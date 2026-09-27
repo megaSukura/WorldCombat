@@ -21,7 +21,7 @@ Smoke.scenario("suckerpunch", function (stage) {
     }, function () {
         stage.expect(stage.casts("suckerpunch", caster) >= 1, "sneasel committed sucker punch");
         stage.expect(stage.damageTo(foe) > 0, "the intercept struck the zombie");
-        stage.note("shots that read wrong whiff (PP still spent, matching a failed move); the trace shows which casts landed. The read is a real completed native attack or a committed attack move inside the window; a foe that merely chases never counts.", {
+        stage.note("shots that read wrong whiff (PP still spent, matching a failed move); the trace shows which casts landed. The read is a real completed native attack or a committed attack move (enemy- or aim-kind) inside the window; a foe that merely chases never counts, and an empty dash now finishes at once.", {
             casts: stage.casts("suckerpunch", caster),
             dealt: Math.round(stage.damageBy(caster) * 10) / 10,
             foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,

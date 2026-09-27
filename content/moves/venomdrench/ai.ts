@@ -2,7 +2,8 @@
  * 毒液陷阱 / venomdrench 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自己为圆心、泼洒半径内至少站着 ai.minFoes 个
- *   **已经中毒**的非友方（默认 1）——毒液只黏中毒的人，没人中毒就白泼。移动中（骑乘）不泼。
+ *   **已经中毒、且三项里至少一项还没到底**的非友方（默认 1）——毒液只黏中毒的人，没人中毒或三项都已封底
+ *   就白泼。移动中（骑乘）不泼。
  * 对谁出手：当前威胁；由共享任务把身体带进泼洒半径，毒性不看视线。
  * 放完之后：圈里中毒的对手攻／特攻／速度一起下降、挂上印记；交回共享顺序，再决定追击还是趁对方变钝拉开。
  * 倾向：圈里中毒的人越多越先泼。
@@ -21,7 +22,12 @@ namespace CompanionBehavior {
         return Math.max(2.0, Math.min(7.5, (3.0 + width * 1.2) * (deep ? 0.8 : 1.25)));
     }
 
-    /** 以自身为心、泼洒半径内已经中毒的非友方数量。 */
+    /** 还削得动：中毒者的攻击／特攻／速度里至少一项没到 −6 封底。 */
+    function venomdrenchWorthwhile(context: WorldBehavior.Context, other: Entity): boolean {
+        return stage(context, other, "atk") > -6 || stage(context, other, "spa") > -6 || stage(context, other, "spe") > -6;
+    }
+
+    /** 以自身为心、泼洒半径内已经中毒且还削得动的非友方数量。 */
     function venomdrenchPoisoned(context: WorldBehavior.Context, centre: number[], radius: number): number {
         const nearby = context.facts.nearby as Entity[];
         let count = 0;
@@ -29,7 +35,7 @@ namespace CompanionBehavior {
             const other = nearby[i];
             if (other.friendly || other.health <= 0) continue;
             if (distance(other.point, centre) > radius) continue;
-            if (status(context, other, "poison")) count++;
+            if (status(context, other, "poison") && venomdrenchWorthwhile(context, other)) count++;
         }
         return count;
     }

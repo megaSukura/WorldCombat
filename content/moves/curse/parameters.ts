@@ -25,11 +25,13 @@ namespace PokemonSkills {
     export const cursedHex = "world_combat:cursed_hex";
     export const cursedBind = "world_combat:cursed_bind";
     export const cursePact = "world_combat:curse_pact";
+    export const cursePactBind = "world_combat:curse_pact_bind";
     export const curseScene = "world_combat:move_curse";
     export const curseStatus = "curse";
     export const cursePactStatus = "cursed_pact";
     export const curseTextHex = "world_combat.move.curse.text.hex";
     export const curseTextPact = "world_combat.move.curse.text.pact";
+    export const curseTextNogain = "world_combat.move.curse.text.nogain";
     export const curseTextToll = "world_combat.move.curse.text.toll";
     export const curseTextLift = "world_combat.move.curse.text.lift";
 
@@ -37,6 +39,15 @@ namespace PokemonSkills {
         if (!pokemon) return false;
         for (let i = 0; i < pokemon.typeCount(); i++) if (String(pokemon.type(i)) === "ghost") return true;
         return false;
+    }
+
+    /** 当前有效属性：优先读现场的实时属性层（含别的单元改过的属性），取不到再退回个体静态属性。 */
+    export function curseIsGhost(world: CombatWorld | null | undefined, actor: CombatActor | null | undefined, pokemon?: CombatPokemon | null): boolean {
+        if (world && actor && world.valid(actor)) {
+            const types = PokemonDamage.combatants.read(world, actor).types;
+            if (types && types.length > 0) return types.indexOf("ghost") >= 0;
+        }
+        return curseGhostType(pokemon);
     }
 
     actionParameters.define(curseId, {

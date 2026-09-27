@@ -3,8 +3,8 @@
  *
  * 场面：只会疾速转轮的普隆隆姆（Revavroom 56 级，速度快、物攻高）对一只被点住、不会还手的铁傀儡
  *   （耐打又不会跑掉的靶子），隔开一点距离。AI 只有这一招可用。
- * 必然事实：本招被提交过、目标受过伤害、施法者为了撞上去移动过。
- * 命中/暴击、撞开距离、自身速度具体降级都写进 note 供读轨迹判断。
+ * 必然事实：本招被提交过、目标受过伤害、施法者为了撞上去移动过、命中后自身速度按实际事实下降。
+ * 命中/暴击与撞开的具体距离写进 note 供读轨迹判断。
  */
 Smoke.scenario("spinout", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:grass_block");
@@ -21,11 +21,13 @@ Smoke.scenario("spinout", function (stage) {
             stage.expect(stage.casts("spinout", caster) > 0, "spinout was committed");
             stage.expect(stage.damageTo(foe) > 0, "the spinning charge struck the foe");
             stage.expect(stage.travelled(caster) > 0.5, "the caster moved during the spinning charge");
+            stage.expect(stage.stages(caster).spe <= -2, "the landed hit lowered the caster's Speed by the real amount");
             stage.note("spinout observations", {
                 casts: stage.casts("spinout", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 casterMoved: Math.round(stage.travelled(caster) * 10) / 10,
-                foeMoved: Math.round(stage.travelled(foe) * 10) / 10
+                foeMoved: Math.round(stage.travelled(foe) * 10) / 10,
+                casterSpeed: stage.stages(caster).spe
             });
             stage.done();
         });

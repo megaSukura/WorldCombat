@@ -3,7 +3,7 @@
   "worldcombat.skill.synthesis.use.0": "在阳光下逐口回一大截生命",
   "worldcombat.skill.synthesis.use.1": "树荫里的小幅续命",
   "worldcombat.skill.synthesis.use.2": "站定窗口里的自救",
-  "worldcombat.skill.synthesis.description.0": "整段光合按缺失生命回复 %1$s：日照越足越高（晴天正午接近 2/3），夜里或遮蔽处只回下限；特防越高叶片越强韧。这口总量均分成 4 次，各按当刻日照结算。",
+  "worldcombat.skill.synthesis.description.0": "整段光合按缺失生命回复 %1$s：日照越足越高（晴天正午接近 2/3），夜里或遮蔽处只回下限；特防越高叶片越强韧。这口总量均分成 4 次，各按当刻日照结算，且总量不超过开始光合时的缺血量——中途再挨打也不会把它撑大。",
   "worldcombat.skill.synthesis.description.1": "起手 %1$s 后提交并支付 PP，随后进入 %2$s 的持续光合、原地站定；期间被打断则停止剩余几口，已经到账的回复保留。",
   "worldcombat.skill.synthesis.timing": "自身招式，起手 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.synthesis.growth.0": "达到 %1$s 级，冷却缩短至 %2$s 秒。",

@@ -3,6 +3,7 @@
   "worldcombat.skill.tailwind.use.0": "开打前把整队的速度垫起来",
   "worldcombat.skill.tailwind.use.1": "在被追上之前让全队先动起来",
   "worldcombat.skill.tailwind.use.2": "把队友连成一队一起压上去",
+  "worldcombat.skill.tailwind.use.3": "独自追击或撤离时也能只给自己起一阵风",
   "worldcombat.skill.tailwind.description.0": "顺风把施法者与半径内队友的速度提高 %1$s 级，持续约 %2$s 秒。",
   "worldcombat.skill.tailwind.description.1": "风场铺开 %1$s 格。",
   "worldcombat.skill.tailwind.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
@@ -28,5 +29,5 @@
   "world_combat.move.tailwind.text.ride": "顺风（速度 +%1$s／%2$s 人受风／%3$s 秒）",
   "world_combat.move.tailwind.text.fade": "顺风停息",
   "effect.world_combat.tailwind_gale": "顺风",
-  "worldcombat.skill.tailwind.description.release": "风停或效果被清除时，按每个受风者实际抬到的等级收回提速；已经带着同一阵风的战斗者不会被再次抬高。"
+  "worldcombat.skill.tailwind.description.release": "风停或效果被清除时，按每个受风者实际抬到的等级收回提速；已经到速度上限或带着同一阵风的战斗者不会被再次抬高。"
 }

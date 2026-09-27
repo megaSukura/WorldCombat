@@ -21,25 +21,21 @@ Smoke.scenario("courtchange", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "meowscarada", level: 40, moves: ["courtchange"], at: [-2, 0, 0] });
-    var bait = stage.mob({ type: "minecraft:iron_golem", at: [0, 0, 0] });
-    var foe = stage.pokemon({ species: "sandslash", level: 40, moves: ["spikes"], at: [4, 0, 0] });
-    stage.command("data merge entity @e[type=minecraft:iron_golem,distance=..8,limit=1] {NoAI:1b}");
-    // 施法者与穿山王互为敌人：穿山王把菱撒向施法者，撒出的敌方领域就落在施法者脚下；
-    // 施法者因此有明确的威胁与一处扫得到的敌方领域，才会选择换场。
-    stage.hostile(caster, foe);
-    stage.hostile(caster, bait);
-    stage.hostile(foe, bait);
-    stage.until(2400, function () {
+    // A passive enemy owns a transferable hazard clear of the caster. It targets the caster (a real threat for the
+    // scan) but is held still, so the caster is free to rest and lay down the swap.
+    var holder = stage.mob({ type: "minecraft:iron_golem", at: [3, 0, 3] });
+    stage.noai(holder);
+    stage.hostile(caster, holder);
+    stage.field("world_combat:hazard/spikes", [5, 0, 0], 1200, 2, {}, holder);
+    stage.until(1150, function () {
         return courtchangeTransferred;
     }, function () {
-        stage.expect(stage.casts("courtchange", caster) > 0, "court change was committed after an enemy field appeared nearby");
+        stage.expect(stage.casts("courtchange", caster) > 0, "court change was committed with an enemy field in range");
         stage.expect(courtchangeTransferred, "the actual field changed source at the same position without refreshing its clock");
-        stage.note("换场扫出中心半径内的所有共享领域效果：敌方的过户给施法者、我方的过户给最近的敌人，领域只换主人、规则与剩余时长不变。穿山王撒在施法者身边的尖刺因此转而扎它自己。实际接管／交出几处随穿山王叠了几层而变，是时机结果；换场半径随等级与体型、光点随特攻变化，速换与稳换各有代价。", {
+        stage.note("换场扫出中心半径内的所有共享领域效果：敌方的过户给施法者、我方的过户给最近的敌人，领域只换主人、规则与剩余时长不变。实际接管／交出几处随场地数量而变，是时机结果；换场半径随等级与体型、光点随特攻变化，速换与稳换各有代价。", {
             courtCasts: stage.casts("courtchange", caster),
-            spikesCasts: stage.casts("spikes", foe),
             casterAlive: caster.alive(),
-            foeAlive: foe.alive(),
-            baitAlive: bait.alive(),
+            holderAlive: holder.alive(),
             tick: stage.tick()
         });
         stage.done();

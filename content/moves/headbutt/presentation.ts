@@ -9,7 +9,7 @@
  * 运动：前伸粒子沿瞄准方向排成短线段；命中的碎屑沿前伸方向退去，畏缩时星子从目标头顶向上飘。
  * 数：`data.hits`（威力派生）决定接触碎屑数，`data.intensity`（威力 / 70）抬高密度与亮度，
  * `data.scale`（头面判定 / 0.5）放大头部与尘点，`data.stride`（顶出距离 / 0.7）决定起步掀起的土块数，
- * `data.reach`（顶出距离）决定前伸线段的长度。
+ * `data.reach`（顶出距离）决定前伸线段的长度；线段按世界格绘制，不再随体型二次拉长。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const HeadbuttDefinition: ParticleDefinition = {
@@ -60,7 +60,7 @@ const HeadbuttDefinition: ParticleDefinition = {
                     color: 0xFFF6E0, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 40
                 },
                 {
-                    name: "jab", bind: "source", height: 0.55, orient: "direction",
+                    name: "jab", bind: "source", height: 0.55, orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: 5, at: 0 },
                     shape: { kind: "line", length: { data: "reach", fallback: 0.7 } },

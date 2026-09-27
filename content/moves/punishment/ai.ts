@@ -5,6 +5,7 @@
  *   （总数封顶），层数越多越优先；没有强化时本招只是一记普通近打，优先级很低，让位给其他基础招。
  *   `ai.finish` 收残血。
  * 出手位置：近身，由共享接近把身位收进射程；自由方向出手时不强求目标。
+ *   施法者头顶被上方方块封住（抬不起重臂）时这一招不列入候选；探针不可用时照常出手。
  * 放完之后：交回共享交战计划。
  */
 namespace PokemonSkills {
@@ -17,9 +18,24 @@ namespace PokemonSkills {
         return access.valid(actor) ? punishmentBoosts(access, actor) : 0;
     });
 
+    /** 施法者头顶留出抬臂与下压所需空间的只读探针；上方被封住时不放这一招。 */
+    CompanionBehavior.registerFact("world_combat:move_punishment/headroom", function (access, actor, _argument) {
+        if (!access.valid(actor)) return true;
+        const body = access.observe(actor);
+        if (body === null) return true;
+        const top = body.position().plus(WorldCombat.point(0, body.height() * 0.5 + 0.1, 0));
+        return access.freeSpace(top, Math.max(0.4, body.width()), Math.max(0.5, body.height() * 0.8));
+    });
+
     function punishmentBoostNow(context: WorldBehavior.Context, target: WorldMethods.Subject): number {
         const value = CompanionBehavior.fact<number>(context, "world_combat:move_punishment/boost", target);
         return typeof value === "number" ? value : 0;
+    }
+
+    /** 探针不可用（未加载等）时不阻塞出手，只在明确探到上方空间不足时拒绝。 */
+    function punishmentHeadroom(context: WorldBehavior.Context): boolean {
+        const value = CompanionBehavior.fact<boolean>(context, "world_combat:move_punishment/headroom", CompanionBehavior.source(context));
+        return value !== false;
     }
 
     CompanionBehavior.registerUse(punishmentId, {
@@ -27,6 +43,7 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if (!punishmentHeadroom(context)) return false;
             if (!target) return true;
             if (!punishmentValid(target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)

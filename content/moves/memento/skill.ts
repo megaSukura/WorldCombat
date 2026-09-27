@@ -1,35 +1,45 @@
-/**
- * 临别礼物 / Memento — 执行组织。
- *
- * 核心念头：把自己的存在当作礼物送出去——当场倒下，在倒下的地方炸开一团漆黑的遗念，缠住身边看得见的敌人；
- *   遗念留下来继续把礼物一份份送出去：踏进它范围的敌人攻击与特攻各被夺走数级。
- *
- * 出手：一段可被打断的起手（windup）后提交；提交即结清 PP 与冷却。
- * 命中：以自身为圆心 giftRadius 的圈内、看得见的非友方各挂共享的 world_combat:memento_grief
- *       （身份 world_combat:status/grieving）。
- * 结果：施法者把当前生命全部交出去（濒死）；随后在原地放出遗念（WorldBodies 持久实体）。
- *       遗念由它自己承担「礼物」：对范围内每个尚未被哀悼的非友方各降一次攻击与特攻（各 drop 级），
- *       并持续为范围内的人续上哀悼。哀悼的人出手会迟疑（概率失手）。
- *       能力等级下降按共享阶梯保留；哀悼身份在身时，招式发动与原生普通攻击各有一次失手判定。
- * 落空：圈内一个非友方都没有时，礼物没送出去，施法者不倒——这是原生 selfdestruct: "ifHit" 的意思。
- * 反制：走出礼物半径、躲到掩体后就不会被罩到；遗念只在一小块地方，把敌人从它旁边引开即可。
- */
+/** 真实牺牲确认后留下遗念；敌我名单在施法者仍活着时冻结。 */
 namespace PokemonSkills {
     const MementoSlowed = 0.2;
+    
+    const MementoGiftReference = 3.0;
+    const MementoRemnantReference = 2.6;
+
+    const mementoGriefText = "world_combat.move.memento.text.grief";
+    const mementoFarewellText = "world_combat.move.memento.text.farewell";
+    const mementoWastedText = "world_combat.move.memento.text.wasted";
+    const mementoHauntText = "world_combat.move.memento.text.haunt";
+    const mementoFailedText = "world_combat.move.memento.text.failed";
+    const mementoSpentText = "world_combat.move.memento.text.spent";
 
     function mementoAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
-    /** 给一个目标挂上哀悼身份并播命中表现；真正的攻击/特攻削减由遗念承担（见下）。 */
-    function mementoGrieve(world: CombatWorld, target: CombatActor, drop: number, grief: number, darkness: number): void {
-        MobEffects.apply(world, target, mementoEffect, grief, 0);
+    
+    function mementoGrieve(world: CombatWorld, target: CombatActor, grief: number, darkness: number): boolean {
+        const applied = MobEffects.apply(world, target, mementoEffect, grief, 0);
+        if (applied === null || !applied.tagged(mementoSpot)) return false;
         const body = world.observe(target);
-        if (body === null) return;
+        if (body === null) return true;
         WorldFeedback.emit(world, mementoScene, 1, body.position(),
-            { moment: "grief", target: String(target.ref()), drop: drop, darkness: darkness }, 28);
-        WorldFeedback.text(world, mementoAbove(body.position()), "world_combat.move.memento.text.grief", [drop], 34);
+            { moment: "grief", target: String(target.ref()), darkness: darkness }, 28);
+        WorldFeedback.text(world, mementoAbove(body.position()), mementoGriefText, [], 34);
+        return true;
     }
 
-    // 招式在提交时判一次，原生普通攻击在命中时判一次；脚本伤害不重复掷骰。
+    
+    function mementoDrain(world: CombatWorld, target: CombatActor, drop: number, darkness: number): boolean {
+        const atk = NativeEffects.boost(world, target, "atk", -drop);
+        const spa = world.valid(target) ? NativeEffects.boost(world, target, "spa", -drop) : 0;
+        if (atk === 0 && spa === 0) return false;
+        const body = world.observe(target);
+        if (body === null) return true;
+        WorldFeedback.emit(world, mementoScene, 1, body.position(),
+            { moment: "grief", target: String(target.ref()), drop: drop, darkness: darkness }, 28);
+        WorldFeedback.text(world, mementoAbove(body.position()), mementoHauntText, [drop], 34);
+        return true;
+    }
+
+
     CombatStatus.actions.define({
         id: "world_combat:move/memento/grief",
         apply: function (context) {
@@ -40,58 +50,65 @@ namespace PokemonSkills {
         }
     });
 
-    function mementoState(brain: CombatEffect): any { return JSON.parse(brain.state()); }
 
-    /** 遗念每 4 刻：浮在倒下处；对新进入范围的非友方各送一份削减、给所有人续上哀悼。 */
-    function mementoHaunt(brain: CombatEffect): void {
-        var world = brain.world(), state = mementoState(brain), at = world.observe(brain.target());
-        if (at === null) return;
-        var point = at.position();
-        WorldFeedback.keep(world, "memento:" + String(brain.target().ref()), mementoScene, 1, point,
-            { moment: "remnant", target: String(brain.target().ref()), radius: state.radius, scale: state.radius / 2.6,
-                darkness: state.darkness }, 20);
-        var marked = state.marked || (state.marked = {});
-        var actors = world.query(point, state.radius, false), changed = false;
-        for (var i = 0; i < actors.length; i++) {
-            var actor = actors[i];
-            if (world.friendly(actor)) continue;
-            var facts = world.observe(actor);
-            if (facts === null || !world.clear(point, facts.position())) continue;
-            var ref = String(actor.ref());
-            if (!marked[ref]) {
-                marked[ref] = true; changed = true;
-                NativeEffects.boost(world, actor, "atk", -state.drop);
-                if (world.valid(actor)) NativeEffects.boost(world, actor, "spa", -state.drop);
-                var body = world.observe(actor);
-                if (body !== null) {
-                    WorldFeedback.emit(world, mementoScene, 1, body.position(),
-                        { moment: "grief", target: ref, drop: state.drop, darkness: state.darkness }, 28);
-                    WorldFeedback.text(world, mementoAbove(body.position()), "world_combat.move.memento.text.grief", [state.drop], 34);
-                }
+    function mementoWatch(brain: CombatEffect): void {
+        if (DeferredSacrifice.waiting(brain)) return;
+        const world = brain.world(), state = JSON.parse(brain.state()), point = MementoDeparture.point(state.centre);
+        const region = WorldGeometry.ring(point, 0, state.radius);
+        state.targets.forEach((entry: any) => {
+            const target = world.actor(entry.ref), facts = target && world.valid(target) ? world.observe(target) : null;
+            if (!target || !facts || !MementoDeparture.inside(region, facts) || !world.clear(point, facts.position())) return;
+            if (!state.marked[entry.ref]) {
+                state.marked[entry.ref] = true;
+                mementoDrain(world, target, state.drop, state.darkness);
             }
-            if (world.valid(actor)) MobEffects.apply(world, actor, mementoEffect, state.renew, 0);
-        }
-        if (changed) brain.state(JSON.stringify(state));
+            if (world.valid(target)) MobEffects.apply(world, target, mementoEffect, state.renew, 0);
+        });
+        brain.state(JSON.stringify(state));
+        brain.schedule("watch", "watch", 4, "{}");
     }
-
     WorldBodies.define(mementoRemnant, {
-        schema: 1,
-        maxTicks: 400,
-        start: function (brain) { mementoHaunt(brain); },
-        resume: function (brain) { mementoHaunt(brain); },
-        tick: { every: 4, handler: function (brain) { mementoHaunt(brain); } },
+        schema: 2, maxTicks: 400,
+        migrate: (_version, json) => json,
+        start: brain => { brain.schedule("watch", "watch", 1, "{}"); },
+        resume: mementoWatch,
+        handlers: { watch: mementoWatch },
         end: function (brain) {
-            var world = brain.world(), at = world.observe(brain.target());
-            if (at) world.presentFor("memento:end:" + String(brain.target().ref()), mementoScene, 1, at.position(),
-                JSON.stringify({ moment: "fade", target: String(brain.target().ref()) }), 24);
+            DeferredSacrifice.forget(brain);
+            const state = JSON.parse(brain.state());
+            if (!state.active) return;
+            const world = brain.world(), at = world.observe(brain.target());
+            if (at) WorldFeedback.emit(world, mementoScene, 1, MementoDeparture.point(state.centre), { moment: "fade" }, 24);
+        },
+        observedDeath: function (brain, death) {
+            const state = DeferredSacrifice.confirm(brain, death);
+            if (!state) return;
+            brain.remaining(state.ticks);
+            const world = brain.world(), point = MementoDeparture.point(state.centre);
+            world.configure(brain.target(), JSON.stringify({ size: [.5, .5], glow: true,
+                appearance: { sprite: "cobblemon:generic/fire/wisp", scale: 1.1, tint: 0x5B2A86, glow: true } }));
+            let caught = 0;
+            const gift = WorldGeometry.ring(point, 0, state.giftRadius);
+            state.targets.forEach((entry: any) => {
+                const target = world.actor(entry.ref), facts = target && world.valid(target) ? world.observe(target) : null;
+                if (target && facts && entry.gift && MementoDeparture.inside(gift, facts)
+                    && world.clear(point, facts.position()) && mementoGrieve(world, target, state.grief, state.darkness)) caught++;
+            });
+            WorldFeedback.emit(world, mementoScene, 1, point, { moment: "farewell", caught: caught,
+                darkness: state.darkness, scale: state.giftRadius / MementoGiftReference }, 34);
+            WorldFeedback.text(world, mementoAbove(point), mementoFarewellText, [caught], 34);
+            world.sound("minecraft:entity.wither.spawn", point, 18, "{}");
+            WorldFeedback.onEffect(world, brain.id(), "memento:remnant", mementoScene, 1, point,
+                { moment: "remnant", target: String(brain.target().ref()), radius: state.radius,
+                    scale: state.radius / MementoRemnantReference, darkness: state.darkness });
+            mementoWatch(brain);
         }
     });
-
     define({
         id: mementoId,
         cooldownParameter: "recharge",
         name: "临别礼物",
-        description: "牺牲自己，在倒下处留下遗念。遗念压低附近敌人的攻击与特攻，并让它们出手时可能失手；范围内没有敌人时不会牺牲。",
+        description: "牺牲自己，在倒下处留下遗念。初次哀悼范围内可见的敌人，之后遗念持续照看施放时已认定的敌人，夺走仍在附近者的攻击与特攻，并让它们出手时可能失手；范围内没有敌人、或遗念无法留下时不会牺牲。",
         uses: ["残血时把围上来的强敌一起废掉", "用一条命换取对手主力的输出崩盘", "在自己必死的一刻把遗念留在原地继续施压"],
         kind: "self",
         range: 3.5,
@@ -118,45 +135,30 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", target: String(action.actor().ref()) }));
             return prepare;
         },
-        indicator: function () { return { radius: 3.0, geometry: "circle", style: "farewell", color: 0x5B2A86, label: "临别礼物" }; },
+        indicator: function (config, pokemon) { return { radius: pokemon ? p(mementoId, "giftRadius", pokemon) : 3.0, geometry: "circle", style: "farewell", color: 0x5B2A86, label: "临别礼物" }; },
         execute: function (action, move, config, done) {
-            const world = action.world(), self = action.actor();
-            const body = world.observe(self);
-            if (body === null) { done(action); return; }
-            const origin = body.position();
-            const drop = Math.max(1, Math.min(3, Math.round(p(mementoId, "drop", action))));
-            const radius = Math.max(1.5, p(mementoId, "giftRadius", action));
-            const grief = Math.max(60, Math.round(p(mementoId, "griefTicks", action)));
-            const remnantTicks = Math.max(60, Math.round(p(mementoId, "remnantTicks", action)));
+            const world = action.world(), self = action.actor(), body = world.observe(self);
+            if (!body) { done(action); return; }
+            const centre = body.position(), radius = Math.max(1.5, p(mementoId, "giftRadius", action));
             const remnantRadius = Math.max(1.2, p(mementoId, "remnantRadius", action));
-            const darkness = Math.max(12, Math.round(p(mementoId, "darkness", action)));
-            let caught = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(origin, 0, radius), function (actor, facts) {
-                if (!world.clear(origin, facts.position())) return;
-                mementoGrieve(world, actor, drop, grief, darkness);
-                caught++;
+            const gift = WorldGeometry.ring(centre, 0, radius), targets: any[] = [];
+            WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, Math.max(radius, remnantRadius)), (target, facts) => {
+                if (world.clear(centre, facts.position())) targets.push({ ref: String(target.ref()), gift: MementoDeparture.inside(gift, facts) });
             });
-            sound(action, "minecraft:entity.wither.spawn");
-            if (caught <= 0) {
-                WorldFeedback.emit(world, mementoScene, 1, origin, { moment: "wasted", target: String(self.ref()) }, 20);
-                WorldFeedback.text(world, mementoAbove(origin), "world_combat.move.memento.text.wasted", [], 30);
-                done(action);
-                return;
+            if (!targets.some(entry => entry.gift)) {
+                WorldFeedback.text(world, mementoAbove(centre), mementoWastedText, [], 30);
+                done(action); return;
             }
-            // 先把遗念放出来（它属于自己、承担礼物），再让自己倒下——倒下后动作作用域不再可用。
-            WorldBodies.spawn(world, origin,
-                { size: [0.5, 0.5], health: 6, gravity: false, pushable: false, invulnerable: true, silent: true,
-                    knockbackResistance: 1, glow: true, appearance: { sprite: "cobblemon:generic/fire/wisp", scale: 1.1, tint: 0x5B2A86, glow: true } },
-                mementoRemnant,
-                { drop: drop, grief: grief, renew: Math.max(40, Math.round(grief * 0.6)), radius: remnantRadius,
-                    darkness: darkness, marked: {}, caught: caught },
-                remnantTicks);
-            WorldFeedback.emit(world, mementoScene, 1, origin,
-                { moment: "farewell", target: String(self.ref()), drop: drop, caught: caught, darkness: darkness, scale: radius / 3.0 }, 34);
-            WorldFeedback.text(world, mementoAbove(origin), "world_combat.move.memento.text.farewell", [caught, drop], 34);
-            const last = world.observe(self);
-            if (last !== null) world.health(self, -last.health(), "world_combat:memento_cost");
-            done(action);
+            const grief = Math.max(60, Math.round(p(mementoId, "griefTicks", action)));
+            const ticks = Math.max(60, Math.round(p(mementoId, "remnantTicks", action)));
+            const state = { centre: [centre.x(), centre.y(), centre.z()], targets: targets, marked: {},
+                giftRadius: radius, radius: remnantRadius, grief: grief, renew: Math.max(40, Math.round(grief * .6)),
+                ticks: ticks, drop: Math.max(1, Math.min(3, Math.round(p(mementoId, "drop", action)))),
+                darkness: Math.max(12, Math.round(p(mementoId, "darkness", action))) };
+            if (!DeferredSacrifice.arm(action, centre, mementoRemnant, state, ticks, done, "world_combat:memento_cost")) {
+                WorldFeedback.text(world, mementoAbove(centre), mementoFailedText, [], 30);
+                done(action);
+            }
         }
     });
 }

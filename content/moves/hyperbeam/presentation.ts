@@ -1,12 +1,13 @@
 /**
  * 破坏光线 / hyperbeam 的客户端表现。
  *
- * 一句话：施法者身前收束出一颗冷白光点，一条窄中心线锁定这次瞄准的走廊；随后一条贯穿的直线光带从身前一直
- * 射到实际截断点（撞墙即止），走廊里被贯穿的活体各自炸开一个白蓝贯穿点；光柱熄灭后施法者身上只剩一层暗下去
- * 的低伏余烬，标明「熄火」这段时间，余烬密度按这一束实际贯穿的人数给出。
+ * 一句话：施法者身前收束出一颗冷白光点，一条窄中心线沿真实三维轴锁定这次瞄准的方向；随后一条贯穿的直线
+ * 光带从身前一直射到实际截断点（撞墙即止，仰视/俯视也同轴），走廊里被贯穿的活体各自炸开一个白蓝贯穿点；
+ * 光柱熄灭后施法者身上只剩一层暗下去的低伏余烬，标明「熄火」这段时间，余烬密度按这一束实际贯穿的人数给出，
+ * 余烬由后端托管效果的生命周期驱动，随熄火载体一起收束。
  * 色相家族：冷白到浅青（speedlines／glowing_dots_cyan 原色、impact_normal 亮帧、tinydust 中性），核心近白。
  * 拍子：起（windup 聚光 + 窄中心线）→ 击（beam 走廊 + pierce 贯穿点，或 fizzle 落空）→ 收（spent 起、recharge 维持整段熄火）。
- * 范围：beam 用 path 画出服务端同一组四个顶点，光带尽头就是实际的方块截断点——画多长，判定就到哪。
+ * 范围：beam 用 path 画出服务端同一组四个顶点，光带沿真实三维轴铺开、尽头就是实际的方块截断点——画多长，判定就到哪。
  * 运动：光带沿走廊由近及远铺开、边缘同时向前扫过；贯穿点在命中处向外炸开；熄火时余烬原地慢慢下沉。
  * 数：`data.notes`（光束威力换算）与 `data.intensity`（威力/150）决定光带与贯穿点的密度，`data.pierce`（贯穿上限）
  * 决定边缘强调的强度，`data.seconds`（熄火秒数）与 `data.heat`（1 + 贯穿人数 ×3）决定余烬维持密度。
@@ -54,8 +55,8 @@ const HyperbeamDefinition: ParticleDefinition = {
             ]
         },
         beam: {
-            duration: 24,
-            exit: { stop: 8, drain: 16 },
+            duration: 14,
+            exit: { stop: 5, drain: 14 },
             emitters: [
                 {
                     name: "lane_fill", bind: "path", offset: [0, 0.55, 0],
@@ -166,8 +167,8 @@ const HyperbeamDefinition: ParticleDefinition = {
             ]
         },
         recharge: {
-            duration: 60,
-            exit: { stop: 40, drain: 20 },
+            duration: 0,
+            exit: { stop: 8, drain: 16 },
             emitters: [
                 {
                     name: "dim_core", bind: "source", offset: [0, 0.65, 0], height: 0.3,

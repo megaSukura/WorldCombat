@@ -40,12 +40,11 @@ namespace PokemonSkills {
         return NativeEffects.effectiveStages(world, actor);
     }
 
-    /** 目标身上防御向能力里正面等级的总和（防与特防）；0 表示此刻没有可被本招无视的涨防。 */
+    /** 目标身上本招真正会无视的物理防御正面等级；0 表示此刻没有可被本招无视的涨防。 */
     export function darkestlariatGuard(world: CombatWorld, actor: CombatActor): number {
         const stages = darkestlariatStages(world, actor);
-        let total = 0;
-        ["def", "spd"].forEach(function (stat) { const value = stages[stat] || 0; if (value > 0) total += value; });
-        return total;
+        const value = stages["def"] || 0;
+        return value > 0 ? value : 0;
     }
 
     actionParameters.define(darkestlariatId, {

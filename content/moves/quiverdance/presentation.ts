@@ -8,7 +8,8 @@
  * 范围：bloom 与 veil 都贴身体、半径绑 `data.veil`（实际鳞幕半径），不再在地面铺成环形地场。
  * 运动：unfurl 鳞粉向身体收拢；flutter 向外洒、带重力缓落，真实侧步的那一拍脚下才点尘（`data.tap`）；
  *   veil 沿身周缓慢上浮绕转（低密度，让出视线），随身体移动。
- * 数：鳞粉数量绑 `data.scales`（特攻与特防、等级派生，厚幕 ×1.4），拍数绑 `data.flutters`、当前第几拍绑 `data.index`。
+ * 数：每拍鳞粉绑 `data.scales`（服务端已按拍均分，特攻与特防、等级与厚幕派生），末拍聚幕另发全量；拍数绑
+ *   `data.flutters`、当前第几拍绑 `data.index`，末拍实际三项增益绑 `data.gains`。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const QuiverDanceDefinition: ParticleDefinition = {

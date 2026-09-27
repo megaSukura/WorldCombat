@@ -26,6 +26,9 @@
   "worldcombat.skill.leafstorm.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.leafstorm.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger opens the storm from farther away.",
   "worldcombat.skill.leafstorm.preference.ai.line": "Prefer lines",
-  "worldcombat.skill.leafstorm.preference.ai.line.help": "On: targets with more foes lined up behind them rank higher, so the rolling storm cuts a whole line; off: ordinary ranged ordering.",
-  "world_combat.move.leafstorm.text.miss": "The vortex whiffs and the leaves scatter"
+  "worldcombat.skill.leafstorm.preference.ai.line.help": "Maelstrom form only: targets with more foes lined up behind them rank higher, so the slow rolling storm cuts a whole line (judged by the real range, vortex radius, height and walls); the piercing form does not roll past, so this does nothing there. Off: ordinary ranged ordering.",
+  "worldcombat.skill.leafstorm.preference.ai.regain": "Hold back when spent",
+  "worldcombat.skill.leafstorm.preference.ai.regain.help": "On: once the user's Sp. Atk has been lowered (for example right after a previous Leaf Storm) it strongly de-prioritises casting again, avoiding paying the same cost over and over; off: it ignores its current Sp. Atk stage and orders normally.",
+  "world_combat.move.leafstorm.text.miss": "The vortex whiffs and the leaves scatter",
+  "world_combat.move.leafstorm.text.slump": "Leaves away: Sp. Atk -%1$s"
 }

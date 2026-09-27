@@ -1,26 +1,27 @@
 /**
  * 仆刀 / kowtowcleave 的出手方式。
  *
- * 核心念头：先跪拜引对方放下防备，等那一瞬的松懈，再欺身一刀劈下——只要真的贴上，就不做随机失手。
+ * 核心念头：先跪拜引对手上钩，等那一瞬的松懈，再欺身递刀——刀尖真实碰上第一个身体才结算，贴上后不做随机失手。
  *
  * 三幕：
  *   起：半跪蓄势（提交前 windup 预告）。
- *   拜：提交后跪拜，只对近处合法目标打上 dropguard（空门）身份并降防；画面画出那道破绽。
- *   劈：蓄拜结束，逐刻用原生碰撞的实际位移欺近目标；只有真实接触距离且视线无阻才 cleave，命中后把目标击退。
- *       追近预算（本招射程）耗尽、被墙挡住或目标离场就挥空——不在目标身上亮刀。空瞄（没有目标）也能空刀。
+ *   拜：提交后跪拜；只有当拜击范围内本次原本的目标在这段时间里真正朝自己逼近 >= 0.4 格，或真的对自己发起过一次
+ *       原生攻击，才算上钩。上钩只给本次对该人的空门加成，画面当刻开一道短口。没有上钩照常出刀；不再前置降防，
+ *       也不再给通用 dropguard（空门）标记。
+ *   劈：蓄拜结束，朝本次瞄准方向以原生 moveSweep 逐刻欺近；第一个真实碰到的非友方身体就是刀口落点，
+ *       若它正是上钩的人就吃空门加成。追近预算（本招射程）耗尽、被墙挡住或走不动就挥空，空瞄也能空刀。
  *
- * 与同族分开：zingzap 是把冲程当燃料、powergem 是远射；仆刀靠先制造破绽、再兑现，是两段的近身。
+ * 与同族分开：zingzap 把冲程当燃料、powergem 是远射；仆刀靠一次可观察的诱敌、再兑现成一刀。
  */
 namespace PokemonSkills {
     const kowtowcleaveScene = "world_combat:move_kowtowcleave";
-    const kowtowcleaveGuard = "world_combat:kowtow_guard";
 
     define({
         freeMovement: true,
         id: "kowtowcleave",
         name: "Kowtow Cleave",
-        description: "先下跪引对手放下防备，让它裂开一瞬空门，再欺身一刀劈下；只有真实贴上、视线无阻才劈中，贴上后不做随机失手，命中把目标击退。追不上、被墙挡住或目标离场就挥空，空瞄也能空刀。",
-        uses: ["下跪骗防再劈", "给目标开一瞬空门", "对高防目标补一刀加重"],
+        description: "先下跪引对手朝自己逼近或出手，抓那一瞬空门欺身挑一刀；只有真实贴上、视线无阻才劈中，贴上后不掷命中，命中把目标击退。没上钩也照常出刀；追不上、被墙挡住或目标离场就挥空，空瞄也能空刀。",
+        uses: ["下跪诱敌再劈一刀", "对真的上钩的目标补一刀加重", "朝瞄准方向欺身，第一个碰到的身体承刀"],
         kind: "aim",
         range: 5,
         prepare: 8,
@@ -28,7 +29,7 @@ namespace PokemonSkills {
         recover: 10,
         cooldown: 40,
         style: "slash",
-        defaults: { feint: false, ai: { maxChase: 8, openFirst: true, leaveStation: true } },
+        defaults: { feint: false, ai: { maxChase: 8, leaveStation: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("kowtowcleave", "collisionRadius", pokemon) * 1.4, geometry: "line", style: "dark", color: 0x7A5AA8, label: "仆刀" };
@@ -54,8 +55,6 @@ namespace PokemonSkills {
             const origin = action.origin();
             const feint = !!(config && config.feint);
             const baitRange = p("kowtowcleave", "baitRange", action);
-            const guardStages = Math.max(1, Math.round(p("kowtowcleave", "guardStages", action)));
-            const guardTicks = Math.max(20, Math.round(p("kowtowcleave", "guardTicks", action)));
             const bowTicks = Math.max(2, Math.round(p("kowtowcleave", "bowTicks", action)));
             const stepLength = p("kowtowcleave", "lunge", action);
             const cleavePower = p("kowtowcleave", "cleave", action);
@@ -66,29 +65,21 @@ namespace PokemonSkills {
             const budget = Math.max(1, action.range());
             const movement = WorldFeedback.actionScenes(kowtowcleaveScene);
             const target = action.target();
+            const startTick = world.tick();
+            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
+            const startedAt = targetBody === null ? null : targetBody.position();
+            const selfBody = world.observe(actor);
+            const selfStartedAt = selfBody === null ? origin : selfBody.position();
             let settled = false;
+            let hooked: string | null = null;
+
             function finish(current: CombatAction): void { if (!settled) { settled = true; movement.finish(current, done); } }
 
             sound(action, "minecraft:entity.evoker.cast_spell");
             WorldFeedback.emit(world, kowtowcleaveScene, 1, origin,
-                { moment: "bow", feint: feint, scale: 1, stages: guardStages }, bowTicks + 20);
+                { moment: "bow", feint: feint, scale: 1 }, bowTicks + 20);
 
-            // 拜：只对近处合法目标开空门。
-            let marked: CombatActor | null = null;
-            if (target !== null && world.valid(target) && !world.friendly(target)) {
-                const targetBody = world.observe(target);
-                if (targetBody !== null && targetBody.position().minus(origin).length() <= baitRange) {
-                    if (MobEffects.apply(world, target, kowtowcleaveGuard, guardTicks, 0) !== null) {
-                        NativeEffects.boost(world, target, "def", -guardStages);
-                        marked = target;
-                        WorldFeedback.emit(world, kowtowcleaveScene, 1, targetBody.position(),
-                            { moment: "open", target: String(target.ref()), stages: guardStages, ticks: guardTicks, scale: 1 },
-                            Math.min(guardTicks, 120));
-                    }
-                }
-            }
-
-            /** 追不到、被挡或目标离场：在原位收刀，不在目标身上亮刀。 */
+            /** 追不到、被挡或走不动：在原位收刀，只在施法者处出 miss。 */
             function whiff(current: CombatAction): void {
                 const scope = current.world();
                 const self = scope.observe(actor);
@@ -99,61 +90,86 @@ namespace PokemonSkills {
                 finish(current);
             }
 
+            /** 刀尖真实碰上的一刻：只有实际上钩的那一口才吃空门加成，拦截体不吃。 */
             function cleaveHit(current: CombatAction, victim: CombatActor, point: CombatPoint): void {
-                const currentWorld = current.world();
-                if (!currentWorld.valid(victim)) { whiff(current); return; }
-                const open = CombatStatus.has(currentWorld, victim, "dropguard");
+                const scope = current.world();
+                if (!scope.valid(victim)) { whiff(current); return; }
+                const open = hooked !== null && String(victim.ref()) === hooked;
                 const amount = open ? cleavePower * (1 + guardBonus) : cleavePower;
                 const landed = hurt(current, victim, "kowtowcleave", amount,
                     { damage: damageSpec("kowtowcleave", "cleave"), contact: true, slice: true });
-                if (landed) {
-                    const self = currentWorld.observe(actor);
-                    const from = self === null ? origin : self.position();
-                    const away = point.minus(from);
-                    if (currentWorld.valid(victim) && away.length() > 0.05) currentWorld.hitDisplace(victim, away.unit().scale(push));
-                }
-                const self = currentWorld.observe(actor);
+                const self = scope.observe(actor);
                 const from = self === null ? origin : self.position();
+                if (landed && scope.valid(victim) && point.minus(from).length() > 0.05)
+                    scope.hitDisplace(victim, point.minus(from).unit().scale(push));
                 const notes = Math.max(8, Math.round(cleavePower / 4));
                 movement.stop(current);
-                WorldFeedback.emit(currentWorld, kowtowcleaveScene, 1, point,
-                    { moment: "cleave", target: String(victim.ref()), open: open, intensity: open ? Math.min(2.4, intensity * 1.2) : intensity,
+                WorldFeedback.emit(scope, kowtowcleaveScene, 1, point,
+                    { moment: "cleave", target: String(victim.ref()), open: open,
+                        intensity: open ? Math.min(2.4, intensity * 1.2) : intensity,
                         notes: notes, scale: radius / 0.5,
                         path: [[from.x(), from.y() + 0.9, from.z()], [point.x(), point.y() + 0.7, point.z()]] }, 28);
-                currentWorld.sound("minecraft:entity.player.attack.sweep", point, 16, "{}");
+                scope.sound("minecraft:entity.player.attack.sweep", point, 16, "{}");
                 finish(current);
             }
 
-            function close(current: CombatAction, victim: CombatActor, remaining: number): void {
-                const currentWorld = current.world();
-                if (!currentWorld.valid(victim)) { whiff(current); return; }
-                const victimBody = currentWorld.observe(victim), selfBody = currentWorld.observe(actor);
-                if (victimBody === null || selfBody === null) { whiff(current); return; }
-                const from = selfBody.position(), to = victimBody.position();
-                const delta = to.minus(from), distance = delta.length();
-                const contact = radius + 0.9;
-                if (distance <= contact) {
-                    // 贴上才算：中间隔着墙就挥空。
-                    if (!currentWorld.clear(from, to)) { whiff(current); return; }
-                    cleaveHit(current, victim, to); return;
+            /** 逐刻朝瞄准方向欺近：原生 moveSweep 停在第一个真实碰到的非友方身体上，不靠距离点名。 */
+            function press(current: CombatAction, remaining: number): void {
+                const scope = current.world();
+                const self = scope.observe(actor);
+                if (self === null) { whiff(current); return; }
+                const here = self.position();
+                let direction = current.direction();
+                const handle = current.target();
+                if (handle !== null && scope.valid(handle)) {
+                    const at = scope.observe(handle);
+                    if (at !== null) { const delta = at.position().minus(here); if (delta.length() > 0.05) direction = delta.unit(); }
                 }
-                if (!currentWorld.clear(from, to)) { whiff(current); return; }
-                if (remaining <= 0.01) { whiff(current); return; }
+                if (self.grounded()) direction = WorldGeometry.flatUnit(direction, current.direction());
+                movement.show(current, "lunge", here, { moment: "lunge", scale: radius / 0.5, intensity: intensity });
                 const step = Math.min(stepLength, remaining);
-                movement.show(current, "lunge", from,
-                    { moment: "lunge", target: String(victim.ref()), scale: radius / 0.5, intensity: intensity });
-                // 用原生碰撞的实际位移欺近：被墙或身体挡住就走不动，返回实走距离。
-                const moved = LivingActions.step(currentWorld, actor, delta.unit().scale(step));
-                if (moved < 0.05) { whiff(current); return; }
-                current.after(1, function (later: CombatAction) { close(later, victim, remaining - moved); });
+                const contact = current.moveSweep(direction.scale(step), radius);
+                const after = scope.observe(actor);
+                const moved = after === null ? 0 : after.position().minus(here).length();
+                if (contact.hitEntity()) {
+                    const victim = contact.target();
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim) && String(victim.ref()) !== String(actor.ref()))
+                        cleaveHit(current, victim, contact.position());
+                    else whiff(current);
+                    return;
+                }
+                if (contact.blocked() || moved < 0.05 || remaining - moved <= 0.01) { whiff(current); return; }
+                current.after(1, function (later: CombatAction) { press(later, remaining - moved); });
             }
 
             action.after(bowTicks, function (later: CombatAction) {
-                const currentWorld = later.world();
-                const victim = marked !== null && currentWorld.valid(marked) ? marked
-                    : target !== null && currentWorld.valid(target) ? target : null;
-                if (victim === null) { whiff(later); return; }
-                close(later, victim, budget);
+                const scope = later.world();
+                // 上钩判定：仅认本次原本的目标；拜击范围内真正逼近 >= 0.4 格、或真的对自己发起过一次原生攻击。
+                if (target !== null && scope.valid(target) && !scope.friendly(target)) {
+                    const body = scope.observe(target);
+                    const self = scope.observe(actor);
+                    if (body !== null && self !== null && body.position().minus(self.position()).length() <= baitRange) {
+                        // 记忆只保留真正已发生的原生攻击；用 tick 过滤保证只认拜势期间的新出手，这点余量只为避开同刻写入顺序。
+                        const age = Math.max(20, scope.tick() - startTick + 5);
+                        const attack = DamageSemantics.recentAttack(scope, target, age);
+                        const attackedSelf = attack !== null && attack.tick >= startTick && String(attack.target) === String(actor.ref());
+                        let approached = false;
+                        if (startedAt !== null) {
+                            const toSelf = selfStartedAt.minus(startedAt);
+                            const span = toSelf.length();
+                            if (span > 1e-4) {
+                                const travel = body.position().minus(startedAt);
+                                approached = (travel.x() * toSelf.x() + travel.y() * toSelf.y() + travel.z() * toSelf.z()) / span >= 0.4;
+                            }
+                        }
+                        if (attackedSelf || (approached && scope.clear(self.position(), body.position()))) {
+                            hooked = String(target.ref());
+                            WorldFeedback.emit(scope, kowtowcleaveScene, 1, body.position(),
+                                { moment: "open", target: hooked, scale: 1, intensity: intensity }, 24);
+                        }
+                    }
+                }
+                press(later, budget);
             });
         }
     });

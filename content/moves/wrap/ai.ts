@@ -1,4 +1,4 @@
-/** Prefer one dangerous nearby target while healthy enough to maintain the hold; skip an existing coil. */
+/** Prefer one dangerous nearby target while healthy enough to maintain the hold; skip an existing coil and prefer a target that can be pinned. */
 namespace PokemonSkills {
     function wrapValid(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
@@ -18,14 +18,18 @@ namespace PokemonSkills {
         accepts: function (context, capability, target) { return wrapValid(context, target); },
         priority: function (context, capability, target) {
             if (!target || !wrapValid(context, target)) return 0;
-            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            const self = CompanionBehavior.source(context);
+            if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "preferHard", true)) {
                 score += Math.round(CompanionBehavior.ratio(target) * 24);
-                if (target.attacking === CompanionBehavior.source(context).ref) score += 14;
+                if (target.attacking === self.ref) score += 14;
             }
             if (CompanionBehavior.ratio(target) < 0.2) score -= 12;
             if (context.facts.focus === target.ref) score += 14;
+            // 正在跑开的目标不好贴住，降权；自己血线偏低时也不轻易开缠。
+            if (CompanionBehavior.fleeing(context, target)) score -= 10;
+            if (CompanionBehavior.ratio(self) < 0.4) score -= 15;
             return Math.max(0, score);
         }
     });

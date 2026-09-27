@@ -17,7 +17,7 @@
   "worldcombat.skill.powerswap.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.powerswap.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才换势；调小只在贴身时换，调大愿意追出去把气势接走。",
   "worldcombat.skill.powerswap.preference.ai.margin": "换势下限",
-  "worldcombat.skill.powerswap.preference.ai.margin.help": "对方的攻势等级之和（攻 + 特攻）要比自己高出这么多级才出手；调大更挑剔，只在对方强化成型时换，调小更常出手。",
+  "worldcombat.skill.powerswap.preference.ai.margin.help": "按双方实际会用到的攻/特攻折算后，对方那一边要比自己高出这么多级才出手；调大更挑剔，只在对方强化成型时换，调小更常出手。",
   "worldcombat.skill.powerswap.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.powerswap.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去换势。",
   "world_combat.move.powerswap.text.swapped": "攻势对调 攻%1$s 特攻%2$s",

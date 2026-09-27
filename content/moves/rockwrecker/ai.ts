@@ -3,20 +3,33 @@
  *
  * 什么局面下出手：目标可见、敌对、活着，距离在 `ai.minRange` 与投送距离之间——巨石走抛物线，
  * 贴脸时反而难砸准，所以太近不出手；因为落地后要力竭一段，自身生命要高于 `ai.minHealth`（或目标已残）才出手。
- * 对谁出手：候选按距离排序，中远距离（≥5 格）更优先；落点周围挤着更多敌人时再加权——矮掩体后的一堆目标最划算。
- * 怎么够到：共享接近把身位收进投送距离，再朝目标抛出巨石（`kind: "point"`，落点由弹道决定）。
+ * 对谁出手：候选按距离排序，中远距离（≥5 格）更优先；落点周围挤着更多**推得动**的敌人时再加权——
+ *   矮掩体后的一堆目标最划算。击退抗性高到几乎推不动的 Boss 照吃伤害，但不计入「顶开一圈」的收益。
+ * 怎么够到：`capability.data.range` 就是这块石头解得出的可达弹道射程，共享接近把身位收进这个距离再抛出。
  * 出手前后：放完交回共享交战计划；力竭期间招式由共享起手门禁自动屏蔽。
  */
 namespace PokemonSkills {
-    /** 以 target 落点为中心、附近还挤着多少可打的敌人；用于「矮掩体后聚集」的优先级。 */
+    /** 击退抗性高到几乎推不动的目标：石伤照吃，但不该被算作「顶开一圈」的收益。 */
+    function rockwreckerImmovable(world: CombatWorld, target: CompanionBehavior.Entity): boolean {
+        const actor = world.actor(target.ref);
+        if (actor === null) return false;
+        const resistance = world.attributeValue(actor, "minecraft:generic.knockback_resistance");
+        return resistance !== null && resistance.value() >= 0.5;
+    }
+
+    /** 以 target 落点为中心、真实碎裂半径内还挤着多少推得动的可打敌人；用于「矮掩体后聚集」的优先级。 */
     function rockwreckerCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context);
+        const radius = Math.max(1.2, p("rockwrecker", "radius", world));
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || !(other.health > 0) || !other.visible) continue;
             const dx = other.point[0] - target.point[0], dz = other.point[2] - target.point[2];
-            if (Math.sqrt(dx * dx + dz * dz) <= 2.5) count++;
+            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+            if (rockwreckerImmovable(world, other)) continue;
+            count++;
         }
         return count;
     }
@@ -49,7 +62,7 @@ namespace PokemonSkills {
 
     addPreferences("rockwrecker", {}, [
         field(pathOf("crush"), "碾碎", "boolean", {
-            help: "开启：扛起更重的整块巨石——单伤更高、砸得更开、顶得更远，但飞得更慢更容易被躲，力竭也更久；关闭：换成更轻的一块，飞得快、恢复快、碎裂范围更小。"
+            help: "开启：扛起更重的整块巨石——单伤更高、碎裂范围更大，但飞得更慢更容易被躲，力竭也更久；关闭：换成更轻的一块，飞得快、恢复快、碎裂范围更小。"
         }),
         field(pathOf("ai.minRange"), "最近距离", "number", {
             min: 0, max: 8, step: 1,

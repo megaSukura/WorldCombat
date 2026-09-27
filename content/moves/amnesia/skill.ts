@@ -23,7 +23,10 @@ namespace PokemonSkills {
     /** 表现里的参考半径：`data.scale = 实际空明半径 / 这个数`。 */
     const amnesiaReferenceRadius = 1.4;
     /** 缠绕心智的共享身份，按「最碍事的先忘」排序；与生产方无关，只按 tag 读。 */
-    const amnesiaMental = ["confusion", "attract", "taunt", "torment", "encore", "disable"];
+    const amnesiaMental = ["taunt", "disable", "encore", "torment", "confusion", "attract"];
+    function amnesiaSelection(world:CombatWorld,actor:CombatActor,limit:number):string[]{
+        return amnesiaMental.filter(name=>CombatStatus.has(world,actor,name)).slice(0,limit);
+    }
 
     /** 忘掉至多 `limit` 个缠绕心智的状态，返回实际忘掉的个数。 */
     function amnesiaForget(world: CombatWorld, actor: CombatActor, limit: number): number {
@@ -53,6 +56,11 @@ namespace PokemonSkills {
         stationary: true,
         defaults: { deep: true, ai: { maxChase: 14, minGap: 2 } },
         fields: [flag("deep", "彻底失忆")],
+        eligibility:context=>{
+            if(context.phase==="damage")return;
+            const limit=Math.max(1,Math.min(6,Math.round(p("amnesia","purge",context.action||context.world))));
+            CombatStatus.selfCure(context,amnesiaSelection(context.world,context.actor,limit));
+        },
         indicator: function (config, pokemon) {
             return { radius: p("amnesia", "void", pokemon), geometry: "area", style: "void", color: 0xDCEBFF,
                 label: config && config.deep !== false ? "瞬间失忆 · 彻底" : "瞬间失忆 · 一时" };

@@ -6,11 +6,12 @@
  *   多挨一记 `slam` 撞墙伤害。推进式让施法者跟着对手走、把整串吃满；立推式站定不动，一次把人顶很远，
  *   但下一推可能就够不着了。
  *
- * 选取 `kind: "aim"`：可以点任意阵营实体，也可以只给一个方向起手。第一推在身前推撞走廊里取最近的首敌，
- *   之后只维持这个首敌；它被推出射程或倒下，这一串就收手。命中权限仍由命中层按敌我结算。
+ * 选取 `kind: "aim"`：可以点任意阵营实体，也可以只给一个方向起手。第一推在身前推撞走廊里取最近、且没有真实墙面
+ *   挡开的首敌，之后只维持这个首敌；每一推都从真实掌位重新核对近身距离与墙面，它升空、绕到墙后、被推出臂展或
+ *   倒下，这一串就收手。命中权限仍由命中层按敌我结算。
  *
- * 撞墙判定：只有目标背后确有原生方块挡住这一次推、并且这一推确实被它限住（不是被抗性/移动拒绝吃掉）时，
- *   才追加 `slam`。抗击退的 Boss 照常吃推撞伤害，但不会被硬生生算成撞墙。
+ * 撞墙判定：先按抗击退缩放后的预期位移判断这一推确实被限住，再只认目标本次实际推程内的真实墙面；被抗性/移动
+ *   拒绝吃掉的一推不算，远处那堵与本推无关的墙也不算。抗击退的 Boss 照常吃推撞伤害，但不会被硬生生算成撞墙。
  *
  * 幕：
  *   起（brace，提交前）：双手张开、掌心朝前，掌缘聚起一线拳气，只播预告。
@@ -112,16 +113,25 @@ namespace PokemonSkills {
                 let victim: CombatActor | null = null;
                 if (targetRef !== "") {
                     const candidate = scope.actor(targetRef);
-                    if (candidate !== null && scope.valid(candidate) && !scope.friendly(candidate)) victim = candidate;
+                    // 只维持同一个首敌：它升空、绕到墙后或走出臂展，这一串就收手。
+                    if (candidate !== null && scope.valid(candidate) && !scope.friendly(candidate)) {
+                        const view = scope.observe(candidate);
+                        if (view !== null) {
+                            const nearest = scope.closestPoint(candidate, origin);
+                            // 近身够得到、且掌到身体表面没有真实墙挡着才算还能推。
+                            if (nearest.minus(origin).length() <= reach + 0.4 && WorldGeometry.blockHit(scope, origin, nearest) === null) victim = candidate;
+                        }
+                    }
                 } else {
-                    // 第一推：在身前推撞走廊里取最近的首敌。
+                    // 第一推：在身前推撞走廊里取最近、且没有真实墙面挡住的首敌。
                     WorldGeometry.selectEnemies(scope, WorldGeometry.lane(origin, heading, reach, laneHalf, band), function (other) {
                         if (victim !== null) return;
+                        if (WorldGeometry.blockHit(scope, origin, scope.closestPoint(other, origin)) !== null) return;
                         victim = other;
                     });
                 }
                 if (victim === null) {
-                    // 推空：没有首敌可推，这一串到此为止。
+                    // 推空：没有够得着、也没被墙挡开的首敌，这一串到此为止。
                     WorldFeedback.emit(scope, armthrustScene, 1, origin.plus(heading.scale(reach)),
                         { moment: "out", index: shot, thrusts: thrusts, knuckles: knuckles, scale: scale,
                             direction: [heading.x(), heading.y(), heading.z()] }, 16);
@@ -132,15 +142,6 @@ namespace PokemonSkills {
                 const victimRef = String(victim.ref());
                 const body = scope.observe(victim);
                 if (body === null) { settle(current); return; }
-                const gapNow = WorldCombat.point(body.position().x() - origin.x(), 0, body.position().z() - origin.z()).length();
-                // 目标被推出射程：收场。
-                if (gapNow > reach + 0.4) {
-                    WorldFeedback.emit(scope, armthrustScene, 1, origin.plus(heading.scale(Math.min(reach, gapNow))),
-                        { moment: "out", target: victimRef, index: shot, thrusts: thrusts, knuckles: knuckles, scale: scale }, 16);
-                    WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.0, 0)), armthrustOutText, [landed], 20);
-                    settle(current);
-                    return;
-                }
                 // 掌前推：判定与表现共用这条走廊。
                 const pushHeading = WorldGeometry.flatUnit(body.position().minus(origin), heading);
                 WorldFeedback.emit(scope, armthrustScene, 1, origin,
@@ -155,26 +156,35 @@ namespace PokemonSkills {
                 landed++;
                 index = shot;
                 targetRef = victimRef;
+                // 目标被这一推打死：不再对失效受体查墙或补推。
+                if (!scope.valid(victim)) { settle(current); return; }
+                const start = body.position();
+                const width = Math.max(0.2, body.width());
                 // 推开：走原生受击位移，抗推者不被硬移。
-                const moved = scope.valid(victim) ? scope.hitDisplace(victim, pushHeading.scale(push)) : push;
+                const moved = scope.hitDisplace(victim, pushHeading.scale(push));
                 const at = scope.observe(victim);
-                const point = at !== null ? at.position() : body.position();
-                // 撞墙证据：目标背后确有原生方块挡住这一推，且这一推确实被它限住；抗击退/移动拒绝不算。
-                const resistance = scope.attributeValue(victim, "minecraft:generic.knockback_resistance");
-                const refused = resistance !== null && resistance.value() >= 0.9;
-                const clip = refused ? null : scope.clipBlocks(body.position(),
-                    body.position().plus(pushHeading.scale(push + Math.max(0.4, body.width()))));
-                const blocked = clip !== null && clip.blocked();
-                const pinned = !refused && blocked && moved < push - 0.05;
-                if (pinned) {
+                const point = at !== null ? at.position() : start;
+                // 撞墙证据：先按抗击退缩放后的预期位移判断这一推确实被限住，再只认目标本次实际推程内的真实墙面；
+                // 仅被抗性/移动拒绝吃掉的一推不算，远处那堵与本推无关的墙也不算。
+                const resistanceAttr = scope.attributeValue(victim, "minecraft:generic.knockback_resistance");
+                const resistance = resistanceAttr === null ? 0 : Math.max(0, Math.min(1, resistanceAttr.value()));
+                const expected = push * (1 - resistance);
+                const stopped = moved > 0.02 && moved < expected - Math.max(0.06, expected * 0.2);
+                let wall: CombatImpact | null = null;
+                if (stopped) {
+                    const front = start.plus(pushHeading.scale(width * 0.5));
+                    wall = WorldGeometry.blockHit(scope, front, start.plus(pushHeading.scale(push + width)));
+                    if (wall !== null && wall.position().minus(front).length() > moved + Math.max(0.12, width * 0.5)) wall = null;
+                }
+                if (wall !== null) {
                     wallHits++;
-                    const wallPoint = clip !== null ? clip.position() : point;
+                    const wallPoint = wall.position();
                     if (hurt(current, victim, armthrustId, slam, { damage: damageSpec(armthrustId, "slam") }))
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.05, 0)), armthrustSlamText, [], 20);
                     WorldFeedback.emit(scope, armthrustScene, 1, wallPoint,
                         { moment: "slam", target: victimRef, index: shot, thrusts: thrusts, direction: [pushHeading.x(), pushHeading.y(), pushHeading.z()],
                             knuckles: knuckles, scale: scale, intensity: Math.max(0.6, intensity * 1.2),
-                            face: clip !== null ? clip.blockFace() : "" }, 22);
+                            face: wall.blockFace() }, 22);
                     scope.sound("minecraft:entity.generic.big_fall", wallPoint, 16, "{}");
                 } else {
                     WorldFeedback.emit(scope, armthrustScene, 1, point,

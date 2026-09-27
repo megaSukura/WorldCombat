@@ -33,6 +33,10 @@
 namespace PokemonSkills {
     export const firepledgeId = "firepledge";
     export const firepledgeScene = "world_combat:move_firepledge";
+    /** 印记／组合的真实边界与剩余（自定义绘制，绑在场地效果上）。 */
+    export const firepledgeFieldScene = "world_combat:move_firepledge_field";
+    /** 彩虹组合的真正弧冠。 */
+    export const firepledgeCrownScene = "world_combat:move_firepledge_crown";
     /** 本单元的火之誓约印（只由本单元注册；别的誓约按同一套命名读取它，共鸣后仍是这一条规则）。 */
     export const firepledgeScar = "world_combat:field/pledge_fire";
     export const firepledgeHitText = "world_combat.move.firepledge.text.hit";

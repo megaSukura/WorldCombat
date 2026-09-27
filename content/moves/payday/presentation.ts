@@ -8,7 +8,7 @@
  * 范围：自由瞄准单体招；命中与落地都发生在实际接触点/弹体结束点，不是区域招；`data.scale` 让大个子的币串更显眼。
  * 运动：币串沿发射方向直线飞行（服务端投射物），throw 时刻的发射器绑在真实弹体 id 上，与飞币同行；
  *   落地金币沿抛物线弹开。
- * 数：云端与地上的金光数量绑定 `data.coins`（速度派生的撒币数），落地闪光绑定 `data.scatter`
+ * 数：飞行与命中的金光密度绑定 `data.coins`（速度派生的金光密度，只驱动画面、不代表命中次数），落地闪光绑定 `data.scatter`
  *   （真正 dropItem 成功的真币数，失败不计），强度绑定 `data.intensity`（单发威力 / 40）。
  */
 const PaydayDefinition: ParticleDefinition = {

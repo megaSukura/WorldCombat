@@ -31,5 +31,6 @@
   "worldcombat.skill.seismictoss.growth.1": "From level %1$s the pin lasts %2$s s.",
   "world_combat.move.seismictoss.text.hold": "Seized %1$s",
   "world_combat.move.seismictoss.text.slam": "Slammed down",
-  "world_combat.move.seismictoss.text.miss": "Missed the grab"
+  "world_combat.move.seismictoss.text.miss": "Missed the grab",
+  "world_combat.move.seismictoss.text.slip": "Broke free"
 }

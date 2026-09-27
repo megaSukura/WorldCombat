@@ -4,7 +4,7 @@ namespace PokemonSkills {
         const scope = CompanionBehavior.world(context), threat = context.senses["world_combat:threat"] as CompanionBehavior.Entity | null;
         const target = threat && scope.actor(threat.ref);
         if (!target || String(target.domain()) === "cobblemon") return item.data.range;
-        const replay = NativeAttackProjection.recent(scope, target, 1200);
+        const replay = NativeAttackProjection.recent(scope, target, p(mirrormoveId, "focus", scope));
         return replay ? Math.min(item.data.range, NativeAttackProjection.reach(scope, scope.source(), replay)) : item.data.range;
     }
 
@@ -33,10 +33,16 @@ namespace PokemonSkills {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, _item, target) {
             if (!target) return 0;
+            const world = CompanionBehavior.world(context), actor = world.actor(target.ref);
+            if (!actor) return 0;
             const id = CompanionBehavior.fact<string>(context, "world_combat:mirrormove-last", target);
             if (!id) return 0;
-            const power = mirrorPower(id);
-            return power >= 60 ? 46 : 26;
+            // 普通生物读真实已观测的原生攻击量级，Pokemon 读可折返招式的威力；都不再拿字符串当 power=0。
+            if (String(actor.domain()) !== "cobblemon") {
+                const replay = NativeAttackProjection.recent(world, actor, p(mirrormoveId, "focus", world));
+                return replay && replay.fact.amount >= 8 ? 46 : 26;
+            }
+            return mirrorPower(id) >= 60 ? 46 : 26;
         }
     });
 

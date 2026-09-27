@@ -17,18 +17,13 @@ namespace PokemonSkills {
     const ragingbullBreakText = "world_combat.move.ragingbull.text.break";
     const ragingbullMissText = "world_combat.move.ragingbull.text.miss";
 
-    /** 水平面上点到线段 from–to 的距离；屏障是水平圆盘，用它判断身体是否真的扫过。 */
-    function ragingbullFlatDistance(point: CombatPoint, from: CombatPoint, to: CombatPoint): number {
-        const ax = from.x(), az = from.z(), bx = to.x(), bz = to.z();
-        const dx = bx - ax, dz = bz - az, lengthSquared = dx * dx + dz * dz;
-        if (lengthSquared < 1e-9) return Math.sqrt((point.x() - ax) * (point.x() - ax) + (point.z() - az) * (point.z() - az));
-        const t = Math.max(0, Math.min(1, ((point.x() - ax) * dx + (point.z() - az) * dz) / lengthSquared));
-        const cx = ax + dx * t, cz = az + dz * t;
-        return Math.sqrt((point.x() - cx) * (point.x() - cx) + (point.z() - cz) * (point.z() - cz));
+    /** 三维上点到线段 from–to 的距离；光幕是水平圆盘，只有真正同高度的冲程才算交会。 */
+    function ragingbullSegmentDistance(point: CombatPoint, from: CombatPoint, to: CombatPoint): number {
+        return WorldGeometry.closestOnSegment(point, from, to).minus(point).length();
     }
     /**
-     * 清除 from–to 这段真实行进轨迹（半径 radius 的胶囊）碰到、且从轨迹起点通视的屏障：场地层与身上的
-     * 共享身份都清；cleared 记录已处理对象，保证同一次冲锋里只清一次。返回清除层数与位置。
+     * 清除 from–to 这段真实行进轨迹（半径 radius 的胶囊）碰到、且从轨迹起点通视的**敌方**屏障：场地层与身上的
+     * 共享身份都清；友方所有者与自己一侧的屏不动。cleared 记录已处理对象，保证同一次冲锋里只清一次。返回清除层数与位置。
      */
     function ragingbullCross(world: CombatWorld, from: CombatPoint, to: CombatPoint, radius: number,
         cleared: { [key: string]: boolean }): { count: number; points: CombatPoint[] } {
@@ -39,8 +34,10 @@ namespace PokemonSkills {
             const area = zones[z];
             const key = "field:" + String(area.id);
             if (cleared[key]) continue;
+            const owner = area.source ? world.actor(area.source) : null;
+            if (owner !== null && world.friendly(owner)) continue;
             const at = WorldCombat.point(area.position[0], area.position[1], area.position[2]);
-            if (ragingbullFlatDistance(at, from, to) > area.radius + radius) continue;
+            if (ragingbullSegmentDistance(at, from, to) > area.radius + radius) continue;
             if (!world.clear(from, at)) continue;
             if (world.operation(area.id, "world_combat:dispel", "{}")) { cleared[key] = true; count++; points.push(at); }
         }
@@ -54,7 +51,7 @@ namespace PokemonSkills {
             if (cleared[key]) continue;
             const body = world.observe(actor);
             if (body === null) continue;
-            if (ragingbullFlatDistance(body.position(), from, to) > radius + body.width() * 0.5) continue;
+            if (ragingbullSegmentDistance(body.position(), from, to) > radius + body.width() * 0.5) continue;
             if (!world.clear(from, body.position())) continue;
             const removed = CombatStatus.cureTagged(world, actor, WorldEffects.categories.screen);
             if (removed > 0) { cleared[key] = true; count += removed; points.push(body.position()); }
@@ -108,7 +105,6 @@ namespace PokemonSkills {
             const radius = p("ragingbull", "collisionRadius", action);
             const power = p("ragingbull", "ram", action);
             const shove = p("ragingbull", "shove", action);
-            const wardBreak = p("ragingbull", "wardBreak", action);
             const minimum = p("ragingbull", "minimumMove", action);
             const trample = !!(config && config.trample);
             const maxTargets = trample ? 4 : 1;
@@ -122,11 +118,10 @@ namespace PokemonSkills {
                 if (result.count <= 0) return;
                 wards += result.count;
                 const scope = current.world();
+                // 碎片只从身体真实交会到的那些屏位置冒出，不在远端用一个中心大爆。
                 for (let i = 0; i < result.points.length && i < 6; i++)
                     WorldFeedback.emit(scope, ragingbullScene, 1, result.points[i],
-                        { moment: "break", wards: result.count, scale: wardBreak / 8 }, 24);
-                WorldFeedback.emit(scope, ragingbullScene, 1, at,
-                    { moment: "break", wards: result.count, scale: wardBreak / 8 }, 24);
+                        { moment: "break", wards: result.count, scale: radius / 0.5 }, 24);
                 sound(current, "minecraft:block.glass.break");
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), ragingbullBreakText, [result.count], 28);
             }
@@ -156,15 +151,21 @@ namespace PokemonSkills {
                         const ref = String(target.ref());
                         if (!struck[ref]) {
                             struck[ref] = true;
-                            hits++;
-                            const burst = ragingbullCross(scope, point, point, wardBreak, cleared);
-                            if (burst.count > 0) showCross(current, burst, point);
+                            // 先破这段真实冲程交会的敌方屏，再结算伤害；用身体实际落点取这一段。
+                            const selfBody = scope.observe(current.actor());
+                            const contact = selfBody === null ? origin.plus(direction.scale(swept.moved)) : selfBody.position();
+                            const crossed = ragingbullCross(scope, origin, contact, radius, cleared);
+                            if (crossed.count > 0) showCross(current, crossed, contact);
                             const landed = impact(current, hit, "ragingbull", power,
                                 { damage: damageSpec("ragingbull", "ram"), contact: true });
-                            WorldFeedback.emit(scope, ragingbullScene, 1, point,
-                                { moment: "ram", target: ref, tint: tint, hits: hits, power: Math.round(power), scale: scale }, 26);
-                            if (landed && scope.valid(target)) scope.hitDisplace(target, direction.scale(shove));
-                            sound(current, "minecraft:entity.ravager.attack");
+                            // 只有真正打实的敌人才计入 1／4 个成功目标和回执；友方或免伤不报攻击成功。
+                            if (landed) {
+                                hits++;
+                                if (scope.valid(target)) scope.hitDisplace(target, direction.scale(shove));
+                                WorldFeedback.emit(scope, ragingbullScene, 1, point,
+                                    { moment: "ram", target: ref, tint: tint, hits: hits, power: Math.round(power), scale: scale }, 26);
+                                sound(current, "minecraft:entity.ravager.attack");
+                            }
                         }
                     }
                     if (hits >= maxTargets) { finish(current, "settle"); return; }
@@ -179,10 +180,12 @@ namespace PokemonSkills {
                 }
                 travelled += moved;
                 if (hit.blocked() || moved < minimum || travelled >= length) { finish(current, "settle"); return; }
-                movementScenes.show(current, "charge", origin, { moment: "charge", tint: tint, scale: scale, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
+                movementScenes.show(current, "charge", origin, { moment: "charge", tint: tint, scale: scale,
+                    direction: [direction.x(), direction.y(), direction.z()], ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }
-            movementScenes.show(action, "charge", action.origin(), { moment: "charge", tint: tint, scale: scale, ratio: 0 });
+            movementScenes.show(action, "charge", action.origin(), { moment: "charge", tint: tint, scale: scale,
+                direction: [direction.x(), direction.y(), direction.z()], ratio: 0 });
             sound(action, "minecraft:entity.goat.prepare_ram");
             advance(action);
         }

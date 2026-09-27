@@ -17,6 +17,9 @@ public final class CombatProjectile extends ThrowableProjectile {
     private static final EntityDataAccessor<Float> GRAVITY = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Float> RADIUS = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<String> APPEARANCE = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Float> ACCELERATION = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> DRAG = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.FLOAT);
+    private static final EntityDataAccessor<Float> WATER_DRAG = SynchedEntityData.defineId(CombatProjectile.class, EntityDataSerializers.FLOAT);
     private MinecraftCombat combat;
     private long action;
     private double range, travelled;
@@ -36,6 +39,7 @@ public final class CombatProjectile extends ThrowableProjectile {
     public CombatProjectile(EntityType<? extends CombatProjectile> type, Level level) { super(type, level); }
     @Override protected void defineSynchedData(SynchedEntityData.Builder builder) {
         builder.define(GRAVITY, 0f); builder.define(RADIUS, 0f); builder.define(APPEARANCE, "");
+        builder.define(ACCELERATION, 0f); builder.define(DRAG, -1f); builder.define(WATER_DRAG, -1f);
     }
     public void configure(MinecraftCombat combat, long action, LivingEntity owner, Vec3 origin, Vec3 velocity,
                           double gravity, double radius, double range, int lifetime, Consumer<Impact> impact, Runnable complete, String appearance) {
@@ -44,7 +48,28 @@ public final class CombatProjectile extends ThrowableProjectile {
         setOwner(owner); setPos(origin); setDeltaMovement(velocity);
         entityData.set(GRAVITY, (float) gravity); entityData.set(RADIUS, (float) radius);
         entityData.set(APPEARANCE, Appearance.of(appearance).json());
+        motionOptions(appearance);
         options(appearance);
+    }
+    private void motionOptions(String json) {
+        if (json == null || json.isBlank()) return;
+        var data = com.google.gson.JsonParser.parseString(json).getAsJsonObject();
+        double acceleration = data.has("acceleration") ? data.get("acceleration").getAsDouble() : 0;
+        double drag = data.has("drag") ? data.get("drag").getAsDouble() : .99;
+        double waterDrag = data.has("waterDrag") ? data.get("waterDrag").getAsDouble() : .8;
+        ProjectileMotion.validate(acceleration, drag); ProjectileMotion.validate(acceleration, waterDrag);
+        entityData.set(ACCELERATION, (float) acceleration);
+        if (data.has("drag")) entityData.set(DRAG, (float) drag);
+        if (data.has("waterDrag")) entityData.set(WATER_DRAG, (float) waterDrag);
+    }
+    /** Input to the original native scale operation; default returns the same vector. */
+    public Vec3 acceleratedVelocity(Vec3 velocity) {
+        double acceleration = entityData.get(ACCELERATION);
+        return acceleration == 0 ? velocity : MinecraftCombat.vec(ProjectileMotion.next(MinecraftCombat.point(velocity), acceleration, 1));
+    }
+    public double velocityRetention(double nativeDrag) {
+        double configured = entityData.get(isInWater() ? WATER_DRAG : DRAG);
+        return configured < 0 ? nativeDrag : configured;
     }
     private void options(String json) {
         if (json == null || json.isBlank()) return;
@@ -53,7 +78,8 @@ public final class CombatProjectile extends ThrowableProjectile {
             hitAllies = root.has("hitAllies") && root.get("hitAllies").getAsBoolean();
             if (root.has("homing") && root.get("homing").isJsonObject()) {
                 var homing = root.getAsJsonObject("homing");
-                homingTarget = homing.has("target") ? java.util.UUID.fromString(homing.get("target").getAsString().split("/")[0]) : null;
+                var target = homing.has("target") ? homing.get("target").getAsString() : "";
+                homingTarget = target.isBlank() ? null : java.util.UUID.fromString(target.split("/")[0]);
                 homingTurn = homing.has("turn") ? Math.max(0, Math.min(90, homing.get("turn").getAsDouble())) : 6;
                 homingDelay = homing.has("delay") ? Math.max(0, homing.get("delay").getAsInt()) : 0;
                 if (homing.has("range")) homingRange = Math.max(1, Math.min(64, homing.get("range").getAsDouble()));
@@ -72,6 +98,7 @@ public final class CombatProjectile extends ThrowableProjectile {
         } catch (RuntimeException ignored) { }
     }
     private void steer() {
+        if (homingTarget != null && pierced.contains(homingTarget)) { homingTarget = null; return; }
         if (homingTarget == null || tickCount < homingDelay || !(level() instanceof net.minecraft.server.level.ServerLevel level)) return;
         var target = level.getEntity(homingTarget);
         if (!(target instanceof LivingEntity living) || !living.isAlive() || living.distanceToSqr(this) > homingRange * homingRange) return;
@@ -129,6 +156,7 @@ public final class CombatProjectile extends ThrowableProjectile {
             if (reflected.lengthSqr() < 1e-4) continues = false;
         }
         if (!continues) settled = true;
+        combat.runtime().projectiles().observe(action, getStringUUID(), MinecraftCombat.point(hit.getLocation()));
         impact.accept(new Impact(MinecraftCombat.point(hit.getLocation()), target instanceof LivingEntity living ? combat.bind(living) : null,
             hit.getType() == HitResult.Type.BLOCK, getStringUUID(), target == null ? "" : target.getStringUUID(),
             getOwner() instanceof LivingEntity owner ? combat.bind(owner) : null, MinecraftCombat.point(impactOrigin),
@@ -144,6 +172,7 @@ public final class CombatProjectile extends ThrowableProjectile {
         if (!level().isClientSide && !settled) steer();
         super.tick(); // Native sweep, NeoForge impact event, deflection, water drag, gravity and rotation.
         if (level().isClientSide || settled) return;
+        combat.runtime().projectiles().observe(action, getStringUUID(), MinecraftCombat.point(position()));
         travelled += position().distanceTo(previous);
         if (tickCount >= lifetime || travelled >= range) discard();
     }
@@ -155,6 +184,9 @@ public final class CombatProjectile extends ThrowableProjectile {
             combat.runtime().projectiles().cancel(action, getStringUUID());
             return;
         }
-        if (!level().isClientSide && !settled && complete != null) { settled = true; complete.run(); }
+        if (!level().isClientSide && !settled && complete != null) {
+            combat.runtime().projectiles().observe(action, getStringUUID(), MinecraftCombat.point(position()));
+            settled = true; complete.run();
+        }
     }
 }

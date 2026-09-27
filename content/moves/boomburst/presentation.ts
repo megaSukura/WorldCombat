@@ -1,13 +1,14 @@
 /**
  * 爆音波 / boomburst 的客户端表现。
  *
- * 一句话：施法者先憋住一口气，身周的空气与尘点被压着吸拢，随后一圈声压球猛地整圈炸开，
+ * 一句话：施法者先憋住一口气，身周的空气与尘点被压着吸拢，随后一圈声压圈猛地整圈炸开，
  * 被波及的地方气浪向外翻卷，最后身周荡开几圈余响。
  * 色相家族：冷白与青灰（sonicboom / giantring_white / xlring / impact_normal / orb / tinydust）为主体，
- * 近白只做声压球核心的强调。
- * 拍子：起（charge 压气吸尘）→ 爆（burst 声压球炸开、hit 逐处轰中并被吹飞）→ 收（ringing 余响 / miss 落空）。
- * 范围：charge / burst / ringing 的地面圈按服务端传的 `data.radius`（真实波及半径）画出，玩家看到的圈就是会被轰到的地。
- * 运动：起手尘点与气旋向内收束，炸开时声压球向外高速翻卷；目标确实被击飞时才在它身上甩出一蓬外散的轨迹，
+ * 近白只做声压圈核心的强调。
+ * 拍子：起（charge 压气吸尘）→ 爆（burst 声压圈炸开、hit 逐处轰中并被吹飞）→ 收（ringing 余响 / deaf 耳鸣未散 / miss 落空）。
+ * 范围：charge / burst / ringing 的地面圈按服务端传的 `data.radius`（真实波及半径）画出，玩家看到的圈就是会被轰到的地；
+ *   burst 的立体边界画成同半径的筒壁（判定本身就是一圈圆柱），不再画超出判定的 3D 球壳。
+ * 运动：起手尘点与气旋向内收束，炸开时声压圈向外高速翻卷；目标确实被击飞时才在它身上甩出一蓬外散的轨迹，
  * 原生抗性拒绝位移时只留下命中的冲击、不画飞出。
  * 数：`data.rings`（特攻与等级派生）决定余响环数，`data.marks`（威力派生）决定炸开的高光量，
  * `data.cells`（半径派生）决定气浪尘量，`data.flow`（半径派生）决定环上密度，`data.count`（本次威力×距离派生）决定命中冲击量，
@@ -38,7 +39,7 @@ const BoomburstDefinition: ParticleDefinition = {
                     color: 0xC8C8D0, alpha: [0.4, 0], light: "world", maxParticles: 50
                 },
                 {
-                    name: "cupped", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "none",
+                    name: "cupped", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/orb/orb",
                     rate: 12, shape: { kind: "ring", radius: { data: "area", fallback: 4.8 } },
                     direction: "inward", speed: [0.03, 0.1], spread: 10,
@@ -61,16 +62,17 @@ const BoomburstDefinition: ParticleDefinition = {
                     color: 0xF0F0FF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 24
                 },
                 {
-                    name: "sphere", bind: "source", height: 0.6, fit: "none",
+                    // 判定是绕自身的一圈圆柱（地面整圈、限高），画面用同半径的筒壁，不再画不存在的 3D 球壳。
+                    name: "sphere", bind: "source", height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
                     burst: { count: { data: "rings", fallback: 8 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 4.8 } },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 4.8 }, length: 7.5, thickness: 0.18 },
                     direction: "outward", speed: [0.2, 0.6], spread: 16,
                     lifetime: [10, 18], size: [0.8, 1.4],
                     color: 0xE8E8F8, alpha: [0.5, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "wave", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "wave", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/xlring",
                     rate: { data: "flow", fallback: 90 }, shape: { kind: "ring", radius: { data: "radius", fallback: 4.8 } },
                     direction: "outward", speed: [0.05, 0.2], spread: 8,
@@ -87,7 +89,7 @@ const BoomburstDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 50
                 },
                 {
-                    name: "air", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "air", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "flow", fallback: 80 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4.8 }, thickness: 0.9 },
                     direction: "outward", speed: [0.2, 0.6], spread: 16,
@@ -136,7 +138,7 @@ const BoomburstDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 28 },
             emitters: [
                 {
-                    name: "tone", bind: "point", offset: [0, 0.15, 0], height: 0, fit: "none",
+                    name: "tone", bind: "point", offset: [0, 0.15, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/xlring",
                     rate: { data: "flow", fallback: 50 }, shape: { kind: "ring", radius: { data: "radius", fallback: 4.8 } },
                     direction: "outward", speed: [0.01, 0.05], spread: 8,
@@ -144,12 +146,35 @@ const BoomburstDefinition: ParticleDefinition = {
                     color: 0xD8D8E8, alpha: [0.28, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "motes", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "none",
+                    name: "motes", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
                     rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 4.8 }, thickness: 0.9 },
                     direction: "up", speed: [0.01, 0.05], spread: 10,
                     lifetime: [18, 30], size: [0.06, 0.01],
                     color: 0xE0E0F0, alpha: [0.25, 0], light: "full", maxParticles: 60
+                }
+            ]
+        },
+        deaf: {
+            // 耳鸣余响：跟在真正带着 deafened 状态的个体头上，状态在就续，被驱散/到期就收。
+            duration: 0,
+            exit: { drain: 24 },
+            emitters: [
+                {
+                    name: "deaf_tone", bind: "target", height: 1.1,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 3, shape: { kind: "ring", radius: 0.28 },
+                    direction: "up", speed: [0.01, 0.03], spin: 4,
+                    lifetime: [12, 20], size: [0.26, 0.5],
+                    color: 0xD8D8E8, alpha: [0.35, 0], alphaMode: "sin", light: "full", maxParticles: 12
+                },
+                {
+                    name: "deaf_mote", bind: "target", height: 1.2,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
+                    rate: 3, shape: { kind: "circle", radius: 0.22 },
+                    direction: "up", speed: [0.01, 0.03],
+                    lifetime: [14, 24], size: [0.07, 0.01],
+                    color: 0xE0E0F0, alpha: [0.3, 0], light: "full", maxParticles: 12
                 }
             ]
         },

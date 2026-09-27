@@ -61,6 +61,15 @@ public final class NativeSweepChecks {
             var endpoint = combat.moveSweep(actor, null, new Point(gap, 0, 0), .2);
             require(endpoint.hitEntity() && endpoint.target().equals(victim)
                 && Math.abs(source.getBoundingBox().maxX - target.getBoundingBox().minX) < 1e-6, "Exact body endpoint lost its hit");
+            double contactedX=source.getX();
+            var retreat=combat.moveSweep(actor,null,new Point(-.4,0,0),.2);
+            require(!retreat.hitEntity() && !retreat.blocked() && Math.abs(source.getX()-contactedX+.4)<1e-6,
+                "A native body contact prevented a reverse step away from the victim");
+            combat.moveSweep(actor,null,new Point(.4,0,0),.2);
+            double contactedZ=source.getZ();
+            var sideStep=combat.moveSweep(actor,null,new Point(0,0,.3),.2);
+            require(!sideStep.hitEntity() && !sideStep.blocked() && Math.abs(source.getZ()-contactedZ-.3)<1e-6,
+                "A native body contact prevented a tangent step along the victim");
             source.moveTo(3.5, 100, 2);
             var touching = combat.moveSweep(actor, null, new Point(.2, 0, 0), .2);
             require(touching.hitEntity() && Math.abs(source.getX() - 3.5) < 1e-6, "Initial body overlap moved through its contact");
@@ -74,6 +83,14 @@ public final class NativeSweepChecks {
                 require(wide.hitEntity() && wide.target().equals(combat.bind(shortTarget)), "Wide/tall body missed a short native target");
                 require(Math.abs(source.getBoundingBox().maxX - shortTarget.getBoundingBox().minX) < 1e-6, "Body sweep overran first contact");
             } finally { shortTarget.discard(); }
+            source.moveTo(2, 100, 2); target.moveTo(4, 100, 2);
+            var edgeTarget = mob(EntityType.CHICKEN, level, 6); edgeTarget.moveTo(6, 100, 3.3);
+            try {
+                var next = combat.moveSweep(actor, null, new Point(3.5, 0, 0), .2, java.util.Set.of(victim.ref()));
+                require(next.hitEntity() && next.target().equals(combat.bind(edgeTarget)), "Excluded prior contact hid a second body at the full body's side");
+                require(Math.abs(source.getBoundingBox().maxX - edgeTarget.getBoundingBox().minX) < 1e-6,
+                    "Continuation failed to reach the next body's exact contact face");
+            } finally { edgeTarget.discard(); }
             source.getAttribute(Attributes.SCALE).setBaseValue(1); source.refreshDimensions();
 
             wall(level, true); source.moveTo(2, 100, 2); target.moveTo(6, 100, 2);

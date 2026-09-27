@@ -6,15 +6,15 @@
  *
  * 翻译：把「杀气 + 俯冲」翻成一段**先张势、再扑下**的两拍动作——起手先把自己的杀气铺成一圈可见的威压，
  *   再从高处沿一条弧线俯冲砸在锁定点上；落点小范围内所有敌人一起吃这一撞，被杀气罩住、被速度差镇住的
- *   目标更容易被撞懵。命中率刻意做得比一般接触招低（原生 75%），因为俯冲的落点在起跳时锁定，对手在腾空
- *   期走开就能躲过——这就是它「一边威慑一边撞」的形状。
+ *   目标更容易被撞懵。落点精度刻意做得比一般接触招低（原生 75%）：砸偏时本体真的落在偏出去的位置、把预告
+ *   一起偏出去，仍然只有真实落地才结算——这就是它「一边威慑一边撞」的形状。
  *
  * 与同族分开：泰山压顶（bodyslam）是原地起跳的坐压、靠体重压出麻痹；龙之俯冲是**先亮杀气再前扑**的俯冲，
  *   身份在那圈起手威压：玩家从画面就知道它将往哪落、该往哪躲。疯狂滚压（steamroller）贴地滚过一排，不腾空。
  *
  * 数值分散（每个参数各吃不同的精灵数据）：
  *   dive      俯冲威力：物攻给撞击狠度、体重给砸下的份量、身高给龙体的长度；威压式 ×0.94、迅袭式 ×1.08。
- *   accuracy  命中率：速度决定能不能在空中修正落点（原生 75%）；威压式压低、迅袭式抬高。
+ *   accuracy  落点精度：速度决定能不能在空中修正落点（原生 75%）；威压式压低、迅袭式抬高。砸偏量在起跳时决定。
  *   menace    威压半径：特攻决定杀气的铺开范围，等级给一点；威压式 ×1.3。详情页可读，也是画面里威压圈的大小。
  *   flinchChance 畏缩几率：特攻 + **自己比目标快多少**（快出来的速度=扑到的把握）；威压式 ×1.25。
  *   flinchTicks  畏缩持续：等级与威压式。
@@ -22,7 +22,7 @@
  *   push         顶开距离：体重与物攻。
  *   hop／airTicks 俯冲高度与滞空：速度决定起跳与落地的快慢。
  *   dust         土屑点数：物攻派生，表现按它发射。
- *   tempo/recover/recharge 速度与等级决定起手、收招与冷却；威压式更慢更费。
+ *   tempo/settle/recharge 速度与等级决定起手、收招与冷却；威压式更慢更费。
  *
  * 配置 `dread`（威压式，默认关）双向取舍：
  *   开（威压）：威压圈更大（×1.3）、畏缩更易（×1.25）更久（+4 刻），但俯冲威力 ×0.94、命中率 −0.04、
@@ -38,6 +38,7 @@ namespace PokemonSkills {
     export const dragonrushHitText = "world_combat.move.dragonrush.text.hit";
     export const dragonrushMissText = "world_combat.move.dragonrush.text.miss";
     export const dragonrushFlinchText = "world_combat.move.dragonrush.text.flinch";
+    export const dragonrushInterruptText = "world_combat.move.dragonrush.text.interrupt";
 
     /** 速度差：自己速度 − 目标速度，只取正；扑得比对手快多少，决定这一撞镇不镇得住。 */
     const dragonrushEdge: Formula.Node = F.stat("speed")
@@ -67,13 +68,13 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "整条龙从高处砸下这一下的威力；物攻给狠度、体重给份量、身高给龙体的长度。迅袭式更重。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 命中率：0.66 + 速度偏移[−0.08,0.18] + 等级偏移[0,0.06] + 威压 −0.04 / 迅袭 +0.04；夹 0.55..0.92。 */
+        /** 落点精度：0.66 + 速度偏移[−0.08,0.18] + 等级偏移[0,0.06] + 威压 −0.04 / 迅袭 +0.04；夹 0.55..0.92。 */
         accuracy: percent(
             F.base(0.66).plus(F.stat("speed").minus(70).times(0.0022).clamp(-0.08, 0.18))
                 .plus(F.level().minus(20).times(0.001).clamp(0, 0.06))
                 .plus(F.when(F.pref("dread"), F.const(-0.04), F.const(0.04)))
                 .clamp(0.55, 0.92).round(3),
-            "命中率", "俯冲能不能砸在锁定的落点上（原生 75%）；速度快的个体能在空中修正，威压式扑得更沉、更容易砸偏。落点在起跳时锁定，对手走开就躲过了。"),
+            "落点精度", "俯冲砸在锁定落点上的把握（原生 75%）；速度快的个体能在空中修正，威压式扑得更沉、更容易砸偏。砸偏时本体真的落在偏出去的位置并画出预告，不是落定后再空掷。"),
         /** 威压半径：2.6 + 特攻偏移[−0.6,2.2] + 等级偏移[0,1.0]；威压 ×1.3；夹 2..5.6。 */
         menace: formula(
             F.base(2.6).plus(F.stat("specialAttack").minus(60).times(0.02).clamp(-0.6, 2.2))
@@ -141,8 +142,8 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("dread"), F.const(3), F.const(0)))
                 .clamp(5, 16).round(0),
             "起手", "从张势到起跳的时间；速度越快越早扑出，威压式要多亮一会儿杀气——这段时间是对手唯一能拉开的机会。"),
-        /** 收招：12 − 速度偏移[−2,2.5] 刻；夹 6..16。 */
-        recover: seconds(
+        /** 收招：12 − 速度偏移[−2,2.5] 刻；夹 6..16。改名避开保留键 recover，resolve 才能读到这条公式。 */
+        settle: seconds(
             F.base(12).minus(F.stat("speed").minus(70).times(0.02).clamp(-2, 2.5)).clamp(6, 16).round(0),
             "收招", "砸地后重新站稳的时间；快脚收得利落。"),
         /** 冷却：38 − 等级偏移[0,7] + 威压 8；夹 22..58。 */

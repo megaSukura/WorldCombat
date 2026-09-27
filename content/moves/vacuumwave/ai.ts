@@ -1,11 +1,13 @@
 /**
  * 真空波 / vacuumwave 的伙伴 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 12）格之内；它是远程波，够不到交给共享接近逻辑。
+ * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 12）格之内，且两者之间中心线没被墙挡住；
+ *   它是远程波，够不到或隔墙交给共享接近逻辑。
  * 对谁出手：当前威胁；不可见、友方或已倒下的不接受。
  * 选择偏好：`ai.pullRunners`（默认开）时优先对正在逃开的目标推进——这一道正好把它抽回近身；
  *   身处中远距离（大于 5 格）时更值得用一记远程波先手；贴到脸上（2 格内）则让位给近战，分数压低。
- * 优先次序：基础 21；目标在逃 +14；距离大于 5 格 +6；距离小于 2 格 −6；目标残血 +6。
+ *   吸力的近战收益也算进去：目标在 3.5 格开外时，这一拉能把它带进贴身范围，分数略增。
+ * 优先次序：基础 21；目标在逃 +14；距离大于 5 格 +6；距离 3.5 格开外 +4（吸回近身）；距离小于 2 格 −6；目标残血 +6。
  * 够不到怎么办：射程由 `reach` 决定，共享任务先把身位收进波面射程再推。
  * 放完之后：被扫到的人朝自己滑，交回共享交战计划继续贴身打。
  */
@@ -13,8 +15,10 @@ namespace PokemonSkills {
     function vacuumwaveWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-            <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
+        const self = CompanionBehavior.source(context);
+        if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 12)) return false;
+        // 路线要成立：波沿中心线推进，墙后的人这一道够不到，交给别的招或先走位。
+        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
     CompanionBehavior.registerUse(vacuumwaveId, {
@@ -35,6 +39,7 @@ namespace PokemonSkills {
             let score = 21;
             if (CompanionBehavior.ai<boolean>(capability, "pullRunners", true) && CompanionBehavior.fleeing(context, target)) score += 14;
             if (distance > 5) score += 6;
+            if (distance > 3.5) score += 4; // 吸回后进入贴身范围，这一道顺带创造了近战机会
             if (distance < 2) score -= 6;
             if (CompanionBehavior.ratio(target) <= 0.35) score += 6;
             return score;

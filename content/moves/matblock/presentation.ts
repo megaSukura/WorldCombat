@@ -50,27 +50,33 @@ const MatBlockDefinition: ParticleDefinition = {
             ]
         },
         hold: {
-            emitters: [{ name: "sheet_outline", bind: "path", fit: "none",
-                particle: "world_combat_core:cobblemon/generic/screen_color", rate: 24,
-                shape: { kind: "polyline" }, direction: "up", speed: [0, .002],
-                lifetime: [8, 12], size: [.16, .12], color: 0xD9C08A, alpha: [.55, .15], light: "world", maxParticles: 36 }]
+            emitters: [
+                { name: "sheet_outline", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/screen_color", rate: 24,
+                    shape: { kind: "polyline" }, direction: "up", speed: [0, .002],
+                    lifetime: [8, 12], size: [.16, .12], color: 0xD9C08A, alpha: [.55, .15], light: "world", maxParticles: 36 },
+                { name: "sheet_weave", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/screen", rate: 7,
+                    shape: { kind: "polygon" }, direction: "outward", speed: [0.002, 0.01],
+                    lifetime: [10, 18], size: [0.3, 0.18], color: 0xD9C08A, alpha: [0.15, 0.02], light: "world", maxParticles: 26 }
+            ]
         },
         block: {
             duration: 22,
             exit: { stop: 8, drain: 18 },
             emitters: [
                 {
-                    name: "block_flex", bind: "target", fit: "body", height: 0.5,
+                    name: "block_flex", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass_white",
-                    burst: { count: { data: "slats", fallback: 10 } }, shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "away", speed: [0.08, 0.26], drag: 0.9, spin: 12,
+                    burst: { count: { data: "slats", fallback: 10 } }, shape: { kind: "ring", radius: 0.45 },
+                    orient: "direction", direction: "outward", speed: [0.08, 0.26], drag: 0.9, spin: 12,
                     lifetime: [8, 16], size: [0.3, 0.06],
                     color: 0xF0E2BC, alpha: [0.9, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "block_straw", bind: "target", fit: "body", height: 0.4,
+                    name: "block_straw", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    burst: { count: { data: "fibers", fallback: 24 } }, shape: { kind: "sphere", radius: 0.5 },
+                    burst: { count: { data: "fibers", fallback: 24 } }, shape: { kind: "sphere", radius: 0.42 },
                     direction: "away", speed: [0.06, 0.2], gravity: 0.02, drag: 0.92, spin: 18,
                     lifetime: [8, 16], size: [0.11, 0.03],
                     color: 0x6E7A46, alpha: [0.85, 0], light: "world", maxParticles: 70

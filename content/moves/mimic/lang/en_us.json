@@ -25,5 +25,5 @@
   "world_combat.move.mimic.text.empty": "Nothing to borrow",
   "world_combat.move.mimic.text.noprovider": "No demonstrator to borrow from",
   "world_combat.move.mimic.text.snap": "The line was cut",
-  "worldcombat.skill.mimic.world": "A known native attack successfully used by a non-Pokémon within %1$s is translated into an existing move, borrowed for %2$s: ordinary melee→Tackle, sting→Poison Sting, ram→Headbutt, mace→Slam, arrow→Fury Attack, trident→Horn Attack, fireball→Ember, sonic boom→Sonic Boom, indirect magic→Psybeam. Unlisted attacks cannot be copied."
+  "worldcombat.skill.mimic.world": "A known native attack successfully used by a non-Pokémon within %1$s is translated into an existing move, borrowed for %2$s: ordinary melee→Tackle, sting/arrow→Poison Sting, ram→Headbutt, mace→Slam, trident→Pin Missile, fireball→Ember, sonic boom→Sonic Boom, indirect magic→Psybeam. Unlisted attacks cannot be copied."
 }

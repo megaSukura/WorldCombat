@@ -27,7 +27,6 @@ public final class WorldCombatCore {
         NativeItemUse.install(NeoForge.EVENT_BUS);
         NativeMobEffectGate.install(NeoForge.EVENT_BUS);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeDeathFacts::observe);
-        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, NativeCriticals::apply);
         dev.worldcombat.core.client.particles.ParticleTypes.register(modBus);
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.PlayLevelSoundEvent.AtPosition event) -> {
             if (event.getLevel() instanceof ServerLevel level) {
@@ -49,13 +48,10 @@ public final class WorldCombatCore {
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent event) -> {
             if (event.getEntity().level() instanceof ServerLevel level
                 && !CombatServices.get(level.getServer()).allowsKnockback(event.getEntity())) event.setCanceled(true);
+            NativeHitMotion.adjust(event);
         });
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent event) -> {
             if (event.getLevel() instanceof ServerLevel level) CombatServices.get(level.getServer()).effects().placed(event);
-        });
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Post event) -> {
-            if (event.getEntity().level() instanceof ServerLevel level && !CombatServices.domain(event.getEntity()).deferredDamage())
-                CombatServices.get(level.getServer()).applied(event.getEntity(), event.getSource());
         });
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.level.BlockDropsEvent event) -> {
             CombatServices.get(event.getLevel().getServer()).effects().drops(event);
@@ -69,19 +65,6 @@ public final class WorldCombatCore {
         });
         if (net.neoforged.fml.ModList.get().isLoaded("curios")) dev.worldcombat.core.integration.CuriosEquipment.install();
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent event) -> WorldEquipment.changed(event.getEntity()));
-        // Effect endings reach content as one topic; the Remove event fires before the actual removal, so a cancelled removal is skipped.
-        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (net.neoforged.neoforge.event.entity.living.MobEffectEvent.Remove event) -> {
-            if (!event.isCanceled() && event.getEffectInstance() != null && event.getEntity().level() instanceof ServerLevel level)
-                CombatServices.get(level.getServer()).mobEffectEnded(event.getEntity(), event.getEffectInstance(), "removed");
-        });
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.MobEffectEvent.Expired event) -> {
-            if (event.getEffectInstance() != null && event.getEntity().level() instanceof ServerLevel level)
-                CombatServices.get(level.getServer()).mobEffectEnded(event.getEntity(), event.getEffectInstance(), "expired");
-        });
-        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.MobEffectEvent.Added event) -> {
-            if (event.getEffectInstance() != null && event.getEntity().level() instanceof ServerLevel level)
-                CombatServices.get(level.getServer()).mobEffectAdded(event.getEntity(), event.getEffectInstance(), event.getOldEffectInstance());
-        });
         modBus.addListener((FMLCommonSetupEvent event) -> {
             // T88 registers its configs in its own constructor; after common setup every mod has constructed.
             if (net.neoforged.fml.ModList.get().isLoaded("t88")) event.enqueueWork(dev.worldcombat.core.integration.T88Compat::install);

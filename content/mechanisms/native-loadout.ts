@@ -17,14 +17,14 @@ namespace NativeLoadout {
     }
     export interface Invocation {
         source: string; slot: number; key: string; design: string; selection: string; executing: string; chain: string[];
-        policyMove?: string; input?: Input; recover?: number; maximumRange?: number;
+        policyMove?: string; input?: Input; recover?: number; prepareLimit?: number; maximumRange?: number; prepaid?: boolean;
     }
     export interface Input {
-        target: string | null; point: number[]; direction: number[]; range: number; cooldown?: number; released?: boolean; metadata?: any;
+        target: string | null; point: number[]; direction: number[]; range: number; cooldown?: number; released?: boolean; committed?: boolean; metadata?: any;
         live?: boolean; anchor?: number[]; kind?: ReturnType<CombatAction["targetKind"]>;
     }
     export interface ActionRuntime {
-        input(action: CombatAction, input: Input): CombatAction;
+        input(action: CombatAction, input: Input, prepaidValidation?: (action: CombatAction) => string): CombatAction;
         host(action: CombatAction): CombatAction;
         lifecycle(action: CombatAction, policy: Policy): void;
     }
@@ -37,7 +37,16 @@ namespace NativeLoadout {
         cooldown?: number;
         /** Shared choreography recovery override. Self-managed rhythms own their completion. */
         recover?: number;
+        /** Upper bound on the callee's shared preparation, preserving windup and the final ready/commit checks.
+         * Self-managed recipes keep their own timing; callers must only request this for a declared shared preparation. */
+        prepareLimit?: number;
         eligibility?: "caller" | "callee";
+        /** Opt-in payment for an already established interception. Requires an explicit source cooldown.
+         * The callee still prepares and checks ready; its later commit only revalidates input/loadout/restrictions.
+         * A paid inline invocation cannot retarget into another inline call. Default payment remains at execution. */
+        commitment?: "execution" | "call";
+        /** Called after early payment succeeds, before the callee runs. Interception survives a later callee rejection. */
+        onPaid?: () => void;
     }
     export interface ForkOptions {
         lifetime: "linked" | "independent";
@@ -89,7 +98,8 @@ namespace NativeLoadout {
         var raw = action.data("cobblemon_world_combat:invocation"); return raw === null ? null : JSON.parse(raw);
     }
     export function view(action: CombatAction): CombatAction {
-        var state = invocation(action); return state && state.input && runtime ? runtime.input(action, state.input) : action;
+        var state = invocation(action);
+        return state && state.input && runtime ? runtime.input(action, state.input, state.prepaid ? prepaidCommit : undefined) : action;
     }
     function policyMove(action: CombatAction, move: CombatPokemonMove): CombatPokemonMove {
         var state = invocation(action); return state && state.policyMove ? CobblemonCombat.moveTemplate(state.policyMove) : move;
@@ -257,10 +267,14 @@ namespace NativeLoadout {
     function candidate(action: CombatAction, id: string, options: CallOptions): { reason: string; input?: Input; policyMove?: string } {
         var state = invocation(action), binding = bindings[id];
         if (!state || !binding || !binding.recipe) return { reason: "move-unimplemented" };
+        if (state.prepaid) return { reason: "paid-invocation" };
         if (state.chain.length >= 4 || state.chain.indexOf(id) >= 0) return { reason: "call-limit" };
         if (options.input && options.input.target && !action.sense().valid(options.input.target)) return { reason: "target-left" };
         if (options.cooldown !== undefined && (!isFinite(options.cooldown) || options.cooldown < 1 || options.cooldown > 12000 || options.cooldown % 1)) throw new Error("Invalid inline cooldown");
         if (options.recover !== undefined && (!isFinite(options.recover) || options.recover < 0 || options.recover % 1)) throw new Error("Invalid inline recovery");
+        if (options.prepareLimit !== undefined && (!isFinite(options.prepareLimit) || options.prepareLimit < 0 || options.prepareLimit % 1)) throw new Error("Invalid inline preparation limit");
+        if (options.commitment === "call" && (!runtime || options.cooldown === undefined)) throw new Error("Early inline payment requires an input runtime and explicit cooldown");
+        if (options.onPaid && options.commitment !== "call") throw new Error("Payment receipt requires early inline payment");
         if (!runtime && (options.input || options.cooldown !== undefined)) return { reason: "invalid-input" };
         var selection = runtime ? mapped(action, binding, options) : undefined;
         var current = runtime && selection ? runtime.input(action, selection) : action, move = CobblemonCombat.moveTemplate(id);
@@ -286,7 +300,16 @@ namespace NativeLoadout {
         }
         state.executing = id; state.chain.push(id); state.input = choice.input; state.policyMove = choice.policyMove;
         if (options.recover !== undefined) state.recover = options.recover;
+        if (options.prepareLimit !== undefined) state.prepareLimit = options.prepareLimit;
+        else delete state.prepareLimit;
         action.data("cobblemon_world_combat:invocation", JSON.stringify(state));
+        if (options.commitment === "call") {
+            // Pay through the host exactly once. Do not mark the callee input committed: that is its later ready boundary.
+            runtime!.host(action).commit(options.cooldown!);
+            state.prepaid = true;
+            action.data("cobblemon_world_combat:invocation", JSON.stringify(state));
+            if (options.onPaid) options.onPaid();
+        }
         var current = view(action);
         if (runtime) runtime.lifecycle(current, binding.policy || {});
         binding.recipe(current, CobblemonCombat.moveTemplate(id));
@@ -304,20 +327,32 @@ namespace NativeLoadout {
     export function choose(action: CombatAction, candidates: string[], input: CallOptions | ((id: string) => CallOptions | null) = {}): string | null {
         var selection = select(action, candidates, input); return selection ? selection.id : null;
     }
+    /** Consume the callee's ready boundary once. Attempt rolls, costs and observers belong to the actual payment. */
+    function prepaidCommit(action: CombatAction): string {
+        var state = invocation(action)!;
+        if (state.input!.committed) throw new Error("Inline action already committed");
+        var reason = validationReason(action); if (reason) return reason;
+        state.input!.committed = true;
+        action.data("cobblemon_world_combat:invocation", JSON.stringify(state));
+        return "";
+    }
+    /** Current facts only; a prepaid callee reuses this without a second native transaction. */
+    function validationReason(action: CombatAction): string {
+        var state = invocation(action); if (!state) return "";
+        var world = action.sense(), pokemon = CobblemonCombat.pokemon(action.actor()), move = pokemon.move(state.slot);
+        if (move === null || String(move.key()) !== state.key) return "loadout-changed";
+        var choice = selection(world, state.slot, move);
+        if (choice.id !== state.design || choice.key !== state.selection) return "loadout-changed";
+        var binding = bindings[state.executing];
+        if (binding && binding.availability) { var unavailable = binding.availability(world, pokemon, CobblemonCombat.moveTemplate(state.executing)); if (unavailable) return unavailable; }
+        if (binding && binding.recipe) {
+            var input = inputReason(view(action), binding); if (input) return input;
+        }
+        return restriction(action, CobblemonCombat.moveTemplate(state.executing)) || restriction(action, CobblemonCombat.moveTemplate(state.design));
+    }
     function before(event: CombatWorldEvent): void {
         var action = event.action(); if (action === null || String(event.actor().domain()) !== "cobblemon") return;
-        var data = action.data("cobblemon_world_combat:invocation"); if (!data) return;
-        var state: Invocation = JSON.parse(data), pokemon = CobblemonCombat.pokemon(event.actor()), move = pokemon.move(state.slot);
-        if (move === null || String(move.key()) !== state.key) { event.reject("loadout-changed"); return; }
-        var choice = selection(event.world(), state.slot, move);
-        if (choice.id !== state.design || choice.key !== state.selection) { event.reject("loadout-changed"); return; }
-        var binding = bindings[state.executing];
-        if (binding && binding.availability) { var unavailable = binding.availability(event.world(), pokemon, CobblemonCombat.moveTemplate(state.executing)); if (unavailable) { event.reject(unavailable); return; } }
-        if (binding && binding.recipe) {
-            var input = inputReason(view(action), binding); if (input) { event.reject(input); return; }
-        }
-        var reason = restriction(action, CobblemonCombat.moveTemplate(state.executing)) || restriction(action, CobblemonCombat.moveTemplate(state.design));
-        if (reason) event.reject(reason);
+        var reason = validationReason(action); if (reason) event.reject(reason);
     }
     if (typeof CobblemonCombat !== "undefined") WorldCombat.on("cobblemon_world_combat:loadout_commit", "world_combat:before_commit", "cobblemon_world_combat:before", before);
 }

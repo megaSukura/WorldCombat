@@ -17,7 +17,8 @@
   "worldcombat.skill.morningsun.preference.ai.healBelow": "Heal threshold",
   "worldcombat.skill.morningsun.preference.ai.healBelow.help": "Below this health ratio the companion schedules Morning Sun; lower endures longer, higher greets the light at the first wound.",
   "worldcombat.skill.morningsun.preference.ai.waitForSky": "Wait for morning",
-  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "On: only cast when the morning light is available (clear day or shared harsh sun), holding the move at night or in rain (little heal, no boost); below half the heal threshold it takes the floor heal instead of waiting. Off: cast whenever wounded.",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "On: only cast when the morning light is available (clear day or shared harsh sun), walking first to a nearby reachable sunlit patch when not already in it; only if none is reachable does it stay and wait (night and rain restore little with no boost); below half the heal threshold it takes the floor heal instead of waiting. Off: cast whenever wounded.",
   "world_combat.move.morningsun.text.dawn": "Morning light",
-  "world_combat.move.morningsun.text.dim": "Faint light"
+  "world_combat.move.morningsun.text.dim": "Faint light",
+  "world_combat.move.morningsun.text.vigor": "Morning vigour (speed up)"
 }

@@ -90,6 +90,29 @@ const AnchorshotDefinition: ParticleDefinition = {
                 }
             ]
         },
+        slip: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "ground_hit", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: { data: "links", fallback: 6 }, at: 0 },
+                    shape: { kind: "circle", radius: 0.4 },
+                    direction: "outward", speed: [0.05, 0.18], gravity: 0.03, drag: 0.88,
+                    lifetime: [8, 16], size: [0.16, 0.05],
+                    color: 0x9AA3AD, alpha: [0.5, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "steel", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "point" },
+                    lifetime: [6, 10], size: [0.5, 0.18], sizeMode: "linear",
+                    color: 0xDCE3E8, alpha: [0.7, 0], light: "full", maxParticles: 3
+                }
+            ]
+        },
         chain: {
             duration: 0,
             exit: { stop: 0, drain: 12 },
@@ -144,7 +167,7 @@ const AnchorshotDefinition: ParticleDefinition = {
                     name: "retract", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/wrap",
                     shape: { kind: "polyline" }, burst: { count: { data: "links", fallback: 5 }, at: 0, repeats: 2, interval: 3 },
-                    direction: "toward", speed: [0.04, 0.14], spin: 8,
+                    direction: "away", speed: [0.04, 0.14], spin: 8,
                     lifetime: [6, 12], size: [0.22, 0.08],
                     alpha: [0.5, 0], light: "world", maxParticles: 24
                 },

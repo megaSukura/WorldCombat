@@ -15,6 +15,19 @@
  *   救助与伤害共用同一记盐拍。
  */
 namespace PokemonSkills {
+    /** 方块表面的法线方向，供表现把落空的盐屑沿墙面弹开。 */
+    function smellingsaltsFace(face: string): number[] {
+        switch (face) {
+            case "down": return [0, -1, 0];
+            case "up": return [0, 1, 0];
+            case "north": return [0, 0, -1];
+            case "south": return [0, 0, 1];
+            case "west": return [-1, 0, 0];
+            case "east": return [1, 0, 0];
+            default: return [0, 1, 0];
+        }
+    }
+
     define({
         id: smellingsaltsId,
         cooldownParameter: "recharge",
@@ -78,7 +91,7 @@ namespace PokemonSkills {
             const lander = contact.hitEntity() ? contact.target() : null;
             const victim = lander !== null && scope.valid(lander) && String(lander.ref()) !== selfRef ? lander : null;
 
-            WorldFeedback.emit(scope, smellingsaltsScene, 1, at, { moment: "slap", direction: heading, puff: puff, scale: scale }, 20);
+            WorldFeedback.emit(scope, smellingsaltsScene, 1, at, { moment: "slap", direction: heading, path: [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]], puff: puff, scale: scale }, 20);
 
             if (victim !== null) {
                 // 读真实被拍中者：显式 target 优先，状态与威力都看这个人。
@@ -110,7 +123,8 @@ namespace PokemonSkills {
                     }
                     let cured = false;
                     const away = at.minus(from);
-                    if (away.length() > 0.05 && scope.valid(victim)) scope.displace(victim, away.unit().scale(push));
+                    // 沿原生击退方向拍开：受目标抗击退与原生事件限制，抗推目标不被强挪。
+                    if (away.length() > 0.05 && scope.valid(victim)) scope.hitDisplace(victim, away.unit().scale(push));
                     if (numb && scope.valid(victim) && CombatStatus.cure(scope, victim, "paralysis")) {
                         cured = true;
                         // 粗盐踉跄只对敌方、且只在真正治愈了麻痹之后留下。
@@ -126,11 +140,10 @@ namespace PokemonSkills {
                         numb ? smellingsaltsWakeText : smellingsaltsHitText, [], 26);
                 }
             } else {
-                // 实墙或空放：只散一小撮盐，不自动找旁边的敌人。
+                // 实墙或空放：只散一小撮盐，不自动找旁边的敌人。落点用真实接触点，墙面朝向传给表现。
                 const blocked = contact.blocked();
-                const point = blocked && contact.blockPosition() !== null ? contact.blockPosition()! : at;
-                WorldFeedback.emit(scope, smellingsaltsScene, 1, point,
-                    { moment: "miss", scale: scale, puff: Math.round(puff * 0.35), blocked: blocked ? 1 : 0 }, 18);
+                WorldFeedback.emit(scope, smellingsaltsScene, 1, at,
+                    { moment: "miss", scale: scale, direction: blocked ? smellingsaltsFace(contact.blockFace()) : heading, puff: Math.round(puff * 0.35), blocked: blocked ? 1 : 0 }, 18);
                 if (!blocked) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), smellingsaltsMissText, [], 24);
                 sound(action, "minecraft:entity.player.attack.nodamage");
             }

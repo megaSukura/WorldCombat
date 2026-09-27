@@ -96,7 +96,13 @@ namespace PokemonSkills {
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < p(counterId, "minimumMove", current) || travelled >= length) { done(current); return; }
+                if (hit.blocked()) {
+                    // 撞上真实墙面：在这一记实际磕到的位置留下钝响，不再让空冲没有收尾。
+                    WorldFeedback.emit(scope, counterScene, 1, hit.position(), { moment: "blocked", scale: scale }, 22);
+                    done(current);
+                    return;
+                }
+                if (moved < p(counterId, "minimumMove", current) || travelled >= length) { done(current); return; }
                 current.after(1, advance);
             }
             advance(action);

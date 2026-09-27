@@ -19,16 +19,27 @@ namespace PokemonSkills {
         return !!ability && !NativeAbilities.flag(ability, "failroleplay");
     }
 
-    /** 画幅内可被盖印的宝可梦：施法者自己、以及半径内的友好宝可梦，按与施法者的距离由近到远。 */
-    export function doodleRecipients(world: CombatWorld, actor: CombatActor, centre: CombatPoint, canvas: number, squad: number, includeNative = false): CombatActor[] {
-        const result: CombatActor[] = [actor];
+    /**
+     * 画幅内真正会被盖印的宝可梦：施法者自己，加上 LOS 通畅、可修改且当前特征确实不同的近友，按距离由近到远。
+     * 先过滤「可改／不同」，再按距离截到 squad，所以挡在墙后或已经相同的同伴不会白占一个名额。
+     */
+    export function doodleRecipients(world: CombatWorld, actor: CombatActor, centre: CombatPoint, canvas: number, squad: number, includeNative: boolean, sample: CombatActor): CombatActor[] {
+        const sampleAbility = includeNative ? "" : doodleAbility(world, sample);
+        const sampleValues = includeNative ? PokemonSkills.copiedNativeTrait(world, sample) : null;
+        function acceptable(other: CombatActor): boolean {
+            if (includeNative) return !!sampleValues && CombatCopies.differs(world, other, sampleValues);
+            if (String(other.domain()) !== "cobblemon" || !NativeModifiers.abilitySuppressible(world, other)) return false;
+            return doodleAbility(world, other) !== sampleAbility;
+        }
+        const result: CombatActor[] = [];
+        if (acceptable(actor)) result.push(actor);
         WorldGeometry.select(world, WorldGeometry.ring(centre, 0, canvas, { below: 2, above: 3 }), function (other, facts) {
-            if (result.length >= squad) return;
-            if (String(other.ref()) === String(actor.ref())) return;
-            if (!facts.friendly() || !includeNative && String(other.domain()) !== "cobblemon") return;
+            if (String(other.ref()) === String(actor.ref()) || !facts.friendly()) return;
+            if (!world.clear(centre, facts.position())) return;
+            if (!acceptable(other)) return;
             result.push(other);
         });
-        return result;
+        return result.sort((a, b) => world.closestPoint(a, centre).minus(centre).length() - world.closestPoint(b, centre).minus(centre).length()).slice(0, squad);
     }
 
     define({
@@ -73,29 +84,29 @@ namespace PokemonSkills {
             const canvas = Math.max(1.5, p("doodle", "canvas", action));
             const squad = Math.max(1, Math.round(p("doodle", "squad", action)));
             if (String(target.domain()) !== "cobblemon") {
-                // The sample's characteristic can go to any friendly body that still differs; the sample is not stamped back onto itself.
-                const values = PokemonSkills.copiedNativeTrait(world, target);
-                return doodleRecipients(world, actor, self.position(), canvas, squad, true)
-                    .some(recipient => CombatCopies.differs(world, recipient, values)) ? "" : "nothing-to-copy";
+                // Only a sample whose characteristic still differs on some reachable friendly body counts.
+                return doodleRecipients(world, actor, self.position(), canvas, squad, true, target).length > 0 ? "" : "nothing-to-copy";
             }
-            // Only a copyable sample and a recipient that can still be modified counts; a same-or-immune recipient is skipped.
             const theirs = doodleAbility(world, target);
             if (!theirs) return "target-suppressed";
             if (!NativeModifiers.abilityCopyable(world, target)) return "uncopyable";
-            const any = doodleRecipients(world, actor, self.position(), canvas, squad).some(function (recipient) {
-                return String(recipient.domain()) === "cobblemon" && NativeModifiers.abilitySuppressible(world, recipient)
-                    && doodleAbility(world, recipient) !== theirs;
-            });
-            return any ? "" : "nothing-to-copy";
+            return doodleRecipients(world, actor, self.position(), canvas, squad, false, target).length > 0 ? "" : "nothing-to-copy";
         },
         windup: function (action, config, prepare) {
-            const actor = action.actor(), target = action.target();
+            const world = action.sense(), actor = action.actor(), target = action.target(), self = world.observe(actor);
+            const canvas = Math.max(1.5, p("doodle", "canvas", action));
+            const squad = Math.max(1, Math.round(p("doodle", "squad", action)));
+            const isNative = target !== null && String(target.domain()) !== "cobblemon";
             const path: (string | number[])[] = target === null ? [String(actor.ref())] : [String(target.ref()), String(actor.ref())];
+            const recipients = self !== null && target !== null && world.valid(target)
+                ? doodleRecipients(world, actor, self.position(), canvas, squad, isNative, target) : [];
+            recipients.forEach(recipient => { if (String(recipient.ref()) !== String(actor.ref())) path.push(String(recipient.ref())); });
+            // The telegraph shows the real canvas and the intended recipient list, not just the sample.
             action.present("world_combat:doodle:sketch", doodleScene, 1, action.origin(), JSON.stringify({
                 moment: "sketch", target: target === null ? "" : String(target.ref()), path: path,
-                marks: p("doodle", "marks", action)
+                canvas: canvas, stamped: recipients.length, marks: p("doodle", "marks", action)
             }));
-            return prepare;
+            return prepare + Math.max(0, recipients.length - 1) * 2;
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
@@ -106,93 +117,58 @@ namespace PokemonSkills {
             const hold = Math.max(40, Math.round(p("doodle", "hold", action)));
             const marks = Math.max(6, Math.round(p("doodle", "marks", action)));
             const scale = canvas / doodleReferenceRadius;
-            const from = String(actor.ref());
-            const casterPoint = body.position();
-            // The sample stroke is drawn along the real sample->caster line, then branches out to each actual recipient.
-            const inward = body.position().minus(sample.position());
-            const distance = inward.length();
+            const from = String(actor.ref()), centre = body.position();
+            const isNative = String(target.domain()) !== "cobblemon";
+            const inward = centre.minus(sample.position()), distance = inward.length();
             const direction = distance < 0.05 ? WorldCombat.point(0, 1, 0) : inward.unit();
+
+            function fizzle(): void {
+                WorldFeedback.emit(world, doodleScene, 1, centre, { moment: "fizzle" }, 22);
+                WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
+            }
+
+            // The sample stroke is drawn along the real sample->caster line; the canvas ring is one world-scale circle.
             WorldFeedback.emit(world, doodleScene, 1, sample.position(),
                 { moment: "canvas", path: [String(target.ref()), from], marks: marks, scale: scale,
                     canvas: canvas, span: distance, direction: [direction.x(), direction.y(), direction.z()] }, 34);
-            function stamp(recipient: CombatActor, at: CombatObservation): void {
-                const recipientRef = String(recipient.ref());
-                if (recipientRef !== from)
-                    WorldFeedback.emit(world, doodleScene, 1, casterPoint,
-                        { moment: "spread", path: [from, recipientRef], marks: marks, scale: scale }, 30);
-                WorldFeedback.emit(world, doodleScene, 1, at.position(),
-                    { moment: "stamp", target: recipientRef, marks: marks, scale: scale }, 26);
+
+            const ability = isNative ? "" : doodleAbility(world, target);
+            if (!isNative && (!ability || !doodleAbilityPattern.test(ability) || !NativeModifiers.abilityCopyable(world, target))) {
+                fizzle(); done(action); return;
             }
-            function glow(layer: number, recipientRef: string, at: CombatObservation): void {
-                // The stamp's sheen is presented on that recipient's own layer, so it ends with the copy, not on its own clock.
-                if (layer) WorldFeedback.onEffect(world, layer, "world_combat:doodle:glow:" + recipientRef, doodleScene, 1,
-                    at.position(), { moment: "glow", target: recipientRef, marks: marks });
-            }
-            let applied = 0;
-            if (String(target.domain()) !== "cobblemon") {
-                const values = PokemonSkills.copiedNativeTrait(world, target);
-                const trait = Object.keys(values)[0] || "";
-                doodleRecipients(world, actor, body.position(), canvas, squad, true).forEach(function (recipient) {
-                    if (!CombatCopies.differs(world, recipient, values)) return;
-                    const at = world.observe(recipient);
-                    if (at === null) return;
-                    const carrier = MobEffects.apply(world, recipient, doodleInk, hold, 0);
-                    if (carrier === null) return;
-                    const copy = CombatCopies.apply(world, recipient, values, hold, "doodle", MobEffects.anchor(carrier));
-                    applied++;
-                    const recipientRef = String(recipient.ref());
-                    stamp(recipient, at);
-                    glow(copy, recipientRef, at);
-                });
-                if (applied === 0) {
-                    WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle" }, 22);
-                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
-                    sound(action, "minecraft:block.amethyst_block.break");
-                    done(action);
-                    return;
-                }
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleTraitText,
-                    [{ key: "attribute.name." + trait.replace("minecraft:", ""), fallback: trait }, applied], 44);
-                sound(action, "minecraft:item.book.put");
-                done(action);
-                return;
-            }
-            const ability = doodleAbility(world, target);
-            if (!ability || !doodleAbilityPattern.test(ability) || !NativeModifiers.abilityCopyable(world, target)) {
-                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle" }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
-                sound(action, "minecraft:block.amethyst_block.break");
-                done(action);
-                return;
-            }
-            doodleRecipients(world, actor, body.position(), canvas, squad).forEach(function (recipient) {
-                if (String(recipient.domain()) !== "cobblemon") return;
-                if (!NativeModifiers.abilitySuppressible(world, recipient)) return;
-                const own = doodleAbility(world, recipient);
-                if (own === ability) return;
+            const values = isNative ? copiedNativeTrait(world, target) : null;
+            const recipients = doodleRecipients(world, actor, centre, canvas, squad, isNative, target);
+            const applied: { ref: string; layer: number }[] = [];
+            recipients.forEach(recipient => {
                 const at = world.observe(recipient);
                 if (at === null) return;
-                // The recipient's ink marker owns its layer; cleansing one ends both together.
                 const marker = MobEffects.apply(world, recipient, doodleInk, hold, 0);
                 if (marker === null) return;
-                const layer = NativeModifiers.apply(world, recipient,
-                    { ability: ability, carrier: MobEffects.anchor(marker) }, hold);
-                if (!layer) return;
-                applied++;
-                const recipientRef = String(recipient.ref());
-                stamp(recipient, at);
-                glow(layer, recipientRef, at);
+                const carrier = MobEffects.anchor(marker);
+                const layer = isNative
+                    ? (values ? CombatCopies.apply(world, recipient, values, hold, "doodle", carrier) : 0)
+                    : NativeModifiers.apply(world, recipient, { ability: ability, carrier: carrier }, hold);
+                // A failed copy must not leave this cast's mark behind.
+                if (!layer) { MobEffects.consume(world, recipient, doodleInk); return; }
+                applied.push({ ref: String(recipient.ref()), layer: layer });
+                WorldFeedback.emit(world, doodleScene, 1, at.position(), { moment: "stamp", target: String(recipient.ref()), marks: marks, scale: scale }, 26);
+                WorldFeedback.emit(world, doodleScene, 1, centre, { moment: "spread", path: [from, String(recipient.ref())], marks: marks, scale: scale }, 8);
+                // The stamp's sheen is presented on that recipient's own layer, so it ends with the copy.
+                WorldFeedback.onEffect(world, layer, "world_combat:doodle:glow:" + String(recipient.ref()), doodleScene, 1,
+                    at.position(), { moment: "glow", target: String(recipient.ref()), marks: marks });
             });
-            if (applied === 0) {
-                WorldFeedback.emit(world, doodleScene, 1, body.position(), { moment: "fizzle" }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleUnchangedText, [], 28);
-                sound(action, "minecraft:block.amethyst_block.break");
-                done(action);
-                return;
+            if (applied.length === 0) { fizzle(); done(action); return; }
+            if (isNative) {
+                const trait = Object.keys(values!)[0] || "";
+                WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), doodleTraitText,
+                    [{ key: "attribute.name." + trait.replace("minecraft:", ""), fallback: trait }, applied.length], 44);
+            } else {
+                WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), doodleAbilityText,
+                    [{ key: "cobblemon.ability." + ability, fallback: ability }, applied.length], 44);
             }
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), doodleAbilityText,
-                [{ key: "cobblemon.ability." + ability, fallback: ability }, applied], 44);
             sound(action, "minecraft:item.book.put");
+
             done(action);
         }
     });

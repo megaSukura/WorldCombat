@@ -17,6 +17,18 @@ namespace CompanionBehavior {
         return distance(source(context).point, target.point) <= ai<number>(item, "maxChase", 7);
     }
 
+    /** 身边可接手的友方数量（感知范围内的存活友方，不含自己）。 */
+    function jawlockAllies(context: WorldBehavior.Context): number {
+        const self = source(context), nearby = (context.facts.nearby || []) as Entity[];
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === self.ref || !other.friendly || other.health <= 0) continue;
+            count++;
+        }
+        return count;
+    }
+
     registerUse("jawlock", {
         protocols: ["world_combat:attack", "world_combat:control"],
         reach: function (context, item) { return item.data.range; },
@@ -31,9 +43,12 @@ namespace CompanionBehavior {
         approachTarget: function (_context, _item, target) { return target; },
         priority: function (context, item, target) {
             if (!target || !jawlockWants(context, item, target)) return 0;
-            let base = 16 + Math.round(ratio(target) * 40);
+            // 不按敌血厚决定要不要自困：看自己能否站住这次对峙（余血），以及队友能否趁机接手。
+            const self = source(context);
+            let base = 16 + Math.round(ratio(self) * 26);
             if (context.facts.focus === target.ref) base += 20;
-            base += Math.round((1 - ratio(source(context))) * 20);
+            if (target.attacking === self.ref || self.hurtAgo < 60) base += 14;
+            if (jawlockAllies(context) > 0) base += 20;
             return base;
         }
     });

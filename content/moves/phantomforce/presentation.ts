@@ -7,22 +7,22 @@
  *
  * 色相家族：灵界深紫（0x6B4FA8）作主体，冷灰蓝（0x9BA8C8）给穿行与碎护的边光，近黑（0x241A33）做裂隙。
  * 与同族的暗影球/暗影之骨分开：这里是「先消失、再从守护里穿出」，靠竖直裂隙与碎护环读，不是一枚飞出去的球。
- * 拍子：起 fade（18t）→ 潜 veil（绑在真实守护效果上，逐刻续期，随相位结束或驱散一起收）→ 破 shatter（28t）
- * → 现 strike（34t）→ 收 whiff／空 air。
- * veil 只对应相位生命周期：finish 时收回守护，影罩表现随即释放，不会多播一段。
+ * 拍子：起 fade（时长按实际消失刻数、裂隙长度按身体尺度）→ 潜 veil（绑在相位托管效果上、固定停在消失点）
+ * → 破 shatter（28t）→ 现 strike（34t）→ 收 whiff／空 air。
+ * veil 只对应相位生命周期：相位结束或被敌方驱散时效果移除，影罩表现随即释放，不会多播一段。
  *
  * 范围：strike 与 shatter 都绑目标点，半径由 data.scale 缩放（现身判定半径 / 0.55），玩家一眼知道这一刀能扫到多大；
  * 只朝点空斩的 air 绑落地点，让「没打到人」与「这一刀劈空」在画面上分得清。
  * 运动：fade 的影向内收束，shatter 的碎光从守护表面向外炸开。
  * 机制驱动：`data.scale`（现身判定半径 / 0.55）决定 strike／shatter 的尺寸，`data.broken`（震碎的守护层数）
- * 决定 shatter 的碎光数量与亮度，`data.vanish`（消失刻数）决定 fade 裂隙的持续与长度。
+ * 决定 shatter 的碎光数量与亮度，`data.rift`（身体尺度）决定 fade 裂隙长度，`data.vanish`（实际消失刻数）决定 fade 时长。
  */
 const PhantomForceDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        // 起：身周收影，一道竖直裂隙把整个人吞下去。
+        // 起：身周收影，一道竖直裂隙把整个人吞下去。时长跟实际消失刻数走，裂隙长度用身体尺度，两者分开。
         fade: {
-            duration: 20,
+            duration: { data: "vanish", fallback: 20 },
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
@@ -34,10 +34,10 @@ const PhantomForceDefinition: ParticleDefinition = {
                     color: 0x6B4FA8, alpha: [0.6, 0], light: "world", maxParticles: 100
                 },
                 {
-                    // Vertical tear: length follows data.vanish, so a deeper dive opens a longer rift.
+                    // Vertical tear sized by the body (data.rift), not by the tick clock.
                     name: "fade_rift", bind: "source", fit: "none", offset: [0, 0.25, 0], height: 0,
                     particle: "world_combat_core:cobblemon/moves/shadowball_impact",
-                    burst: { count: 14, at: 2 }, shape: { kind: "line", length: { data: "vanish", fallback: 12 } },
+                    burst: { count: 14, at: 2 }, shape: { kind: "line", length: { data: "rift", fallback: 1.6 } },
                     direction: "down", speed: [0.02, 0.1],
                     lifetime: [8, 16], size: [0.34, 0.06],
                     color: 0x241A33, alpha: [0.85, 0], light: "world", maxParticles: 60
@@ -52,13 +52,12 @@ const PhantomForceDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 潜：消失期间原地的一缕影罩，低密度、让出视线。
+        // 潜：消失点在原地留一缕影罩，低密度、让出视线；固定绑在消失点，不跟着隐身的身体移动。
         veil: {
-            duration: 16,
-            exit: { stop: 5, drain: 12 },
+            exit: { drain: 14 },
             emitters: [
                 {
-                    name: "veil_smoke", bind: "source", offset: [0, 0.5, 0], height: 0.45,
+                    name: "veil_smoke", bind: "point", fit: "none", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     rate: 8, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.01, 0.05],
@@ -66,7 +65,7 @@ const PhantomForceDefinition: ParticleDefinition = {
                     color: 0x3A2A55, alpha: [0.28, 0], light: "world", maxParticles: 26
                 },
                 {
-                    name: "veil_motes", bind: "source", offset: [0, 0.55, 0], height: 0.4,
+                    name: "veil_motes", bind: "point", fit: "none", offset: [0, 0.65, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: 6, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.01, 0.05],

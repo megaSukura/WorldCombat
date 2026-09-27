@@ -38,13 +38,19 @@ namespace PokemonSkills {
         var after = world.valid(target) ? world.observe(target) : null, dealt = before - (after ? after.health() : 0);
         var intensity = Math.max(1, Math.min(3, 1 + dealt / maximum * 4));
         var bursts = Math.round(p("naturalgift", "bursts", current));
+        if (!landed) {
+            // 伤害被原生拒绝（免疫／未中）：只发抵消回执，不报成功命中音效、果屑与属性文字。
+            WorldFeedback.emit(world, naturalgiftScene, 1, point,
+                { moment: "repel", target: String(target.ref()), tint: gift.colour, scale: p("naturalgift", "halo", current) }, 22);
+            return;
+        }
         world.sound("cobblemon:move.seedbomb.target", point, 16, "{}");
         WorldFeedback.emit(world, naturalgiftScene, 1, point, { moment: "impact", target: String(target.ref()), tint: gift.colour,
             intensity: intensity, scale: p("naturalgift", "halo", current), bursts: Math.round(bursts * (0.7 + intensity * 0.2)),
             seeds: Math.max(6, Math.round(bursts * 0.5)) }, 32);
         WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.8, 0)),
             "world_combat.move.naturalgift.text.gift", [{ key: "cobblemon.type." + gift.type, fallback: gift.type }], 30);
-        if (landed && world.valid(target)) world.hitDisplace(target, direction.scale(p("naturalgift", "push", current)));
+        if (world.valid(target)) world.hitDisplace(target, direction.scale(p("naturalgift", "push", current)));
     }
 
     function naturalgiftStrike(action: CombatAction, done: (current: CombatAction) => void): void {

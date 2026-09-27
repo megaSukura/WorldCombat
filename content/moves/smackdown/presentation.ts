@@ -131,7 +131,7 @@ const SmackdownDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "slam", bind: "target", fit: "none", offset: [0, -0.5, 0],
+                    name: "slam", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: { data: "count", fallback: 12 }, at: 0, interval: 2, repeats: 4 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
@@ -140,7 +140,7 @@ const SmackdownDefinition: ParticleDefinition = {
                     color: 0x9A8A72, alpha: [0.7, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "crush", bind: "target", fit: "none", offset: [0, -0.55, 0],
+                    name: "crush", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: 20, at: 1 },
                     shape: { kind: "ring", radius: 0.4 },

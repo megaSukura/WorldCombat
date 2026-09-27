@@ -5,15 +5,16 @@
  * 施法者的等级与特攻（data.echoes）增长。
  *
  * 色相家族：睡眠紫 0x6D5BD0 与它变淡的 0xB9A8F0，加白色强调；与睡眠状态的图标同色系。
- * 拍子：murmur 0–30t（起：由少到多）→ draw 0–24t（击：密集一闪，收：散开淡化）。
- * 贴图与帧尺寸来自 particle_types.txt。
+ * 拍子：murmur 与本次实际呓语同长（data.murmur，2–12 刻；起：由少到多）→ draw 0–24t（击：密集一闪，
+ * 收：散开淡化）。呓语中被唤醒时动作结束，梦泡随即停止发射，不盖住醒来之后的动作。贴图与帧尺寸来自
+ * particle_types.txt。
  */
 const sleeptalkDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         murmur: {
-            duration: 30,
-            exit: { stop: 24, drain: 24 },
+            duration: { data: "murmur", fallback: 12 },
+            exit: { stop: { data: "murmur", fallback: 12 }, drain: 24 },
             emitters: [
                 {
                     name: "murmur_zzz", bind: "source", offset: [0, 1.1, 0],

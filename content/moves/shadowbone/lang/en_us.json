@@ -19,8 +19,8 @@
   "worldcombat.skill.shadowbone.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.shadowbone.preference.ai.maxChase.help": "Beyond this distance it closes in instead of throwing. Larger values open from further away.",
   "worldcombat.skill.shadowbone.preference.ai.spookFirst": "Open with the rattle",
-  "worldcombat.skill.shadowbone.preference.ai.spookFirst.help": "On: prefer targets that do not carry the guardbroken identity yet, to attach the rattle first. Off: treat it as an ordinary ranged attack.",
+  "worldcombat.skill.shadowbone.preference.ai.spookFirst.help": "On: reads the target's current Defence stage and prefers the throw while it can still be lowered one more stage; at the floor or after a cleared buff it is treated as an ordinary ranged attack. Off: always an ordinary ranged attack.",
   "world_combat.move.shadowbone.text.rattle": "Spooked, Defence −%1$s stage",
   "effect.world_combat.shadowbone_spooked": "Shadow Bone: Spooked",
-  "worldcombat.skill.shadowbone.description.additional": "A bone that strikes the ground without hitting a living target drops there as a bone anyone can pick up; at most one drops per cast, and a bone that hits a living target drops none."
+  "worldcombat.skill.shadowbone.description.additional": "A bone that strikes a block, or flies its full range without hitting a living target, drops at its real resting point as a bone anyone can pick up; at most one drops per cast, and a bone that hits a living target drops none."
 }

@@ -1,13 +1,15 @@
 /**
- * 祈愿 / Wish 的粒子语言。
+ * 祈愿 / Wish 的客户端表现。
  *
- * 一句话：所选落点收拢一圈祈愿的光，愿星被送上高空；悬停期间一条细光把高空星与地面小圈连在一起，星沿这条线
- *   一点点下落，倒计时就读在星的高度上；落地时圈内每个真正受益者各亮一下治疗光。
+ * 一句话：所选落点收拢一圈祈愿的光，愿星被送上高空；随后**唯一一枚**愿星 sprite 按剩余时间从高空落到那个固定圈，
+ *   倒计时就读在它的高度上；末刻接地与治疗爆发同一刻出现，圈内每个真正受益者各亮一下治疗光。
  * 色相家族：愿力金 0xFFD36A 作主体，暖白 0xFFF2C8 作高光，浅青 0xBFE6FF 只落在上升的星尾。
- * 拍子：起（windup）／升（rise）／悬（hang，星下落计时）／落（fall）／击（land）／愈（heal 受益者）／收（fade）。
- * 范围：落点圈绑 point、fit none，几何按 data.scale = 实际半径 / 2.6 缩放，圈外的人一眼看出不会被加到。
- * 机制驱动：hang 的星高与连线绑定 data.fallY／data.path，由服务端按延迟进度算出；land 的爆发数绑定 data.burst，
- *   由服务端按实际受益者数量算出；heal 只在真实受益者身上出现。
+ * 拍子：起（windup）／升（愿星 sprite 出现）／落（愿星 sprite 按剩余时间下降）／击（land）／愈（heal 受益者）／收（fade）。
+ * 范围：愿星的落点与治疗圈共用同一真实落点；圈半径由 data.radius（本招实际祝福半径）画出，实心圈就是判定圈。
+ * 机制驱动：愿星的起点/落点/剩余时间来自服务端同一份数据；land 的爆发数绑定 data.burst，由实际受益者数量算出；
+ *   heal 只在真实受益者身上出现。
+ *
+ * 唯一愿星由 `WorldCombatClient.scene` 固定绘制（没有重复生成的星点），星尘与落地爆发仍走粒子幕。
  */
 const WishDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -31,78 +33,6 @@ const WishDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.06],
                     lifetime: [12, 20], size: [0.07, 0.01],
                     color: 0xFFF2C8, alpha: [0.9, 0], light: "full", maxParticles: 24
-                }
-            ]
-        },
-        rise: {
-            duration: 30,
-            exit: { stop: 8, drain: 16 },
-            emitters: [
-                {
-                    name: "rise_beam", bind: "path", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/moves/wish_star",
-                    burst: { count: 14, interval: 2, repeats: 4 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.05, 0.14],
-                    lifetime: [14, 24], size: [0.24, 0.06],
-                    color: 0xFFD36A, alpha: [1, 0], light: "full", maxParticles: 56
-                },
-                {
-                    name: "rise_tail", bind: "path", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 20, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.03, 0.1],
-                    lifetime: [10, 18], size: [0.06, 0.01],
-                    color: 0xBFE6FF, alpha: [0.8, 0], light: "full", maxParticles: 40
-                }
-            ]
-        },
-        hang: {
-            exit: { drain: 20 },
-            emitters: [
-                {
-                    name: "hang_star", bind: "source", offset: [0, { data: "fallY", fallback: 0 }, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/moves/wish_star",
-                    rate: 6, shape: { kind: "sphere", radius: 0.2 },
-                    direction: "outward", speed: [0.005, 0.02], spin: 4,
-                    lifetime: [20, 34], size: [0.28, 0.05],
-                    color: 0xFFD36A, alpha: [0.95, 0.1], alphaMode: "sin", light: "full", bloom: 0.25, maxParticles: 14
-                },
-                {
-                    name: "hang_link", bind: "path", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: 10, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.01, 0.04],
-                    lifetime: [14, 24], size: [0.06, 0.01],
-                    color: 0xFFF2C8, alpha: [0.6, 0], light: "full", maxParticles: 30
-                },
-                {
-                    name: "hang_ring", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 4, shape: { kind: "circle", radius: 2.6 },
-                    direction: "up", speed: [0.004, 0.014],
-                    lifetime: [30, 50], size: [0.12, 0.04],
-                    color: 0xFFD36A, alpha: [0.18, 0.02], alphaMode: "sin", light: "world", maxParticles: 30
-                }
-            ]
-        },
-        fall: {
-            duration: 26,
-            exit: { stop: 6, drain: 14 },
-            emitters: [
-                {
-                    name: "fall_streak", bind: "source", offset: [0, { data: "fallY", fallback: 0 }, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/moves/wish_star",
-                    burst: { count: 18, interval: 2, repeats: 4 }, shape: { kind: "ring", radius: 0.3 },
-                    direction: [0, -1, 0], speed: [0.1, 0.24], drag: 0.95,
-                    lifetime: [10, 18], size: [0.24, 0.04],
-                    color: 0xFFD36A, alpha: [1, 0], light: "full", maxParticles: 40
-                },
-                {
-                    name: "fall_mote", bind: "source", offset: [0, { data: "fallY", fallback: 0 }, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 16, direction: [0, -1, 0], speed: [0.08, 0.2],
-                    lifetime: [8, 14], size: [0.06, 0.01],
-                    color: 0xFFF2C8, alpha: [0.9, 0], light: "full", maxParticles: 30
                 }
             ]
         },
@@ -176,3 +106,46 @@ const WishDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_wish", 1, WishDefinition);
+
+// 唯一愿星：服务端给出真实起点（高空）、真实落点与剩余时间；客户端每帧按 serverTick 插值出星的位置。
+// 落地圈由 data.radius（本招实际祝福半径）画出，与判定圈是同一半径、同一落点。
+const WishStarTexture = "cobblemon:particle/moves/wish_star";
+const WishStarDust = "cobblemon:particle/generic/sparkle/glowingsparkle_yellow";
+
+function wishStarValue(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene("world_combat:move_wish_star", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const start = data.start, ground = data.ground;
+    if (!Array.isArray(start) || !Array.isArray(ground)) return;
+    const born = wishStarValue(data.born, frame.serverTick());
+    const landAt = Math.max(born + 1, wishStarValue(data.landAt, born + 1));
+    const span = Math.max(1, landAt - born);
+    const linear = Math.max(0, Math.min(1, (frame.serverTick() - born) / span));
+    // 先悬后落：平方曲线让它大半程停在高空，末刻落到真实落点，与 land 爆发同刻。
+    const progress = linear * linear;
+    const radius = Math.max(1.2, wishStarValue(data.radius, 2.6));
+    const x = start[0] + (ground[0] - start[0]) * progress;
+    const y = start[1] + (ground[1] - start[1]) * progress;
+    const z = start[2] + (ground[2] - start[2]) * progress;
+    const pulse = 0.5 + 0.5 * Math.sin(frame.serverTick() * 0.25);
+    // 地面圈：真实半径，越接近兑现越亮。
+    const ringAlpha = Math.round(60 + 120 * progress);
+    frame.ring(ground[0], ground[1] + 0.05, ground[2], radius, (ringAlpha << 24 | 0xFFD36A) | 0);
+    // 星尘：沿已走过的连线留几枚次要亮尘。
+    for (let index = 1; index <= 3; index++) {
+        const t = Math.max(0, progress - index * 0.07);
+        const dust = Math.round(150 * (1 - index * 0.22) * (1 - progress * 0.4));
+        frame.sprite(WishStarDust,
+            start[0] + (ground[0] - start[0]) * t, start[1] + (ground[1] - start[1]) * t, start[2] + (ground[2] - start[2]) * t,
+            0.09 - index * 0.015, 0, (dust << 24 | 0xFFF2C8) | 0, 0, true);
+    }
+    // 唯一愿星。
+    const starFrame = Math.floor(frame.serverTick() * 0.12) % 2;
+    frame.sprite(WishStarTexture, x, y, z, 0.5 + 0.06 * pulse, 0, (0xF5 << 24 | 0xFFD36A) | 0, starFrame, true);
+});

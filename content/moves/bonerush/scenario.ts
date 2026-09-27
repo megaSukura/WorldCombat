@@ -7,9 +7,9 @@
  * 场面：只会骨棒乱打的卡拉卡拉（cubone，L30，原生 29 级学习）站在僵尸左侧 3 格（在掷距内），僵尸被点住、
  *   不会还手也不会走开、贴在石地上。夜间，僵尸不会被日光灼烧。
  *
- * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一击的地面伤害（`stage.damageTo`）。
- *   击数（2～5，随物攻／等级与裂地式变化）、每击命中率 90、骨头弧线偏角、末击更重、暴击，都是随机或配置结果，
- *   写进 note 供读轨迹判断；落点不再改动地表，所以地痕只是会散去的尘。
+ * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一击的地面伤害（`stage.damageTo`）；落点不改动地表
+ *   （`stage.changedBlocks` 为空）。击数（2～5，随物攻／等级与裂地式变化）、每击命中率 90、骨头从身体顶真实起点
+ *   抛出并瞄向目标脚底的真实支撑面、末击更重、暴击，都是随机或配置结果，写进 note 供读轨迹判断。
  */
 Smoke.scenario("bonerush", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -25,7 +25,8 @@ Smoke.scenario("bonerush", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("bonerush", caster) >= 1, "the caster committed bonerush");
             stage.expect(stage.damageTo(foe) > 0, "the ground shock dealt damage to the foe");
-            stage.note("strikes (2-5) follow attack/level and the fissure choice; each bone flies a ballistic arc and stops at the real contact, rolls 90%, and the last strike is heavier; the landing only leaves fading dust and does not replace terrain, and only grounded targets take the ground shock", {
+            stage.expect(stage.changedBlocks().length === 0, "the landing left no terrain change");
+            stage.note("strikes (2-5) follow attack/level and the fissure choice; each bone flies a ballistic arc from the body top to the real support under the target's feet, stops at the real contact, rolls 90%, and the last strike is heavier; only real same-layer support with a clear line transmits the shock (walls and airborne targets do not), and the landing only leaves fading dust without replacing terrain", {
                 casts: stage.casts("bonerush", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 changedBlocks: stage.changedBlocks().length,

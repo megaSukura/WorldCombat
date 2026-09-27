@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.metalsound.summary": "摩擦身上的金属，发出让人牙酸的高频声，隔着掩体也能送到对手耳里，分几次一次一级地刮掉它的特防。要把音磨出来就得先站定，起手很长；每刮过一次会重新核对目标还在射程内；长磨多刮一级、回响更久，但更慢。",
+  "worldcombat.skill.metalsound.summary": "摩擦身上的金属，发出让人牙酸的高频声，隔着掩体也能送到对手耳里，分几次一次一级地刮掉它的特防。要把音磨出来就得先站定，起手很长；每刮过一次会重新核对目标还在射程内、自己还在原地；长磨多刮一级、回响更久，但更慢。回响结束或被打断时，未刮完的临时降级一并收回。",
   "worldcombat.skill.metalsound.use.0": "隔着掩体一级一级磨掉一个特防位",
   "worldcombat.skill.metalsound.use.1": "在队友承伤、目标走不动时把特防刮到底",
-  "worldcombat.skill.metalsound.use.2": "在墙后安全起手，再把声音送到对面",
-  "worldcombat.skill.metalsound.description.0": "目标一共被刮掉 %1$s 级特防，每一次之间隔约 %3$s，并带上约 %2$s 的回响；回响期间身上持续荡开金属声纹，同伴也不会对它重复刮擦。级别下降按常规能力等级逐级保留。",
-  "worldcombat.skill.metalsound.description.1": "声音能送到 %1$s 格外的耳朵里；掩体挡不住它；每段之前都会重新核对目标还在这个距离内，离开就停掉剩下的刮擦。",
+  "worldcombat.skill.metalsound.use.2": "在墙后安全起手，再把声音送到对面，或送到只记得上次位置的目标",
+  "worldcombat.skill.metalsound.description.0": "目标被临时刮掉 %1$s 级特防（绑在那一份回响上），每一次之间隔约 %3$s，并带上约 %2$s 的回响；回响期间身上持续荡开金属声纹，同伴也不会对它重复刮擦。回响结束、被驱散或被打断时，这几级一并收回。",
+  "worldcombat.skill.metalsound.description.1": "声音能送到 %1$s 格外的耳朵里；掩体挡不住它；可指向一个敌人，也可指向一个世界点、取该点附近最近的非友方。每段之前都会重新核对目标还在这个距离内、施法者还在原地，离开或被移动就停掉剩下的刮擦。",
   "worldcombat.skill.metalsound.description.2": "站定磨音 %1$s，冷却 %2$s。",
   "worldcombat.skill.metalsound.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.metalsound.value.reach": "回响距离",
@@ -22,5 +22,6 @@
   "worldcombat.skill.metalsound.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去磨音。",
   "world_combat.move.metalsound.text.grate": "金属音刮过（特防 -%1$s）",
   "world_combat.move.metalsound.text.break": "金属音被拉开了距离",
+  "world_combat.move.metalsound.text.broken": "金属音被打断（离开了原位）",
   "effect.world_combat.metal_sound_grating": "刮擦"
 }

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.doubleteam.summary": "向选定侧方短移，在实际经过的位置留下数个一击即破的假身；追兵可能扑向旧位置，本体仍正常承受命中的伤害。",
+  "worldcombat.skill.doubleteam.summary": "向选定侧方短移，在真正走过的位置隔开放下数个一击即破的诱饵身体；追兵可能把矛头转向旧位置，本体仍正常承受命中的伤害。",
   "worldcombat.skill.doubleteam.use.0": "在被集火前先手留影，把伤害引到影子上",
   "worldcombat.skill.doubleteam.use.1": "被追击时借加速脱身，让残影替你挨打",
   "worldcombat.skill.doubleteam.use.2": "为换位或撤退争取几秒",
-  "worldcombat.skill.doubleteam.description.0": "侧移预算约 %1$s 格，墙与活体会缩短实际行程；只在走过且可容纳实体的位置留下少量假身。",
-  "worldcombat.skill.doubleteam.description.1": "假身持续 %1$s，并继承本次加速身份的清理；期间本体移动速度提高12%%，宝可梦保留1级闪避提升。每个假身可被直接打碎。",
+  "worldcombat.skill.doubleteam.description.0": "侧移预算约 %1$s 格，墙与活体会缩短实际行程；只在走过、彼此留出间距且能容纳实体的位置留下少量诱饵，路短就少留。",
+  "worldcombat.skill.doubleteam.description.1": "诱饵持续 %1$s，并随这一身份的清理一起消失；期间本体移动速度提高12%%（短暂余势），宝可梦保留1级闪避提升（持久的等级提升）。每个诱饵可被直接打碎。",
   "worldcombat.skill.doubleteam.description.2": "起手 %1$s，收势 %2$s，冷却 %3$s。群影数量更多、持续较长、侧移略短；疾影更快更远、影子较少，并获得额外加速。",
   "worldcombat.skill.doubleteam.value.copies": "分身数",
   "worldcombat.skill.doubleteam.value.mirrorPool": "侧移距离",

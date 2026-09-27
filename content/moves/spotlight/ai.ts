@@ -6,8 +6,9 @@
  * 对谁出手（敌方）：当前威胁；够不到先交给共享接近逻辑。
  * 候选之间怎么排（敌方）：身边友方越多、目标生命越高，越值得先照；否则只当普通控制用。
  * 照应友军（ai.assist，默认关闭）：开启后，当 ai.maxChase 内有友军生命低于 ai.allyBelow、旁边又有一名
- *   生命不低于 ai.coverFloor 的耐打友军时，AI 会向这名耐打友军聚光，把周围敌人的火力引过去；它因此挨打是
- *   明确的代价，所以只在真有脆弱友军需要被护、且引火者承伤合理时才建议。关闭时只标敌方集火目标。
+ *   耐受（生命比例 × 防御加成）不低于 ai.coverFloor 的友军，且它的扫过范围确实罩住被护对象身边的威胁时，
+ *   AI 会向这名友军聚光，把周围敌人的火力引过去；它因此挨打是明确的代价，所以只在真有脆弱友军需要被护、
+ *   引火者真能承伤、且覆盖到威胁时才建议。关闭时只标敌方集火目标。
  * 放完之后：目标继续被照亮并承受更重的伤害，施法者交回共享顺序继续战斗；照明还在时不重复照。
  * 配置：mode 切换穿刺／钉住；ai.maxChase、ai.focus、ai.leaveStation 决定射程、要不要凑够同伴、驻守时是否离位；
  *   ai.assist、ai.allyBelow、ai.coverFloor 决定照应友军的开关与门槛。
@@ -23,8 +24,8 @@ namespace CompanionBehavior {
     spotlightAssist.help = "开启后，附近有脆弱友军被威胁时，会向一名较耐打的友军聚光把火力引过去；关闭则只把敌方标成集火目标。";
     const spotlightAllyBelow = PokemonSkills.number("ai.allyBelow", "友军告急血量", 0.1, 0.9, 0.05);
     spotlightAllyBelow.help = "友军生命低于这个比例才算需要被保护；调高更愿意替人引火，调低只在友军快倒下时才照。";
-    const spotlightCoverFloor = PokemonSkills.number("ai.coverFloor", "引火者承伤下限", 0.2, 0.9, 0.05);
-    spotlightCoverFloor.help = "只有生命比例不低于这个值的友军才会被选中引火；调高只让更健康的友军承担额外伤害，调低更愿意让伤者也来引火。";
+    const spotlightCoverFloor = PokemonSkills.number("ai.coverFloor", "引火者耐受下限", 0.2, 0.9, 0.05);
+    spotlightCoverFloor.help = "只有耐受（生命比例 × 防御与特防加成）不低于这个值的友军才会被选中引火；调高只让真正耐打者承担额外伤害，调低也允许伤者引火。";
 
     function spotlightAllies(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
@@ -34,6 +35,34 @@ namespace CompanionBehavior {
             if (other.friendly && other.health > 0 && CompanionBehavior.distance(other.point, target.point) <= 8) count++;
         }
         return count;
+    }
+
+    /** 本招扫过范围，供 AI 用同一机制值核对引火覆盖；不另存第二份常量。 */
+    CompanionBehavior.registerFact("world_combat:move_spotlight/sweep", function (world) {
+        return PokemonSkills.p("spotlight", "sweepRadius", world);
+    });
+
+    /** 真正的耐受：生命比例叠上防御与特防，满血脆皮不再等同于耐打坦克。 */
+    function spotlightToughness(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const stats = CompanionBehavior.combatStats(context, target), values = stats && stats.stats ? stats.stats : null;
+        const defend = values && isFinite(Number(values.def)) ? Math.max(0, Number(values.def)) : 0;
+        const special = values && isFinite(Number(values.spd)) ? Math.max(0, Number(values.spd)) : 0;
+        return CompanionBehavior.ratio(target) * (1 + (defend + special) / 200);
+    }
+
+    /** 被护对象身边确有一名敌对威胁落在引火者的扫过范围内，才算这次引火真的覆盖到人。 */
+    function spotlightThreatNear(context: WorldBehavior.Context, item: WorldBehavior.Capability,
+        fragile: CompanionBehavior.Entity, candidate: CompanionBehavior.Entity): number {
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const sweep = CompanionBehavior.fact<number>(context, "world_combat:move_spotlight/sweep", candidate) || 4;
+        const watch = ai<number>(item, "maxChase", 14);
+        for (let i = 0; i < nearby.length; i++) {
+            const enemy = nearby[i];
+            if (enemy.friendly || !enemy.hostile || enemy.health <= 0 || !enemy.visible) continue;
+            if (CompanionBehavior.distance(enemy.point, fragile.point) > watch) continue;
+            if (CompanionBehavior.distance(enemy.point, candidate.point) <= sweep) return sweep;
+        }
+        return 0;
     }
 
     /** 需要在 ai.maxChase 内被保护的最脆弱友军；没有则不影响 AI。 */
@@ -52,19 +81,23 @@ namespace CompanionBehavior {
         return best;
     }
 
-    /** 引火者：离最脆弱友军最近、且承伤合理（生命不低于 ai.coverFloor）的另一名友军。 */
+    /** 引火者：贴近被护对象、真正耐受（生命比例叠防御）且扫过范围确实罩住威胁的另一名友军。 */
     function spotlightCoverAlly(context: WorldBehavior.Context, item: WorldBehavior.Capability): CompanionBehavior.Entity | null {
         const fragile = spotlightFragile(context, item);
         if (!fragile) return null;
         const self = source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
         const reach = ai<number>(item, "maxChase", 14), floor = ai<number>(item, "coverFloor", 0.55);
+        const sweep = CompanionBehavior.fact<number>(context, "world_combat:move_spotlight/sweep", fragile) || 4;
         let best: CompanionBehavior.Entity | null = null, bestDistance = Infinity;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (!other.friendly || other.health <= 0 || !other.visible || other.ref === self.ref) continue;
             if (CompanionBehavior.status(context, other, "spotlight")) continue;
-            if (CompanionBehavior.ratio(other) < floor) continue;
+            if (spotlightToughness(context, other) < floor) continue;
             if (CompanionBehavior.distance(self.point, other.point) > reach) continue;
+            // 引火者必须贴近被护对象，且至少有一名威胁落进它的扫过范围。
+            if (CompanionBehavior.distance(other.point, fragile.point) > sweep) continue;
+            if (!spotlightThreatNear(context, item, fragile, other)) continue;
             const d = CompanionBehavior.distance(other.point, fragile.point);
             if (d >= bestDistance) continue;
             best = other; bestDistance = d;
@@ -87,7 +120,7 @@ namespace CompanionBehavior {
                 if (purpose !== "world_combat:cover" || !ai<boolean>(capability, "assist", false)) return false;
                 if (target.ref === self.ref || target.health <= 0 || !target.visible) return false;
                 if (status(context, target, "spotlight")) return false;
-                if (ratio(target) < ai<number>(capability, "coverFloor", 0.55)) return false;
+                if (spotlightToughness(context, target) < ai<number>(capability, "coverFloor", 0.55)) return false;
                 if (distance(self.point, target.point) > ai<number>(capability, "maxChase", 14)) return false;
                 return spotlightFragile(context, capability) !== null;
             }

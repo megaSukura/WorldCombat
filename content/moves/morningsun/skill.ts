@@ -4,16 +4,28 @@
  * 核心念头：把初升的日光一次拽到身上。白天晴空（或共享语义烈日）下这一口最足，还带一阵晨间的轻快；夜里或阴雨只剩下一点余光。
  *
  * 出手：共享节奏，短促迎候（时长随速度缩短），准备期间仍可正常移动，不新增站桩。
- * 结果：提交后按 heal（白天晴空 × 特攻）一次补回生命；若真的接住了晨光，再给自己一段 minecraft:speed。
- *   治疗与速度分别记录实际结果：没回进生命就不播回血成功，速度被拒（或已有更强提速）也不报振作成功。
+ * 结果：提交后按 heal（白天晴空 × 特攻）一次补回生命；只有**本次真的回进生命**、且处在强光（白天晴空／共享烈日）时，
+ *   才给自己一段 minecraft:speed。治疗与速度分别记录实际结果：没回进生命就不播回血成功、也不白拿加速；速度被拒
+ *   （或已有更强提速）也不报振作成功。表现按真实强/弱光分开——强光是从头顶照下的亮束，弱光只是零散暗光。
  * 反制：迎候期可被打断（不花 PP）；夜里或雨天动用只回下限、也不带加速，所以要看天。
  */
 namespace PokemonSkills {
     const morningsunScene = "world_combat:move_morningsun";
     const morningsunTextDawn = "world_combat.move.morningsun.text.dawn";
     const morningsunTextDim = "world_combat.move.morningsun.text.dim";
+    const morningsunTextVigor = "world_combat.move.morningsun.text.vigor";
 
     function morningsunAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 0.9, 0)); }
+
+    /** 本次朝向（水平）：脚边的光点据此落在身体左右两侧，而不是固定在世界的 X 轴两侧。 */
+    function morningsunHeading(world: CombatWorld, self: CombatActor): number[] {
+        const look = WorldGeometry.facing(world, self);
+        if (look !== null) {
+            const length = Math.sqrt(look.x() * look.x() + look.z() * look.z());
+            if (length > 1e-4) return [look.x() / length, 0, look.z() / length];
+        }
+        return [0, 0, 1];
+    }
 
     /** 回复走共享健康写入：宝可梦经过 NativeEffects.heal（含受治疗加成），其他战斗者直接写 MC 生命。 */
     function morningsunHeal(world: CombatWorld, self: CombatActor, missing: number, fraction: number): number {
@@ -39,7 +51,7 @@ namespace PokemonSkills {
         fields: [],
         indicator: function () { return { radius: 1, style: "dawn", label: "晨光" }; },
         resolve: function (pokemon, config, world, actor, attributes) {
-            var context: NumberContext = { pokemon: pokemon, skill: skills[morningsunId], detail: { values: config },
+            var context: NumberContext = { pokemon, skill: skills[morningsunId], detail: { values: config },
                 world: world || null, actor: actor || null, attributes: attributes };
             return { prepare: Math.max(4, Math.round(p(morningsunId, "sunriseTicks", context))),
                 recover: 10, cooldown: Math.max(60, Math.round(p(morningsunId, "cooldown", context))), active: 0, range: 0 };
@@ -68,8 +80,9 @@ namespace PokemonSkills {
             var after = world.observe(self);
             var gained = after ? Math.max(0, after.health() - before) : 0;
             var share = missing > 0 ? Math.max(0, Math.min(1, gained / missing)) : 0;
-            // 治疗与振作分别记录：先按实际进账决定回血画面，再按实际提速结果决定振作画面。
-            var vigor = dawn ? Math.max(20, Math.round(p(morningsunId, "vigorTicks", action))) : 0;
+            var heading = morningsunHeading(world, self);
+            // 提速绑定本次实际正治疗：没回进生命就不白拿加速；治疗/提速分别按实际结果记录与呈现。
+            var vigor = dawn && gained > 0 ? Math.max(20, Math.round(p(morningsunId, "vigorTicks", action))) : 0;
             var vigorApplied = false;
             if (vigor > 0) {
                 MobEffects.apply(world, self, "minecraft:speed", vigor, 0);
@@ -81,8 +94,9 @@ namespace PokemonSkills {
             world.sound("minecraft:block.moss.place", point, 16, "{}");
             if (gained > 0) {
                 WorldFeedback.emit(world, morningsunScene, 1, point,
-                    { moment: "dawn", target: String(self.ref()), dawn: dawn ? 1 : 0, share: share,
-                        bursts: bursts, scale: dawn ? 1.5 : 0.85, rays: dawn ? 16 : 6 }, 34);
+                    { moment: dawn ? "dawn" : "glimmer", target: String(self.ref()), dawn: dawn ? 1 : 0, share: share,
+                        bursts: bursts, scale: dawn ? 1.5 : 0.85, rays: dawn ? 16 : 6,
+                        beamRate: dawn ? 22 : 0, direction: heading }, 34);
             } else {
                 WorldFeedback.emit(world, morningsunScene, 1, point,
                     { moment: "hush", target: String(self.ref()), dawn: dawn ? 1 : 0, scale: dawn ? 1 : 0.7 }, 26);
@@ -90,9 +104,13 @@ namespace PokemonSkills {
             if (vigorApplied) {
                 sound(action, "minecraft:block.amethyst_block.chime");
                 WorldFeedback.emit(world, morningsunScene, 1, point,
-                    { moment: "vigor", target: String(self.ref()), scale: 1 }, 36);
+                    { moment: "vigor", target: String(self.ref()), scale: 1, direction: heading }, 36);
             }
-            WorldFeedback.text(world, morningsunAbove(point), gained > 0 ? morningsunTextDawn : morningsunTextDim, [], 30);
+            WorldFeedback.text(world, morningsunAbove(point), gained > 0 && dawn ? morningsunTextDawn : morningsunTextDim, [], 30);
+            if (vigorApplied)
+                WorldFeedback.emit(world, "world_combat:feedback", 1, morningsunAbove(point),
+                    { kind: "world-text", start: world.tick(), duration: 30, key: morningsunTextVigor, args: [] }, 30,
+                    "world_combat:move_morningsun/vigor");
             done(action);
         }
     });

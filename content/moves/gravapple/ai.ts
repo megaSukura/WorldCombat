@@ -2,7 +2,8 @@
  * 万有引力 / gravapple 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 9）格内；更远交给共享接近逻辑。
- * 目标头顶要有让苹果落下的真实空间（`freeSpace` 探针），低顶棚里不硬塞一颗穿天花板而过的苹果。
+ * 目标头顶要有让苹果落下的真实空间（与招式同一套 `gravapplePlacement` 判据、读同一个苹果判定公式），低顶棚里不硬塞。
+ * 支持对最近确实看到的点落苹果（`memoryAim`）：记忆点没有实体引用，因此不会被当成隐藏的实时锁头。
  * `ai.dropFliers` 开启（默认）时按局面排序：**离地的目标最值**（苹果会把它砸回地面、还按原作多打五成），
  * 站定不动（慢速）的目标次之，站在地上还没被压碎防御的再次；已经带着破防身份的目标降到很后。
  * 对谁出手：`accepts` 只筛阵营、存活与可见，不筛距离（距离归 `approach`）。
@@ -12,6 +13,8 @@
 namespace PokemonSkills {
     CompanionBehavior.registerUse("gravapple", {
         protocols: ["world_combat:attack"],
+        // 支持对最近确实看到的点落苹果（显式有限记忆）；记忆点没有实体引用，因此不会走隐藏的实时锁定。
+        memoryAim: true,
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
@@ -19,11 +22,13 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point)
                 > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return false;
-            // 目标头顶留得下苹果才落：低顶棚不误判高落程，也不让苹果卡进天花板。
+            // 与招式共用同一套出生空间判据和个体公式：目标头顶留得下苹果才落。
             const world = CompanionBehavior.world(context);
-            const top = typeof target.height === "number" && target.height > 0 ? target.height : 1.4;
-            const probe = CompanionBehavior.point([target.point[0], target.point[1] + top * 0.5 + 0.5, target.point[2]]);
-            return world.freeSpace(probe, 0.7, 0.7);
+            const skill = skills["gravapple"];
+            const sphere = { world: world, actor: world.source(), skill: skill, detail: { values: capability.data.config } };
+            const radius = p("gravapple", "collisionRadius", sphere);
+            const desired = p("gravapple", "dropHeight", sphere);
+            return gravapplePlacement(world, CompanionBehavior.point(target.point), desired, radius) !== null;
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

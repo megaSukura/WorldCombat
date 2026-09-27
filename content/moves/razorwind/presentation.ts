@@ -1,15 +1,14 @@
 /**
  * 旋风刀 / razorwind 的客户端表现。
  *
- * 一句话：站定后一圈风刃在身周拧起、越积越多，随后整把扇子朝身前铺开，扇面里的目标被风刃扫出成片碎屑；
- * 真切中要害时再闪一记亮白。
- * 色相家族：淡青白与近白（swirlingwind／cut／swipe 的青白偏色）＋中性尘（tinydust）＋白色强调。
- * 拍子：蓄（charge 风刃绕身累积）→ 发（release 三段环扇按真实推进时刻依次亮起）→ 切（cut 命中爆）→ 强调（crit 要害）。
- * 范围：release 用 `data.path`（与服务端 `razorwindBand` 同一段环扇顶点）按 `data.band` 逐段画出推进中的扇面；哪段亮就打到哪。
- * 运动：charge 风刃绕身旋转并向内收，release 每段环扇的边缘由内向外亮起，cut 碎屑沿切口向外爆。
- * 数：`data.blades`（速度与特攻换算）绑定绕身风刃的发射量，`data.motes` 绑定扇面与命中的风屑量；
- *   `data.scale`／`data.intensity` 让散流式比集刃式更大更亮。
- * 参照节：视觉语言第二、三、四、六、七、九节。
+ * 一句话：站定后一圈风刃在身周拧起、越积越多越亮，随后整把扇子朝身前铺开，每一拍的真实前缘短促亮起，
+ *   扇面里的目标被风刃扫出成片碎屑；真切中要害时再闪一记亮白。
+ * 色相家族：淡青白与近白（swirlingwind／cut／softswipe 的青白偏色）＋中性尘（tinydust）＋白色强调。
+ * 拍子：蓄（charge 风刃绕身收拢成冠）→ 发（release 三段扇面按段亮起）→ 切（cut 命中爆）→ 强调（crit 要害）。
+ * 范围：release 用 `data.path`（与服务端 `razorwindBand` 同一段被墙截短的扇带顶点）按 `data.band` 逐段填充；
+ *   `data.blades` 绑定绕身风刃冠的发射量，`data.motes` 绑定扇面与命中的风屑量。
+ * 前缘：`world_combat:move_razorwind_edge` 自定义场景沿 `data.edge`（该拍外弧、与判定同源）画一条短亮线，
+ *   固定顶点、固定数量，不生成粒子或实体。
  */
 const RazorwindDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -19,19 +18,26 @@ const RazorwindDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "orbit", bind: "source", offset: [0, 0.7, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: { data: "blades", fallback: 6 }, shape: { kind: "ring", radius: 1.0 },
-                    direction: "inward", speed: [0.04, 0.12],
-                    lifetime: [10, 18], size: [0.24, 0.05],
-                    color: 0xA8D8C0, alpha: [0.55, 0], light: "full", bloom: 0.2, maxParticles: 90
+                    name: "crown", bind: "source", offset: [0, 0.8, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    rate: { data: "blades", fallback: 6 }, shape: { kind: "ring", radius: 0.95 },
+                    direction: "inward", speed: [0.05, 0.16], spin: 20,
+                    lifetime: [8, 14], size: [0.3, 0.06],
+                    color: 0xDFF3E6, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
                     name: "whet", bind: "source", offset: [0, 0.9, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/cut",
-                    rate: 12, shape: { kind: "sphere", radius: 0.9 }, direction: "inward", speed: [0.06, 0.16],
-                    lifetime: [6, 12], size: [0.18, 0.04], spriteFrom: "random",
-                    color: 0xE8F6EE, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 60
+                    rate: 10, shape: { kind: "sphere", radius: 0.85 }, direction: "inward", speed: [0.05, 0.15],
+                    lifetime: [6, 12], size: [0.16, 0.04], spriteFrom: "random",
+                    color: 0xE8F6EE, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 50
+                },
+                {
+                    name: "orbit", bind: "source", offset: [0, 0.7, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
+                    rate: 6, shape: { kind: "ring", radius: 1.0 }, direction: "inward", speed: [0.03, 0.1],
+                    lifetime: [10, 18], size: [0.22, 0.05],
+                    color: 0xA8D8C0, alpha: [0.4, 0], light: "full", maxParticles: 60
                 }
             ]
         },
@@ -40,19 +46,11 @@ const RazorwindDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 13 },
             emitters: [
                 {
-                    name: "fan_fill", bind: "path", offset: [0, 0.6, 0],
+                    name: "fan_fill", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/cut",
                     shape: { kind: "polygon" }, rate: { data: "motes", fallback: 22 }, direction: "shape", speed: [0.04, 0.14],
                     lifetime: [7, 14], size: [0.3, 0.06],
                     color: 0xDFF3E6, alpha: [0.3, 0], light: "full", maxParticles: 130
-                },
-                {
-                    name: "fan_edge", bind: "path", offset: [0, 0.65, 0],
-                    particle: "world_combat_core:cobblemon/generic/softswipe",
-                    shape: { kind: "polyline", closed: true },
-                    rate: 30, direction: "shape", speed: [0.06, 0.18], spread: 6,
-                    lifetime: [5, 11], size: [0.34, 0.06], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 110
                 }
             ]
         },
@@ -118,3 +116,40 @@ const RazorwindDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_razorwind", 1, RazorwindDefinition);
+
+/** 该拍真实前缘：沿外弧顶点画一条短亮线并在弧上点几枚固定刃形贴图；数量固定、路径由服务端给定。 */
+const RazorwindEdge = "cobblemon:particle/generic/softswipe";
+function razorwindNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+function razorwindPoints(value: any): number[][] {
+    if (!Array.isArray(value)) return [];
+    const points: number[][] = [];
+    for (let i = 0; i < value.length; i++) {
+        const entry = value[i];
+        if (Array.isArray(entry) && entry.length === 3 && entry.every(function (n: any) { return typeof n === "number" && isFinite(n); }))
+            points.push([Number(entry[0]), Number(entry[1]), Number(entry[2])]);
+    }
+    return points;
+}
+
+WorldCombatClient.scene("world_combat:move_razorwind_edge", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const edge = razorwindPoints(data.edge);
+    if (edge.length < 2) return;
+    const intensity = Math.max(0.6, Math.min(2.4, razorwindNumber(data.intensity, 1)));
+    const alpha = Math.round(Math.min(1.5, intensity) * 200);
+    for (let i = 1; i < edge.length; i++) {
+        const a = edge[i - 1], b = edge[i];
+        frame.line(a[0], a[1], a[2], b[0], b[1], b[2], ((alpha << 24) | 0xFFFFFF) | 0);
+    }
+    const step = edge.length > 6 ? 2 : 1;
+    for (let i = 0; i < edge.length; i += step) {
+        const at = edge[i];
+        frame.sprite(RazorwindEdge, at[0], at[1] + 0.1, at[2], 0.28 + 0.1 * intensity, 0,
+            ((Math.round(alpha * 0.9) << 24) | 0xFFFFFF) | 0, 0, true);
+    }
+});

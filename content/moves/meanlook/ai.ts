@@ -4,7 +4,8 @@
  * 什么局面有意义：有可见威胁、在 ai.maxChase（默认 10）格以内、目标还没被定住、视线通畅。
  *   只在**没有近身威胁**时用：目标或别的敌人已经贴到身边（默认 3 格内）时不凝视——术者站定不动会被白打。
  *   目标正在逃跑时加分（`ai.catchRunners` 默认开）：它正要离开，一道目光正好把它钉住。
- *   只有目标离得够近（`ai.holdRange` 默认 8）时才值得用——太远目光拉不住，术者反而白站。
+ *   距离门槛取本招实际可施距离（min(施放距离, 绷断距离)，由 resolve 给出）与 `ai.holdRange` 的较小者——
+ *   太远目光拉不住，术者反而白站；`ai.holdRange` 只能把考虑范围收得更紧，不会超出机制射程。
  * 对谁出手：当前威胁；已被 trapped（任何来源）的目标跳过。
  * 够不到怎么办：reach 就是凝视距离，超出先走近；视线被掩体挡住时交回共享接近逻辑，找得到角度再瞪。
  * 放完之后：术者在这段时间里站定不动、不能出手，目标被完全钉住；锁一被破坏（遮断、拽开、被打断、
@@ -31,7 +32,7 @@ namespace CompanionBehavior {
             if (other.ref === threat.ref || !other.visible || other.friendly || other.health <= 0) continue;
             if (distance(self.point, other.point) < 3) return false;
         }
-        const range = ai<number>(item, "holdRange", 8);
+        const range = Math.min(ai<number>(item, "holdRange", 8), item.data.range);
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > Math.min(ai<number>(item, "maxChase", 10), range)) return false;
         return world(context).clear(point(self.point), point(threat.point));
     }

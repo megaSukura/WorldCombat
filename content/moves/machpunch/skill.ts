@@ -7,9 +7,10 @@
  * 两幕：
  *   起（windup，提交前）：拳锋在身前收拢、压缩空气在拳上成形，只播预告（present chamber）；默认起手 0 刻，
  *       这一拍极短，重拳式才看得清。
- *   打（execute）：提交后从身体中心朝瞄准方向做一次瞬时直线判定——拳锋细闪先到；撞上非友方活体就只结算一次 jab
- *       （带 punch 标记）并沿出拳方向把它顶开一点；成功与免伤都在真实接触点给一次接触回执，免伤只显示格挡不报伤害数。
- *       音爆延后极短 1–2 刻，只是一声短音爆与小冲环，不二次伤害；一路无人在射程线上就只是挥空（whiff）。
+ *   打（execute）：提交后从身体中心朝瞄准方向做一次瞬时直线判定——拳锋细闪先到，并即时从体侧到真实接触点画一条短拳迹；
+ *       撞上非友方活体就只结算一次 jab（带 punch 标记）并沿出拳方向把它顶开一点；成功与免伤都在真实接触点给一次接触回执，
+ *       免伤只显示格挡不报伤害数。音爆延后极短 1–2 刻，落在同一接触点、沿拳向展开，只是一声短音爆与小冲环，不二次伤害；
+ *       一路无人在射程线上就只是挥空（whiff），拳迹停在射线真实终点。
  *
  * 与同族分开：快手还击只在对手出手时闪身刺、有闪身位移；音速拳任何时候都能出、不闪身。
  *   击掌奇袭只在刚出场、拍懵并打断；音速拳没有懵、没有打断，只是最快的贴身一拳。
@@ -64,7 +65,16 @@ namespace PokemonSkills {
             const scale = radius / 0.36;
             const intensity = Math.max(0.6, Math.min(2.2, power / 60));
             const origin = action.origin();
+            const body = world.observe(action.actor());
+            // 连贯拳形：从体侧到真实接触点画一条短拳迹；方向锁定在释放那一刻。
+            const frame = WorldGeometry.basis(direction, WorldCombat.point(0, 0, 1));
+            const side = origin.plus(frame.right.scale(Math.max(0.12, (body === null ? 0.9 : body.width()) * 0.45)));
             const end = origin.plus(direction.scale(reach));
+            const aimed = [direction.x(), direction.y(), direction.z()];
+
+            function punchPath(to: CombatPoint): number[][] {
+                return [[side.x(), side.y(), side.z()], [to.x(), to.y(), to.z()]];
+            }
 
             sound(action, "minecraft:entity.player.attack.weak");
 
@@ -73,7 +83,7 @@ namespace PokemonSkills {
                 current.after(2, function (next: CombatAction) {
                     const scope = next.world();
                     WorldFeedback.emit(scope, machpunchScene, 1, at,
-                        { moment: landed ? "boom" : "blocked", point: [at.x(), at.y(), at.z()],
+                        { moment: landed ? "boom" : "blocked", point: [at.x(), at.y(), at.z()], direction: aimed,
                             count: count, ring: ring, boom: boom, scale: scale, intensity: intensity }, 18);
                     scope.sound("minecraft:entity.warden.sonic_boom", at, 14, "{}");
                 });
@@ -84,7 +94,8 @@ namespace PokemonSkills {
             if (hit.hitEntity() && victim !== null && world.valid(victim) && !world.friendly(victim)) {
                 const at = hit.position();
                 WorldFeedback.emit(world, machpunchScene, 1, at,
-                    { moment: "contact", point: [at.x(), at.y(), at.z()], target: String(victim.ref()), scale: scale, intensity: intensity }, 14);
+                    { moment: "contact", point: [at.x(), at.y(), at.z()], path: punchPath(at), direction: aimed,
+                        target: String(victim.ref()), scale: scale, intensity: intensity }, 14);
                 const landed = impact(action, hit, machpunchId, power,
                     { damage: damageSpec(machpunchId, "jab"), contact: true, punch: true });
                 if (landed) {
@@ -100,7 +111,8 @@ namespace PokemonSkills {
             }
             const at = hit.blocked() ? hit.position() : end;
             WorldFeedback.emit(world, machpunchScene, 1, at,
-                { moment: "whiff", point: [at.x(), at.y(), at.z()], ring: ring, boom: boom, scale: scale, intensity: intensity }, 16);
+                { moment: "whiff", point: [at.x(), at.y(), at.z()], path: punchPath(at), direction: aimed,
+                    ring: ring, boom: boom, scale: scale, intensity: intensity }, 16);
             world.sound("minecraft:entity.player.attack.sweep", at, 14, "{}");
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), machpunchWhiffText, [], 22);
             done(action);

@@ -2,11 +2,12 @@
  * 胜利之舞 / victorydance 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：即将连续作战、并且能保持进攻时，先立一场凯旋。存在威胁且在 ai.maxChase 内、
- *   又还没近到 ai.minGap 以内时，priority 越过共享交战次序（100）；对手生命已掉到一半以下、胜利在望时抬到 112——
- *   这时开仪典，随后的每一次命中都会把这份凯旋延续下去。
+ *   又还没近到 ai.minGap 以内时，priority 越过共享交战次序（100）。
+ * 什么时候最想出手：威胁血线还长、且按「起式 + 拍数 × 拍间 + 收招」估出的整段仪式能在敌人逼近前完成时给 112；
+ *   敌人已在残血（<30%）时降到 90——不值得为一场长仪式投入，先普通攻击收掉；贴身逼近、来不及安全完成时给 95。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：终端拍在头顶升起冠冕、攻防速各 +1；冠还在时本招不可再次起舞（available 直接返回 false），
- *   交回共享交战计划继续进攻经营——每一次命中都把窗口向上延续，直到很久没有战果才落幕。
+ * 放完之后：终拍在头顶升起冠冕、攻防速各 +1；冠还在时本招不可再次起舞（available 直接返回 false），
+ *   交回共享交战计划继续进攻经营——每一次命中都把窗口向上延续，直到绝对最迟结束刻才落幕。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("victorydance", {
@@ -28,8 +29,24 @@ namespace PokemonSkills {
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
-            if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 3)) return 0;
-            return CompanionBehavior.ratio(threat) < 0.5 ? 112 : 100;
+            const gap = CompanionBehavior.distance(self.point, threat.point);
+            if (gap < CompanionBehavior.ai<number>(capability, "minGap", 3)) return 0;
+            // 快死的敌人无需长投入：让普通攻击先收掉，不抢着开仪式。
+            if (CompanionBehavior.ratio(threat) < 0.3) return 90;
+            // 按总准备 + 拍数 × 拍间 + 收招估计整段仪式，用敌人实际逼近速度估安全间隔；来不及就不冒险。
+            const world = CompanionBehavior.world(context);
+            const facts = { world: world, actor: world.source(), detail: { values: capability.data.config || {} } };
+            const ceremony = Math.round(p("victorydance", "tempo", facts))
+                + Math.round(p("victorydance", "beats", facts)) * Math.round(p("victorydance", "pace", facts))
+                + Math.round(p("victorydance", "aftercast", facts));
+            const v = CompanionBehavior.velocity(context, threat);
+            if (v) {
+                const dx = self.point[0] - threat.point[0], dz = self.point[2] - threat.point[2];
+                const length = Math.max(0.01, Math.sqrt(dx * dx + dz * dz));
+                const closing = (v[0] * dx + v[2] * dz) / length;
+                if (closing > 0.01 && gap / closing < ceremony) return 95;
+            }
+            return 112;
         }
     });
 

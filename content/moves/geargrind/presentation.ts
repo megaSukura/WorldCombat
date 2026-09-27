@@ -101,7 +101,7 @@ const GeargrindDefinition: ParticleDefinition = {
                 {
                     name: "disc", bind: "point", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    rate: 6, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
+                    rate: { data: "disc", fallback: 6 }, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
                     direction: "outward", speed: [0.02, 0.08], drag: 0.92,
                     lifetime: [8, 12], size: [0.14, 0.04],
                     color: 0x9AA4AE, alpha: [0.4, 0], light: "world", maxParticles: 18

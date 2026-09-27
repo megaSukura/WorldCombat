@@ -15,9 +15,6 @@
  * 与同族分开：突袭只抢一下伤害、不断招；双倍奉还只认挨过的物理账；快手还击是本族唯一主动截住对手「这一手」的招式。
  */
 namespace PokemonSkills {
-    /** 迎掌成功的记档：键是托管 guard 效果 id；动作收窗时据此决定合掌还是已经折向攻击者。 */
-    var upperhandParried: { [id: string]: boolean } = Object.create(null);
-
     /** 按停：借本单元带共享身份 world_combat:status/flinch 的载体，走共享门禁，免疫畏缩的目标只挨掌击不挨按停。 */
     function upperhandFlinch(world: CombatWorld, target: CombatActor, ticks: number): boolean {
         if (!CombatStatus.apply(world, target, "flinch", upperhandFlinchEffect, ticks, 0, { secondary: true })) return false;
@@ -49,14 +46,14 @@ namespace PokemonSkills {
             function (victim: CombatActor, facts: CombatObservation): void {
                 if (String(victim.ref()) === ignore) return;
                 const landed = hurt(world, victim, upperhandId, power, { damage: damageSpec(upperhandId, "snap"), contact: true, punch: true });
-                WorldFeedback.emit(world, upperhandScene, 1, facts.position(),
-                    { moment: "wide", target: String(victim.ref()), count: Math.round(14 + power * 0.2), scale: swipe / 1.2,
-                        power: Math.round(power * 10) / 10 }, 28);
                 if (!landed) return;
                 hits++;
+                const flinched = upperhandFlinch(world, victim, flinchTicks);
+                WorldFeedback.emit(world, upperhandScene, 1, facts.position(),
+                    { moment: "wide", target: String(victim.ref()), count: Math.round(14 + power * 0.2), scale: swipe / 1.2,
+                        power: Math.round(power * 10) / 10, reel: flinched ? 3 : 0 }, 28);
                 const away = facts.position().minus(origin);
                 if (away.length() > 0.05) world.hitDisplace(victim, away.unit().scale(push));
-                upperhandFlinch(world, victim, flinchTicks);
             });
         return hits;
     }
@@ -95,24 +92,23 @@ namespace PokemonSkills {
             effect.state(JSON.stringify(custom));
             upperhandParried[String(effect.id())] = true;
             if (attacker === null || !world.valid(attacker)) return;
-            const self = world.observe(effect.target());
-            if (self === null) return;
-            const attackerBody = world.observe(attacker), at = attackerBody === null ? self.position() : attackerBody.position();
+            const self = world.observe(effect.target()), attackerBody = world.observe(attacker);
+            if (self === null || attackerBody === null) return;
+            const at = attackerBody.position(), gap = at.minus(self.position());
+            // 只对可触及的来源还击：远距接触（投射物/脚本接触）这一下照样被挡掌，但不给无关的反击奖励。
+            if (gap.length() > custom.reach + 0.6 || !world.clear(self.position(), at)) return;
             // 纹路折向攻击者：更新绑定在该效果上的持续表现。
             WorldFeedback.onEffect(world, effect.id(), "upperhand:guard", upperhandScene, 1, self.position(),
-                { moment: "fold", target: String(attacker.ref()),
-                    direction: [at.x() - self.position().x(), at.y() - self.position().y(), at.z() - self.position().z()],
-                    scale: custom.scale });
+                { moment: "fold", target: String(attacker.ref()), direction: [gap.x(), gap.y(), gap.z()], scale: custom.scale });
             const landed = hurt(world, attacker, upperhandId, custom.power,
                 { damage: damageSpec(upperhandId, "snap"), contact: true, punch: true });
+            if (!landed) return;
+            const flinched = upperhandFlinch(world, attacker, custom.flinchTicks);
             WorldFeedback.emit(world, upperhandScene, 1, at,
                 { moment: custom.wide ? "wide" : "strike", target: String(attacker.ref()), count: custom.count,
-                    scale: custom.scale, power: custom.powerText }, 28);
+                    scale: custom.scale, power: custom.powerText, reel: flinched ? (custom.wide ? 3 : 4) : 0 }, 28);
             world.sound("cobblemon:impact.fighting", at, 16, "{}");
-            if (!landed) return;
-            const away = at.minus(self.position());
-            if (away.length() > 0.05) world.hitDisplace(attacker, away.unit().scale(custom.push));
-            upperhandFlinch(world, attacker, custom.flinchTicks);
+            if (gap.length() > 0.05) world.hitDisplace(attacker, gap.unit().scale(custom.push));
             if (custom.wide) {
                 upperhandSweep(world, self.position(), WorldCombat.point(custom.facing[0], custom.facing[1], custom.facing[2]),
                     custom.swipe, custom.sweepArc, custom.power, custom.push, custom.flinchTicks, String(attacker.ref()));
@@ -165,6 +161,8 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: marked === null ? "ready" : "alert", windup: prepare,
                     target: marked === null ? "" : String(marked.ref()), direction: [direction.x(), direction.y(), direction.z()],
                     parry: marked === null ? Math.round(p(upperhandId, "parryWindow", action)) : 0,
+                    arc: marked === null ? Math.round(p(upperhandId, "parryArc", action)) : 0,
+                    radius: marked === null ? p(upperhandId, "reach", action) : 0,
                     wide: config && config.wide === true }));
             return prepare;
         },
@@ -195,13 +193,14 @@ namespace PokemonSkills {
                     facing: [facing.x(), facing.y(), facing.z()], arc: arcDegrees * Math.PI / 360,
                     power: power, powerText: Math.round(power * 10) / 10, push: p(upperhandId, "push", action),
                     flinchTicks: flinchTicks, wide: wide, swipe: p(upperhandId, "swipe", action),
-                    sweepArc: p(upperhandId, "arc", action), count: Math.round(14 + power * 0.2), scale: scale, reacted: false };
+                    sweepArc: p(upperhandId, "arc", action), count: Math.round(14 + power * 0.2), scale: scale, reach: reach, reacted: false };
                 const effectId = GuardEffects.apply(world, actor, state, guardTicks);
                 if (effectId <= 0) {
                     WorldFeedback.emit(world, upperhandScene, 1, origin, { moment: "clasp", scale: scale }, 18);
                     done(action);
                     return;
                 }
+                upperhandGuards[String(action.id())] = effectId;
                 WorldFeedback.onEffect(world, effectId, "upperhand:guard", upperhandScene, 1, origin,
                     { moment: "ready", direction: [facing.x(), facing.y(), facing.z()], window: guardTicks, arc: arcDegrees, scale: scale });
                 sound(action, "minecraft:entity.player.attack.sweep");
@@ -214,6 +213,7 @@ namespace PokemonSkills {
                         scope.sound("minecraft:entity.player.attack.sweep", at, 10, "{}");
                     }
                     delete upperhandParried[String(effectId)];
+                    delete upperhandGuards[String(current.id())];
                     done(current);
                 });
                 return;
@@ -234,16 +234,16 @@ namespace PokemonSkills {
             }
 
             function strike(current: CombatAction, victim: CombatActor, point: CombatPoint, dealt: boolean): void {
+                // 只在真实结算成功时播命中：被原生拒绝/免疫不发成功表现；畏缩免疫则只留掌击、不放眩晕鸟。
+                if (!dealt) return;
                 const scope = current.world();
+                const flinched = upperhandFlinch(scope, victim, flinchTicks);
                 WorldFeedback.emit(scope, upperhandScene, 1, point,
                     { moment: wide ? "wide" : "strike", target: String(victim.ref()), count: count,
-                        scale: radius / 0.4, power: Math.round(power * 10) / 10 }, 28);
+                        scale: radius / 0.4, power: Math.round(power * 10) / 10, reel: flinched ? (wide ? 3 : 4) : 0 }, 28);
                 scope.sound("cobblemon:impact.fighting", point, 16, "{}");
-                if (dealt) {
-                    upperhandFlinch(scope, victim, flinchTicks);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), upperhandHitText,
-                        [Math.round(power)], 26);
-                }
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), upperhandHitText,
+                    [Math.round(power)], 26);
             }
 
             if (wide) {

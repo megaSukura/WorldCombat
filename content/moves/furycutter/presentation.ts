@@ -1,15 +1,17 @@
 /**
  * 连斩 / furycutter 的客户端表现。
  *
- * 一句话：刃上先聚起一层黄绿的薄气，随后沿着身前那条短走廊一刀接一刀地掠过，刀刀在目标身上崩出虫咬般的碎屑；
+ * 一句话：刃上先聚起一层黄绿的薄气，随后在身前以自身为心、左右交替扫出一刀接一刀的短刃风，刀刀在目标身上崩出虫咬般的碎屑；
  * 层数每长一层，刃气就更密、更亮一分，落空时这股气立刻散掉。
  * 色相家族：黄绿刃气（swipe／cut／smallsparkle）＋近白高光（cut）＋中性尘（tinydust）。原色为主，只做轻微偏绿。
- * 拍子：起（windup 聚气）→ 斩（cut 逐刀走廊、bite 命中）→ 续（rise 层数上升／streak 层数存续／drop 断招散去）。
- * 范围：cut 用 `data.path`（与服务端 WorldGeometry.lane 同一组四个顶点）铺成走廊，走廊多长多宽画面就是那块。
- * 运动：刃风由近及远沿走廊扫过、左右交替（`data.side` 翻转）；命中碎屑在目标身上向外爆；层数上升时全身向上亮一次。
- * 数：服务端每挥一刀发一条 cut 载荷，条数就是机制段数；cut 的刃面量绑定 `data.notes`（机制段数换算），
+ * 拍子：起（windup 聚气）→ 斩（cut 逐子段扫刃、bite 命中）→ 续（rise 层数上升／streak 层数存续／drop 断招散去）。
+ * 范围：cut 用 `data.path`（与服务端当刻弧带的三个实际端点：心点＋被墙裁过的两端）铺出刚扫过的一小条弧带；弧带怎么动，画面就怎么动。
+ * 运动：每一刀在几刻里从一侧扫到另一侧，服务端每刻发一条 cut，路径本身在动，所以看到的是连续短刀而不是一块常亮矩形；
+ *   命中碎屑在目标身上向外爆；层数上升时全身向上亮一次。
+ * 持续：streak 是无限时长 moment，由层数载体自身的托管效果 presentOn 拥有，载体因任何原因消失即结束，不靠固定时长续期。
+ * 数：服务端每挥一刀发若干条 cut 载荷，条数就是这一刀的扫过子段；cut 的锋光量绑定 `data.notes`（机制段数换算），
  *   命中碎屑绑定 `data.sparks`（每刀威力换算），层数上升的亮点绑定 `data.cuts`（1／2／4），
- *   刃气大小绑定 `data.aura`（由当前层数推出的 0.06..0.12 格）。
+ *   刃气大小绑定 `data.aura`（由当前层数推出的 0.06..0.12 格）；左右交替由 `data.path` 的扫向与 `data.side` 的色相共同交代。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FurycutterDefinition: ParticleDefinition = {
@@ -30,23 +32,24 @@ const FurycutterDefinition: ParticleDefinition = {
             ]
         },
         cut: {
-            duration: 14,
-            exit: { stop: 5, drain: 10 },
+            duration: 8,
+            exit: { stop: 3, drain: 6 },
             emitters: [
                 {
-                    name: "pass_fill", bind: "path", offset: [0, 0.5, 0],
+                    name: "sweep_wash", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/swipe",
-                    shape: { kind: "polygon" }, rate: 30, direction: "shape", speed: [0.04, 0.14],
-                    lifetime: [6, 12], size: [0.3, 0.06],
-                    color: 0x9FC24E, alpha: [0.4, 0], light: "full", maxParticles: 90
+                    shape: { kind: "polygon" }, rate: 24, direction: "shape", speed: [0.03, 0.1],
+                    lifetime: [5, 9], size: [0.26, 0.05],
+                    color: { attribute: "side", colors: { "-1": 0x9FC24E, "1": 0xB6D66A }, fallback: 0x9FC24E },
+                    alpha: [0.32, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "pass_edge", bind: "path", offset: [0, 0.55, 0],
+                    name: "sweep_edge", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/cut",
-                    shape: { kind: "polyline", closed: true },
-                    rate: { data: "notes", fallback: 26 }, direction: "shape", speed: [0.06, 0.2], spread: 10,
-                    lifetime: [5, 9], size: [0.24, 0.04], sizeMode: "index",
-                    color: 0xF2F6D4, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 90
+                    shape: { kind: "polyline" },
+                    rate: { data: "notes", fallback: 22 }, direction: "shape", speed: [0.05, 0.16], spread: 10,
+                    lifetime: [4, 8], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xF2F6D4, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 60
                 }
             ]
         },
@@ -99,8 +102,7 @@ const FurycutterDefinition: ParticleDefinition = {
             ]
         },
         streak: {
-            duration: 40,
-            exit: { stop: 10, drain: 16 },
+            exit: { drain: 16 },
             emitters: [
                 {
                     name: "blade_aura", bind: "source", offset: [0, 0.6, 0], height: 0.4,

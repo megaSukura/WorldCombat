@@ -5,7 +5,8 @@
  *   幽灵个体：目标还没中咒、自己生命高于 ai.bloodFloor（默认 0.6，押出半条命后还站得住）时，把债记上去。
  *   非幽灵个体：自己身上没有契约印记时，押敏捷换凶悍与硬壳。
  * 对谁出手：当前威胁（诅咒需要一个凝视的对象）；够不到先交给共享接近逻辑。
- * 候选之间怎么排：幽灵形态在目标偏残血时抬到 45（收尾），平时 30；非幽灵形态 25。
+ * 候选之间怎么排：幽灵形态按目标身体还能兑现几口债抬高优先级——血厚、收得回的目标更优先，马上会死的不再被高看；
+ *   非幽灵形态 25。
  * 放完之后：绑定效果替施法者慢慢收债或维持交换等级，交回共享顺序继续战斗。
  * 配置：bloodpact 切换血契／稳咒；ai.maxChase、ai.bloodFloor、ai.leaveStation 决定追多远、敢押多狠、驻守时是否离位。
  */
@@ -55,7 +56,11 @@ namespace CompanionBehavior {
         },
         priority: function (context, capability, target) {
             if (!target || !curseSelfGhost(context)) return 25;
-            return ratio(target) < 0.5 ? 45 : 30;
+            // 按这份债还能兑现几口排序：血够厚、收得回多口的目标优先；马上就会死的半血怪不再被高看一眼。
+            var share = capability.data.config && capability.data.config.bloodpact ? 0.25 : 0.14;
+            var perToll = Math.max(1, target.maximum * share);
+            var tolls = Math.max(1, Math.ceil(target.health / perToll));
+            return 30 + Math.min(4, tolls) * 4;
         }
     });
 }

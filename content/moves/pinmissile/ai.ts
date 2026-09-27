@@ -3,8 +3,8 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 12）格之内；更远交给共享接近逻辑。
  *   它单根轻、出手快、带追踪，所以比岩石爆击更愿意从远处先手，也适合贴身缠斗。
- * 对谁出手：`ai.stick`（默认开）打开时，还没被钉住的目标排得更前——先把减速挂上；正在移动的目标也加分，
- *   因为钉刺正好限制脚步。已经钉着针的目标排得稍后，但不会因此被排除。
+ * 对谁出手：`ai.stick`（默认开）打开时按目标**实际钉数与剩余时长**估计这一梭的减速增益——没钉住的最优先，
+ *   到 3 针饱和后仍会为刷新时长或补伤害出手，只是价值降低；正在移动的目标也加分，因为钉刺正好限制脚步。
  * 对 Boss：减速可能被原生免控拒绝，本招不把「能不能挂上减速」当成出手条件——基础针伤照常结算，所以照用。
  * 够不到怎么办：reach 就是本招射程，不够先走近；针带追踪，目标跑动也难甩掉；自由方向也能空发一梭。
  * 放完之后：这一梭射完（或目标先倒）就收势，交回共享交战计划等冷却。
@@ -24,6 +24,14 @@ namespace PokemonSkills {
         return Math.sqrt(value[0] * value[0] + value[1] * value[1] + value[2] * value[2]);
     }
 
+    /** 目标当前真实钉数与剩余时长：按实际层数估计再加一梭的减速增益，而不是「有钉就一律贬值」。 */
+    function pinmissileQuills(context: WorldBehavior.Context, target: CompanionBehavior.Entity): { pins: number; remaining: number } {
+        const world = CompanionBehavior.world(context), actor = world.actor(target.ref);
+        if (actor === null) return { pins: 0, remaining: 0 };
+        const effect = MobEffects.read(world, actor, pinMissileQuills);
+        return effect === null ? { pins: 0, remaining: 0 } : { pins: effect.amplifier() + 1, remaining: effect.duration() };
+    }
+
     CompanionBehavior.registerUse("pinmissile", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -41,7 +49,13 @@ namespace PokemonSkills {
             let score = 15;
             if (distance <= capability.data.range) score += 4;
             if (distance <= 6) score += 4;
-            if (CompanionBehavior.ai<boolean>(capability, "stick", true) && !CompanionBehavior.status(context, target, "quills")) score += 6;
+            if (CompanionBehavior.ai<boolean>(capability, "stick", true)) {
+                const quills = pinmissileQuills(context, target);
+                if (quills.pins <= 0) score += 6;            // 还没钉住：先把减速挂上，收益最高
+                else if (quills.pins < 3) score += 4;        // 未到 3 针饱和：再加一根仍会加深减速
+                else if (quills.remaining <= 40) score += 3; // 已饱和但快到期：刷新时长
+                else score += 1;                             // 已饱和且还早：只为补伤害，仍不贬到 0
+            }
             if (pinmissileMotion(target) > 0.08) score += 4;
             return Math.max(1, score);
         }
@@ -55,8 +69,8 @@ namespace PokemonSkills {
             min: 3, max: 18, step: 1,
             help: "超过这个距离就不主动射针，先走近。越大越愿意从更远处先手。"
         }),
-        field(pathOf("ai.stick"), "优先钉没被粘住的", "boolean", {
-            help: "开启：还没被钉住、或正在移动的目标排得更前，把针先给需要限制脚步的对手；关闭则只按普通攻击排序。不会因为目标可能免疫减速就拒绝出手。"
+        field(pathOf("ai.stick"), "按钉数估值", "boolean", {
+            help: "开启：按目标实际钉数与剩余时长估计这一梭的减速增益——没钉住的最优先，未到 3 针仍加分，饱和后只为刷新或补伤害小幅加分；关闭则只按普通攻击排序。不会因为目标可能免疫减速就拒绝出手。"
         })
     ]);
 }

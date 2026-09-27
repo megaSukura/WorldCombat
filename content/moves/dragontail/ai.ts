@@ -11,18 +11,38 @@
  * `ai.leaveStation`：驻守中的伙伴是否愿意离位去扫（默认关闭）。
  */
 namespace CompanionBehavior {
+    /** 本招当刻真实的扇形：张角走公式（随身高），不再另存一份 ai.arc 近似。 */
+    function dragontailFan(context: WorldBehavior.Context, item: WorldBehavior.Capability): { limit: number; cosHalf: number } {
+        const world = CompanionBehavior.world(context);
+        const sweep = PokemonSkills.p("dragontail", "sweep", { world: world, actor: world.source(),
+            skill: PokemonSkills.skills["dragontail"], detail: { values: item.data.config } });
+        return { limit: item.data.range, cosHalf: Math.cos(sweep * Math.PI / 360) };
+    }
+    /** 当刻竖直带：本招以施法者身体高度为中心，横向比较也要求对方落在同一带里。 */
+    function dragontailWithinBand(self: Entity, other: Entity): boolean {
+        const reach = Math.max(1.0, (self.height || 1.4) * 1.2);
+        return Math.abs(other.point[1] - self.point[1]) <= reach;
+    }
+    /** 这条线上真的有墙就扫不到（block-only），实体站在墙前不改变遮挡事实。 */
+    function dragontailBlocked(context: WorldBehavior.Context, self: Entity, other: Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        return WorldGeometry.blockHit(world, WorldCombat.point(self.point[0], self.point[1], self.point[2]),
+            WorldCombat.point(other.point[0], other.point[1], other.point[2])) !== null;
+    }
     function dragontailArc(context: WorldBehavior.Context, item: WorldBehavior.Capability, subject: Entity): number {
-        const self = source(context), limit = item.data.range, halfAngle = ai<number>(item, "arc", 75) * Math.PI / 180;
+        const self = source(context), fan = dragontailFan(context, item);
         const dx = subject.point[0] - self.point[0], dz = subject.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz) || 1;
-        const cosHalf = Math.cos(halfAngle);
         let count = 1;
         (context.facts.nearby as Entity[]).forEach(function (other) {
             if (other.ref === subject.ref || other.friendly || other.health <= 0 || !other.visible) return;
+            if (!dragontailWithinBand(self, other)) return;
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const distance = Math.sqrt(ox * ox + oz * oz);
-            if (distance > limit || distance < 1e-6) return;
-            if ((ox * dx + oz * dz) / (distance * length) >= cosHalf) count++;
+            if (distance > fan.limit || distance < 1e-6) return;
+            if ((ox * dx + oz * dz) / (distance * length) < fan.cosHalf) return;
+            if (dragontailBlocked(context, self, other)) return;
+            count++;
         });
         return count;
     }
@@ -68,9 +88,8 @@ namespace CompanionBehavior {
         }
     });
 
-    PokemonSkills.addPreferences("dragontail", { ai: { maxChase: 8, arc: 75, leaveStation: false } }, [
+    PokemonSkills.addPreferences("dragontail", { ai: { maxChase: 8, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "追击距离", 2, 14, 1),
-        PokemonSkills.number("ai.arc", "瞄准半角", 30, 120, 5),
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 }

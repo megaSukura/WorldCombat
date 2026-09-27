@@ -20,5 +20,6 @@
   "worldcombat.skill.weatherball.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.weatherball.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离开原位去甩球；关闭时留在原地。",
   "world_combat.move.weatherball.text.sky": "气象球·%1$s",
+  "world_combat.move.weatherball.text.immune": "气象球·%1$s 无效",
   "worldcombat.skill.weatherball.description.flight": "球以约 %1$s 格每刻的初速飞出，判定半径约 %2$s 格；开启贯穿时最多穿透 2 个目标，每击威力 ×0.75。"
 }

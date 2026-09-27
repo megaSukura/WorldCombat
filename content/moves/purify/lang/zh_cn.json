@@ -23,6 +23,8 @@
   "worldcombat.skill.purify.preference.ai.selfBelow.help": "自己生命低于该比例时，伙计才允许把净化用在对手身上换一口生机；调低更克制，调高则一缺血就愿意做这笔交易。",
   "worldcombat.skill.purify.preference.ai.enemyStatus": "可换病痛",
   "worldcombat.skill.purify.preference.ai.enemyStatus.help": "对手身上被缠住的有害状态不超过这么多项时，才值得把他的病痛拿走换自己的回复；调低只碰轻微中招的对手，调高愿意替更病重的对手祛病。",
+  "worldcombat.skill.purify.preference.ai.worthGap": "值得换血缺口",
+  "worldcombat.skill.purify.preference.ai.worthGap.help": "自己缺口不到目标最大生命这个比例时，不值得替对手祛病换血（回复量按目标最大生命算）；调高更挑伤害，调低更愿意顺手换一口。",
   "world_combat.move.purify.text.draw": "净化抽引 ×%1$s",
   "world_combat.move.purify.text.absorb": "生机 +%1$s",
   "world_combat.move.purify.text.none": "附近无异常可抽",

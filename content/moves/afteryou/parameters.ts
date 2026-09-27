@@ -17,6 +17,7 @@ namespace PokemonSkills {
     export const afteryouCallText = "world_combat.move.afteryou.text.call";
     export const afteryouGoText = "world_combat.move.afteryou.text.go";
     export const afteryouFadeText = "world_combat.move.afteryou.text.fade";
+    export const afteryouNoneText = "world_combat.move.afteryou.text.none";
     export const afteryouYieldText = "world_combat.move.afteryou.text.yield";
 
     actionParameters.define(afteryouId, {

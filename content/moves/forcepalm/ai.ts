@@ -5,19 +5,29 @@
  * 这是一记接触掌击，`ai.preferNumb`（默认开）在目标还没被麻痹时把它排到前面——把这一掌的麻痹机会留给
  * 还能被麻的人；代价是可能反复追着未麻目标、放过眼前更该打的对象。关闭则只按威胁本身排序。
  * 透劲式不改变出手条件，只改变力道收在一个人身上还是透到身后；开启后，目标身后还排着敌人时收益更高，
- * 这类局面会被抬高（前后有敌时更值得上步按掌）。主目标不可接近时不会空放：命中由真实接触决定。
+ * 这类局面会被抬高（前后有敌时更值得上步按掌）。它按本个体真实的 `step`、手程、`throughReach` 与判定半径
+ * 估计身后那条窄束能不能再咬到人；主目标不可接近时不会空放：命中由真实接触决定。
  */
 namespace PokemonSkills {
-    /** 另一个敌人是否落在「自己 → 目标」延长线上、目标身后 `reach` 内且偏离很小。 */
-    function forcepalmBehind(self: WorldMethods.Subject, target: WorldMethods.Subject, other: WorldMethods.Subject, reach: number): boolean {
+    /** 用本个体真实配置求一项参数；缺省时退回给定值。 */
+    function forcepalmValue(context: WorldBehavior.Context, item: WorldBehavior.Capability, key: string, fallback: number): number {
+        try {
+            const world = CompanionBehavior.world(context);
+            const value = p("forcepalm", key, { world: world, actor: world.source(), detail: { values: item.data.config } });
+            return typeof value === "number" && isFinite(value) ? value : fallback;
+        } catch (error) { return fallback; }
+    }
+
+    /** 另一个敌人是否落在「自己 → 目标」延长线上、目标身后 `throughReach` 内，且偏离在真实判定半径内。 */
+    function forcepalmBehind(self: WorldMethods.Subject, target: WorldMethods.Subject, other: WorldMethods.Subject, throughReach: number, thickness: number): boolean {
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return false;
         const ox = other.point[0] - target.point[0], oz = other.point[2] - target.point[2];
         const along = (ox * dx + oz * dz) / length;
-        if (along <= 0.2 || along > reach) return false;
+        if (along <= 0.2 || along > throughReach) return false;
         const off = Math.abs((ox * dz - oz * dx) / length);
-        return off <= Math.max(0.5, along * 0.1);
+        return off <= Math.max(0.35, thickness);
     }
 
     CompanionBehavior.registerUse("forcepalm", {
@@ -38,17 +48,22 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range * 2.2) return 0;
             // 未麻痹的目标排序更前，把这一掌的麻痹机会留给还能被麻的人；已被麻的仍可出手，只是不优先。
             let score = CompanionBehavior.ai<boolean>(capability, "preferNumb", true) && !CompanionBehavior.status(context, target, "paralysis") ? 42 : 28;
-            // 透劲开启且目标身后还排着敌人时收益更高，这类前后有敌的局面抬高优先。
+            // 透劲开启、这一掌真能补步按上去、且目标身后还有敌人落在真实窄束里时收益更高。
             if (capability.data.config && capability.data.config.through === true) {
-                const reach = capability.data.range;
-                let behind = 0;
-                const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
-                for (let i = 0; i < nearby.length; i++) {
-                    const other = nearby[i];
-                    if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                    if (forcepalmBehind(self, target, other, reach)) behind++;
+                const handReach = capability.data.range;
+                const step = Math.max(0, forcepalmValue(context, capability, "step", 1.2));
+                if (CompanionBehavior.distance(self.point, target.point) <= handReach + step) {
+                    const throughReach = Math.max(1.2, forcepalmValue(context, capability, "throughReach", handReach));
+                    const thickness = Math.max(0.3, forcepalmValue(context, capability, "collisionRadius", 0.45));
+                    let behind = 0;
+                    const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+                    for (let i = 0; i < nearby.length; i++) {
+                        const other = nearby[i];
+                        if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
+                        if (forcepalmBehind(self, target, other, throughReach, thickness)) behind++;
+                    }
+                    if (behind > 0) score += 10 + Math.min(12, behind * 6);
                 }
-                if (behind > 0) score += 10 + Math.min(12, behind * 6);
             }
             return score;
         }

@@ -31,5 +31,6 @@
   "worldcombat.skill.firepunch.preference.ai.preferUnlit.help": "On: targets not already burning rank first, so the fire seed is not wasted; off: all targets score the same.",
   "world_combat.move.firepunch.text.hit": "Fire hit",
   "world_combat.move.firepunch.text.spread": "Fire spreads",
-  "world_combat.move.firepunch.text.miss": "Whiffed"
+  "world_combat.move.firepunch.text.miss": "Whiffed",
+  "world_combat.move.firepunch.text.blocked": "The punch was blocked"
 }

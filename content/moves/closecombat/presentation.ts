@@ -1,12 +1,12 @@
 /**
  * 近身战 / closecombat 的客户端表现。
  *
- * 一句话：施法者屈膝沉肩、双拳在身前收拢、脚边尘被吸起 → 猛地抢进对手怀里，一串快拳在同一点上连续炸开暖光与碎光
- *   （横扫式时正面还摊开一片扇面）→ 打完重心散掉，身上浮起一层脱力灰气。
+ * 一句话：施法者屈膝沉肩、双拳在身前收拢、脚边尘被吸起 → 猛地抢进对手怀里，每一拳都从身前划到真实接触点、
+ *   在同一点上连续炸开暖光与碎光（横扫式时正面还摊开一片随该拳朝向更新的扇面）→ 打完重心散掉，身上浮起一层脱力灰气。
  * 色相家族：拳劲的暖橙 0xE8A24A 与近白 0xFFE0B0 为主体，灰褐 0x8C7448 作地面尘与余韵，无第二色相。
- * 拍子：起 ready（扎马收拳）→ 弃守 guard（护罩碎裂）→ 击 hit（每一下砸实）／sweep（横扫扇面）→ 收 slump（脱力）／失 whiff（扑空）。
+ * 拍子：起 ready（扎马收拳）→ 弃守 guard（护罩碎裂）→ 击 hit（每一下砸实，附身前拳路）／sweep（每拳更新的扇面）→ 收 slump（脱力）／失 whiff（扑空）。
  * 范围：sweep 的 `face` 绑 `path`、用 `polygon` 填出服务端与判定共用的那片扇形（data.path），画出的面就是要被扫到的范围。
- * 运动：起手拳光向内收，弃守时护罩碎片向外崩开，命中时拳劲与火花从目标向外炸开，横扫的扇面向外流动，脱力灰气缓缓上浮。
+ * 运动：起手拳光向内收，弃守时护罩碎片向外崩开，命中时拳路沿 data.path 从身前划到接触点、拳劲与火花在接触点炸开，横扫的扇面向外流动，脱力灰气缓缓上浮。
  * 数：hit 的拳劲与火花量绑 `data.motes`（物攻派生）、核心尺寸绑 `data.intensity`（威力派生），guard 的碎护罩量绑 `data.guardCracks`（降级派生）。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -63,6 +63,14 @@ const CloseCombatDefinition: ParticleDefinition = {
             duration: 20,
             exit: { stop: 8, drain: 12 },
             emitters: [
+                {
+                    name: "fist_path", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    burst: { count: 9, at: 0 }, shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.06, 0.2], spread: 10, drag: 0.9,
+                    lifetime: [4, 8], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xFFE0B0, alpha: [0.75, 0], light: "full", bloom: 0.2, maxParticles: 24
+                },
                 {
                     name: "fist", bind: "target", height: 0.55, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/bigfist",

@@ -4,6 +4,7 @@
   "worldcombat.attributes.heading": "%1$s · Attributes",
   "worldcombat.attributes.refresh": "Refresh",
   "worldcombat.attributes.loading": "Loading attributes…",
+  "worldcombat.attributes.empty": "No attributes are available yet. Refresh to try again.",
   "worldcombat.attributes.nature": "Nature: %1$s",
   "worldcombat.attributes.footer": "Hover for effects and sources · Updates when values change",
   "worldcombat.attributes.group.combat": "Combat",

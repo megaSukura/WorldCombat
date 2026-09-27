@@ -49,9 +49,11 @@ const BoltbeakDefinition: ParticleDefinition = {
                     alpha: [0.9, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "beaktip", bind: "source", offset: [0, 0, 0], height: 0.7, orient: "velocity",
+                    // 喙尖短线贴真实身体前点，朝 data.direction 拉直（不再用中心 height 0.7 + velocity）。
+                    name: "beaktip", bind: "source", fit: "none",
+                    offset: [{ data: "front.0", fallback: 0 }, { data: "front.1", fallback: 0 }, { data: "front.2", fallback: 0 }], height: 0.7, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    rate: 14, shape: { kind: "line", length: 0.5 },
+                    rate: 16, shape: { kind: "line", length: 0.55 },
                     direction: "shape", speed: [0.02, 0.08],
                     lifetime: [3, 7], size: [0.08, 0.01],
                     alpha: [1, 0], light: "full", maxParticles: 40
@@ -130,12 +132,13 @@ const BoltbeakDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "crackle", bind: "target", offset: [0, 0, 0], height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    rate: { data: "sparks", fallback: 10 }, shape: { kind: "sphere", radius: 0.38 },
+                    // 纯余电：换成电黄而非麻痹火花，生命周期随 keep 到期一起收，不暗示施加了麻痹。
+                    name: "residual", bind: "target", offset: [0, 0, 0], height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    rate: { data: "sparks", fallback: 8 }, shape: { kind: "sphere", radius: 0.36 },
                     direction: "outward", speed: [0.02, 0.09], spread: 26,
                     lifetime: [7, 14], size: [0.07, 0.01],
-                    alpha: [0.75, 0], light: "full", maxParticles: 26
+                    alpha: [0.7, 0], light: "full", maxParticles: 24
                 }
             ]
         },
@@ -160,8 +163,9 @@ const BoltbeakDefinition: ParticleDefinition = {
                     alpha: [0.6, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "static", bind: "source", offset: [0, 0, 0], height: 0.1, trail: { minDistance: 0.32 },
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    // 沿真实后退路径留下的短余电，用余电纹理而非麻痹火花。
+                    name: "residual", bind: "source", offset: [0, 0, 0], height: 0.1, trail: { minDistance: 0.32 },
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     rate: 10, shape: { kind: "sphere", radius: 0.18 },
                     direction: "outward", speed: [0.02, 0.07],
                     gravity: 0.02, drag: 0.92,

@@ -1,75 +1,36 @@
 /**
  * 灭亡之歌 / perishsong —— 执行组织。
  *
- * 核心念头：当众唱起一首三拍子的歌——半径内所有听见的活物（包括唱的人自己）都被歌声缠上，
- *   每过一拍就离倒下更近一步；跑出起唱中心两倍歌声半径、撑满一整拍，或在空拍外被牛奶解掉，都能甩掉它。
+ * 核心念头：当众唱起一首三拍子的歌，把脚下这一圈空气变成一块固定「歌域」；圈内最近的一批活物（连同唱的人自己）
+ *   被歌声写进名单，施法者必须留在原地把三拍唱完。每一拍过去，名单上还留在圈里的人就少一档；末拍对仍带着
+ *   本曲 carrier 的每个活物（敌我都一样，最后才轮到自己）结算一次有限的固定世界伤害。跑出歌域当场脱出名单，
+ *   之后回到圈内也不再进入；取消、换下或死亡会终止整首歌，没有独立倒计时，也没有假造状态能单独致死。
  *
  * 三幕 + 收：
- *   起（windup 只在口边聚起音符预告，提交前可打断，不花代价）→
- *   唱（提交后：对半径内每个看得见/听得见的活物挂共享身份 world_combat:status/perish_song 的真实 MobEffect；
- *       carrier 成功才登记，已在倒数的对象不被新歌重置；计数效果记下起唱原点、歌声半径与逃生线）。
- *   数（每过一个游戏刻读一次计数：离原点超过 songRadius×2 记下时刻，连续撑满一整拍就解歌；回到范围内清零重计。
- *       每 10 刻把 3／2／1 的剩余拍数交给绑在真实托管效果上的头顶画面）。
- *   结（身份效果自然到期的那一次 mob_effect_removed）：用现一次 world.health 原生入口只尝试一次并记录 settled，
- *       依据返回实伤与之后是否存活演出「数拍已尽」或「抵住了」；牛奶／驱散是 removed，不结算。
- * 分岔：跑出逃生线、被牛奶清除、提前死亡都通过 removed 分支甩掉歌声，不结清。
- * 反制：走出两倍歌声半径并保持一拍，或抢在被唱倒前清除／结束战斗。
+ *   起（windup，提交前）：口边聚起音符预告，可被打断，不花代价。
+ *   唱（execute 起）：以施法者真实身体中心为原点固定歌域；把圈内最近的其他活物（最多 11）加上自己挂上
+ *       共享身份 world_combat:status/perish_song 的真实 MobEffect 作为本曲 carrier，并把 carrier lease 交给
+ *       本次动作——取消、换下、死亡时随动作一起清掉。
+ *   数（逐刻推进）：每刻核对名单对象是否已离开歌域或死亡；离开即摘 carrier 并永久脱出。每拍更新一次
+ *       固定音符画面（3→2→1）与歌域边缘脉冲；歌域边缘就是解除边界，原点固定不追施法者。
+ *   结（末拍）：先快照仍留在歌域里的名单与本次施法者预算，先结算其他对象、最后结算自己。非友方目标走
+ *       PokemonDamage.fixed（typePolicy:none、无暴击、无击退）；自己与队友只能走宿主开放的原生自伤入口
+ *       world.health（队友的友伤仍会被宿主 mayHit 拒绝，见报告的 needs）。被原生拒绝只报被挡下，不报成功；
+ *       自己若被这一发带走，直接停下，不再触碰已失活的动作。
+ * 反制：走出歌域、提前清掉 carrier、打断或杀死施法者、或在三拍内结束战斗。
  */
 namespace PokemonSkills {
     function perishAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.2, 0)); }
-    const PERISH_TURNS = 3;
-
-    function perishCountView(world: CombatWorld, actor: CombatActor): CombatEffectView | null {
-        const views = world.effects(actor, perishCount);
-        return views.length ? views[0] : null;
+    function perishFlat(a: CombatPoint, b: CombatPoint): number {
+        const dx = a.x() - b.x(), dz = a.z() - b.z();
+        return Math.sqrt(dx * dx + dz * dz);
     }
-    function perishLingerView(world: CombatWorld, actor: CombatActor): CombatEffectView | null {
-        const views = world.effects(actor, perishLinger);
-        return views.length ? views[0] : null;
-    }
-    function perishDropMark(world: CombatWorld, actor: CombatActor): void {
-        const counts = world.effects(actor, perishCount);
-        for (let i = 0; i < counts.length; i++) world.operation(counts[i].id(), "world_combat:dispel", "{}");
-        const lingers = world.effects(actor, perishLinger);
-        for (let i = 0; i < lingers.length; i++) world.operation(lingers[i].id(), "world_combat:dispel", "{}");
-    }
-    function perishMarkOf(view: CombatEffectView | null): any {
-        return view === null ? null : JSON.parse(String(view.data()));
-    }
-
-    WorldCombat.effect(perishCount, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.turnTicks !== "number" || !isFinite(value.turnTicks) || value.turnTicks < 1) throw new Error("Invalid perish turn length");
-        if (typeof value.turns !== "number" || !isFinite(value.turns) || value.turns < 1) throw new Error("Invalid perish turns");
-        if (typeof value.max !== "number" || !isFinite(value.max) || value.max < 1) throw new Error("Invalid perish window");
-        if (!Array.isArray(value.origin) || value.origin.length !== 3) throw new Error("Invalid perish origin");
-        if (typeof value.escapeRadius !== "number" || !isFinite(value.escapeRadius) || value.escapeRadius < 0) throw new Error("Invalid perish escape radius");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(perishCount, "start", function () { });
-    WorldCombat.effectHandler(perishCount, "operation:world_combat:dispel", function (effect) { effect.end(); });
-    // 逃生计时与结账标记持久化在计数效果里，跨 tick 一致。
-    WorldCombat.effectHandler(perishCount, "operation:world_combat:perish_progress", function (effect) {
-        const input = JSON.parse(String(effect.input())), state = JSON.parse(String(effect.state()));
-        if (typeof input.outsideSince === "number") state.outsideSince = input.outsideSince;
-        if (input.settled) state.settled = 1;
-        effect.state(JSON.stringify(state));
-    });
-
-    // 头顶画面绑在真实托管效果上：随它自然到期或提前清除一起收掉。
-    WorldCombat.effect(perishLinger, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (value === null || typeof value !== "object") throw new Error("Invalid perish linger");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(perishLinger, "start", function () { });
-    WorldCombat.effectHandler(perishLinger, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
         id: perishId,
         cooldownParameter: "recharge",
         name: "灭亡之歌",
-        description: "唱起一首三拍子的歌：半径内所有听见的活物（包括你自己）在数完三拍后一同倒下；跑出起唱中心两倍半径并保持一整拍、或被清除，可以甩掉它。它是一首同归于尽的歌，只有在自己比对手更能撑、或本来就打算换命时才划算。",
+        description: "唱起一首三拍子的歌，把最近的一圈活物（连同你自己）写进名单；施法者必须留在原地唱完三拍，每拍结束还在歌域里的人就离结算更近一步，末拍对仍在名单上的活物结算一次有限的固定伤害。跑出歌域、提前清除、打断或杀死施法者都能让这首歌作废；它是一首会把自己也算进去的歌。",
         uses: ["打不过时把整场拉平，逼对手速战或撤退", "对着成群的敌人一次点名", "在必输的交换里把对手主力一起带走"],
         kind: "self",
         range: 0,
@@ -77,6 +38,7 @@ namespace PokemonSkills {
         active: 0,
         recover: 8,
         cooldown: 300,
+        stationary: true,
         style: "perishsong",
         defaults: { dirge: false, ai: { threshold: 0.55, maxChase: 12, leaveStation: false } },
         fields: [],
@@ -91,125 +53,135 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, _config, prepare) {
+            const motes = Math.max(8, Math.round(p(perishId, "motes", action)));
             action.present("world_combat:move_perishsong/sing", perishScene, 1, action.origin(),
-                JSON.stringify({ moment: "sing", target: String(action.actor().ref()) }));
+                JSON.stringify({ moment: "sing", target: String(action.actor().ref()), motes: motes }));
             return prepare;
         },
         indicator: function (config, pokemon) {
             const radius = pokemon ? p(perishId, "songRadius", pokemon) : 4;
             return { radius: radius, geometry: "circle", style: "perishsong", color: 0x5A6BB0, label: "灭亡之歌" };
         },
-        execute: function (action, _move, config, done) {
-            const world = action.world(), self = action.actor(), body = world.observe(self);
-            if (body === null) { done(action); return; }
-            const origin = body.position();
-            const dirge = !!(config && config.dirge);
+        execute: function (action, _move, _config, done) {
+            const world = action.world(), self = action.actor();
+            const me = world.observe(self);
+            if (me === null) { done(action); return; }
+            const origin = me.position(), singerEntity = world.nativeEntity(self);
             const radius = Math.max(2.5, p(perishId, "songRadius", action));
-            const turnTicks = Math.max(30, Math.round(p(perishId, "turnTicks", action)));
-            const countdown = turnTicks * PERISH_TURNS;
+            const beatTicks = Math.max(1, Math.round(p(perishId, "beatTicks", action)));
+            const total = beatTicks * perishTurns;
+            const budget = Math.max(0, p(perishId, "judge", action));
             const motes = Math.max(8, Math.round(p(perishId, "motes", action)));
-            const escapeRadius = radius * 2;
-            const heard = world.query(origin, radius, false);
-            let caught = 0;
-            for (let i = 0; i < heard.length; i++) {
-                const actor = heard[i];
-                if (world.observe(actor) === null) continue;
-                // 已在倒数的对象不被新歌重置延长；carrier 成功才登记。
-                if (MobEffects.read(world, actor, perishEffect) !== null) continue;
-                const carrier = MobEffects.apply(world, actor, perishEffect, countdown, 0);
-                if (carrier === null) continue;
-                world.effect(perishCount, actor, JSON.stringify({ turnTicks: turnTicks, turns: PERISH_TURNS, motes: motes,
-                    max: countdown, origin: [origin.x(), origin.y(), origin.z()], radius: radius,
-                    escapeRadius: escapeRadius, outsideSince: 0 }), countdown);
-                caught++;
-                const at = world.observe(actor);
-                if (at !== null && String(actor.key()) !== String(self.key()))
-                    WorldFeedback.emit(world, perishScene, 1, at.position(),
-                        { moment: "mark", target: String(actor.ref()), motes: motes, turns: PERISH_TURNS }, 30);
-            }
+            const start = world.tick();
+            const notes = WorldFeedback.actionScenes(perishNotesScene, 1);
+            const domain = WorldFeedback.actionScenes(perishDomainScene, 1);
+            const marks: { target: CombatActor; ref: string; key: string; out: boolean }[] = [];
+
             sound(action, "cobblemon:move.sing.actor");
+            // 声音穿掩体：只按圈内距离取最近的其他人，不做视线判定；已在别的歌声里的对象不被重置。
+            const heard = world.query(origin, radius, false).slice();
+            heard.sort((a, b) => {
+                const first = world.observe(a), second = world.observe(b);
+                return (first ? first.position().minus(origin).length() : Infinity)
+                    - (second ? second.position().minus(origin).length() : Infinity);
+            });
+            for (let i = 0; i < heard.length && marks.length < perishTargets - 1; i++) {
+                const other = heard[i];
+                if (String(other.ref()) === String(self.ref())) continue;
+                if (world.observe(other) === null) continue;
+                if (MobEffects.read(world, other, perishEffect) !== null) continue;
+                const carrier = MobEffects.apply(world, other, perishEffect, total + 60);
+                if (carrier === null) continue;
+                MobEffects.bind(world, other, perishEffect, carrier);
+                marks.push({ target: other, ref: String(other.ref()), key: String(carrier.key()), out: false });
+            }
+            const ownCarrier = MobEffects.apply(world, self, perishEffect, total + 60);
+            if (ownCarrier !== null) {
+                MobEffects.bind(world, self, perishEffect, ownCarrier);
+                marks.push({ target: self, ref: String(self.ref()), key: String(ownCarrier.key()), out: false });
+            }
+            const caught = marks.length;
             WorldFeedback.emit(world, perishScene, 1, origin,
-                { moment: "song", target: String(self.ref()), heard: caught, turns: PERISH_TURNS, motes: motes, scale: radius / 4.0 }, 44);
-            WorldFeedback.text(world, perishAbove(origin), perishSongText, [PERISH_TURNS, caught], 44);
-            done(action);
-        }
-    });
+                { moment: "song", radius: radius, heard: caught, motes: motes, scale: radius / 4.0 }, 40);
+            WorldFeedback.text(world, perishAbove(origin), perishSongText, [caught], 40);
 
-    // 倒计时：逐 tick 读距离做「跑离一拍」判定；每 10 刻把真实剩余拍数交给绑在托管效果上的画面。
-    WorldCombat.on("world_combat:move_perishsong/beat", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== perishEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const effect = MobEffects.read(world, actor, perishEffect);
-        if (effect === null) return;
-        const countView = perishCountView(world, actor);
-        const mark = perishMarkOf(countView);
-        const body = world.observe(actor);
-        if (body === null) return;
-        // 逃生：离起唱原点超过两倍歌声半径并撑满一整拍就解歌；回到范围内重新计时。对所有名单对象一致。
-        if (countView !== null && mark !== null && mark.escapeRadius > 0) {
-            const origin = WorldCombat.point(mark.origin[0], mark.origin[1], mark.origin[2]);
-            const outside = body.position().minus(origin).length() > mark.escapeRadius;
-            const since = typeof mark.outsideSince === "number" ? mark.outsideSince : 0;
-            if (outside) {
-                if (!since) world.operation(countView.id(), "world_combat:perish_progress", JSON.stringify({ outsideSince: world.tick() }));
-                else if (world.tick() - since >= Math.max(1, mark.turnTicks || 1)) {
-                    world.removeMobEffect(actor, perishEffect, effect.key());
-                    return;
+            function release(current: CombatAction, mark: { target: CombatActor; ref: string; key: string; out: boolean }): void {
+                if (mark.out) return;
+                mark.out = true;
+                const scope = current.world();
+                const carrier = MobEffects.read(scope, mark.target, perishEffect);
+                if (carrier !== null && String(carrier.key()) === mark.key) scope.removeMobEffect(mark.target, perishEffect, mark.key);
+                notes.stop(current, "notes/" + mark.ref);
+                const body = scope.observe(mark.target);
+                if (body !== null && body.health() > 0) {
+                    WorldFeedback.emit(scope, perishScene, 1, body.position(), { moment: "lift", target: mark.ref }, 24);
+                    WorldFeedback.text(scope, perishAbove(body.position()), perishLiftText, [], 22);
                 }
-            } else if (since) {
-                world.operation(countView.id(), "world_combat:perish_progress", JSON.stringify({ outsideSince: 0 }));
             }
-        }
-        if (world.tick() % 10 !== 0) return;
-        const turn = mark === null || !(mark.turnTicks > 0) ? 90 : mark.turnTicks;
-        const turnsLeft = Math.max(1, Math.ceil(effect.duration() / turn));
-        const turns = mark === null ? PERISH_TURNS : mark.turns;
-        const motes = mark === null ? 12 : mark.motes;
-        let linger = perishLingerView(world, actor);
-        const lingerId = linger === null ? world.effect(perishLinger, actor, "{}", Math.max(1, effect.duration() + 2)) : linger.id();
-        if (lingerId <= 0) return;
-        // 绑在 carrier 自己创建的托管效果上：驱散／到期时画面同步收掉。
-        WorldFeedback.onEffect(world, lingerId, "world_combat:move_perishsong/state/" + String(actor.ref()), perishScene, 1, body.position(),
-            { moment: turnsLeft <= 1 ? "final" : "beat", target: String(actor.ref()), turnsLeft: turnsLeft, turns: turns, motes: motes });
-    });
 
-    // 分岔：自然到期只结清一次；跑离、牛奶、驱散都是 removed，不结算。
-    WorldCombat.on("world_combat:move_perishsong/lift", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== perishEffect) return;
-        const world = event.world(), actor = event.actor();
-        const countView = perishCountView(world, actor);
-        const mark = perishMarkOf(countView);
-        // 计数效果可能比身份先退一步；自然到期这一条移除事件只来一次，照常结账。
-        if (String(data.cause) === "expired" && (mark === null || !mark.settled)) {
-            const body = world.observe(actor);
-            if (body === null || body.health() <= 0) { perishDropMark(world, actor); return; }
-            if (countView !== null) world.operation(countView.id(), "world_combat:perish_progress", JSON.stringify({ settled: 1 }));
-            const actual = world.health(actor, -body.health(), "world_combat:perishsong");
-            const after = world.observe(actor);
-            const died = after === null || after.health() <= 0;
-            perishDropMark(world, actor);
-            if (died) {
-                WorldFeedback.emit(world, perishScene, 1, body.position(), { moment: "doom", target: String(actor.ref()), turnsLeft: 0 }, 52);
-                WorldFeedback.text(world, perishAbove(body.position()), perishDoomText, [], 45);
-                world.sound("minecraft:particle.soul_escape", body.position(), 16, "{}");
-            } else if (actual < -0.001) {
-                WorldFeedback.emit(world, perishScene, 1, body.position(), { moment: "final", target: String(actor.ref()), turnsLeft: 1 }, 40);
-                WorldFeedback.text(world, perishAbove(body.position()), perishWithstandText, [], 40);
-            } else {
-                WorldFeedback.emit(world, perishScene, 1, body.position(), { moment: "lift", target: String(actor.ref()) }, 30);
-                WorldFeedback.text(world, perishAbove(body.position()), perishWithstandText, [], 36);
+            function present(current: CombatAction, turnsLeft: number): void {
+                for (let i = 0; i < marks.length; i++) {
+                    const mark = marks[i];
+                    if (mark.out) continue;
+                    const body = current.world().observe(mark.target);
+                    if (body === null) { release(current, mark); continue; }
+                    notes.show(current, "notes/" + mark.ref, body.position(), { moment: "notes", target: mark.ref,
+                        turnsLeft: turnsLeft, turns: perishTurns, start: start, beatTicks: beatTicks, motes: motes });
+                }
+                domain.show(current, "domain", origin, { moment: "domain", origin: [origin.x(), origin.y(), origin.z()],
+                    radius: radius, start: start, beatTicks: beatTicks, turns: perishTurns, turnsLeft: turnsLeft });
             }
-            return;
+
+            function settle(current: CombatAction): void {
+                const scope = current.world(), move = CobblemonCombat.moveTemplate(perishId), selfRef = String(self.ref());
+                const recipients = marks.filter(mark => !mark.out);
+                const others = recipients.filter(mark => mark.ref !== selfRef), own = recipients.filter(mark => mark.ref === selfRef);
+                const receipt = PerishJudgments.prepare(scope, self, origin, recipients);
+                // Clear action-owned lines before the potentially fatal last native hurt.
+                notes.stop(current); domain.stop(current);
+                function judgeOne(mark: { target: CombatActor; ref: string; key: string; out: boolean }): boolean {
+                    if (!scope.valid(mark.target)) return true;
+                    const carrier = MobEffects.read(scope, mark.target, perishEffect), body = scope.observe(mark.target);
+                    if (!carrier || String(carrier.key()) !== mark.key || !body || body.health() <= 0) return true;
+                    scope.removeMobEffect(mark.target, perishEffect, mark.key);
+                    PerishJudgments.attempt(receipt, mark.ref);
+                    const features: PokemonDamage.Features & { perishReceipt: string } = {
+                        category: "special", sound: true, knockback: false, segment: "judge", perishReceipt: receipt,
+                        damageRelations: { self: true, friendly: true } };
+                    PokemonDamage.fixed(scope, mark.target, move, budget, features, "none", current);
+                    // Only the native object captured while alive is read after a possibly fatal hit/reflection.
+                    return !!singerEntity && singerEntity.isAlive() && !singerEntity.isRemoved();
+                }
+                for (const mark of others) if (!judgeOne(mark)) return;
+                for (const mark of own) if (!judgeOne(mark)) return;
+                done(current);
+            }
+
+            function advance(current: CombatAction, elapsed: number): void {
+                current.stopMovement();
+                const caster = current.world().observe(self);
+                if (!caster || caster.position().minus(origin).length() > .35) {
+                    marks.forEach(mark => release(current, mark));
+                    notes.stop(current); domain.stop(current); done(current); return;
+                }
+                for (let i = 0; i < marks.length; i++) {
+                    const mark = marks[i];
+                    if (mark.out) continue;
+                    const body = current.world().observe(mark.target);
+                    if (body === null || body.health() <= 0) { release(current, mark); continue; }
+                    if (perishFlat(body.position(), origin) > radius) release(current, mark);
+                }
+                if (elapsed >= total) { settle(current); return; }
+                if (elapsed % beatTicks === 0) {
+                    const turnsLeft = Math.max(1, perishTurns - Math.floor(elapsed / beatTicks));
+                    present(current, turnsLeft);
+                    if (elapsed > 0) WorldFeedback.emit(current.world(), perishScene, 1, origin,
+                        { moment: "beat", radius: radius, turnsLeft: turnsLeft, scale: radius / 4.0 }, 18);
+                }
+                current.after(1, function (next) { advance(next, elapsed + 1); });
+            }
+
+            advance(action, 0);
         }
-        perishDropMark(world, actor);
-        if (!world.valid(actor)) return;
-        const body = world.observe(actor);
-        if (body === null || body.health() <= 0) return;
-        WorldFeedback.emit(world, perishScene, 1, body.position(), { moment: "lift", target: String(actor.ref()) }, 26);
-        WorldFeedback.text(world, perishAbove(body.position()), perishLiftText, [], 30);
-        world.sound("minecraft:block.note_block.harp", body.position(), 14, "{}");
     });
 }

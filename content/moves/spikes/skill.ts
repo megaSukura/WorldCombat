@@ -9,7 +9,8 @@
  *   起（windup，提交前）：掌心拢起碎屑的预告。
  *   撒（toss→lay）：提交后碎片沿低弧线飞出，落点必须吸到真实合法地表才插成半径 patchRadius 的尖刺圈
  *       （`WorldEffects.field`，规则 `world_combat:hazard/spikes` 由本单元注册）；落在水面、岩浆或空中就落空。
- *       同一片同层地上已有的自方尖刺并入新的一层。
+ *       若在满射程内始终没碰到东西，完成回调用 `projectilePosition` 取弹体真正的最后位置，而不是旧瞄准点。
+ *       同一片同层地上已有的自方尖刺只并层/续时（`WorldEffects.update` 保留成员冷却与步距），站在原地的敌人不会因重铺再挨一下。
  *   扎（tread／step→hum）：尖刺圈存续 patchTicks。贴地的非友方 `enter` 时按层数结算一次 `pierce`（地属性物理）；
  *       之后每名敌人各自累计在圈内实际水平走过的距离，每跨过 `step`（约 0.9 格）再扎一次，并遵守最短
  *       `treadInterval`。跳起暂停累计，落地触及真实刺地再继续；短暂出入会保留该敌人的冷却与步距，不能蹭边连刷。
@@ -56,20 +57,30 @@ namespace PokemonSkills {
         return world.clear(origin, body.position());
     }
 
-    /** 找同一片同层地上自己布下的尖刺，把层数并进这一层（最多 maxLayers 层），旧圈收回。 */
-    function spikesLayers(world: CombatWorld, point: CombatPoint, radius: number, max: number): number {
+    /**
+     * 找同一片同层地上自己布下的尖刺：把层数并进最近的一层并交给调用方续时（`WorldEffects.update` 保留
+     * `travel/next/last/inside`，所以站在原地的敌人不会因为重铺再挨一下），多余的重复场收掉，只留续接的那一个。
+     * `pending`（预留、尚未落成的场）不参与计数。返回要写入的层数与要续接的场 id（0 表示新建）。
+     */
+    function spikesMerge(world: CombatWorld, point: CombatPoint, radius: number, max: number): { layers: number; id: number } {
         const own = String(world.source().ref()), found = WorldEffects.areas(world, spikesRule);
-        let layers = 1;
+        let keep = 0, layers = 1, best = Infinity;
+        const duplicates: number[] = [];
         for (let i = 0; i < found.length; i++) {
             const entry = found[i];
-            if (entry.source !== own) continue;
+            if (entry.pending || entry.source !== own) continue;
             if (Math.abs(entry.position[1] - point.y()) > 0.8) continue;
             const centre = WorldCombat.point(entry.position[0], entry.position[1], entry.position[2]);
-            if (centre.minus(point).length() > radius + entry.radius) continue;
-            layers = Math.min(max, Math.max(layers, (Number(entry.data.layers) || 1) + 1));
-            world.operation(entry.id, "world_combat:dispel", "{}");
+            const distance = centre.minus(point).length();
+            if (distance > radius + entry.radius) continue;
+            const next = Math.min(max, (Number(entry.data.layers) || 1) + 1);
+            if (distance < best) {
+                if (keep > 0) duplicates.push(keep);
+                keep = entry.id; best = distance; layers = next;
+            } else duplicates.push(entry.id);
         }
-        return layers;
+        for (let d = 0; d < duplicates.length; d++) world.operation(duplicates[d], "world_combat:dispel", "{}");
+        return { layers: layers, id: keep };
     }
 
     /**
@@ -153,7 +164,7 @@ namespace PokemonSkills {
             if (inside) inside[String(actor.ref())] = false;
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            WorldFeedback.onEffect(world, effect.id(), "spikes:field:" + effect.id(), spikesScene, 1, spikesPoint(field),
+            WorldFeedback.onEffect(world, effect.id(), "spikes:field:" + effect.id(), spikesFieldScene, 1, spikesPoint(field),
                 { moment: "hum", radius: field.radius, layers: Math.max(1, Math.round(Number(field.data.layers) || 1)),
                     shards: Math.max(10, Math.round(Number(field.data.shards) || 22)),
                     intensity: Math.max(1, Math.round(Number(field.data.layers) || 1)) });
@@ -221,25 +232,38 @@ namespace PokemonSkills {
                     done(current);
                     return;
                 }
-                const layers = spikesLayers(scope, point, radius, maxLayers);
-                const field = WorldEffects.field(scope, spikesRule, point, radius,
-                    { pierce: pierce, gain: gain, layers: layers, interval: interval, step: step,
-                        shards: shards, travel: {}, next: {}, last: {} }, ticks);
+                // 合并同一片同层地的自方尖刺：只增层/续时，update 会保留成员已有的冷却与步距。
+                const merged = spikesMerge(scope, point, radius, maxLayers);
+                const data = { pierce: pierce, gain: gain, layers: merged.layers, interval: interval, step: step, shards: shards };
+                let field = merged.id;
+                if (field > 0 && !WorldEffects.update(scope, field, { data: data, radius: radius, ticks: ticks })) field = 0;
+                if (field <= 0)
+                    field = WorldEffects.field(scope, spikesRule, point, radius,
+                        { pierce: pierce, gain: gain, layers: merged.layers, interval: interval, step: step, shards: shards,
+                            travel: {}, next: {}, last: {}, inside: {} }, ticks);
                 WorldFeedback.emit(scope, spikesScene, 1, point,
-                    { moment: "lay", radius: radius, layers: layers, shards: shards, scale: scale, intensity: layers }, 30);
-                WorldFeedback.onEffect(scope, field, "spikes:hum", spikesScene, 1, point,
-                    { moment: "hum", radius: radius, layers: layers, shards: shards, intensity: layers });
-                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.6, 0)), spikesLayText, [layers], 30);
+                    { moment: "lay", radius: radius, layers: merged.layers, shards: shards, intensity: merged.layers }, 30);
+                WorldFeedback.onEffect(scope, field, "spikes:hum", spikesFieldScene, 1, point,
+                    { moment: "hum", radius: radius, layers: merged.layers, shards: shards, intensity: merged.layers });
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.6, 0)), spikesLayText, [merged.layers], 30);
                 sound(current, "cobblemon:impact.ground");
                 done(current);
             }
 
             sound(action, "cobblemon:move.rockthrow.actor");
+            let flightId = "";
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.24, gravity: 0.03, lifetime: 100,
                 appearance: { item: "minecraft:flint", scale: 0.7 },
                 impact: function (current, hit) { lay(current, hit.position()); }
-            }, function (current) { lay(current, current.targetPosition()); });
+            }, function (current) {
+                // 首次接触已在 impact 落场；这里只处理从未接触（超时/满射程）的弹体：取真实结束点。
+                if (laid) return;
+                const at = flightId === "" ? null : current.world().projectilePosition(flightId);
+                if (at === null) { done(current); return; }
+                lay(current, at);
+            });
+            flightId = flight;
             WorldFeedback.emit(world, spikesScene, 1, action.origin(),
                 { moment: "throw", projectile: flight, shards: shards, scale: scale }, 26);
         }

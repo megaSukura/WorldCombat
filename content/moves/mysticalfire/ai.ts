@@ -18,6 +18,11 @@ namespace PokemonSkills {
         return (vel[0] * dx + vel[2] * dz) / length > 0.08;
     }
 
+    /** 完整缠焰要在挣脱距离内：比 leash 更远的命中也只吃到首击。 */
+    function mysticalfireLeash(context: WorldBehavior.Context): number {
+        return Math.max(4, p("mysticalfire", "leash", CompanionBehavior.world(context)));
+    }
+
     CompanionBehavior.registerUse("mysticalfire", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -33,9 +38,12 @@ namespace PokemonSkills {
         approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            const base = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 22 : 0;
-            if (!CompanionBehavior.ai<boolean>(capability, "cutSpecial", true)) return base;
-            let score = base;
+            const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+            const reached = gap <= capability.data.range;
+            // 射程内是一发；完整缠焰还要在挣脱距离内，超出就只吃首击。
+            let score = reached ? 22 : 0;
+            if (reached && gap > mysticalfireLeash(context)) score -= 10;
+            if (!CompanionBehavior.ai<boolean>(capability, "cutSpecial", true)) return score;
             const facts = CompanionBehavior.pokemonFacts(context, target);
             const special = facts && typeof facts.specialAttack === "number" ? facts.specialAttack : 0;
             score += Math.min(10, special / 12);
@@ -47,14 +55,14 @@ namespace PokemonSkills {
 
     addPreferences("mysticalfire", {}, [
         field(pathOf("linger"), "黏焰式", "boolean", {
-            help: "开启：火团更慢更短、单发略轻，但缠身时长 ×1.4、每跳更疼、点燃概率 +0.35、冷却 +6 刻，适合缠住一个慢慢磨。关闭：火团更快更远、一发打得更痛，但缠身与点燃都少。"
+            help: "开启：火团更慢更短、起手与冷却更长，但缠身时长 ×1.4、每跳更疼、点燃概率 +0.35，适合缠住一个慢慢磨。关闭：火团更快更远、起手与冷却更短，但缠身与点燃都少。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 3, max: 20, step: 1,
             help: "超过这个距离就不吐火，先走近；越大越愿意从远处先手。"
         }),
         field(pathOf("ai.cutSpecial"), "盯高特攻目标", "boolean", {
-            help: "开启：优先对特攻高的目标出手，避开已经缠着缠火的、以及正在远离的目标；关闭：当普通远程攻击排序。"
+            help: "开启：对能读到特攻的宝可梦优先挑特攻高的出手；普通生物读不到特攻时按普通远程规则排序。完整缠焰要保持在挣脱距离内，更远的命中也只吃首击，因此过远的目标会降档；已缠火或正在远离的目标同样降档。关闭：一律当普通远程攻击排序。"
         })
     ]);
 }

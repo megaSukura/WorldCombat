@@ -4,11 +4,12 @@
  * 一句话：龙气从脚下卷成赤红的旋流，顺着低头冲撞的方向甩出一条赤红走廊；撞中的一刻在目标身上炸开龙鳞火花；
  *   接连几次之后龙低下头，头顶升起一圈转个不停的眩晕气流。
  * 色相家族：赤红 0xC23B2E 与近白暖橙 0xFFE0C0 为主，低饱和灰红 0x8A5A50 只做余韵与余烬；龙与火光是一家色相。
- * 层次：蓄势内聚（tempo）→ 真实短冲轨迹＋冲势条（charge）→ 命中爆发（claw）→ 冲空尘（whiff）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
+ * 层次：蓄势内聚（tempo）→ 真实短冲轨迹＋冲势条（charge）→ 命中爆发（claw）→ 终结环（finisher，只最后一撞）→
+ *       撞停（blocked，墙面或首个同伴）／冲空尘（whiff）→ 收束眩晕（spent）→ 持续眩晕（dizzy）。
  * 范围：charge 的 `dash_path` 绑 `path`、用 `polyline` 描出这一撞身体真实走出的短段（data.path），画出的线就是被撞的范围。
  * 运动：短冲轨迹每撞按身体实际位移更新；冲势条沿 `data.direction` 指向；命中火花从目标向外炸开；眩晕气流绕着头顶转。
  * 数：服务端把 `data.grains`（龙气点数）、`data.intensity`（威力）与 `data.scale`（判定半径）交给发射器，数量和强度按机制走。
- * 参照节：视觉语言第二、三、四、六、七、九节。
+ * 拥有：持续 dizzy 画面由服务端 `WorldFeedback.onEffect` 绑在真实恍惚载体上，载体到期、被清除或刷新即收，不留残影。
  */
 const OutrageDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -78,7 +79,13 @@ const OutrageDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.22],
                     lifetime: [10, 18], size: [0.08, 0.01],
                     color: 0xFFE0C0, alpha: [0.9, 0], light: "full", maxParticles: 48
-                },
+                }
+            ]
+        },
+        finisher: {
+            duration: 30,
+            exit: { stop: 12, drain: 20 },
+            emitters: [
                 {
                     name: "finisher_ring", bind: "target", offset: [0, 0.1, 0], height: 0.1, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
@@ -86,6 +93,36 @@ const OutrageDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.12, 0.3], drag: 0.9,
                     lifetime: [12, 20], size: [0.8, 0.1], sizeMode: "sin",
                     color: 0x8A5A50, alpha: [0.5, 0], light: "world", maxParticles: 6
+                },
+                {
+                    name: "finisher_burst", bind: "target", height: 0.55, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    burst: { count: { data: "grains", fallback: 16 } }, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.12, 0.34],
+                    lifetime: [10, 18], size: [0.2, 0.03],
+                    color: 0xFFE0C0, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 48
+                }
+            ]
+        },
+        blocked: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "stop_dust", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "up", speed: [0.03, 0.12],
+                    lifetime: [10, 18], size: [0.1, 0.01],
+                    color: 0x8A5A50, alpha: [0.5, 0], light: "world", maxParticles: 28
+                },
+                {
+                    name: "stop_spark", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 8 }, shape: { kind: "sphere_surface", radius: 0.24 },
+                    direction: "outward", speed: [0.05, 0.2], spread: 22,
+                    lifetime: [6, 12], size: [0.09, 0.02],
+                    color: 0xFFE0C0, alpha: [0.8, 0], light: "full", maxParticles: 18
                 }
             ]
         },

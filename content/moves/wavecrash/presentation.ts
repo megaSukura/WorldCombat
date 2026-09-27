@@ -8,14 +8,14 @@
  * 范围：surge 的水壳与尾迹贴施法者真实身体、随它涌过整段路；impact 与 drench 绑命中点，画的就是水墙拍到哪里。
  * 运动：聚水向内收成壳；涌进时水花沿载荷给出的显式后方向（surge 的 `data.direction` 即背向冲势）向后溅；
  * 命中时水壳沿前方向（impact 的 `data.direction`）在接触面裂成一片向前的水片，浇透幕是一圈向内收的水纹。
- * 数：`data.spray`（速度与物攻派生）决定涌进与命中的总溅水量，`data.intensity`（威力 / 115 ×湿身与厚水壳加成）
- * 抬高密度与亮度，`data.scale`（判定半径 / 0.6）放大水墙与水环，`data.ratio` 让涌进水花随路程变浓。
+ * 数：`data.spray`（速度与物攻派生）决定涌进与命中的总溅水量，`data.intensity`（威力 / 115）抬高密度与亮度，
+ * `data.shell`（判定半径，格）直接作为水壳的球半径（fit:"world"，只缩放一次），`data.scale`（判定半径 / 0.6）放大粒子尺寸。 
  */
 const WavecrashDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         cloak: {
-            duration: 12,
+            duration: { data: "windup", fallback: 12 },
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {
@@ -42,8 +42,9 @@ const WavecrashDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "shell", bind: "source", offset: [0, 0.5, 0], height: 0.4,
+                    fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    rate: 42, shape: { kind: "sphere", radius: { data: "shell", fallback: 0.5 } },
+                    rate: 42, shape: { kind: "sphere", radius: { data: "shell", fallback: 0.6 } },
                     direction: "inward", speed: [0.04, 0.16],
                     lifetime: [6, 12], size: [0.24, 0.05], sizeMode: "sin",
                     color: 0x4F9FD4, alpha: [0.62, 0], light: "full", maxParticles: 240

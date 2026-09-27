@@ -34,6 +34,8 @@ public final class NativeDeathFacts {
         data.addProperty("victim", target.ref()); data.addProperty("identity", target.domain() + ":" + target.identity());
         data.addProperty("entity", victim.getStringUUID()); data.addProperty("dimension", level.dimension().location().toString());
         data.addProperty("tick", combat.runtime().now());
+        data.addProperty("damageType", event.getSource().typeHolder().unwrapKey().map(key -> key.location().toString()).orElse(""));
+        data.addProperty("cause", combat.currentHealthCause().isEmpty() ? event.getSource().getMsgId() : combat.currentHealthCause());
         var at = victim.getBoundingBox().getCenter(); var position = new JsonArray();
         position.add(at.x); position.add(at.y); position.add(at.z); data.add("position", position);
         var source = event.getSource().getEntity();

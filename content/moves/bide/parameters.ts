@@ -7,7 +7,9 @@
  *
  * 翻译：回合制的「忍两回合再还手」在即时战斗里是一段**站定忍耐**——进入架势后这段时间里挨到的每一记
  *   （不论物理、特殊还是别的来源）都记进账本，按自身最大生命设上限；忍耐时间走完自动把账上的伤害加倍
- *   还给最后打自己的人（够不到就找最近的敌人），空忍、或被外力打断则落空。
+ *   还给最后打自己的人（按真实体表距够得到才行，够不到就找最近的敌人），空忍、或被外力打断/清除则落空。
+ *   账本归属本次动作实例与架势载体锚点：载体被清除/替换时 bideRead 立即失效并停记，不靠读取超时兜底。
+ *   返还读这一击真正打出的 HP 回执，被原生规则拒绝/吸收时不报假点数。
  *   与同族分开：双倍奉还只认物理、要你主动迎击；镜面反射只认特殊、隔空射回；忍耐全吃、要站定、自动还。
  *
  * 数据分散（每个参数各吃不同的精灵数据）：
@@ -26,19 +28,35 @@ namespace PokemonSkills {
     export const bideWhiffText = "world_combat.move.bide.text.whiff";
     export const bideBrokenText = "world_combat.move.bide.text.broken";
 
-    export interface BideRecord { amount: number; cap: number; window: number; start: number; source: string; active: boolean; }
+    export interface BideRecord { amount: number; cap: number; window: number; start: number; source: string; active: boolean; instance: number; carrier: MobEffects.Anchor | null; }
     export var bideLedger: { [ref: string]: BideRecord } = Object.create(null);
+    /** 架势被取消/挂断后置位，等本载体的可写 tick 收掉效果并播崩塌，避免只读作用域里直接写世界。 */
+    export var bideBroken: { [ref: string]: boolean } = Object.create(null);
+    /** 本轮还手真正打出的 HP，按动作实例记一次，供还手读实际回执（护甲、免疫、Boss 规则之后的结果）。 */
+    export var bideSettled: { [action: string]: number } = Object.create(null);
 
-    /** 进入忍耐架势：清掉旧账，按这次施放的上限开一本新账。 */
-    export function bideBegin(world: CombatWorld, actor: CombatActor, cap: number, window: number): void {
-        bideLedger[String(actor.ref())] = { amount: 0, cap: cap, window: window, start: world.tick(), source: "", active: true };
+    /** 进入忍耐架势：清掉旧账，按这次施放的上限开一本新账，并记住本次动作实例与架势载体锚点。 */
+    export function bideBegin(world: CombatWorld, actor: CombatActor, cap: number, window: number,
+        instance: number, carrier: MobEffects.Anchor | null): void {
+        var ref = String(actor.ref());
+        bideLedger[ref] = { amount: 0, cap: cap, window: window, start: world.tick(), source: "", active: true, instance: instance, carrier: carrier };
+        delete bideBroken[ref];
     }
-    /** 当前账本；架势已经超期未结（被打断、动作异常结束）时视为无效并清除。 */
+    /** 原始账本（不做载体校验），供还手在结账前读回计划量；释放后即被删除。 */
+    export function bideRaw(actor: CombatActor | null): BideRecord | null {
+        if (!actor) return null;
+        var record = bideLedger[String(actor.ref())];
+        return record && record.active ? record : null;
+    }
+    /**
+     * 记账时用的有效账本：账本归属本次动作与架势载体。载体被清除/替换、效果与锚点不再匹配时立刻失效，
+     * 不靠「以后读一次超时」兜底，所以清除之后的伤害不会继续进旧账。
+     */
     export function bideRead(world: CombatWorld | null, actor: CombatActor | null): BideRecord | null {
         if (!world || !actor || !world.valid(actor)) return null;
         var ref = String(actor.ref()), record = bideLedger[ref];
-        if (!record) return null;
-        if (record.active && world.tick() - record.start > record.window + 40) { delete bideLedger[ref]; return null; }
+        if (!record || !record.active) return null;
+        if (record.carrier && !MobEffects.matches(world, actor, record.carrier)) { delete bideLedger[ref]; delete bideBroken[ref]; return null; }
         return record;
     }
     /** 结账并清除；返回结账前的账本，供还手读取。 */
@@ -50,18 +68,22 @@ namespace PokemonSkills {
     }
     /**
      * 忍耐的还手不走攻防公式：账上的伤害原样加倍，只按目标护甲削一次，属性免疫也不拦（native ignoreImmunity）。
-     * 这是它与双倍奉还／镜面反射共享的「固定伤害结算」入口，但只有忍耐不看属性免疫。
+     * 这是它与双倍奉还／镜面反射共享的「固定伤害结算」入口，但只有忍耐不看属性免疫。返回这次真正打出的 HP，
+     * 被原生规则拒绝/吸收/零伤时为 0，让反馈报实际点数而不是计划点数。
      */
-    export function bideRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
+    export function bideRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): number {
         var world = action.world();
-        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return false;
+        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return 0;
         var armor = world.attributeValue(target, "minecraft:generic.armor");
         var toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
         var metadata: any = { kind: "move", move: bideId, category: "physical", contact: contact, knockback: false,
             bypassCooldown: true, targetScale: 1, critical: false, action: action.id() };
         if (armor !== null) metadata.armorExcluded = armor.value();
         if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        return world.hurt(target, amount, JSON.stringify(metadata));
+        var applied = world.hurt(target, amount, JSON.stringify(metadata));
+        var actual = applied ? bideSettled[String(action.id())] || 0 : 0;
+        delete bideSettled[String(action.id())];
+        return actual;
     }
 
     // 忍耐记账：架势存续期内，任何外来伤害都记进账本，按上限截断，并记住最后打你的人。
@@ -70,8 +92,8 @@ namespace PokemonSkills {
         if (victim === null) return;
         var world = event.world();
         if (!world.valid(victim)) return;
-        var record = bideLedger[String(victim.ref())];
-        if (!record || !record.active) return;
+        var record = bideRead(world, victim);
+        if (record === null) return;
         var data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
         var source = event.actor();
@@ -81,14 +103,28 @@ namespace PokemonSkills {
         var body = world.observe(victim);
         if (body !== null) WorldFeedback.emit(world, bideScene, 1, body.position(),
             { moment: "absorb", target: String(victim.ref()), charge: record.amount, cap: record.cap,
-                motes: Math.max(6, Math.round(record.amount * 1.4)),
-                intensity: Math.max(0.12, Math.min(1, record.amount / Math.max(1, record.cap))) }, 24);
+                motes: Math.max(6, Math.round(record.amount * 1.4)) }, 24);
+    });
+
+    // 还手真正打出的伤害按动作实例记下，供 bideRawHit 读实际回执；只认本招自己的结算。
+    WorldCombat.on("world_combat:move_bide/settled", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data()));
+        if (String(data.move || "") !== bideId || typeof data.action !== "number") return;
+        if (Number(data.actual) > 0) bideSettled[String(data.action)] = Number(data.actual);
+    });
+
+    // 架势载体自然到期时留给还手结账；被外力清除/替换时立即停记（上面的 bideRead 也会即时失效）。
+    WorldCombat.on("world_combat:move_bide/brace-removed", "world_combat:mob_effect_removed", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data()));
+        if (String(data.id) !== bideBraceEffect || String(data.cause) === "expired") return;
+        var actor = event.actor();
+        if (actor !== null) { bideEnd(actor); delete bideBroken[String(actor.ref())]; }
     });
 
     defineFacts(bideId, function (context: FactContext): Formula.Facts {
         return { read: function (id: string): Formula.Fact {
             if (id === "bide.stored") {
-                var record = bideRead(context.world || null, context.actor || null);
+                var record = bideRaw(context.actor || null);
                 return record ? record.amount : 0;
             }
             return undefined;

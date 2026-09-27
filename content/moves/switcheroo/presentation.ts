@@ -4,7 +4,9 @@
  * 一句话：施法者低伏压身，贴着地面朝目标一掠而过，身后拖一条暗色残影；撞上的一瞬在接触点炸开一撮暗火，
  * 两件持有物各沿一条短弧飞向对方。
  * 色相家族：恶系暗紫近黑（smoke / impact_dark）为主，一点近白高光（smallsparkle）作为「一闪」的那一下。
- * 拍子：起（blur 速度线与贴地残影）→ 掠（残影沿运动拖出）→ 换（trade 接触暗爆与两件道具对飞）／空（miss 擦身尘）。
+ * 拍子：起（blur 速度线与贴地残影）→ 掠（残影沿运动拖出）→ 换（trade 接触暗爆与两件道具对飞）／
+ *   双空（empty 抓了一手空）／拒绝（reject 被黏着或查封挡回的小爆）／空（miss 擦身尘）。
+ * 三种结果各有一幕：成功才有暗爆与道具对飞，双空只有徒劳的一抓，拒绝读成被挡回的短闪，绝不共用同一爆闪。
  * 范围：blur 的残影沿施法者实际掠过的轨迹铺开，trade 绑接触点，画面就是被打中的位置。
  * 运动：贴地拖影与速度线给出「一闪而过」，接触是短促内聚的暗爆，道具沿两端之间的短弧对飞。
  * 数：`data.motes`（速度与等级派生的火花数）驱动残影与接触的粒子量，`data.direction`（本次掠行方向）让速度线指向真正走的方向。
@@ -78,6 +80,50 @@ const SwitcherooDefinition: ParticleDefinition = {
                     direction: "away", speed: [0.01, 0.05],
                     lifetime: [5, 11], size: [0.05, 0.01],
                     color: 0xD9C9A0, alpha: [0.7, 0], light: "full", maxParticles: 60
+                }
+            ]
+        },
+        empty: {
+            duration: 20,
+            exit: { stop: 9, drain: 12 },
+            emitters: [
+                {
+                    name: "grasp", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/grab",
+                    burst: { count: 5, at: 0 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "inward", speed: [0.03, 0.1],
+                    lifetime: [6, 12], size: [0.09, 0.02],
+                    color: 0x9A8AA8, alpha: [0.6, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "dust", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.02, 0.1], gravity: 0.03, drag: 0.93,
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0x5E5268, alpha: [0.45, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        reject: {
+            duration: 22,
+            exit: { stop: 10, drain: 14 },
+            emitters: [
+                {
+                    name: "clutch", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: 5, at: 0 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "inward", speed: [0.05, 0.16],
+                    lifetime: [5, 10], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xC9B8DA, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 20
+                },
+                {
+                    name: "ward", bind: "target", offset: [0, 0.35, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 6 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.06, 0.22], drag: 0.9,
+                    lifetime: [4, 9], size: [0.18, 0.05],
+                    color: 0xE8E2F2, alpha: [0.7, 0], light: "full", maxParticles: 24
                 }
             ]
         },

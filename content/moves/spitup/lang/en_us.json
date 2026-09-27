@@ -25,7 +25,7 @@
   "worldcombat.skill.spitup.preference.ai.maxChase": "Spit distance",
   "worldcombat.skill.spitup.preference.ai.maxChase.help": "Beyond this distance the user closes in instead of spitting. Larger values fire from further out as a ranged attack and get dodged during the wind-up more often.",
   "worldcombat.skill.spitup.preference.ai.minLayers": "Layers required",
-  "worldcombat.skill.spitup.preference.ai.minLayers.help": "Below this layer count the user keeps hoarding instead of firing. Higher values wait for a heavier shot; lower values spit as soon as a layer or two are up.",
+  "worldcombat.skill.spitup.preference.ai.minLayers.help": "Below this layer count the user keeps hoarding instead of firing. Higher values wait for a heavier shot; lower values spit as soon as a layer or two are up. The layers also grant Defence and Sp. Def, so a hurt partner weighs that survival cost and does not always fire the moment more layers pile up.",
   "world_combat.move.spitup.text.spit": "Spit Up - %1$s layers - hit %2$s",
   "world_combat.move.spitup.text.miss": "Spit Up missed",
   "worldcombat.skill.spitup.spend": "Firing spends every stockpile layer at once: the Defence and Sp. Def each layer granted go with them, and even a shot that hits nothing still spends them. With no layer stored, the move cannot be used."

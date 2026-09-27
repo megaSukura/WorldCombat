@@ -5,7 +5,7 @@
  *
  * 场面：会岩石封锁的隆隆岩（40 级，只给这一招）对一只厚血、站桩的卡比兽（50 级，只会跃起）投石；
  * 原负高度硬石场地保留：主伤后必须真立石柱；原生身体探针确认目标未被嵌入石柱、出口全程可通行，
- * 到期石柱和临时地表均归还。伤害数、实际箱体、石柱格数写进 note。
+ * 到期石柱、临时地表与限时减速窗口均归还。伤害数、实际箱体、石柱格数与速度阶段写进 note。
  * 共享状态在施加后的下一个 tick 才触发 `mob_effect_added`，所以断言前等几个 tick 再结算，
  * 否则会读到「效果还没登记」的假阴性。
  */
@@ -56,12 +56,14 @@ Smoke.scenario("rocktomb", function (stage) {
         }
         stage.expect(raised > 0, "the negative-height arena received real above-ground pillars");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/encased"), "successful pillars carried the encased identity");
+        stage.expect((stage.stages(foe).spe || 0) < 0, "the landed cage applied a timed Speed window");
         stage.expect(footprint !== null && footprint.fits, "the native target body still fits inside its cage");
         stage.expect(footprint !== null && footprint.gapClear, "the full native target body fits along the exit through the ring");
         stage.note("actual native footprint and accepted pillar cells; the source arena and both Pokemon remain unchanged", {
             casts: stage.casts("rocktomb", actor),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             encased: stage.hadMobEffect(foe, "world_combat:status/encased"),
+            speedStage: stage.stages(foe).spe || 0,
             pillars: raised,
             ground: ground,
             footprint: footprint,
@@ -71,7 +73,9 @@ Smoke.scenario("rocktomb", function (stage) {
         stage.until(280, function () { return stage.changedBlocks().length === 0; }, function () {
             stage.expect(stage.changedBlocks().length === 0, "pillar and surface leases restored the original arena");
             stage.expect(!stage.hasMobEffect(foe, "world_combat:status/encased"), "the cage identity expired with its window");
-            stage.note("lease expiry returned the original stone and air", { changed: stage.changedBlocks().length });
+            stage.expect((stage.stages(foe).spe || 0) >= 0, "the timed Speed window ended with the cage lease");
+            stage.note("lease expiry returned the original stone and air and released the Speed window", {
+                changed: stage.changedBlocks().length, speedStage: stage.stages(foe).spe || 0 });
             stage.done();
         }, "rock tomb terrain restores after its finite lease");
     }, "rock tomb lands and raises its real cage within 60 s");

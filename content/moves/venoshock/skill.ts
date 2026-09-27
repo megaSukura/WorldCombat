@@ -66,23 +66,29 @@ namespace PokemonSkills {
                     }
                     const ref = String(target.ref());
                     const poisoned = CombatStatus.has(body, target, "poison");
-                    const power = p("venoshock", "glob", current);
+                    // 倍率按真实被打中的受害者结算，而不是原瞄准对象；拦截者不该吃别人的毒增幅。
+                    const power = p("venoshock", "glob", withTarget(factContext(current), target));
                     const landed = impact(current, hit, "venoshock", power, { damage: damageSpec("venoshock", "glob"), knockback: false });
                     const force = Math.max(0.6, Math.min(2.2, power / 65));
-                    // Real contact always splashes venom; only a settled hit shoves and reports success.
-                    WorldFeedback.emit(body, venoshockScene, 1, point,
-                        { moment: "splash", target: ref, intensity: force, splashCount: Math.round(34 * force) }, 26);
                     if (!landed) {
+                        // 伤害被原生拒绝时只留一小摊落点水迹：不发成功爆点、不冲退、不升毒。
+                        WorldFeedback.emit(body, venoshockScene, 1, point, { moment: "fizzle" }, 20);
                         sound(current, "minecraft:entity.generic.splash");
                         return;
                     }
+                    WorldFeedback.emit(body, venoshockScene, 1, point,
+                        { moment: "splash", target: ref, intensity: force, splashCount: Math.round(34 * force) }, 26);
                     const delta = point.minus(origin);
                     const direction = delta.length() < 0.01 ? aim(current) : delta.unit();
                     if (body.valid(target)) body.hitDisplace(target, direction.scale(p("venoshock", "push", current)));
                     if (poisoned && body.valid(target)) {
-                        const existing = MobEffects.read(body, target, "minecraft:poison");
-                        const remaining = existing === null ? 0 : existing.duration();
-                        const deepen = Math.max(p("venoshock", "toxinTicks", current), remaining + 20);
+                        // 读当刻实际毒载体（支持不同来源与已有剧毒），以本招毒素预算为上限续时，避免反复无界延长。
+                        const carriers = CombatStatus.tagged(body, target, "poison");
+                        let remaining = 0;
+                        for (let i = 0; i < carriers.length; i++) remaining = Math.max(remaining, Math.max(0, carriers[i].duration()));
+                        const base = Math.round(p("venoshock", "toxinTicks", current));
+                        const ceiling = Math.max(base, Math.round(base * 1.5));
+                        const deepen = Math.max(remaining, Math.min(Math.max(base, remaining + 20), ceiling));
                         if (CombatStatus.inflict(body, target, "toxic", deepen, undefined, { secondary: true })) {
                             WorldFeedback.emit(body, venoshockScene, 1, point,
                                 { moment: "react", target: ref, intensity: Math.min(2.4, force * 1.6), reactCount: Math.round(46 * force) }, 30);

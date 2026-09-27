@@ -14,7 +14,7 @@ Smoke.scenario("stringshot", function (stage) {
         stage.expect(stage.casts("stringshot") > 0, "string shot was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/silked"), "the target carried the shared silked identity");
         stage.expect(stage.attribute(target, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the target's movement speed fell with the Speed drop");
-        stage.note("string shot bound the zombie; the surface web, the net posture and the accuracy roll are not part of this run", {
+        stage.note("string shot bound the zombie with a permanent Speed-stage drop and a separate bind marker; the surface web is drawn only from the cells terrainResult actually placed (count, not lease id), the air end point reads the real projectilePosition, and the accuracy roll is not part of this run", {
             casts: stage.casts("stringshot"), baseSpeed: baseSpeed,
             speed: stage.attribute(target, "minecraft:generic.movement_speed"),
             damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10

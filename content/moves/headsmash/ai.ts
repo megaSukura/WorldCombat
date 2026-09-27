@@ -4,6 +4,8 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这是一记反伤与冲空自伤都很重的头撞，
  * 所以伙伴只在自身生命高于 `ai.minHealth`、或对手已经残到值得用这一下收掉时才排到前面；残血目标在射程内时
  * 最优先。`ai.minHealth` 越高越珍惜自己，也越少抢收残血。
+ * 低于 `ai.minHealth` 仍要收残时，先估计能不能承受：只有自己剩余生命还多于对手剩余生命，才值得用这一记
+ * 反伤/冲空都很重的头撞去换；否则空冲或反震可能把自己一起带走。
  * 用完会刹在较远的位置，剩下的距离交回共享顺序；稳头式更安全、更适合缠斗，拼命式留给一锤定音。
  */
 namespace PokemonSkills {
@@ -20,9 +22,11 @@ namespace PokemonSkills {
             if (!headsmashValid(target)) return false;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 > CompanionBehavior.ai<number>(capability, "maxChase", 8)) return false;
+            const self = CompanionBehavior.source(context);
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.45);
-            return CompanionBehavior.ratio(CompanionBehavior.source(context)) >= minHealth
-                || CompanionBehavior.ratio(target) <= 0.3;
+            if (CompanionBehavior.ratio(self) >= minHealth) return true;
+            // 低血收残：只有自己剩余生命仍多于对手，才扛得住这一记的反伤或冲空自伤。
+            return CompanionBehavior.ratio(target) <= 0.3 && self.health > target.health;
         },
         accepts: function (context, capability, target) {
             return headsmashValid(target);

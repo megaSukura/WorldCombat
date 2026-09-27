@@ -19,10 +19,9 @@ namespace PokemonSkills {
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["healblock"], detail: { values: config },
                 world: world || null, actor: actor || null, attributes: attributes };
-            var hold = !!(config && config.hold);
             return { prepare: Math.round(p("healblock", "tempo", context)),
                 recover: Math.round(p("healblock", "aftercast", context)),
-                cooldown: Math.round(p("healblock", "recharge", context)) + (hold ? 6 : -4),
+                cooldown: Math.round(p("healblock", "recharge", context)),
                 active: 0, range: p("healblock", "reach", context) };
         },
         ready: function (action) {
@@ -44,7 +43,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            var world = action.world(), caster = action.actor(), target = action.target();
+            var world = action.world(), target = action.target();
             var origin = action.origin(), targetPos = action.targetPosition();
             var delta = targetPos.minus(origin);
             var direction = delta.length() < 0.01 ? action.direction() : delta.unit();
@@ -63,14 +62,15 @@ namespace PokemonSkills {
             var body = world.observe(target);
             if (body === null || !world.clear(origin, body.position())) { fizzle(targetPos); return; }
             var at = body.position();
-            var path: (string | number[])[] = [String(caster.ref()), String(target.ref())];
+            // 镇环按目标横向体型围合，只用一个世界尺度，不再叠加实例 scale。
+            var sealRadius = Math.max(radius, body.width() * 0.5 + 0.06);
             WorldFeedback.emit(world, healBlockScene, 1, origin,
-                { moment: "cast", target: String(target.ref()), path: path, veils: veils, scale: 1,
+                { moment: "cast", target: String(target.ref()), veils: veils, scale: 1,
                     direction: [direction.x(), direction.y(), direction.z()],
                     reach: Math.max(0.5, Math.min(action.range(), delta.length() || action.range())) }, 18);
-            if (!healBlockArm(world, target, ticks)) { fizzle(at); return; }
+            if (!healBlockArm(world, target, ticks, rings)) { fizzle(at); return; }
             WorldFeedback.emit(world, healBlockScene, 1, at,
-                { moment: "seal", target: String(target.ref()), rings: rings, scale: scale,
+                { moment: "seal", target: String(target.ref()), rings: rings, ring: sealRadius, scale: scale,
                     intensity: Math.max(0.8, Math.min(2, ticks / 260)) }, 32);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), healBlockTextSeal, [], 34);
             world.sound("minecraft:block.beacon.deactivate", at, 14, "{}");

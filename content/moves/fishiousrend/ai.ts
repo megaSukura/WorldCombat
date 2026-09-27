@@ -2,16 +2,18 @@
  * 鳃咬 / fishiousrend 的伙伴 AI 用途。
  *
  * 什么局面下出手：目标可见、敌对、存活，且威胁在 `ai.maxChase`（默认 8）格内。
- * `ai.leadFirst`（默认开）打开时，目标还没打过自己、也没正朝自己出手的那一刻 priority 抬到 45——这正是先手窗口；
+ * `ai.leadFirst`（默认开）打开时，目标还没真正出手打过自己、自己最近也没被它击中的那一刻 priority 抬到 45——这正是先手窗口；
  * 它偏好贴身目标（3 格以内）：扑咬距离短，近身才咬得住并拖得动。
  * 够不到怎么办：射程交给 lunge，共享任务把身位收进射程后再出手。
  * 放完接什么：交回共享交战计划；咬住拖近之后交给后续的近战。
  */
 namespace PokemonSkills {
     function fishiousrendWouldLead(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        const self = CompanionBehavior.source(context);
-        if (typeof self.hurtAgo === "number" && self.hurtAgo <= 45 && self.lastAttacker === target.ref) return false;
-        return !(typeof target.attacking === "string" && target.attacking === self.ref);
+        const world = CompanionBehavior.world(context);
+        const opponent = world.actor(target.ref);
+        if (opponent === null) return false;
+        // 与执行同源：真实对手出手/最近受击事实 + 本招先手窗口；仇恨字段不算出手。
+        return fishiousrendLead(withTarget({ world: world, actor: world.source() }, opponent)) > 0;
     }
 
     CompanionBehavior.registerUse(fishiousrendId, {

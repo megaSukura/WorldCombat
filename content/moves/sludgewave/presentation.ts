@@ -1,12 +1,14 @@
 /**
  * 污泥波 / sludgewave 的客户端表现。
  *
- * 一句话：施法者脚边鼓起泥泡，随后一整圈厚污泥自身体同时向周围泼散，泥点粘到人身上片刻再滑落；
+ * 一句话：施法者脚边鼓起泥泡，随后一整圈厚污泥自身体向周围泼散、向上漫到泥幕高度，泥点粘到人身上片刻再滑落；
  * 泼过即散，不留持续的危险场。
  * 色相家族：污泥绿与毒紫（goo/sludgesplash / goo/ooze / bubble/poisonbubble / mud/mudsplash）为主体，
  * 深绿灰做衬托，毒紫只出现在毒泡的小面积上。
- * 拍子：起（gurgle 冒泡）→ 击（splash 一次三维泼开、hit 溅身）→ 收（miss 空泼）。
- * 范围：splash 的半球按服务端传的 `data.radius` 与 `data.scale` 画出真实泼溅半径，`data.height` 决定毒泡升起的高度带。
+ * 拍子：起（gurgle 冒泡，跟着本次起手时长）→ 击（splash 一次三维泼开、hit 溅身）→ 收（miss 空泼）。
+ * 范围：splash 的泥幕用服务端传的真实 `data.radius`、`data.drop`（脚面相对身体中心的偏移）与 `data.span`
+ *   （脚面到泥幕顶的高度）画出；地面几何用 `fit:"world"` 直接读世界格数，半径/高度只缩放一次，
+ *   `data.scale` 只作用于粒子尺寸。玩家看到的泥幕范围就是会被泼到的那片空间。
  * 数：`data.marks`（威力派生）决定泼出的泥点量，`data.intensity`（威力派生）抬高亮度与发射率。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
@@ -14,8 +16,8 @@ const SludgewaveDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         gurgle: {
-            duration: 14,
-            exit: { stop: 7, drain: 14 },
+            duration: { data: "prepare", fallback: 14 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "bubbles", bind: "source", offset: [0, 0.06, 0], height: 0,
@@ -41,20 +43,30 @@ const SludgewaveDefinition: ParticleDefinition = {
             exit: { stop: 9, drain: 16 },
             emitters: [
                 {
-                    name: "curtain", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
+                    name: "sheet", bind: "point", fit: "world", offset: [0, { data: "drop", fallback: -0.7 }, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
                     burst: { count: { data: "marks", fallback: 22 }, at: 1 },
-                    shape: { kind: "hemisphere", radius: 3.4, thickness: 0.55 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 3.4 }, thickness: 0.7 },
                     direction: "outward", speed: [0.12, 0.42], spread: 16,
                     gravity: 0.05, drag: 0.9,
                     lifetime: [10, 20], size: [0.3, 0.5], sizeMode: "linear",
                     color: 0x7FB84A, alpha: [0.9, 0], light: "world", maxParticles: 170
                 },
                 {
-                    name: "strands", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
+                    name: "curtain", bind: "point", fit: "world", offset: [0, { data: "drop", fallback: -0.7 }, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
+                    burst: { count: { data: "marks", fallback: 22 }, at: 1 },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 3.4 }, length: { data: "span", fallback: 2.2 }, thickness: 0.6 },
+                    direction: "outward", speed: [0.14, 0.46], spread: 16,
+                    gravity: 0.05, drag: 0.9,
+                    lifetime: [10, 20], size: [0.3, 0.5], sizeMode: "linear",
+                    color: 0x7FB84A, alpha: [0.9, 0], light: "world", maxParticles: 170
+                },
+                {
+                    name: "strands", bind: "point", fit: "world", offset: [0, { data: "drop", fallback: -0.7 }, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/mud/mudsplash",
                     burst: { count: { data: "marks", fallback: 14 }, at: 1 },
-                    shape: { kind: "hemisphere", radius: 3.0, thickness: 0.4 },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 3.0 }, length: { data: "span", fallback: 2.0 }, thickness: 0.5 },
                     direction: "outward", speed: [0.18, 0.5], spread: 20,
                     gravity: 0.08, drag: 0.92,
                     lifetime: [12, 24], size: [0.2, 0.04],
@@ -63,7 +75,7 @@ const SludgewaveDefinition: ParticleDefinition = {
                         lifetime: 14, size: [0.08, 0.02], color: 0x5E7A30, alpha: [0.6, 0] }
                 },
                 {
-                    name: "toxbubbles", bind: "source", offset: [0, 0, 0], height: 0, fit: "world",
+                    name: "toxbubbles", bind: "point", fit: "world", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: { data: "marks", fallback: 10 }, at: 1 },
                     shape: { kind: "cylinder", radius: 1.0, length: { data: "height", fallback: 1.4 } },

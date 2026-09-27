@@ -2,7 +2,8 @@
  * 潜水 / Dive — 伙伴 AI 用途。
  *
  * 这招是一次"先敌一步钻过去"的突袭，所以它的计划围绕接近与绕后：
- *   何时考虑   目标看得见、活着、非友方，且在 `ai.maxChase` 内（或它就是焦点）。
+ *   何时考虑   自己身在水里（只在可容纳身体的真实水体里才能下潜），且目标看得见、活着、非友方，
+ *              在 `ai.maxChase` 内（或它就是焦点）。陆地无水时直接换别的招，不硬潜。
  *   对谁出手   ai.opening=isolated 时只扑身边没有其他敌人的落单目标，避免一头扎进敌群。
  *   出手前     没有硬性视线要求（水痕会绕到脚下），由共用任务走到 reach；驻守且没开 leaveStation
  *              时不硬追，把机会让给别的招。
@@ -10,7 +11,6 @@
  *   放完之后   after 先退开两步（人已经贴在目标身边），随后由共用交战计划接管。
  *   什么时候紧急  身在水里（深潜、射程与强度更高）时插到更前面。
  *   优先级     0 表示按共享顺序参与；身在水里时 60，抢在别的输出前。
- * 留下的东西：窜出的落点留下一汪涌泉（世界区域），伙伴可以利用它给接下来经过的敌人浇灭灼伤。
  */
 namespace CompanionBehavior {
     const diveChase = PokemonSkills.number("ai.maxChase", "突袭距离", 3, 20, 1);
@@ -22,13 +22,16 @@ namespace CompanionBehavior {
 
     PokemonSkills.addPreferences("dive", { ai: { maxChase: 12, opening: "anytime", leaveStation: false } }, [diveChase, diveOpening, diveLeave]);
 
+    /** 身在水里（真实水体，不是软地）：这是下潜与整条水路成立的前提。 */
     function diveWet(context: WorldBehavior.Context): boolean {
         var access = world(context), actor = access.actor(source(context).ref);
-        var body = actor === null ? null : access.observe(actor);
-        return body !== null && body.wet();
+        return actor !== null && PokemonSkills.diveSubstantial(access, actor);
     }
     function diveWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        if (!diveWet(context)) return false;
         if (threat.friendly || !threat.visible || threat.health <= 0) return false;
+        const access = world(context), caster = access.actor(source(context).ref), victim = access.actor(threat.ref);
+        if (caster === null || victim === null || !PokemonSkills.diveExitAvailable(access, caster, victim, item.data.range)) return false;
         var self = source(context), range = item.data.range;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
         // 驻守且没开 leaveStation 时不硬追，把机会让给别的招。

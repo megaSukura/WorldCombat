@@ -6,7 +6,8 @@
  *
  * 三幕：
  *   起（windup，提交前）：掌心托起一个礼盒、缎带亮起，只播预告。
- *   掷（throw → open，提交后）：盒子沿低弧抛向选定的落点，撞到人或落地就当着谁打开。
+ *   掷（throw → open，提交后）：盒子沿低弧抛向选定的落点，撞到人或飞尽就**按弹体真实的最后接触/结束点**
+ *       当着谁打开（不拿旧瞄准点补开）。
  *   开（candy / blast，提交后）：掷中糖果（`sweetChance`）就治疗落点旁最近的一个活物（连对手一起）；
  *       否则按 `heavyChance`／固定 30% 分出重／中／轻三档，对落点附近的非友方炸出机关。落点没人时盒子空开。
  *
@@ -92,16 +93,25 @@ namespace PokemonSkills {
 
                 if (candy) {
                     // 糖从真实盒点弹出；只有与盒子通路畅通的最近活物才拿得到，隔墙者被跳过。
+                    ExecutionOutcomes.settle(scope, "support");
                     const recipient = presentNearest(scope, point, radius + 0.6);
-                    let healed = 0;
-                    if (recipient !== null) healed = heal(scope, recipient, mend, "present");
+                    let healed = 0, where = point;
+                    if (recipient !== null) {
+                        const body = scope.observe(recipient);
+                        if (body !== null) where = body.position();
+                        healed = heal(scope, recipient, mend, "present");
+                    }
                     WorldFeedback.emit(scope, presentScene, 1, point,
                         { moment: "candy", target: recipient === null ? "" : String(recipient.ref()),
                             friend: recipient !== null && scope.friendly(recipient) ? 1 : 0,
                             motes: motes, scale: scale, healed: Math.max(0, Math.round(healed)) }, 30);
                     sound(current, "minecraft:entity.allay.item_given");
-                    if (healed > 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), presentCandyText, [Math.round(healed * 10) / 10], 26);
-                    else WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), presentEmptyText, [], 22);
+                    if (recipient !== null && healed > 0) {
+                        // 受治疗者另开一份回执：糖与心落在真正被治好的人身上，不再只停在盒点。
+                        WorldFeedback.emit(scope, presentScene, 1, where,
+                            { moment: "treat", target: String(recipient.ref()), healed: Math.max(0, Math.round(healed)), motes: motes, scale: scale }, 30);
+                        WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.1, 0)), presentCandyText, [Math.round(healed * 10) / 10], 26);
+                    } else WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), presentEmptyText, [], 22);
                     done(current);
                     return;
                 }
@@ -121,6 +131,9 @@ namespace PokemonSkills {
                 });
                 WorldFeedback.emit(scope, presentScene, 1, point,
                     { moment: "open", tier: tier, motes: motes, scale: scale, struck: struck }, 26);
+                // 同一开盒刻：机关档在盒点弹出弹簧拳套与短弹簧线（糖档不播这个 moment）。
+                WorldFeedback.emit(scope, presentScene, 1, point,
+                    { moment: "trap", tier: tier, motes: motes, scale: scale, struck: struck }, 26);
                 sound(current, "minecraft:entity.generic.explode");
                 if (struck > 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), presentHitText, [struck], 26);
                 else WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), presentEmptyText, [], 22);
@@ -134,7 +147,13 @@ namespace PokemonSkills {
                 direction: arc || undefined,
                 appearance: { sprite: "cobblemon:particle/generic/present", scale: 0.8, glow: true },
                 impact: function (current, hit) { open(current, hit.position()); }
-            }, function (current) { open(current, current.targetPosition()); });
+            }, function (current) {
+                if (settled) return;
+                // 完成回调按弹体真实最后接触/结束点开盒；读不到真实位置就不在旧瞄准点假造一盒。
+                const at = current.world().projectilePosition(flight);
+                if (at !== null) open(current, at);
+                else done(current);
+            });
             WorldFeedback.emit(world, presentScene, 1, action.origin(),
                 { moment: "throw", projectile: flight, target: action.target() === null ? "" : String(action.target()!.ref()),
                     motes: motes, scale: scale, sweet: Math.round(sweet * 100), power: Math.round(power * 10) / 10 }, 40);

@@ -33,6 +33,9 @@ namespace PokemonSkills {
     const jawMissText = "world_combat.move.jawlock.text.miss";
     const jawImmuneText = "world_combat.move.jawlock.text.immune";
 
+    function jawlockAnchorValid(value: any): boolean {
+        return !!value && typeof value.id === "string" && !!value.id && typeof value.key === "string" && !!value.key;
+    }
     function jawlockGripData(json: string): string {
         const value = JSON.parse(json);
         if (typeof value.caster !== "string" || !value.caster) throw new Error("Invalid jaw lock caster");
@@ -40,7 +43,17 @@ namespace PokemonSkills {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid jaw lock state");
         });
         if (value.grip <= 0 || value.lock < 1) throw new Error("Invalid jaw lock state");
+        if (!jawlockAnchorValid(value.victimAnchor) || !jawlockAnchorValid(value.holderAnchor))
+            throw new Error("Invalid jaw lock carriers");
         return JSON.stringify(value);
+    }
+    /** 两个真实碰撞箱的表面间距：重叠为 0，否则三轴外扩后的最短间距（大 Boss 体心远也能正确判接触）。 */
+    function jawlockSurfaceGap(first: CombatObservation, second: CombatObservation): number {
+        const aMin = first.boundsMin(), aMax = first.boundsMax(), bMin = second.boundsMin(), bMax = second.boundsMax();
+        const dx = Math.max(0, bMin.x() - aMax.x(), aMin.x() - bMax.x());
+        const dy = Math.max(0, bMin.y() - aMax.y(), aMin.y() - bMax.y());
+        const dz = Math.max(0, bMin.z() - aMax.z(), aMin.z() - bMax.z());
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     WorldCombat.effect(jawGrip, 1, 500, "actor", jawlockGripData, EffectProtocols.unchanged);
@@ -50,36 +63,50 @@ namespace PokemonSkills {
         if (!world.valid(victim)) { effect.end(); return; }
         const caster = world.actor(data.caster);
         if (caster === null || !world.valid(caster)) { data.broken = true; effect.state(JSON.stringify(data)); effect.end(); return; }
+        // 双载体精确绑定：任一方被清除/替换（净化、死亡、别人重咬）就不再是本对，结束并只撤各自的本次 key。
+        if (!MobEffects.matches(world, victim, data.victimAnchor) || !MobEffects.matches(world, caster, data.holderAnchor)) {
+            data.broken = true; effect.state(JSON.stringify(data)); effect.end(); return;
+        }
         const held = world.observe(victim), holder = world.observe(caster);
-        if (held === null || holder === null || held.position().minus(holder.position()).length() > data.grip) {
+        if (held === null || holder === null) { data.broken = true; effect.state(JSON.stringify(data)); effect.end(); return; }
+        // 用真实 AABB 表面距维持，并要求两者之间通视：隔墙即散，大 Boss 体心远但身体贴住不算脱开。
+        if (jawlockSurfaceGap(held, holder) > data.grip || !world.clear(holder.position(), held.position())) {
             data.broken = true; effect.state(JSON.stringify(data)); effect.end(); return;
         }
         const mid = held.position().plus(holder.position()).scale(0.5);
+        const aim = holder.position().minus(held.position());
+        const direction = aim.length() > 0.01 ? [aim.x(), aim.y(), aim.z()] : [0, 0, 1];
         // 持续锁链挂在 jawlock_grip 这个托管效果上：效果自然到期、被驱散或被外力拆开时，表现随之消失。
         WorldFeedback.onEffect(world, effect.id(), "jawlock:hold", jawlockScene, 1, mid,
-            { moment: "hold", path: [String(caster.ref()), String(victim.ref())], maw: data.maw,
-                beats: Math.max(1, Math.min(6, Math.round(data.lock / 60))) });
+            { moment: "hold", target: String(victim.ref()), path: [String(caster.ref()), String(victim.ref())], maw: data.maw,
+                direction: direction, beats: Math.max(1, Math.min(6, Math.round(data.lock / 60))) });
         effect.schedule("hold", "hold", 4, "{}");
     });
     WorldCombat.effectHandler(jawGrip, "end", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        // 只撤本次锁的 exact key：被新一次咬合替换后，旧对峙结束不会删掉新对留下的载体。
         if (world.valid(victim)) {
-            const locked = MobEffects.read(world, victim, jawLocked);
-            if (locked !== null) world.removeMobEffect(victim, jawLocked, locked.key());
-            const body = world.observe(victim);
-            if (body !== null) {
-                WorldFeedback.emit(world, jawlockScene, 1, body.position(),
-                    { moment: data.broken ? "break" : "release", target: String(victim.ref()) }, 24);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)),
-                    data.broken ? jawBreakText : jawReleaseText, [], 24);
+            const current = MobEffects.read(world, victim, jawLocked), mine = MobEffects.matches(world, victim, data.victimAnchor);
+            if (mine && current !== null) world.removeMobEffect(victim, jawLocked, current.key());
+            // 结束表现只在本对仍是受害者当前的锁（或锁已自然到期）时播；已被新一对替换就不冒名播。
+            if (current === null || mine) {
+                const body = world.observe(victim);
+                if (body !== null) {
+                    WorldFeedback.emit(world, jawlockScene, 1, body.position(),
+                        { moment: data.broken ? "break" : "release", target: String(victim.ref()) }, 24);
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)),
+                        data.broken ? jawBreakText : jawReleaseText, [], 24);
+                }
             }
         }
         const caster = world.actor(data.caster);
         if (caster !== null && world.valid(caster)) {
-            const holding = MobEffects.read(world, caster, jawHolding);
-            if (holding !== null) world.removeMobEffect(caster, jawHolding, holding.key());
-            const body = world.observe(caster);
-            if (body !== null) WorldFeedback.emit(world, jawlockScene, 1, body.position(), { moment: "free", target: String(caster.ref()) }, 20);
+            const current = MobEffects.read(world, caster, jawHolding), mine = MobEffects.matches(world, caster, data.holderAnchor);
+            if (mine && current !== null) world.removeMobEffect(caster, jawHolding, current.key());
+            if (current === null || mine) {
+                const body = world.observe(caster);
+                if (body !== null) WorldFeedback.emit(world, jawlockScene, 1, body.position(), { moment: "free", target: String(caster.ref()) }, 20);
+            }
         }
     });
 
@@ -113,15 +140,18 @@ namespace PokemonSkills {
             const context: NumberContext = { pokemon, skill: skills["jawlock"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p("jawlock", "tempo", context)),
-                recover: Math.round(p("jawlock", "recover", context)),
+                recover: Math.round(p("jawlock", "aftercast", context)),
                 cooldown: Math.round(p("jawlock", "recharge", context)),
                 active: skills["jawlock"].active,
                 range: p("jawlock", "reach", context)
             };
         },
         windup: function (action, config, prepare) {
+            // 张颚闪朝向：把施法者当前朝向的水平单位方向按 0.32 格给嘴部粒子，不再固定世界 +Z。
+            const dir = action.direction(), flat = WorldCombat.point(dir.x(), 0, dir.z());
+            const heading = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
             action.present("jawlock:gather:" + action.id(), jawlockScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather",
+                JSON.stringify({ moment: "gather", mawX: heading.x() * 0.32, mawZ: heading.z() * 0.32,
                     maw: Math.max(8, Math.round(p("jawlock", "maw", action))) }));
             return prepare;
         },
@@ -176,10 +206,21 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), jawImmuneText, [], 24);
                     finish(current); return;
                 }
+                const victimAnchor = MobEffects.anchor(lockedEffect), holderAnchor = MobEffects.anchor(holdingEffect);
                 scope.stopMovement(victim);
                 scope.stopMovement(self);
                 // 锁效果与双方被钉的状态同时长：自然到期走 release，被拉开/一方倒下才走 break。
-                scope.effect(jawGrip, victim, JSON.stringify({ caster: String(self.ref()), grip: grip, lock: lock, maw: maw, broken: false }), lock);
+                // 双载体精确锚点存进对峙本身，结束时只撤本次 key，不误清新一对。
+                const gripId = scope.effect(jawGrip, victim, JSON.stringify({ caster: String(self.ref()), grip: grip, lock: lock, maw: maw, broken: false,
+                    victimAnchor: victimAnchor, holderAnchor: holderAnchor }), lock);
+                if (!gripId) {
+                    // 对峙效果创建失败：回滚双方载体，不留下单边状态。
+                    scope.removeMobEffect(victim, jawLocked, victimAnchor.key);
+                    scope.removeMobEffect(self, jawHolding, holderAnchor.key);
+                    WorldFeedback.emit(scope, jawlockScene, 1, at, { moment: "snap", target: String(victim.ref()), maw: maw, intensity: intensity }, 24);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), jawImmuneText, [], 24);
+                    finish(current); return;
+                }
                 WorldFeedback.emit(scope, jawlockScene, 1, at,
                     { moment: "lock", target: String(victim.ref()), maw: maw, grip: grip,
                         beats: Math.max(1, Math.min(6, Math.round(lock / 60))), intensity: intensity }, 28);

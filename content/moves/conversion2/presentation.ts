@@ -3,10 +3,11 @@
  *
  * 一句话：一道冷色的读解视线搭上目标、把它上一手的属性收拢回来，再以那一种属性的色相在施法者身上翻织一层新纹理。
  * 色相家族：钢青与月白的中性层（read）＋ settle 里唯一的饱和色——被读出的属性色（data.color）。
- * 拍子：读（read 0–16t 收拢）→ 织（settle 0–44t，击 0–16t，收 16–44t）／空（fizzle 0–22t）。
- * 范围：read 的收拢环绑在目标身上，画出的就是被读的那一个；settle 的翻转面绑施法者自己。
- * 运动：读解环从外向内收，属性色的光晕在重织时由内向外翻出去。
+ * 拍子：读（read 0–16t 收拢）→ 织（settle 0–44t）／空（fizzle 0–22t）→ 持（weave，无限时长，随承载效果存续）。
+ * 范围：read 的收拢环绑在目标身上，画出的就是被读的那一个；settle／weave 的纹面绑施法者自己。
+ * 运动：读解环从外向内收，属性色的光晕在重织时由内向外翻出去；weave 是一片稳定的小纹面，一直显示所抗的类型/伤害。
  * 数：服务端把 `facets`（随特攻派生）交给发射器决定纹面条数与光带密度；命中抗性越硬，scale 越大。
+ * 色：宝可梦那一支 weave 读 `data.color`（重织属性的色）；普通生物这一支没有属性和色，落回中性钢蓝。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const Conversion2Definition: ParticleDefinition = {
@@ -82,6 +83,28 @@ const Conversion2Definition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.05],
                     lifetime: [22, 34], size: [0.28, 0.08],
                     color: 0x2F4A4A, alpha: [0.26, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        weave: {
+            duration: 0,
+            exit: { drain: 18 },
+            emitters: [
+                {
+                    name: "weave_facet", bind: "source", offset: [0, 0.55, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    rate: 3, shape: { kind: "ring", radius: 0.55, thickness: 0.5 },
+                    direction: "outward", speed: [0.01, 0.03], spin: 8,
+                    lifetime: [16, 26], size: [0.08, 0.02],
+                    color: { data: "color", fallback: 0x8FD8D8 }, alpha: [0.35, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "weave_ring", bind: "source", offset: [0, 0.1, 0], height: 0.15,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 2, shape: { kind: "ring", radius: 0.7, thickness: 0.6 },
+                    direction: "outward", speed: [0.01, 0.04],
+                    lifetime: [14, 22], size: [0.06, 0.22],
+                    color: { data: "color", fallback: 0x8FD8D8 }, alpha: [0.3, 0], light: "world", maxParticles: 12
                 }
             ]
         },

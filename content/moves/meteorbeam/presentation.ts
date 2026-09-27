@@ -4,11 +4,11 @@
  * 一句话：碎星从高空一串串落到施法者身上、在脚边溅开一圈，随后一颗拖着火星的陨石沿抛物线飞出去，
  *         落地炸开一圈星尘与碎岩，再溅起一记短促的碎石与尘。
  * 色相家族：暖星金（0xFFD873 / 0xFFF3D0）＋岩褐（0x9A8A72 / 0x6E6352）；星金只出现在聚星与爆点的核心。
- * 拍子：起 gather（落星）→ boost（特攻提升的一记竖光）→ flight（陨石飞行）→ burst（落点炸开）→ debris（短促碎石余尘）。
- * 范围：burst 的半径绑定 `data.blast`（落点半径），debris 的碎石铺在同一半径内——站进这一圈就会被溅射到。
- * 运动：gather 的星点由上往下落；flight 的陨石沿抛物线飞（服务端 ballistic）；burst 向外炸、debris 贴地短溅后散去。
+ * 拍子：起 gather（落星）→ boost（特攻提升的一记竖光）→ flight（陨石飞行）→ burst（每个受击者局部爆岩）→ debris（落点短促碎石余尘）。
+ * 范围：burst 是每个受击者身上的局部爆点；debris 在真实落点按 `data.blast`（实际落点半径）铺开——站进这一圈才会被溅射到。
+ * 运动：gather 的星点由上往下落；flight 的陨石沿真实弹道飞（服务端解算的弧线）；burst 向外炸、debris 贴地短溅后散去。
  * 数：`data.starlight`（特攻与等级换算）决定聚星与爆点密度，`data.intensity`（威力/120）决定亮度，
- *     `data.scale`（落点半径/1.9）决定整体尺度，`data.hits`（命中数）决定碎石余尘的强度。
+ *     `data.scale`（落点半径/1.9）决定粒子尺寸，`data.hits`（命中数）决定碎石余尘的强度。
  */
 const MeteorBeamDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -101,28 +101,28 @@ const MeteorBeamDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "burst_flash", bind: "point", offset: [0, 0.4, 0],
+                    name: "burst_flash", bind: "point", fit: "world", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
                     burst: { count: { data: "starlight", fallback: 18 } },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 0.4 } },
+                    shape: { kind: "sphere", radius: 0.5 },
                     direction: "outward", speed: [0.08, 0.28], spread: 22,
                     lifetime: [6, 12], size: [0.34, 0.05], sizeMode: "index",
                     color: 0xFFF3D0, alpha: [1, 0], light: "full", bloom: 0.45
                 },
                 {
-                    name: "burst_ring", bind: "point", offset: [0, 0.06, 0], height: 0,
+                    name: "burst_ring", bind: "point", fit: "world", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: { data: "hits", fallback: 2 }, interval: 3 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.5 } },
+                    shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [12, 20], size: [0.5, 1.6],
                     color: 0xC8B490, alpha: [0.6, 0], light: "full", maxParticles: 20
                 },
                 {
-                    name: "burst_rocks", bind: "point", offset: [0, 0.35, 0],
+                    name: "burst_rocks", bind: "point", fit: "world", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "starlight", fallback: 12 } },
-                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 0.4 } },
+                    shape: { kind: "sphere_surface", radius: 0.5 },
                     direction: "outward", speed: [0.08, 0.26], gravity: 0.1, drag: 0.88,
                     lifetime: [14, 28], size: [0.26, 0.1],
                     color: 0x9A8A72, alpha: [0.85, 0], light: "world", maxParticles: 70
@@ -134,19 +134,19 @@ const MeteorBeamDefinition: ParticleDefinition = {
             exit: { stop: 9, drain: 16 },
             emitters: [
                 {
-                    name: "debris_dust", bind: "point", offset: [0, 0.05, 0], height: 0,
+                    name: "debris_dust", bind: "point", fit: "world", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: { data: "debris", fallback: 8 } },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.6 } },
+                    shape: { kind: "ring", radius: { data: "blast", fallback: 1.9 } },
                     direction: "outward", speed: [0.04, 0.14], gravity: 0.03, drag: 0.9,
                     lifetime: [10, 20], size: [0.2, 0.32],
                     color: 0x6E6352, alpha: [0.4, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "debris_grit", bind: "point", offset: [0, 0.25, 0],
+                    name: "debris_grit", bind: "point", fit: "world", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "stones", fallback: 5 } },
-                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 0.4 } },
+                    shape: { kind: "sphere_surface", radius: { data: "blast", fallback: 1.9 } },
                     direction: "outward", speed: [0.06, 0.22], gravity: 0.12, drag: 0.88,
                     lifetime: [8, 16], size: [0.18, 0.06],
                     color: 0x9A8A72, alpha: [0.8, 0], light: "world", maxParticles: 50

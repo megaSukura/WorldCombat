@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.iciclecrash.summary": "Forms a huge icicle above the chosen landing spot and drops it straight down: foes in the landing ring are scoured by shards, and a solid hit may leave them flinched. The spot is fixed at cast and the icicle does not chase, so the target can step aside before it lands; the high drop is heavier but slower, the close drop faster and surer.",
+  "worldcombat.skill.iciclecrash.summary": "Forms a huge mass of ice above the chosen landing spot and drops it straight down: foes in the landing ring with a clear three-dimensional line to the shatter are scoured by shards, and a solid hit may leave them flinched. The spot is fixed during the wind-up and the ice does not chase, so the target can step aside before it lands; the high drop is heavier but slower, the close drop faster and surer.",
   "worldcombat.skill.iciclecrash.use.0": "Single-target slam",
   "worldcombat.skill.iciclecrash.use.1": "Fluster a target at range",
   "worldcombat.skill.iciclecrash.use.2": "Drop past a low wall onto a spot behind cover",
   "worldcombat.skill.iciclecrash.use.3": "Pin a slow target to its spot",
-  "worldcombat.skill.iciclecrash.description.0": "Foes within %2$s blocks of the landing each take one hit for about %1$s damage (a target is struck only once); the target's defence, type and crit are settled on the hit.",
-  "worldcombat.skill.iciclecrash.description.1": "The icicle forms up to %1$s blocks above the landing (a ceiling shortens it) and drops straight down at %2$s blocks/tick with a %3$s-block hit radius; the landing is fixed when you cast, so the target can step out of it.",
+  "worldcombat.skill.iciclecrash.description.0": "Foes within %2$s blocks of the landing with no block between them and the shatter take one hit for about %1$s damage (a target is struck only once, and the directly hit target counts as struck); the target's defence, type and crit are settled on the hit.",
+  "worldcombat.skill.iciclecrash.description.1": "The ice forms up to %1$s blocks above the landing, shortened only by a block ceiling (entities never hide the roof), and drops straight down at %2$s blocks/tick with a %3$s-block hit radius; the landing is fixed during the wind-up, so the target can step out of it.",
   "worldcombat.skill.iciclecrash.description.2": "Cast onto a spot or target within %1$s blocks; a ground point, an entity or open air all work.",
   "worldcombat.skill.iciclecrash.description.3": "Each target struck by the icicle has a %1$s chance to flinch for %2$s, interrupting interruptible actions and preventing new moves and ordinary attacks during that time.",
   "worldcombat.skill.iciclecrash.tall.on": "High drop on: the icicle forms higher with power x1.15 and a shatter ring x1.2 wide, but adds 6 ticks of wind-up, drops at x0.72 speed and adds 8 ticks of cooldown, giving the target more time to step aside.",
@@ -24,7 +24,7 @@
   "worldcombat.skill.iciclecrash.preference.tall": "High drop",
   "worldcombat.skill.iciclecrash.preference.tall.help": "On: the icicle forms higher, hits harder and shatters wider, but the longer, slower fall gives the target time to step aside. Off: a close, fast drop that is lighter and narrower but almost impossible to dodge.",
   "worldcombat.skill.iciclecrash.preference.ai.maxChase": "Cast distance",
-  "worldcombat.skill.iciclecrash.preference.ai.maxChase.help": "The companion considers Icicle Crash only while a foe is this close; higher opens at range, but the longer fall lets the target slip out of the landing.",
+  "worldcombat.skill.iciclecrash.preference.ai.maxChase.help": "The companion considers Icicle Crash only while a foe is this close; higher opens at range. Distance only decides whether it opens, not how fast the ice falls; whether the target dodges still depends on its own movement and the headroom over the landing.",
   "worldcombat.skill.iciclecrash.preference.ai.opening": "Opening target",
   "worldcombat.skill.iciclecrash.preference.ai.opening.help": "Fresh only: skip targets already flinched by another move and save this one for a target that can still be flustered. Always: treat it as an ordinary attack and ignore target status.",
   "worldcombat.skill.iciclecrash.preference.ai.opening.fresh": "Fresh targets only",
@@ -32,5 +32,6 @@
   "world_combat.move.iciclecrash.text.hit": "Slammed %1$s",
   "world_combat.move.iciclecrash.text.flinch": "Flustered",
   "world_combat.move.iciclecrash.text.miss": "Icicle missed",
+  "world_combat.move.iciclecrash.text.blocked": "No headroom overhead",
   "effect.world_combat.iciclecrash_flinch": "Flinched"
 }

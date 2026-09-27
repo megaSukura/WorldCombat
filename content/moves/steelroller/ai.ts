@@ -1,8 +1,8 @@
 /**
  * 铁滚轮 / steelroller 的 AI 用途。
  *
- * 什么局面下出手：**自己脚下正站在一片场地上**（青草／电气／薄雾／精神的共享身份，或按决策帧缓存一次区域读取
- * 兜底覆盖特性掀起的场地），且目标可见、敌对、存活且在 `ai.maxChase`（默认 7）格内。没有场地时不提议——
+ * 什么局面下出手：**自己真实站在一片同层生效场地上**（与执行同一 `surfaceTouches` + `covers` 判据，含特性掀起的
+ * 场地），且目标可见、敌对、存活且在 `ai.maxChase`（默认 7）格内。没有场地时不提议——
  * 那只会白扣 5 点 PP；场地外不提案。够不到交给共享接近逻辑。
  *
  * priority：目标也站在同一片场地上时最高（吃掉场地同时剥夺对方的场地收益），在场内 34/20。
@@ -10,11 +10,12 @@
  */
 namespace PokemonSkills {
     function steelrollerTerrain(context: WorldBehavior.Context, subject: CompanionBehavior.Entity): boolean {
-        for (let i = 0; i < steelrollerTerrainNames.length; i++)
-            if (CompanionBehavior.status(context, subject, steelrollerTerrainNames[i])) return true;
-        // 没有共享身份标记时（例如特性掀起的场地），按决策帧缓存一次区域读取兜底；缓存键带 subject，避免同帧互相覆盖。
+        if (subject.grounded === false) return false;
+        // 与执行同一 covers + 同层脚点判据：按决策帧缓存一次真实区域读取，缓存键带 subject，避免同帧互相覆盖。
         return CompanionBehavior.observedFlag(context, "world_combat:move_steelroller/ground/" + subject.ref, function () {
-            return steelrollerAreas(CompanionBehavior.world(context), CompanionBehavior.point(subject.point)).length > 0;
+            const access = CompanionBehavior.world(context);
+            const actor = access.actor(subject.ref);
+            return actor !== null && steelrollerGroundedAreas(access, actor).length > 0;
         });
     }
 

@@ -32,6 +32,6 @@
   "worldcombat.skill.twineedle.preference.ai.finishLow.help": "开启：残血目标排得更前，用这两下稳定收尾；关闭则所有目标同等对待。",
   "worldcombat.skill.twineedle.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.twineedle.preference.ai.leaveStation.help": "开启后，驻守命令下也会为出针离开站位；关闭则只在原地够得到时出手。",
-  "world_combat.move.twineedle.text.venom": "第二针刺入，带毒",
+  "world_combat.move.twineedle.text.venom": "毒液渗入伤口",
   "worldcombat.skill.twineedle.description.homing": "两根针离手后会在射程内朝锁定的目标修正飞行，移动中的敌人也不容易甩开。"
 }

@@ -38,7 +38,7 @@ const HoldhandsDefinition: ParticleDefinition = {
                 { name: "ribbon", bind: "path", offset: [0, 0.6, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/status/infatuation_heart",
                     shape: { kind: "polyline" },
-                    rate: 50, direction: "shape", speed: [0.015, 0.06], trail: { minDistance: 0.12 },
+                    rate: 50, direction: "shape", speed: [0.015, 0.06],
                     lifetime: [8, 14], size: [0.14, 0.05],
                     color: 0xFF9FBF, alpha: [0.9, 0], light: "full", maxParticles: 110 },
                 { name: "burst", bind: "target", height: 0.55,

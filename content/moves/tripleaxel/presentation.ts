@@ -5,8 +5,8 @@
  * 弧上的碎冰随之变密；撞到谁就在谁身上崩开一圈霜屑，滑步被墙挡住就停在真实位置。
  * 色相家族：冰蓝弧光（softswipe／cut）＋旋身风（swirlingwind）＋霜白碎屑（iceshard／impact_ice）＋中性尘（tinydust）。
  * 拍子：起（windup 起旋）→ 滑（slide 脚下冰弧记录真实滑位与转向）→ 击（kick 逐脚按真实切线的扇形弧扫）→ 命中（hit 崩屑）／落空（whiff）。
- * 范围：kick 用 `data.path`（与服务端 WorldGeometry.sector 同一组角度、同一实际切线的扇形顶点）铺成扇形，画面里的弧面就是判定区；slide 的冰弧跟随身体真实滑位。
- * 运动：弧光沿扇形从一侧扫到另一侧（`data.direction` 定向）；slide 的冷刃朝当刻切线旋进（orient heading），每脚角度更宽（`data.arc`）。
+ * 范围：每脚把扇形切成几片真实子楔逐刻扫过，kick 的 `data.path` 就是当刻那一片三个端点（与服务端 WorldGeometry.bodyPolygon 判定同一组端点）；slide 的冰弧跟随身体真实滑位，每段用新键不会缺段。
+ * 运动：脚缘斩线沿扇形由一侧扫到另一侧（`data.direction` 定向）；slide 的冷刃朝当刻切线旋进（orient heading），每脚角度更宽（`data.arc`）。
  * 数：弧面细节量绑定 `data.sparks`（物攻换算），命中碎屑绑定 `data.sparks`、亮度绑定 `data.intensity`，
  *   弧面大小绑定 `data.scale`；第几脚（`data.index`）决定整脚的亮度与弧宽——画面里的数与机制里的数一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。

@@ -44,7 +44,7 @@ namespace CombatStages {
     /** Exact edit of one contribution; source, duration, carrier and unrelated modifier fields stay intact. */
     export function editWindow(effect: CombatEffect): void {
         var input = JSON.parse(effect.input()), state = JSON.parse(effect.state());
-        if (stats.indexOf(input.stat) < 0 || !isFinite(input.value) || input.value % 1 || Math.abs(input.value) > 6
+        if (stats.indexOf(input.stat) < 0 || !isFinite(input.value) || input.value % 1
             || (state.stages && state.stages[input.stat] || 0) !== input.expected) { effect.reject("stage-changed"); return; }
         if (!state.stages) state.stages = {};
         if (input.value === 0) delete state.stages[input.stat]; else state.stages[input.stat] = input.value;
@@ -79,22 +79,29 @@ namespace CombatStages {
     /** Domains install their stage-window transfer writer when the native mechanics package loads. */
     export var transferWindow = function (effect: CombatEffect, _definition: string): void { effect.reject("unsupported-transfer"); };
 
-    function clean(value: any): { [stat: string]: number } {
+    function clean(value: any, bounded = true): { [stat: string]: number } {
         var stages: { [stat: string]: number } = {};
-        stats.forEach(function (stat) { var n = Number(value && value[stat] || 0); if (isFinite(n) && n !== 0) stages[stat] = Math.max(-6, Math.min(6, Math.round(n))); });
+        stats.forEach(function (stat) { var n = Number(value && value[stat] || 0); if (isFinite(n) && n !== 0) stages[stat] = bounded?Math.max(-6, Math.min(6, Math.round(n))):Math.round(n); });
         return stages;
     }
     function normalize(json: string): string {
         var value = JSON.parse(json);
-        return JSON.stringify({ stages: clean(value && value.stages), pending: value && value.pending === true ? true : undefined });
+        var result: any = { stages: clean(value && value.stages) };
+        if (value && value.pending === true) result.pending = true;
+        return JSON.stringify(result);
     }
     function normalizeWindow(json: string): string {
         var value: Window = JSON.parse(json);
         if (!value || typeof value.source !== "string" || !value.stages) throw new Error("Invalid stage window");
         if (value.carrier && !MobEffects.validAnchor(value.carrier)) throw new Error("Invalid stage carrier");
         if (value.owner && !validOwner(value.owner)) throw new Error("Invalid stage owner");
-        if (value.origin !== undefined && typeof value.origin !== "string") throw new Error("Invalid stage origin");
-        return JSON.stringify({ source: value.source, stages: clean(value.stages), carrier: value.carrier, owner: value.owner, origin: value.origin, pending: value.pending === true ? true : undefined });
+        if (value.origin != null && typeof value.origin !== "string") throw new Error("Invalid stage origin");
+        var result: Window = { source: value.source, stages: clean(value.stages,false) };
+        if (value.carrier) result.carrier = value.carrier;
+        if (value.owner) result.owner = value.owner;
+        if (value.origin != null) result.origin = value.origin;
+        if (value.pending === true) result.pending = true;
+        return JSON.stringify(result);
     }
     function clamp(value: number): number { return Math.max(-6, Math.min(6, value)); }
     export function multiplier(stage: number): number { return stage >= 0 ? (2 + stage) / 2 : 2 / (2 - stage); }
@@ -188,7 +195,7 @@ namespace CombatStages {
      */
     export function window(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source?: string, carrier?: MobEffects.Anchor): number {
         if (!world.valid(actor)) return 0;
-        var stages = clean(changes);
+        var stages = clean(changes,false);
         if (!Object.keys(stages).length) return 0;
         return world.effect(windowDefinition, actor, JSON.stringify({ source: source || "", stages: stages, carrier: carrier }), ticks);
     }

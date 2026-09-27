@@ -1,12 +1,14 @@
 /**
  * 精神转移 / psychoshift 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：自己身上带着一个主异常（否则没东西可推），附近有可见威胁、在 ai.maxChase 以内、有一条通视
- *   直线，对手身上没有异常、也不免疫这种异常——种不上就白推。默认避开种不上的目标。
+ * 什么局面有意义：自己身上带着一个主异常、且它确实是共享 transferMajor 受理的默认主异常载体（否则推不动），
+ *   附近有可见威胁、在 ai.maxChase 以内、有一条通视直线，对手身上没有异常、也不免疫这种异常——种不上就白推。
+ *   默认避开种不上的目标。
  * 对谁出手：当前威胁；对手已有异常或免疫该异常时跳过。
- * 候选之间怎么排：灼伤／中毒／剧毒／麻痹这类会持续消耗或限制行动的异常 priority 95，睡眠／冰冻（自己也动不了）
- *   70，其它 45；都不满足则 0。
+ * 候选之间怎么排：灼伤／中毒／剧毒／麻痹这类会持续消耗或限制行动的异常 priority 95，其它 45；睡眠／冰冻会让
+ *   自己无法行动、本来就走不完起手，不作为优先项。
  * 够不到怎么办：reach 就是本招射程（由特攻与体型决定）；共享任务先走近，approach 在无通视时侧移找角度。
+ *   驻守（hold／stay）且 ai.leaveStation 关闭时只禁止离位去追：目标已在射程内仍可原地转移，够不到才放弃。
  * 放完之后：对手接住这份异常、自己干净，交回共享交战计划。
  * 配置 ai.requireTransferable 决定要不要先确认「种得上」；ai.maxChase、ai.leaveStation 决定追多远、驻守是否离位。
  */
@@ -22,6 +24,15 @@ namespace CompanionBehavior {
         const definition = CombatStatus.defaultCarrier(name); if (!definition) return 1;
         return CombatStatus.allowed(access, actor, name, 1, definition.amplifier, { effect: definition.effect }).allowed ? 0 : 1;
     });
+    /** 只读事实：自己身上这份载体能被共享 transferMajor 原子转手（默认主异常载体、未被 identity_only 借壳）。 */
+    CompanionBehavior.registerFact("world_combat:psychoshift-transferable", function (access: CombatWorld, actor: CombatActor, argument: any): number {
+        const name = CombatStatus.normalize(String(argument || ""));
+        if (!name) return 0;
+        const definition = CombatStatus.majors[name]; if (!definition) return 0;
+        const source = CombatStatus.representative(access, actor, name, true);
+        if (!source) return 0;
+        return String(source.id()) === String(definition.effect) && !source.tagged(CombatStatus.identityOnly) ? 1 : 0;
+    });
 
     function psychoshiftMajor(context: WorldBehavior.Context, target: CompanionBehavior.Entity): string {
         return CompanionBehavior.fact<string>(context, "world_combat:psychoshift-major", target) || "";
@@ -30,13 +41,18 @@ namespace CompanionBehavior {
     function psychoshiftWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context), name = psychoshiftMajor(context, self);
         if (!name) return false;
+        // 只有默认主异常载体才转得动；同标签的模组自定义载体不在共享 transferMajor 的受理范围。
+        if (CompanionBehavior.fact<number>(context, "world_combat:psychoshift-transferable", self, name) !== 1) return false;
         if (psychoshiftMajor(context, target)) return false;
         if (CompanionBehavior.ai<boolean>(item, "requireTransferable", true)
             && CompanionBehavior.fact<number>(context, "world_combat:psychoshift-immune", target, name === "poison" && item.data.config && item.data.config.deep === true ? "toxic" : name) === 1) return false;
-        if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 12)) return false;
+        const distance = CompanionBehavior.distance(self.point, target.point);
+        // 驻守只限制离位：目标已在射程内就在原地转，够不到才放弃。
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)
+            && distance > item.data.range) return false;
+        if (context.facts.focus !== target.ref && distance > CompanionBehavior.ai<number>(item, "maxChase", 12)) return false;
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
@@ -51,8 +67,8 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (target === null || !psychoshiftWants(context, item, target)) return 0;
             const name = psychoshiftMajor(context, CompanionBehavior.source(context));
+            // 睡眠／冰冻会让自己无法行动，本来就走不完起手，不作为优先项。
             if (name === "burn" || name === "poison" || name === "toxic" || name === "paralysis") return 95;
-            if (name === "sleep" || name === "frozen") return 70;
             return 45;
         },
         approach: function (context, _item, target) {

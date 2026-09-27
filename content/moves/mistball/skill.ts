@@ -21,6 +21,36 @@ namespace PokemonSkills {
         return action.targetPosition();
     }
 
+    /** 沿解出的真实弹道逐段查墙（clipBlocks 畅通返回 MISS，用 WorldGeometry.blockHit 只认 BLOCK），
+     * 并按球的判定半径向上下左右外扩一档，要求这一段净空容得下这颗球。 */
+    export function mistballArcClear(world: CombatWorld, points: CombatPoint[], radius: number): boolean {
+        for (let index = 1; index < points.length; index++) {
+            const from = points[index - 1], to = points[index], delta = to.minus(from);
+            if (delta.length() < 1e-6) continue;
+            if (WorldGeometry.blockHit(world, from, to) !== null) return false;
+            if (radius > 0) {
+                const horizontal = WorldCombat.point(delta.x(), 0, delta.z());
+                const side = horizontal.length() < 1e-6 ? WorldCombat.point(1, 0, 0)
+                    : WorldCombat.point(-horizontal.z(), 0, horizontal.x()).unit();
+                const up = WorldCombat.point(0, radius, 0), right = side.scale(radius);
+                if (WorldGeometry.blockHit(world, from.plus(up), to.plus(up)) !== null) return false;
+                if (WorldGeometry.blockHit(world, from.minus(up), to.minus(up)) !== null) return false;
+                if (WorldGeometry.blockHit(world, from.plus(right), to.plus(right)) !== null) return false;
+                if (WorldGeometry.blockHit(world, from.minus(right), to.minus(right)) !== null) return false;
+            }
+        }
+        return true;
+    }
+
+    /** 这条初速与重力下真正可达、且净空容得下球的一条低弧/高弧解；从低弧起挑第一条畅通的，都没有就 null。 */
+    export function mistballArc(world: CombatWorld, origin: CombatPoint, landing: CombatPoint, speed: number, gravity: number, radius: number): LivingActions.BallisticSolution | null {
+        if (landing.minus(origin).length() < 0.05) return null;
+        const solutions = LivingActions.ballisticSolutions(origin, landing, speed, gravity, mistballFlightTicks);
+        for (let index = 0; index < solutions.length; index++)
+            if (mistballArcClear(world, solutions[index].points, radius)) return solutions[index];
+        return null;
+    }
+
     // 贴身羽绒雾：由命中时这一次附带创建的托管效果拥有。start 绑定实际 downcast 载体的 lease，
     // 每 tick 复核载体是否还在——被牛奶／清除／替换后立即结束，画面随效果清理，绝不比状态多留。
     WorldCombat.effect(mistballCling, 1, 800, "actor", function (json) {
@@ -84,11 +114,27 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const world = action.sense();
             const cloud = p(mistballId, "cloud", action);
             const motes = Math.max(10, Math.round(p(mistballId, "motes", action)));
-            action.present("world_combat:move_mistball:puff", mistballScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", cloud: cloud, motes: motes,
-                    suffuse: !(config && config.suffuse === false) }));
+            const speed = Math.max(0.35, p(mistballId, "lob", action));
+            const gravity = Math.max(0.01, p(mistballId, "fall", action));
+            const radius = Math.max(0.15, p(mistballId, "collisionRadius", action));
+            const self = world.observe(action.actor());
+            const origin = self === null ? action.origin() : self.position();
+            const reach = Math.max(1, p(mistballId, "reach", action));
+            // 起手就把这一抛真正可达的弧线（低/高弧、按弧长预算）画成预告；解不出就不画，不冒充可达。
+            let landing = action.targetPosition();
+            const delta = landing.minus(origin);
+            if (delta.length() < 0.05) {
+                const heading = action.direction().length() < 1e-6 ? WorldCombat.point(0, 0, 1) : action.direction().unit();
+                landing = origin.plus(heading.scale(reach));
+            } else if (delta.length() > reach) landing = origin.plus(delta.unit().scale(reach));
+            const solution = mistballArc(world, origin, landing, speed, gravity, radius);
+            const path = solution === null ? [] : solution.points.map(function (v: CombatPoint): number[] { return [v.x(), v.y(), v.z()]; });
+            action.present("world_combat:move_mistball:puff", mistballScene, 1, origin,
+                JSON.stringify({ moment: "charge", cloud: cloud, motes: motes, path: path,
+                    noarc: solution === null ? 1 : 0, suffuse: !(config && config.suffuse === false) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -96,7 +142,6 @@ namespace PokemonSkills {
             const selfActor: CombatActor = action.actor();
             const self = world.observe(selfActor);
             const origin = self === null ? action.origin() : self.position();
-            const aimPoint = mistballAimPoint(action, world);
             const power = p(mistballId, "puff", action);
             const speed = Math.max(0.35, p(mistballId, "lob", action));
             const gravity = Math.max(0.01, p(mistballId, "fall", action));
@@ -106,14 +151,38 @@ namespace PokemonSkills {
             const downTicks = Math.max(20, Math.round(p(mistballId, "downTicks", action)));
             const cloud = p(mistballId, "cloud", action);
             const motes = Math.max(10, Math.round(p(mistballId, "motes", action)));
-            const arc = LivingActions.ballistic(origin, aimPoint, speed, gravity);
-            const direction = arc === null ? ((aimPoint.minus(origin).length() < 0.01) ? action.direction() : aimPoint.minus(origin).unit()) : arc;
             const scenes = WorldFeedback.actionScenes(mistballScene, 1);
 
+            // 落点：给定世界点/实体点直接读；只给方向时沿方向取射程，并一律夹在本招射程内，
+            // 目标远移不会把单发射程拉长。
+            const reach = Math.max(1, action.range());
+            const aimPoint = mistballAimPoint(action, world);
+            let landing = aimPoint;
+            const delta = landing.minus(origin);
+            if (delta.length() < 0.05) {
+                const heading = action.direction().length() < 1e-6 ? WorldCombat.point(0, 0, 1) : action.direction().unit();
+                landing = origin.plus(heading.scale(reach));
+            } else if (delta.length() > reach) {
+                landing = origin.plus(delta.unit().scale(reach));
+            }
+
             sound(action, "cobblemon:move.mist.actor");
+            // 只有真实可达且净空容得下球的低/高弧才发；解不出就不假直射越障，原地只散一撮羽绒。
+            const solution = mistballArc(world, origin, landing, speed, gravity, radius);
+            if (solution === null) {
+                WorldFeedback.emit(world, mistballScene, 1, origin,
+                    { moment: "fizzle", cloud: cloud }, 24);
+                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.0, 0)), mistballMissText, [], 22);
+                scenes.finish(action, done);
+                return;
+            }
+            const direction = solution.direction;
+            const flightRange = Math.max(1.5, solution.length + 0.6);
+            const flightLifetime = Math.max(24, Math.ceil(solution.ticks) + 10);
+
             let struck = false;
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: action.range(), radius: radius, gravity: gravity, direction: direction, lifetime: 140,
+                speed: speed, range: flightRange, radius: radius, gravity: gravity, direction: direction, lifetime: flightLifetime,
                 appearance: { sprite: "cobblemon:generic/orb/largesmokeorb", tint: 0xF3F0FF, glow: true, scale: 0.9 },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     struck = true;
@@ -137,9 +206,11 @@ namespace PokemonSkills {
                         { moment: "cloud", target: String(target.ref()), cloud: cloud, motes: motes }, 40);
                     sound(current, "cobblemon:impact.psychic");
                     if (scope.valid(target) && scope.random() < chance) {
+                        // 特攻等级下降（普通能力等级，持久）与有限减速（downcast 载体，到期/驱散即恢复）各自独立结算。
                         const dropped = NativeEffects.boost(scope, target, "spa", -stages);
                         const carrier = MobEffects.apply(scope, target, mistballEffect, downTicks, 0);
                         if (carrier !== null) {
+                            // 后挂雾与减速载体同一份有限责任公司：载体在，雾在；载体被清即散。
                             scope.effect(mistballCling, target,
                                 JSON.stringify({ motes: motes, cloud: cloud, stages: stages }), downTicks);
                         }
@@ -150,10 +221,11 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) {
                 if (!struck) {
-                    const scope = current.world(), at = mistballAimPoint(current, scope);
-                    WorldFeedback.emit(scope, mistballScene, 1, at,
+                    // 飞尽或用尽射程：落在 projectilePosition 的真实末点，不用旧瞄点或满射程点假造终点。
+                    const scope = current.world(), end = scope.projectilePosition(flight) || origin;
+                    WorldFeedback.emit(scope, mistballScene, 1, end,
                         { moment: "fizzle", cloud: cloud }, 24);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), mistballMissText, [], 22);
+                    WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.0, 0)), mistballMissText, [], 22);
                 }
                 scenes.finish(current, done);
             });

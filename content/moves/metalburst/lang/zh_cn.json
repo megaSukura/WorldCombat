@@ -28,5 +28,6 @@
   "worldcombat.skill.metalburst.preference.ai.maxChase": "引爆距离",
   "worldcombat.skill.metalburst.preference.ai.maxChase.help": "账主离自己这么远以内才追上去引爆；调大愿意为这笔账主动靠近。",
   "world_combat.move.metalburst.text.hit": "金属爆炸！",
-  "world_combat.move.metalburst.text.whiff": "空响一声"
+  "world_combat.move.metalburst.text.whiff": "空响一声",
+  "world_combat.move.metalburst.text.store": "应力 %1$s（余 %2$s 秒）"
 }

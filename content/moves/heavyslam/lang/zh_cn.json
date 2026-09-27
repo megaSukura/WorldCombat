@@ -17,7 +17,6 @@
   "worldcombat.skill.heavyslam.value.hop": "跃起高度",
   "worldcombat.skill.heavyslam.value.airTicks": "腾空时长",
   "worldcombat.skill.heavyslam.value.leap": "跳跃距离",
-  "worldcombat.skill.heavyslam.value.collisionRadius": "判定半径",
   "worldcombat.skill.heavyslam.preference.anchor": "沉坠式",
   "worldcombat.skill.heavyslam.preference.anchor.help": "开启：跃得近、单点威力更高、落地更集中，但顶开更少、收招与冷却更久。关闭：冲跳式，跃得远、顶得更开，单发更轻。",
   "worldcombat.skill.heavyslam.preference.ai.maxChase": "起跳距离",

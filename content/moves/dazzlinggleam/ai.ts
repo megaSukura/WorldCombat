@@ -14,23 +14,21 @@ namespace PokemonSkills {
         return typeof item.data.range === "number" ? item.data.range : 3.4;
     }
 
-    /** 真实半径内、可见、且与中心之间通视的非友方数量（墙上的人不凑数）。 */
+    /** 与 execute 同一套事实：真实身体箱与 3D 光球相交、可见、且与中心之间通视的非友方数量（球边大体型算数，墙上的人不算）。 */
     function dazzlinggleamReachable(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
         const reach = dazzlinggleamReach(item);
         const world = CompanionBehavior.world(context);
-        const actor = world.actor(self.ref);
+        const actor = world.actor(CompanionBehavior.source(context).ref);
         if (actor === null) return 0;
         const body = world.observe(actor);
-        const centre = body === null ? CompanionBehavior.point(self.point) : body.position();
+        if (body === null) return 0;
+        const centre = body.position();
         let count = 0;
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) > reach) continue;
-            if (!world.clear(centre, CompanionBehavior.point(other.point))) continue;
+        WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(centre, reach), function (other, facts) {
+            if (String(other.ref()) === String(actor.ref()) || facts.friendly() || facts.health() <= 0 || !facts.visible()) return;
+            if (!world.clear(centre, facts.position())) return;
             count++;
-        }
+        });
         return count;
     }
 
@@ -67,7 +65,7 @@ namespace PokemonSkills {
 
     addPreferences("dazzlinggleam", {}, [
         field(pathOf("wide"), "散射式", "boolean", {
-            help: "开启：光浪半径约 ×1.22、边缘更均匀、出手更慢，代价是威力约 ×0.88、目眩更短，用来一次扫到更多人。关闭（凝聚式）：威力约 ×1.14、目眩更久，半径收到约 ×0.82，用来把贴身的一两个目标闪得更狠。"
+            help: "开启：光浪半径约 ×1.22、边缘更均匀、冷却更长，代价是威力约 ×0.88、目眩更短，用来一次扫到更多人。关闭（凝聚式）：威力约 ×1.14、目眩更久，半径收到约 ×0.82，用来把贴身的一两个目标闪得更狠。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 2, max: 16, step: 1,

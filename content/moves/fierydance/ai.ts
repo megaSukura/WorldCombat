@@ -9,13 +9,16 @@
  * 放完之后：特攻等级留在身上，交回共享交战计划继续交战；舞期间共享接近逻辑仍按当前目标小步走位。
  */
 namespace PokemonSkills {
-    /** 自己 `outer` 范围内看得见、还挤着几个敌人，用来读「一圈人」；只是候选排序的读法，不改变命中判定。 */
+    /** 自己 `outer` 范围内看得见、且落在火翼同一高度带里还挤着几个敌人，用来读「一圈人」；只是候选排序的读法，不改变命中判定。 */
     function fierydanceCrowd(context: WorldBehavior.Context, self: CompanionBehavior.Entity, reach: number): number {
         const nearby: CompanionBehavior.Entity[] = <any>context.facts.nearby || [];
+        const band = Math.max(1, typeof self.height === "number" ? self.height : 1.4);
         let count = 0;
         for (let index = 0; index < nearby.length && count < 6; index++) {
             const other = nearby[index];
             if (other.friendly || other.health <= 0 || !other.visible || String(other.ref) === String(self.ref)) continue;
+            // 火翼在身体高度带里水平扫过：只看同高、通视、且在当前扫域内的对象。
+            if (Math.abs(other.point[1] - self.point[1]) > band) continue;
             if (CompanionBehavior.distance(other.point, self.point) <= reach) count++;
         }
         return count;

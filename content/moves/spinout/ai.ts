@@ -4,8 +4,8 @@
  * 什么局面下出手：一记自由瞄准的贴地甩尾滑旋。目标可见、敌对、存活，且在 `ai.maxChase`（默认 8）格内；
  *   更远交给共享接近逻辑。它会让自己速度下降 2 级，所以只在够得到、值得换的时候用，不拿它空跑。
  * 对谁出手：`ai.finish`（默认开）打开时，残血目标多一档分——用一记最重的移动打击收掉，把失速的代价花在
- *   结算上；自身速度已经很低（`spe` 到 −3 以下）时再压低分，不值得继续叠加；朝目标释放方向两侧都挤不下
- *   身体时也压低分（执行里仍会按配置与另一侧的实空间择合法一侧）。
+ *   结算上；自身速度已经很低（`spe` 到 −3 以下）时再压低分，不值得继续叠加；按完整短弧（前半直线、后半甩尾）
+ *   两侧都落脚不下时也压低分（执行里仍会按配置与另一侧的实空间择合法一侧）。
  * 够不到怎么办：reach 就是本招总路程，不够先走近；冲势发出后不再追敌，撞墙或冲满就收势。
  * 放完之后：命中才付自身速度 −2；交回共享交战计划等冷却。
  */
@@ -17,19 +17,25 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
     }
 
-    /** 释放方向左右两侧各有多少空间容得下甩尾；0、1 或 2。AI 据此避开两侧都堵死的站位。 */
+    /** 沿完整短弧取样，数一数两侧各有几侧从头到尾都容得下身体；0、1 或 2。AI 据此避开落脚被封死的站位。 */
     function spinoutSideRoom(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
         const at = CompanionBehavior.point(self.point), goal = CompanionBehavior.point(target.point);
         const forward = WorldGeometry.flatUnit(goal.minus(at), CompanionBehavior.point([0, 0, 1]));
         const left = WorldCombat.point(forward.z(), 0, -forward.x());
-        const reach = Math.max(1.5, capability.data.range), width = Math.max(0.5, self.width === undefined ? 0.9 : self.width);
+        const total = Math.max(1.5, capability.data.range), turn = Math.max(10, p("spinout", "turn", world)) * Math.PI / 180;
+        const width = Math.max(0.5, self.width === undefined ? 0.9 : self.width);
         const height = Math.max(0.8, self.height === undefined ? 1.4 : self.height);
         let room = 0;
         for (let side = -1; side <= 1; side += 2) {
-            const dir = forward.scale(Math.cos(0.3 * side)).plus(left.scale(Math.sin(0.3 * side)));
-            const probe = at.plus(dir.scale(reach * 0.7));
-            if (world.freeSpace(WorldCombat.point(probe.x(), at.y() - height / 2, probe.z()), width, height)) room += 1;
+            let free = true;
+            for (let i = 1; i <= 6; i++) {
+                const t = i / 6, angle = turn * side * (t <= 0.5 ? 0 : (t - 0.5) / 0.5);
+                const dir = forward.scale(Math.cos(angle)).plus(left.scale(Math.sin(angle)));
+                const probe = at.plus(dir.scale(total * t));
+                if (!world.freeSpace(WorldCombat.point(probe.x(), at.y() - height / 2, probe.z()), width, height)) { free = false; break; }
+            }
+            if (free) room += 1;
         }
         return room;
     }
@@ -59,8 +65,8 @@ namespace PokemonSkills {
     });
 
     addPreferences("spinout", {}, [
-        field(pathOf("preload"), "预旋式", "boolean", {
-            help: "开启：起步前先原地打转蓄势，冲距 ×1.2、冲速 ×1.15、威力 ×1.1、火星更密；代价是起手 +4 刻、收招 +2 刻、冷却 +8 刻。关闭（即转式）：压腿就转，出手快、冷却短，但冲得近、撞得轻。"
+        field(pathOf("preload"), "蓄势式", "boolean", {
+            help: "开启：起步前先压低重心蓄势，冲距 ×1.2、冲速 ×1.15、威力 ×1.1、火星更密；代价是起手 +4 刻、收招 +2 刻、冷却 +8 刻。关闭（即转式）：压腿就转，出手快、冷却短，但冲得近、撞得轻。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,

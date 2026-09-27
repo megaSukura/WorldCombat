@@ -25,7 +25,7 @@
   "worldcombat.skill.headsmash.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.headsmash.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger starts headbutts sooner, and is easier to crash far away.",
   "worldcombat.skill.headsmash.preference.ai.minHealth": "Health reserve",
-  "worldcombat.skill.headsmash.preference.ai.minHealth.help": "Below this health fraction the user stops starting headbutts (unless the target is nearly down). Higher is more protective, and grabs fewer kills.",
+  "worldcombat.skill.headsmash.preference.ai.minHealth.help": "Below this health fraction the user stops starting headbutts; it only finishes a nearly-down target when it still has more health left than that target. Higher is more protective, and grabs fewer kills.",
   "world_combat.move.headsmash.text.hit": "Head Smash",
   "world_combat.move.headsmash.text.crash": "Crash self-damage %1$s",
   "worldcombat.skill.headsmash.description.charge": "This is a straight-line charge along the aim direction that resolves only the first enemy it touches; running out of distance, being blocked, or being unable to advance all count as a miss."

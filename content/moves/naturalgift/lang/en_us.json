@@ -12,7 +12,7 @@
   "worldcombat.skill.naturalgift.value.radius": "Strike radius",
   "worldcombat.skill.naturalgift.value.push": "Knockback",
   "worldcombat.skill.naturalgift.value.bursts": "Berry bits",
-  "worldcombat.skill.naturalgift.value.halo": "Element halo",
+  "worldcombat.skill.naturalgift.value.halo": "Element halo radius",
   "worldcombat.skill.naturalgift.preference.savor": "Savor",
   "worldcombat.skill.naturalgift.preference.savor.help": "On: chew 0.4 s longer for x1.3 damage, good against one tough target; Off: a faster chew at lower power, good for a quick hit.",
   "worldcombat.skill.naturalgift.preference.ai.maxChase": "Chase distance",

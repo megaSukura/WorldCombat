@@ -3,9 +3,9 @@ namespace PokemonSkills {
     const terrainpulseScene="world_combat:move_terrainpulse";
     function terrainpulseStrike(action:CombatAction,config:any,done:(current:CombatAction)=>void):void{
         const world=action.world(),body=world.observe(action.actor());if(!body){done(action);return;}
-        const feet=body.boundsMin().plus(WorldCombat.point(body.position().x()-body.boundsMin().x(),0,body.position().z()-body.boundsMin().z()));
+        const feet=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z());
         const start=SurfacePaths.support(world,feet,.1,4);if(!start){done(action);return;}
-        const terrain=body.grounded()?terrainpulseTerrainAt(world,body.position()):null,colour=terrain?terrain.colour:0x9AA0A8,element=terrain?terrain.type:"normal";
+        const terrain=terrainpulseTerrainAt(world,action.actor()),colour=terrain?terrain.colour:0x9AA0A8,element=terrain?terrain.type:"normal";
         const power=p("terrainpulse","pulse",action),pace=p("terrainpulse","velocity",action),radius=p("terrainpulse","radius",action),reach=action.range();
         const bursts=p("terrainpulse","bursts",action),ring=p("terrainpulse","ring",action),heading=WorldGeometry.flatUnit(aim(action)),side=WorldCombat.point(-heading.z(),0,heading.x());
         const count=config&&config.resonate?2:1,scenes=WorldFeedback.actionScenes(terrainpulseScene);
@@ -17,6 +17,9 @@ namespace PokemonSkills {
         sound(action,"cobblemon:move.bulldoze.actor");
         WorldFeedback.emit(world,terrainpulseScene,1,start,{moment:"stomp",tint:colour,scale:1,charged:terrain?1:0},20);
         action.releaseTarget();
+        function front(current:CombatAction,point:CombatPoint):void{
+            WorldFeedback.emit(current.world(),terrainpulseScene,1,point,{moment:"front",tint:colour,scale:ring},16);
+        }
         function advance(current:CombatAction):void{
             const scope=current.world();let active=0;
             waves.forEach(function(wave,index){
@@ -25,14 +28,17 @@ namespace PokemonSkills {
                 for(let i=1;i<step.path.length;i++){
                     const from=step.path[i-1].plus(WorldCombat.point(0,.16,0)),to=step.path[i].plus(WorldCombat.point(0,.16,0));
                     WorldGeometry.selectBodies(scope,WorldGeometry.bodySegment(from,to,wave.width),function(enemy,facts){
-                        const ref=String(enemy.ref());if(scope.friendly(enemy)||wave.seen[ref])return;wave.seen[ref]=true;
+                        const ref=String(enemy.ref());if(scope.friendly(enemy)||wave.seen[ref])return;
+                        if(WorldGeometry.blockHit(scope,to,facts.position())!==null)return;wave.seen[ref]=true;
                         const landed=hurt(current,enemy,"terrainpulse",power,{damage:damageSpec("terrainpulse","pulse"),resolve:function(){return{type:element};}});
-                        if(landed)WorldFeedback.emit(scope,terrainpulseScene,1,to,{moment:"impact",target:ref,tint:colour,bursts,scale:ring},22);
+                        if(landed)WorldFeedback.emit(scope,terrainpulseScene,1,to,{moment:"impact",tint:colour,bursts,scale:ring},22);
                     });
                 }
                 wave.point=step.point;wave.distance+=step.travelled;
                 scenes.show(current,"wave"+index,wave.point,{moment:"surface",tint:colour,path:step.path.map(p=>p.plus(side.scale(-wave.width))).concat(step.path.slice().reverse().map(p=>p.plus(side.scale(wave.width)))).map(p=>[p.x(),p.y()+.04,p.z()]),width:wave.width});
-                wave.ended=step.ended||wave.distance>=reach-.01;if(wave.ended)scenes.stop(current,"wave"+index);else active++;
+                scenes.show(current,"front"+index,wave.point,{moment:"front",tint:colour,scale:ring});
+                wave.ended=step.ended||wave.distance>=reach-.01;
+                if(wave.ended){front(current,wave.point);scenes.stop(current,"wave"+index);scenes.stop(current,"front"+index);}else active++;
             });
             if(!active){scenes.finish(current,done);return;}current.after(1,advance);
         }
@@ -61,8 +67,7 @@ namespace PokemonSkills {
         },
         windup: function (action: CombatAction, config: any, prepare: number): number {
             var body = action.sense().observe(action.actor());
-            var point = body ? body.position() : action.origin();
-            var terrain = body && body.grounded() ? terrainpulseTerrainAt(action.sense(), point) : null;
+            var terrain = terrainpulseTerrainAt(action.sense(), action.actor());
             var scale = body ? (body.width() + body.height()) / 2.3 : 1;
             action.present("world_combat:terrainpulse:" + action.id(), terrainpulseScene, 1, action.origin(), JSON.stringify({
                 moment: "windup", tint: terrain ? terrain.colour : 0x9AA0A8, scale: scale, charged: terrain ? 1 : 0 }));

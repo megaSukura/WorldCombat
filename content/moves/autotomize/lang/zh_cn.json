@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.autotomize.summary": "当场把身上没用的外壳一块块撬下来甩出去：身体一下子轻了，速度大幅提高。轻身窗口里重力变小，跳得更高、落得更慢——这是「变轻」在世界里的兑现，静止时仍站在地面。外壳抛落后自行散掉，不是可拾取的物品；部件不会长回来。",
+  "worldcombat.skill.autotomize.summary": "当场把身上没用的外壳一块块撬下来甩出去：身体一下子轻了，速度大幅提高。轻身窗口里重力变小，跳得更高、落得更慢——这是「变轻」在世界里的兑现，静止时仍站在地面。甩出的外壳只是散落片刻的装饰，落地后自行散去，不是可拾取的物品。",
   "worldcombat.skill.autotomize.use.0": "开战前卸一轮，把速度拉起来",
   "worldcombat.skill.autotomize.use.1": "被追时先提速，再决定追或退",
   "worldcombat.skill.autotomize.use.2": "轻身窗口里跳得更高，借身法跨过小高差",

@@ -5,11 +5,13 @@
  *   被扫到的人身上各炸开一圈龙鳞冲击（攻击下降）。
  * 色相家族：龙系的靛青（0x8A6CFF 主体、0xC9BFFF 亮面），地面尘用中性灰，击点用近白核心。
  * 拍子：起 coil 0–7t ／ 扫 sweep（逐刻前进）／ 中 hit ／ 空 miss。
- * 范围：sweep 只填服务端这一刻刚扫过的那一窄条弧带（`data.path` polygon），尾巴没到的地方不亮；
- *   `data.direction` 是当前尾巴指向，`data.point` 是尾巴外端，前缘爆点落在那里。
+ * 范围：sweep 只填服务端这一刻刚扫过的那一窄条弧带（`data.path` 撑出身体实际高度的竖直尾带 polygon），
+ *   尾巴没到的地方不亮；`data.direction` 是当前尾巴指向，`data.point` 是尾巴外端。
+ * 尾形：`world_combat:move_breakingswipe_tail` 自定义场景按 `data.centre`／`data.point`／`data.minY`／`data.maxY`
+ *   画一条短尾线与竖直尾缘，固定顶点、固定数量，读得出身体实际高度上的厚度。
  * 运动：coil 的尾风绕身向内收；sweep 的尘从当前弧带向外散、前缘在尾巴外端爆开；hit 的龙鳞从目标表面外炸。
- * 数：`data.scales`（物攻与等级派生的龙鳞数）驱动 sweep／hit 发射量，`data.stages` 决定 hit 的压环重放，
- *   `data.intensity`（威力 / 58）抬高密度。
+ * 数：`data.scales`（物攻与等级派生的龙鳞数）驱动 sweep／hit 发射量，`data.drop`（本次降攻是否真的落下）
+ *   决定 hit 的压环，`data.intensity`（威力 / 58）抬高密度。
  */
 const BreakingSwipeSceneDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -89,9 +91,10 @@ const BreakingSwipeSceneDefinition: ParticleDefinition = {
                     color: 0x8A6CFF, alpha: [0.9, 0], light: "world", maxParticles: 60
                 },
                 {
+                    // 只有攻击真的被压低（drop=1）才压出一圈光；被免疫或已到下限时不发。
                     name: "press", bind: "target", offset: [0, 0.1, 0], height: 0, orient: "fixed",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: { data: "stages", fallback: 1 }, interval: 2 },
+                    burst: { count: { data: "drop", fallback: 0 }, interval: 2 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
                     direction: "inward", speed: [0.12, 0.3],
                     lifetime: [9, 16], size: [0.4, 0.85], sizeMode: "sin",
@@ -117,3 +120,31 @@ const BreakingSwipeSceneDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_breakingswipe", 1, BreakingSwipeSceneDefinition);
+
+/** 当刻尾形：从心点沿当刻角片到真实尾尖的短尾线 + 竖直尾缘 + 尾尖一枚龙鳞贴图；固定数量、路径由服务端给定。 */
+const BreakingswipeSpike = "cobblemon:particle/generic/spike";
+function breakingswipeNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+function breakingswipeVector(value: any, fallback: number[]): number[] {
+    if (Array.isArray(value) && value.length === 3 && value.every(function (n: any) { return typeof n === "number" && isFinite(n); }))
+        return [Number(value[0]), Number(value[1]), Number(value[2])];
+    return fallback;
+}
+
+WorldCombatClient.scene("world_combat:move_breakingswipe_tail", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const centre = breakingswipeVector(data.centre, [entry.position[0], entry.position[1], entry.position[2]]);
+    const tip = breakingswipeVector(data.point, centre);
+    const minY = breakingswipeNumber(data.minY, centre[1] - 0.5);
+    const maxY = Math.max(minY + 0.2, breakingswipeNumber(data.maxY, centre[1] + 0.5));
+    const intensity = Math.max(0.6, Math.min(2.4, breakingswipeNumber(data.intensity, 1)));
+    const alpha = Math.round(Math.min(1.4, intensity) * 190);
+    frame.line(centre[0], centre[1], centre[2], tip[0], tip[1], tip[2], (alpha << 24 | 0xC9BFFF) | 0);
+    frame.line(tip[0], minY, tip[2], tip[0], maxY, tip[2], (Math.round(alpha * 0.8) << 24 | 0x8A6CFF) | 0);
+    frame.sprite(BreakingswipeSpike, tip[0], tip[1], tip[2], 0.26 + 0.1 * intensity, 0,
+        ((Math.round(alpha * 0.95) << 24) | 0xE8E0FF) | 0, Math.floor(frame.serverTick() * 0.5) % 6, true);
+});

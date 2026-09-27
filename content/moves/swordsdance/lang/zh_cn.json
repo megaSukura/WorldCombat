@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.swordsdance.summary": "跳起一段朝对手压上去的战舞：压低身形、连挥刃光，大幅提高自己的物攻；刃光只显威势、不造成伤害，物攻增益只维持一段窗口，走完即被收回。",
-  "worldcombat.skill.swordsdance.use.0": "开战前把物攻拉满",
-  "worldcombat.skill.swordsdance.use.1": "一边前压一边起舞，直接切进对手身边",
-  "worldcombat.skill.swordsdance.use.2": "用可见的磨刃窗口逼对手拖时间",
-  "worldcombat.skill.swordsdance.description.0": "起势后物攻最多提升 %1$s 级；随后挥出的 %2$s 道刃光只显威势，不造成伤害或附加状态。",
-  "worldcombat.skill.swordsdance.description.1": "磨刃持续 %1$s；物攻增益只在这个窗口内存在，窗口走完或被清除时，这段舞抬起的物攻等级一并收回。",
-  "worldcombat.skill.swordsdance.press.on": "进逼：每一斩朝最近的敌人压上一步，整支舞合计最多前进 %1$s 格，斩击间隔 %2$s；换来真实的前压，代价是整支舞更慢、冷却更长。",
-  "worldcombat.skill.swordsdance.press.off": "定桩：原地挥刃，出手干脆；但不会替你拉近距离。",
+  "worldcombat.skill.swordsdance.summary": "三柄剑随舞步绕身升起，合剑时提高物攻。可以原地完成，也可以缓步前压；舞步被打断时，本次强化尚未获得。",
+  "worldcombat.skill.swordsdance.use.0": "在接战空隙强化接下来的物理攻势",
+  "worldcombat.skill.swordsdance.use.1": "一边缓步前压一边完成剑舞",
+  "worldcombat.skill.swordsdance.use.2": "根据交战空隙选择叠加强化或立即攻击",
+  "worldcombat.skill.swordsdance.description.0": "完成 %2$s 的剑舞后，物攻最多提升 %1$s 级。合剑前被打断则得不到本次强化；舞步本身不造成伤害。",
+  "worldcombat.skill.swordsdance.description.1": "强化持续 %1$s；到期或被驱散时，只撤回本次剑舞提供的物攻等级。",
+  "worldcombat.skill.swordsdance.press.on": "进逼：沿开始起舞时的朝向缓步前压，合计最多 %1$s 格；身体碰到障碍就停下，仍可在原地完成剑舞。舞步与冷却稍长。",
+  "worldcombat.skill.swordsdance.press.off": "原地完成剑舞，舞步更快。",
   "worldcombat.skill.swordsdance.description.2": "起势 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.swordsdance.timing": "自身招式，射程 %1$s 格；准备 %2$s 秒后消耗 %4$s PP 发动，结束后收招 %3$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.swordsdance.growth.0": "达到 %1$s 级，磨刃窗口延长至 %2$s。",
@@ -22,7 +22,7 @@
   "worldcombat.skill.swordsdance.value.aftercast": "收招",
   "worldcombat.skill.swordsdance.value.wait": "冷却",
   "worldcombat.skill.swordsdance.preference.press": "进逼",
-  "worldcombat.skill.swordsdance.preference.press.help": "开启：连斩段朝最近的敌人逐步压上，整支舞更慢、冷却更长，换来真实的前压；关闭：原地挥刃，出手更干脆。",
+  "worldcombat.skill.swordsdance.preference.press.help": "开启后沿开始起舞时的朝向缓步前压，舞步与冷却稍长；关闭后原地完成。",
   "worldcombat.skill.swordsdance.preference.ai.maxChase": "起舞距离",
   "worldcombat.skill.swordsdance.preference.ai.maxChase.help": "威胁进入这个距离内才考虑先起舞；越大越早开始磨刃。",
   "worldcombat.skill.swordsdance.preference.ai.minGap": "贴身下限",
@@ -31,5 +31,6 @@
   "world_combat.move.swordsdance.text.faded": "锋芒散去",
   "effect.world_combat.swordsdance_hone": "磨刃",
   "worldcombat.skill.swordsdance.description.stack": "窗口内再次起舞会继续叠加物攻，最多累计 6 级。",
-  "worldcombat.skill.swordsdance.description.hold": "起势与收招期间原地站定，不能移动。"
+  "worldcombat.skill.swordsdance.description.hold": "起势与收招期间原地站定，不能移动。",
+  "worldcombat.skill.swordsdance.value.dance": "剑舞时长"
 }

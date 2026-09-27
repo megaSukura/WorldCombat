@@ -3,7 +3,7 @@
   "worldcombat.skill.punishment.use.0": "Hit hard when the foe has stacked stat stages",
   "worldcombat.skill.punishment.use.1": "Weigh every layer the target has raised into the damage",
   "worldcombat.skill.punishment.use.2": "An overhead judgement that falls from above",
-  "worldcombat.skill.punishment.description.0": "One blow dealing about %1$s contact damage at about %2$s blocks; at the moment of impact each positive stat stage or positive status layer on the target adds 18 (up to 10 counted, capped at +150 extra power).",
+  "worldcombat.skill.punishment.description.0": "One blow dealing about %1$s contact damage at about %2$s blocks; the raised short arm sweeps a finite line from front-high to front-low and takes the first contact, so a target that leaves the line during the wind-up, or is shielded by a wall or another body, is missed. At the moment of impact each positive stat stage or positive status layer on the target adds 18 (up to 10 counted, capped at +150 extra power).",
   "worldcombat.skill.punishment.heavy.on": "Heavy judgement: each positive stat stage is worth x1.35 and reach +0.2, at the cost of +3 ticks of wind-up, +2 of recovery and +5 of cooldown - hardest on a fully buffed foe.",
   "worldcombat.skill.punishment.heavy.off": "Quick judgement: faster wind-up and cycle but a lower per-stage coefficient - good against lightly buffed frail targets.",
   "worldcombat.skill.punishment.timing": "Reach %1$s blocks; %2$s seconds of wind-up, %3$s seconds of recovery, %4$s PP, then a %5$s second cooldown.",

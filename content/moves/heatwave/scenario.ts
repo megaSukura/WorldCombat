@@ -1,7 +1,8 @@
 /**
  * 热风 / heatwave 的可执行设计说明。
  *
- * 场面：只会热风的煤炭龟（Torkoal）对五格外的卡比兽（Snorlax，只会跃起、不会还手），晴天的石台。
+ * 场面：只会热风的煤炭龟（Torkoal）对五格外的卡比兽（Snorlax，只会跃起、不会还手），晴天的石台。热风在
+ *   身前水平面沿固定准线向前推，每格是一条被真实墙面截短的扇带；本场景无墙，前沿走到目标处即结算。
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（热风扫中）。
  * 灼伤（10% 起）、烈日加成与击退距离都是概率与位置相关的随机结果，写进 note 供读轨迹判断。
  */
@@ -17,7 +18,7 @@ Smoke.scenario("heatwave", function (stage) {
     }, function () {
         stage.expect(stage.casts("heatwave", caster) > 0, "torkoal committed heat wave");
         stage.expect(stage.damageTo(foe) > 0, "the hot gust swept the foe");
-        stage.note("10% burn, the sunlight bonus and the push are random/positional",
+        stage.note("the gust advances a real wall-clipped band each tick; a target is struck only once as the leading edge passes it. 10% burn, the sunlight bonus and the push are random/positional",
             { casts: stage.casts("heatwave", caster), onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
               burned: stage.hadMobEffect(foe, "world_combat:status/burn"), travelled: Math.round(stage.travelled(foe) * 10) / 10,
               foeAlive: foe.alive() });

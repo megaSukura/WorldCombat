@@ -6,37 +6,32 @@
  * 主动离开原位、被推离、量尽或到时则碉堡塌成一滩（fall）。四幕：鼓壁 → 拒止 → 灌毒 → 塌壁。
  *
  * 与原位的绑定：毒壁只守施法者的落脚点（state.anchor）。施法者离开锚点超过 banefulAnchorTolerance 后，
- * 规则不再接受新的来击（accepts 拒绝），pulse 随即收掉毒壁与共享身份——「驻守原位」就是这招的代价，
- * 区别于一族里会跟着走的尖刺防守。`stationary: true` 让合拢动作本身不移动；收招后可自由走位，走开即放弃剩余护池。
+ * 规则不再接受新的来击（accepts 拒绝），pulse 随即收掉毒壁与共享身份——「驻守原位」就是这招的代价。
  *
  * 碉堡本体是共享 GuardEffects 的 pool 模式（规则 world_combat:move_banefulbunker），撑壁期间施法者身上挂
  * 真实 MobEffect `world_combat:baneful_guard`，承载共享身份 world_combat:status/banefulbunker；
- * 灌毒走 CombatStatus.inflict 的共享主异常，宝可梦那侧由共享库同步成原生异常。
+ * 封变化招式与灌毒都把「实时有效的盾」当作唯一判据：盾量尽、离位或消失时两者一起失效。
+ * 每个攻击者在本盾内只灌一次，记录随盾托管效果一起结束，不会在尾段提前清空后重灌。
  */
 namespace PokemonSkills {
     const banefulScene = "world_combat:move_banefulbunker";
     export const BanefulRule = "world_combat:move_banefulbunker";
     const banefulEffect = "world_combat:baneful_guard";
-    const banefulStatus = "banefulbunker";
     const banefulHoldKey = "world_combat:move_banefulbunker:hold";
     const banefulBlockText = "world_combat.move.banefulbunker.text.block";
     const banefulPunishText = "world_combat.move.banefulbunker.text.punish";
     const banefulToxicText = "world_combat.move.banefulbunker.text.toxic";
     const banefulWardText = "world_combat.move.banefulbunker.text.ward";
     const banefulFallText = "world_combat.move.banefulbunker.text.fall";
-    /** 表现里的参考半径：`data.scale = 实际碉堡半径 / 这个数`。 */
-    const banefulReferenceRadius = 1.6;
-    /** 离起点的水平容差（格）：脚离开这一小圈即视为离开，毒壁不再接受来击并在下一次 pulse 收场。 */
+    /** 离起点的容差（格）：脚离开这一小圈即视为离开，毒壁不再接受来击并在下一次 pulse 收场。 */
     const banefulAnchorTolerance = 0.9;
-    /** 每个攻击者在本次碉堡窗口里是否已经被灌过。 */
-    const banefulVenomed: { [key: string]: boolean } = Object.create(null);
     /** 被顶回的敌方变化招式：提交点只读，先记在这里，等身份下一次 tick（可写作用域）补播画面。 */
     const banefulWards: { [ref: string]: { at: number; move: string } } = Object.create(null);
     /** 本次毒壁的原位锚点；身份移除后 fall 要在毒壁原本的位置收场，而不是跟着走开的角色。 */
     const banefulAnchors: { [ref: string]: number[] } = Object.create(null);
 
     function banefulScale(radius: number): number {
-        return Math.max(0.5, Math.min(2.3, (radius || banefulReferenceRadius) / banefulReferenceRadius));
+        return Math.max(0.5, Math.min(2.3, (radius || 1.6) / 1.6));
     }
     function banefulIntensity(capacity: number, initial: number): number {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
@@ -51,25 +46,34 @@ namespace PokemonSkills {
             return WorldCombat.point(value[0], value[1], value[2]);
         return null;
     }
-    /** 真实的来袭接触侧：原生 sourcePosition；缺省时退回来源身体位置；都没有就不给坐标，不捏造。 */
-    function banefulContactPoint(world: CombatWorld, attacker: CombatActor | null, data: any): CombatPoint | null {
-        const source = data ? data.sourcePosition : null;
-        if (Array.isArray(source) && source.length === 3
-            && typeof source[0] === "number" && typeof source[1] === "number" && typeof source[2] === "number")
-            return WorldCombat.point(source[0], source[1], source[2]);
-        const body = attacker ? world.observe(attacker) : null;
-        return body === null ? null : body.position();
-    }
-    function banefulClear(effectId: number): void {
-        const prefix = String(effectId) + ":";
-        Object.keys(banefulVenomed).forEach(function (entry) { if (entry.indexOf(prefix) === 0) delete banefulVenomed[entry]; });
-    }
+    /** 同样的三点距离：主动走开或被顶离锚点都算离开，毒壁随之失效。 */
     function banefulStillThere(body: CombatObservation, state: any): boolean {
         const anchor = banefulAnchor(state);
         if (anchor === null) return true;
-        const at = body.position();
-        const dx = at.x() - anchor.x(), dz = at.z() - anchor.z();
-        return Math.sqrt(dx * dx + dz * dz) <= banefulAnchorTolerance;
+        return body.position().minus(anchor).length() <= banefulAnchorTolerance;
+    }
+    /** 实时有效的毒壁盾：规则匹配、盾量未尽。离位由 accepts/pulse 另行收场。 */
+    function banefulGuardState(world: CombatWorld, target: CombatActor): any | null {
+        const views = world.effects(target, "world_combat:guard");
+        for (let i = 0; i < views.length; i++) {
+            try {
+                const value = JSON.parse(String(views[i].data()));
+                if (value && value.rule === BanefulRule && (value.mode !== "pool" || value.capacity > 0)) return value;
+            } catch (error) { }
+        }
+        return null;
+    }
+    /** 壁面实际接触点：沿锚点→攻击者方向到达毒壁外缘（不超过攻击者本身），不再取攻击者原位置。 */
+    function banefulEdge(world: CombatWorld, centre: CombatPoint, attacker: CombatActor, radius: number): CombatPoint | null {
+        const body = world.observe(attacker);
+        if (body === null) return null;
+        const away = body.position().minus(centre), length = away.length();
+        if (!(length > 1e-4) || !(radius > 0)) return centre;
+        return centre.plus(away.unit().scale(Math.min(radius, length)));
+    }
+    /** 连用计数：超过 stallReset 不用即归零，执行与失误率读同一复位结果。 */
+    function banefulStall(world: CombatWorld, actor: CombatActor, action: CombatAction): number {
+        return GuardEffects.stall(state(world, actor, GuardEffects.stallKey), world.tick(), p("banefulbunker", "stallReset", action));
     }
 
     GuardEffects.register(BanefulRule, {
@@ -83,67 +87,67 @@ namespace PokemonSkills {
             const world = effect.world(), body = world.observe(effect.target());
             if (body === null) return;
             if (!banefulStillThere(body, state)) {
-                banefulClear(effect.id());
                 MobEffects.consume(world, effect.target(), banefulEffect);
                 effect.end(); return;
             }
-            if (effect.remaining() <= 8) banefulClear(effect.id());
             const anchor = banefulAnchor(state) || body.position();
             const initial = (<any>state).initial || state.capacity || 1;
-            // 持壁画面绑在毒壁这条托管效果上：随它自然到期、量尽或被离位收掉一起消失，不跟着走开的角色飘。
+            // 持壁画面绑在毒壁这条托管效果上：随它自然到期、量尽或被离位收掉一起消失。
             WorldFeedback.onEffect(world, effect.id(), banefulHoldKey, banefulScene, 1, anchor, {
                 moment: "hold", target: String(effect.target().ref()), point: [anchor.x(), anchor.y(), anchor.z()],
+                radius: (<any>state).radius || 1.6, anchor: banefulAnchorTolerance,
                 scale: banefulScale((<any>state).radius), intensity: banefulIntensity(state.capacity, initial)
             });
         },
         guarded: function (effect, state, amount, incoming) {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
             if (body === null) return;
-            const custom: any = state, scale = banefulScale(custom.radius);
+            const custom: any = state, scale = banefulScale(custom.radius), centre = banefulAnchor(custom) || body.position();
             const attacker = incoming.source && String(incoming.source.ref()) !== String(target.ref()) && world.observe(incoming.source) !== null ? incoming.source : null;
             if (attacker !== null && banefulContact(incoming.data) && !world.friendly(attacker)) {
-                const key = String(effect.id()) + ":" + String(attacker.ref());
-                if (!banefulVenomed[key]) {
-                    banefulVenomed[key] = true;
+                const venomed: any = custom.venomed || (custom.venomed = {});
+                const ref = String(attacker.ref());
+                if (!venomed[ref]) {
                     const attackerBody = world.observe(attacker)!;
-                    const point = attackerBody.position();
-                    const contact = banefulContactPoint(world, attacker, incoming.data) || body.position();
+                    const contact = banefulEdge(world, centre, attacker, custom.radius) || body.position();
                     const venom = Math.max(40, custom.venom || 40);
                     // 已经在中毒的人改灌剧毒：把战场上已有的状态当材料。
                     const worsen = CombatStatus.has(world, attacker, "poison") || CombatStatus.has(world, attacker, "toxic");
                     const landed = CombatStatus.inflict(world, attacker, worsen ? "toxic" : "poison", venom);
-                    const data: any = { moment: "punish", target: String(attacker.ref()),
-                        venous: Math.max(4, Math.round(venom / 40)), worsen: worsen ? 1 : 0, landed: landed ? 1 : 0,
-                        scale: scale, intensity: worsen ? 1.4 : 1,
-                        // 毒从实际接触点滴到攻击者：一条由壁面接触点到攻击者的真实连线，两帧都跟着它们走。
-                        path: [[contact.x(), contact.y(), contact.z()], String(attacker.ref())] };
-                    const away = point.minus(contact);
-                    if (away.length() > 0.01) { const direction = away.unit(); data.direction = [direction.x(), direction.y(), direction.z()]; }
-                    WorldFeedback.emit(world, banefulScene, 1, point, data, 26);
-                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.2, 0)),
-                        worsen ? banefulToxicText : banefulPunishText, [], 30);
-                    world.sound("cobblemon:impact.poison", point, 14, "{}");
+                    // 被原生拒绝（免疫等）时不记、不播成功字，下一次接触再试。
+                    if (landed) {
+                        venomed[ref] = true;
+                        effect.state(JSON.stringify(custom));
+                        const data: any = { moment: "punish", target: ref,
+                            venous: Math.max(4, Math.round(venom / 40)), worsen: worsen ? 1 : 0, landed: 1,
+                            scale: scale, intensity: worsen ? 1.4 : 1,
+                            // 毒从壁面实际接触点滴到攻击者：一条由壁缘到攻击者的真实连线，两帧都跟着它们走。
+                            path: [[contact.x(), contact.y(), contact.z()], ref] };
+                        const away = attackerBody.position().minus(contact);
+                        if (away.length() > 0.01) { const direction = away.unit(); data.direction = [direction.x(), direction.y(), direction.z()]; }
+                        WorldFeedback.emit(world, banefulScene, 1, contact, data, 26);
+                        WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 1.2, 0)),
+                            worsen ? banefulToxicText : banefulPunishText, [], 30);
+                        world.sound("cobblemon:impact.poison", contact, 14, "{}");
+                    }
                 }
             }
             const blocked = Math.round(amount * 10) / 10, remaining = Math.round(state.capacity * 10) / 10;
-            const contact = attacker !== null ? (banefulContactPoint(world, attacker, incoming.data) || body.position()) : body.position();
+            // 受击反馈落在壁缘（真实接触侧），不是攻击者原位置。
+            const contact = (attacker !== null ? banefulEdge(world, centre, attacker, custom.radius) : null) || body.position();
             const data: any = { moment: "block", target: String(target.ref()), point: [contact.x(), contact.y(), contact.z()],
+                radius: custom.radius || 1.6, anchor: banefulAnchorTolerance,
                 scale: scale, intensity: banefulIntensity(state.capacity, custom.initial || 1), blocked: blocked, remaining: remaining };
-            if (attacker !== null) {
-                const away = contact.minus(body.position());
-                if (away.length() > 0.01) { const direction = away.unit(); data.direction = [direction.x(), direction.y(), direction.z()]; }
-            }
+            const away = contact.minus(centre);
+            if (away.length() > 0.01) { const direction = away.unit(); data.direction = [direction.x(), direction.y(), direction.z()]; }
             WorldFeedback.emit(world, banefulScene, 1, contact, data, 22);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), banefulBlockText, [blocked, remaining], 30);
             world.sound("minecraft:item.shield.block", body.position(), 16, "{}");
-            if (state.capacity <= 0) {
-                banefulClear(effect.id());
-                MobEffects.consume(world, target, banefulEffect);
-            }
+            if (state.capacity <= 0) MobEffects.consume(world, target, banefulEffect);
         }
     });
 
-    // 封变化招：带身份的活体被敌方变化招式瞄上时，整条在提交点顶回。
+    // 封变化招：带身份的活体被敌方变化招式瞄上时，按同一份实时有效盾整条在提交点顶回。
     WorldCombat.on("world_combat:move_banefulbunker/ward", "world_combat:before_commit", "", function (event: CombatWorldEvent) {
         const action = event.action(); if (action === null) return;
         const move = NativeLoadout.executing(action); if (move === null) return;
@@ -152,7 +156,10 @@ namespace PokemonSkills {
         if (target === null) return;
         if (String(event.actor().key()) === String(target.key())) return;
         if (world.friendly(target)) return;
-        if (!CombatStatus.has(world, target, banefulStatus)) return;
+        const shield = banefulGuardState(world, target);
+        if (shield === null) return;
+        const body = world.observe(target);
+        if (body === null || !banefulStillThere(body, shield)) return;
         event.reject("banefulbunker");
         banefulWards[String(target.ref())] = { at: world.tick(), move: String(move.id()) };
     });
@@ -167,7 +174,8 @@ namespace PokemonSkills {
         if (world.tick() - pending.at > 20) return;
         const body = world.observe(actor);
         if (body === null) return;
-        WorldFeedback.emit(world, banefulScene, 1, body.position(), { moment: "deflect", target: ref }, 20);
+        WorldFeedback.emit(world, banefulScene, 1, body.position(),
+            { moment: "deflect", target: ref, radius: (banefulGuardState(world, actor) || {}).radius || 1.6, anchor: banefulAnchorTolerance }, 20);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), banefulWardText, [], 22);
         world.sound("minecraft:item.shield.block", body.position(), 12, "{}");
     });
@@ -218,15 +226,20 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            const scale = banefulScale(p("banefulbunker", "radius", action));
+            const radius = Math.max(1.2, p("banefulbunker", "radius", action));
             action.present("world_combat:move_banefulbunker:raise", banefulScene, 1, action.origin(),
-                JSON.stringify({ moment: "raise", scale: scale }));
+                JSON.stringify({ moment: "raise", radius: radius, anchor: banefulAnchorTolerance, scale: banefulScale(radius) }));
             return prepare;
         },
         ready: function (action, config) {
             const key = "banefulbunker_fizzle", stored = action.data(key);
             if (stored !== null) return JSON.parse(stored).failed ? "world_combat:fizzle" : "";
-            const failed = action.sense().random() < p("banefulbunker", "fizzle", action);
+            const world = action.sense(), actor = action.actor(), now = world.tick();
+            const count = banefulStall(world, actor, action);
+            // 失误率读复位后的计数：超过 stallReset 没连用，这里就是 0。
+            const source: FactContext = { world: world, actor: actor, action: action,
+                state: function (id: string) { return id === GuardEffects.stallKey ? { stall: count, at: now } : state(world, actor, id); } };
+            const failed = world.random() < p("banefulbunker", "fizzle", source);
             action.data(key, JSON.stringify({ failed: failed }));
             return failed ? "world_combat:fizzle" : "";
         },
@@ -237,9 +250,8 @@ namespace PokemonSkills {
             const radius = Math.max(1.2, p("banefulbunker", "radius", action));
             const venom = Math.max(40, Math.round(p("banefulbunker", "venom", action)));
             const origin = action.origin();
-            const previous = state(world, actor, GuardEffects.stallKey), now = world.tick();
-            const count = previous && typeof previous.stall === "number" && now - (previous.at || 0) <= p("banefulbunker", "stallReset", action) ? previous.stall : 0;
-            setState(world, actor, GuardEffects.stallKey, { stall: count + 1, at: now });
+            const now = world.tick();
+            setState(world, actor, GuardEffects.stallKey, { stall: banefulStall(world, actor, action) + 1, at: now });
             banefulAnchors[String(actor.ref())] = [origin.x(), origin.y(), origin.z()];
             MobEffects.apply(world, actor, banefulEffect, window, 0);
             GuardEffects.apply(world, actor, { rule: BanefulRule, mode: "pool", capacity: capacity, fraction: 1,
@@ -247,7 +259,8 @@ namespace PokemonSkills {
                 anchor: [origin.x(), origin.y(), origin.z()] } as any, window);
             sound(action, "minecraft:block.honey_block.place");
             action.present("world_combat:move_banefulbunker:raise2", banefulScene, 1, origin,
-                JSON.stringify({ moment: "raise", scale: banefulScale(radius), venom: Math.max(6, Math.round(venom / 40)) }));
+                JSON.stringify({ moment: "raise", radius: radius, anchor: banefulAnchorTolerance,
+                    scale: banefulScale(radius), venom: Math.max(6, Math.round(venom / 40)) }));
             done(action);
         }
     });

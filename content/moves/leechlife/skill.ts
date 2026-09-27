@@ -40,7 +40,7 @@ namespace PokemonSkills {
         defaults: { deep: false, ai: { maxChase: 6, healBelow: 0.88 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("leechlife", "reach", pokemon) + 0.3, geometry: "line", style: "leech", color: 0xB0303A,
+            return { radius: p("leechlife", "reach", pokemon), geometry: "line", style: "leech", color: 0xB0303A,
                 label: config && config.deep === true ? "吸血·深咬" : "吸血" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -50,7 +50,8 @@ namespace PokemonSkills {
                 recover: Math.round(p("leechlife", "aftercast", context)),
                 cooldown: Math.round(p("leechlife", "recharge", context)),
                 active: skills["leechlife"].active,
-                range: p("leechlife", "reach", context) + 0.3
+                // 初咬范围用本个体 resolve 出的咬距，指示与实际触及一致。
+                range: p("leechlife", "reach", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -60,24 +61,25 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
+            const actor = action.actor();
             const deep = config && config.deep === true;
             const bitePower = p("leechlife", "bite", action);
             const siphonPower = p("leechlife", "siphon", action);
             const share = p("leechlife", "sap", action);
             const draws = Math.max(1, Math.round(p("leechlife", "draws", action)));
             const leash = p("leechlife", "leash", action);
+            const reach = p("leechlife", "reach", action);
             const radius = p("leechlife", "fang", action);
             const gap = Math.max(1, Math.round(p("leechlife", "gap", action)));
-            const selected = action.target();
-            const targetRef = selected !== null && world.valid(selected) ? String(selected.ref()) : "";
             const motes = Math.max(8, Math.round(bitePower * 0.25 + siphonPower * 0.6 + share * 30));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.4));
             const intensity = Math.max(0.6, Math.min(2.2, siphonPower / 14));
-            let settled = false;
+            let settled = false, latched = "";
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-            function victim(scope: CombatWorld): CombatActor | null {
-                const value = targetRef === "" ? null : scope.actor(targetRef);
+            function latchedActor(scope: CombatWorld): CombatActor | null {
+                if (latched === "") return null;
+                const value = scope.actor(latched);
                 return value !== null && scope.valid(value) ? value : null;
             }
             function miss(current: CombatAction, at: CombatPoint): void {
@@ -93,45 +95,68 @@ namespace PokemonSkills {
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), leechLifeSnapText, [], 20);
                 finish(current);
             }
+            /** 只有这一拍真的抽回血才亮施法者，避免零治疗时留下回血假象。 */
+            function mend(current: CombatAction, at: CombatPoint, healed: number): void {
+                if (!(healed > 0)) return;
+                WorldFeedback.emit(current.world(), leechLifeScene, 1, at,
+                    { moment: "mend", motes: Math.max(2, Math.round(healed * 6)), scale: scale, intensity: intensity }, 16);
+            }
+            /** 咬住后的每一拍：重验同体、友敌、视线与拉扯距离，任一失败立刻断链。 */
             function draw(current: CombatAction, index: number): void {
                 if (index >= draws) { finish(current); return; }
-                const scope = current.world(), foe = victim(scope), me = scope.observe(current.actor());
+                const scope = current.world(), foe = latchedActor(scope), me = scope.observe(current.actor());
                 const body = foe !== null ? scope.observe(foe) : null;
                 if (me === null || body === null) { finish(current); return; }
-                const distance = body.position().minus(me.position()).length();
-                if (distance > leash) { snap(current, body.position(), index); return; }
+                if (scope.friendly(foe!) || !scope.clear(me.position(), body.position())
+                    || body.position().minus(me.position()).length() > leash) { snap(current, body.position(), index); return; }
+                const before = me.health();
                 const landed = hurt(current, foe!, "leechlife", siphonPower,
                     { damage: damageSpec("leechlife", "siphon"), contact: true, bite: true, drain: share });
+                if (!landed) { snap(current, body.position(), index); return; }
+                const after = scope.observe(current.actor());
+                const healed = after === null ? 0 : Math.max(0, after.health() - before);
                 const flow = me.position().minus(body.position()), span = flow.length();
                 const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
                 WorldFeedback.emit(scope, leechLifeScene, 1, body.position(),
                     { moment: "draw", path: ["target", "source"], target: String(foe!.ref()),
                         direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, scale: scale,
-                        intensity: intensity, draw: index + 1, draws: draws, deep: deep ? 1 : 0 }, 22);
-                if (landed) {
-                    sound(current, "cobblemon:move.leechlife.target");
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.05, 0)), leechLifeDrawText,
-                        [index + 1, draws], 20);
-                }
+                        intensity: intensity, draw: index + 1, draws: draws, deep: deep ? 1 : 0 }, 18);
+                sound(current, "cobblemon:move.leechlife.target");
+                WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.05, 0)), leechLifeDrawText,
+                    [index + 1, draws], 20);
+                mend(current, me.position(), healed);
                 current.after(gap, function (next: CombatAction) { draw(next, index + 1); });
             }
 
-            const me = world.observe(action.actor()), foe = victim(world);
-            const body = foe !== null ? world.observe(foe) : null;
-            if (me === null || body === null) { miss(action, action.origin().plus(WorldCombat.point(0, 1, 0))); return; }
-            const dx = body.position().x() - me.position().x(), dz = body.position().z() - me.position().z();
-            const distance = Math.max(0.01, Math.sqrt(dx * dx + dz * dz));
-            const forward = WorldCombat.point(dx / distance, 0, dz / distance);
-            const hit = action.trace(me.position(), me.position().plus(forward.scale(Math.min(3.1, distance + 0.6))), radius);
+            // 初咬：直线探到真实首碰者，只有真咬中敌对的活体才锁定它（不沿用旧选目标），此后按拍抽。
+            const me = world.observe(action.actor());
+            if (me === null) { miss(action, action.origin().plus(WorldCombat.point(0, 1, 0))); return; }
+            const selected = action.target();
+            const selectedBody = selected !== null && world.valid(selected) ? world.observe(selected) : null;
+            let forward = action.direction();
+            if (selectedBody !== null) {
+                const dx = selectedBody.position().x() - me.position().x(), dz = selectedBody.position().z() - me.position().z();
+                const distance = Math.sqrt(dx * dx + dz * dz);
+                if (distance > 0.01) forward = WorldCombat.point(dx / distance, 0, dz / distance);
+            }
+            const hit = action.trace(me.position(), me.position().plus(forward.scale(reach)), radius);
             sound(action, "cobblemon:move.leechlife.actor");
-            if (!hit.hitEntity()) { miss(action, me.position().plus(forward.scale(Math.min(3.1, distance + 0.6)))); return; }
+            if (!hit.hitEntity() || hit.target() === null) { miss(action, hit.position()); return; }
+            const struck = hit.target()!;
             const at = hit.position();
-            WorldFeedback.emit(world, leechLifeScene, 1, at,
-                { moment: "bite", target: targetRef, motes: motes, scale: scale, intensity: intensity, deep: deep ? 1 : 0 }, 20);
-            impact(action, hit, "leechlife", bitePower,
+            const before = me.health();
+            const landed = impact(action, hit, "leechlife", bitePower,
                 { damage: damageSpec("leechlife", "bite"), contact: true, bite: true, drain: share });
+            // 咬到友方／自己，或伤害被原生拒绝：不锁、不吸、无后续。
+            if (!landed) { miss(action, at); return; }
+            latched = String(struck.ref());
+            const after = world.observe(actor);
+            const healed = after === null ? 0 : Math.max(0, after.health() - before);
+            WorldFeedback.emit(world, leechLifeScene, 1, at,
+                { moment: "bite", target: latched, motes: motes, scale: scale, intensity: intensity, deep: deep ? 1 : 0 }, 20);
             sound(action, "cobblemon:move.leechlife.target");
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.05, 0)), leechLifeBiteText, [], 20);
+            mend(action, me.position(), healed);
             action.after(3, function (next: CombatAction) { draw(next, 0); });
         }
     });

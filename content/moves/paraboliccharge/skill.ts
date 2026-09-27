@@ -53,7 +53,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:paraboliccharge:" + action.id(), parabolicchargeScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", radius: p(parabolicchargeId, "dish", action),
+                JSON.stringify({ moment: "charge", radius: p(parabolicchargeId, "dish", action), charge: prepare,
                     wide: config && config.wide === true }));
             return prepare;
         },
@@ -105,9 +105,11 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, parabolicchargeScene, 1, at,
                     { moment: "surge", target: ref, scale: scale, motes: motes, focus: focus,
                         intensity: Math.max(0.5, Math.min(2, power / 70)), count: Math.round(8 + power * 0.2) }, 22);
+                // 回流只从命中点出发、朝施术者收拢：给固定回程刻数，让速度正好走完这段真实距离，不越过施术者。
                 WorldFeedback.emit(world, parabolicchargeScene, 1, at,
-                    { moment: "pull", target: ref, path: ["target", "source"],
-                        direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, sap: Math.round(share * 100) }, 26);
+                    { moment: "pull", target: ref, direction: [inward.x(), inward.y(), inward.z()],
+                        span: span, flow: span, flowTicks: 10, flowSpeed: Math.max(0.02, span / 10),
+                        motes: motes, focus: focus, sap: Math.round(share * 100) }, 26);
             });
 
             if (total === 0) WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.1, 0)), parabolicchargeMissText, [], 24);

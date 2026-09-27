@@ -41,6 +41,17 @@ namespace PokemonSkills {
             if (distance <= capability.data.range) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "strip", true) && firelashDeflation(context, target) > -4) score += 10;
             if (CompanionBehavior.ai<boolean>(capability, "finish", false) && CompanionBehavior.ratio(target) < 0.45) score += 9;
+            // 缠卷评估：把敌拉入自己近身，受体抗性高、目标太重、或自己太脆时降低意愿。
+            if (capability.data.config && capability.data.config.entangle === true) {
+                const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+                const actor = world.actor(target.ref);
+                const resistance = actor === null ? null : world.attributeValue(actor, "minecraft:generic.knockback_resistance");
+                if (resistance !== null && resistance.value() >= 0.9) score -= 12;
+                const drag = PokemonSkills.p("firelash", "drag", PokemonSkills.withTarget(
+                    { world: world, actor: world.source(), skill: PokemonSkills.skills["firelash"], detail: { values: capability.data.config } }, actor));
+                if (drag < 0.4) score -= 8;
+                if (CompanionBehavior.ratio(self) < 0.5) score -= 8;
+            }
             return score;
         }
     });

@@ -51,7 +51,8 @@ namespace PokemonSkills {
             const world = action.world(), point = action.targetPosition();
             const ticks = Math.max(80, Math.round(p(trickRoomId, "spinTicks", action)));
             const radius = p(trickRoomId, "spinRadius", action);
-            const reference = Math.round(p(trickRoomId, "reference", action));
+            // 原生移动速度是小数：基准必须整个保留（约 0.14–0.30），不能先取整。
+            const reference = p(trickRoomId, "reference", action);
             const depth = p(trickRoomId, "depth", action);
             const density = Math.round(p(trickRoomId, "density", action));
             WorldEffects.field(world, trickRoomField, point, radius,

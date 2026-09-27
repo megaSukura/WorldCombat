@@ -4,6 +4,7 @@
  * 什么局面下出手：只有冰雹（雨/雷暴 + 脚下有雪或冰）时才考虑；有可见威胁在 ai.maxChase 以内。
  *   ai.coverTeam 开启时，只有身边 5 格内还有别的友方才铺——留着一次护住多人。
  * 出手前的位置：ai.advance 关闭（默认）时铺在脚下；开启时前压到交战区中间，把更多队友罩进幕里。
+ *   收到「驻守」指令且未开 ai.leaveStation 时就地张幕护住自己，不因 hold 一律跳过，也不会前压离开岗位。
  * 放完之后把伤害交回共用交战计划；自己还带着幕时不再重复（幕只护友方，铺完走出去就失去）。
  */
 namespace CompanionBehavior {
@@ -27,7 +28,6 @@ namespace CompanionBehavior {
         if (status(context, self, "auroraveil")) return false;
         if (!auroraHailHere(context)) return false;
         if (!threat || threat.health <= 0 || !threat.visible || threat.friendly) return false;
-        if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 14)) return false;
         if (ai<boolean>(item, "coverTeam", false)) {
             const nearby = context.facts.nearby as Entity[];
@@ -70,7 +70,9 @@ namespace CompanionBehavior {
             return castNode(item.id, "prepare", function (current) {
                 const self = source(current), threat: Entity | null = current.senses["world_combat:threat"];
                 const copy: Entity = JSON.parse(JSON.stringify(self));
-                if (ai<boolean>(item, "advance", false) && threat) {
+                // 驻守且未开「离开驻守点」时就地张幕护住自己，不因 hold 一律跳过，也不前压离开岗位。
+                const holding = current.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false);
+                if (!holding && ai<boolean>(item, "advance", false) && threat) {
                     const dx = threat.point[0] - self.point[0], dz = threat.point[2] - self.point[2];
                     const length = Math.max(0.001, Math.sqrt(dx * dx + dz * dz)), step = Math.min(2, length * 0.4);
                     copy.point = [self.point[0] + dx / length * step, self.point[1], self.point[2] + dz / length * step];

@@ -1,13 +1,13 @@
 /**
  * 翅膀攻击 / wingattack 的客户端表现。
  *
- * 一句话：双翼在身侧张开成两道人字形的风弧，随即左右两片翼锋沿身前扇面各扫过一半——扇面铺到哪，哪里的
- *   对手就被拍开，翅膀抖落几根羽毛。
+ * 一句话：双翼在身侧张开成两道人字形的风弧，随即左右两片翼锋从身体中心向前短短扫过身前整扇——扇面铺到
+ *   哪，哪里的对手就被拍开，翅膀抖落几根羽毛。
  * 色相家族：近白与浅灰青（softswipe／impact_flying／smallsparkle 原色），羽毛层用微微发暖的米白偏色。
  * 拍子：起 spread（张翼聚风）→ 击 sweep（左右各一片翼锋，两片合起来就是判定扇区）→ 收 shove（沿目标实际侧移的余风与落羽）／ miss（空扇）。
- * 范围：`sweep` 的 `bind: "path"` 左右两片多边形正是服务端判定 `WorldGeometry.sector` 的同一组顶点，各发一次；
- *   `data.scale`（横扫长度 / 3.2）让扇面与石头尺寸随体型缩放。
- * 运动：扇面从身前向外铺开、同一刻结算；收势的羽毛沿 `data.direction`（目标实际被推的侧向）飘走，不再做径向爆圈。
+ * 范围：`sweep` 的 `bind: "path"` 每刻只有当前子弧的三个端点（原点与外弧两端），正是服务端 `WorldGeometry.bodyPolygon`
+ *   判定的同一组端点，左、右各用独立 key 逐刻更新，中央不留假空隙；`data.scale`（横扫长度 / 3.2）让扇面随体型缩放。
+ * 运动：两片翼锋从身体中心沿各自半扇由内向外扫过；收势的羽毛沿 `data.direction`（目标实际被推的侧向）飘走，不做径向爆圈。
  * 数：`data.targets`（扇面内命中的非友方数）绑定命中爆发量，`data.chaff`（物攻换算的落羽量）绑定羽毛数量，
  *   `data.push`（实际推开的格数，推不动为 0）放大收势的推力感，`data.intensity`（威力 / 45）放大整幕，`data.wide` 让宽扫更张。
  */
@@ -19,7 +19,8 @@ const WingattackDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 12 },
             emitters: [
                 {
-                    name: "wing_left", bind: "source", offset: [-0.35, 0.75, 0.35], height: 0, fit: "body",
+                    name: "wing_left", bind: "source", height: 0, fit: "body",
+                    offset: [{ data: "leftOffset.0", fallback: -0.35 }, { data: "leftOffset.1", fallback: 0.75 }, { data: "leftOffset.2", fallback: 0.35 }],
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     burst: { count: 3, at: 0, interval: 2 },
                     shape: { kind: "arc", radius: 0.5, arcDegrees: 150 },
@@ -28,7 +29,8 @@ const WingattackDefinition: ParticleDefinition = {
                     color: 0xE8EEF2, alpha: [0.7, 0], light: "full", maxParticles: 24
                 },
                 {
-                    name: "wing_right", bind: "source", offset: [0.35, 0.75, 0.35], height: 0, fit: "body",
+                    name: "wing_right", bind: "source", height: 0, fit: "body",
+                    offset: [{ data: "rightOffset.0", fallback: 0.35 }, { data: "rightOffset.1", fallback: 0.75 }, { data: "rightOffset.2", fallback: 0.35 }],
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     burst: { count: 3, at: 0, interval: 2 },
                     shape: { kind: "arc", radius: 0.5, arcDegrees: 150 },

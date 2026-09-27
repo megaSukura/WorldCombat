@@ -6,7 +6,7 @@
   "worldcombat.skill.geomancy.description.0": "The second beat raises Sp. Atk, Sp. Def and Speed by %1$s each.",
   "worldcombat.skill.geomancy.description.1": "The first beat channels for %1$s; it can only be used while standing on the ground, and the user stands rooted and cannot act during this time.",
   "worldcombat.skill.geomancy.description.2": "After the burst the rune's afterglow lingers on the ground, then fades on its own.",
-  "worldcombat.skill.geomancy.description.3": "%1$s wind-up, %2$s recovery, %3$s cooldown. Sleep or freeze during the channel, or clearing the channel window early, collapses the energy and gains nothing.",
+  "worldcombat.skill.geomancy.description.3": "%1$s wind-up, %2$s recovery, %3$s cooldown. Sleep or freeze during the channel, being pushed off the ground, or losing the root or channel window early all collapse the energy and gain nothing.",
   "worldcombat.skill.geomancy.timing": "A self move with %1$s blocks of range; after %2$s s of wind-up it spends %4$s PP, then recovers for %3$s s with a %5$s s cooldown committed on cast.",
   "worldcombat.skill.geomancy.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.geomancy.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",

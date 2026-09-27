@@ -9,6 +9,8 @@
  * 拍子：起（windup 蓄火）→ 扑（pounce 低弧）→ 滑（slide 贴地火线、scorch 火擦痕）→ 停（stop 余烬）→ 击（impact 压中、shove 被顶开、burn 明火）。
  * 范围：pounce／slide 绑施法者身体，跟着真实运动；scorch 绑实际贴地点，宽度按 `data.scale`（火痕宽 / 0.45）铺开。
  * 运动：扑是低平外扩的火苗，滑是贴地拖尾加地面擦痕；命中是短促外爆，明火贴目标向上窜。
+ * 寿命：scorch 的 moment 与火痕贴图寿命都绑 `data.traceTicks`（按参数停留）；burn 的持续明火由服务端绑在目标真实灼烧载体上，
+ *     载体提前驱散或到期即收，不会在状态消失后留下残影。
  * 数：scorch 的数量绑定机制值（宽度/强度），impact 的强度绑 `data.intensity`（威力 / 90），burn 的余烬量绑 `data.embers`。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -89,7 +91,7 @@ const HeatCrashDefinition: ParticleDefinition = {
             ]
         },
         scorch: {
-            duration: 24,
+            duration: { data: "traceTicks", fallback: 40 },
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
@@ -98,7 +100,7 @@ const HeatCrashDefinition: ParticleDefinition = {
                     burst: { count: 1, at: 1 },
                     shape: { kind: "circle", radius: 0.45 },
                     direction: "outward", speed: [0.0, 0.01],
-                    lifetime: [14, 18], size: [0.8, 0.9],
+                    lifetime: { data: "traceTicks", fallback: 40 }, size: [0.8, 0.9],
                     alpha: [0.7, 0], light: "world", maxParticles: 3
                 },
                 {

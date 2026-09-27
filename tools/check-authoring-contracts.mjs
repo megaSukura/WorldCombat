@@ -42,6 +42,7 @@ let busy = false, cooldown = 0;
 const world = {
   closestPoint: actor => view(actor).position(),
   source: () => first, tick: () => 10, valid: () => true, effects: () => [], mobEffect: () => null, mobEffects: () => [], observe: view, actions: () => [],
+  matchesMobEffect(actor, id, key) { const value = this.valid(actor) && this.mobEffect(actor, id); return !!value && String(value.key()) === key; },
   busy: () => busy, claimed: () => busy, cooldown: () => cooldown, readiness: () => cooldown ? 'cooldown' : busy ? 'busy' : '', actor: ref => ref === first.ref() ? first : ref === second.ref() ? second : null,
   friendly: () => true, query: () => [], survey: () => '[]', equipment: () => [],
   cast: (...args) => { casts.push(args); return casts.length; }, face: noop

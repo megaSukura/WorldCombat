@@ -1,12 +1,14 @@
 /**
  * 暗影爪 / shadowclaw 的客户端表现。
  *
- * 一句话：脚下的影子朝落点身后沿真实地表铺成一条暗带，一只近黑的爪从暗带末端反向抓回落点；命中处散出
- * 幽暗碎屑、在目标身上留一道短抓痕，暴击时抓痕亮成要害的白点。
+ * 一句话：脚下的影子逐刻朝落点身后沿真实地表爬出一条暗带、影头随进度前移，一只近黑的爪按 `data.depth`
+ * 从暗带末端反向抓回落点；命中处散出幽暗碎屑、在目标身上留一道随身短抓痕，暴击时抓痕亮成要害的白点。
  * 色相家族：近黑紫（impact_ghost／orb／smoke）＋中性暗尘（tinydust）＋白亮要害强调（smallsparkle／critical_hit）。
- * 拍子：起（windup 脚边收影）→ 铺（shade 暗带沿真实地面铺到落点身后）→ 抓（rend／rake 反向爪痕、命中）→ 留（gouge 短抓痕）→ 强调（crit）。
- * 范围：`data.path` 是服务端沿真实地表铺出的同一组顶点；shade 用 polyline 画出那条暗带，rend／rake 用 polyline 画反向抓回的爪痕。
- * 运动：暗带沿 path 从脚下铺到锚点，爪痕由锚点反向划到真实接触点；命中碎屑向外爆，短抓痕原地很快变淡。
+ * 拍子：起（windup 脚边收影）→ 铺（shade 影头按 lag 逐刻推进，每刻只发当前真实子段）→
+ *   抓（rend／rake 反向爪痕、命中）→ 留（gouge 随身短抓痕）→ 强调（crit）。
+ * 范围：`data.path` 是服务端本刻真正走出的地表短段；shade 用 polyline 画出它、`data.point`／head 画影头；
+ *   rend／rake 用 polyline 画反向抓回的爪痕，两端含 `depth` 抬起的竖直高度。
+ * 运动：暗带沿真实地表逐刻前移，爪痕由锚点反向划到真实接触点；命中碎屑向外爆，短抓痕随目标移动并很快变淡。
  * 数：`data.shred`（物攻换算的崩屑量）绑定命中与暗带边缘的量；`data.scale` 让宽爪比窄爪更大；
  *   要害标记的数量与尺寸读 `data.marks`（实际伤害换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -45,6 +47,14 @@ const ShadowclawDefinition: ParticleDefinition = {
                     shape: { kind: "polyline" }, rate: 22, direction: "shape", speed: [0.03, 0.1], spread: 6,
                     lifetime: [5, 10], size: [0.16, 0.03], sizeMode: "index",
                     color: 0x8E6FD0, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 80
+                },
+                {
+                    name: "head_mark", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/orb",
+                    rate: 26, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.02, 0.07], spread: 10,
+                    lifetime: [5, 9], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0x8E6FD0, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 44
                 }
             ]
         },
@@ -99,7 +109,7 @@ const ShadowclawDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "mark", bind: "point", offset: [0, 0.45, 0],
+                    name: "mark", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
                     rate: 8, shape: { kind: "line", length: 0.7, rotation: [0, 0, 38] },
                     direction: "shape", speed: [0.01, 0.04],

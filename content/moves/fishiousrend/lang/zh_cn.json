@@ -3,7 +3,7 @@
   "worldcombat.skill.fishiousrend.use.0": "抢在对手出手前咬住",
   "worldcombat.skill.fishiousrend.use.1": "把目标拖回自己身边",
   "worldcombat.skill.fishiousrend.use.2": "咬住后压低猎物速度",
-  "worldcombat.skill.fishiousrend.description.0": "咬出约 %1$s 的物理伤害；命中时若目标在最近 %2$s 秒内没有打过施法者、此刻也没朝施法者出手，威力翻倍。",
+  "worldcombat.skill.fishiousrend.description.0": "咬出约 %1$s 的物理伤害；命中时若目标在最近 %2$s 秒内没有真正出手打过施法者，威力翻倍。",
   "worldcombat.skill.fishiousrend.description.1": "最多扑咬 %1$s 格、每刻位移 %2$s 格，咬合判定半径 %3$s 格。",
   "worldcombat.skill.fishiousrend.description.2": "咬住后把目标朝自己拖最多 %1$s 格，并压低它 %2$s 级速度。",
   "worldcombat.skill.fishiousrend.deepbite.on": "开启深咬：拖拽多 0.4 格、压速多一级，猎物被牢牢钉住；代价是起手多 3 刻、冷却多 6 刻。",

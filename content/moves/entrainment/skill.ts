@@ -2,8 +2,12 @@
 namespace PokemonSkills {
     export const entrainmentScene = "world_combat:move_entrainment";
     export const entrainmentMark = "world_combat:entrainment";
+    export const entrainmentBeat = "world_combat:entrainment_beat";
     export const entrainmentSharedText = "world_combat.move.entrainment.text.shared";
+    export const entrainmentSpeedText = "world_combat.move.entrainment.text.speed";
     export const entrainmentSameText = "world_combat.move.entrainment.text.same";
+    export const entrainmentBlockedText = "world_combat.move.entrainment.text.blocked";
+    export const entrainmentImmuneText = "world_combat.move.entrainment.text.immune";
 
     /** 一个战斗者当前生效的特性（含临时层与压制）；非宝可梦返回 ""。 */
     export function entrainmentAbility(world: CombatWorld, actor: CombatActor): string {
@@ -23,10 +27,51 @@ namespace PokemonSkills {
 
     /** 只有把自己的特性递出去不亏、或对手的特性值得顶掉时才值得出手：这是 AI 的「有意义」判断。 */
     var entrainmentLiability = ["truant", "slowstart", "defeatist", "klutz", "cacophony", "normalize", "stall"];
-    var entrainmentTrouble = ["wonderguard", "multiscale", "magicguard", "intimidate", "levitate", "flashfire", "waterabsorb",
+    var entrainmenttrouble = ["wonderguard", "multiscale", "magicguard", "intimidate", "levitate", "flashfire", "waterabsorb",
         "voltabsorb", "sapsipper", "sturdy", "disguise", "thickfat", "filter", "regenerator", "immunity", "hydration", "overcoat"];
     export function entrainmentLiabilityAbility(ability: string): boolean { return entrainmentLiability.indexOf(ability) >= 0; }
-    export function entrainmentWorthOverwriting(ability: string): boolean { return entrainmentTrouble.indexOf(ability) >= 0; }
+    export function entrainmentWorthOverwriting(ability: string): boolean { return entrainmenttrouble.indexOf(ability) >= 0; }
+
+    /**
+     * 与本招实际结算同源的原生移动速度（minecraft:generic.movement_speed 属性），供 AI 比较；
+     * 不用物种速度事实，普通生物与宝可梦按同一单位读。
+     */
+    export function entrainmentNativeSpeed(world: CombatWorld, actor: CombatActor): number | null {
+        const value = world.attributeValue(actor, CombatCopies.speed);
+        return value === null ? null : value.value();
+    }
+
+    /**
+     * 持续节拍画面绑定在一个真正 own 的托管效果上：它观察目标身上本招标记的最新 carrier（id+key），
+     * 标记到期、被牛奶/驱散清除或换新实例，watch 立即失去匹配并结束，不留失效锚与残留画面。
+     */
+    function entrainmentBindBeat(scope: CombatWorld, foe: CombatActor, mark: CombatMobEffect,
+        hold: number, beats: number, sway: number, scale: number, intensity: number): void {
+        const owner = String(scope.source().ref());
+        scope.effects(foe, entrainmentBeat).forEach(function (view) {
+            if (String(view.source().ref()) === owner) scope.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        const ticks = mark.duration() < 0 ? hold : Math.max(1, Math.min(hold, mark.duration()));
+        scope.effect(entrainmentBeat, foe,
+            JSON.stringify({ id: mark.id(), key: mark.key(), beats: beats, sway: sway, scale: scale, intensity: intensity }), ticks);
+    }
+
+    WorldCombat.effect(entrainmentBeat, 1, 1200, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.id !== "string" || typeof value.key !== "string") throw new Error("Invalid entrainment beat anchor");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    function entrainmentBeatPresent(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target(), state = JSON.parse(effect.state());
+        const body = world.observe(target);
+        if (body === null || !MobEffects.matches(world, target, state)) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_entrainment/beat/" + effect.id(), entrainmentScene, 1, body.position(),
+            { moment: "hold", target: String(target.ref()), beats: state.beats, sway: state.sway, scale: state.scale, intensity: state.intensity });
+        effect.schedule("watch", "watch", 2, "{}");
+    }
+    WorldCombat.effectHandler(entrainmentBeat, "start", entrainmentBeatPresent);
+    WorldCombat.effectHandler(entrainmentBeat, "watch", entrainmentBeatPresent);
+    WorldCombat.effectHandler(entrainmentBeat, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
         id: "entrainment",
@@ -67,7 +112,17 @@ namespace PokemonSkills {
             if (body === null) return "target-left";
             if (body.position().minus(action.origin()).length() > action.range()) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
-            if (String(target.domain()) !== "cobblemon") return world.attributeValue(target, CombatCopies.speed) ? "" : "no-rhythm";
+            if (String(target.domain()) !== "cobblemon") {
+                // 普通生物用与执行同一条原生 movement_speed 属性比较；同速/净变化为零直接拒绝无收益刷新。
+                const mineSpeed = entrainmentNativeSpeed(world, actor);
+                const theirsSpeed = entrainmentNativeSpeed(world, target);
+                if (mineSpeed === null || theirsSpeed === null) return "no-rhythm";
+                const pull = Math.max(0.05, Math.min(1, p("entrainment", "pull", action)));
+                const blend = Math.max(0.05, Math.min(1, p("entrainment", "blend", action)));
+                const wanted = Math.max(theirsSpeed * (1 - pull), Math.min(theirsSpeed * (1 + pull),
+                    theirsSpeed + (mineSpeed - theirsSpeed) * blend));
+                return Math.abs(wanted - theirsSpeed) > 0.0005 ? "" : "no-rhythm";
+            }
             if (String(actor.domain()) !== "cobblemon") return "no-ability";
             const mine = entrainmentAbility(world, actor), theirs = entrainmentAbility(world, target);
             if (!mine) return "self-suppressed";
@@ -106,44 +161,78 @@ namespace PokemonSkills {
                 settled = true;
                 done(current);
             }
-            function breakBeat(scope: CombatWorld, point: CombatPoint): void {
+            /** 断拍：分清拦截 / 同速 / 免改，不再一律报「已经相同」。 */
+            function breakBeat(scope: CombatWorld, point: CombatPoint, key: string): void {
                 WorldFeedback.emit(scope, entrainmentScene, 1, point,
                     { moment: "fizzle", target: String(actor.ref()), beats: beats, scale: scale }, 22);
-                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.35, 0)), entrainmentSameText, [], 34);
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.35, 0)), key, [], 34);
             }
-            /** 拍子真正落到受术者身上才结算；被别的身体挡住或目标离场就断拍，不当成已经同步。 */
+            /** 拍子真正落到受术者身上、且真实层写入成功才结算；被别的身体/墙挡住或目标离场就断拍。 */
             function land(current: CombatAction, impact: CombatImpact): void {
                 const scope = current.world(), foe = impact.target();
                 const selfBody = scope.observe(current.actor());
                 if (foe === null || !scope.valid(foe) || String(foe.ref()) !== chosen) {
-                    breakBeat(scope, selfBody === null ? current.origin() : selfBody.position());
+                    breakBeat(scope, selfBody === null ? current.origin() : selfBody.position(),
+                        impact.blocked() ? entrainmentBlockedText : entrainmentSameText);
                     finish(current);
                     return;
                 }
                 const mine = entrainmentAbility(scope, current.actor());
-                let shared = false;
+                let shared = false, sharedText = entrainmentSharedText, sharedArgs: any[] = [], failText = entrainmentSameText;
                 if (String(foe.domain()) === "cobblemon") {
                     const theirs = entrainmentAbility(scope, foe);
-                    if (mine && entrainmentShareable(mine) && theirs && theirs !== mine && entrainmentReceivable(theirs)) {
-                        NativeModifiers.apply(scope, foe, { ability: mine }, hold);
-                        MobEffects.apply(scope, foe, entrainmentMark, hold, 0);
-                        shared = true;
+                    const shareable = !!mine && entrainmentShareable(mine);
+                    const receivable = !!theirs && entrainmentReceivable(theirs);
+                    if (!shareable || !receivable) failText = entrainmentImmuneText;
+                    if (shareable && receivable && theirs !== mine) {
+                        // 先申请标记载体，再让能力层用同一 carrier 锚定；只有真实层写入成功才 shared。
+                        const mark = MobEffects.apply(scope, foe, entrainmentMark, hold, 0);
+                        if (mark !== null) {
+                            const layer = NativeModifiers.apply(scope, foe, { ability: mine, carrier: MobEffects.anchor(mark) }, hold);
+                            const applied = layer > 0 && scope.effects(foe, "cobblemon_world_combat:modifier").some(function (view) { return view.id() === layer; });
+                            if (applied) {
+                                shared = true;
+                                // 显示真正送出去的特性名。
+                                sharedArgs = [{ key: "cobblemon.ability." + mine, fallback: mine }];
+                                entrainmentBindBeat(scope, foe, mark, hold, beats, sway, scale, intensity);
+                            } else {
+                                scope.removeMobEffect(foe, mark.id(), mark.key());
+                                failText = entrainmentImmuneText;
+                            }
+                        } else {
+                            failText = entrainmentImmuneText;
+                        }
                     }
                 } else {
-                    const mineSpeed = scope.attributeValue(current.actor(), CombatCopies.speed);
-                    const theirsSpeed = scope.attributeValue(foe, CombatCopies.speed);
+                    sharedText = entrainmentSpeedText;
+                    const mineSpeed = entrainmentNativeSpeed(scope, current.actor());
+                    const theirsSpeed = entrainmentNativeSpeed(scope, foe);
                     if (mineSpeed !== null && theirsSpeed !== null) {
-                        const from = theirsSpeed.value(), to = mineSpeed.value();
+                        const from = theirsSpeed, to = mineSpeed;
                         const wanted = Math.max(from * (1 - pull), Math.min(from * (1 + pull), from + (to - from) * blend));
                         if (Math.abs(wanted - from) > 0.0005) {
-                            const carrier = MobEffects.apply(scope, foe, entrainmentMark, hold, 0);
-                            if (carrier) {
+                            const mark = MobEffects.apply(scope, foe, entrainmentMark, hold, 0);
+                            if (mark !== null) {
                                 const values: CombatCopies.Values = {};
                                 values[CombatCopies.speed] = wanted;
-                                CombatCopies.apply(scope, foe, values, hold, "entrainment", MobEffects.anchor(carrier));
-                                shared = true;
+                                // equalize 拒绝（原生属性范围/斜率挡下）就撤标记，不谎报同步。
+                                const layer = CombatCopies.equalize(scope, foe, values, hold, "entrainment", MobEffects.anchor(mark));
+                                if (layer > 0) {
+                                    shared = true;
+                                    sharedArgs = [wanted > from
+                                        ? { key: "world_combat.move.entrainment.text.faster" }
+                                        : { key: "world_combat.move.entrainment.text.slower" }];
+                                    entrainmentBindBeat(scope, foe, mark, hold, beats, sway, scale, intensity);
+                                } else {
+                                    scope.removeMobEffect(foe, mark.id(), mark.key());
+                                    failText = entrainmentImmuneText;
+                                }
+                            } else {
+                                failText = entrainmentImmuneText;
                             }
                         }
+                    } else {
+                        failText = entrainmentImmuneText;
                     }
                 }
                 const foeBody = scope.observe(foe);
@@ -155,9 +244,9 @@ namespace PokemonSkills {
                     if (selfBody !== null)
                         WorldFeedback.emit(scope, entrainmentScene, 1, selfBody.position(),
                             { moment: "sync", target: String(current.actor().ref()), path: [String(current.actor().ref()), chosen], beats: beats, sway: sway, scale: scale, intensity: intensity }, 32);
-                    WorldFeedback.text(scope, selfBody === null ? current.origin() : selfBody.position().plus(WorldCombat.point(0, 1.35, 0)), entrainmentSharedText, [], 40);
+                    WorldFeedback.text(scope, selfBody === null ? current.origin() : selfBody.position().plus(WorldCombat.point(0, 1.35, 0)), sharedText, sharedArgs, 40);
                 } else {
-                    breakBeat(scope, selfBody === null ? current.origin() : selfBody.position());
+                    breakBeat(scope, selfBody === null ? current.origin() : selfBody.position(), failText);
                 }
                 sound(current, shared ? "minecraft:block.note_block.bell" : "minecraft:block.amethyst_block.break");
                 finish(current);

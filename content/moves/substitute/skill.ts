@@ -59,7 +59,15 @@ namespace PokemonSkills {
         const carrier = MobEffects.apply(world, effect.target(), substituteStatus, effect.remaining());
         state.carrier = carrier ? MobEffects.anchor(carrier) : null;
         effect.state(JSON.stringify(state));
-        if (!carrier) { effect.end(); return; }
+        if (!carrier) {
+            // 身份挂不上：撤掉刚放下的身体、退还已投入的生命，这次施放不留东西。
+            state.failed = true;
+            effect.state(JSON.stringify(state));
+            if (world.valid(effect.target())) world.health(effect.target(), state.spent, "world_combat:substitute_refund");
+            if (body !== null) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), substituteWeakText, [], 24);
+            effect.end();
+            return;
+        }
         MobEffects.bind(world, effect.target(), substituteStatus, carrier);
         if (body !== null) {
             WorldFeedback.emit(world, substituteScene, 1, body.position(), { moment: "form", scale: state.scale }, 32);
@@ -82,9 +90,11 @@ namespace PokemonSkills {
         // The exact predicate the shared redirect settles damage with: distance and a clear line.
         const connected = WorldEffects.redirectConnected(world, effect.target(), helper, state.linkRange);
         const point = body.position();
-        if (state.connected !== connected) {
-            state.connected = connected;
-            effect.state(JSON.stringify(state));
+        const changed = state.connected !== connected;
+        state.point = [point.x(), point.y(), point.z()];
+        state.connected = connected;
+        effect.state(JSON.stringify(state));
+        if (changed) {
             WorldFeedback.emit(world, substituteScene, 1, point,
                 { moment: connected ? "link_restore" : "link_break",
                   path: [String(effect.target().ref()), state.helper], scale: state.scale }, 22);
@@ -94,6 +104,8 @@ namespace PokemonSkills {
         }
         WorldFeedback.onEffect(world, effect.id(), "world_combat:move_substitute:present", substituteScene, 1, point,
             { moment: "present", target: state.helper, scale: state.scale, health: body.health(), maximum: body.maxHealth(),
+              durability: Math.max(0, Math.min(1, body.health() / Math.max(1, body.maxHealth()))),
+              shell: 0.45 + 0.55 * Math.max(0, Math.min(1, body.health() / Math.max(1, body.maxHealth()))),
               connected: connected ? 1 : 0, path: connected ? [String(effect.target().ref()), state.helper] : [] });
         effect.schedule("guard", "guard", 6, "{}");
     });
@@ -102,10 +114,12 @@ namespace PokemonSkills {
         const world = effect.world(), state = JSON.parse(effect.state()), actor = effect.target();
         if (state.redirect) world.operation(state.redirect, "world_combat:dispel", "{}");
         const helper = state.helper ? world.actor(state.helper) : null;
+        const helperBody = helper !== null && world.valid(helper) ? world.observe(helper) : null;
         if (helper !== null && world.valid(helper) && world.helperSource(helper) !== null) world.removeHelper(helper);
         const body = world.valid(actor) ? world.observe(actor) : null;
-        const anchor = WorldCombat.point(state.point[0], state.point[1], state.point[2]);
-        if (world.valid(actor)) {
+        // 收尾落在替身最后停留的位置；只有看守的常驻判据被跑过，才回退到上一次记录点。
+        const anchor = helperBody !== null ? helperBody.position() : WorldCombat.point(state.point[0], state.point[1], state.point[2]);
+        if (world.valid(actor) && !state.failed) {
             const moment = state.broken ? "break" : "expire";
             WorldFeedback.emit(world, substituteScene, 1, anchor, { moment: moment, scale: state.scale }, 24);
             if (body !== null) WorldFeedback.text(world, anchor.plus(WorldCombat.point(0, 1.3, 0)),

@@ -5,8 +5,8 @@
  * 轨迹拼成一道弧；碰到身体或墙的当刻端点才炸开骨屑，撞墙的端点闪出一撮碎石，落空只在棒端散一小撮尘。
  * 色相家族：骨白（0xEAE0C8 / 0xC8B48E）与土棕（0x8A7A62）；饱和色只在骨屑尖端一点。
  * 拍子：起 raise（举棍）→ 挥 thrust（直刺线）／ club + arc（横扫每刻长轴与轨迹）→ hit（命中）／ wall（敲墙）／ miss（空抡）。
- * 范围：thrust／club 的 polyline 直接消费服务端 `data.path`（握点 ↔ 当刻棒头），画出的就是真正够到的那条线；
- *       arc 消费已划过的端点序列，画出横扫真实的弧。
+ * 范围：thrust／club 的 polyline 直接消费服务端 `data.path`（握点 ↔ 当刻棒端），服务端已按真实墙裁长，画出的就是真正到达的那段；
+ *       arc 消费已划过的端点序列，画出横扫真实经过的可达弧。棒身用稳定帧的修长划痕拼出硬直的棍影，棒头用 index 尺寸放大成清楚的骨节。
  * 运动：骨棒长轴每刻随服务端更新，端点碰到谁／哪面墙就停在哪里。
  * 数：`data.clubs`（威力派生）决定骨屑与土雾点数，`data.reach` 与 `data.gauge` 记录真实长度与半宽，
  * `data.scale`（半宽 / 0.5）放大骨屑与光边。
@@ -36,46 +36,46 @@ const BoneclubDefinition: ParticleDefinition = {
                 {
                     name: "shaft", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    shape: { kind: "polyline" },
+                    shape: { kind: "polyline" }, spriteFrom: "random",
                     rate: 130, direction: "shape", speed: [0.02, 0.08],
-                    lifetime: [5, 10], size: [0.22, 0.05], sizeMode: "index",
-                    color: 0xEAE0C8, alpha: [0.88, 0], light: "full", maxParticles: 150
+                    lifetime: [5, 10], size: [0.24, 0.05],
+                    color: 0xEAE0C8, alpha: [0.95, 0.15], light: "full", maxParticles: 150
                 },
                 {
                     name: "tip", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    shape: { kind: "polyline" },
+                    shape: { kind: "polyline" }, spriteFrom: "random",
                     rate: 30, direction: "shape", speed: [0.05, 0.2],
-                    lifetime: [4, 9], size: [0.18, 0.05],
-                    color: 0xF2E8CE, alpha: [0.8, 0], light: "full", bloom: 0.25, maxParticles: 60
+                    lifetime: [4, 9], size: [0.14, 0.42], sizeMode: "index",
+                    color: 0xF2E8CE, alpha: [0.9, 0.2], light: "full", bloom: 0.25, maxParticles: 60
                 }
             ]
         },
         club: {
-            duration: 8,
-            exit: { stop: 3, drain: 10 },
+            duration: 0,
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "shaft", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    shape: { kind: "polyline" },
+                    shape: { kind: "polyline" }, spriteFrom: "random",
                     rate: 150, direction: "shape", speed: [0.02, 0.08],
-                    lifetime: [4, 9], size: [0.24, 0.05], sizeMode: "index",
-                    color: 0xEAE0C8, alpha: [0.9, 0], light: "full", maxParticles: 120
+                    lifetime: [4, 9], size: [0.26, 0.05],
+                    color: 0xEAE0C8, alpha: [0.95, 0.15], light: "full", maxParticles: 120
                 },
                 {
                     name: "head", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    shape: { kind: "polyline" },
+                    shape: { kind: "polyline" }, spriteFrom: "random",
                     rate: 40, direction: "outward", speed: [0.04, 0.16],
-                    lifetime: [4, 9], size: [0.16, 0.04],
-                    color: 0xF2E8CE, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 70
+                    lifetime: [4, 9], size: [0.14, 0.44], sizeMode: "index",
+                    color: 0xF2E8CE, alpha: [0.9, 0.2], light: "full", bloom: 0.2, maxParticles: 70
                 }
             ]
         },
         arc: {
-            duration: 8,
-            exit: { stop: 3, drain: 12 },
+            duration: 0,
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "trail", bind: "path",
@@ -157,6 +157,21 @@ const BoneclubDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.06], spread: 10,
                     lifetime: [11, 17], size: [0.13, 0.04],
                     color: 0xEAE0C8, alpha: [0.85, 0], light: "full", bloom: 0.22, maxParticles: 20
+                }
+            ]
+        },
+        interrupt: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "jolt", bind: "target", height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    burst: { count: 6, at: 1 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "shape", speed: [0.05, 0.18],
+                    lifetime: [5, 10], size: [0.22, 0.05], sizeMode: "index",
+                    color: 0xC8B48E, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 24
                 }
             ]
         },

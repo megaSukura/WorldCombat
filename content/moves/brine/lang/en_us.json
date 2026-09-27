@@ -3,7 +3,7 @@
   "worldcombat.skill.brine.use.0": "Double down on a target that is already wounded",
   "worldcombat.skill.brine.use.1": "Keep the pressure on once a foe drops below half HP",
   "worldcombat.skill.brine.use.2": "Fire one long shot just to finish a wounded target",
-  "worldcombat.skill.brine.description.0": "On a hit, deals about %1$s special damage; while the target is at half HP or less that segment is doubled.",
+  "worldcombat.skill.brine.description.0": "On a hit, deals about %1$s special damage; while the target is at half HP or less that segment is doubled. The doubling is applied after the full-health budget cap, so it stays exactly 2x even at high level or in high-pressure mode.",
   "worldcombat.skill.brine.description.1": "The jet reaches %1$s blocks, travels at about %2$s blocks/tick with a %3$s block hit radius; it splashes only where it lands, on a body or on a block.",
   "worldcombat.skill.brine.description.2": "A target hit directly keeps the drenched identity for about %1$s; brine leaves only that mark and adds no extra slow.",
   "worldcombat.skill.brine.press.on": "High-pressure mode: power x1.15, range x1.15 and a finer hit radius, but a shorter soak, +2 ticks windup and +4 ticks cooldown.",

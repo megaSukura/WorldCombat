@@ -3,7 +3,7 @@ namespace PokemonSkills {
     define({
         id: burningjealousyId,
         cooldownParameter: "recharge", name: "妒火",
-        description: "朝一个方向喷出扇形火焰，强化中的目标烧得更重、被留下灼伤，普通目标只吃基础火伤。可以对着空地空喷，方块不会留下火圈。",
+        description: "朝一个方向喷出扇形火焰，强化中的目标烧得更重、被留下灼伤，普通目标只吃基础火伤。实心墙会挡住火舌，墙后的目标不会越过墙受热。可以对着空地空喷，方块不会留下火圈。",
         uses: ["惩罚刚强化过的对手", "一次扫过身前挤成一排的敌人", "用灼伤压制正在铺垫的强化手", "朝空地空喷，逼走位或配合队友"],
         kind: "aim", range: 5, maxRange: 8, prepare: 7, active: 1, recover: 8, cooldown: 32,
         style: "fire", stationary: true, maximumTicks: 120,
@@ -49,13 +49,16 @@ namespace PokemonSkills {
             const maxTargets = Math.round(p(burningjealousyId, "maxTargets", action));
             const motes = Math.round(p(burningjealousyId, "motes", action));
             const scale = reach / burningjealousyReferenceReach;
-            const vertices = burningJealousyPath(burningJealousyFan(origin, direction, reach, angle));
+            const vertices = burningJealousyPath(burningJealousyFan(world, origin, direction, reach, angle));
             let hits = 0, ignited = 0, totalStages = 0, best = 0;
 
             sound(action, "cobblemon:move.fireblast.actor");
-            const region = WorldGeometry.sector(origin, direction, reach, angle, { below: 2, above: 3 });
-            WorldGeometry.selectEnemies(world, region, function (victim, facts) {
+            // 真实身体箱求交（胖身体靠扇面一侧也算在内）＋墙遮挡：墙后的目标不因同在一个扇面里被烧。
+            const region = WorldGeometry.bodySector(origin, direction, reach, angle, { below: 2, above: 3 });
+            WorldGeometry.selectBodies(world, region, function (victim, facts) {
                 if (hits >= maxTargets) return;
+                if (String(victim.ref()) === String(actor.ref()) || facts.friendly()) return;
+                if (WorldGeometry.blockHit(world, origin, facts.position()) !== null) return;
                 const boost = burningJealousyBoost(world, victim);
                 const factor = 1 + Math.min(cap, boost * step);
                 const dealt = hurt(action, victim, burningjealousyId, power * factor, { damage: damageSpec(burningjealousyId, "flare") });
@@ -66,14 +69,14 @@ namespace PokemonSkills {
                 let burned = false;
                 if (boost > 0) burned = CombatStatus.inflict(world, victim, "burn", burnBase + boost * burnPer);
                 if (burned) ignited++;
+                // 强化反馈落在被击中的目标身上；没有真的咬上就不显示缠火，避免谎报灼伤。
                 WorldFeedback.emit(world, burningjealousyScene, 1, facts.position(),
                     { moment: "hit", target: String(victim.ref()), stages: boost, burned: burned ? 1 : 0,
-                        gnaw: boost * 4, intensity: 1 + Math.min(1.2, boost * 0.12) }, 30);
+                        gnaw: burned ? boost * 4 : 0, intensity: 1 + Math.min(1.2, boost * 0.12) }, 30);
             });
             WorldFeedback.emit(world, burningjealousyScene, 1, origin,
                 { moment: "wave", path: vertices, reach: reach, angle: angle, scale: scale, hits: hits,
                     ignited: ignited, stages: totalStages, best: best, motes: motes,
-                    rise: 0.8 + Math.min(4, best * 0.35),
                     intensity: 1 + Math.min(1.6, totalStages * 0.12 + hits * 0.2) }, 44);
             if (best > 0) WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.45, 0)), burningjealousyEnvyText, [best], 36);
             else WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.35, 0)), burningjealousyHitText, [hits], 30);

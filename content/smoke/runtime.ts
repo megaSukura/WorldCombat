@@ -244,7 +244,8 @@ namespace Smoke {
                 var combat = Java.loadClass("dev.worldcombat.core.world.CombatServices").get(server), data: any = {};
                 Object.keys(options && options.metadata || {}).forEach(function (key) { data[key] = options!.metadata![key]; });
                 data.damageType = damageType || "minecraft:generic";
-                scope.hurt(combat.bind(target.entity), amount, JSON.stringify(data));
+                  const relations = options && options.relations || (source === target ? { self: true } : {});
+                  scope.hurt(combat.bind(target.entity), amount, JSON.stringify(data), JSON.stringify(relations));
             });
         },
         field: function (rule, at, ticks, radius, data, source) {

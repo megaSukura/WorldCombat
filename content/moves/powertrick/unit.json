@@ -19,6 +19,9 @@
   "clientSources": [
     "presentation.ts"
   ],
+  "scenarioFixtures": [
+    "content/moves/powershift"
+  ],
   "mobEffectIcons": {
     "world_combat:powertrick_hold": "minecraft:mob_effect/strength"
   }

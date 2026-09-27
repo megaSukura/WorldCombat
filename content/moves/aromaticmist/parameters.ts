@@ -7,8 +7,9 @@
  *   特防提起来，离雾之后香还挂在身上一小会儿。它把一次特防强化留在**世界上一个位置**，而不是只贴一个人。
  * 世界化：落点用 WorldEffects.field 租借一片香云（规则 world_combat:field/aromaticmist 定义在本单元）。
  *   云每 5 刻扫一次，对雾里的友方按共享身份 world_combat:status/aromaticmist 挂一份真实 MobEffect
- *   （本单元效果 world_combat:aromatic_veil），特防立刻写入公共能力阶梯；留在雾里香气不断续上，
- *   离雾后香随留香窗口自行走完，窗口结束或被清除时按各自实际抬到的级数原样收回。
+ *   （本单元效果 world_combat:aromatic_veil），特防由绑在这份载体上的 NativeEffects.boostWindow 临时窗口
+ *   写入公共能力阶梯；留在雾里留香将尽即续一份载体与窗口，离雾后香随留香窗口自行走完，载体一收窗口
+ *   只收回本招这一份贡献。
  *
  * 数值来源（每个参数读不同的精灵数据，分散开）：
  *   gift        特防等级：基础 1，基础特防 ≥ 90 再 +1；夹 1..2。天生厚的个体把这一档推得更高。

@@ -9,7 +9,8 @@
  *   射（volley → hit / husk）：提交后每 `gap` 刻射出一片鳞（保留 3D 方向与垂直分量、带 `spread` 偏角）；
  *       无目标也能空射，2～5 片照实射完才脱鳞。聚鳞式让每片有限追踪原瞄实体；散鳞式按面前真实可见把鳞片
  *       分给至多 `maxTargets` 个敌人，面前没人就按扇向散射。已选目标失效时该片射向当时准点，不凭空跳过。
- *   脱（shed）：这一梭射完（或目标全部倒下）后自身速度 +`speedGain`、防御 −`guardLoss`，浮字提示。
+ *   脱（shed）：整梭射完（2～5 片全部射出并各自落定，或目标全部倒下）才结算一次自身速度 +`speedGain`、
+ *       防御 −`guardLoss`，并按实际应用量浮字提示；中途被打断则这一梭不算完成、不结算。
  *
  * 与同族分开：蛮力是近身单体最重的一击、自身攻防双降；火焰鞭是长鞭剥对手甲；鳞片噪音是环身特殊声爆；
  *   鳞射是**远距 2～5 段小撞击，打完自身提速降防**，本族唯一会加速的招式。
@@ -86,18 +87,19 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            /** 脱鳞：这一梭打完把速度抬起来、防御降下去；这是使用本招的固定代价与收益，整梭只结算一次。 */
+            /** 脱鳞：这一梭打完把速度抬起来、防御降下去；固定代价与收益，整梭只结算一次。阶段文字按实际应用量显示。 */
             function shed(current: CombatAction): void {
                 if (settled) return;
                 const scope = current.world();
-                NativeEffects.boost(scope, actor, "spe", speedGain);
-                NativeEffects.boost(scope, actor, "def", -guardLoss);
+                const gained = NativeEffects.boost(scope, actor, "spe", speedGain);
+                const lost = Math.abs(NativeEffects.boost(scope, actor, "def", -guardLoss));
                 const self = scope.observe(actor);
                 const at = self !== null ? self.position() : current.origin();
                 WorldFeedback.emit(scope, scaleshotScene, 1, at,
-                    { moment: "shed", speedGain: speedGain, guardLoss: guardLoss, shards: shards,
+                    { moment: "shed", speedGain: gained, guardLoss: lost, shards: shards,
                         shed: Math.round(8 + shards * 0.6), intensity: intensity, scale: scale }, 24);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), scaleshotShedText, [speedGain, guardLoss], 30);
+                if (gained !== 0 || lost !== 0)
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), scaleshotShedText, [gained, lost], 30);
                 sound(current, "cobblemon:move.dragonclaw.target");
                 finish(current);
             }

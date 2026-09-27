@@ -3,16 +3,29 @@
  *
  * 什么局面有意义：有可见、存活、敌对的威胁，在 `ai.maxChase`（默认 8）格以内，且身上还没有被蛸固缠住。
  *   目标生命越满、防御越高、连线越通，越值得先缠住（缠住的是「拖慢它、还越削越软」，不是补最后一下）；焦点目标另加一档。
- * 对谁出手：当前威胁；已经被蛸固缠住的目标跳过，不浪费一次缠绕。已被别的手段定住的目标照缠——双防照削，Boss 免疫牵制时降防仍是主价值。
+ * 对谁出手：当前威胁；已经被蛸固缠住的目标跳过，不浪费一次缠绕；双防都已封底的目标也跳过，再缠只剩牵制。
+ *   已被别的手段定住的目标照缠——双防照削，Boss 免疫牵制时降防仍是主价值。
  * 够不到怎么办：reach 就是触手伸出距离，超出先走近；触手够短，多数时候需要靠身。墙会挡住连线，能保持连接的敌人才值得出手。
  * 放完之后：目标被拖慢、每拍双防下降，术者留在这片地方继续打；走出维持距离、视线被挡或术者倒下，触手自动松开。
  * 配置 coil（缠紧）：勒得更密、维持更牢，但伸出更近、冷却更长。
  */
 namespace CompanionBehavior {
+    // 只读探针：目标当前有效双防等级（含临时窗口）。两项都已封底时再缠只剩牵制，不再优先。
+    CompanionBehavior.registerFact("world_combat:move_octolock/stages", function (access, actor) {
+        if (!access.valid(actor)) return { def: 0, spd: 0 };
+        return { def: NativeEffects.effectiveStage(access, actor, "def"), spd: NativeEffects.effectiveStage(access, actor, "spd") };
+    });
+
+    function octolockBottomed(context: WorldBehavior.Context, threat: Entity): boolean {
+        const value = CompanionBehavior.fact<any>(context, "world_combat:move_octolock/stages", threat);
+        return !!value && value.def <= -6 && value.spd <= -6;
+    }
+
     function octolockWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         if (context.facts.mounted) return false;
         if (threat.friendly || threat.health <= 0 || !threat.visible) return false;
         if (status(context, threat, "octolock")) return false;
+        if (octolockBottomed(context, threat)) return false;
         if (context.facts.focus === threat.ref) return true;
         return distance(source(context).point, threat.point) <= ai<number>(item, "maxChase", 8);
     }
@@ -40,7 +53,8 @@ namespace CompanionBehavior {
             return target === null ? true : octolockWants(context, item, target);
         },
         accepts: function (context, _item, target) {
-            return !target.friendly && target.health > 0 && target.visible && !status(context, target, "octolock");
+            return !target.friendly && target.health > 0 && target.visible && !status(context, target, "octolock")
+                && !octolockBottomed(context, target);
         },
         approachTarget: function (_context, _item, target) { return target; },
         priority: function (context, item, target) {

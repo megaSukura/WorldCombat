@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.splash.summary": "沿选定方向一蹦：蹲身、弹起一小段抛物线、落地——什么都不会发生，不伤害也不影响任何人。可以越过一道坎，或把自己挪出攻击的落点。它是唯一只动自己的招。",
+  "worldcombat.skill.splash.summary": "沿选定方向一蹦：蹲身、弹起一小段抛物线、落地——什么都不会发生，不伤害也不影响任何人。起跳要有实地或合适水面，可以越过一道坎，或把自己挪出攻击的落点。它是唯一只动自己的招。",
   "worldcombat.skill.splash.use.0": "越过一道坎或一小段水面",
   "worldcombat.skill.splash.use.1": "把自己挪出直线招式的落点",
   "worldcombat.skill.splash.use.2": "低而远地换位拉距离",
@@ -23,6 +23,6 @@
   "worldcombat.skill.splash.preference.ai.retreatBelow": "危急阈值",
   "worldcombat.skill.splash.preference.ai.retreatBelow.help": "有攻击手段时，生命低于这个比例且被逼住会把这一跳当作逃离（优先级更高）；调高更早撤，调低只在濒危时跳。",
   "worldcombat.skill.splash.preference.ai.keepAway": "近身距离",
-  "worldcombat.skill.splash.preference.ai.keepAway.help": "敌人贴到这个距离以内就算被近身逼住；有攻击手段的伙伴此时才会跳开，落点另用 freeSpace 探针挑选。",
+  "worldcombat.skill.splash.preference.ai.keepAway.help": "敌人贴到这个距离以内就算被近身逼住；有攻击手段的伙伴此时才会跳开，落点另用支撑与弧线净空探针挑选。",
   "world_combat.move.splash.text.nothing": "什么都没发生……"
 }

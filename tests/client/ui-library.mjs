@@ -20,13 +20,14 @@ const bindings={'pressure':{label:{key:'irrigation.pressure'},value:'2.8',unit:'
 model={identity:'irrigation:pump',title:'Irrigation planner',selected:'route',tabs:[{id:'route',name:'Outlet',description:{paragraphs:[{key:'irrigation.prose',args:[{binding:'pressure'},{binding:'duration'}]}],bindings},
  fields:[{kind:'outlet-routing',path:['direction'],label:'Direction'},{kind:'number',path:['rate'],label:'Rate',min:.1,max:.8,step:.05,display:{scale:100,suffix:'%'}},
  {kind:'boolean',path:['weather'],label:'Respect weather',group:'ai',groupLabel:{key:'worldcombat.ui.ai_preferences'}}],values:{direction:'north',rate:.3,weather:true},revision:'a'}]};
-editor.present(model);assert.equal(screen.theme,'minecraft');assert(widgets(screen).some(widget=>widget.classes.includes('panel_bg')));
+editor.present(model);assert.equal(screen.theme,'minecraft');assert(widgets(screen).some(widget=>widget.background?.color===(UiSurfaces.palette.panel|0)));
 let prose=widgets(screen).find(widget=>widget.runs);assert.equal(prose.text,'以 2.8 bar 水压持续供水 12 s。');assert(prose.runs.find(run=>run.text==='2.8').tooltip.includes('Pump contribution'));
 assert(!find('全部数值'));const oldScreen=screen;prose.hovered=true;const scroll=widgets(screen).find(widget=>widget.viewContainer);scroll.scrollOffset=89;
 bindings.pressure.value='3.1';bindings.pressure.contributions[0].value='+1.0 bar';editor.present(model);
 assert.equal(screen,oldScreen);assert(prose.hovered&&prose.text.includes('3.1 bar'));assert.equal(scroll.scrollOffset,89);assert(prose.runs.find(run=>run.text==='3.1').tooltip.includes('+1.0 bar'));
-click(native.t('preferences'));assert(find('Route north'));assert(find('30%'));const ai=widgets(screen).find(widget=>widget.text==='Respect weather');assert.equal(widgets(screen).find(widget=>widget.children.includes(ai)).visible,false,'AI group is folded initially');
-click('▸ '+native.t('ai_preferences'));assert.equal(widgets(screen).find(widget=>widget.children.includes(ai)).visible,true);
+const displayed=widget=>widget.visible!==false&&(!widget.parent||displayed(widget.parent));
+click(native.t('preferences'));assert(find('Route north'));assert(find('30%'));const ai=widgets(screen).find(widget=>widget.text==='Respect weather');assert.equal(displayed(ai),false,'AI group is folded initially');
+click('▸ '+native.t('ai_preferences'));assert.equal(displayed(ai),true);
 const stable=screen,button=find('Route north');button.hovered=true;button.click();button.click();assert.equal(requests.length,1);assert.deepEqual(JSON.parse(JSON.stringify(requests[0])),{revision:'a',patch:{direction:'south'}});
 gate.finish();model.tabs[0].values.direction='south';model.tabs[0].revision='b';editor.present(model);assert.equal(screen,stable);assert.equal(find('Route south'),button);assert(button.hovered);
 click('+');assert.equal(requests.at(-1).patch.rate,.35);assert.equal(requests.at(-1).revision,'b');gate.finish();
@@ -50,9 +51,9 @@ const projected=UiState.arrangeMenu(items,UiState.menuLayout({favorites:['pipes/
 assert.equal(UiState.menuLayout({scale:99,deadZone:-1}).scale,1.3);assert.equal(UiState.menuLayout({scale:99,deadZone:-1}).deadZone,.15);
 const fresh=new RadialMenu.View({id:'irrigation:wheel',title:()=> 'Loaded',backLabel:()=> 'Back',choose(){},close:host.close,reject(){}});fresh.updateItems(items);fresh.open();assert(!find('Survey'),'Personal hidden state is restored in a new consumer instance');
 // Dense contributed categories page without compressing labels; semantic confirm reaches non-sector buttons.
-const pagedMenu=new RadialMenu.View({id:'paged',title:()=> 'Jobs',backLabel:()=> 'Back',choose:item=>{chosen.push(item);host.close();},close:host.close,reject(){}});pagedMenu.updateItems(Array.from({length:19},(_,index)=>({id:'job'+index,label:'Job '+index,command:'job'})));pagedMenu.open();assert.equal(widgets(screen).filter(widget=>/^Job \d/.test(widget.text||'')&&widget.click).length,8);
-cursor=[50,15];pagedMenu.confirm();assert(find('Job 8'));cursor=[240,70];pagedMenu.release();assert.equal(chosen.at(-1).id,'job8');
-pagedMenu.open();cursor=[400,15];pagedMenu.confirm();assert(widgets(screen).some(widget=>widget.text===native.t('wheel_display')),'Semantic confirm opens the layout control before native mouse dispatch');pagedMenu.release();assert(screen,'G release leaves the explicitly opened layout editor available');cursor=[240,70];
+const pagedMenu=new RadialMenu.View({id:'paged',title:()=> 'Jobs',backLabel:()=> 'Back',choose:item=>{chosen.push(item);host.close();},close:host.close,reject(){}});pagedMenu.updateItems(Array.from({length:19},(_,index)=>({id:'job'+index,label:'Job '+index,command:'job'})));pagedMenu.open();assert.equal(widgets(screen).filter(widget=>/^Job \d/.test(widget.text||'')&&widget.click).length,6);
+cursor=[457,39];pagedMenu.confirm();assert(find('Job 6'));cursor=[240,70];pagedMenu.release();assert(screen,'Paging keeps click selection rather than firing on held-key release');pagedMenu.confirm();assert.equal(chosen.at(-1).id,'job6');
+pagedMenu.open();cursor=[400,15];pagedMenu.confirm();assert(widgets(screen).some(widget=>widget.text===native.t('wheel_display')||widget.tooltip===native.t('wheel_display')),'Semantic confirm opens the layout control before native mouse dispatch');pagedMenu.release();assert(screen,'G release leaves the explicitly opened layout editor available');cursor=[240,70];
 let placements=[];const selection=new UiState.Selection({validate:(_item,aim)=>aim.x<0?'Blocked':'',submit:(_item,aim)=>placements.push(aim),changed(){},reject:reason=>errors.push(reason),continuous:item=>item.repeat});selection.begin({repeat:true});selection.confirm({x:-1});selection.confirm({x:2});selection.confirm({x:4});assert.equal(placements.length,2);assert(selection.current);selection.cancel();assert.equal(selection.current,null);
 assert(!reads.some(name=>name.includes('cobblemon')||name.includes('photon')));
 native.preferences.set('legacy:wheel',JSON.stringify({scale:1.2,hidden:['survey'],favorites:[],order:[]}));

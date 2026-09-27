@@ -25,6 +25,7 @@ namespace CompanionBehavior {
         available: function (context, item) {
             const self = source(context);
             if (context.facts.mounted) return false;
+            if (status(context, self, "healblock")) return false;
             const layers = fact<number>(context, "world_combat:move_swallow/layers", self) || 0;
             if (layers <= 0 || ratio(self) >= ai<number>(item, "cashBelow", 0.7)) return false;
             const enough = layers >= ai<number>(item, "minLayers", 2);
@@ -34,6 +35,7 @@ namespace CompanionBehavior {
         approachTarget: function (context) { return source(context); },
         priority: function (context, item) {
             const self = source(context);
+            if (status(context, self, "healblock")) return 0;
             const layers = fact<number>(context, "world_combat:move_swallow/layers", self) || 0;
             if (layers <= 0 || ratio(self) >= ai<number>(item, "cashBelow", 0.7)) return 0;
             if (layers >= ai<number>(item, "minLayers", 2)) return 60;

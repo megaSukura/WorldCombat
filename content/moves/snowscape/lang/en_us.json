@@ -30,7 +30,7 @@
   "world_combat.move.snowscape.text.cover": "Covered %1$s",
   "world_combat.move.snowscape.text.lock": "Frozen %1$s",
   "effect.world_combat.snowscape_powder": "Snow-clad",
-  "worldcombat.skill.snowscape.description.3": "Each snowy area grants up to one Defence stage to Ice-type Pokémon, allied or hostile. Overlapping areas can add together up to the stage cap. Leaving an area or that snow ending removes only its contribution.",
+  "worldcombat.skill.snowscape.description.3": "Each snowy area grants up to one Defence stage to Ice-type bodies, allied or hostile; an ordinary body's temporary Ice type counts too. Overlapping areas can add together up to the stage cap. Leaving an area or that snow ending removes only its contribution.",
   "worldcombat.skill.snowscape.description.4": "Deep Snow: a wider area with more covered ground and frozen water, but a shorter snowfall and longer cooldown. Thin Snow covers less, lasts longer and cools down faster.",
   "worldcombat.skill.snowscape.value.groundDuration": "Terrain restoration time"
 }

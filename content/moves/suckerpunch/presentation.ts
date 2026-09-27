@@ -1,13 +1,14 @@
 /**
  * 突袭 / suckerpunch 的客户端表现。
  *
- * 一句话：施法者眼里闪过一丝暗光 → 读到附近有人在出手时，被读到的目标边缘闪一条黑线 → 身体一闪消失、
- * 只留一条黑影，下一瞬已经贴上第一个活体刺出一记暗色冲击；读空或撞到不在出手窗的活体时只扑了个空、
- * 散开一缕黑烟。
+ * 一句话：施法者眼里闪过一丝暗光 → 读到当前瞄准线上有人在出手时，被读到的目标边缘闪一条黑线 →
+ * 身体一闪刺出、身后拖一条短黑影，下一瞬已经贴上第一个活体刺出一记暗色冲击；读空或撞到不在出手窗的活体时
+ * 只扑了个空、散开一缕黑烟。
  * 色相家族：暗紫（0x6B5AA8）与近黑（0x1E1630）、近白（0xE8E0FF）；亮色只给刺中那一下的核心。
- * 拍子：读 read（盯住目标，提交前）→ 闪 flash（身体消失）→ 击 strike（有效窗口命中）／空 whiff（读空或撞错人）。
+ * 拍子：读 read（盯住目标，提交前）→ 闪 dash（身体短冲的真实位移拖尾）→ 击 strike（有效窗口命中）／空 whiff（读空或撞错人）。
  * 范围：strike 的爆环半径用 `data.scale`（判定半径 / 0.38）给出，玩家看出这一刺能咬住多大一圈。
- * 运动：read 的暗光由外向内收、并有一点掠向目标；strike 的黑影由内向外炸、亮屑沿速度方向甩出。
+ * 运动：read 的暗光由外向内收、并有一点掠向目标；dash 绑 source、按真实位移拖出短尾（静止不发射）；
+ *   strike 的黑影由内向外炸、亮屑沿速度方向甩出。
  * 数：`data.count`（刺击威力派生）决定命中碎片与黑屑的数量，`data.power` 抬高亮度；数量与机制里的数一致。
  */
 const SuckerpunchDefinition: ParticleDefinition = {
@@ -36,18 +37,26 @@ const SuckerpunchDefinition: ParticleDefinition = {
                 }
             ]
         },
-        flash: {
-            duration: 8,
-            exit: { stop: 3, drain: 8 },
+        dash: {
+            duration: 0,
+            exit: { stop: 0, drain: 10 },
             emitters: [
                 {
-                    name: "streak", bind: "source", offset: [0, 0.5, 0], height: 0.4,
+                    name: "streak", bind: "source", offset: [0, 0.4, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: { data: "count", fallback: 8 } },
-                    shape: { kind: "sphere", radius: 0.28 },
-                    direction: "outward", speed: [0.1, 0.3], spread: 18,
-                    lifetime: [5, 9], size: [0.24, 0.05],
+                    trail: { minDistance: 0.35 }, rate: { data: "streak", fallback: 8 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "away", speed: [0.05, 0.18], spread: 16,
+                    lifetime: [5, 9], size: [0.24, 0.05], sizeMode: "index",
                     color: 0x2A1E44, alpha: [0.8, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "blur", bind: "source", offset: [0, 0.45, 0], height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    trail: { minDistance: 0.5 }, rate: 8,
+                    shape: { kind: "point" },
+                    lifetime: [4, 8], size: [0.18, 0.04],
+                    color: 0x1E1630, alpha: [0.55, 0], light: "world", maxParticles: 24
                 }
             ]
         },

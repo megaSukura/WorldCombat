@@ -5,11 +5,11 @@
  *   落在自己身上，把五项战斗能力各抬一级。鳞粉是实物：走得慢、会被掩体挡住，飘完就落。
  *
  * 三幕：
- *   起（gather，提交前）：翅缘亮起银光、鳞粉朝翅上聚，只播预告。
+ *   起（gather，提交前）：翅缘亮起银光、鳞粉朝翅上聚，只播预告；这是对手读出并走位躲开的反制窗口。
  *   扇（blow → hit）：提交后把 `span` 度、`reach` 远的**三维薄扇**朝瞄准方向铺满鳞粉；扇面与准心平面一致，
- *       因此能仰射空中，也能俯扫脚下。扇内每个非友方各结算一次 `gale` 特殊伤害，命中须过视线检查（墙后的不伤）。
- *       鳞粉在空气里飘 `drift` 秒后落下；这是短余尘，没有第二次伤害或延时补伤。
- *   涌（surge / miss）：扇过之后掷一次反哺，只按本次实际提高的项反馈，窗口保持一层。
+ *       因此能仰射空中，也能俯扫脚下。扇内（整段径长不超过 reach）每个非友方各立即结算一次 `gale` 特殊伤害；
+ *       命中须过视线检查（墙后的不伤）。鳞粉在空气里飘 `drift` 刻后落下；这是短余尘，没有第二次伤害或延时补伤。
+ *   涌（surge / miss）：扇过之后掷一次反哺，只按本次实际提高的项反馈，窗口保持一层；窗口期加一层轻量读数。
  *
  * `kind: "aim"`：可点实体，也可点空中／地面落点；提交不要求存在敌人。
  */
@@ -31,7 +31,7 @@ namespace PokemonSkills {
             normal.z() * axis.x() - normal.x() * axis.z(), normal.x() * axis.y() - normal.y() * axis.x()).unit() };
     }
 
-    /** 与判定同源的扇面区域：前向距离 0..reach、法线厚度 ±halfThickness、面内半角 span/2。 */
+    /** 与判定同源的扇面区域：前向距离 0..reach、面内径长不超过 reach、法线厚度 ±halfThickness、面内半角 span/2。 */
     function silverwindRegion(origin: CombatPoint, frame: { axis: CombatPoint; normal: CombatPoint; side: CombatPoint },
         reach: number, span: number, halfThickness: number): WorldGeometry.Region {
         const axis = frame.axis, normal = frame.normal, side = frame.side;
@@ -39,8 +39,10 @@ namespace PokemonSkills {
         return {
             contains: function (point) {
                 const d = point.minus(origin);
+                // 斜侧角上的点径向会超过画出来的 reach 弧：先按整段径长封顶，扇边不会伸到弧外。
+                if (d.length() > reach) return false;
                 const along = d.x() * axis.x() + d.y() * axis.y() + d.z() * axis.z();
-                if (along < 0 || along > reach) return false;
+                if (along < 0) return false;
                 const depth = d.x() * normal.x() + d.y() * normal.y() + d.z() * normal.z();
                 if (Math.abs(depth) > halfThickness) return false;
                 const inPlane = d.minus(normal.scale(depth)), length = inPlane.length();
@@ -71,7 +73,7 @@ namespace PokemonSkills {
         id: "silverwind",
         cooldownParameter: "recharge",
         name: "Silver Wind",
-        description: "抖翅把银鳞扇成一大片向前铺开：扇面朝向准心所在的平面，可以仰射空中或俯扫脚下；扇面里的敌人各被割一下，墙后的打不到；鳞粉缓缓飘落后散尽，不留延时伤害。回卷的一撮鳞粉有概率把自身五项战斗能力短时各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
+        description: "抖翅把银鳞扇成一大片向前铺开：扇面朝向准心所在的平面，可以仰射空中或俯扫脚下；起手聚鳞的那一刻是对手走位躲开的窗口，扇出后扇内的敌人立即各被割一下，墙后的打不到；鳞粉随后缓缓飘落散尽，只是余尘、不留延时伤害。回卷的一撮鳞粉有概率把自身五项战斗能力短时各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
         uses: ["一次割到并排站着的几个人", "仰起或压低朝空中/地面的方向先手", "抓住反哺后的短时强化窗口进攻"],
         kind: "aim",
         range: 7.5,
@@ -118,12 +120,12 @@ namespace PokemonSkills {
             const chance = Math.max(0.02, Math.min(0.9, p("silverwind", "surgeChance", action)));
             const stages = Math.max(1, Math.round(p("silverwind", "surgeStages", action)));
             const scales = Math.max(16, Math.round(p("silverwind", "scales", action)));
-            const drift = Math.max(0.6, p("silverwind", "drift", action));
+            const drift = Math.max(16, Math.round(p("silverwind", "drift", action)));
             const thickness = Math.max(0.7, body.height() * 0.5);
             const fan = silverwindFan(world, origin, frame, reach, span, 8).map(function (point) { return [point.x(), point.y(), point.z()]; });
             const scale = Math.max(0.6, Math.min(2.2, reach / 7.5));
             const intensity = Math.max(0.5, Math.min(2.4, power / 62));
-            const life = Math.max(30, Math.round(drift * 20) + 16);
+            const life = Math.max(30, drift + 24);
 
             sound(action, "cobblemon:animation.chitin.wing_flap.medium");
             WorldFeedback.emit(world, silverwindScene, 1, origin,
@@ -173,6 +175,9 @@ namespace PokemonSkills {
                     if (raised > 0) {
                         const self = world.observe(actor);
                         const at = self === null ? origin : self.position();
+                        // 轻量全窗口读数：一圈银环绑在真正的能力窗口上，窗口到期或被清除一起收。
+                        WorldFeedback.onEffect(world, windowId, "world_combat:move_silverwind/ring", silverwindScene, 1, at,
+                            { moment: "hum", rise: rise, stages: best, scale: scale });
                         WorldFeedback.emit(world, silverwindScene, 1, at,
                             { moment: "surge", target: String(actor.ref()), rise: rise, stages: best, scales: scales, scale: scale }, 26);
                         WorldFeedback.text(world, at.plus(WorldCombat.point(0, self === null ? 1.4 : self.height() + 0.1, 0)),

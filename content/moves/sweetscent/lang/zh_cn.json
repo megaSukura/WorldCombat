@@ -24,7 +24,8 @@
   "worldcombat.skill.sweetscent.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.sweetscent.preference.ai.leaveStation.help": "开启后，驻守命令下也会为喷香离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.sweetscent.text.cloud": "香甜弥漫",
+  "world_combat.move.sweetscent.text.noground": "落点无法铺云",
   "world_combat.move.sweetscent.text.scented": "被香气浸透（%1$s 级）",
   "effect.world_combat.sweet_scent": "香气浸透",
-  "worldcombat.skill.sweetscent.description.additional": "甜云只浸透视线可达的敌人；留香期间留下短时位置香点。自身施加的发光随窗口清理，外部已有或后加的发光继续由原来源管理。"
+  "worldcombat.skill.sweetscent.description.additional": "甜云在真实墙面处截住、只在可站立的地面铺开，墙后不会凭空生成，云一直铺到场地结束；只浸透视线可达的敌人。每个目标的降闪避与发光由本层留香拥有，别家场的留香互不解除，窗口结束或被清除时不留残留。"
 }

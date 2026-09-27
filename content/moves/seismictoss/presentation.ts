@@ -3,7 +3,7 @@
  *
  * 一句话：施法者站定收力，一把扣住对手（抓痕一闪），把它整个甩上一条陡弧，落地砸出一圈地裂石屑。
  * 色相家族：斗系的橙金到土黄（impact_fighting / grab / groundquake），烟尘用焦土中性色。
- * 拍子：起（brace 收力）→ 抓（seize 扣住）→ 甩（hurl 沿弧线飞）→ 击（slam 落地）。
+ * 拍子：起（brace 收力）→ 抓（seize 扣住，短停是挣脱窗口）→ 甩（hurl 沿弧线飞）／脱（slip 挣脱）→ 击（slam 落地）。
  * 范围：slam 的地环与石屑画的就是落地冲击半径（data.scale = 实际半径 / 0.9）。
  * 运动：hurl 的尾迹钉在被甩出的对手身上，沿服务端给的初速方向跟着它飞完整条弧线。
  * 数：seize 的抓痕量与 slam 的尘石量由服务端按等级伤害与体重算好传入（data.count / data.scale）。
@@ -52,6 +52,28 @@ const SeismicTossDefinition: ParticleDefinition = {
                     burst: { count: 4, at: 1 },
                     shape: { kind: "point" }, lifetime: [5, 9], size: [0.26, 0.07],
                     color: 0xE0603A, alpha: [0.9, 0], light: "full", maxParticles: 8
+                }
+            ]
+        },
+        slip: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "break_free", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "count", fallback: 12 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [6, 11], size: [0.1, 0.03],
+                    color: 0xB9AFA0, alpha: [0.5, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "tug", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 3, at: 1 },
+                    shape: { kind: "point" }, lifetime: [5, 9], size: [0.2, 0.05],
+                    color: 0xE0603A, alpha: [0.7, 0], light: "full", maxParticles: 6
                 }
             ]
         },

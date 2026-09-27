@@ -100,8 +100,10 @@ namespace PokemonSkills {
                 { moment: "swap", path: [[selfFrom.x(), selfFrom.y(), selfFrom.z()], [allyFrom.x(), allyFrom.y(), allyFrom.z()]],
                     target: allyRef, motes: motes, misled: misled,
                     swapped: swapped ? 1 : 0, scale: scale, intensity: Math.max(0.7, Math.min(1.8, 0.7 + misled / 3)) }, 26);
-            WorldFeedback.emit(world, allySwitchScene, 1, selfFrom, { moment: "arrival", motes: motes }, blink);
-            WorldFeedback.emit(world, allySwitchScene, 1, allyFrom, { moment: "arrival", motes: motes }, blink);
+            // 到达闪光用交换后的真实落位：两人脚点已对调，重新观察才是各自的新身体中心。
+            const selfNow = world.observe(self), allyNow = world.observe(ally);
+            WorldFeedback.emit(world, allySwitchScene, 1, selfNow !== null ? selfNow.position() : allyFrom, { moment: "arrival", motes: motes }, blink);
+            WorldFeedback.emit(world, allySwitchScene, 1, allyNow !== null ? allyNow.position() : selfFrom, { moment: "arrival", motes: motes }, blink);
             WorldFeedback.text(world, center.plus(WorldCombat.point(0, 1.25, 0)),
                 swapped ? allySwitchSwapText : allySwitchFizzleText, swapped ? [misled] : [], 28);
             world.sound("minecraft:entity.illusioner.mirror_move", selfFrom, 14, "{}");

@@ -20,7 +20,7 @@
  *   lunge       扑身速度：速度决定逐段扑咬推进得快不快。
  *   maw         咬齿粒子量：物攻决定一次崩出多少碎屑，也驱动画面密度。
  *   tempo       起手：速度决定压身咬下的快慢。
- *   recover     收招：速度决定松口后的收势。
+ *   aftercast   收招：速度决定松口后的收势（原参数名 recover 与保留键冲突，改名）。
  *   recharge    冷却：等级决定熟练度，死咬式更久。PP 10 的代价。
  *
  * 配置 `vise`（死咬式）双向取舍：开启＝锁更牢（`lockTicks` ×1.25、`grip` +0.4）但咬合 ×0.9、冷却 +8 刻；
@@ -64,7 +64,7 @@ namespace PokemonSkills {
                 .clamp(1.8, 3.6).round(2),
             "维持距离", {
                 unit: "格",
-                description: "咬住后两者相距超过这个距离就脱开；体型越宽容差越大，死咬式更牢。"
+                description: "咬住后两者身体表面相距超过这个距离、或中间被墙挡住就脱开；体型越宽容差越大，死咬式更牢。"
             }),
         /** 扑身速度：1.0 + 速度偏移[−0.2,0.5]；夹 0.7..1.6。 */
         lunge: formula(
@@ -82,7 +82,7 @@ namespace PokemonSkills {
             F.base(9).minus(F.stat("speed").minus(60).times(0.03).clamp(-1.5, 1.5)).clamp(6, 13).round(0),
             "起手", "压身、张颚再一口咬下的时间；速度越快咬得越快。"),
         /** 收招：8 − 速度偏移[−1,2]；夹 5..12。 */
-        recover: seconds(
+        aftercast: seconds(
             F.base(8).minus(F.stat("speed").minus(60).times(0.02).clamp(-1, 2)).clamp(5, 12).round(0),
             "收招", "松口后的收势时间；速度越快收得越利落。"),
         /** 冷却：72 − 等级(≥25)偏移[0,20]；死咬 +8；夹 50..100。 */

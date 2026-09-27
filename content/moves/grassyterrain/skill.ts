@@ -53,7 +53,8 @@ namespace PokemonSkills {
             const density = Math.round(p("grassyterrain", "bloomDensity", action));
             const growth = blooming ? Math.round(p("grassyterrain", "growth", action)) : 0;
             WorldEffects.field(world, grassyField, point, radius,
-                { ratio: ratio, interval: interval, density: density, mark: 24, bloom: blooming, growth: growth }, ticks);
+                { ratio: ratio, interval: interval, density: density, mark: 24, bloom: blooming, growth: growth,
+                  element: "grass", colour: 0x7CCB5A }, ticks);
             world.sound("minecraft:block.grass.place", point, 24, "{}");
             WorldFeedback.emit(world, grassyScene, 1, point,
                 { moment: "sprout", radius: radius, scale: radius / 3, density: density, bloom: blooming ? 1 : 0 }, 46);

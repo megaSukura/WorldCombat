@@ -35,12 +35,12 @@ namespace PokemonSkills {
                 unit: " 点",
                 description: "一次缩身带起的尘点数量；速度越高越多，粒子按它发射。"
             }),
-        /** 收缩拍数：等级越高多收几拍。 */
+        /** 收缩波纹次数：等级越高，缩身时向内收拢的波纹越多。 */
         pulses: formula(
             F.base(2).plus(F.level().div(26)).clamp(2, 4).round(0),
-            "收缩拍数", {
-                unit: " 拍",
-                description: "身体收几拍；等级越高越多，画面按它一下下收拢。"
+            "收缩波纹次数", {
+                unit: " 圈",
+                description: "缩身时向内收拢的波纹次数；等级越高越多，画面按它一圈圈收拢。"
             }),
         /** 起手：速度决定缩多快，大胆更慢。 */
         tempo: seconds(

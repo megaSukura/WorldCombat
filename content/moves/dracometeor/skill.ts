@@ -6,10 +6,12 @@
  *
  * 三幕（提交前只播预告）：
  *   起（summon）：施法者抬头，天光在落点聚起，只播预告，此时代价未结清。
- *   落（mark → fall → impact / burst）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付）；
- *       落点在提交时一次算定（第一颗是点选中心，其余按 `spread` 散布），逐颗按 `interval` 亮起预告并召下；
- *       每颗垂直落到自己固定落点后，在 `impactRadius` 内结算 `meteor`；撞到屋顶就在真实碰撞位置炸开。
- *   散（finish / miss）：全部落完后余烬散去；一颗也没砸到就是空放。
+ *   落（mark → fall → impact / burst）：提交后先快照本次出力（`snapshotAttack`），再付反作用力
+ *       （自身特攻 −insightLoss，中与不中都照付），所以本招自己召下的陨石不吃刚付的降阶；落点在提交时一次算定
+ *       （第一颗是点选中心，其余按 `spread` 散布），逐颗按 `interval` 亮起预告并召下；每颗垂直落到自己固定落点后，
+ *       在 `impactRadius` 内结算 `meteor`，隔屋顶/隔墙（`clear` 无视线）的人不吃这一圈；撞到屋顶就在真实碰撞位置炸开。
+ *   散（finish / miss）：全部落完后余烬散去；一颗也没砸到就是空放。弹体一路没撞到东西时只在
+ *       `world.projectilePosition` 的真实末点淡散，不在计划落点补炸。
  *
  * 与同族分开：飞叶风暴是旋转前进并沿路旋切的叶刃、过热是身前一张扇形热浪、精神突进是隔空内爆；
  *   流星群是唯一从正上方垂直砸下、落点在召唤时固定并逐颗预告的那一记，也是唯一把伤害分给多颗陨石的。
@@ -40,8 +42,8 @@ namespace PokemonSkills {
         defaults: { barrage: false, ai: { maxChase: 17, spread: true, minRange: 5, still: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            const fallback = config && config.barrage === true ? 2.0 : 1.3;
-            const radius = pokemon ? Math.max(p("dracometeor", "impactRadius", pokemon), p("dracometeor", "spread", pokemon)) : fallback;
+            const fallback = config && config.barrage === true ? 3.1 : 1.3;
+            const radius = pokemon ? p("dracometeor", "impactRadius", pokemon) + p("dracometeor", "spread", pokemon) : fallback;
             return { radius: radius, geometry: "area", style: "meteor", color: 0x7A6AC8,
                 label: config && config.barrage === true ? "流星群·流星式" : "流星群·坠星式" };
         },
@@ -91,6 +93,8 @@ namespace PokemonSkills {
                 points.push(base.plus(WorldCombat.point(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)));
             }
 
+            // 先快照本次出力（当前特攻与能力等级），再付耗竭：本招自己召下的陨石不吃刚付的 -insightLoss。
+            const snapshot = PokemonDamage.snapshotAttack(world, actor, "spa");
             // 召唤耗的是精神力：反作用力在提交那一刻付。
             NativeEffects.boost(world, actor, "spa", -insightLoss);
             WorldFeedback.emit(world, dracometeorScene, 1, base,
@@ -112,8 +116,10 @@ namespace PokemonSkills {
                 const scope = current.world();
                 let hits = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, impactRadius, { below: 3, above: 3.5 }), function (enemy, facts) {
+                    // 隔屋顶/隔墙的人不吃这一圈：从真实接触点有实心遮挡就不算。
+                    if (!scope.clear(at, facts.position())) return;
                     const isDirect = direct !== null && String(enemy.ref()) === String(direct.ref());
-                    if (!hurt(current, enemy, "dracometeor", power, { damage: damageSpec("dracometeor", "meteor") })) return;
+                    if (!hurt(current, enemy, "dracometeor", power, { damage: damageSpec("dracometeor", "meteor"), attackSnapshot: snapshot })) return;
                     hits++;
                     WorldFeedback.emit(scope, dracometeorScene, 1, facts.position(),
                         { moment: "impact", target: String(enemy.ref()), direct: isDirect ? 1 : 0, shards: shards,
@@ -151,7 +157,13 @@ namespace PokemonSkills {
                         spent = true;
                         scenes.stop(fresh, "fall:" + index);
                         scenes.stop(fresh, "mark:" + index);
-                        strike(fresh, at, null);
+                        // 一路没碰到任何东西：只在 projectilePosition 读到的真实弹体末点消散，不在计划落点假造爆点。
+                        const end = fresh.world().projectilePosition(flight);
+                        if (end !== null)
+                            WorldFeedback.emit(fresh.world(), dracometeorScene, 1, end,
+                                { moment: "fizzle", target: "", scale: trailScale, intensity: intensity }, 18);
+                        resolved++;
+                        if (resolved >= launched && launched >= count) finish(fresh);
                     },
                     JSON.stringify({ sprite: "cobblemon:particle/moves/meteor", scale: Math.max(1.0, impactRadius * 1.5), glow: true, spin: true }));
                 scenes.show(current, "fall:" + index, from,

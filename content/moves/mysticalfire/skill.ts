@@ -66,10 +66,12 @@ namespace PokemonSkills {
                 intensity: Math.max(0.4, Math.min(1.6, data.coil / 9)), ring: Math.max(0.22, 0.6 - 0.34 * progress),
                 progress: progress, struck: data.struck || 0 });
         if (data.elapsed >= data.coilTicks) {
-            NativeEffects.boost(world, victim, "spa", -data.finale);
+            // 收束提示按真正抽到的级数：已到下限或被免疫时不虚报。
+            const siphoned = -NativeEffects.boost(world, victim, "spa", -data.finale);
             WorldFeedback.emit(world, mysticalfireScene, 1, at.position(),
                 { moment: "siphon", target: String(victim.ref()), wisps: data.wisps, scale: data.scale, intensity: data.intensity }, 28);
-            WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.3, 0)), mysticalfireSiphonText, [data.finale], 30);
+            if (siphoned > 0)
+                WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.3, 0)), mysticalfireSiphonText, [siphoned], 30);
             world.sound("cobblemon:impact.fire", at.position(), 16, "{}");
             data.reason = "finale"; effect.state(JSON.stringify(data)); effect.end(); return;
         }
@@ -112,7 +114,7 @@ namespace PokemonSkills {
         id: "mysticalfire",
         name: "Mystical Fire",
         description: "向一个敌人（或自由方向／点）吐出一枚会追上目标的魔法火团：命中并造成伤害后夺走目标 1 级特攻、并可能点燃；火焰随后缠住目标，每隔几秒再咬一口，缠满全程再夺 1 级特攻。目标离施放者太远就会挣脱断线，缠火状态被提前清除时同步解除。黏焰式火团更慢更短、但缠得更久更疼更易点燃、蓄力与冷却略长；快速式火团更快更远。",
-        uses: ["缠住一个高特攻目标，把它的特攻一层层抽走", "用会转向的火团追打爱走位的对手", "先手点燃，再贴身慢慢消耗"],
+        uses: ["贴身缠住一个高特攻目标，把它的特攻一层层抽走（完整缠焰要保持在挣脱距离内）", "用会转向的火团追打爱走位的对手", "先手点燃，再贴身慢慢消耗"],
         kind: "aim",
         range: 9,
         maxRange: 15,
@@ -205,10 +207,11 @@ namespace PokemonSkills {
                     { damage: damageSpec("mysticalfire", "core"), status: "burn", chance: burnChance })) { finish(current); return; }
                 const at = scope.observe(victim);
                 if (at === null) { finish(current); return; }
-                NativeEffects.boost(scope, victim, "spa", -siphon);
+                const siphoned = -NativeEffects.boost(scope, victim, "spa", -siphon);
                 WorldFeedback.emit(scope, mysticalfireScene, 1, at.position(),
                     { moment: "hit", target: String(victim.ref()), wisps: wisps, scale: scale, intensity: intensity }, 26);
-                WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.3, 0)), mysticalfireSiphonText, [siphon], 28);
+                if (siphoned > 0)
+                    WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.3, 0)), mysticalfireSiphonText, [siphoned], 28);
                 scope.sound("cobblemon:impact.fire", at.position(), 16, "{}");
                 buildBond(current, victim, at.position());
                 finish(current);
@@ -224,7 +227,10 @@ namespace PokemonSkills {
                 impact: function (current: CombatAction, hit: CombatImpact) { onImpact(current, hit); }
             }, function (current: CombatAction) {
                 if (!landed) {
-                    WorldFeedback.emit(current.world(), mysticalfireScene, 1, action.targetPosition(), { moment: "fizzle" }, 16);
+                    // 自然飞尽：用弹体最后的真实接触/结束点散火，不用旧瞄准点或满射程点。
+                    const scope = current.world();
+                    const end = scope.projectilePosition(flight) || current.targetPosition();
+                    WorldFeedback.emit(scope, mysticalfireScene, 1, end, { moment: "fizzle" }, 16);
                     finish(current);
                 }
             });

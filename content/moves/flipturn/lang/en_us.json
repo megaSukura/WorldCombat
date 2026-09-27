@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.flipturn.summary": "Ram the target, somersault off it and land on its far side; with a waiting reserve the flip swaps to it, and a wet user glides further. A target too tall or a ceiling overhead stops the flip at the point of impact. The turn style swings back to a waiting partner, the dive style keeps going.",
+  "worldcombat.skill.flipturn.summary": "Ram the target, somersault off it and land on its far side; with a waiting reserve the flip swaps to it, and a wet user glides further. A target too tall or a ceiling overhead stops the flip at the point of impact; a whiff only pulls back a short way and never swaps for free. The turn style swings back to a waiting partner, the dive style keeps going.",
   "worldcombat.skill.flipturn.use.0": "Hit and flip to the far side, switching attack lines",
   "worldcombat.skill.flipturn.use.1": "Strike and open distance while in water",
   "worldcombat.skill.flipturn.use.2": "Kick off a pursuer and hand your ground to a partner",
@@ -35,5 +35,5 @@
   "world_combat.move.flipturn.text.turn": "Flip · regroup",
   "world_combat.move.flipturn.text.miss": "Whiffed · gliding away",
   "world_combat.move.flipturn.text.switch": "Flip Turn · switch out",
-  "worldcombat.skill.flipturn.description.swap": "If a reserve is available, it is swapped in at the landing point; with no reserve you simply keep the crossed landing."
+  "worldcombat.skill.flipturn.description.swap": "Only after a landed hit and a real touchdown is a reserve swapped in at the landing point; a whiff, wall hit or empty landing swaps nothing and keeps only a short retreat."
 }

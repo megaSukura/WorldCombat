@@ -34,6 +34,16 @@ namespace PokemonSkills {
         return at;
     }
 
+    /** 溅射面的朝外法线；表现用它把茶圈贴在真正命中的那一面上，而不是一律水平摊开。 */
+    function matchaGotchaNormal(face: string): CombatPoint {
+        if (face === "down") return WorldCombat.point(0, -1, 0);
+        if (face === "north") return WorldCombat.point(0, 0, -1);
+        if (face === "south") return WorldCombat.point(0, 0, 1);
+        if (face === "west") return WorldCombat.point(-1, 0, 0);
+        if (face === "east") return WorldCombat.point(1, 0, 0);
+        return WorldCombat.point(0, 1, 0);
+    }
+
     define({
         id: "matchagotcha",
         cooldownParameter: "recharge",
@@ -88,15 +98,18 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            function splash(current: CombatAction, point: CombatPoint): void {
+            function splash(current: CombatAction, point: CombatPoint, surface: CombatPoint): void {
                 const scope = current.world(), me = scope.observe(current.actor());
                 const from = me === null ? current.origin() : me.position();
                 let hits = 0;
                 sound(current, "cobblemon:impact.grass");
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, burst, { below: 1.5, above: 2.6 }),
                     function (enemy: CombatActor, facts: CombatObservation) {
-                        if (CombatStatus.has(scope, enemy, "frozen")) CombatStatus.cure(scope, enemy, "frozen");
                         const at = facts.position();
+                        // 圈边也要真的看得到：落点到这个人之间被墙挡住就不再伤、也不再解冻。
+                        if (WorldGeometry.blockHit(scope, point, at) !== null) return;
+                        // 热茶化冻与实际伤害共用同一条可达条件；伤害被拒时解冻仍然成立（无伤解冻）。
+                        if (CombatStatus.has(scope, enemy, "frozen")) CombatStatus.cure(scope, enemy, "frozen");
                         const landed = hurt(current, enemy, "matchagotcha", power,
                             { damage: damageSpec("matchagotcha", "brew"), status: "burn", chance: scald, statusTicks: burnTicks, drain: share });
                         if (!landed) return;
@@ -104,7 +117,7 @@ namespace PokemonSkills {
                         const flow = from.minus(at), span = flow.length();
                         const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
                         WorldFeedback.emit(scope, matchaGotchaScene, 1, at,
-                            { moment: "drain", path: ["target", "source"], target: String(enemy.ref()),
+                            { moment: "drain", target: String(enemy.ref()),
                                 direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, scale: scale, hits: hits }, 24);
                         if (CombatStatus.has(scope, enemy, "burn")) {
                             WorldFeedback.emit(scope, matchaGotchaScene, 1, at,
@@ -113,17 +126,16 @@ namespace PokemonSkills {
                         }
                     });
                 WorldFeedback.emit(scope, matchaGotchaScene, 1, point,
-                    { moment: "splash", point: [point.x(), point.y(), point.z()], burst: burst, whisk: whisk ? 1 : 0,
-                        hits: hits, motes: motes, scale: scale, intensity: intensity }, 26);
+                    { moment: "splash", point: [point.x(), point.y(), point.z()], direction: [surface.x(), surface.y(), surface.z()],
+                        burst: burst, whisk: whisk ? 1 : 0, hits: hits, motes: motes, scale: scale, intensity: intensity }, 26);
                 if (hits > 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.05, 0)), matchaGotchaHitText, [], 20);
             }
 
             sound(action, "minecraft:block.brewing_stand.brew");
-            // 瞄点：敌人、地面或高处。飞行距离收束到瞄点，空放时按当前朝向飞满射程，
-            // 这样「距离耗尽在末点泼开」的末点就是画面里茶泡真正停下的地方。
+            // 瞄点：敌人、地面或高处。飞行距离收束到实际射程，空放时按当前朝向飞满射程；
+            // 末点由原生弹体自己记下，超程选点不会在远端假爆。
             const aimPoint = action.targetPosition();
             const delta = aimPoint.minus(origin), distance = delta.length();
-            const flightPoint = distance < 0.05 ? origin.plus(action.direction().scale(jet)) : aimPoint;
             const travel = Math.max(0.5, Math.min(jet, distance < 0.05 ? jet : distance));
             const flight = LivingActions.projectile(action, {
                 speed: castSpeed, range: travel, radius: radius,
@@ -134,12 +146,17 @@ namespace PokemonSkills {
                     if (splashed) return;
                     splashed = true;
                     if (hit.hitEntity()) sound(current, "minecraft:entity.llama.spit");
-                    // 活体与方块都在真实碰撞点炸开一次；方块命中沿表面法线轻轻推开，圈不埋进墙里。
-                    splash(current, hit.blocked() ? matchaGotchaSurface(hit) : hit.position());
+                    // 活体与方块都在真实碰撞点炸开一次；方块命中沿表面法线轻轻推开，圈贴在命中面上。
+                    splash(current, hit.blocked() ? matchaGotchaSurface(hit) : hit.position(),
+                        matchaGotchaNormal(hit.blocked() ? hit.blockFace() : ""));
                 }
             }, function (current: CombatAction) {
-                // 只有自然飞完全程（未撞任何东西）才在末点泼开；被取消的飞行随动作一起消失，不补泼。
-                if (!splashed) splash(current, flightPoint);
+                // 只有自然飞完（未撞任何东西）才在弹体真实停下的位置泼开，用 projectilePosition 而不是原选点；
+                // 被取消的飞行随动作一起消失，不补泼。
+                if (!splashed) {
+                    const stop = current.world().projectilePosition(flight);
+                    splash(current, stop === null ? origin : stop, WorldCombat.point(0, 1, 0));
+                }
                 finish(current);
             });
             WorldFeedback.keep(world, "world_combat:matchagotcha:" + action.id(), matchaGotchaScene, 1, origin,

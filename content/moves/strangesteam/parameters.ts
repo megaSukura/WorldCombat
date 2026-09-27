@@ -133,7 +133,7 @@ namespace PokemonSkills {
                 .minus(F.stat("speed").minus(58).times(0.05).clamp(-5, 8))
                 .clamp(18, 46).round(0),
             "冷却", "再次喷出蒸汽前的等待；速度越快回得越快。"),
-        /** 单次云最多同时熏几个人：协议常量。 */
+        /** 每轮扫描最多结算几人（首次入云与到点续熏共用）：协议常量。 */
         maxTargets: hidden(4)
     });
 

@@ -10,9 +10,9 @@
  *   被照者与周围生物的敌对关系决定谁能被转向，不强迫任何玩家。
  * 命中：给目标挂共享身份 world_combat:status/spotlight（本单元效果 world_combat:spotlighted），
  *   并把暴露加成、扫过范围、光点数写进 world_combat:spotlight_mark。
- * 持续：带身份者受到的伤害更重（入场规则 ×(1+expose)），mark 每 20 刻把被照者周围与它敌对的生物指向它
- *   （world.target），让「只瞄准它」真正落在行为上；只有真的被改目标的生物才向它牵出一条短线。
- *   被照者与 mark 的持续亮光绑定在同一 mark 效果上，提前驱散时一起收场。
+ * 持续：带身份者受到的伤害更重（入场规则 ×(1+expose)），mark 每 20 刻把被照者周围与它敌对、有攻击性
+ *   且能看见光源的生物指向它（world.target），让「只瞄准它」真正落在行为上；只有真的被改目标的生物才在转向
+ *   那一刻牵一条单次短线。被照者与 mark 的持续亮光绑定在同一 mark 效果上，提前驱散时一起收场。
  * 结束：照明走完或被清掉时收回 mark，光安静散去。两种方式都不消耗目标身上的效果，只按时间走。
  * 反制：照明有时限，避开这段时间就能少挨；目标也可以拉开距离，让敌人够不到它。
  *   能免疫转向的 Boss（world.target 拒绝）只会吃到合法的易伤，不会出现假的仇恨线。
@@ -31,34 +31,51 @@ namespace PokemonSkills {
             if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] <= 0) throw new Error("Invalid spotlight mark: " + key);
         });
         if (typeof value.caster !== "string") throw new Error("Invalid spotlight mark: caster");
+        if (!MobEffects.validAnchor(value.carrier)) throw new Error("Invalid spotlight mark: carrier");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(spotlightMark, "start", function (effect) { effect.schedule("sweep", "sweep", 20, "{}"); });
+    WorldCombat.effectHandler(spotlightMark, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        // 只有申请成功的照明载体在身才立 mark：免疫/被拒时不留标记，也不引敌。
+        if (world.observe(target) === null || !MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
+        effect.schedule("sweep", "sweep", 20, "{}");
+    });
     WorldCombat.effectHandler(spotlightMark, "sweep", function (effect) {
         const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
         const body = world.observe(target);
-        if (body === null) { effect.end(); return; }
+        // 照明被驱散或刷新成新的 revision 后，旧 mark 立即收束，不留失效锚。
+        if (body === null || !MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
         const radius = Math.max(1, Number(data.radius) || 4);
         const found = world.query(body.position(), radius, false);
-        let lured = 0;
+        const now = world.tick(), lured: { [ref: string]: number } = data.lured || (data.lured = {});
+        let luredNow = 0;
         for (let i = 0; i < found.length; i++) {
-            const other = found[i];
-            if (String(other.ref()) === String(target.ref())) continue;
+            const other = found[i], ref = String(other.ref());
+            if (ref === String(target.ref())) continue;
             const observed = world.observe(other);
             if (observed === null || observed.player() || observed.health() <= 0) continue;
+            // 只吸引有敌对资格的活体：中立动物不被强行转向。
+            if (!observed.hostile()) continue;
             // 以被照者的阵营关系判断：与它同为盟友的生物不会被转向。
             if (world.allied(other, target)) continue;
-            // world.target 拒绝（如免疫转向的 Boss）时视为合法但无效：不计数、不画线。
+            // 隔墙者看不见光源，不会被牵；world.target 拒绝（如免疫转向的 Boss）时视为合法但无效：不计数、不画线。
+            if (!world.clear(body.position(), observed.position())) continue;
             if (!world.target(other, target)) continue;
-            lured++;
-            WorldFeedback.keep(world, "world_combat:move_spotlight/link/" + String(other.ref()), spotlightScene, 1,
-                body.position(), { moment: "link", target: String(target.ref()), other: String(other.ref()),
-                    path: [String(other.ref()), String(target.ref())], lured: lured }, 30);
+            luredNow++;
+            // 只在实际转向的那一刻牵一次单次连线；持续被牵的不反复刷同一条线。
+            if (!lured[ref] || now - lured[ref] > 60) {
+                lured[ref] = now;
+                WorldFeedback.emit(world, spotlightScene, 1, body.position(), { moment: "link", target: String(target.ref()),
+                    other: ref, path: [ref, String(target.ref())], lured: luredNow }, 24);
+            }
         }
+        for (let i = 0, keys = Object.keys(lured); i < keys.length; i++)
+            if (!found.some(actor => String(actor.ref()) === keys[i]) && now - lured[keys[i]] > 60) delete lured[keys[i]];
+        effect.state(JSON.stringify(data));
         // 被照者的持续亮光绑定在 mark 效果上，随它自然到期或提前驱散一起结束。
         WorldFeedback.onEffect(world, effect.id(), "world_combat:move_spotlight/lit", spotlightScene, 1, body.position(),
             { moment: "lit", target: String(target.ref()), motes: Math.max(8, Math.round(Number(data.motes) || 20)),
-                scale: Math.max(0.6, Math.min(2, radius / 4)), lured: lured });
+                scale: Math.max(0.6, Math.min(2, radius / 4)), lured: luredNow });
         effect.schedule("sweep", "sweep", 20, "{}");
     });
     WorldCombat.effectHandler(spotlightMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
@@ -110,7 +127,7 @@ namespace PokemonSkills {
     define({
         id: spotlightId,
         cooldownParameter: "recharge", name: "聚光灯",
-        description: "把一束光钉在一个生物身上：照明期间它受到的所有伤害更重，并成为全场焦点——与它敌对的周围生物会被引向它。照住敌人可给全队标出集火目标，照住队友则把火力引到它身上（代价是它也会被打得更痛）。需要看得见的生物目标，空放无效，照明有时限。",
+        description: "把一束光钉在一个生物身上：照明期间它受到的所有伤害更重，并成为全场焦点——周围与它敌对、有攻击性且能看见光源的生物会被引向它（中立动物和隔墙者不被牵）。照住敌人可给全队标出集火目标，照住队友则把火力引到它身上（代价是它也会被打得更痛）。需要看得见的生物目标，空放无效，照明有时限。",
         uses: ["给全队标出优先集火目标", "在集火前先把它照得更脆", "照住一名耐打的队友，把周围敌人的火力引到它身上"],
         kind: "aim", range: 12, maxRange: 14,
         prepare: 8, active: 0, recover: 7, cooldown: 70, style: "beam",
@@ -154,10 +171,13 @@ namespace PokemonSkills {
             const ticks = Math.max(80, Math.round(p(spotlightId, "spotTicks", action)));
             const radius = Math.max(1.5, p(spotlightId, "sweepRadius", action));
             const motes = Math.max(8, Math.round(p(spotlightId, "motes", action)));
-            MobEffects.apply(world, target, spotlightEffect, ticks, 0);
+            // 先申请照明载体：被免疫/被原生拒绝时不立 mark、不引敌、不报成功。
+            const carrier = MobEffects.apply(world, target, spotlightEffect, ticks, 0);
+            if (!carrier) { done(action); return; }
             const marks = world.effects(target, spotlightMark);
             for (let i = 0; i < marks.length; i++) world.operation(marks[i].id(), "world_combat:dispel", "{}");
-            world.effect(spotlightMark, target, JSON.stringify({ bonus: bonus, radius: radius, motes: motes, caster: String(self.ref()) }), ticks);
+            world.effect(spotlightMark, target, JSON.stringify({ bonus: bonus, radius: radius, motes: motes,
+                caster: String(self.ref()), carrier: MobEffects.anchor(carrier) }), ticks);
             sound(action, "minecraft:block.beacon.activate");
             WorldFeedback.emit(world, spotlightScene, 1, lit.position(),
                 { moment: "beam", path: [String(self.ref()), String(target.ref())], target: String(target.ref()),

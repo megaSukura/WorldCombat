@@ -81,16 +81,19 @@ namespace PokemonSkills {
             const moon = Math.max(0, Math.min(1, p(moonblastId, "moonlight", action)));
             const stage = Math.max(0.6, Math.min(2.4, power * (0.7 + 0.3 * moon) / 96));
             const orb = Math.max(0.2, radius * 1.6);
-            const direction = moonblastAimPoint(action, world).minus(origin);
+            const offset = moonblastAimPoint(action, world).minus(origin);
+            // 自由直射：按准心方向飞；准心落在原点时退回动作方向，不追踪、不拐弯。
+            const flightDirection = offset.length() < 0.01 ? action.direction() : offset.unit();
+            const directionList = [flightDirection.x(), flightDirection.y(), flightDirection.z()];
             const scenes = WorldFeedback.actionScenes(moonblastScene, 1);
 
             sound(action, "minecraft:block.amethyst_block.resonate");
             // The host runs `impact` first and then `complete` for the same hit; only the exhaustion case
             // (no impact at all) leaves a miss note, so the flag separates the two paths.
-            let struck = false;
-            const flight = LivingActions.projectile(action, {
+            let struck = false, flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius,
-                direction: direction.length() < 0.01 ? action.direction() : direction.unit(),
+                direction: flightDirection,
                 appearance: { sprite: "cobblemon:generic/orb/largefadeorb", tint: 0xFFF3D6, glow: true, scale: 1.1 },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     struck = true;
@@ -107,9 +110,12 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, moonblastScene, 1, at, { moment: "fizzle", moon: moon, scale: stage }, 22);
                         return;
                     }
+                    // 命中是一发单体：粒子只补一小撮月尘，主体是一枚固定轮廓的短月牙与有限射线（自定义场景）。
                     WorldFeedback.emit(scope, moonblastScene, 1, at,
-                        { moment: "burst", target: String(target.ref()), rays: rays, moon: moon, burst: burst, orb: orb,
-                            count: Math.round(8 + rays + moon * 12), intensity: stage }, 30);
+                        { moment: "burst", target: String(target.ref()), moon: moon, orb: orb, intensity: stage }, 26);
+                    WorldFeedback.emit(scope, moonblastCrescentScene, 1, at,
+                        { moment: "burst", direction: directionList, rays: rays, moon: moon, burst: burst, orb: orb,
+                            start: scope.tick(), life: 16 }, 16);
                     sound(current, "cobblemon:impact.fairy");
                     if (scope.valid(target) && scope.random() < chance) {
                         const dropped = NativeEffects.boost(scope, target, "spa", -stages);
@@ -122,7 +128,10 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) {
                 if (!struck) {
-                    const scope = current.world(), at = moonblastAimPoint(current, scope);
+                    const scope = current.world();
+                    // 真实结束点：读原生弹体在移除后保留的末点；读不到才退回本次冻结瞄点，绝不假造满射程点。
+                    const end = scope.projectilePosition(flight);
+                    const at = end !== null ? end : moonblastAimPoint(current, scope);
                     WorldFeedback.emit(scope, moonblastScene, 1, at,
                         { moment: "fizzle", moon: moon, scale: stage }, 24);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), moonblastMissText, [], 22);

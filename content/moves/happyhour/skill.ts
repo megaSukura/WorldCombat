@@ -31,14 +31,16 @@ namespace PokemonSkills {
             if (!field.data.lease) field.data.lease = MobEffects.bind(world, effect.source(), happyhourBanner);
             if (!MobEffects.present(world, field.data.lease)) { effect.end(); return; }
             const centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
+            // 实际半径直接绑给画面；不再另乘 scale，地环的边界与判定只放大一次。
             WorldFeedback.onEffect(world, effect.id(), "celebration", happyhourScene, 1, centre,
-                { moment: "hold", radius: field.radius, motes: field.data.motes, scale: field.radius / 4.5 });
+                { moment: "hold", radius: field.radius, motes: field.data.motes });
         }
     });
+    /** 庆典是脚下铺开的地面圈：按真实 XZ 范围感应，画出的那圈就是判定范围。 */
     function happyhourCovers(zone: WorldEffects.Area, data: CombatNativeDeathFacts): boolean {
         if (zone.pending || data.tick < zone.data.born) return false;
-        const dx = zone.position[0] - data.position[0], dy = zone.position[1] - data.position[1], dz = zone.position[2] - data.position[2];
-        return dx * dx + dy * dy + dz * dz <= zone.radius * zone.radius;
+        const dx = zone.position[0] - data.position[0], dz = zone.position[2] - data.position[2];
+        return dx * dx + dz * dz <= zone.radius * zone.radius;
     }
     WorldCombat.on("world_combat:move_happyhour/payout", "world_combat:actor_died", "", event => {
         const data: CombatNativeDeathFacts = JSON.parse(String(event.data())), world = event.world();
@@ -105,19 +107,22 @@ namespace PokemonSkills {
             const world = action.world(), self = action.actor(), body = world.observe(self);
             if (body === null) { done(action); return; }
             const origin = body.position();
+            const ground = WorldCombat.point(origin.x(), body.boundsMin().y(), origin.z());
             const ticks = Math.max(180, Math.round(p("happyhour", "banner", action)));
             const radius = Math.max(3.5, p("happyhour", "radius", action));
             const coins = Math.max(3, Math.round(p("happyhour", "purse", action)));
             const motes = Math.max(14, Math.round(p("happyhour", "motes", action)));
-            const scale = Math.max(0.6, Math.min(1.8, radius / 4.5));
+            // 先把场铺成功；失败就什么都不留，光环与预告都不要。
+            const field = WorldEffects.field(world, happyhourField, ground, radius,
+                { purse: coins, motes: motes, born: world.tick(), paid: {}, rewarded: 0 }, ticks);
+            if (!(field > 0)) { done(action); return; }
             const banner = MobEffects.apply(world, self, happyhourBanner, ticks, 0);
-            if (banner === null) { done(action); return; }
-            WorldEffects.field(world, happyhourField, origin, radius,
-                { purse: coins, motes: motes, born: world.tick(), anchor: MobEffects.anchor(banner), paid: {}, rewarded: 0 }, ticks);
+            if (banner === null) { world.operation(field, "world_combat:dispel", "{}"); done(action); return; }
+            WorldEffects.update(world, field, { data: { anchor: MobEffects.anchor(banner) } });
             sound(action, "minecraft:ui.toast.challenge_complete");
-            WorldFeedback.emit(world, happyhourScene, 1, origin,
-                { moment: "raise", radius: radius, motes: motes, purse: coins, scale: scale }, 50);
-            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.4, 0)), happyhourRaiseText,
+            WorldFeedback.emit(world, happyhourScene, 1, ground,
+                { moment: "raise", radius: radius, motes: motes, purse: coins }, 50);
+            WorldFeedback.text(world, ground.plus(WorldCombat.point(0, 1.4, 0)), happyhourRaiseText,
                 [Math.round(ticks / 20), coins], 46);
             sound(action, "cobblemon:block.relic_coin_pouch.place");
             done(action);

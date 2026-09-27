@@ -4,9 +4,10 @@
  * 一句话：水从施法者脚下涌起，一圈水环贴着地面越铺越开、扫过站在圈里的自己与伙伴；每扫到一个人，
  *   那人身上溅起一捧水花并亮起治疗的光，水环走到头就一起退去。
  * 色相家族：水青 0x4FC3E8 作主体，近白的 0xDCF6FF 作浪尖与治疗光，只在治疗层出现一点点亮青。
- * 拍子：起（gather 拢水）／涌（burst 起波）／铺（spread 水环推进）／溅（splash 命中治疗）／收（settle 退水）。
- * 范围：burst / spread / settle 的水环绑脚点、`fit:"none"`，形状按参考半径 3.0 书写、由 `data.scale`
- *   （实际水波半径 / 3.0）推出真实大小——画面里的环就是会被扫到的范围。
+ * 拍子：起（gather 拢水）／涌（burst 脚边起波）／铺（spread 水环推进）／溅（splash 命中治疗）／收（settle 退水）。
+ * 范围：spread / settle 的水环绑脚点、`fit:"none"`，形状按参考半径 3.0 书写、由 `data.scale`
+ *   （实际水波半径 / 3.0）推出真实大小——画面里的环就是会被扫到的范围。burst 只做脚边小喷，脚边的浪花
+ *   是起波，不预先把最大治疗圈画成活动水面；真实外扩由 spread 逐刻的 `data.scale` 承担。
  * 运动：水环沿地面由内向外推，速度由 `data.progress` 与每帧更新的 `data.scale` 表达；水滴向外飞溅后落回。
  * 数：水环与水滴的发射量绑 `data.motes`（特攻＋身高派生），命中层按 `data.share`（实际回复比例）再加密。
  */
@@ -36,24 +37,24 @@ const LifeDewDefinition: ParticleDefinition = {
             ]
         },
         burst: {
-            duration: 20,
-            exit: { stop: 7, drain: 14 },
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "open_ring", bind: "point", offset: [0, 0.08, 0],
+                    name: "foot_ring", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    burst: { count: 3 }, shape: { kind: "circle", radius: 3.0, thickness: 0.9 },
+                    burst: { count: 5 }, shape: { kind: "circle", radius: 0.55, thickness: 0.9 },
                     direction: "outward", speed: [0.05, 0.16],
-                    lifetime: [12, 22], size: [0.3, 0.12], sizeMode: "index",
-                    color: 0x9FE8FF, alpha: [0.75, 0], light: "full", bloom: 0.15, maxParticles: 40
+                    lifetime: [10, 18], size: [0.22, 0.08], sizeMode: "index",
+                    color: 0x9FE8FF, alpha: [0.75, 0], light: "full", bloom: 0.15, maxParticles: 24
                 },
                 {
-                    name: "splash_out", bind: "point", offset: [0, 0.1, 0],
+                    name: "foot_splash", bind: "point", offset: [0, 0.08, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    burst: { count: { data: "motes", fallback: 20 } }, shape: { kind: "circle", radius: 3.0, thickness: 0.5 },
+                    burst: { count: { data: "motes", fallback: 20 } }, shape: { kind: "circle", radius: 0.5, thickness: 0.5 },
                     direction: "outward", speed: [0.06, 0.22], gravity: 0.03, drag: 0.94,
-                    lifetime: [10, 18], size: [0.11, 0.02],
-                    color: 0x6FD3EC, alpha: [0.8, 0], light: "full", maxParticles: 120
+                    lifetime: [8, 16], size: [0.1, 0.02],
+                    color: 0x6FD3EC, alpha: [0.8, 0], light: "full", maxParticles: 60
                 }
             ]
         },

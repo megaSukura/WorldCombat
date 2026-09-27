@@ -109,6 +109,23 @@ namespace CombatStatus {
         failures: { [reason: string]: number };
         /** Rejection details attached to whichever reason stops the action; rides before_commit into action_rejected. */
         detail: { [reason: string]: any };
+        /** Identities this action actually attempts to cure; matched after all restriction contributors run. */
+        selfCures?: string[];
+    }
+    export function selfCure(context: ActionPolicy, identities: string[]): void {
+        var values=context.selfCures||(context.selfCures=[]);
+        identities.forEach(function(identity){var name=normalize(identity);if(values.indexOf(name)<0)values.push(name);});
+    }
+    /** Only restrictions carrying an explicitly cured identity are exempt; other reasons retain their order. */
+    export function applySelfCures(context: ActionPolicy): ActionPolicy {
+        var values=context.selfCures||[];
+        Object.keys(context.detail).forEach(function(reason){
+            var detail=context.detail[reason]||{},identities=Array.isArray(detail.statuses)?detail.statuses:typeof detail.status==="string"?[detail.status]:[];
+            if(identities.some(function(name:string){return values.indexOf(name)>=0;})){
+                delete context.blocked[reason];delete context.failures[reason];delete context.detail[reason];
+            }
+        });
+        return context;
     }
     export var actions = new WorldContributions.Registry<ActionPolicy>();
     export function actionPolicy(world: CombatWorld, actor: CombatActor, action: CombatAction | null = null,
@@ -128,7 +145,7 @@ namespace CombatStatus {
                 if (chance > 0) { context.failures.confused = chance; context.detail.confused = { status: "confusion", chance: chance, effect: String(confused.id()) }; }
             }
         }
-        return actions.apply(context);
+        return applySelfCures(actions.apply(context));
     }
     export function actionReason(context: ActionPolicy): string {
         var reasons = Object.keys(context.blocked);

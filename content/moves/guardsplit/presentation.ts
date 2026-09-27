@@ -1,15 +1,16 @@
 /**
  * 防守平分 / guardsplit 的客户端表现。
  *
- * 一句话：两人各自的护壁光按自己底子的厚度从两端出发，在中点压成同样厚度的一份共同护光，再从中央等量地分回两端；
- *   谁守势越厚，出发的护壁越密、越厚，回来后两边一样厚。维持期里两人身上各亮着一圈同样大小的共同刻度护环。
- * 色相家族：青玉 0x70C8C0（防御）＋石板 0x9AA8C0（特防）两色从两端汇向中央，中性近白 0xE0F0EE 落在分回与护环上。
+ * 一句话：两人各自的护光按自己实际的厚度从两端出发，在中点压成同样厚度的一份共同护光，再从中央等量地分回两端；
+ *   谁的世界防护越厚，出发的护光越密、越厚，回来后两边一样厚。维持期里两人身上各亮着一圈同样大小的共同刻度护环。
+ * 色相家族：青玉 0x70C8C0（护甲）＋石板 0x9AA8C0（护甲韧性）两色从两端汇向中央，中性近白 0xE0F0EE 落在分回与护环上。
  *   两色在中央合为近白，正是「两数取平均」的意思。
- * 拍子：聚（gather 0–20t，两端护壁读数）→ 平（merge 0–36t，两端不等护壁向中央压 → 中点合并 → 等量分回）→ 维持（hum，两端护环）→ 归（revert 0–26t）。
+ * 拍子：聚（gather 0–20t，两端护甲读数）→ 平（merge 0–36t，两端不等护光向中央压 → 中点合并 → 等量分回）→ 维持（hum，两端护环）→ 归（revert 0–26t）。
  * 范围：merge 的 `out_equal` 沿 data.path 的两端顶点从质心向外铺开，画面就是两人当前的实际距离；两端护环各落在本人身上。
  * 运动：`in_self_*` 从施法者按 data.toward 飞向目标、`in_foe_*` 从目标按 data.back 飞向施法者，方向与距离用同一份位置数据；
- *   `out_equal` 从中央质心向两端等量散回。出发端的厚度由 data.selfSize / data.foeSize（本次双方底子占比）决定，回来后相等。
- * 数：`data.selfFlow` / `data.foeFlow` 驱动两端出发的发射量，`data.flow` 驱动分回量；`data.gauge` 驱动强度；`data.average` 随载荷提供。
+ *   `out_equal` 从中央质心向两端等量散回。出发端的厚度由 data.selfSize / data.foeSize（本次双方防护占比）决定，回来后相等。
+ * 数：`data.selfFlow` / `data.foeFlow` 驱动两端出发的发射量，`data.flow` 驱动分回量；`data.gauge` 驱动强度；
+ *   `data.exchange`（0/1）标记这次是否真的发生了交换：相等时不播成功交换，只留两端读数。
  * 参照节：视觉语言第一、二、三、四、七、九节。
  */
 const GuardsplitDefinition: ParticleDefinition = {
@@ -88,7 +89,7 @@ const GuardsplitDefinition: ParticleDefinition = {
                 {
                     name: "dome_self", bind: "source", offset: [0, 0.5, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1, at: 18 }, shape: { kind: "ring", radius: 0.64 },
+                    burst: { count: { data: "exchange", fallback: 0 }, at: 18 }, shape: { kind: "ring", radius: 0.64 },
                     direction: "outward", speed: [0.0, 0.03],
                     lifetime: [10, 16], size: [0.34, 0.05],
                     color: 0xE0F0EE, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 8
@@ -96,7 +97,7 @@ const GuardsplitDefinition: ParticleDefinition = {
                 {
                     name: "dome_foe", bind: "target", offset: [0, 0.5, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1, at: 18 }, shape: { kind: "ring", radius: 0.64 },
+                    burst: { count: { data: "exchange", fallback: 0 }, at: 18 }, shape: { kind: "ring", radius: 0.64 },
                     direction: "outward", speed: [0.0, 0.03],
                     lifetime: [10, 16], size: [0.34, 0.05],
                     color: 0xE0F0EE, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 8
@@ -129,9 +130,9 @@ const GuardsplitDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 16 },
             emitters: [
                 {
-                    name: "return", bind: "path", fit: "none", shape: { kind: "polyline", closed: false },
+                    name: "return", bind: "source", offset: [0, 0.5, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
-                    burst: { count: 10, interval: 3, repeats: 3 },
+                    burst: { count: 10, interval: 3, repeats: 3 }, shape: { kind: "ring", radius: 0.46 },
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [7, 13], size: [0.1, 0.01], sizeMode: "index",
                     color: 0xE0F0EE, alpha: [0.5, 0], light: "full", maxParticles: 40

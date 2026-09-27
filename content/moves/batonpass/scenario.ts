@@ -10,6 +10,6 @@ Smoke.scenario("batonpass", stage => {
         stage.expect((stage.stages(ally).atk || 0) === 2, "the selected live ally received the actual two stages");
         stage.expect(stage.hasMobEffect(ally, "world_combat:status/baton_pass"), "the successful handoff is visible");
         stage.expect(stage.travelled(caster) > .3, "the giver withdrew through real movement");
-        stage.note("live handoff", { given: stage.stages(caster), received: stage.stages(ally), travelled: stage.travelled(caster) }); stage.done();
+        stage.note("baton flight", { given: stage.stages(caster), received: stage.stages(ally), travelled: Math.round(stage.travelled(caster) * 10) / 10 }); stage.done();
     }, "actual stages reach the chosen ally");
 });

@@ -8,7 +8,7 @@
  * 范围：snap 绑在 `data.path` 上，顶点就是判定用的那条近直线——画出来的线就是电刺真正走的那条。
  * 运动：电弧沿近直线瞬间炸开，命中点向四周溅开；没有飞行过程，这正是「贴身快刺」的读法。
  * 数：`data.arcs`（由特攻派生）绑定电弧条数，`data.sparks`（由威力派生，已麻目标再乘 1.6）绑定缠身火花数，
- *   `data.intensity`（已麻更高）抬高亮度与速度。
+ *   `data.intensity`（已麻更高）只抬高亮度（bloom），粒子速度是独立低值，不让电花随强度撒远。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ThunderShockDefinition: ParticleDefinition = {
@@ -37,9 +37,9 @@ const ThunderShockDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     burst: { count: { data: "arcs", fallback: 5 }, at: 1 },
                     shape: { kind: "polyline" },
-                    direction: "shape", speed: { data: "intensity", fallback: 0.9 },
+                    direction: "shape", speed: [0.04, 0.18],
                     lifetime: [3, 7], size: [0.16, 0.03], sizeMode: "index",
-                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: 0.5
+                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: { data: "intensity", fallback: 0.5 }
                 },
                 {
                     name: "spark", bind: "path", height: 0,
@@ -69,16 +69,16 @@ const ThunderShockDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
                     burst: { count: { data: "sparks", fallback: 12 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.28 },
-                    direction: "shape", speed: { data: "intensity", fallback: 0.2 },
+                    direction: "shape", speed: [0.05, 0.22],
                     lifetime: [5, 10], size: [0.28, 0.05], sizeMode: "index",
-                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 50
+                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: { data: "intensity", fallback: 0.5 }, maxParticles: 50
                 },
                 {
                     name: "cling", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
                     burst: { count: { data: "sparks", fallback: 10 }, interval: 3, repeats: 3 },
                     shape: { kind: "sphere_surface", radius: 0.3 },
-                    direction: "outward", speed: { data: "intensity", fallback: 0.16 },
+                    direction: "outward", speed: [0.03, 0.15],
                     lifetime: [10, 18], size: [0.08, 0.02],
                     color: 0xFFF04A, alpha: [0.9, 0], light: "full", maxParticles: 70
                 },
@@ -90,6 +90,21 @@ const ThunderShockDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.12],
                     lifetime: [9, 16], size: [0.2, 0.08],
                     color: 0xC8F0A0, alpha: [0.5, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        immune: {
+            duration: 20,
+            exit: { stop: 9, drain: 12 },
+            emitters: [
+                {
+                    name: "shrug", bind: "target", height: 0.45, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.26 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.06, 0.01],
+                    color: 0x9AA6A0, alpha: [0.5, 0], light: "world", maxParticles: 20
                 }
             ]
         },

@@ -14,6 +14,12 @@
  *   与电光一闪分开：水柱拖尾、浇透与「水中更强」是它独有的读法。
  */
 namespace PokemonSkills {
+    /** 目标身上是否真的在烧（原版着火，与共享身份 burn 分开读）。 */
+    function aquajetOnFire(world: CombatWorld, victim: CombatActor): boolean {
+        const entity = world.nativeEntity(victim);
+        return entity !== null && typeof entity.isOnFire === "function" && !!entity.isOnFire();
+    }
+
     define({
         freeMovement: true,
         id: aquajetId,
@@ -32,7 +38,9 @@ namespace PokemonSkills {
         defaults: { deluge: false, ai: { maxChase: 9, preserveBurn: true, preferDry: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: (pokemon ? p(aquajetId, "surge", pokemon) : 3.1) + 0.4, geometry: "line", style: "jet", color: 0x4FC3E8,
+            // 指示与本招实际推进对齐：位移（surge）加上身体可达边界（判定半径），激流式更宽也一并读进同一条线。
+            const reach = pokemon ? p(aquajetId, "surge", pokemon) + p(aquajetId, "collisionRadius", pokemon) : 3.5;
+            return { radius: reach, geometry: "line", style: "jet", color: 0x4FC3E8,
                 label: config && config.deluge === true ? "水流喷射·激流" : "水流喷射" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -42,7 +50,7 @@ namespace PokemonSkills {
                 recover: Math.round(p(aquajetId, "settle", context)),
                 cooldown: Math.round(p(aquajetId, "recharge", context)),
                 active: 0,
-                range: p(aquajetId, "surge", context) + 0.4
+                range: p(aquajetId, "surge", context) + p(aquajetId, "collisionRadius", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -70,6 +78,7 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.2, radius / 0.44));
             const intensity = Math.max(0.6, Math.min(2.2, power / 60));
             const caught: { [ref: string]: boolean } = {};
+            const caughtList: string[] = [];
             let travelled = 0, hits = 0;
 
             sound(action, "minecraft:item.trident.riptide_1");
@@ -90,14 +99,15 @@ namespace PokemonSkills {
                     { moment: "burst", target: String(victim.ref()), spray: spray, scale: scale, intensity: intensity }, 24);
                 scope.sound("cobblemon:impact.water", point, 14, "{}");
                 if (soaked) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), aquajetSoakText, [], 22);
-                if (CombatStatus.has(scope, victim, "burn")) {
-                    const cured = CombatStatus.cure(scope, victim, "burn");
-                    const out = scope.ignite(victim, 0);
-                    if (cured || out) {
-                        WorldFeedback.emit(scope, aquajetScene, 1, point, { moment: "douse", target: String(victim.ref()), scale: scale }, 26);
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), aquajetDouseText, [], 24);
-                        scope.sound("minecraft:block.fire.extinguish", point, 14, "{}");
-                    }
+                // 原版着火与共享身份 burn 分开处理：只带其中一个也会被这一冲浇熄。
+                const burning = CombatStatus.has(scope, victim, "burn");
+                const onFire = scope.valid(victim) && aquajetOnFire(scope, victim);
+                if (burning) CombatStatus.cure(scope, victim, "burn");
+                if (onFire && scope.valid(victim)) scope.ignite(victim, 0);
+                if (burning || onFire) {
+                    WorldFeedback.emit(scope, aquajetScene, 1, point, { moment: "douse", target: String(victim.ref()), scale: scale }, 26);
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), aquajetDouseText, [], 24);
+                    scope.sound("minecraft:block.fire.extinguish", point, 14, "{}");
                 }
             }
 
@@ -111,27 +121,40 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
+            /**
+             * 沿实际已走路段逐接触推进：用原生 moveSweep(...,已接触refs) 一次扫过本刻预算，
+             * 碰到尚未结算的活体就结算并记入忽略表，同一步里紧排的其他人不会被裸 displace 越过；
+             * 实墙始终真实停止，总路程预算不超。默认命中首个即收势，激流式继续用完余程。
+             */
             function advance(current: CombatAction): void {
-                const scope = current.world(), origin = current.origin();
-                const delta = direction.scale(Math.min(step, length - travelled));
-                const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.hitEntity()) {
-                    const victim = hit.target();
-                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        const ref = String(victim.ref());
-                        if (!caught[ref]) {
-                            caught[ref] = true;
-                            strike(current, hit, victim);
-                            if (!deluge) { finish(current); return; }
+                const scope = current.world();
+                let budget = Math.min(step, length - travelled), guard = 0;
+                while (budget > 0.001 && guard++ < 16) {
+                    const before = current.origin();
+                    const hit = current.moveSweep(direction.scale(budget), radius, JSON.stringify(caughtList));
+                    const moved = current.origin().minus(before).length();
+                    travelled += moved;
+                    budget -= moved;
+                    if (hit.hitEntity()) {
+                        const victim = hit.target();
+                        if (victim !== null) {
+                            const ref = String(victim.ref());
+                            if (!caught[ref]) {
+                                caught[ref] = true;
+                                caughtList.push(ref);
+                                if (scope.valid(victim) && !scope.friendly(victim)) {
+                                    strike(current, hit, victim);
+                                    if (!deluge) { finish(current); return; }
+                                }
+                            }
                         }
+                        continue;
                     }
+                    if (hit.blocked()) { finish(current); return; }
+                    if (moved < p(aquajetId, "minimumMove", current)) { finish(current); return; }
+                    break;
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < p(aquajetId, "minimumMove", current) || travelled >= length) {
-                    finish(current);
-                    return;
-                }
+                if (travelled >= length) { finish(current); return; }
                 current.after(1, advance);
             }
             advance(action);

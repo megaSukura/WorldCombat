@@ -87,7 +87,7 @@ const SmokescreenDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 22 },
             emitters: [
                 {
-                    name: "bloom_core", bind: "point", height: 0.5,
+                    name: "bloom_core", bind: "point", height: 0.5, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/orb/largesmokeorb",
                     burst: { count: 22 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 2.1 } },
                     direction: "outward", speed: [0.03, 0.12], drag: 0.9,
@@ -95,7 +95,7 @@ const SmokescreenDefinition: ParticleDefinition = {
                     color: 0x6E6E78, alpha: [0.55, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "bloom_ground", bind: "point", height: 0.06,
+                    name: "bloom_ground", bind: "point", height: 0.06, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 34 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.1 } },
                     direction: "outward", speed: [0.04, 0.12],
@@ -110,7 +110,7 @@ const SmokescreenDefinition: ParticleDefinition = {
                 {
                     name: "cloud_body", bind: "point", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/smokeorb",
-                    rate: { data: "density", fallback: 40 }, shape: { kind: "sphere", radius: 2.1 },
+                    rate: { data: "density", fallback: 40 }, shape: { kind: "hemisphere", radius: 2.1 },
                     direction: "up", speed: [0.005, 0.025], drag: 0.96, spin: 4,
                     lifetime: [30, 54], size: [0.28, 0.5],
                     color: 0x6E6E78, alpha: [0.4, 0], alphaMode: "sin", light: "world", maxParticles: 90
@@ -126,7 +126,7 @@ const SmokescreenDefinition: ParticleDefinition = {
                 {
                     name: "cloud_mote", bind: "point", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 12, shape: { kind: "sphere", radius: 2.0 },
+                    rate: 12, shape: { kind: "hemisphere", radius: 2.0 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [20, 36], size: [0.06, 0.01],
                     color: 0xB8B8BE, alpha: [0.3, 0], light: "world", maxParticles: 40
@@ -155,7 +155,7 @@ const SmokescreenDefinition: ParticleDefinition = {
             ]
         },
         linger: {
-            duration: { data: "tick", fallback: 60 },
+            // 不设固定 duration：呛眼载体在多久，这份余烟就飘多久；载体结束、驱散或奶牛解除时随托管回执一起收。
             exit: { drain: 26 },
             emitters: [
                 {

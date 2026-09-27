@@ -6,8 +6,10 @@
  *
  * 两幕（多段脉冲 + 收势）：
  *   起（inhale，提交前）：吸满一口气，火星与音符往嗓子口收。
- *   唱（sing 每段 → hit → boost → fade）：提交后按段喷焰，每段沿当前朝向往目标方向扫过一条锥面，
- *       圈内的对手各吃总威力的 1/pulses；第一次命中即提高特攻；唱完收声。
+ *   唱（sing 每段 → hit → boost → fade）：提交后按段喷焰，站定有限转向；判定与画面共用同一个三维锥，
+ *       沿朝向撞墙截断（同一几何驱动伤害/可见锥）。看得见目标才跟改瞄点，失去视野就冻结在最后见到的地方；
+ *       锥内的对手各吃总威力的 1/pulses，每个真实受击点各炸一次；整支歌第一次造成伤害时提高特攻（按实际值）；
+ *       唱完收声。
  *
  * 与同族分开：起草／蓄能焰袭／流水旋舞都是接触位移招，闪焰高歌是**不接触的持续火锥**，也是唯一提高特攻的一支。
  */
@@ -62,8 +64,13 @@ namespace PokemonSkills {
             const gift = Math.max(1, Math.round(p("torchsong", "spaGift", action)));
             const notes = Math.round(p("torchsong", "notes", action));
             const push = p("torchsong", "push", action);
-            const scale = reach / 7;
             const intensity = Math.max(0.6, Math.min(2.4, song / 100));
+            // 冻结瞄点：目标失去视野后不再隔着墙跟改，最后看得见的位置就是这一句的落点。
+            let aim = action.targetPosition();
+            if (action.target() !== null && world.valid(action.target()!)) {
+                const opening = world.observe(action.target()!);
+                if (opening !== null) aim = opening.position();
+            }
             let index = 0, boosted = false, hits = 0, settled = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
@@ -72,40 +79,54 @@ namespace PokemonSkills {
                 const body = scope.observe(actor);
                 if (body === null) { finish(current); return; }
                 current.stopMovement();
+                const from = body.position();
                 const victim = action.target() !== null && scope.valid(action.target()!) ? action.target() : null;
                 const victimBody = victim === null ? null : scope.observe(victim);
-                const aimPoint = victimBody === null ? action.targetPosition() : victimBody.position();
-                const from = body.position();
-                const delta = aimPoint.minus(from);
-                const direction = delta.length() < 0.01 ? action.direction() : delta.unit();
-                current.face(aimPoint, 30, 30);
-                WorldFeedback.keep(scope, "torchsong:sing:" + String(actor.ref()), torchsongScene, 1, from, {
+                // 只有看得见才跟着改瞄点；否则冻结在最后见到的地方。
+                if (victimBody !== null && scope.clear(from, victimBody.position())) aim = victimBody.position();
+                const delta = aim.minus(from);
+                const raw = delta.length() < 0.01 ? action.direction() : delta.unit();
+                const direction = raw.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : raw.unit();
+                current.face(aim, 30, 30);
+                // 判定与画面共用同一几何：轴被墙截短后，锥长、远半径与可见锥都用这条真实可达长度。
+                const wall = WorldGeometry.blockHit(scope, from, from.plus(direction.scale(reach)));
+                const length = wall === null ? reach : Math.max(0.5, wall.position().minus(from).length());
+                const farRadius = Math.max(0.3, length * Math.tan(half * Math.PI / 180));
+                // 每段一个新实例：同 key 续帧不会重启停发时钟，之前的火锥只覆盖第一段。
+                WorldFeedback.emit(scope, torchsongScene, 1, from, {
                     moment: "sing", direction: [direction.x(), direction.y(), direction.z()],
-                    reach: reach, half: half, scale: scale, notes: notes, intensity: intensity, pulse: index + 1
+                    reach: length, half: half, scale: length / 7, notes: notes, intensity: intensity, pulse: index + 1
                 }, interval + 4);
                 let struck = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(from, direction, reach, half * 2, { below: 2, above: 3 }), function (other: CombatActor) {
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodyFrustum(from, from.plus(direction.scale(length)), 0.05, farRadius),
+                    function (other: CombatActor, facts: CombatObservation) {
+                    if (String(other.ref()) === String(actor.ref()) || facts.friendly()) return;
+                    // 墙/掩体挡住的不吃这一段。
+                    if (!scope.clear(from, facts.position())) return;
                     const landed = hurt(current, other, "torchsong", per, { damage: damageSpec("torchsong", "song"), sound: true });
                     if (!landed) return;
                     struck++;
                     const otherBody = scope.observe(other);
-                    if (otherBody !== null) scope.hitDisplace(other, direction.scale(push));
+                    const at = otherBody === null ? facts.position() : otherBody.position();
+                    scope.hitDisplace(other, direction.scale(push));
+                    // 每个真实受击点各炸一次，而不是只播到选定瞄点。
+                    WorldFeedback.emit(scope, torchsongScene, 1, at,
+                        { moment: "hit", scale: length / 7, intensity: intensity, notes: notes, targets: struck }, 24);
                 });
                 hits += struck;
-                if (struck > 0) {
-                    WorldFeedback.emit(scope, torchsongScene, 1, aimPoint,
-                        { moment: "hit", scale: scale, intensity: intensity, notes: notes, targets: struck }, 24);
-                    if (!boosted) {
-                        boosted = true;
-                        NativeEffects.boost(scope, actor, "spa", gift);
-                        WorldFeedback.emit(scope, torchsongScene, 1, from, { moment: "boost", gift: gift }, 30);
-                        WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.4, 0)), torchsongGiftText, [gift], 34);
+                if (struck > 0 && !boosted) {
+                    boosted = true;
+                    // 只在真的提升时发提示，浮字写实际提升的级数（不是配置里的标称值）。
+                    const gained = NativeEffects.boost(scope, actor, "spa", gift);
+                    if (gained !== 0) {
+                        WorldFeedback.emit(scope, torchsongScene, 1, from, { moment: "boost", gift: gained }, 30);
+                        WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.4, 0)), torchsongGiftText, [gained], 34);
                         scope.sound("cobblemon:move.nastyplot.actor_2", from, 16, "{}");
                     }
                 }
                 index++;
                 if (index >= pulses) {
-                    WorldFeedback.emit(scope, torchsongScene, 1, from, { moment: "fade", scale: scale, sung: hits > 0 }, 24);
+                    WorldFeedback.emit(scope, torchsongScene, 1, from, { moment: "fade", scale: length / 7, sung: hits > 0 }, 24);
                     if (hits > 0) WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.5, 0)), torchsongHitText, [hits], 24);
                     finish(current);
                     return;

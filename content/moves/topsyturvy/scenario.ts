@@ -1,35 +1,30 @@
-/**
- * 颠倒 / topsyturvy 的可执行设计说明。
- *
- * 场面：一只只会「颠倒」的乌贼王（Malamar）与一只不会动、不会还手的铁傀儡隔开 5 格开战；夜晚、天晴。
- *   开战前先给铁傀儡挂三级速度（一组可识别的成对药水），技能表里只有这一招，所以 AI 只会甩镜片。
- * 必然事实：本招被提交过；镜片命中真实对象后把速度换成同级的缓慢，并给目标带上共享身份 world_combat:status/inverted。
- *   没有可识别内容的空翻不会留下印记，也不会显示翻面——本场景用真实的成对药水覆盖有内容的一侧。
- */
+/** Actual enemy/ally mirror collisions and gains-only AI eligibility. Native veto/hidden-stack cases are shared host checks. */
 Smoke.scenario("topsyturvy", function (stage) {
-    stage.fill([-10, -1, -10], [10, -1, 10], "minecraft:stone");
-    stage.time("night");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "malamar", level: 40, moves: ["topsyturvy"], at: [-5, 0, 0] });
-    var foe = stage.mob({ type: "minecraft:iron_golem", at: [0, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.command("data merge entity @e[type=minecraft:iron_golem,distance=..12,limit=1] {NoAI:1b}");
+    stage.fill([-10, -1, -6], [10, -1, 22], "minecraft:stone");
+    const caster = stage.pokemon({ species: "malamar", level: 40, moves: ["topsyturvy"], at: [-5, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:iron_golem", at: [0, 0, 0] });
+    const helper = stage.pokemon({ species: "malamar", level: 40, moves: ["topsyturvy"], at: [-5, 0, 16] });
+    const ally = stage.mob({ type: "minecraft:cow", at: [0, 0, 16] });
+    const pressure = stage.mob({ type: "minecraft:husk", at: [3, 0, 19] });
+    stage.hostile(caster, foe); stage.team("mirror", [helper, ally]); stage.noai(foe, ally, pressure);
     stage.command("effect give " + foe.ref.split("/")[0] + " minecraft:speed 200 2 true");
+    stage.command("effect give " + ally.ref.split("/")[0] + " minecraft:slowness 200 1 true");
+    stage.after(4, function () { stage.prefer(helper, "topsyturvy", { gain: true }); });
+    stage.after(8, function () { stage.hostile(helper, pressure); });
+    let gainsChecked = false;
+    stage.after(40, function () {
+        stage.expect(stage.casts("topsyturvy", helper) === 0, "gains-only AI does not cast on a debuffed ally");
+        gainsChecked = true;
+        stage.prefer(helper, "topsyturvy", { gain: false });
+    });
     stage.until(700, function () {
-        return stage.casts("topsyturvy", caster) > 0 && stage.hadMobEffect(foe, "world_combat:status/inverted");
+        return gainsChecked && stage.hasMobEffect(foe, "minecraft:slowness") && !stage.hasMobEffect(foe, "minecraft:speed")
+            && stage.hasMobEffect(ally, "minecraft:speed") && !stage.hasMobEffect(ally, "minecraft:slowness");
     }, function () {
-        stage.expect(stage.casts("topsyturvy", caster) > 0, "topsy-turvy was committed");
-        stage.expect(stage.hadMobEffect(foe, "world_combat:status/inverted"), "the struck target carried the shared inverted identity");
-        stage.expect(stage.hasMobEffect(foe, "minecraft:slowness") && !stage.hasMobEffect(foe, "minecraft:speed"),
-            "the paired Speed was flipped into an equal Slowness");
-        stage.note("a recognised paired potion is reversed in place, keeping its strength and remaining time; the identical loop also negates stat stages, and a hit with nothing recognisable shows the shatter instead", {
-            casts: stage.casts("topsyturvy", caster),
-            casterHp: Math.round(caster.health() * 10) / 10,
-            foeHp: Math.round(foe.health() * 10) / 10,
-            marked: stage.hasMobEffect(foe, "world_combat:status/inverted"),
-            slowness: stage.hasMobEffect(foe, "minecraft:slowness"),
-            speed: stage.hasMobEffect(foe, "minecraft:speed")
-        });
+        stage.expect(stage.casts("topsyturvy", caster) > 0, "enemy reversal committed through the real projectile");
+        stage.expect(stage.casts("topsyturvy", helper) > 0, "explicit ally targeting lets the real mirror shard reach its friend");
+        stage.expect(stage.damageBy(caster) === 0 && stage.damageBy(helper) === 0, "the reversal retains its non-damaging role");
+        stage.note("Both actual collisions reversed the recognised potion pair. The selected friend enables ally collision; full reversal still flips both signs. Particle directions/counts use observed stage changes and committed potion receipts; native immunity, preflight veto, hidden stacks and natural clocks are separately covered by NativeEffectTransformChecks.");
         stage.done();
-    }, "the mirror flips the target");
+    }, "both mirror deliveries reverse their original potion");
 });

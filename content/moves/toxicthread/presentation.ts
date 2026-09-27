@@ -8,7 +8,7 @@
  * 层次：蓄毒（起手）→ 丝身＋毒泡（飞行）→ 丝结＋毒爆＋丝线（缠住）→ 垂丝毒渍（落空）→ 未干紫丝（持续）。
  * 起击收：windup（蓄丝）→ spit（吐出去）→ latch（缠住）→ linger（还缠着）。
  * 数：丝股与毒爆数量由服务端 data.threads 派生；缠住那一刻的丝线由 data.path 的两端（施法者、目标）
- *   撑起，画的正是收丝/钉住作用的那条线。
+ *   撑起，画的正是收丝/钉住作用的那条线。持续期的毒泡只在目标真中毒时出现（data.poisonTufts，免疫时为零）。
  */
 const ToxicThreadDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -149,7 +149,7 @@ const ToxicThreadDefinition: ParticleDefinition = {
                 {
                     name: "linger_beads", bind: "target", height: 0.7,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: 4, shape: { kind: "sphere", radius: 0.16 },
+                    rate: { data: "poisonTufts", fallback: 0 }, shape: { kind: "sphere", radius: 0.16 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [14, 24], size: [0.05, 0.01],
                     color: 0xE9DDF3, alpha: [0.4, 0], light: "world", maxParticles: 16

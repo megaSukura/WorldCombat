@@ -168,6 +168,15 @@ check('in-range placement respects station permission and a wait plan blocks cas
     const result=tasks.perform(frame,'tool','work',target,{});assert.equal(result.state,wait?'running':'failed');assert.equal(casts,0);
   }
 });
+check('a short positioning step uses its authored tolerance before casting', () => {
+  const library=new M.Library(),tasks=new M.Tasks(library),progress={},body={ref:'checks:worker',point:[0,0,0]},target={ref:'checks:workpiece',point:[2,0,0]};
+  let casts=0;const tolerances=[];
+  library.register('checks:precise',{protocols:['checks:work'],reach:()=>4,approach:()=>({point:[.5,0,0],within:.08}),execute:()=>{casts++;return 32;}});
+  const frame={actor:body.ref,tick:1,facts:{self:body,nearby:[target],busy:false},scratch:{},memory:{},active:null,suspended:[],choice:{key:'checks:precise'},
+    capabilities:[{id:'tool',protocols:['checks:work'],data:{use:'checks:precise',range:4}}],services:{behavior:{move:(_point,within)=>{tolerances.push(within);return 'moving';},stop(){},face(){},random:()=>.5}}};
+  assert.equal(tasks.perform(frame,'tool','work',target,progress).state,'running');assert.equal(casts,0);assert.deepEqual(tolerances,[.08]);
+  body.point=[.46,0,0];frame.tick++;tasks.perform(frame,'tool','work',target,progress);assert.equal(casts,1);
+});
 check('body-aware reach approaches a surface without changing the selected aim or identity', () => {
   const library = new M.Library(), tasks = new M.Tasks(library), body = { ref: 'checks:self', point: [0, 1, 0] };
   const target = { ref: 'checks:large', point: [8, 10, 0] }, moves = []; let cast = null;
@@ -217,5 +226,48 @@ check('known-reference null snapshots expire with the frame and identity substit
   assert.equal(M.observeKnown(frame, ref), null);
   frame.tick++; delete frame.services.behavior.subject;
   assert.equal(M.observeKnown(frame, ref), null, 'Older hosts remain usable');
+});
+check('remembered aim is a finite observed point and never a fresh subject probe', () => {
+  const self = { ref: 'factory:reader', point: [0, 0, 0], visible: true };
+  const other = { ref: 'factory:valve', point: [3, 0, 0], visible: true, health: 10, velocity: [1, 0, 0] };
+  let valid = true;
+  const frame = { actor: self.ref, tick: 10, facts: { self, nearby: [other] }, scratch: {}, memory: {},
+    services: { fact() { throw Error('Hidden fact probe'); }, behavior: {
+      subject() { throw Error('Hidden observation'); }, validReference: ref => valid && ref === other.ref } } };
+  assert.equal(M.observedAim(frame, 'selected', null, 60), null, 'Unseen subjects have no memory');
+  assert.throws(() => M.observedAim(frame, 'selected', other, Infinity), /Invalid observation lifetime/);
+  assert.equal(M.observedAim(frame, 'selected', other, 60), null, 'Visible observations retain their ordinary identity');
+  other.visible = false; other.point = [30, 0, 0]; frame.tick = 14; frame.scratch = {};
+  const remembered = M.observedAim(frame, 'selected', null, 60);
+  assert.deepEqual(Array.from(remembered.point), [3, 0, 0]);
+  assert.equal(remembered.health, undefined); assert.equal(remembered.velocity, undefined);
+  assert.equal(M.find(frame, other.ref), remembered); assert.equal(M.fact(frame, 'pressure', remembered), null);
+  frame.tick = 71; frame.scratch = {}; assert.equal(M.observedAim(frame, 'selected', null, 60), null);
+  other.visible = true; frame.tick = 72; M.observedAim(frame, 'selected', other, 60);
+  other.visible = false; frame.tick++; valid = false;
+  assert.equal(M.observedAim(frame, 'selected', null, 60), null, 'Invalid identities retire their stored point');
+});
+check('only declared free-point uses can cast remembered aim, with no body reach query', () => {
+  const library = new M.Library(), tasks = new M.Tasks(library);
+  const self = { ref: 'factory:reader', point: [0, 0, 0], visible: true };
+  const other = { ref: 'factory:valve', point: [3, 0, 0], visible: true };
+  const calls = [];
+  library.register('factory:touch', { protocols: ['factory:operate'] });
+  library.register('factory:signal', { protocols: ['factory:operate'], memoryAim: true });
+  const frame = { actor: self.ref, tick: 1, facts: { self, nearby: [other], busy: false }, memory: {}, scratch: {},
+    capabilities: [
+      { id: 'touch', protocols: ['factory:operate'], data: { use: 'factory:touch', kind: 'aim', range: 8 } },
+      { id: 'signal', protocols: ['factory:operate'], data: { use: 'factory:signal', kind: 'aim', range: 8 } },
+      { id: 'entity', protocols: ['factory:operate'], data: { use: 'factory:signal', kind: 'enemy', range: 8 } }],
+    services: { behavior: { validReference: () => true, reachPoint() { throw Error('Hidden body query'); },
+      stop() {}, use: (_item, target) => { calls.push(target); return 1; } } } };
+  M.observedAim(frame, 'selected', other, 60); other.visible = false; other.point = [80, 0, 0]; frame.tick++; frame.scratch = {};
+  const remembered = M.observedAim(frame, 'selected', null, 60);
+  assert.deepEqual(Array.from(library.ready(frame, 'factory:operate', remembered), item => item.id), ['signal']);
+  assert.equal(tasks.perform(frame, 'touch', 'operate', remembered, {}).state, 'failed');
+  assert.equal(tasks.perform(frame, 'entity', 'operate', remembered, {}).state, 'failed');
+  assert.equal(tasks.perform(frame, 'signal', 'operate', remembered, {}).state, 'running');
+  assert.equal(calls.length, 1); assert.equal(calls[0].ref, ''); assert.deepEqual(Array.from(calls[0].point), [3, 0, 0]);
+  assert.equal(tasks.perform(frame, 'signal', 'operate', { ...remembered }, {}).state, 'failed', 'A fabricated memory marker is not a published observation');
 });
 console.log(`PASS independent world methods: ${checks} checks, no native SDK or final content loaded`);

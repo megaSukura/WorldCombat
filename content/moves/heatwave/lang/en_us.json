@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.heatwave.summary": "Warms a breath in its chest and exhales it forward: a fan of hot wind pushes across the ground, scalding everyone it sweeps and shoving them away from the caster, with a chance to set them alight. Fiercer in harsh sun, weaker in rain, and it leaves nothing behind.",
+  "worldcombat.skill.heatwave.summary": "Warms a breath in its chest and exhales it forward along the caster's horizontal plane: a fan of hot wind pushes ahead, scalding everyone it sweeps and shoving them away from the caster, with a chance to set them alight. Fiercer in harsh sun, weaker in rain, cut short by solid walls, and it leaves nothing behind.",
   "worldcombat.skill.heatwave.use.0": "Scald several enemies in the fan ahead",
   "worldcombat.skill.heatwave.use.1": "Shove a charging group out of position",
   "worldcombat.skill.heatwave.use.2": "Reach full force under harsh sunlight",
   "worldcombat.skill.heatwave.use.3": "Lay down a readable cone of pressure",
   "worldcombat.skill.heatwave.description.0": "The gust deals %1$s special damage to each body it sweeps; their special defence, type matchup and criticals are settled on impact.",
-  "worldcombat.skill.heatwave.description.1": "A fan %1$s blocks long with a %2$s degree opening sweeps out over %3$s s, pushing everyone it catches out of position.",
+  "worldcombat.skill.heatwave.description.1": "A fan %1$s blocks long with a %2$s degree opening sweeps out over %3$s s, pushing everyone it catches out of position; solid walls cut it short, so anything behind them stays untouched.",
   "worldcombat.skill.heatwave.description.2": "A body it catches has a %1$s chance to be set alight; the burn lasts about 40 s and deals about 6.25%% of its maximum health every 5 s (targets immune to burn, such as Fire types, cannot be set alight). A body it catches is also pushed about %2$s blocks away from the caster.",
   "worldcombat.skill.heatwave.gale.on": "Gale: a wider fan that pushes farther and sweeps faster, at the cost of x0.88 power, x0.85 ignition and -2 cooldown.",
   "worldcombat.skill.heatwave.gale.off": "Scorch: x1.12 power and x1.15 ignition, but a narrower fan, a shorter push and +4 cooldown.",

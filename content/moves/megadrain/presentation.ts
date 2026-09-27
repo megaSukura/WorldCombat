@@ -1,15 +1,15 @@
 /**
  * 超级吸取 / megadrain 的客户端表现。
  *
- * 一句话：身前养起一颗青绿孢荚 → 孢荚拖着一串种屑飞出去 → 撞在对手身上绽成根网并炸开草屑 →
- * 一串汁点沿「对手→自身」被抽回来，按 `data.waves` 一次一次重演。
+ * 一句话：身前养起一颗青绿孢荚 → 孢荚拖着一串种屑飞出去 → 撞在对手身上炸开草屑并附上一枚跟身的荚 →
+ * 每拍把真实伤害的一部分吐成一颗会慢慢回飞的绿荚，回到施法者身边才治疗。
  *
  * 色相家族：黄绿（0x8CC63F／0x5C9E2E）与嫩白（0xDCE775），近白只给命中核心；无第二色相。
- * 拍子：起 windup（聚荚）→ 飞 fly（拖尾）→ 绽 burst（命中峰值）→ 抽 sap（回流，可重演）→ 空 miss／fizzle。
- * 范围：burst 的环与 sap 的线长都读 `data.scale`（缠吸判定 / 0.5）与 `data.span`（目标到施法者的距离），
- *   画出的就是根网波及与汁流经过的那块地方。
- * 运动：fly 沿 projectile 拖尾；sap 的线发射器 orient=direction 沿「目标→自身」把汁点抽回来，path 把两端连成实线。
- * 数：`data.motes`（孢荚威力与抽取比例换算）决定种屑与汁点密度；`data.wave`／`data.waves` 让抽取进度可读。
+ * 拍子：起 windup（聚荚）→ 飞 fly（拖尾）→ 绽 burst（命中峰值）→ attached（跟身荚，逐拍更新剩余拍数）→
+ *   回 return→collected（真实绿荚归身）→ 空 miss／fizzle。
+ * 范围：burst 与 attached 的环读 `data.scale`（荚体接触半径 / 0.5）；fly 沿 projectile、return 绑真实回收体。
+ * 运动：fly 沿 projectile 拖尾；return 由 `WorldBodies` 里的真实回收体每刻移动，表现绑它自身；没有假的吸收连线。
+ * 数：`data.motes` 决定种屑密度；`data.beats`（剩余拍数换算）让跟身荚的剩余拍数可读；miss 落在真实弹体结束点。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const MegaDrainDefinition: ParticleDefinition = {
@@ -92,35 +92,25 @@ const MegaDrainDefinition: ParticleDefinition = {
                 }
             ]
         },
-        sap: {
-            duration: 26,
-            exit: { stop: 14, drain: 16 },
+        attached: {
+            // Owned by the real attached effect: one pod follows the carrier and the remaining beats read as a shrinking ring.
+            duration: 0,
+            exit: { drain: 10 },
             emitters: [
                 {
-                    name: "link", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    shape: { kind: "polyline" }, rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.01, 0.05], spread: 12,
-                    lifetime: [8, 16], size: [0.10, 0.02], sizeMode: "index",
-                    color: 0x5C9E2E, alpha: [0.7, 0], light: "world", maxParticles: 90
+                    name: "held_pod", bind: "target", fit: "body", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/grass/seed",
+                    rate: 8, shape: { kind: "sphere", radius: 0.16 }, spin: 24,
+                    lifetime: [5, 11], size: [0.16, 0.05],
+                    color: 0x8CC63F, alpha: [0.8, 0], light: "world", maxParticles: 24
                 },
                 {
-                    name: "flow", bind: "point", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    shape: { kind: "line", length: { data: "span", fallback: 6 } },
-                    rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.12, 0.34], spread: 10,
-                    lifetime: [6, 14], size: [0.08, 0.01],
-                    color: 0xDCE775, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 80
-                },
-                {
-                    name: "sap_pips", bind: "target", height: 0.75,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
-                    burst: { count: { data: "wave", fallback: 1 }, at: 2 },
-                    shape: { kind: "sphere_surface", radius: 0.26 },
-                    direction: "up", speed: [0.02, 0.07],
-                    lifetime: [10, 18], size: [0.09, 0.01],
-                    color: 0xDCE775, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 12
+                    name: "beat_marks", bind: "target", fit: "body", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    rate: { data: "beats", fallback: 8 }, shape: { kind: "ring", radius: 0.3, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.01, 0.05],
+                    lifetime: [4, 9], size: [0.1, 0.02],
+                    color: 0xDCE775, alpha: [0.7, 0], light: "full", maxParticles: 24
                 }
             ]
         },

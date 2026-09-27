@@ -5,7 +5,7 @@
   "worldcombat.skill.orderup.use.2": "Open a fight with both a strike and a buff",
   "worldcombat.skill.orderup.description.0": "The dish is thrown flat, and the first body it touches takes about %1$s non-contact damage with a %2$s block half-width; the target's Defence, type matchup and criticals are settled on the hit.",
   "worldcombat.skill.orderup.description.1": "Throw distance %1$s blocks at %2$s blocks/tick; if it touches no one the dish breaks apart at the landing point and leaves no damage.",
-  "worldcombat.skill.orderup.description.2": "With an ally clearly smaller than you within %1$s blocks, you gain %2$s stage(s) of a stat in its likeness (solo mode adds one more) - Defence for a Droopy companion, Speed for a Stretchy one, Attack otherwise; in share mode the same buff also reaches up to four allies within %3$s blocks.",
+  "worldcombat.skill.orderup.description.2": "With a clearly smaller ally in line of sight within %1$s blocks, you gain %2$s stage(s) of a stat in its likeness (solo mode adds one more) - Defence for a Droopy companion, Speed for a Stretchy one, Attack otherwise; in share mode the same buff also reaches up to four allies within %3$s blocks. A stat already at its cap is not raised, and this never makes you linger longer.",
   "worldcombat.skill.orderup.share.on": "Share mode: you and up to four nearby allies each gain %1$s stage(s), at the cost of ×0.94 single-hit power and +8 ticks of cooldown.",
   "worldcombat.skill.orderup.share.off": "Solo mode: you gain one extra stage, 1.06x single-hit power and a shorter cooldown; the buff applies to you only.",
   "worldcombat.skill.orderup.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

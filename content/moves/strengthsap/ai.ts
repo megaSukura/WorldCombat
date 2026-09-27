@@ -5,7 +5,8 @@
  *   所以自己血量低于 ai.healBelow 时优先抬一档当回血用；对手当前有效物攻达到 ai.strongAt 时当作强敌优先抽；
  *   已被削到很弱、自己也不缺血时收益下降，不反复榨一个没有力气的目标。
  * 对谁出手：当前威胁；友方、倒下或不可见的不接受。
- * 够不到怎么办：reach 就是抽取距离（本族很短），超出先走近；抽不到就先让给远程招。
+ * 够不到怎么办：reach 就是抽取距离（本族很短），超出先走近；抽不到就先让给远程招。收到「驻守／停留」指令
+ *   且没有开启 ai.leaveStation 时留在原位，不为了搭手离位。
  * 放完之后：自己回了一口、对手物攻被按住，交回共享顺序继续交战。
  */
 namespace CompanionBehavior {
@@ -31,9 +32,15 @@ namespace CompanionBehavior {
         reach: function (context, capability) { return strengthsapReach(context, capability); },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if ((context.facts.intent === "hold" || context.facts.intent === "stay")
+                && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false)) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
+            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+                > CompanionBehavior.ai<number>(capability, "maxChase", 6)) return false;
+            // 自己满血、对手物攻又已经封底：这一抽既抽不动也回不了，不白用。
+            if (CompanionBehavior.ratio(CompanionBehavior.source(context)) >= 0.98
+                && CompanionBehavior.stage(context, target, "atk") <= -6) return false;
+            return true;
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

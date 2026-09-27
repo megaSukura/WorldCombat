@@ -10,13 +10,20 @@
  * 放完之后：雾自己滚远，伙伴交回共享顺序；空喷只走冷却；窄走廊或两道墙之间额外加分，适合封路。
  */
 namespace PokemonSkills {
-    /** 从自身沿 source→target 方向、在射程内、离中轴 1.8 格以内的敌人；按是否计入已毒者数出覆盖人数。 */
+    /**
+     * 用同一条滚雾的真实几何数覆盖人数：雾口随滚程扩到锥宽，某距离处的球半径就是该处前沿的横截面。
+     * 判定与命中用同一份公式，不再用固定 1.8 格窄带。视线按喷口到目标是否畅通过滤，与实际罩取一致。
+     */
     function smogCovered(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context).point;
         const dx = target.point[0] - self[0], dy = target.point[1] - self[1], dz = target.point[2] - self[2];
         const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (length < 0.01) return 0;
-        const reach = Number(capability.data.range) || 6;
+        const world = CompanionBehavior.world(context), actor = world.source(), values = capability.data.config;
+        const args = { world: world, actor: actor, skill: skills["smog"], detail: { values: values } };
+        const reach = Math.max(0.5, Number(capability.data.range) || p("smog", "reach", args));
+        const mouth = p("smog", "mouth", args);
+        const flare = smogFlare(mouth, p("smog", "cone", args), reach);
         const seek = CompanionBehavior.ai<boolean>(capability, "seekUnpoisoned", true);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
@@ -27,9 +34,11 @@ namespace PokemonSkills {
             const ox = other.point[0] - self[0], oy = other.point[1] - self[1], oz = other.point[2] - self[2];
             const project = (ox * dx + oy * dy + oz * dz) / length;
             if (project < -0.5 || project > reach) continue;
+            const radius = mouth + (flare - mouth) * Math.max(0, Math.min(1, project / reach));
             const t = project / length;
             const lateral = CompanionBehavior.distance(other.point, [self[0] + dx * t, self[1] + dy * t, self[2] + dz * t]);
-            if (lateral > 1.8) continue;
+            if (lateral > radius) continue;
+            if (!world.clear(CompanionBehavior.point(self), CompanionBehavior.point(other.point))) continue;
             count++;
         }
         return count;
@@ -39,16 +48,18 @@ namespace PokemonSkills {
     function smogNarrow(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const world = CompanionBehavior.world(context);
         if (typeof (world as any).freeSpace !== "function") return 0;
-        const self = CompanionBehavior.source(context).point;
+        const body = CompanionBehavior.source(context);
+        const self = body.point, height = body.height || 1.4;
         const dx = target.point[0] - self[0], dz = target.point[2] - self[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1) return 0;
         const px = -dz / length, pz = dx / length;
-        const mx = (self[0] + target.point[0]) / 2, mz = (self[2] + target.point[2]) / 2, y = self[1];
+        // freeSpace wants a feet centre; the body point is the centre, so drop by half the height.
+        const mx = (self[0] + target.point[0]) / 2, mz = (self[2] + target.point[2]) / 2, y = self[1] - height / 2;
         let blocked = 0;
         for (let i = 0; i < 2; i++) {
             const side = i === 0 ? 2.4 : -2.4;
-            if (!world.freeSpace(CompanionBehavior.point([mx + px * side, y, mz + pz * side]), 0.9, 1.4)) blocked++;
+            if (!world.freeSpace(CompanionBehavior.point([mx + px * side, y, mz + pz * side]), 0.9, height)) blocked++;
         }
         return blocked;
     }

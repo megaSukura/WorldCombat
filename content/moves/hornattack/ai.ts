@@ -4,12 +4,24 @@
  * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 6）格内；角程短，够不到先让共享接近逻辑送进来。
  * 对谁出手：贴地的目标排得更前——顶撞本来就是地面动作，飞在空中的目标不好锁角；目标身后有可推直线的空间时再抬一档
  * （有可推直线且要把敌挤离友方时用）；`ai.finish` 收残血。抗推 Boss 上推不动，只值那一记初伤。
- * 出手位置：越贴近越好（角程约六成内），好让原生短接触稳稳咬住并把对方推出去。
+ * 出手位置：按身体尺寸加冲身步幅算出的贴身距离，好让原生短接触稳稳咬住并把对方推出去，不再按射程比例猜。
  * 放完之后：目标被推离原位、护甲未动；交回共享计划决定继续贴身还是等冷却。
  */
 namespace PokemonSkills {
     function hornattackValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
+    }
+
+    /** 出手站位由真实身体尺寸加冲身步幅决定，而不是按射程比例猜；读不到个体参数时退回射程的一部分。 */
+    function hornattackReach(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const self = CompanionBehavior.source(context);
+        const width = self.width === undefined ? 0.9 : self.width;
+        const height = self.height === undefined ? 1.4 : self.height;
+        const half = Math.max(width, height) * 0.5;
+        let rush = 0.6;
+        try { rush = Math.max(0, Number(p("hornattack", "rush", factContext(CompanionBehavior.world(context))))); } catch (ignored) { }
+        const reach = half + 0.45 + rush;
+        return isFinite(reach) && reach > 0 ? Math.max(1.0, reach) : Math.max(1.0, capability.data.range * 0.62);
     }
 
     /** 目标身后是否留有可推的直线空间（只读世界探针），供「有可推直线」这一倾向使用。 */
@@ -24,7 +36,7 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("hornattack", {
         protocols: ["world_combat:attack"],
-        reach: function (context, capability) { return Math.max(1.0, capability.data.range * 0.62); },
+        reach: function (context, capability) { return hornattackReach(context, capability); },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;

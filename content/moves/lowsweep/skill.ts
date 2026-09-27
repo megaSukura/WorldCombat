@@ -6,11 +6,13 @@ namespace PokemonSkills {
     const lowsweepFastText = "world_combat.move.lowsweep.text.fast";
     const lowsweepMissText = "world_combat.move.lowsweep.text.miss";
 
-    /** 用某个具体目标的事实求这一次扫踢的威力与掉速级数（目标移动速度只有在这里读得到）。 */
-    function lowsweepCut(action: CombatAction, world: CombatWorld, target: CombatActor, values: any): { power: number; stages: number } {
+    /** 用某个具体目标的现场事实求这一次扫踢的威力、掉速级数与别腿时长（目标此刻的实际水平速度只有这里读得到）。 */
+    function lowsweepCut(action: CombatAction, world: CombatWorld, target: CombatActor, values: any): { power: number; stages: number; rootTicks: number } {
         const context: NumberContext = { pokemon: CobblemonCombat.pokemon(action.actor()), skill: skills["lowsweep"],
             detail: { values: values }, world: world, actor: action.actor(), target: { world: world, actor: target } };
-        return { power: p("lowsweep", "cut", context), stages: Math.max(1, Math.round(p("lowsweep", "slowStages", context))) };
+        return { power: p("lowsweep", "cut", context),
+            stages: Math.max(1, Math.round(p("lowsweep", "slowStages", context))),
+            rootTicks: Math.max(0, Math.round(p("lowsweep", "rootTicks", context))) };
     }
 
     define({
@@ -53,52 +55,75 @@ namespace PokemonSkills {
             const arc = p("lowsweep", "sweepArc", action);
             const spark = Math.max(8, Math.round(p("lowsweep", "spark", action)));
             const hobble = Math.max(30, Math.round(p("lowsweep", "hobbleTicks", action)));
-            const rootTicks = Math.max(0, Math.round(p("lowsweep", "rootTicks", action)));
             const whirl = !!(config && config.whirl);
             const scale = body === null ? 1 : (body.width() + body.height()) / 2.3;
             const feetY = origin.y() - (body === null ? 0.7 : body.height() / 2);
-            // 与判定同一组顶点：贴着地面的低弧，玩家一眼看出站在弧线上会被削到。
+            const ground = feetY + 0.2;
             let hx = direction.x(), hz = direction.z();
             const flat = Math.sqrt(hx * hx + hz * hz);
             if (flat < 1e-6) { hx = 0; hz = 1; } else { hx /= flat; hz /= flat; }
-            const path: number[][] = [];
-            const steps = 9;
-            for (let i = 0; i <= steps; i++) {
-                const a = (i / steps - 0.5) * arc * Math.PI / 180;
-                const dx = hx * Math.cos(a) - hz * Math.sin(a), dz = hx * Math.sin(a) + hz * Math.cos(a);
-                path.push([origin.x() + dx * reach, feetY + .2, origin.z() + dz * reach]);
+            const base = Math.atan2(hz, hx), half = arc * Math.PI / 360;
+            const pivot = WorldCombat.point(origin.x(), ground, origin.z());
+            // 判定与表现共用同一片薄扇面的顶点：脚踝高度上的低弧尖，一格一格从一侧扫到另一侧。
+            function tip(angle: number): CombatPoint {
+                return WorldCombat.point(origin.x() + Math.cos(angle) * reach, ground, origin.z() + Math.sin(angle) * reach);
             }
-            sound(action, "minecraft:entity.player.attack.sweep");
-            WorldFeedback.emit(world, lowsweepScene, 1, origin,
-                { moment: "sweep", arc: arc, reach: reach, path: path, whirl: whirl ? 1 : 0, spark: spark, scale: scale }, 24);
+            function blade(from: number, to: number): CombatPoint[] {
+                return [pivot, tip(from), tip((from + to) / 2), tip(to)];
+            }
+            const scenes = WorldFeedback.actionScenes(lowsweepScene);
+            const struck: { [ref: string]: boolean } = {};
+            let hits = 0, settled = false;
 
-            let hits = 0;
-            WorldGeometry.selectBodies(world, WorldGeometry.bodySector(WorldCombat.point(origin.x(), feetY + .2, origin.z()), direction, reach, arc, { below: .2, above: .5 }),
-                function (target, facts) {
-                    if (hits >= 3 || world.friendly(target)) return;
+            function finish(current: CombatAction, count: number): void {
+                if (settled) return;
+                settled = true;
+                const scope = current.world();
+                scenes.stop(current, "arc");
+                if (count === 0) {
+                    WorldFeedback.emit(scope, lowsweepScene, 1, origin, { moment: "miss", spark: spark, scale: scale }, 20);
+                    WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.2, 0)), lowsweepMissText, [], 22);
+                }
+                sound(current, count > 0 ? "cobblemon:impact.fighting" : "minecraft:entity.player.attack.weak");
+                done(current);
+            }
+
+            function step(current: CombatAction, index: number): void {
+                if (settled) return;
+                const scope = current.world();
+                const from = base - half + (index / 6) * 2 * half;
+                const to = base - half + ((index + 1) / 6) * 2 * half;
+                const verts = blade(from, to);
+                const path: number[][] = verts.map(function (point) { return [point.x(), point.y(), point.z()]; });
+                scenes.show(current, "arc", verts[3],
+                    { moment: "sweep", path: path, arc: arc, reach: reach, whirl: whirl ? 1 : 0, spark: spark,
+                      density: Math.round(spark * 5), scale: scale,
+                      progress: (index + 1) / 6, direction: [direction.x(), direction.y(), direction.z()] });
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodyPolygon(verts, feetY, feetY + 0.7), function (target, facts) {
+                    const ref = String(target.ref());
+                    if (struck[ref] || hits >= 3 || scope.friendly(target)) return;
                     const low = facts.boundsMin(), high = facts.boundsMax();
-                    const contact = WorldCombat.point(Math.max(low.x(), Math.min(high.x(), origin.x())), Math.max(low.y(), feetY + .2), Math.max(low.z(), Math.min(high.z(), origin.z())));
-                    if (!world.clear(WorldCombat.point(origin.x(), feetY + .2, origin.z()), contact)) return;
-                    hits++;
-                    const rolled = lowsweepCut(action, world, target, config);
-                    const landed = hurt(action, target, "lowsweep", rolled.power,
-                        { damage: damageSpec("lowsweep", "cut"), contact: true });
-                    if (!landed) return;
-                    NativeEffects.boost(world, target, "spe", -rolled.stages);
-                    MobEffects.apply(world, target, lowsweepHobble, hobble, 0);
-                    if (world.valid(target) && rolled.stages >= 2 && rootTicks > 0) WorldEffects.apply(world, target, "rooted", {}, rootTicks);
-                    WorldFeedback.emit(world, lowsweepScene, 1, contact,
-                        { moment: "hit", target: String(target.ref()), stages: rolled.stages, spark: spark,
+                    const contact = WorldCombat.point(Math.max(low.x(), Math.min(high.x(), origin.x())),
+                        Math.max(low.y(), ground), Math.max(low.z(), Math.min(high.z(), origin.z())));
+                    if (!scope.clear(origin, contact)) return;
+                    struck[ref] = true; hits++;
+                    const rolled = lowsweepCut(current, scope, target, config);
+                    if (!hurt(current, target, "lowsweep", rolled.power, { damage: damageSpec("lowsweep", "cut"), contact: true })) return;
+                    NativeEffects.boost(scope, target, "spe", -rolled.stages);
+                    MobEffects.apply(scope, target, lowsweepHobble, hobble, 0);
+                    if (scope.valid(target) && rolled.stages >= 2 && rolled.rootTicks > 0) WorldEffects.apply(scope, target, "rooted", {}, rolled.rootTicks);
+                    WorldFeedback.emit(scope, lowsweepScene, 1, contact,
+                        { moment: "hit", target: ref, stages: rolled.stages, spark: spark,
                             intensity: Math.max(0.6, Math.min(2.2, rolled.power / 55)), scale: scale }, 24);
-                    WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)),
+                    WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.2, 0)),
                         rolled.stages >= 2 ? lowsweepFastText : lowsweepHitText, [rolled.stages], 24);
                 });
-            if (hits === 0) {
-                WorldFeedback.emit(world, lowsweepScene, 1, origin, { moment: "miss", spark: spark, scale: scale }, 20);
-                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), lowsweepMissText, [], 22);
+                if (index + 1 >= 6) { finish(current, hits); return; }
+                current.after(1, function (next: CombatAction) { step(next, index + 1); });
             }
-            sound(action, hits > 0 ? "cobblemon:impact.fighting" : "minecraft:entity.player.attack.weak");
-            done(action);
+
+            sound(action, "minecraft:entity.player.attack.sweep");
+            step(action, 0);
         }
     });
 }

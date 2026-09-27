@@ -122,28 +122,34 @@ namespace PokemonSkills {
                 const blocked = victim === null && contact.blocked();
                 const blockCell = blocked && contact.blockPosition() !== null ? contact.blockPosition() : null;
 
-                WorldFeedback.emit(world, chipawayScene, 1, at,
+                // 一拍一影：单枚拳影自这一拍的当前高度沿真实拳路推向碰点；判定与表现共用同一对端点。
+                const delta = at.minus(from), distance = delta.length();
+                const fistSpeed = Math.max(0.16, Math.min(1.2, distance / 3));
+                const fist = { dir: distance < 1e-4 ? direction : [delta.x() / distance, delta.y() / distance, delta.z() / distance],
+                    speed: fistSpeed, life: Math.max(1, Math.round(distance / fistSpeed)) };
+                WorldFeedback.emit(world, chipawayScene, 1, from,
                     { moment: "beat", beat: beat + 1, path: [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]],
-                      direction: direction, chips: chips, scale: scale, intensity: intensity }, 14);
+                      direction: direction, chips: chips, scale: scale, intensity: intensity, fist: fist }, 14);
 
                 if (victim !== null) {
+                    // 每一拍给独立 strike 身份：同一动作对同一目标的多次接触各自结算，不被按目标去重。
                     const connected = impact(current, contact, chipawayId, power,
-                        { damage: damageSpec(chipawayId, "strike"), contact: true });
+                        { damage: damageSpec(chipawayId, "strike"), contact: true }, "beat" + (beat + 1));
                     if (connected) {
                         landed++;
                         WorldFeedback.emit(world, chipawayScene, 1, at,
-                            { moment: "hit", target: String(victim.ref()), beat: beat + 1, chips: chips,
+                            { moment: "hit", target: String(victim.ref()), beat: beat + 1, chips: chips, arrival: fist.life,
                               guard: chipawayGuard(world, victim), scale: scale, intensity: intensity }, 16);
                         sound(current, "cobblemon:impact.normal");
                     } else {
                         WorldFeedback.emit(world, chipawayScene, 1, at,
-                            { moment: "resist", target: String(victim.ref()), chips: Math.round(chips * 0.5), scale: scale }, 14);
+                            { moment: "resist", target: String(victim.ref()), chips: Math.round(chips * 0.5), arrival: fist.life, scale: scale }, 14);
                     }
                 } else if (blocked) {
                     blockedAny = true;
                     WorldFeedback.emit(world, chipawayScene, 1, blockCell === null ? at : blockCell,
                         { moment: "block", direction: chipawayFace(contact.blockFace()),
-                          chips: Math.round(chips * 0.5), scale: scale }, 14);
+                          chips: Math.round(chips * 0.5), arrival: fist.life, scale: scale }, 14);
                 }
 
                 beat++;

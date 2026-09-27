@@ -1,14 +1,18 @@
 /**
  * 打草结 / grassknot 的 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、还活着，在 `ai.maxChase` 之内，且体量达到 `ai.minMass`（默认 0＝总是可以）。
+ * 什么局面下出手：对手可见、敌对、还活着，在 `ai.maxChase` 之内，体量达到 `ai.minMass`（默认 0＝总是可以），
+ * 足底有真实支撑、与落点同层，且按 `snareDelay` 估计不会在收圈前整步走出范围、也没有正在跳离。
  * 对谁出手：**优先重的目标**——分量就是这招的全部；已经带着 `tripped` 身份的目标排到后面，不重复缠。
  * 够不到怎么办：距离交给 `reach`，共享任务把身位收进射程；`available` 只判断「值不值得把这一招列入候选」。
  * 放完接什么：交回共享交战计划；它是一记远程削弱，不负责收尾。
  */
 namespace PokemonSkills {
-    /** 只读、回调内缓存的目标质量观察（百克＝hg）；宝可梦读原生体重，其他生物返回 null 由调用处按体型估算。 */
-    
+    /** 一次决策共享的参数上下文：同一批读取复用世界、施法者与配置。 */
+    function grassknotContext(context: WorldBehavior.Context, capability: WorldBehavior.Capability): FactContext {
+        const world = CompanionBehavior.world(context);
+        return { world: world, actor: world.source(), skill: skills["grassknot"], detail: { values: capability.data.config || {} } };
+    }
 
     /** 目标质量（hg）：优先原生体重，缺失时按碰撞箱体积估算。 */
     function grassknotMassOf(context: WorldBehavior.Context, target: WorldMethods.Subject): number {
@@ -17,6 +21,24 @@ namespace PokemonSkills {
         if (typeof target.width === "number" && typeof target.height === "number")
             return target.width * target.width * target.height * 1000;
         return 0;
+    }
+
+    /** 足底真实支撑；没有支撑（空中、水面、岩浆）就不值得播种。 */
+    function grassknotSupport(context: WorldBehavior.Context, target: CompanionBehavior.Entity): CombatPoint | null {
+        const world = CompanionBehavior.world(context), here = CompanionBehavior.point(target.point);
+        return SurfacePaths.support(world, WorldCombat.point(here.x(), here.y(), here.z()), 1, 4);
+    }
+
+    /** 按实际收圈延迟估计目标能走开多远；只有明显会整步离开或正在跳起才放弃。 */
+    function grassknotEscaping(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const velocity = target.velocity;
+        if (!velocity || velocity.length !== 3) return false;
+        if (velocity[1] > 0.08) return true;
+        const ctx = grassknotContext(context, capability);
+        const delay = Math.max(4, Math.round(p("grassknot", "snareDelay", ctx)));
+        const radius = p("grassknot", "snareRadius", ctx);
+        const horizontal = Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]);
+        return horizontal * delay > radius * 2.0;
     }
 
     CompanionBehavior.registerUse("grassknot", {
@@ -30,8 +52,10 @@ namespace PokemonSkills {
             return grassknotMassOf(context, target) >= CompanionBehavior.ai<number>(capability, "minMass", 0) * 10;
         },
         accepts: function (context, capability, target) {
-            // 飞在空中的目标脚下没有支撑，收结绊不到；本招不推荐这类目标。
-            return !target.friendly && target.health > 0 && target.visible && target.grounded !== false;
+            // 飞在空中的目标脚下没有支撑，收结绊不到；与落点不同层或即将跳离的也不推荐。
+            if (target.friendly || !(target.health > 0) || !target.visible || target.grounded === false) return false;
+            if (!grassknotSupport(context, target)) return false;
+            return !grassknotEscaping(context, capability, target);
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

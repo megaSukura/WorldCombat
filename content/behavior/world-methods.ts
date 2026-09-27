@@ -14,6 +14,8 @@ namespace WorldMethods {
         hurtAgo: number;
         /** In sight after hidden/revealed resolution: a hidden, unrevealed subject reports false. Every host observation carries it. */
         visible: boolean;
+        /** Last observed point only: no current health, motion or combat facts accompany this aim. */
+        memoryAim?: { seen: number; expires: number };
         /** Carries the shared world_combat:hidden effect. */
         hidden?: boolean;
         /** Carries the reveal marker (minecraft:glowing). */
@@ -24,6 +26,8 @@ namespace WorldMethods {
     export interface Host {
         /** Detached facts for one explicitly known reference; null when it is unloaded or invalid. Does not discover subjects. */
         subject?(ref: string): Subject | null;
+        /** Identity/lifecycle check only; must not refresh an unseen subject's position or facts. */
+        validReference?(ref: string): boolean;
         /** Point-only hosts use the subject point. Body hosts can supply the closest reachable body point for range/navigation. */
         reachPoint?(target: Subject, from: number[]): number[];
         move(point: number[], within: number, memory: WorldBehavior.Bag): string;
@@ -68,8 +72,11 @@ namespace WorldMethods {
      * 当前共享目标如何接入协议，见 content/behaviors/companion/rules.ts 与 wild/rules.ts；
      * 新用途可用同一 registry 注册目标、方法和策略。
      */
+    export interface Positioning { point: number[]; within: number; }
     export interface Use {
         protocols: string[];
+        /** Opt into a finite last-observed point. Only aim/point/motion capabilities can submit it, without an entity reference. */
+        memoryAim?: boolean;
         ready?(context: WorldBehavior.Context, capability: WorldBehavior.Capability): boolean;
         available?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, purpose: string, target: Subject | null): boolean;
         priority?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject | null): number;
@@ -77,7 +84,8 @@ namespace WorldMethods {
         selectTarget?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, proposed: Subject): Subject | null;
         accepts?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject): boolean;
         approachTarget?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject): Subject | null;
-        approach?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject, reach: number): number[] | "wait" | null | void;
+        /** Arrays retain a one-block arrival tolerance; Positioning supplies a precise authored tolerance. */
+        approach?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject, reach: number): number[] | Positioning | "wait" | null | void;
         target?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject): Subject | null;
         /** Return the submitted instance for host-managed completion; boolean hosts may supply progress.instance explicitly. */
         execute?(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Subject, progress: WorldBehavior.Bag): WorldBehavior.Result | Submission;
@@ -120,10 +128,44 @@ namespace WorldMethods {
     export function find(context: WorldBehavior.Context, ref: string): Subject | null {
         if (source(context).ref === ref) return source(context);
         var nearby: Subject[] = context.facts.nearby || [];
-        for (var i = 0; i < nearby.length; i++) if (nearby[i].ref === ref) return nearby[i];
+        var present: Subject | null = null;
+        for (var i = 0; i < nearby.length; i++) if (nearby[i].ref === ref) { present = nearby[i]; break; }
+        if (present && present.visible) return present;
+        var remembered = context.scratch.rememberedSubjects as KnownSubjects | undefined;
+        if (remembered && remembered.tick === context.tick && remembered.actor === context.actor && remembered.values[ref]) return remembered.values[ref];
+        if (present) return present;
         var known = context.scratch.knownSubjects as KnownSubjects | undefined;
         return known && known.tick === context.tick && known.actor === context.actor
             && Object.prototype.hasOwnProperty.call(known.values, ref) ? known.values[ref] : null;
+    }
+    /** Remember an actual visible observation, or publish its previous point for this frame. No host observation is made. */
+    export function observedAim(context: WorldBehavior.Context, key: string, visible: Subject | null, lifetime: number): Subject | null {
+        if (!isFinite(lifetime) || lifetime < 0) throw new Error("Invalid observation lifetime");
+        var records = context.memory.observedPositions || (context.memory.observedPositions = {}), record = records[key];
+        if (visible && visible.visible && !visible.memoryAim && find(context, visible.ref) === visible && !(visible.health !== undefined && visible.health <= 0)
+            && visible.point.length === 3 && visible.point.every(coordinate => typeof coordinate === "number" && isFinite(coordinate))) {
+            record = records[key] = { actor: context.actor, ref: visible.ref, point: visible.point.slice(), seen: context.tick, expires: context.tick + lifetime };
+            return null;
+        }
+        var host = context.services.behavior as Host | undefined;
+        if (!record || record.actor !== context.actor || context.tick < record.seen || context.tick > record.expires
+            || !host || !host.validReference || !host.validReference(record.ref)) { delete records[key]; return null; }
+        var nearby: Subject[] = context.facts.nearby || [];
+        if (nearby.some(other => other.ref === record.ref && other.visible)) return null;
+        var subject: Subject = { ref: record.ref, point: record.point.slice(), visible: false, hurtAgo: 1000000,
+            memoryAim: { seen: record.seen, expires: record.expires } };
+        var remembered = context.scratch.rememberedSubjects as KnownSubjects | undefined;
+        if (!remembered || remembered.tick !== context.tick || remembered.actor !== context.actor)
+            remembered = context.scratch.rememberedSubjects = { tick: context.tick, actor: context.actor, values: Object.create(null) };
+        remembered.values[subject.ref] = subject;
+        return subject;
+    }
+    function validMemoryAim(context: WorldBehavior.Context, subject: Subject): boolean {
+        var memory = subject.memoryAim, host = context.services.behavior as Host | undefined;
+        var remembered = context.scratch.rememberedSubjects as KnownSubjects | undefined;
+        return !!memory && context.tick >= memory.seen && context.tick <= memory.expires && !!host && !!host.validReference
+            && host.validReference(subject.ref) && !!remembered && remembered.tick === context.tick && remembered.actor === context.actor
+            && remembered.values[subject.ref] === subject;
     }
     /**
      * Explicitly observe a reference already known to this content (for example an observed attacker).
@@ -181,6 +223,7 @@ namespace WorldMethods {
     }
     /** Probe values are cached only for this decision frame, including unavailable (null) observations. */
     export function fact<T>(context: WorldBehavior.Context, probe: string, subject: Subject, argument: any = null): T | null {
+        if (subject.memoryAim) return null;
         return cached<T | null>(context, JSON.stringify([probe, subject.ref, argument]), function () {
             return context.services.fact(probe, subject.ref, argument);
         });
@@ -216,13 +259,22 @@ namespace WorldMethods {
         id(item: WorldBehavior.Capability): string { return this.selector(item); }
         forCapability(item: WorldBehavior.Capability): Use | null { return this.get(this.selector(item)); }
         selectTarget(context: WorldBehavior.Context, item: WorldBehavior.Capability, proposed: Subject): Subject | null {
+            if (!this.permitsAim(context, item, proposed)) return null;
             var rule = this.forCapability(item), target = proposing(context, proposed, function () { return rule && rule.selectTarget ? rule.selectTarget(context, item, proposed) : proposed; });
-            return target && !(target.health !== undefined && target.health <= 0) ? target : null;
+            return target && (!proposed.memoryAim || target === proposed) && this.permitsAim(context, item, target)
+                && !(target.health !== undefined && target.health <= 0) ? target : null;
+        }
+        private permitsAim(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Subject): boolean {
+            if (!target.memoryAim) return true;
+            var rule = this.forCapability(item);
+            return !!rule && rule.memoryAim === true && ["aim", "point", "motion"].indexOf(item.data.kind) >= 0 && validMemoryAim(context, target);
         }
         accepts(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Subject): boolean {
+            if (!this.permitsAim(context, item, target)) return false;
             var rule = this.forCapability(item); return proposing(context, target, function () { return !!rule && (!rule.accepts || rule.accepts(context, item, target)); });
         }
         available(context: WorldBehavior.Context, item: WorldBehavior.Capability, purpose: string, target: Subject | null = null): boolean {
+            if (target && !this.permitsAim(context, item, target)) return false;
             var rule = this.forCapability(item);
             return proposing(context, target, function () { return !!rule && item.data.available !== false && (!rule.available || rule.available(context, item, purpose, target)); });
         }
@@ -264,6 +316,7 @@ namespace WorldMethods {
             }), target);
         }
         isReady(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Subject | null = null): boolean {
+            if (target && !this.permitsAim(context, item, target)) return false;
             var rule = this.forCapability(item);
             return proposing(context, target, function () { return !!rule && (rule.ready ? rule.ready(context, item) : item.data.ready !== false); });
         }
@@ -359,30 +412,33 @@ namespace WorldMethods {
             var usage = this.library.forCapability(item)!;
             if (!this.library.accepts(context, item, target)) return WorldBehavior.failure("target-declined");
             var subject = target;
-            target = usage.target ? usage.target(context, item, subject) : item.data.kind === "self" ? source(context) : subject;
+            target = subject.memoryAim ? subject : usage.target ? usage.target(context, item, subject) : item.data.kind === "self" ? source(context) : subject;
             if (!target || target.health !== undefined && target.health <= 0) return WorldBehavior.failure("target-left");
-            var approachTarget = usage.approachTarget ? usage.approachTarget(context, item, subject) : item.data.kind === "self" ? source(context) : target;
+            var approachTarget = subject.memoryAim ? subject : usage.approachTarget ? usage.approachTarget(context, item, subject) : item.data.kind === "self" ? source(context) : target;
             if (!approachTarget || approachTarget.health !== undefined && approachTarget.health <= 0) return WorldBehavior.failure("target-left");
             if (context.facts.busy && !this.library.isReady(context, item, subject)) return WorldBehavior.running();
             var reach = this.reach(context, item, purpose); if (reach < 0) return WorldBehavior.failure("invalid-use-reach");
             var here = source(context).point, host = context.services.behavior as Host;
-            var approachPoint = host && host.reachPoint ? host.reachPoint(approachTarget, here) : approachTarget.point;
+            var approachPoint = subject.memoryAim ? subject.point : host && host.reachPoint ? host.reachPoint(approachTarget, here) : approachTarget.point;
             var outside = distance(here, approachPoint) > reach;
             var plan = usage.approach ? usage.approach(context, item, approachTarget, reach) : null;
             if (plan === "wait") { this.stop(context); this.report(context, "waiting", purpose); return WorldBehavior.running(); }
             var placement = progress.placement;
             if (!plan) { delete progress.placement; placement = null; }
             else {
-                if (plan.length !== 3 || !plan.every(function (coordinate) { return typeof coordinate === "number" && isFinite(coordinate); }))
+                const point = Array.isArray(plan) ? plan : plan.point, tolerance = Array.isArray(plan) ? 1 : plan.within;
+                if (!Array.isArray(point) || point.length !== 3 || !point.every(function (coordinate) { return typeof coordinate === "number" && isFinite(coordinate); })
+                    || typeof tolerance !== "number" || !isFinite(tolerance) || tolerance < 0)
                     return WorldBehavior.failure("invalid-approach-plan");
                 if (!placement || placement.subject !== approachTarget.ref || distance(placement.observed, approachTarget.point) > 1)
-                    placement = progress.placement = { subject: approachTarget.ref, observed: approachTarget.point.slice(), point: plan.slice(), arrived: false };
-                if (distance(here, placement.point) <= 1) placement.arrived = true;
+                    placement = progress.placement = { subject: approachTarget.ref, observed: approachTarget.point.slice(), point: point.slice(), within: tolerance, arrived: false };
+                placement.within = tolerance;
+                if (distance(here, placement.point) <= placement.within) placement.arrived = true;
             }
             var reposition = placement && !placement.arrived;
             if (outside || reposition) {
                 if (this.options.mayApproach && !this.options.mayApproach(context, item, purpose, approachTarget)) return WorldBehavior.failure("guard-range");
-                var destination = reposition ? placement.point : approachPoint, within = reposition ? 1 : reach;
+                var destination = reposition ? placement.point : approachPoint, within = reposition ? placement.within : reach;
                 var navigation = this.move(context, destination, within), moving = navigation === "moving" || navigation === "arrived";
                 if (navigation === "arrived" && reposition) placement.arrived = true;
                 this.report(context, moving ? "approaching" : "blocked", moving ? purpose : navigation);
@@ -390,6 +446,11 @@ namespace WorldMethods {
             }
             if (!this.library.isReady(context, item, subject)) { this.report(context, "waiting", "skill-not-ready"); return WorldBehavior.failure("skill-not-ready"); }
             if (context.memory.navigation || progress.placement) this.stop(context);
+            // Recheck after authored planning and submit only the recorded point. The host cannot resolve or follow the hidden body.
+            if (subject.memoryAim) {
+                if (!validMemoryAim(context, subject)) return WorldBehavior.failure("target-left");
+                target = { ref: "", point: subject.point.slice(), visible: false, hurtAgo: 1000000 };
+            }
             var rule = this.library.forCapability(item)!;
             var result = rule.execute ? rule.execute(context, item, target, progress) : (context.services.behavior as Host).use(item, target);
             if (typeof result !== "boolean" && typeof result !== "number") return result;

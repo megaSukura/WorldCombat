@@ -7,6 +7,11 @@
  * 只剩本招时：威胁一进 `ai.range` 就会炸甲等它撞。
  */
 namespace PokemonSkills {
+    /** 威胁贴到身边还要多久（刻）：距离 ÷ 移动速度；速度不可用时按中等速度估算。 */
+    function spikyShieldArrival(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): number {
+        const speed = typeof threat.speed === "number" && isFinite(threat.speed) && threat.speed > 0.01 ? threat.speed : 0.15;
+        return CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point) / speed;
+    }
     CompanionBehavior.registerUse("spikyshield", {
         protocols: ["world_combat:survive"],
         reach: function (context, capability) { return 0; },
@@ -19,10 +24,18 @@ namespace PokemonSkills {
                 <= CompanionBehavior.ai<number>(capability, "range", 5);
         },
         priority: function (context, capability, target) {
-            const threat = context.senses["world_combat:threat"];
+            const threat: CompanionBehavior.Entity | null = target || context.senses["world_combat:threat"];
             if (!threat) return 0;
-            const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point);
-            return distance <= 3 ? 100 : 55;
+            const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+            let contact = 0;
+            for (let i = 0; i < nearby.length; i++) {
+                const other = nearby[i];
+                if (!other.friendly && other.health > 0 && CompanionBehavior.distance(other.point, self.point) <= 4) contact++;
+            }
+            let value = CompanionBehavior.distance(self.point, threat.point) <= 3 ? 100 : 55;
+            if (contact > 1) value += Math.min(24, (contact - 1) * 6);        // 被围时立甲更值：每个人各扎一次
+            if (spikyShieldArrival(context, threat) <= 20) value += 6;         // 马上就撞上来，先摆好等它
+            return Math.min(120, value);
         }
     });
 

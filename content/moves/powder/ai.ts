@@ -28,6 +28,7 @@ namespace CompanionBehavior {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (status(context, threat, "powdered")) return false;
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", true)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
         const facts = CompanionBehavior.pokemonFacts(context, threat);
         if (facts && facts.types && facts.types.indexOf("grass") >= 0) return false;
@@ -41,10 +42,11 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !powderWants(context, item, target)) return 0;
+            // 只有真实火攻证据（近期实际火攻或有效配招里的火招）才值得埋粉；这是针对火攻者的对策，不是通用的40常规招。
             if (powderFireArmed(context, target)) return 82;
             const facts = CompanionBehavior.pokemonFacts(context, target);
             const fireType = !!facts && !!facts.types && facts.types.indexOf("fire") >= 0;
-            return fireType ? 50 : 40;
+            return fireType ? 50 : 0;
         }
     });
 

@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.detect.summary": "在极短窗口内读穿下一次攻击并完整免除，成功后可获得一段先机（默认抬速度，可配置为抬攻击）；连续使用容易失败。",
-  "worldcombat.skill.detect.description.0": "读招窗口 %1$s，挡下窗口内的下一次攻击；成功后获得 %2$s 的先机，速度或物攻最多提升 %3$s 级，到期或被清除后只撤去这次提升。",
+  "worldcombat.skill.detect.summary": "在极短窗口内读穿下一次直接攻击并完整免除（近战或弹体都算），成功后可获得一段先机（默认抬速度，可配置为抬攻击）；连续使用容易失败。",
+  "worldcombat.skill.detect.description.0": "读招窗口 %1$s，挡下窗口内来自敌人的下一次直接攻击（近战或弹体都算，持续伤害等残留不会触发）；成功后获得 %2$s 的先机，速度或物攻最多提升 %3$s 级，到期或被清除后只撤去这次提升。",
   "worldcombat.skill.detect.description.1": "凝神 %1$s，冷却 %2$s。",
   "worldcombat.skill.detect.description.2": "连用失误率 %1$s：约 9 秒内再次读招每次叠加约 25%（最高约 85%），失误时这一下直接落空；停手约 9 秒后计数归零。",
   "worldcombat.skill.detect.use.0": "对手起手瞬间拆掉它的第一击",
@@ -21,5 +21,5 @@
   "world_combat.move.detect.text.read": "看穿！",
   "world_combat.move.detect.text.opening": "先机 +%1$s",
   "world_combat.move.detect.text.miss": "未读中",
-  "worldcombat.skill.detect.description.window": "凝神结束才打开读招窗口；窗口只对来自敌人的攻击生效，自身或没有敌人的环境伤害不会消耗它，走完仍未读中则落空。读中后先机立即抬升一项能力等级：默认速度，开启反击时改为攻击。"
+  "worldcombat.skill.detect.description.window": "凝神结束才打开读招窗口；窗口只对来自敌人的直接攻击生效，自身、环境与持续伤害等残留不会消耗它，走完仍未读中则落空。读中后先机立即抬升一项能力等级：默认速度，开启反击时改为攻击。"
 }

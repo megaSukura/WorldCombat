@@ -6,12 +6,13 @@
  * 三幕：
  *   起（windup，提交前）：术者沉腰、双臂张开，脚边卷起一圈尘土；同时沿拟建弧线画出一道淡淡的冷光，
  *       让玩家在出手前就看见退路会被封在哪（`data.path` 是拟建弧，`fit:"none"` 按世界坐标画）。
- *   立（seal，提交后）：以落点为心、术者到落点的方向为轴，取 `columns` 个点位，从地表往上立 `height` 格
- *       `minecraft:iron_bars`（`world.terrain` 租借，`linger` 活过招式，到期原方块回来）。
- *       墙按**实际成功格数**立起：碰撞箱挡住的格、受保护的格、非空气的格都会失败，弧线上因此留下缺口。
- *       只对**落墙时真实贴住墙面**的敌人做一次短推挤（往术者方向），并让他们短暂走不快、被钉一下；
- *       没有贴住墙的目标不写任何压制——墙本身才是这招的作用。
- *   收（fold）：`hold` 到点，栅栏由租约自己归还原方块，墙基冷光收回。
+ *   立（seal，提交后）：起手锁定的落点为准，沿拟建弧取 `columns` 个点位，从地表往上立 `height` 格
+ *       `minecraft:iron_bars`（`world.terrainResult` 租借，`linger` 活过招式，到期原方块回来）。
+ *       墙只按**原生真正放下的格**立起：受保护的格会被跳过，碰撞箱挡住的格与弧上受阻挡的列都留下缺口；一格没放下就散场。
+ *       只对**落墙时真实贴住墙面**的敌人做一次短推挤（往术者方向，走 `hitDisplace` 让原生抗击退生效），
+ *       并让他们短暂走不快、被钉一下；没有贴住墙的目标不写任何压制——墙本身才是这招的作用。
+ *   收（fold）：`hold` 到点，栅栏由租约自己归还原方块；墙的托管效果每几刻用 `terrainCells` 核验实装格并重画，
+ *       被挖掉的列立即留白，最后一格消失或效果被驱散时冷光随效果一起收。
  *
  * 目标形状：`kind:"aim"` 接受敌人或地面点。
  *   点敌人：墙立在它背影一侧（保留原来的推荐位置），弧朝向取术者到它的方向。
@@ -26,6 +27,7 @@
 namespace PokemonSkills {
     const blockId = "block";
     const blockScene = "world_combat:move_block";
+    const blockWallClientScene = "world_combat:move_block_wall";
     const blockPenned = "world_combat:block_penned";
     const blockWall = "world_combat:block_wall";
     const blockWallKey = "block:wall:";
@@ -34,14 +36,22 @@ namespace PokemonSkills {
     const blockPenSpeed = 0.3;
     /** 贴住墙面的判定余量：超过「半个身位 + 这个数」就不算接触。 */
     const blockContactReach = 0.85;
+    /** 核验真实租约前，施法者超过这个距离时，空读不代表墙没了（观察范围有限）。 */
+    const blockWatchRange = 48;
 
-    /** `world_combat:block_wall` 的状态：墙基折线、锚点与它的大小；到期时用它播放收栅。 */
+    /** `world_combat:block_wall` 的状态：租约、墙根锚点、实装格与强度；到期时用它播放收栅。 */
     function blockWallData(json: string): string {
         const value = JSON.parse(json);
-        if (!Array.isArray(value.path)) throw new Error("Invalid block wall path");
+        if (typeof value.lease !== "number" || !isFinite(value.lease)) throw new Error("Invalid block wall lease");
         if (!Array.isArray(value.anchor) || value.anchor.length !== 3
             || !value.anchor.every(function (n: any) { return typeof n === "number" && isFinite(n); }))
             throw new Error("Invalid block wall anchor");
+        if (!Array.isArray(value.cells) || !value.cells.every(function (cell: any) {
+            return Array.isArray(cell) && cell.length === 3 && cell.every(function (n: any) { return typeof n === "number" && isFinite(n); });
+        })) throw new Error("Invalid block wall cells");
+        if (!Array.isArray(value.frame) || value.frame.length !== 4
+            || !value.frame.every(function (n: any) { return typeof n === "number" && isFinite(n); }))
+            throw new Error("Invalid block wall frame");
         ["columns", "scale", "intensity"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid block wall state");
         });
@@ -52,10 +62,12 @@ namespace PokemonSkills {
         return WorldCombat.point(data.anchor[0], data.anchor[1], data.anchor[2]);
     }
 
-    function blockWallVisual(world: CombatWorld, data: any): void {
-        WorldFeedback.keep(world, blockWallKey + String(world.source().ref()), blockScene, 1, blockAnchor(data),
-            { moment: "penned", path: data.path, columns: data.columns, lines: data.columns,
-                scale: data.scale, intensity: data.intensity }, 40);
+    function blockWallVisual(world: CombatWorld, effect: CombatEffect, data: any): void {
+        // 绑定在墙的托管效果上：墙效果结束（自然到期、被驱散或最后一格消失）时一起收，不留失效锚。
+        WorldFeedback.onEffect(world, effect.id(), blockWallKey + "mote", blockScene, 1, blockAnchor(data),
+            { moment: "penned", columns: data.columns, scale: data.scale, intensity: data.intensity });
+        WorldFeedback.onEffect(world, effect.id(), blockWallKey + "wall", blockWallClientScene, 1, blockAnchor(data),
+            { cells: data.cells, columns: data.columns, scale: data.scale, intensity: data.intensity });
     }
 
     /** 这格栅栏会不会落在某个存活生物的碰撞箱里；会就跳过，免得把谁封进墙里。 */
@@ -71,20 +83,28 @@ namespace PokemonSkills {
         return false;
     }
 
+    /** 弧墙的水平几何：朝向、弧心、半径与半张角；点敌与点地面只差 behind 一步。 */
+    function blockArcFrame(origin: CombatPoint, at: CombatPoint, span: number, gap: number, arcDegrees: number, behind: boolean):
+        { hx: number; hz: number; cx: number; cz: number; radius: number; half: number } {
+        const dx = at.x() - origin.x(), dz = at.z() - origin.z(), length = Math.sqrt(dx * dx + dz * dz);
+        const hx = length < 0.01 ? 0 : dx / length, hz = length < 0.01 ? 1 : dz / length;
+        const radius = behind ? Math.max(0.8, gap + span * 0.5) : Math.max(0.8, span * 0.5 + 0.5);
+        return { hx: hx, hz: hz, cx: behind ? at.x() : at.x() - hx * radius, cz: behind ? at.z() : at.z() - hz * radius,
+            radius: radius, half: Math.max(0, arcDegrees) * Math.PI / 360 };
+    }
+
     /**
      * 规划一道弧墙。
      *   behind=true（点敌人）：弧心就是敌人，半径 `gap + 弧长一半`，墙落在它的背影一侧。
      *   behind=false（点地面）：弧心后退一个半径，弧的中间点正好穿过落点，弧朝向取术者到落点。
-     * 返回：真正放置的格子、成功列的墙基折线、拟建弧折线（含受阻列）、墙根锚点与实际成功列数。
+     * 返回：候选格子、成功列的墙基折线、拟建弧折线（含受阻列）、墙根锚点、实际成功列数与弧几何。
      */
     function blockPlan(world: CombatWorld, origin: CombatPoint, at: CombatPoint, behind: boolean,
                        span: number, height: number, gap: number, arcDegrees: number, columns: number):
-        { cells: any[]; path: number[][]; proposed: number[][]; anchor: CombatPoint; columns: number } {
-        const dx = at.x() - origin.x(), dz = at.z() - origin.z(), length = Math.sqrt(dx * dx + dz * dz);
-        const hx = length < 0.01 ? 0 : dx / length, hz = length < 0.01 ? 1 : dz / length;
-        const radius = behind ? Math.max(0.8, gap + span * 0.5) : Math.max(0.8, span * 0.5 + 0.5);
-        const centre = behind ? at : WorldCombat.point(at.x() - hx * radius, at.y(), at.z() - hz * radius);
-        const half = Math.max(0, arcDegrees) * Math.PI / 360;
+        { cells: any[]; path: number[][]; proposed: number[][]; anchor: CombatPoint; columns: number; frame: any } {
+        const frame = blockArcFrame(origin, at, span, gap, arcDegrees, behind);
+        const centre = WorldCombat.point(frame.cx, at.y(), frame.cz), radius = frame.radius, half = frame.half;
+        const hx = frame.hx, hz = frame.hz;
         const baseY = Math.floor(at.y()), cells: any[] = [], path: number[][] = [], proposed: number[][] = [];
         const seen: { [key: string]: boolean } = Object.create(null);
         let placed = 0;
@@ -122,43 +142,108 @@ namespace PokemonSkills {
         }
         const middle = path.length ? path[Math.floor(path.length / 2)] : null;
         const anchor = middle !== null ? WorldCombat.point(middle[0], middle[1], middle[2]) : at;
-        return { cells: cells, path: path, proposed: proposed, anchor: anchor, columns: placed };
+        return { cells: cells, path: path, proposed: proposed, anchor: anchor, columns: placed, frame: frame };
+    }
+
+    /**
+     * 从原生真正放下的格子重算存续轮廓：每个 (x,z) 取最低一格作墙根，折线沿弧的切向排序。
+     * 被破坏或被跳过的列不会补回，画出来就是真实缺口；`cells` 保留全部实装格，供逐段绘制与接触判定。
+     */
+    function blockOutline(placed: number[][], frame: any): { cells: number[][]; path: number[][]; columns: number } {
+        const cells: number[][] = [], bases: { x: number; z: number; y: number }[] = [], groups: { [key: string]: number } = Object.create(null);
+        for (let i = 0; i < placed.length; i++) {
+            const entry = placed[i];
+            if (!entry) continue;
+            const x = Number(entry[0]), y = Number(entry[1]), z = Number(entry[2]);
+            if (!isFinite(x) || !isFinite(y) || !isFinite(z)) continue;
+            cells.push([x, y, z]);
+            const key = x + "," + z;
+            if (groups[key] === undefined || y < groups[key]) groups[key] = y;
+        }
+        Object.keys(groups).forEach(function (key) {
+            const parts = key.split(",");
+            bases.push({ x: Number(parts[0]), z: Number(parts[1]), y: groups[key] });
+        });
+        bases.sort(function (a, b) {
+            const aAlong = (a.x + 0.5 - frame.cx) * frame.hx + (a.z + 0.5 - frame.cz) * frame.hz;
+            const aPerp = (a.x + 0.5 - frame.cx) * (-frame.hz) + (a.z + 0.5 - frame.cz) * frame.hx;
+            const bAlong = (b.x + 0.5 - frame.cx) * frame.hx + (b.z + 0.5 - frame.cz) * frame.hz;
+            const bPerp = (b.x + 0.5 - frame.cx) * (-frame.hz) + (b.z + 0.5 - frame.cz) * frame.hx;
+            const av = Math.atan2(aPerp, aAlong), bv = Math.atan2(bPerp, bAlong);
+            return av - bv;
+        });
+        const path: number[][] = [];
+        for (let i = 0; i < bases.length; i++) path.push([bases[i].x + 0.5, bases[i].y + 1.1, bases[i].z + 0.5]);
+        return { cells: cells, path: path, columns: bases.length };
     }
 
     /** 落墙时真实贴住这道墙的非友方：到任意一格的平面距离在「半个身位 + 余量」以内，且与那格上下相交。 */
-    function blockContacts(world: CombatWorld, cells: any[], height: number): CombatActor[] {
+    function blockContacts(world: CombatWorld, cells: number[][]): CombatActor[] {
         const found: CombatActor[] = [], seen: { [ref: string]: boolean } = Object.create(null);
         for (let i = 0; i < cells.length; i++) {
-            const cell = cells[i];
-            const bodies = world.query(WorldCombat.point(cell.x + 0.5, cell.y + 0.5, cell.z + 0.5), 2.2, false);
+            const cell = cells[i], cx = cell[0] + 0.5, cy = cell[1], cz = cell[2] + 0.5;
+            const bodies = world.query(WorldCombat.point(cx, cy + 0.5, cz), 2.2, false);
             for (let j = 0; j < bodies.length; j++) {
                 const actor = bodies[j], ref = String(actor.ref());
                 if (seen[ref] || world.friendly(actor)) continue;
                 const facts = world.observe(actor);
                 if (facts === null || facts.health() <= 0) continue;
                 const centre = facts.position(), half = facts.width() / 2;
-                const dx = Math.max(0, Math.abs(centre.x() - (cell.x + 0.5)) - half);
-                const dz = Math.max(0, Math.abs(centre.z() - (cell.z + 0.5)) - half);
+                const dx = Math.max(0, Math.abs(centre.x() - cx) - half);
+                const dz = Math.max(0, Math.abs(centre.z() - cz) - half);
                 if (dx * dx + dz * dz > blockContactReach * blockContactReach) continue;
                 const feet = centre.y() - facts.height() / 2;
-                if (feet >= cell.y + 1.05 || feet + facts.height() <= cell.y - 0.35) continue;
+                if (feet >= cell[1] + 1.05 || feet + facts.height() <= cell[1] - 0.35) continue;
                 seen[ref] = true; found.push(actor);
             }
         }
         return found;
     }
 
+    /** 供 AI 只读判断：这道弧墙会不会把某个友方（世界点）隔在墙外。 */
+    export function blockArcWouldTrapAllies(world: CombatWorld, actor: CombatActor, at: CombatPoint, allies: number[][]): boolean {
+        if (!allies.length || String(actor.domain()) !== "cobblemon") return false;
+        const body = world.observe(actor);
+        if (body === null) return false;
+        const values = config(world, actor, blockId);
+        const context: NumberContext = { pokemon: CobblemonCombat.pokemon(actor), skill: skills[blockId], detail: { values: values }, world: world, actor: actor };
+        const span = Math.max(2.4, p(blockId, "span", context));
+        const gap = Math.max(0.6, p(blockId, "gap", context));
+        const arc = Math.max(90, Math.min(240, p(blockId, "arc", context)));
+        const frame = blockArcFrame(body.position(), at, span, gap, arc, true);
+        const chord = frame.radius * Math.sin(frame.half) + 0.6;
+        for (let i = 0; i < allies.length; i++) {
+            const dx = allies[i][0] - at.x(), dz = allies[i][2] - at.z();
+            const along = dx * frame.hx + dz * frame.hz;
+            const perp = dx * (-frame.hz) + dz * frame.hx;
+            if (along >= frame.radius - 0.6 && along <= frame.radius + 6 && Math.abs(perp) <= chord) return true;
+        }
+        return false;
+    }
+
     WorldCombat.effect(blockWall, 1, 600, "actor", blockWallData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(blockWall, "start", function (effect) {
         const world = effect.world();
         if (!world.valid(effect.target())) { effect.end(); return; }
-        blockWallVisual(world, JSON.parse(effect.state()));
+        blockWallVisual(world, effect, JSON.parse(effect.state()));
         effect.schedule("watch", "watch", 4, "{}");
     });
     WorldCombat.effectHandler(blockWall, "watch", function (effect) {
         const world = effect.world();
         if (!world.valid(effect.target())) { effect.end(); return; }
-        blockWallVisual(world, JSON.parse(effect.state()));
+        const data = JSON.parse(effect.state()), anchor = blockAnchor(data);
+        const body = world.observe(effect.target());
+        // 核验真实租约：只有施法者还在墙附近时，空读才代表墙真的没了；局部被挖只重画剩下的格。
+        if (body !== null && body.position().minus(anchor).length() <= blockWatchRange) {
+            const alive = world.terrainCells(data.lease);
+            if (!alive || alive.length === 0) { effect.end(); return; }
+            const placed: number[][] = [];
+            for (let i = 0; i < alive.length; i++) placed.push([alive[i].x(), alive[i].y(), alive[i].z()]);
+            const outline = blockOutline(placed, { hx: data.frame[0], hz: data.frame[1], cx: data.frame[2], cz: data.frame[3] });
+            data.cells = outline.cells; data.columns = outline.columns;
+            effect.state(JSON.stringify(data));
+        }
+        blockWallVisual(world, effect, data);
         effect.schedule("watch", "watch", 4, "{}");
     });
     WorldCombat.effectHandler(blockWall, "end", function (effect) {
@@ -214,6 +299,8 @@ namespace PokemonSkills {
             const enemy = target !== null && world.valid(target) && !world.friendly(target);
             const targetBody = enemy && target !== null ? world.observe(target) : null;
             const at = targetBody !== null ? targetBody.position() : action.targetPosition();
+            // 起手锁点：预览与执行用同一个落点，目标随后移动也不会把墙改到别处。
+            action.data("cast", JSON.stringify({ point: [at.x(), at.y(), at.z()], enemy: enemy ? 1 : 0 }));
             const span = Math.max(2.4, p(blockId, "span", action));
             const height = Math.max(1, Math.min(3, Math.round(p(blockId, "height", action))));
             const gap = Math.max(0.6, p(blockId, "gap", action));
@@ -230,14 +317,30 @@ namespace PokemonSkills {
                 label: config && config.brace === true ? "挡路·撑臂" : "挡路" };
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), self = action.actor(), target = action.target();
+            const world = action.world(), self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
-            const enemy = target !== null && world.valid(target) && !world.friendly(target);
-            const targetBody = enemy && target !== null ? world.observe(target) : null;
-            const at = targetBody !== null ? targetBody.position() : action.targetPosition();
+            let at = action.targetPosition(), enemy = false;
+            const locked = action.data("cast");
+            if (locked !== null) {
+                const value = JSON.parse(locked);
+                at = WorldCombat.point(value.point[0], value.point[1], value.point[2]);
+                enemy = value.enemy === 1;
+            } else {
+                const target = action.target();
+                enemy = target !== null && world.valid(target) && !world.friendly(target);
+                if (enemy && target !== null) {
+                    const body = world.observe(target); if (body !== null) at = body.position();
+                }
+            }
             if (at.minus(origin).length() < 0.4) {
                 WorldFeedback.emit(world, blockScene, 1, at, { moment: "fizzle" }, 16);
+                done(action); return;
+            }
+            // 执行重验：目标在起手期间走远或被墙挡住时，不远程立墙。
+            if (enemy && (at.minus(origin).length() > action.range() + 0.5 || WorldGeometry.blockHit(world, origin, at) !== null)) {
+                WorldFeedback.emit(world, blockScene, 1, at, { moment: "fizzle" }, 16);
+                sound(action, "minecraft:block.iron_trapdoor.close");
                 done(action); return;
             }
             const span = Math.max(2.4, p(blockId, "span", action));
@@ -250,30 +353,40 @@ namespace PokemonSkills {
             const shove = Math.max(0, p(blockId, "shove", action));
             const wall = blockPlan(world, origin, at, enemy, span, height, gap, arc, columns);
             const scale = Math.max(0.6, Math.min(2.4, span / 4.0));
-            const intensity = Math.max(0.6, Math.min(2.4, wall.columns / 7 + height / 4));
             if (!wall.cells.length) {
                 WorldFeedback.emit(world, blockScene, 1, at, { moment: "fizzle", scale: scale }, 18);
                 sound(action, "minecraft:block.iron_trapdoor.close");
                 done(action); return;
             }
-            world.terrain(JSON.stringify({ cells: wall.cells, replace: true, linger: true }), hold);
-            // 只对被墙真实接触到的敌人做短推挤与压制；没有贴住的目标不写任何状态。
-            const pressed = blockContacts(world, wall.cells, height);
+            // 只认原生真正放下的格：受保护或被跳过的格不算数，一格没放下就散场。
+            let receipt: any = null;
+            try { receipt = JSON.parse(String(world.terrainResult(JSON.stringify({ cells: wall.cells, replace: true, linger: true, bestEffort: true }), hold))); }
+            catch (error) { receipt = null; }
+            const placed: number[][] = receipt && receipt.id > 0 && Array.isArray(receipt.placed) ? receipt.placed : [];
+            if (!placed.length) {
+                WorldFeedback.emit(world, blockScene, 1, at, { moment: "fizzle", scale: scale }, 18);
+                sound(action, "minecraft:block.iron_trapdoor.close");
+                done(action); return;
+            }
+            const outline = blockOutline(placed, wall.frame);
+            const intensity = Math.max(0.6, Math.min(2.4, outline.columns / 7 + height / 4));
+            // 只对实装墙真实接触到的敌人做短推挤与压制；没有贴住的目标不写任何状态。
+            const pressed = blockContacts(world, outline.cells);
             const away = at.minus(origin);
             for (let i = 0; i < pressed.length; i++) {
                 const contact = pressed[i], body = world.observe(contact);
                 if (body === null) continue;
-                if (shove > 0 && away.length() > 0.01) world.displace(contact, away.unit().scale(-shove));
+                if (shove > 0 && away.length() > 0.01) world.hitDisplace(contact, away.unit().scale(-shove));
                 MobEffects.apply(world, contact, blockPenned, hold, 0);
                 if (pin > 0) WorldEffects.apply(world, contact, "rooted", {}, pin);
                 WorldFeedback.emit(world, blockScene, 1, body.position(),
-                    { moment: "press", target: String(contact.ref()), columns: wall.columns, shove: shove, intensity: intensity }, 22);
+                    { moment: "press", target: String(contact.ref()), columns: outline.columns, shove: shove, intensity: intensity }, 22);
             }
-            const data = { path: wall.path, columns: wall.columns, scale: scale, intensity: intensity,
-                anchor: [wall.anchor.x(), wall.anchor.y(), wall.anchor.z()] };
+            const data = { lease: receipt.id, cells: outline.cells, columns: outline.columns, scale: scale, intensity: intensity,
+                frame: [wall.frame.hx, wall.frame.hz, wall.frame.cx, wall.frame.cz], anchor: [wall.anchor.x(), wall.anchor.y(), wall.anchor.z()] };
             action.effect(blockWall, self, JSON.stringify(data), hold);
             WorldFeedback.emit(world, blockScene, 1, wall.anchor,
-                { moment: "seal", path: wall.path, columns: wall.columns, lines: wall.columns,
+                { moment: "seal", path: outline.path, columns: outline.columns, lines: outline.columns,
                     scale: scale, intensity: intensity, shove: shove, pressed: pressed.length }, 40);
             WorldFeedback.text(world, wall.anchor.plus(WorldCombat.point(0, 1.2, 0)), blockSealText, [Math.round(hold / 20 * 10) / 10], 30);
             sound(action, "minecraft:block.piston.extend");

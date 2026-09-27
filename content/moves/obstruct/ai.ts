@@ -2,9 +2,12 @@
  * 拦堵 / obstruct 的 AI 用途。
  *
  * 什么局面下出手：有威胁、进入 `ai.range`、自己身上还没有拒马时立起；
+ * 但它不是"远程围攻里无条件定身"——只有威胁已经贴上、正把矛头指向自己、或确实在朝自己逼近时才立，
+ * 站在远处不靠近的敌人不会换来自锁。
  * 优先正在逼近的接触攻击者：已经贴上或正把矛头指向自己时抬到 110，正朝自己移动且在 5 格内时抬到 80；
+ * 手上还有接触／近战输出能在拒马后跟打时再抬一档，否则原地站着不如留给别的行动。
  * 只有远程／不靠近的独敌时降到 25，不抢守住的位置。撑罩期间定身，所以它是一记“请君入瓮”的取舍。
- * 只剩本招时，敌人贴进 `ai.range` 就会立起等它撞。
+ * 只剩本招时，敌人贴进 `ai.range` 并继续逼近就会立起等它撞。
  */
 namespace PokemonSkills {
     /** 该威胁是否正朝自己移动（用 survey 提供的速度）：贴过来的是接触攻击者，才值得为它立拒马。 */
@@ -15,6 +18,15 @@ namespace PokemonSkills {
         const length = Math.sqrt(dx * dx + dz * dz);
         return length > 0.01 && (velocity[0] * dx + velocity[2] * dz) / length > 0.01;
     }
+    /** 当前决策帧里自己是否还有一记接触／近战输出，能在拒马后跟打。 */
+    function obstructHasOffense(context: WorldBehavior.Context): boolean {
+        const capabilities = context.capabilities || [];
+        for (let i = 0; i < capabilities.length; i++) {
+            const protocols = capabilities[i].protocols || [];
+            if (protocols.indexOf("world_combat:contact") >= 0 || protocols.indexOf("world_combat:melee") >= 0) return true;
+        }
+        return false;
+    }
 
     CompanionBehavior.registerUse("obstruct", {
         protocols: ["world_combat:survive"],
@@ -24,16 +36,22 @@ namespace PokemonSkills {
             if (CompanionBehavior.guarded(context, CompanionBehavior.source(context), ObstructRule)) return false;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return false;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point)
-                <= CompanionBehavior.ai<number>(capability, "range", 4);
+            const self = CompanionBehavior.source(context), distance = CompanionBehavior.distance(self.point, threat.point);
+            if (distance > CompanionBehavior.ai<number>(capability, "range", 4)) return false;
+            // 已经在打自己或贴到接触距离：值得立；否则必须真在逼近，才不是对远程围攻空立。
+            if (threat.attacking === self.ref || distance <= 3) return true;
+            return obstructClosing(self, threat);
         },
         priority: function (context, capability, target) {
             const threat = context.senses["world_combat:threat"], self = CompanionBehavior.source(context);
             if (!threat) return 0;
             const distance = CompanionBehavior.distance(self.point, threat.point);
-            if (threat.attacking === self.ref || distance <= 2.5) return 110;
-            if (obstructClosing(self, threat) && distance <= 5) return 80;
-            return distance <= 4 ? 55 : 25;
+            const contact = threat.attacking === self.ref || distance <= 2.5;
+            const closing = obstructClosing(self, threat) && distance <= 5;
+            const offense = obstructHasOffense(context);
+            if (contact) return offense ? 120 : 100;
+            if (closing) return offense ? 85 : 65;
+            return distance <= 4 ? 45 : 20;
         }
     });
 

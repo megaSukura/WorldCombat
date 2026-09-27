@@ -14,8 +14,8 @@
  *   stamp        基础一击威力 52 + 物攻偏移 + 体重偏移；心机 ×0.86 / 直球 ×1.16。
  *   seize        乘机威力倍率 1.30 + 等级偏移；心机 +0.25；命中时若目标仍带疏忽则乘上它。
  *   startle      乘机畏缩倍率 1.50 + 心机 +0.5；乘机命中时乘在畏缩几率上。
- *   charmTicks   疏忽窗口 32 刻 + 心机 +24 + 等级偏移（窗口越长越能等，也越容易被躲开）。
- *   feint        卖萌到扑击之间的间隔 7 刻 − 速度偏移 + 心机 3；它也是起手时长的来源。
+ *   charmTicks   疏忽窗口 8 刻 + 心机 4 + 等级偏移（窗口很紧，远距扑到会真的过期）。
+ *   feint        卖萌到扑击之间的间隔 4 刻 − 速度偏移 + 心机 2；它短于窗口，近距才赶得上。
  *   lunge        扑击距离 3.4 格 + 物攻偏移 + 等级偏移；它决定这一记能追上的目标。
  *   pace         扑击速度 0.75 格/刻 + 速度偏移（手快的补击更急）。
  *   radius       接触判定 0.55 格 + 体型高度偏移。
@@ -52,21 +52,21 @@ namespace PokemonSkills {
         startle: percent(
             F.base(1.50).plus(F.when(F.pref("guile"), F.const(0.5), F.const(0))).clamp(1.2, 2.2).round(2),
             "乘机畏缩倍率", "乘机命中时，畏缩几率乘上这个倍率；心机把这个优势再放大。"),
-        /** 疏忽窗口：32 + 心机 24 + 等级偏移[0,20]；夹 24..90。 */
+        /** 疏忽窗口：基础 8 + 心机 4 + 等级偏移[0,2]；夹 6..14。 */
         charmTicks: seconds(
-            F.base(32).plus(F.when(F.pref("guile"), F.const(24), F.const(0)))
-                .plus(F.level().minus(30).times(0.5).clamp(0, 20)).clamp(24, 90).round(0),
-            "疏忽窗口", "卖萌后目标放开警惕的时间；窗口里扑到才算乘机。心机把它拉长，等级也让它更久。"),
+            F.base(8).plus(F.when(F.pref("guile"), F.const(4), F.const(0)))
+                .plus(F.level().minus(30).times(0.05).clamp(0, 2)).clamp(6, 14).round(0),
+            "疏忽窗口", "卖萌后目标放开警惕的时间，紧到只有近身扑到才来得及；心机把它稍稍拉长，等级也加一点。远距离等冲过去就过期了。"),
         /** 起手：8 − 速度偏移[−2,3] + 心机 2；夹 5..14。 */
         wink: seconds(
             F.base(8).minus(F.stat("speed").minus(55).times(0.04).clamp(-2, 3))
                 .plus(F.when(F.pref("guile"), F.const(2), F.const(0))).clamp(5, 14).round(0),
             "起手", "从读出招式到放出爱心的时间；速度快的个体更快出手，心机多花一点。"),
-        /** 卖萌间隔：7 − 速度偏移[−1,2] + 心机 3；夹 5..14。 */
+        /** 卖萌间隔：基础 4 − 速度偏移[−1,1] + 心机 2；夹 3..8。 */
         feint: seconds(
-            F.base(7).minus(F.stat("speed").minus(55).times(0.03).clamp(-1, 2))
-                .plus(F.when(F.pref("guile"), F.const(3), F.const(0))).clamp(5, 14).round(0),
-            "卖萌间隔", "从放出爱心到扑上去之间的时间；这段时间里目标可以走开或先出手打断。"),
+            F.base(4).minus(F.stat("speed").minus(55).times(0.03).clamp(-1, 1))
+                .plus(F.when(F.pref("guile"), F.const(2), F.const(0))).clamp(3, 8).round(0),
+            "卖萌间隔", "从放出爱心到扑上去之间的时间，比窗口短：近身才赶得上，目标也能趁这段时间走开或先出手。"),
         /** 扑击距离：3.4 + 物攻偏移[−0.5,1.4] + 等级偏移[0,1];夹 2.4..6。 */
         lunge: formula(
             F.base(3.4).plus(F.stat("attack").minus(60).times(0.02).clamp(-0.5, 1.4))

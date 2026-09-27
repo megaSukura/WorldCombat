@@ -1,4 +1,6 @@
 // 原生毒唯一计伤；检查实际附着和持续毒伤，毒性到期自然收束。
+// 加深从目标身上真正生效的毒载体强度起步、重施不降级已有更强的毒，这两点是代码层保证；
+// 单场景里无法稳定先造出更强的毒再重施，因此只断言附着与累计毒伤，强度归属见 skill.ts。
 Smoke.scenario("toxic", function (stage) {
     var caster = stage.pokemon({ species: "Gengar", level: 40, moves: ["toxic"], at: [-2, 0, 0] });
     var target = stage.pokemon({ species: "Snorlax", level: 25, moves: [], at: [2, 0, 0] });

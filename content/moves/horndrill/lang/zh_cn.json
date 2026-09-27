@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.horndrill.summary": "蹲身把角高速旋转成钻头，沿一条直线钻出去——线路上第一个挡路的活体被钻尖贯穿、一次结清（一击必杀）。它是这一族里唯一会位移的一记：让开这条线，或者躲到墙后，钻头就只能扎进地里。",
-  "worldcombat.skill.horndrill.description.0": "沿直线钻出 %1$s 格，钻头判定半径 %2$s 格；首次实际碰到敌人就结算一次处决伤害并停止。 原生免疫和伤害规则仍生效。",
+  "worldcombat.skill.horndrill.summary": "蹲身把角高速旋转成钻头，沿一条直线钻出去——线路上第一个挡路的活体被钻尖贯穿，按本招预算结一次有限的重击。它是这一族里唯一会位移的一记：让开这条线，或者躲到墙后，钻头就只能扎进地里。",
+  "worldcombat.skill.horndrill.description.0": "沿直线钻出 %2$s 格、钻头判定半径 %3$s 格；首次实际碰到敌人就结算一次 %1$s 点贯穿伤害并停止。原生免疫与减伤规则仍生效。",
   "worldcombat.skill.horndrill.description.1": "从锁定钻路到冲出去有 %1$s 秒起钻蓄势；施放者等级每压过对手 1 级就缩短一点，被对手压级时则更长，对手得在这段时间里让开这条线。",
   "worldcombat.skill.horndrill.description.2": "冲速 %1$s 格/刻；撞墙、钻到尽头或钻中目标都会停下。",
   "worldcombat.skill.horndrill.wide.on": "扩钻式：钻头判定 ×1.35，但冲程更短、蓄势更慢、收招更久——更慢更好躲，但不在正中也会被扫到。",
@@ -8,9 +8,10 @@
   "worldcombat.skill.horndrill.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，提交起冷却 %5$s 秒。",
   "worldcombat.skill.horndrill.growth.0": "%1$s 级起冲程到 %2$s 格。",
   "worldcombat.skill.horndrill.growth.1": "%1$s 级起冲程到 %2$s 格、钻头判定到 %3$s 格、起钻蓄势缩到 %4$s 秒。",
-  "worldcombat.skill.horndrill.use.0": "在近身对角线路上贯穿一个目标",
+  "worldcombat.skill.horndrill.use.0": "在近身对角线路上贯穿第一个挡路的目标",
   "worldcombat.skill.horndrill.use.1": "逼对手横向让开，撞上墙就自己停住",
-  "worldcombat.skill.horndrill.use.2": "对手站桩时用一记钻穿终结它",
+  "worldcombat.skill.horndrill.use.2": "对手站桩时用一记重钻打出可观但有限的一击",
+  "worldcombat.skill.horndrill.value.damage": "贯穿伤害",
   "worldcombat.skill.horndrill.value.span": "冲程",
   "worldcombat.skill.horndrill.value.girth": "钻头判定",
   "worldcombat.skill.horndrill.value.thrust": "冲速",
@@ -24,9 +25,8 @@
   "worldcombat.skill.horndrill.preference.wide.help": "开启：钻头判定 ×1.35，代价是冲程 ×0.85、起钻蓄势 +6 刻、收招 +4 刻——更慢更短、对手更好躲，但不在正中也会被扫到。关闭（细钻式）：更长更快、收招更短，但在差之毫厘时会擦身而过。",
   "worldcombat.skill.horndrill.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.horndrill.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑角钻；调小只在近处起钻，调大愿意先追进冲程里。",
-  "worldcombat.skill.horndrill.preference.ai.executionAbove": "残血留手阈值",
-  "worldcombat.skill.horndrill.preference.ai.executionAbove.help": "目标生命比例低于这个值时，不再把一击必杀浪费在它身上；调大只在目标还很健康时出手。",
   "world_combat.move.horndrill.text.kill": "钻穿",
+  "world_combat.move.horndrill.text.hit": "重钻命中",
   "world_combat.move.horndrill.text.miss": "钻头扎空",
   "world_combat.move.horndrill.text.resisted": "对手撑住了"
 }

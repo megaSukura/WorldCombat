@@ -1,16 +1,24 @@
 /**
  * 打鼾 / snore 的伙伴 AI 用途。
  *
- * 什么局面下出手：**只在施法者自己带着共享睡眠身份时**才有意义——睡着的人别的什么都做不了，
+ * 什么局面下出手：**只在施法者自己实际带有睡眠行为（CombatStatus.behaves，而非仅挂标识）时**才有意义——睡着的人别的什么都做不了，
  * 这一声鼾就是它的全部还手。目标可见、敌对、存活且在 `ai.maxChase`（默认 12）格内时列入候选。
  * 对谁出手：范围内的敌人按普通攻击排序；目标越脆（生命比例越低）越优先补上这一下。
  * 够不到怎么办：射程交给 `span`，共享任务把身位收进射程后再出手；睡着了走不动，够不到就等。
  * 放完接什么：交回共享交战计划；它是一记睡眠中的点射，不负责收尾。
  */
 namespace PokemonSkills {
+    // 打鼾的施放许可是「实际带有睡眠行为」而非仅挂标识；共享状态事实只读身份，注册一条 behaves 探针补上。
+    CompanionBehavior.registerFact("world_combat:move_snore/asleep", function (access, actor) {
+        return CombatStatus.behaves(access, actor, "sleep");
+    });
+    function snoreAsleep(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        return !!CompanionBehavior.fact<boolean>(context, "world_combat:move_snore/asleep", target);
+    }
+
     function snoreAwakeGuard(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity | null): boolean {
         if (context.facts.mounted) return false;
-        if (!CompanionBehavior.status(context, CompanionBehavior.source(context), "sleep")) return false;
+        if (!snoreAsleep(context, CompanionBehavior.source(context))) return false;
         if (!target) return true;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= CompanionBehavior.ai<number>(item, "maxChase", 12);
@@ -19,7 +27,7 @@ namespace PokemonSkills {
     CompanionBehavior.registerUse("snore", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
-        ready: function (context) { return CompanionBehavior.status(context, CompanionBehavior.source(context), "sleep"); },
+        ready: function (context) { return snoreAsleep(context, CompanionBehavior.source(context)); },
         available: function (context, capability, purpose, target) { return snoreAwakeGuard(context, capability, target); },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

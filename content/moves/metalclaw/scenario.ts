@@ -17,7 +17,7 @@ Smoke.scenario("metalclaw", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("metalclaw", caster) >= 1, "the caster committed metal claw");
             stage.expect(stage.damageTo(foe) > 0, "the steel claws dealt damage to the foe");
-            stage.note("the ~10% sharpen roll and how many attack levels it raised are random; the two-rake timing varies with speed", {
+            stage.note("the ~10% sharpen roll, how many attack levels it raised (twin form +1 per rake, hone up to the configured cap) and the two-rake timing are random; the two rakes are separate strikes and both settle on the same foe", {
                 casts: stage.casts("metalclaw", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive()

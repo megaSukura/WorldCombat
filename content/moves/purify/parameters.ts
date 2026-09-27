@@ -23,6 +23,7 @@
 namespace PokemonSkills {
     export const purifyId = "purify";
     export const purifyScene = "world_combat:move_purify";
+    export const purifyFlowScene = "world_combat:move_purify_flow";
     export const purifyDrawText = "world_combat.move.purify.text.draw";
     export const purifyAbsorbText = "world_combat.move.purify.text.absorb";
     export const purifyNoneText = "world_combat.move.purify.text.none";

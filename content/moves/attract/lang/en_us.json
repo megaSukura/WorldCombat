@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.attract.summary": "Throw a flying kiss at a single foe: on hit it is infatuated for a while, may lose its nerve each time it tries to act. The spell only holds while you can still see each other and it stays close — break line of sight or walk away and it snaps out of it. Pokemon must be the opposite gender.",
+  "worldcombat.skill.attract.summary": "Throw a flying kiss at a single foe: when it lands and can hold, it is infatuated for a while and may lose its nerve each time it tries to act. The spell only holds while you can still see each other and it stays close — break line of sight or walk away and it snaps out of it. Any living body open to mind-affecting states can take part; native control immunity still applies.",
   "worldcombat.skill.attract.use.0": "Split attention",
   "worldcombat.skill.attract.use.1": "Stall a foe",
   "worldcombat.skill.attract.use.2": "Open a reposition",
-  "worldcombat.skill.attract.description.0": "On hit it is infatuated for %2$s s: while charmed, each time the target tries a move or an ordinary attack it has a %1$s%% chance to lose its nerve, and that attempt is wasted.",
-  "worldcombat.skill.attract.description.1": "The kiss flies at about %2$s blocks/tick with a radius of about %1$s blocks: it takes time and cover can block it, but it slowly homes in (aiming at empty air flies straight). The spell holds only while you have a clear line and it stays within %3$s blocks; breaking line of sight or walking away ends it. Pokemon must be the opposite gender; vanilla mobs, modded mobs and players have no gender, so they are charmed directly.",
+  "worldcombat.skill.attract.description.0": "When the kiss lands and can hold, the target is infatuated for %2$s s: while charmed, each time it tries a move or an ordinary attack it has a %1$s%% chance to lose its nerve, and that attempt is wasted.",
+  "worldcombat.skill.attract.description.1": "The kiss flies at about %2$s blocks/tick with a radius of about %1$s blocks: it takes time and cover can block it, but it slowly homes in (aiming at empty air flies straight). The spell holds only while you have a clear line and it stays within %3$s blocks; if the hit is already beyond that range or through a wall, the kiss fizzles and no infatuation is built. Once held, breaking line of sight or walking away ends it. Any living body open to mind-affecting states can take part; native control immunity still applies.",
   "worldcombat.skill.attract.allure.0": "Allure: a slightly lower chance to lose nerve and a longer cooldown, but a longer infatuation and a wider bond range, made to stall.",
   "worldcombat.skill.attract.allure.1": "Sweet talk: a higher chance to lose nerve and a shorter cooldown, but a shorter infatuation and a narrower bond range, made to interrupt now.",
   "worldcombat.skill.attract.timing": "Cast within %1$s blocks. After %2$s s of preparation it spends %4$s PP to throw the kiss, recovers %3$s s, and commits a %5$s s cooldown on cast.",
@@ -30,5 +30,6 @@
   "effect.world_combat.attract_infatuation": "Infatuated",
   "world_combat.move.attract.text.charm": "Charmed",
   "world_combat.move.attract.text.hesitate": "Hesitated",
-  "world_combat.move.attract.text.snap": "Snapped out"
+  "world_combat.move.attract.text.snap": "Snapped out",
+  "world_combat.move.attract.text.fizzle": "Cannot hold"
 }

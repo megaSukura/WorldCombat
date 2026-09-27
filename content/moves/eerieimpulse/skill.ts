@@ -47,9 +47,12 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", overload: config && config.overload ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) {
-            return { radius: config && config.overload ? 7 : 4, geometry: "area", style: "eerie", color: 0xA8D84A,
-                label: config && config.overload ? "怪异电波·过载" : "怪异电波" };
+        indicator: function (config, pokemon) {
+            const overload = !!(config && config.overload);
+            // 预览圈读实际的 reach 公式（含体型与过载），不再固定写 4/7：圈画到哪就是电波罩到哪。
+            const radius = pokemon ? p(eerieimpulseId, "reach", pokemon) : (overload ? 7 : 4);
+            return { radius: radius, geometry: "area", style: "eerie", color: 0xA8D84A,
+                label: overload ? "怪异电波·过载" : "怪异电波" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor();
@@ -60,21 +63,24 @@ namespace PokemonSkills {
             const jam = Math.max(60, Math.round(p(eerieimpulseId, "jam", action)));
             const arcs = Math.max(8, Math.round(p(eerieimpulseId, "arcs", action)));
             const overload = !!(config && config.overload);
-            let hits = 0;
+            let hits = 0, deepest = 0;
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 3 }),
                 function (target, facts) {
-                    NativeEffects.boost(world, target, "spa", -drop);
+                    // 只有真正掉下去的特攻等级才算这一圈的一次成功：免疫降级或已经封底的目标不吃标记、不报成功。
+                    const delta = NativeEffects.boost(world, target, "spa", -drop);
+                    if (delta === 0) return;
                     MobEffects.apply(world, target, eerieimpulseEffect, jam, 0);
+                    deepest = Math.max(deepest, Math.abs(delta));
                     hits++;
                     WorldFeedback.emit(world, eerieimpulseScene, 1, facts.position(),
-                        { moment: "jam", target: String(target.ref()), drop: drop, arcs: Math.round(6 + arcs * 0.4) }, 24);
+                        { moment: "jam", target: String(target.ref()), drop: Math.abs(delta), arcs: Math.round(6 + arcs * 0.4) }, 24);
                 });
             WorldFeedback.emit(world, eerieimpulseScene, 1, centre,
                 { moment: "pulse", radius: radius, arcs: arcs, drop: drop, hits: hits, overload: overload ? 1 : 0,
                     scale: radius / 4 }, 28);
             sound(action, "minecraft:block.conduit.ambient");
             if (hits > 0)
-                WorldFeedback.text(world, eerieimpulseAbove(centre), "world_combat.move.eerieimpulse.text.jam", [hits, drop], 34);
+                WorldFeedback.text(world, eerieimpulseAbove(centre), "world_combat.move.eerieimpulse.text.jam", [hits, deepest], 34);
             else
                 WorldFeedback.text(world, eerieimpulseAbove(centre), "world_combat.move.eerieimpulse.text.miss", [], 26);
             done(action);

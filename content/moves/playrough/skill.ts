@@ -1,8 +1,9 @@
 /**
  * 嬉闹 / playrough —— 注册与动作。
  *
- * 核心念头：一记**滚翻扑撞的撒欢**。压低身子冲上去、用整个身体把对手撞得人仰马翻，把它顶开一段；
- * 撞翻一个若旁边还站着别人，就顺势再滚过去翻第二个。被撞翻的人攻击下降。
+ * 核心念头：一记**压低身子蹦撞出去的撒欢**。贴着地面朝目标撞上去、用整个身体把它撞得人仰马翻，把它顶开一段；
+ * 撞翻一个若旁边还站着别人，就顺势转身再撞第二个。被撞翻的人攻击下降。没有骨骼翻滚动画，所以它是蹦撞与转身，
+ * 而不是身体打滚。
  *
  * 选取：`kind: "aim"`——首段朝瞄准方向自由滚出，点方向、点世界点或让 AI 推荐敌人都行，允许空扑；
  *   提交与执行都不要求存在敌人（不引用 action.target()）。
@@ -135,9 +136,12 @@ namespace PokemonSkills {
                     scope.hitDisplace(victim, direction.scale(push));
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), playroughDownText, [], 22);
                     if (scope.random() < chance) {
-                        NativeEffects.boost(scope, victim, "atk", -stages);
-                        WorldFeedback.emit(scope, playroughScene, 1, at, { moment: "disarm", target: String(victim.ref()), sparkles: sparkles }, 22);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), playroughAtkText, [stages], 24);
+                        // 回执取 boost 的真实变化：已到 -6 时 boost 返回 0，不画降攻、不报数字。
+                        const lowered = NativeEffects.boost(scope, victim, "atk", -stages);
+                        if (lowered < 0) {
+                            WorldFeedback.emit(scope, playroughScene, 1, at, { moment: "disarm", target: String(victim.ref()), sparkles: sparkles }, 22);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), playroughAtkText, [-lowered], 24);
+                        }
                     }
                     sound(current, "cobblemon:impact.fairy");
                     // 只有首段成功地撞到有效敌人，且还有可见、通视的第二个目标，才真的转身再滚。

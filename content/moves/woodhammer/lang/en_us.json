@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.woodhammer.summary": "Harden the body into a wooden mallet, rear up and slam down: a hit deals heavy damage, hurls the target and staggers its Speed, and brief cracked-ground debris bursts from the contact surface (visual only, no blocks change), while the user takes recoil. Defence feeds the power, and a hard body softens the recoil.",
+  "worldcombat.skill.woodhammer.summary": "Harden the body into a wooden mallet, rear up and slam down onto the landing point locked in before rearing: a hit deals heavy damage, hurls the target and staggers its Speed, and brief cracked debris bursts from a real contact surface (visual only, no blocks change), while the user takes recoil. Defence feeds the power, and a hard body softens the recoil.",
   "worldcombat.skill.woodhammer.description.0": "The slam deals about %1$s contact damage, reaching %2$s blocks after rearing %3$s blocks, with a %4$s block collision radius.",
   "worldcombat.skill.woodhammer.description.1": "On a hit the user takes %1$s times the actual damage as recoil, hurls the target %2$s blocks and drops its Speed %3$s stage(s).",
   "worldcombat.skill.woodhammer.root.on": "Rooted form: more power, knockback and impact debris, but heavier recoil and a slower wind-up and recovery.",
@@ -34,5 +34,5 @@
   "worldcombat.skill.woodhammer.preference.ai.preferHeld.help": "On: prefer sleeping or rooted targets - the slow swing is saved for one that cannot dodge. Off: rank by threat and distance alone.",
   "world_combat.move.woodhammer.text.hit": "Wood Hammer",
   "world_combat.move.woodhammer.text.whiff": "Slam whiffed",
-  "worldcombat.skill.woodhammer.description.crack": "Hit or miss, each landing throws brief cracked-ground debris along the contact surface; they are visual only and change no blocks."
+  "worldcombat.skill.woodhammer.description.crack": "When the slam meets a real contact surface (ground or wall) it throws brief cracked debris spread along that surface's facing; a mid-air hit on a body has no surface and draws no cracks. They are visual only and change no blocks."
 }

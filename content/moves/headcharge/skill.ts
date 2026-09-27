@@ -21,18 +21,25 @@ namespace PokemonSkills {
     const headchargeHitText = "world_combat.move.headcharge.text.hit";
     const headchargeMissText = "world_combat.move.headcharge.text.miss";
 
-    /** 锁定式：每刻把冲撞方向朝最近的敌人微调，最多 turnRate 度；找不到人保持原方向。 */
-    function headchargeSteer(scope: CombatWorld, origin: CombatPoint, direction: CombatPoint, radius: number, turnRate: number): CombatPoint {
+    /**
+     * 锁定式：每刻把冲撞方向朝最近的敌人微调，最多 turnRate 度。
+     * 只追尚未撞过、可见、且在前向可达圆锥内的敌体；找不到就保持原方向，不为贴身的侧后目标原地兜圈。
+     */
+    function headchargeSteer(scope: CombatWorld, origin: CombatPoint, direction: CombatPoint, radius: number, turnRate: number,
+                             struck: { [ref: string]: boolean }): CombatPoint {
         const actors = scope.query(origin, radius + 2.5, false);
         let best: CombatPoint | null = null, bestDistance = Infinity;
         for (let i = 0; i < actors.length; i++) {
             const other = actors[i];
-            if (!scope.valid(other) || scope.friendly(other)) continue;
+            if (!scope.valid(other) || scope.friendly(other) || struck[String(other.ref())]) continue;
             const body = scope.observe(other);
-            if (body === null) continue;
+            if (body === null || !body.visible()) continue;
             const to = body.position().minus(origin), distance = to.length();
             if (distance < 0.15 || distance >= bestDistance) continue;
-            bestDistance = distance; best = to.unit();
+            const unit = to.unit();
+            // 前向圆锥：目标必须大体在冲锋前进方向，避免为贴身最近体反身回旋。
+            if (direction.x() * unit.x() + direction.y() * unit.y() + direction.z() * unit.z() < 0.2) continue;
+            bestDistance = distance; best = unit;
         }
         if (best === null) return direction;
         const dot = Math.max(-1, Math.min(1, direction.x() * best.x() + direction.y() * best.y() + direction.z() * best.z()));
@@ -96,15 +103,23 @@ namespace PokemonSkills {
             const scale = radius / 0.62;
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
             const struck: { [ref: string]: boolean } = {};
+            const struckList: string[] = [];
             let travelled = 0, firstHit = false, hits = 0;
 
             sound(action, "minecraft:entity.ravager.roar");
-            movementScenes.show(action, "charge", action.origin(), { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
-                    afro: afro, scale: scale, intensity: intensity, hunt: hunt ? 1 : 0 });
 
+            function heading(): number[] { return [direction.x(), direction.y(), direction.z()]; }
+
+            function showCharge(current: CombatAction, origin: CombatPoint): void {
+                movementScenes.show(current, "charge", origin, { moment: "charge", direction: heading(),
+                    afro: afro, scale: scale, intensity: intensity, hunt: hunt ? 1 : 0 });
+            }
+
+            /** 每刻按真实 heading 同步 charge（速度线朝向）与 track（贴地尘带），转弯时两者一起弯。 */
             function track(current: CombatAction): void {
-                const scope = current.world();
-                movementScenes.show(current, "track", current.origin(), { moment: "track", direction: [direction.x(), direction.y(), direction.z()], afro: afro, scale: scale });
+                const origin = current.origin();
+                showCharge(current, origin);
+                movementScenes.show(current, "track", origin, { moment: "track", direction: heading(), afro: afro, scale: scale });
             }
 
             function finish(current: CombatAction): void {
@@ -123,46 +138,83 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
+            /**
+             * 单一接触的结算：无论伤害是否落地都先把该体记为已接触（去重防重复伤害），
+             * 但首个「有效重击」档位与命中计数只在伤害真正落地时消费；友体／免伤接触不发成功回执。
+             */
+            function resolveContact(current: CombatAction, scope: CombatWorld, origin: CombatPoint, victim: CombatActor, hit: CombatImpact): void {
+                const ref = String(victim.ref());
+                if (struck[ref]) return;
+                struck[ref] = true;
+                struckList.push(ref);
+                const isFirst = !firstHit;
+                const amount = isFirst ? power : power * through;
+                scope.originData("world_combat:headcharge/recoil", JSON.stringify({ direction: [-direction.x(), -direction.y(), -direction.z()], afro: afro, scale: scale }));
+                const landed = impact(current, hit, "headcharge", amount,
+                    { damage: damageSpec("headcharge", "ram"), contact: true, recoil: recoil });
+                if (!landed) return;
+                if (isFirst) firstHit = true;
+                hits++;
+                const struckIntensity = Math.max(0.6, Math.min(2.4, amount / 120));
+                WorldFeedback.emit(scope, headchargeScene, 1, hit.position(),
+                    { moment: "impact", target: ref, afro: afro, scale: scale,
+                        burst: Math.round(afro * (1 + hits * 0.25)), intensity: struckIntensity, hits: hits }, 30);
+                sound(current, "minecraft:entity.iron_golem.attack");
+                if (scope.valid(victim)) {
+                    const body = scope.observe(victim);
+                    if (body !== null) {
+                        const away = body.position().minus(origin);
+                        scope.hitDisplace(victim, (away.length() >= 0.05 ? away.unit() : direction).scale(shove));
+                    }
+                    WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.5, 0)), headchargeHitText, [hits], 26);
+                }
+            }
+
             function advance(current: CombatAction): void {
                 const scope = current.world();
-                if (hunt) direction = headchargeSteer(scope, current.origin(), direction, radius, turnRate);
-                const origin = current.origin();
+                if (hunt) direction = headchargeSteer(scope, current.origin(), direction, radius, turnRate, struck);
                 const step = Math.min(pace, Math.max(0, length - travelled));
-                if (step <= 0.001) { finish(current); return; }
-                const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.hitEntity()) {
-                    const victim = hit.target();
-                    if (victim !== null && !struck[String(victim.ref())]) {
-                        struck[String(victim.ref())] = true;
-                        const amount = firstHit ? power * through : power;
-                        firstHit = true;
-                        const landed = impact(current, hit, "headcharge", amount,
-                            { damage: damageSpec("headcharge", "ram"), contact: true, recoil: recoil });
-                        hits++;
-                        WorldFeedback.emit(scope, headchargeScene, 1, hit.position(),
-                            { moment: "impact", target: String(victim.ref()), afro: afro, scale: scale,
-                                burst: Math.round(afro * (1 + hits * 0.25)),
-                                intensity: Math.max(0.6, Math.min(2.4, amount / 120)), hits: hits }, 30);
-                        sound(current, "minecraft:entity.iron_golem.attack");
-                        if (landed && scope.valid(victim)) {
-                            const body = scope.observe(victim);
-                            if (body !== null) {
-                                const away = body.position().minus(origin);
-                                scope.hitDisplace(victim, (away.length() >= 0.05 ? away.unit() : direction).scale(shove));
-                            }
-                            WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.5, 0)), headchargeHitText, [hits], 26);
-                        }
-                    }
-                }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= length) { finish(current); return; }
+                if (step <= 0.001 || spend(current, step)) { finish(current); return; }
+                if (travelled >= length) { finish(current); return; }
                 track(current);
                 current.after(1, advance);
             }
 
+            /**
+             * 在本刻预算内逐体推进：用原生 action.moveSweep(...,已接触refs) 连续扫过，
+             * 每撞到一个尚未结算的活体就结算一次；已接触体被排除后同刻可以继续够到下一个身体，
+             * 实墙或推不动的接触保持真实停止，不再用一次性裸 displace 冲过整段而漏掉第二个身体。
+             * 返回是否应当立刻收势（撞墙／无法推进）。
+             */
+            function spend(current: CombatAction, step: number): boolean {
+                const scope = current.world();
+                let remaining = step, guard = 0;
+                while (remaining > 0.001 && guard++ < 16) {
+                    const before = current.origin();
+                    const hit = current.moveSweep(direction.scale(remaining), radius, JSON.stringify(struckList));
+                    const moved = current.origin().minus(before).length();
+                    travelled += moved; remaining -= moved;
+                    if (hit.hitEntity()) {
+                        const victim = hit.target();
+                        if (victim !== null && !struck[String(victim.ref())]) resolveContact(current, scope, before, victim, hit);
+                        continue;
+                    }
+                    if (hit.blocked()) return true;                 // 实墙：真实停止
+                    if (moved < minimumMove) return true;            // 无法推进
+                }
+                return remaining > 0.001;
+            }
+
+            showCharge(action, action.origin());
             advance(action);
         }
     });
+    NativeEffects.recoilApplied.define({ id: "world_combat:move_headcharge/recoil", apply: function (receipt) {
+        if (receipt.damage.move !== "headcharge" || !receipt.world.valid(receipt.actor)) return;
+        const body = receipt.world.observe(receipt.actor), raw = receipt.world.originData("world_combat:headcharge/recoil");
+        if (!body || !raw) return;
+        const data = JSON.parse(raw);
+        WorldFeedback.emit(receipt.world, headchargeScene, 1, body.position(), { moment: "recoil", direction: data.direction,
+            afro: data.afro, scale: data.scale, intensity: Math.max(.5, Math.min(2, receipt.amount / 40)) }, 16);
+    } });
 }

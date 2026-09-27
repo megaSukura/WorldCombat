@@ -1,14 +1,15 @@
 /**
  * 防御指令 / defendorder — 执行组织。
  *
- * 核心念头：召来一队手下扑上来贴住身体、叠成一层会动的甲壳——每贴一只，防御与特防各 +1；被清掉一只，甲壳薄一分。
+ * 核心念头：召来一队手下扑上来贴住身体、叠成一层会动的甲壳——每贴身且可见一只，防御与特防各 +1；被清掉一只，甲壳薄一分。
  *   它是本组里唯一由活物承载收益的一招：收益不在你身上，在那些手下身上，对手可以先清手下再打你。
  *
  * 两幕：
  *   召（windup 播「振翅」，提交前只观察与预告，打断不花代价）。
- *   附（提交后）：放出一队手下（WorldBodies 持久实体，脑 world_combat:move/defendorder/underling）贴住身体；
- *     在**施法者自己的作用域**开一条标记效果作为这批手下的账本，按**活着的手下数量**把等级写进一条由
- *     world_combat:defendorder_guard 载体拥有的 boostWindow 临时窗口，挂上共享身份 world_combat:status/defendorder 的甲壳窗口。
+ *   附（提交后）：先确认本次甲壳载体成立，再放出一队手下（WorldBodies 持久实体，脑 world_combat:move/defendorder/underling）
+ *     从外圈扑进来贴住身体；在**施法者自己的作用域**开一条标记效果作为这批手下的账本，只把**贴身范围内且可见**的
+ *     活手下计入等级，写进一条由 world_combat:defendorder_guard 载体拥有的 boostWindow 临时窗口，挂上共享身份
+ *     world_combat:status/defendorder 的甲壳窗口。夹墙、隔墙或尚未飞到的都不供给。
  * 反制：手下是活物，会被打掉；每只结束（死亡、散去或到期）时，手下只报「自己没了」，由施法者作用域立即减去这一只并重算窗口；
  *   周期核对只作兜底。窗口只按自己的来源回收，刷新时先撤本批旧窗口再重开。
  * 结束：甲壳到期或被清除时，召来的手下一起散去，窗口随载体结束，等级一次收回。
@@ -57,12 +58,18 @@ namespace PokemonSkills {
         const input = JSON.parse(String(effect.input() || "{}"));
         const state = JSON.parse(String(effect.state()));
         const dead = String(input.dead || "");
-        if (dead) state.refs = state.refs.filter(function (ref: string) { return String(ref) !== dead; });
+        const ownerBody = world.observe(owner);
+        const surviving: string[] = [];
         let live = 0;
         for (let i = 0; i < state.refs.length; i++) {
-            const body = world.actor(String(state.refs[i]));
-            if (body !== null && world.valid(body)) live++;
+            const ref = String(state.refs[i]);
+            if (dead && ref === dead) continue;
+            const body = world.actor(ref), facts = body === null ? null : world.observe(body);
+            if (body === null || facts === null || !world.valid(body)) continue;
+            surviving.push(ref);
+            if (ownerBody !== null && defendorderCling(world, ownerBody, facts, state)) live++;
         }
+        state.refs = surviving;
         const desired = Math.max(0, Math.min(defendorderCap, live));
         const applied = Math.max(0, Math.round(Number(state.applied) || 0));
         if (desired !== applied) {
@@ -74,7 +81,18 @@ namespace PokemonSkills {
             state.applied = desired;
         }
         effect.state(JSON.stringify(state));
+        // 最后一只手下（不论被打掉还是自然散去）都没了：甲壳结束、账本收掉，冷却走完即可再召。
+        if (state.refs.length === 0) {
+            MobEffects.consume(world, owner, defendorderGuard);
+            effect.end();
+        }
     });
+
+    /** 一只手下是否真的贴身且可见：在贴身半径内，且主人到它有一条不被方块挡住的直线。 */
+    function defendorderCling(world: CombatWorld, owner: CombatObservation, guard: CombatObservation, state: any): boolean {
+        if (guard.position().minus(owner.position()).length() > (Number(state.cling) || 1)) return false;
+        return world.clear(owner.position(), guard.position());
+    }
 
     export function defendorderRead(world: CombatWorld, owner: CombatActor): any | null {
         const marks = world.effects(owner, defendorderMark);
@@ -115,8 +133,12 @@ namespace PokemonSkills {
             const delta = goal.minus(self.position()), length = delta.length();
             if (length > 0.05) world.motion(brain.target(), delta.unit().scale(Math.min(0.5, length)), false);
         }
-        WorldFeedback.keep(world, "defendorder:cling:" + String(brain.target().ref()), defendorderScene, 1, self.position(),
-            { moment: "cling", owner: state.owner, guards: state.guards, scale: state.scale, size: 0.14 * state.scale }, 20);
+        // 甲光挂在这只手下自己的脑上：死亡或散去当刻随脑一起收，不再靠 20 刻的独立续期慢慢消失。
+        WorldFeedback.onEffect(world, brain.id(), "defendorder:cling:" + String(brain.target().ref()),
+            defendorderScene, 1, self.position(),
+            { moment: "cling", owner: state.owner, guards: state.guards, scale: state.scale, size: 0.14 * state.scale });
+        // 让主人的账本按真实相对位置重算供给：贴到身上且可见才加那一级。
+        defendorderSync(world, owner);
     }
 
     WorldBodies.define(defendorderUnderling, {
@@ -125,20 +147,23 @@ namespace PokemonSkills {
         start: function (brain) {
             const world = brain.world(), state = defendorderState(brain), self = world.observe(brain.target());
             if (self !== null) WorldFeedback.emit(world, defendorderScene, 1, self.position(),
-                { moment: "spent", owner: state.owner, scale: state.scale }, 16);
+                { moment: "appear", owner: state.owner, scale: state.scale }, 14);
         },
         tick: { every: 2, handler: function (brain) { defendorderHover(brain); } },
         end: function (brain) {
             const world = brain.world(), state = defendorderState(brain), body = world.observe(brain.target());
             const owner = world.actor(state.owner);
+            const died = brain.reason() === "died";
             if (body !== null) WorldFeedback.emit(world, defendorderScene, 1, body.position(),
-                { moment: brain.reason() === "died" ? "shed" : "spent", owner: state.owner, scale: state.scale }, 18);
-            // 同一刻结束两只以上，是成片被清：给下一次估收益留一条观察。
+                { moment: died ? "shed" : "spent", owner: state.owner, scale: state.scale }, 18);
             if (owner !== null && world.valid(owner)) {
-                const key = String(owner.ref()), now = world.tick();
-                if (defendorderLostAt[key] !== now) { defendorderLostAt[key] = now; defendorderLostCount[key] = 0; }
-                defendorderLostCount[key] = (defendorderLostCount[key] || 0) + 1;
-                if (defendorderLostCount[key] >= 2) defendorderAoeAt[key] = now;
+                // 只有真的被打死才算「同刻成片损失」；自然到期或主动散去不是 AoE 证据。
+                if (died) {
+                    const key = String(owner.ref()), now = world.tick();
+                    if (defendorderLostAt[key] !== now) { defendorderLostAt[key] = now; defendorderLostCount[key] = 0; }
+                    defendorderLostCount[key] = (defendorderLostCount[key] || 0) + 1;
+                    if (defendorderLostCount[key] >= 2) defendorderAoeAt[key] = now;
+                }
                 // 手下只报「这一只没了」；施法者作用域当刻减去它并重算窗口，不等下一次周期核对。
                 defendorderSync(world, owner, String(brain.target().ref()));
             }
@@ -197,10 +222,16 @@ namespace PokemonSkills {
             const guards = Math.max(10, Math.round(p("defendorder", "guards", action)));
             const scale = ring / defendorderReferenceRadius;
             const hover = 0.25 + body.height() * 0.15;
+            // 先确认本次甲壳载体成立；承载被拒就整次失败，不生成任何手下。
+            if (MobEffects.apply(world, actor, defendorderGuard, bond, brood) === null) { done(action); return; }
             const refs: string[] = [];
+            // 手下从更外圈扑进来，贴近且可见后才供给；被墙挡住的留在原地，不算防御来源。
+            const outward = ring + 1.3;
             for (let i = 0; i < brood; i++) {
                 const angle = i * (Math.PI * 2 / brood) + world.random() * 0.4;
-                const point = body.position().plus(WorldCombat.point(Math.cos(angle) * ring, hover + 0.2, Math.sin(angle) * ring));
+                const preferred = body.position().plus(WorldCombat.point(Math.cos(angle) * outward, hover + 0.2, Math.sin(angle) * outward));
+                const spot = LivingActions.hasFreeSpace(world) ? LivingActions.freeSpot(world, preferred, 0.35, 0.35, 0.7) : null;
+                const point = spot !== null ? spot : preferred;
                 const underling = WorldBodies.spawn(world, point, {
                     appearance: { sprite: "cobblemon:generic/ground_bugs", scale: 0.7, tint: 0xF2C14E, glow: true },
                     size: [0.3, 0.3], health: chitin, gravity: false, pushable: false, invulnerable: false,
@@ -209,11 +240,13 @@ namespace PokemonSkills {
                     owner: String(actor.ref()), phase: angle, spin: 0.06, radius: ring, hover: hover,
                     guards: brood, scale: scale
                 }, bond + 60);
-                refs.push(String(underling.ref()));
+                if (underling !== null && world.valid(underling)) refs.push(String(underling.ref()));
             }
+            if (!refs.length) { MobEffects.consume(world, actor, defendorderGuard); done(action); return; }
+            const cling = ring + 0.5;
             // 账本由施法者建立；随后的同步也在施法者作用域里开窗口。
-            world.effect(defendorderMark, actor, JSON.stringify({ refs: refs, applied: 0, window: 0, scale: scale }), 1200);
-            MobEffects.apply(world, actor, defendorderGuard, bond, brood);
+            world.effect(defendorderMark, actor,
+                JSON.stringify({ refs: refs, applied: 0, window: 0, scale: scale, ring: ring, cling: cling }), 1200);
             defendorderSync(world, actor);
             WorldFeedback.emit(world, defendorderScene, 1, body.position(),
                 { moment: "call", actor: String(actor.ref()), guards: brood, burst: brood * 10, motes: guards, scale: scale, swarm: swarm ? 1 : 0,

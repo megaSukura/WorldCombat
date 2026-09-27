@@ -2,31 +2,44 @@
  * 小偷 / thief —— 注册与动作。
  *
  * 念头两幕：一幕压身探手（提交前 `windup`，低伏、手探向前，火花沿指尖聚起），一幕贴身掠过（提交后沿瞄准方向
- * 逐刻推进，撞上活体的一刻结算接触伤害；若自己空手，便把对手手里的道具换进自己手里，
- * 道具贴图沿一条归巢的弧线飞回施法者）。自己手上有物或对手空手时，只当一记普通打击。
- * 得手后按 `flee` 向后拉开一段；没得手就留在对方身边继续压。
- * 道具交换走统一的原生装备事务（equipmentExchange）：宝可梦携带物与原版生物/玩家的主副手同一契约，
- * 两边快照核对通过才写入，被查封（embargo）者不参与转手；不做任何“复制”或凭空生成。
+ * 逐刻推进，撞上活体的一刻结算接触伤害；命中时重新验空手、接收槽仍空，原子转移才把对手手里的道具换进自己手里，
+ * 物品贴图从真实接触点飞回施法者）。自己手上有物（含途中获得）或对手空手时，只当一记普通打击。
+ * 得手后按 `flee` 沿原生 displace 的实际退回距离向后拉开一段；没得手就留在对方身边继续压。
+ * 道具交换走统一的原生装备事务（equipmentExchange，`firstEmpty` 前置条件）：宝可梦携带物与原版生物/玩家的主副手同一契约，
+ * 两边快照核对通过才写入，被查封（embargo）者不参与转手；不做任何“复制”或凭空生成。物品回执由效果自有的客户端图形承载。
  */
 namespace PokemonSkills {
     const thiefScene = "world_combat:move_thief";
+    const thiefFlowScene = "world_combat:move_thief_flow";
     const thiefStealText = "world_combat.move.thief.text.steal";
     const thiefStrikeText = "world_combat.move.thief.text.strike";
     const thiefFullText = "world_combat.move.thief.text.full";
     const thiefMissText = "world_combat.move.thief.text.miss";
 
-    /** 得手后让道具贴图从目标手里沿一条归巢弧线飞回施法者（道具此刻已经在手里，这只是画面）。 */
-    function thiefArc(current: CombatAction, target: CombatActor, itemId: string): void {
-        var world = current.world(), actor = current.actor();
-        var theirs = world.observe(target), mine = world.observe(actor);
-        if (theirs === null || mine === null) return;
-        var origin = theirs.position().plus(WorldCombat.point(0, theirs.height() * 0.6, 0));
-        var delta = mine.position().plus(WorldCombat.point(0, mine.height() * 0.6, 0)).minus(origin);
-        var velocity = (delta.length() < 0.05 ? aim(current) : delta.unit()).scale(0.9);
-        var flight = current.projectile(origin, velocity, 0, 0.18, 14, 26,
-            function () { }, function () { },
-            JSON.stringify({ item: itemId, scale: 1, glow: true, pierce: 1, homing: { target: String(actor.ref()), turn: 80 } }));
-        WorldFeedback.emit(world, thiefScene, 1, origin, { moment: "snatch", projectile: flight, item: itemId, scale: 1 }, 30);
+    /** 探手：从身体沿真实接触段短伸再收回，固定一枚贴图，不生成粒子或实体。 */
+    function thiefHand(current: CombatAction, point: CombatPoint): void {
+        var scope = current.world(), body = scope.observe(current.actor());
+        var from = body === null ? current.origin() : body.position();
+        WorldFeedback.emit(scope, thiefFlowScene, 1, point,
+            { moment: "reach", from: [from.x(), from.y() + 0.3, from.z()], at: [point.x(), point.y() + 0.15, point.z()],
+                start: scope.tick(), dur: 9 }, 15);
+    }
+
+    /** 得手后的实际后撤：沿真实退回段画一段短探手收回与脚印，距离取原生 displace 的实际值。 */
+    function thiefBack(current: CombatAction, point: CombatPoint, distance: number): void {
+        var scope = current.world(), body = scope.observe(current.actor());
+        var to = body === null ? current.origin() : body.position();
+        WorldFeedback.emit(scope, thiefFlowScene, 1, to,
+            { moment: "back", from: [point.x(), point.y() + 0.3, point.z()], at: [to.x(), to.y() + 0.3, to.z()],
+                start: scope.tick(), dur: 10, back: distance }, 18);
+    }
+
+    /** 得手的物品回执：道具已经在手里，这里只把物品贴图从真实接触点送回施法者，独立于动作弹。 */
+    function thiefHome(current: CombatAction, point: CombatPoint, itemId: string): void {
+        var scope = current.world();
+        WorldFeedback.emit(scope, thiefFlowScene, 1, point,
+            { moment: "homeward", item: itemId, target: String(current.actor().ref()),
+                from: [point.x(), point.y() + 0.3, point.z()], start: scope.tick(), dur: 18 }, 30);
     }
 
     function thiefStrike(action: CombatAction, done: (current: CombatAction) => void): void {
@@ -52,31 +65,40 @@ namespace PokemonSkills {
                 var before = scope.observe(target), dealt = 0, maximum = 1;
                 maximum = before ? Math.max(1, before.maxHealth()) : 1;
                 var power = p("thief", "swipe", current);
+                thiefHand(current, point);
                 var landed = impact(current, hit, "thief", power, { damage: damageSpec("thief", "swipe"), contact: true });
-                var stolen = false, itemId = "";
-                if (landed && scope.valid(target) && emptyHanded && !NativeItems.sealed(scope, actor) && !NativeItems.sealed(scope, target)) {
-                    var theirs = thiefHeldOf(scope, target);
-                    if (theirs !== null && NativeItems.exchangeHeld(scope, actor, target).ok) {
-                        stolen = true; itemId = theirs.id;
-                    }
-                }
                 var after = scope.valid(target) ? scope.observe(target) : null;
                 dealt = before ? before.health() - (after ? after.health() : 0) : 0;
                 var intensity = Math.max(1, Math.min(3, 1 + dealt / maximum * 4));
-                WorldFeedback.emit(scope, thiefScene, 1, point, { moment: stolen ? "snatch" : "strike", target: String(target.ref()),
-                    item: itemId, intensity: intensity, scale: scale, mottoes: Math.round(motes * (0.7 + intensity * 0.2)) }, 30);
-                sound(current, "cobblemon:impact.dark");
-                if (stolen) {
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), thiefStealText, [], 30);
-                    sound(current, "minecraft:entity.item.pickup");
-                    thiefArc(current, target, itemId);
-                } else {
-                    var message = emptyHanded ? thiefStrikeText : thiefFullText;
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), message, [], 28);
+                var stolen = false, itemId = "";
+                // 命中时重新验空手并由原生 CAS 要求接收槽仍空；途中自己获物、或目标已倒下则退回普通打击。
+                if (landed && after !== null && after.health() > 0 && !NativeItems.sealed(scope, actor) && !NativeItems.sealed(scope, target)) {
+                    var theirs = thiefHeldOf(scope, target);
+                    if (theirs !== null && NativeItems.exchangeHeld(scope, actor, target, 1, { firstEmpty: true }).ok) {
+                        stolen = true; itemId = theirs.id;
+                    }
                 }
-                if (landed && scope.valid(target)) {
+                sound(current, "cobblemon:impact.dark");
+                if (landed) {
+                    WorldFeedback.emit(scope, thiefScene, 1, point, { moment: stolen ? "snatch" : "strike", target: String(target.ref()),
+                        item: itemId, intensity: intensity, scale: scale, motes: Math.round(motes * (0.7 + intensity * 0.2)) }, 30);
                     scope.hitDisplace(target, direction.scale(push));
-                    if (stolen && slip > 0.05) scope.displace(actor, direction.scale(-slip));
+                    if (stolen) {
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), thiefStealText, [], 30);
+                        sound(current, "minecraft:entity.item.pickup");
+                        thiefHome(current, point, itemId);
+                        if (slip > 0.05) {
+                            var slipped = scope.displace(actor, direction.scale(-slip));
+                            if (slipped > 0.01) thiefBack(current, point, slipped);
+                        }
+                    } else {
+                        var nowEmpty = thiefHeldOf(scope, actor) === null;
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), nowEmpty ? thiefStrikeText : thiefFullText, [], 28);
+                    }
+                } else {
+                    // 原生拒绝这次伤害：不报普通击成功。
+                    WorldFeedback.emit(scope, thiefScene, 1, point, { moment: "resist", target: String(target.ref()), scale: scale }, 22);
+                    scope.sound("minecraft:entity.player.attack.weak", point, 12, "{}");
                 }
                 movementScenes.finish(current, done);
                 return;

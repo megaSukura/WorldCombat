@@ -50,7 +50,7 @@ namespace PokemonSkills {
 
     addPreferences("thundercage", {}, [
         field(pathOf("wide"), "广笼式", "boolean", {
-            help: "开启：笼半径 ×1.35、笼柱更多、持续 ×1.15、冷却 +8，但初击 ×0.9、电击 ×0.85，关得更宽更久。关闭：更小更紧、电得更重。"
+            help: "开启：笼半径 ×1.35、电栅围得更宽、持续 ×1.15、冷却 +8，但初击 ×0.9、电击 ×0.85，关得更宽更久。关闭：更小更紧、电得更重。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 2, max: 22, step: 1,

@@ -1,42 +1,13 @@
-/**
- * 薄雾炸裂 / mistyexplosion 的参数与伤害段。
- *
- * 原生事实（Cobblemon 1.8，取自带 Showdown 数据）：Fairy／特殊／威力 100／命中 100／PP 5／优先度 0／
- *   target allAdjacent（自己周围所有宝可梦）／`selfdestruct: "always"`（用完自己陷入濒死）／
- *   站在薄雾场地上威力 ×1.5。
- *
- * 翻译：把身体当场放成**一朵铺开的薄雾**：起手粉雾在脚边收拢、身体发亮；提交后雾环贴着地面向外炸开，
- *   圈内所有非友方挨一次 `bloom` 并被迷雾夺去视线（`minecraft:blindness`），施法者随之倒下。
- *   雾不是火药——它不炸坑、只铺开一次，而且**不留可经营的持续危险区**：炸裂后雾只作一小段淡去的视效，
- *   不再额外挂全敌减速；这一发代价已经足够，不复制控场池。与大爆炸分开：那一发毁地、掀飞、无属性加成；
- *   这一发铺雾、致盲、并在薄雾上更重。真源（施法者）失效后不再继续跑任何过程。
- *
- * 数值来源（每项读不同的个体数据）：
- *   bloom        迷雾威力：特攻 + 等级；在薄雾中 ×`terrainBoost`（原生 ×1.5）；配置 denseMist 再调 0.92／1.08。
- *   blastRadius  雾环半径：特攻 + 体型高度；配置 denseMist ×1.05／×0.95。
- *   blindTicks   致盲时长：特攻；配置 denseMist +30／+0。
- *   mistRadius   残雾视效铺多大：特攻；配置 denseMist ×1.3／×0.8。
- *   mistTicks    残雾视效淡去多久：等级；配置 denseMist ×1.3／×0.85。它不挂减速，只控制画面停留。
- *   terrainBoost 薄雾加成：固定 1.5（原生规则）。
- *   burst        雾絮数量：特攻（同时驱动粒子数）。
- *   tempo        起手：速度；配置 denseMist +3。
- *   recharge     冷却：等级；配置 denseMist +10／−6。
- *
- * 配置 `denseMist`（浓雾）：开启＝残雾视效更广（半径 ×1.3）、淡去更久（×1.3）、致盲 +30t，但这一爆威力 ×0.92、
- *   起手 +3、冷却 +10——雾铺得更足、致盲更久；关闭（薄爆）＝威力 ×1.08、残雾 ×0.8，炸得更脆更快。
- *
- * 伤害段 `bloom` 与参数同名，走共享换算（原生类别 Special、Fairy 属性）。
- */
 namespace PokemonSkills {
     export const mistyexplosionId = "mistyexplosion";
     export const mistyexplosionScene = "world_combat:move_mistyexplosion";
-    /** 已有薄雾场地的规则名（跨单元识别，字符串常量不依赖对方是否装载）。 */
+    
     export const mistyexplosionTerrain = "world_combat:field/mistyterrain";
     export const mistyexplosionHitText = "world_combat.move.mistyexplosion.text.hit";
     export const mistyexplosionMissText = "world_combat.move.mistyexplosion.text.miss";
 
     actionParameters.define(mistyexplosionId, {
-        /** 迷雾威力：100 + 特攻偏移[−28,84] + 等级偏移[0,20]；薄雾中 ×terrainBoost；浓雾 ×0.92 / 薄爆 ×1.08；夹 80..235。 */
+        
         bloom: formula(
             F.base(100)
                 .plus(F.stat("specialAttack").minus(60).times(1.0).clamp(-28, 84))
@@ -47,7 +18,7 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "这一爆对圈内每个敌人的基础威力；特攻越高、等级越高越重，在薄雾上还会整体放大。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 雾环半径：4.4 + 特攻偏移[−0.5,2.0] + 高度偏移[−0.4,1.2]；浓雾 ×1.05 / 薄爆 ×0.95；夹 3.2..7.2。 */
+        
         blastRadius: formula(
             F.base(4.4)
                 .plus(F.stat("specialAttack").minus(60).times(0.02).clamp(-0.5, 2.0))
@@ -58,13 +29,13 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "薄雾一圈炸开罩住多大；特攻越高、身体越高炸得越开。它也是本招的实际射程与指示圈半径。"
             }),
-        /** 致盲时长：60 + 特攻偏移[0,40]；浓雾 +30 / 薄爆 +0；夹 40..130 tick。 */
+        
         blindTicks: seconds(
             F.base(60).plus(F.stat("specialAttack").minus(60).times(0.4).clamp(0, 40))
                 .plus(F.when(F.pref("denseMist"), F.const(30), F.const(0)))
                 .clamp(40, 130).round(),
-            "致盲时长", "被迷雾夺去视线多久；清雾之后看得见，但那时已经挨完了这一爆。"),
-        /** 残雾视效半径：3.6 + 特攻偏移[0,1.4]；浓雾 ×1.3 / 薄爆 ×0.8；夹 2.6..6.6。 */
+            "失准时长", "命中等级下降两级的持续时间；到期或驱散后收回本次削弱。"),
+        
         mistRadius: formula(
             F.base(3.6).plus(F.stat("specialAttack").minus(60).times(0.015).clamp(0, 1.4))
                 .times(F.when(F.pref("denseMist"), F.const(1.3), F.const(0.8)))
@@ -73,30 +44,30 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "炸裂后散开的雾视效铺多大；浓雾更广，只影响画面，不留可经营的持续危险区。"
             }),
-        /** 残雾视效停留：50 + 等级偏移[0,40]；浓雾 ×1.3 / 薄爆 ×0.85；夹 30..140 tick。 */
+        
         mistTicks: seconds(
             F.base(50).plus(F.level().minus(20).times(0.9).clamp(0, 40))
                 .times(F.when(F.pref("denseMist"), F.const(1.3), F.const(0.85)))
                 .clamp(30, 140).round(),
             "残雾停留", "炸裂后的雾视效停留多久再淡去；它不再拖慢任何目标，只控制画面停留。"),
-        /** 薄雾加成：固定 1.5（原生规则）。 */
+        
         terrainBoost: formula(F.base(1.5).round(2),
             "薄雾加成", { unit: "倍", format: function (value) { return "×" + (Math.round(value * 100) / 100); },
-                description: "站在薄雾场地上（薄雾场地单元或本招留下的残雾）施放时，这一爆整体乘上的倍率；原生规则固定 ×1.5。" }),
-        /** 雾絮数量：60 + 特攻 ×0.6；夹 50..150。直接驱动画面密度。 */
+                description: "贴地站在实际同层薄雾场地上施放时，这一爆整体乘上的倍率；原生规则固定 ×1.5。" }),
+        
         burst: formula(
             F.base(60).plus(F.stat("specialAttack").times(0.6)).clamp(50, 150).round(0),
             "雾絮数量", {
                 unit: "团",
                 description: "雾环炸开时喷出的雾絮数量；特攻越高越密，粒子直接按它发射。"
             }),
-        /** 起手：14 − 速度偏移[−3,4] + 浓雾 3；夹 10..24 tick。 */
+        
         tempo: seconds(
             F.base(14).minus(F.stat("speed").minus(60).times(0.03).clamp(-3, 4))
                 .plus(F.when(F.pref("denseMist"), F.const(3), F.const(0)))
                 .clamp(10, 24).round(),
             "起手", "从收雾到炸开需要多久；这一整段可以被对手打断（打断则不花任何代价），浓雾更长。"),
-        /** 冷却：95 − 等级偏移[0,20] + 浓雾 10 / 薄爆 −6；夹 65..150 tick。 */
+        
         recharge: seconds(
             F.base(95).minus(F.level().minus(20).times(0.5).clamp(0, 20))
                 .plus(F.when(F.pref("denseMist"), F.const(10), F.const(-6)))

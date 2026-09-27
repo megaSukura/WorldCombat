@@ -4,7 +4,7 @@
   "worldcombat.skill.needlearm.use.1": "Catch a target circling to your side, where a wide arc does not miss",
   "worldcombat.skill.needlearm.use.2": "Settle each foe only once across the whole multi-beat swing",
   "worldcombat.skill.needlearm.description.0": "The thorny arm sweeps an arc, striking each caught enemy once for about %1$s physical damage with a %2$s-block sweep radius.",
-  "worldcombat.skill.needlearm.description.1": "It first lunges %2$s blocks (%3$s blocks per tick), then sweeps %1$s degrees right-to-left in three beats; being blocked by terrain stops it in place to swing.",
+  "worldcombat.skill.needlearm.description.1": "It first lunges %2$s blocks (%3$s blocks per tick), then sweeps %1$s degrees right-to-left in three beats; being blocked by terrain stops it in place to swing, and a foe behind a wall is never reached.",
   "worldcombat.skill.needlearm.description.2": "Each caught target has a %1$s chance to flinch for %2$s, unable to start new moves or make ordinary attacks; any one foe is settled with only one main hit per swing.",
   "worldcombat.skill.needlearm.description.3": "Broad form is currently %1$s.",
   "worldcombat.skill.needlearm.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

@@ -4,6 +4,7 @@
   "worldcombat.attributes.heading": "%1$s · 属性",
   "worldcombat.attributes.refresh": "刷新",
   "worldcombat.attributes.loading": "正在读取属性…",
+  "worldcombat.attributes.empty": "当前没有可显示的属性。可刷新后重试。",
   "worldcombat.attributes.nature": "性格：%1$s",
   "worldcombat.attributes.footer": "悬停查看作用与来源 · 数值变化时更新",
   "worldcombat.attributes.group.combat": "战斗",

@@ -5,8 +5,9 @@
  *   在 `ai.maxChase`（默认 7）以内就出手；更远交给共享接近逻辑。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.corner`（默认开）打开时，几乎不移动的
  *   目标（被逼住、贴墙、站在原地）排得更前——它退不开，整串会被吃满；正在跑的目标排后，因为顶退会把它推出射程。
- * 够不到怎么办：射程交给 `reach`，共享任务负责把身位送进射程。
- * 放完之后：这一串刺完（或目标被顶出射程）就收势，交回共享交战计划等冷却。
+ * 够不到怎么办：射程交给 `reach`，共享任务负责把身位送进射程；追击式出手前还要确认身前真有跟步空间
+ *   （没空间时只在已经够得着时才起刺，避免这一串追到一半被墙卡住）。
+ * 放完之后：这一串刺完（或落空）就收势，交回共享交战计划等冷却。
  * 优先级：基础 17；已在射程内 +8；`ai.corner` 开启且目标几乎不移动 +10。仅剩本招可选时，它仍在普通顺序里被选中。
  */
 namespace CompanionBehavior {
@@ -14,6 +15,15 @@ namespace CompanionBehavior {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return distance(source(context).point, target.point) <= ai<number>(item, "maxChase", 7);
+    }
+
+    /** 追击式身前是否真有一步可站的跟步空间；没有就走不进这一串，只在已经够得着时起刺。 */
+    function furyattackFollowSpace(context: WorldBehavior.Context, target: Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const self = source(context), foot = self.point[1] - (self.height || 1.4) / 2;
+        const from = CompanionBehavior.point([self.point[0], foot, self.point[2]]);
+        const heading = WorldGeometry.flatUnit(CompanionBehavior.point([target.point[0] - self.point[0], 0, target.point[2] - self.point[2]]));
+        return !SurfacePaths.advance(world, from, heading, 0.9, { up: 1, down: 1, spacing: 0.3, samples: 4 }).ended;
     }
 
     /** 目标当前的水平速度；没有速度事实时按「站住」处理。 */
@@ -29,7 +39,11 @@ namespace CompanionBehavior {
         available: function (context, item, _purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return furyattackWants(context, item, target);
+            if (!furyattackWants(context, item, target)) return false;
+            // 追击式身前没有跟步空间时，只在已经有目标在射程内才起刺。
+            if (item.data.config && item.data.config.close === true && !furyattackFollowSpace(context, target))
+                return CompanionBehavior.distance(source(context).point, target.point) <= item.data.range;
+            return true;
         },
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         approachTarget: function (_context, _item, target) { return target; },

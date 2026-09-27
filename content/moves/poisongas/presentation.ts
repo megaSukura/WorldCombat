@@ -4,7 +4,8 @@
  * 一句话：施法者朝选定处吐出一股灰绿瓦斯，瓦斯摊成一片贴地的云；云罩住谁谁就冒绿泡，被火点着时整片云翻成橙火。
  * 色相家族：灰绿（smoke / poisonbubble / ooze）为主体，饱和的黄绿只在冒泡细节，点火后叠一层橙（fire / ember）。
  * 拍子：起（windup 0–12t，喉间聚气）→ 击（exhale 喷出 / cloud 落地成云）→ 收（云慢慢稀薄；ignite 是它的第二种结局）。
- * 范围：exhale 的锥体长度就是喷吐距离，cloud 的盘面就是覆盖半径——两处都随 `data.scale`／`data.distance` 与判定同步。
+ * 范围：exhale 用 fit world，锥体长度就是真实喷吐距离、锥口是小小喷嘴（不随投距变宽）；cloud 的盘面半径就是覆盖半径，
+ *   随 `data.scale` 与判定同步，并由场地效果托管（onEffect）随云散或转火云一起更新。
  * 运动：瓦斯沿喷吐方向冲出，落定后低垂原地翻涌；被点着时向四周炸开。
  * 数：服务端把覆盖半径换算成 `scale`、喷吐距离传成 `distance`，又把爆燃的 `count`／`size`／`speed` 一并交给发射器；
  * 云越大、爆燃越猛，画面越大越密。
@@ -32,19 +33,19 @@ const PoisongasDefinition: ParticleDefinition = {
             exit: { stop: 18, drain: 20 },
             emitters: [
                 {
-                    name: "jet", bind: "source", offset: [0, 0.55, 0], height: 0.4, fit: "none",
+                    name: "jet", bind: "source", offset: [0, 0.55, 0], height: 0.4, fit: "world",
                     orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 60, shape: { kind: "cone_volume", radius: { data: "distance", fallback: 3 }, length: { data: "distance", fallback: 3 }, angleDegrees: 16 },
+                    rate: 60, shape: { kind: "cone_volume", radius: 0.34, length: { data: "distance", fallback: 3 }, angleDegrees: 16 },
                     direction: "shape", speed: [0.08, 0.32],
                     lifetime: [14, 26], size: [0.3, 0.14],
                     color: 0x9AA855, alpha: [0.45, 0], light: "world", maxParticles: 220
                 },
                 {
-                    name: "droplets", bind: "source", offset: [0, 0.5, 0], height: 0.4, fit: "none",
+                    name: "droplets", bind: "source", offset: [0, 0.5, 0], height: 0.4, fit: "world",
                     orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: 40, shape: { kind: "cone_volume", radius: { data: "distance", fallback: 3 }, length: { data: "distance", fallback: 3 }, angleDegrees: 14 },
+                    rate: 40, shape: { kind: "cone_volume", radius: 0.28, length: { data: "distance", fallback: 3 }, angleDegrees: 14 },
                     direction: "shape", speed: [0.1, 0.38],
                     lifetime: [10, 20], size: [0.09, 0.02],
                     color: 0xC6D84A, alpha: [0.8, 0], light: "full", maxParticles: 180

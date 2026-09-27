@@ -3,24 +3,46 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
  * `ai.serve`（默认开）在身边跟着小个子伙伴（「菜」）时抬高优先级——它能把这一记变成一次自身强化；
- * 对应的能力还没顶满时更优先，顶满后只保留小幅加成。关闭则只按威胁与距离排序。独自一人也照样出招，
- * 只是少了增益。放完之后继续常规交战。
+ * 判定用本个体实际的 `dishRange` 与真实通视，只看该伙伴决定的那一项能力是否还能增（不再是攻/防/速任意未满），
+ * 顶满后只保留小幅加成。关闭则只按威胁与距离排序。独自一人也照样出招，只是少了增益。放完之后继续常规交战。
  */
 namespace PokemonSkills {
-    function orderupDishState(context: WorldBehavior.Context): { present: boolean; open: boolean } {
+    /** 按伙伴的样子决定它会给哪项能力：Droopy 防御、Stretchy 速度、其余攻击；与执行侧同源。 */
+    function orderupDishStat(context: WorldBehavior.Context, dish: CompanionBehavior.Entity): string {
+        const facts = CompanionBehavior.pokemonFacts(context, dish);
+        if (facts) {
+            const aspects = facts.aspects || [];
+            if (aspects.indexOf("droopy") >= 0) return "def";
+            if (aspects.indexOf("stretchy") >= 0) return "spe";
+            const form = String(facts.form || "").toLowerCase();
+            if (form.indexOf("droopy") >= 0) return "def";
+            if (form.indexOf("stretchy") >= 0) return "spe";
+        }
+        return "atk";
+    }
+
+    /** 身边实际 dishRange 内、比自身明显小、与自身通视的最小友方；并判断它决定的那项能力是否还能增。 */
+    function orderupDishState(context: WorldBehavior.Context, capability: WorldBehavior.Capability): { present: boolean; open: boolean } {
         const self = CompanionBehavior.source(context);
+        const world = CompanionBehavior.world(context);
+        let range = 1.4;
+        try {
+            range = Math.max(1.4, p("orderup", "dishRange", { world: world, actor: world.source(), detail: { values: capability.data.config } }));
+        } catch (error) { }
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
-        let present = false;
+        let best: CompanionBehavior.Entity | null = null, bestWidth = Infinity;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === self.ref || !other.friendly || other.health <= 0) continue;
-            if ((other.width || 1) > (self.width || 1) * 0.75) continue;
-            if (CompanionBehavior.distance(other.point, self.point) <= 3) { present = true; break; }
+            const width = typeof other.width === "number" ? other.width : 1;
+            if (width > (self.width || 1) * 0.75) continue;
+            if (CompanionBehavior.distance(other.point, self.point) > range) continue;
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) continue;
+            if (width < bestWidth) { bestWidth = width; best = other; }
         }
-        if (!present) return { present: false, open: false };
-        const stats = CompanionBehavior.stages(context, self);
-        const open = (stats.atk || 0) < 6 || (stats.def || 0) < 6 || (stats.spe || 0) < 6;
-        return { present: true, open: open };
+        if (!best) return { present: false, open: false };
+        const stat = orderupDishStat(context, best);
+        return { present: true, open: (CompanionBehavior.stage(context, self, stat) || 0) < 6 };
     }
 
     CompanionBehavior.registerUse("orderup", {
@@ -39,7 +61,7 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            const dish = CompanionBehavior.ai<boolean>(capability, "serve", true) ? orderupDishState(context) : { present: false, open: false };
+            const dish = CompanionBehavior.ai<boolean>(capability, "serve", true) ? orderupDishState(context, capability) : { present: false, open: false };
             return 18 + (dish.present ? (dish.open ? 16 : 4) : 0);
         }
     });

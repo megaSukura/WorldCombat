@@ -47,7 +47,7 @@ namespace CompanionBehavior {
 
     PokemonSkills.addPreferences(PokemonSkills.outrageId, {}, [
         PokemonSkills.field(PokemonSkills.pathOf("relentless"), "穷追", "boolean", {
-            help: "开启：冲得更远、把目标顶得更狠、终结更重，但起手与冷却更久、闹完晕得更久——适合黏住会跑的对手。关闭（疾撞）：贴得更近、节奏更快、失控更短，代价是够不到远处的目标。"
+            help: "开启：冲得更远、把目标顶得更狠，但每撞威力约 ×0.97、起手与冷却更久、闹完晕得更久——适合黏住会跑的对手。关闭（疾撞）：贴得更近、节奏更快、失控更短，代价是够不到远处的目标。"
         }),
         PokemonSkills.number("ai.maxChase", "追击距离", 2, 18, 1),
         PokemonSkills.flag("ai.finishLow", "抢收残血")

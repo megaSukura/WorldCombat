@@ -1,11 +1,11 @@
 {
   "effect.world_combat.throat_chop": "Throat Sealed",
-  "worldcombat.skill.throatchop.summary": "A thrust straight at the throat. It deals physical damage and leaves the target unable to use any sound-based move for a while.",
+  "worldcombat.skill.throatchop.summary": "A thrust straight at the throat. It deals physical damage and leaves the target unable to use any sound-based attack for a while: a Pokemon's sound moves are turned back at cast, and a native sound attack (such as a Warden's sonic boom) is turned back when it lands. Normal melee is unaffected.",
   "worldcombat.skill.throatchop.use.0": "Shut down an opponent's roar or sound wave",
   "worldcombat.skill.throatchop.use.1": "Punish a foe that leans on sound-based moves",
   "worldcombat.skill.throatchop.use.2": "Suppress a ranged caster at close range",
   "worldcombat.skill.throatchop.description.0": "The hit deals about %1$s contact physical damage.",
-  "worldcombat.skill.throatchop.description.1": "After a hit that deals damage, the target cannot use any sound-based move for %1$s, recovering when the effect expires or is removed.",
+  "worldcombat.skill.throatchop.description.1": "After a hit that deals damage, the target cannot use any sound-based attack for %1$s: a Pokemon's sound moves are turned back at cast, while a native sound attack is turned back on landing by its real sound semantics; normal melee and unknown attacks still pass. It recovers when the effect expires or is removed.",
   "worldcombat.skill.throatchop.description.2": "Thrust reach %1$s blocks, collision radius %2$s blocks; prepare %3$s s, recover %4$s s, cooldown %5$s s.",
   "worldcombat.skill.throatchop.choke.on": "Chokehold: the silence lasts x1.25, at the cost of x0.9 power, 2 more ticks of prepare and 6 more ticks of cooldown.",
   "worldcombat.skill.throatchop.choke.off": "Slash: faster and x1.15 power, at the cost of a x0.75 silence.",

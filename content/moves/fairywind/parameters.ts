@@ -30,6 +30,8 @@
 namespace PokemonSkills {
     export const fairywindId = "fairywind";
     export const fairywindScene = "world_combat:move_fairywind";
+    /** 侧甩起止短路径的固定对象表现（自定义场景，不生成粒子）。 */
+    export const fairywindWakeScene = "world_combat:move_fairywind_wake";
     export const fairywindHitText = "world_combat.move.fairywind.text.hit";
     export const fairywindMissText = "world_combat.move.fairywind.text.miss";
     /** 表现里风团判定的参考值（格）；服务端传 scale = 实际判定 / 这个值。 */

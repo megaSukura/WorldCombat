@@ -1,11 +1,13 @@
 /**
  * 火焰牙 / firefang 的客户端表现。
  *
- * 一句话：牙间燃起火种、火星顺牙面乱窜 → 合牙的一刻在接触点炸开火色迸溅与獠牙剪影，随即火苗从伤口里往外冒
+ * 一句话：牙间燃起火种、火星顺牙面乱窜 → 上下两列獠牙在真实接触点闭合一次、同点炸开火色迸溅，随即火苗从伤口里往外冒
  * （火种被按进肉里）；若对手免疫灼伤，同一点的火只向外炸开、四散熄灭；被咬懵的人头顶晃出火色星子。
  * 色相家族：火橙（0xFF7A2A）与余烬金（0xFFD08A），近白只出现在咬实峰值一点。
- * 拍子：起 charge（牙间聚火）→ 咬 bite（命中峰值）／ scatter（免疫散火）／ miss（空咬收牙）→ 灌 sear → 懵 flinch。
- * 范围：bite／scatter／sear 绑命中点，画出的就是咬中的位置与伤口；miss 落在空咬刹停的位置。
+ * 拍子：起 charge（牙间聚火）→ 咬 bite（合牙+迸溅）／ scatter（免疫散火）／ miss（空咬收牙）→ 灌 sear → 懵 flinch。
+ * 合牙：獠牙不是向四周散开的剪影，而是由 custom scene `world_combat:move_firefang_fangs` 在入口点按真实方向摆出上/下两列，
+ *   在几刻内闭合并淡出；粒子定义只留同点的火色迸溅与余烬。
+ * 范围：bite／scatter／sear 绑命中点，画出的就是咬中的位置与伤口；miss 落在真实空咬/撞墙停下的位置（bind point）。
  * 运动：scatter 的火星从表面向外迸出并熄落；sear 的火苗从伤口向上冒并向外舔；flinch 的星子从目标头顶向上飘。
  * 数：`data.embers`（特攻派生）决定咬中迸溅、散火与伤口火星的数量；`data.intensity`（威力 / 66）抬高密度与亮度；
  * `data.scale`（獠牙判定 / 0.42）放大牙影与判定环。
@@ -39,15 +41,6 @@ const FirefangDefinition: ParticleDefinition = {
             duration: 24,
             exit: { stop: 10, drain: 16 },
             emitters: [
-                {
-                    name: "fang_frames", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/fang",
-                    burst: { count: 5, at: 1 },
-                    shape: { kind: "sphere", radius: 0.26 },
-                    direction: "outward", speed: [0.04, 0.16],
-                    lifetime: [6, 11], size: [0.32, 0.06], sizeMode: "index",
-                    color: 0xFFF1D6, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 24
-                },
                 {
                     name: "fire_burst", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
@@ -139,7 +132,7 @@ const FirefangDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "skid", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    name: "skid", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 18 },
                     shape: { kind: "ring", radius: 0.36, rotation: [90, 0, 0] },
@@ -154,3 +147,50 @@ const FirefangDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_firefang", 1, FirefangDefinition);
+
+/**
+ * 合牙：在服务端给出的真实接触点，按瞄准方向摆出上、下两列獠牙，几刻内闭合一次再淡出。
+ * 固定数量（每列 4 枚），不生成粒子或实体；方向来自本招实际 aim，牙尖落在接触点那一格。
+ */
+const FirefangFangTexture = "cobblemon:particle/generic/fang";
+function firefangFangVector(value: any, fallback: number[]): number[] {
+    if (Array.isArray(value) && value.length === 3 && (value as any[]).every(function (n) { return typeof n === "number" && isFinite(n); }))
+        return [Number(value[0]), Number(value[1]), Number(value[2])];
+    return fallback;
+}
+function firefangFangUnit(value: number[]): number[] {
+    const length = Math.sqrt(value[0] * value[0] + value[1] * value[1] + value[2] * value[2]);
+    return length > 1e-6 ? [value[0] / length, value[1] / length, value[2] / length] : [0, 0, 1];
+}
+function firefangFangCross(a: number[], b: number[]): number[] {
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+}
+WorldCombatClient.scene("world_combat:move_firefang_fangs", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "close") return;
+    const scale = Math.max(0.6, Math.min(1.8, typeof data.scale === "number" && isFinite(data.scale) ? data.scale : 1));
+    const forward = firefangFangUnit(firefangFangVector(data.direction, [0, 0, 1]));
+    let reference = [0, 1, 0];
+    if (Math.abs(forward[0] * reference[0] + forward[1] * reference[1] + forward[2] * reference[2]) > 0.95) reference = [1, 0, 0];
+    const right = firefangFangUnit(firefangFangCross(forward, reference));
+    const up = firefangFangUnit(firefangFangCross(right, forward));
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const age = Math.max(0, frame.serverTick() - start);
+    const close = Math.min(1, age / 5);
+    const fade = age <= 6 ? 1 : Math.max(0, 1 - (age - 6) / 6);
+    if (fade <= 0) return;
+    const alpha = Math.round(235 * fade);
+    const count = 4, spread = 0.26 * scale;
+    const gap = (0.30 * (1 - close) + 0.02) * scale;
+    const px = entry.position[0], py = entry.position[1], pz = entry.position[2];
+    for (let i = 0; i < count; i++) {
+        const along = (i - (count - 1) / 2) * spread;
+        const bx = px + right[0] * along, by = py + right[1] * along, bz = pz + right[2] * along;
+        frame.sprite(FirefangFangTexture, bx + up[0] * gap, by + up[1] * gap, bz + up[2] * gap,
+            0.16 * scale, 180, (alpha << 24 | 0xFFF1D6) | 0, 0, true);
+        frame.sprite(FirefangFangTexture, bx - up[0] * gap, by - up[1] * gap, bz - up[2] * gap,
+            0.16 * scale, 0, (alpha << 24 | 0xFFE0B0) | 0, 0, true);
+    }
+});

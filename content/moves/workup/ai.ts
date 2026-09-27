@@ -16,7 +16,21 @@ namespace CompanionBehavior {
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
-            if (["atk", "spa"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
+            const self = source(context);
+            const atkStage = CompanionBehavior.stage(context, self, "atk");
+            const spaStage = CompanionBehavior.stage(context, self, "spa");
+            if (atkStage >= 6 && spaStage >= 6) return false;
+            // 只按实际用得上的那一侧判断：更擅长的一项已到顶时，若另一项本就远弱，这一口等于白鼓。
+            const facts = CompanionBehavior.combatStats(context, self), stats = facts && facts.stats;
+            if (stats) {
+                const atk = Number(stats.atk), spa = Number(stats.spa);
+                if (isFinite(atk) && isFinite(spa) && atk > 0 && spa > 0) {
+                    const strongerRoom = atk >= spa ? 6 - atkStage : 6 - spaStage;
+                    const weakerRoom = atk >= spa ? 6 - spaStage : 6 - atkStage;
+                    const weaker = Math.min(atk, spa), strong = Math.max(atk, spa);
+                    if (strongerRoom <= 0 && (weakerRoom <= 0 || weaker < strong * 0.5)) return false;
+                }
+            }
             const threat = workupThreat(context);
             if (!threat) return false;
             return distance(source(context).point, threat.point) <= ai<number>(capability, "maxChase", 12);
@@ -34,5 +48,9 @@ namespace CompanionBehavior {
     const workupEager = PokemonSkills.number("ai.eagerBelow", "背水血量", 0.2, 0.9, 0.05);
     workupEager.help = "生命低于这个比例时，自我激励越过分派顺序抢先出手（背水时更强的一侧多涨一级）；调高更常抢，调低更沉着。";
 
-    PokemonSkills.addPreferences("workup", { ai: { maxChase: 12, eagerBelow: 0.5 } }, [workupChase, workupEager]);
+    PokemonSkills.addPreferences("workup", { desperate: false, ai: { maxChase: 12, eagerBelow: 0.5 } }, [
+        PokemonSkills.flag("desperate", "背水式"),
+        workupChase,
+        workupEager
+    ]);
 }

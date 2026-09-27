@@ -1,20 +1,34 @@
 /**
  * 落英缤纷 / petalblizzard 的伙伴 AI 用途。
  *
- * 什么局面下出手：以自身为中心、空中地面都割的落英旋风。`ready` 要求身周 `ai.maxChase`（默认 8）格内
- * 至少站着 `ai.minFoes`（默认 2）个可见、敌对的敌人——它是拿来一次割一圈的，只对一个目标转风不划算。
+ * 什么局面下出手：以自身为中心、空中地面都割的落英旋风。`ready` 要求**实际风暴半径**内至少站着
+ * `ai.minFoes`（默认 2）个可见、敌对、且从中心通视的敌人——人数门槛用的是本个体算出来的 `stormRadius`，
+ * 不是追击距离，窄回旋圈不会再被高估。`ai.maxChase`（默认 8）只管考虑距离，决定愿不愿意先追进去。
  * `available` 还要求目标在考虑距离内；它不挑目标站不站在地上（旋风卷的是整圈，空中的也会被卷到）。
  * 够不到交给共享接近逻辑；走到风暴半径以内就原地转起。
  */
 namespace PokemonSkills {
+    /** 这个个体这一招的真实风暴半径；AI 的人数门槛与指示圈、判定圈同源。 */
+    function petalblizzardRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return Math.max(2.4, p("petalblizzard", "stormRadius",
+            { world: world, actor: world.source(), skill: skills["petalblizzard"], detail: { values: item.data.config } }));
+    }
+
+    /** 实际风暴半径内、可见、敌对、且从中心通视的目标数；隔墙与被半径排除的不计入。 */
     function petalblizzardCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
-        const limit = CompanionBehavior.ai<number>(item, "maxChase", 8);
+        const world = CompanionBehavior.world(context);
+        const centre = CompanionBehavior.point(self.point);
+        const band = WorldGeometry.ring(centre, 0, petalblizzardRadius(context, item), { below: 2.5, above: 3 });
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= limit) count++;
+            const point = CompanionBehavior.point(other.point);
+            if (!band.contains(point)) continue;
+            if (!world.clear(centre, point)) continue;
+            count++;
         }
         return count;
     }

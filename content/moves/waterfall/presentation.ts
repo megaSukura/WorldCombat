@@ -1,12 +1,12 @@
 /**
  * 攀瀑 / waterfall 的客户端表现。
  *
- * 一句话：水从脚下直涌成柱，把真实身体沿柱托高；随后身体向前上方扑出、拖着一路下降的水墙，
- * 撞上目标的一刻水帘向上拍散，目标被冲退并头顶转起愣神的环，最后身体落回地面、水帘收束。
+ * 一句话：水从脚下直涌成柱、从真实起跳脚面连到当前脚面把身体沿柱托高；随后身体朝锁定点向前上方扑出、拖着一路下降的水墙，
+ * 撞上目标的一刻水帘向上拍散，目标被冲退并头顶转起愣神的环，最后身体落回地面附近、水帘收束。
  * 色相家族：深水蓝（0x3E8FCB）与泡沫白（0xCFEBFF）；饱和只出现在水柱与命中的小面积。
- * 拍子：起 gather（脚下涌水）→ 升 rise（水柱托身，柱高＝实际升高）→ 扑 surge（拖行水墙）→
+ * 拍子：起 gather（脚下涌水）→ 升 rise（水柱托身，柱脚为真实起跳脚面、柱顶为当前脚面）→ 扑 surge（拖行水墙）→
  *   击 impact（向上拍散）→ 落 fall／收 spill；flinch 是震懵的头顶环。
- * 范围：surge／impact 的水墙高度用 `data.column`（实际升起来的高度）铺开，横向范围由 `data.scale`（判定半径 / 0.6）放大。
+ * 范围：surge／impact 的水墙高度用 `data.column`（实际升起来的高度）在世界单位下铺开，横向范围由 `data.scale`（判定半径 / 0.6）放大。
  * 运动：水柱沿竖直方向涌起、随施法者升身增长；命中时水花向上拍散，而不是拖出长水平尾巴。
  * 数：impact／spill 的水花点数绑定 `data.spray`（速度与物攻换算），强度绑定命中威力，雨下更大时更密。
  */
@@ -41,18 +41,18 @@ const WaterfallDefinition: ParticleDefinition = {
             duration: 0,
             emitters: [
                 {
-                    name: "column", bind: "source", offset: [0, -0.45, 0], height: 0,
+                    name: "column", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
-                    rate: 26, shape: { kind: "line", length: { data: "column", fallback: 1.4 } },
+                    rate: 26, shape: { kind: "polyline" },
                     direction: "up", speed: [0.14, 0.42], spread: 10,
                     gravity: 0.03, drag: 0.9,
                     lifetime: [7, 14], size: [0.16, 0.03],
                     color: 0x3E8FCB, alpha: [0.85, 0], light: "world", maxParticles: 180
                 },
                 {
-                    name: "crest", bind: "source", offset: [0, -0.4, 0], height: 0,
+                    name: "crest", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    rate: 20, shape: { kind: "line", length: { data: "column", fallback: 1.4 } },
+                    rate: 20, shape: { kind: "polyline" },
                     direction: "down", speed: [0.1, 0.3], spread: 12,
                     gravity: 0.02, drag: 0.9,
                     lifetime: [7, 14], size: [0.12, 0.02],
@@ -64,7 +64,7 @@ const WaterfallDefinition: ParticleDefinition = {
             duration: 0,
             emitters: [
                 {
-                    name: "wall", bind: "source", fit: "body", trail: { minDistance: 0.28 }, rate: { data: "spray", fallback: 24 },
+                    name: "wall", bind: "source", fit: "world", trail: { minDistance: 0.28 }, rate: { data: "spray", fallback: 24 },
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
                     shape: { kind: "line", length: { data: "column", fallback: 1.4 } },
                     direction: "down", speed: [0.1, 0.34], spread: 10,
@@ -73,7 +73,7 @@ const WaterfallDefinition: ParticleDefinition = {
                     color: 0xCFEBFF, alpha: [0.75, 0], light: "world", maxParticles: 220
                 },
                 {
-                    name: "streak", bind: "source", fit: "body", trail: { minDistance: 0.4 }, rate: 16,
+                    name: "streak", bind: "source", fit: "world", trail: { minDistance: 0.4 }, rate: 16,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     direction: "down", speed: [0.2, 0.5],
                     lifetime: [5, 9], size: [0.16, 0.03],

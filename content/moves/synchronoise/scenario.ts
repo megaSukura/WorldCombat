@@ -1,3 +1,6 @@
+// 同步干扰的执行性设计说明：频率先取有效属性，无类型事实的普通生物才按种类映射。
+// 必然事实：同频（亡灵→幽灵，与鬼系施法者同频）的目标受伤、被锁上共享身份 world_combat:status/resonance 并发光；
+//   不同频的牛毫发无伤、也不发光；共振载体被清除时，只收走本招租下的那一次发光，别人更长的发光留着。
 Smoke.scenario("synchronoise", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
     stage.time("day");

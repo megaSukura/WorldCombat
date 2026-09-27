@@ -24,7 +24,7 @@ Smoke.scenario("round", function (stage) {
             stage.expect(stage.damageTo(foe) > 0, "the verse damaged the foe");
             stage.expect(stage.hadMobEffect(lead, "world_combat:status/round") || stage.hadMobEffect(answer, "world_combat:status/round"),
                 "an ally carried the shared round identity");
-            stage.note("余韵只会落在同伴身上；接唱翻倍由公式读身份决定，且接唱时消费自身那一份再传给别的同伴，独唱不会自循环。谁先起唱、接了几句是时序结果。", {
+            stage.note("余韵只会落在同伴身上并显示可接秒数；接唱翻倍由公式读身份决定，且接唱时消费自身那一份再传给别的同伴，独唱不会自循环。歌句瞬时结算，声纹只在施法者端与命中目标端同刻亮起，不画跨越两点的飞行线（正面掩体不挡声音；共享威胁感知按视线过滤，被墙完全挡住的目标不在 AI 自主索敌范围）。谁先起唱、接了几句是时序结果。", {
                 leadCasts: stage.casts("round", lead),
                 answerCasts: stage.casts("round", answer),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,

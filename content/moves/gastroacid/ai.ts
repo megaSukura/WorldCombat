@@ -1,10 +1,29 @@
-/** gastroacid：行为、参数与目标条件以本单元实现为准。 */
+/**
+ * 胃液 / gastroacid 的伙伴 AI 用途。
+ *
+ * 出手条件：目标可见、敌对、还活着，在 `ai.maxChase` 内，视线通畅，且酸膜对它能实际作用
+ * （普通生物必成立；宝可梦要有可压制特性、可受残留酸伤或有护甲之一）。
+ * 收益按真实事实分档：可压制特性最高，其次是可蚀护甲与可受残留酸伤，不再对任意普通敌固定给满分。
+ * 注意：沾酸只压制当前仍生效的特性；威吓这类进入战斗时已触发的一次性效果，事后沾酸不能倒回，不据此加分。
+ */
 namespace CompanionBehavior {
     registerFact("world_combat:gastroacid-open", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return access.valid(actor);
-        const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(access, actor);
-        const ability = NativeEffects.ability(pokemon, state);
-        return !!ability && !NativeAbilities.flag(ability, "cantsuppress");
+        return PokemonSkills.gastroacidCanAct(access, actor);
+    });
+    registerFact("world_combat:gastroacid-value", function (access, actor, _argument) {
+        if (!access.valid(actor)) return 0;
+        let score = 12;
+        if (String(actor.domain()) === "cobblemon") {
+            const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(access, actor);
+            const ability = NativeEffects.ability(pokemon, state);
+            if (ability && !NativeAbilities.flag(ability, "cantsuppress")) score += 45;
+            if (!NativeAbilities.flag(ability, "indirectImmune")) score += 8;
+        } else {
+            score += 8;
+        }
+        const armor = access.attributeValue(actor, "minecraft:generic.armor");
+        if (armor !== null && armor.value() > 0) score += 12;
+        return Math.max(0, Math.min(65, score));
     });
 
     function gastroacidWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
@@ -28,7 +47,8 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (target === null) return 0;
-            return gastroacidWants(context, item, target) ? 65 : 0;
+            if (!gastroacidWants(context, item, target)) return 0;
+            return fact<number>(context, "world_combat:gastroacid-value", target) || 0;
         }
     });
 

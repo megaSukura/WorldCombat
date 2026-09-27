@@ -61,7 +61,7 @@ const StunSporeDefinition: ParticleDefinition = {
                     name: "burst_puff", bind: "point", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/powder",
                     burst: { count: { data: "spores", fallback: 16 }, interval: 2, repeats: 2 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 2.3 },
                     direction: "outward", speed: [0.06, 0.22], spread: 60, drag: 0.9, gravity: 0.002,
                     lifetime: [14, 26], size: [0.16, 0.05], spin: 18,
                     color: 0xE8E24A, alpha: [0.85, 0], light: "world", maxParticles: 120
@@ -70,7 +70,7 @@ const StunSporeDefinition: ParticleDefinition = {
                     name: "burst_ring", bind: "point", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 14 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 2.3 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [10, 18], size: [0.2, 0.08],
                     color: 0xF2E24A, alpha: [0.6, 0], light: "world", maxParticles: 30
@@ -83,7 +83,7 @@ const StunSporeDefinition: ParticleDefinition = {
                 {
                     name: "cloud_fill", bind: "point", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/powder",
-                    rate: { data: "spores", fallback: 16 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    rate: { data: "spores", fallback: 16 }, shape: { kind: "sphere", radius: 2.3 },
                     direction: "up", speed: [0.01, 0.05], drag: 0.92,
                     lifetime: [20, 36], size: [0.12, 0.04], spin: 12,
                     color: 0xE8E24A, alpha: [0.4, 0], light: "world", maxParticles: 120
@@ -91,7 +91,7 @@ const StunSporeDefinition: ParticleDefinition = {
                 {
                     name: "cloud_motes", bind: "point", height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "spores", fallback: 16 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    rate: { data: "spores", fallback: 16 }, shape: { kind: "sphere", radius: 2.3 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [16, 28], size: [0.05, 0.01],
                     color: 0xF6F0A0, alpha: [0.4, 0], light: "world", maxParticles: 90

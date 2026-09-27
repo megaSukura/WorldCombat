@@ -75,6 +75,28 @@ const SwallowDefinition: ParticleDefinition = {
                 }
             ]
         },
+        denied: {
+            duration: 26,
+            exit: { stop: 10, drain: 18 },
+            emitters: [
+                {
+                    name: "choke", bind: "source", offset: [0, 0.5, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/orb/orbshrink_white",
+                    burst: { count: 10, interval: 4, repeats: 2 }, shape: { kind: "sphere_surface", radius: 0.6 },
+                    direction: "inward", speed: [0.05, 0.14],
+                    lifetime: [10, 18], size: [0.22, 0.05], sizeMode: "index",
+                    color: 0x8C7B5A, alpha: [0.7, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "dull_dust", bind: "source", offset: [0, 0.35, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.5 },
+                    direction: "inward", speed: [0.02, 0.08], gravity: 0.01, drag: 0.92,
+                    lifetime: [10, 18], size: [0.05, 0.01],
+                    color: 0x6E6A5E, alpha: [0.35, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         fade: {
             duration: 20,
             exit: { stop: 6, drain: 14 },

@@ -5,7 +5,7 @@
   "worldcombat.skill.muddywater.use.2": "贴地推进，隔着障碍打到正对着的那排敌人",
   "worldcombat.skill.muddywater.description.0": "泥浪扫到目标造成约 %1$s 点特殊伤害；同一个敌人只挨一记，各有 %2$s 概率掉 %3$s 级命中。",
   "worldcombat.skill.muddywater.description.1": "泥浪在身前铺开 %1$s 度的扇形，最远漫到 %2$s 格，分 %3$s 步从脚下推出去。",
-  "worldcombat.skill.muddywater.description.2": "被泥水糊住的目标攻击变弱（攻击伤害降低 15%%），命中等级也随之下调，这项能力变化在交战中一直保留，直到被清除或脱离战斗；糊眼本身持续 %1$s，到期或被清除后结束。",
+  "worldcombat.skill.muddywater.description.2": "被泥水糊住的目标命中等级下调，直到被清除或脱离战斗才恢复；糊眼本身持续 %1$s，到期或被清除后结束。",
   "worldcombat.skill.muddywater.description.3": "浪推完，扫过的地面留下一层短泥膜（不替换方块）；一片泥浪最多污到 %1$s 个敌人。",
   "worldcombat.skill.muddywater.silted.on": "淤积式：扇面 ×1.35、糊眼概率 +12%、可掉 2 级、糊眼与泥膜都更久；代价是威力 ×0.85、射程 −1.5 格、推进更慢、起手 +3 刻、冷却 +6 刻。",
   "worldcombat.skill.muddywater.silted.off": "急流式：威力 ×1.12、射程 +1.5 格、推进更快；代价是糊眼概率 −6%、糊眼与泥膜都更短（泥膜 ×0.75）。",

@@ -13,6 +13,7 @@
  */
 namespace PokemonSkills {
     const bugbiteScene = "world_combat:move_bugbite";
+    const bugbiteJawScene = "world_combat:move_bugbite_jaws";
     const bugbiteEatText = "world_combat.move.bugbite.text.eat";
     const bugbiteHealText = "world_combat.move.bugbite.text.heal";
     const bugbiteBoostText = "world_combat.move.bugbite.text.boost";
@@ -22,18 +23,28 @@ namespace PokemonSkills {
     const bugbitePlainText = "world_combat.move.bugbite.text.plain";
     const bugbiteMissText = "world_combat.move.bugbite.text.miss";
 
-    /** 咽下之后把结果画出来：回复量、能力等级或异常解除各有自己的浮字与表现。 */
-    function bugbiteSavor(current: CombatAction, result: any, motes: number, scale: number): void {
+    /** 施法者真实的嘴前一点：按咬的方向从头部向前推，避免固定世界轴偏移把吞食画到背侧。 */
+    function bugbiteMouth(world: CombatWorld, actor: CombatActor, direction: CombatPoint): CombatPoint {
+        var body = world.observe(actor);
+        if (body === null) return WorldCombat.point(0, 0, 0);
+        var unit = direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
+        var head = body.position().plus(WorldCombat.point(0, Math.max(0.35, body.height() * 0.45), 0));
+        return head.plus(unit.scale(Math.max(0.28, body.width() * 0.5 + 0.12)));
+    }
+
+    /** 咽下之后把结果画出来：回复量、能力等级或异常解除各有自己的浮字与表现；强化只在真的有阶段变化时报。 */
+    function bugbiteSavor(current: CombatAction, result: any, motes: number, scale: number, mouth: CombatPoint): void {
         var world = current.world(), actor = current.actor(), body = world.observe(actor);
         var point = body !== null ? body.position() : current.origin();
         var data = { moment: "gain", target: String(actor.ref()), heal: result.healed, stages: result.stages,
             stat: result.stat || "", cured: result.cured.length, spike: result.recoil ? 1 : 0, motes: Math.round(motes),
+            point: [mouth.x(), mouth.y(), mouth.z()],
             gain: Math.max(2, Math.round(result.healed) + (result.stages || 0) * 2 + (result.cured.length ? 2 : 0) + (result.recoil ? 2 : 0)),
             scale: scale };
-        WorldFeedback.emit(world, bugbiteScene, 1, point, data, 28);
+        WorldFeedback.emit(world, bugbiteScene, 1, mouth, data, 28);
         if (result.healed > 0) feedback(world, actor, point, "heal", { amount: result.healed });
         if (result.healed > 0) WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), bugbiteHealText, [result.healed], 30);
-        else if (result.stat) WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), bugbiteBoostText,
+        else if (result.stat && result.stages) WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), bugbiteBoostText,
             [{ key: "worldcombat.skill.bugbite.stat." + result.stat, fallback: result.stat }, result.stages], 30);
         else if (result.cured.length > 0) WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), bugbiteCureText, [], 30);
         else if (result.recoil) WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), bugbiteSpikeText, [], 30);
@@ -48,6 +59,9 @@ namespace PokemonSkills {
         var devour = !!(config && config.devour);
         var body = world.observe(actor), scale = body ? (body.width() + body.height()) / 2.3 : 1;
         var travelled = 0;
+        // 咬合与咀嚼都是本动作拥有的表现：打断时随动作取消收束，不会留下继续咀嚼的画面。
+        var scenes = WorldFeedback.actionScenes(bugbiteScene);
+        var jaws = WorldFeedback.actionScenes(bugbiteJawScene);
         function advance(current: CombatAction): void {
             var scope = current.world(), origin = current.origin();
             var delta = direction.scale(Math.min(speed, length - travelled));
@@ -55,27 +69,43 @@ namespace PokemonSkills {
             if (hit.hitEntity()) {
                 var target = hit.target();
                 if (target === null || scope.friendly(target)) { done(current); return; }
-                var point = hit.position(), held = NativeItems.heldBerry(scope, target), berry = held !== null ? held.berry : null;
+                var point = hit.position(), held = NativeItems.heldBerry(scope, target);
                 var landed = impact(current, hit, "bugbite", p("bugbite", "gnaw", current),
                     { damage: damageSpec("bugbite", "gnaw"), contact: true, bite: true });
-                WorldFeedback.emit(scope, bugbiteScene, 1, point,
-                    { moment: "bite", target: String(target.ref()), berry: berry !== null ? 1 : 0, scale: scale,
-                        motes: Math.round(motes), bits: berry !== null ? Math.round(motes) : Math.round(motes * 0.4) }, 26);
+                if (!landed) {
+                    // 伤害被原生拒绝（免疫／未中）：不播成功咬合与双颚合拢。
+                    WorldFeedback.emit(scope, bugbiteScene, 1, point, { moment: "miss", scale: scale }, 20);
+                    done(current);
+                    return;
+                }
+                // 致死击后 target 已不可访问：保留这一咬但不取果（与 pluck 同一顺序）；只有真正取到才显示果屑。
+                var took = held !== null && scope.valid(target) && NativeItems.takeHeld(scope, target, held.held).ok;
+                var mouth = bugbiteMouth(scope, actor, direction);
+                scenes.show(current, "bite", point,
+                    { moment: "bite", target: String(target.ref()), berry: took ? 1 : 0, scale: scale,
+                        motes: Math.round(motes), bits: took ? Math.round(motes) : 0 });
+                // 双颚贴真实碰点合拢：方向取自本招实际 aim，牙尖落在接触点那一格。
+                jaws.show(current, "bite", point,
+                    { moment: "jaws", from: [mouth.x(), mouth.y(), mouth.z()],
+                        contact: [point.x(), point.y(), point.z()],
+                        direction: [direction.x(), direction.y(), direction.z()],
+                        scale: scale, start: scope.tick(), hold: 0 });
                 sound(current, "cobblemon:move.bite.target");
-                if (landed && scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
-                if (landed && held !== null && scope.valid(target) && NativeItems.takeHeld(scope, target, held.held).ok) {
-                    var eaten = held.berry;
+                if (scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
+                if (took) {
+                    var eaten = held!.berry;
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), bugbiteEatText, [{ key: eaten.name, fallback: "berry" }], 28);
-                    WorldFeedback.emit(scope, bugbiteScene, 1, point,
-                        { moment: "chew", target: String(actor.ref()), berry: 1, scale: scale, motes: Math.round(motes) }, 30);
+                    // 咀嚼含在真实来源嘴前（服务端算好的世界点），随动作结束／打断一起收束。
+                    scenes.show(current, "chew", mouth,
+                        { moment: "chew", target: String(actor.ref()), berry: 1, scale: scale, motes: Math.round(motes) });
                     sound(current, "cobblemon:item.berry.eat");
                     current.after(Math.max(1, Math.round(p("bugbite", "chew", current))), function (next) {
-                        bugbiteSavor(next, bugbiteAbsorb(next, eaten, absorb, devour ? 1 : 0), motes, scale);
+                        bugbiteSavor(next, bugbiteAbsorb(next, eaten, absorb, devour ? 1 : 0), motes, scale, mouth);
                         done(next);
                     });
                     return;
                 }
-                if (landed) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), bugbitePlainText, [], 26);
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), bugbitePlainText, [], 26);
                 done(current);
                 return;
             }
@@ -117,12 +147,16 @@ namespace PokemonSkills {
                 cooldown: Math.round(p("bugbite", "recharge", context)), active: 0, range: p("bugbite", "reach", context) };
         },
         windup: function (action: CombatAction, config: any, prepare: number) {
-            var body = action.sense().observe(action.actor());
+            var sense = action.sense();
+            var body = sense.observe(action.actor());
             var scale = body ? (body.width() + body.height()) / 2.3 : 1;
             var target = action.target();
-            var berry = target !== null && target !== undefined ? bugbiteBerryOf(action.sense(), target) : null;
-            action.present("world_combat:bugbite:" + action.id(), bugbiteScene, 1, action.origin(), JSON.stringify({
-                moment: "rear", scale: scale, motes: Math.round(p("bugbite", "motes", action)), berry: berry !== null ? 1 : 0 }));
+            var berry = target !== null && target !== undefined ? bugbiteBerryOf(sense, target) : null;
+            var direction = aim(action), mouth = bugbiteMouth(sense, action.actor(), direction);
+            // 起手只在真实嘴前聚汁，双颚的合拢留给咬中那一瞬（见 execute）。
+            action.present("world_combat:bugbite:" + action.id(), bugbiteScene, 1, mouth, JSON.stringify({
+                moment: "rear", scale: scale, motes: Math.round(p("bugbite", "motes", action)),
+                berry: berry !== null ? 1 : 0, point: [mouth.x(), mouth.y(), mouth.z()] }));
             return prepare;
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {

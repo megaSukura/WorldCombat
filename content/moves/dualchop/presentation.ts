@@ -1,15 +1,16 @@
 /**
  * 二连劈 / dualchop 的客户端表现。
  *
- * 一句话：施法者抬起前肢先竖举再横转对准准线，第一刀沿这条窄线重劈下去、在触地点带出一道紫黑的龙能裂痕，
- *   第二刀以第一刀落点为圆心横向展开一记宽短横斩。
+ * 一句话：施法者抬起前肢先竖举再横转对准准线，第一刀沿这条窄线逐刻重劈下去、在真正触到身体或墙处带出一道
+ *   紫黑的龙能裂痕，第二刀以第一刀落点为圆心逐刻横向扫过一记宽短横斩。
  * 色相家族：龙紫（0x8E6BD9、0xC79BE8）做刀路与能量，灰白（0xE6E2D8）做碎石，近白只给第二刀横斩的高光。
- * 拍子：起 raise（先竖后横）→ 一 chop1（沿 `data.path` 的窄重刀路）→ 裂 crack（只画首刀实际触地线）→
- *   二 chop2（以落点为圆心的宽短横斩）→ 中 hit1/hit2 → 收 settle。
- * 范围：chop1 直接消费 `data.path`（眼位到触点的真实刀路）；chop2 的水平扇面以发射点为圆心、`data.breadth` 为半径、
- *   `data.span` 为张角；crack 消费 `data.path`（与首刀判定同一组地面顶点），玩家一眼看出第一刀落在哪条线上。
- * 运动：chop1 沿刀路从高处压向触地点；chop2 以落点为圆心沿地面横向铺开。
- * 数：`data.shards`（物攻派生）绑定碎石量，`data.intensity`（实际威力派生）抬高亮度，`data.quake` 决定裂痕线长度。
+ * 拍子：起 raise（先竖后横）→ 一 chop1（沿 `data.path` 逐刻推进的窄重刀路）→ 裂 crack（只画首刀实际触到的支撑面）→
+ *   二 chop2（以落点为圆心逐刻扫出的宽短横斩）→ 中 hit1/hit2 → 收 settle。
+ * 范围：chop1 消费 `data.path`（当刻真实子段，眼位到刀锋）；chop2 消费服务端每刻上传的 `data.path`（落点加
+ *   截断后的子弧顶点）、`data.point` 是当刻刃尖；crack 消费 `data.path`（首刀触点的短地面线），
+ *   `data.crackTicks` 决定它停留多久。
+ * 运动：chop1 沿刀路从高处压向触点；chop2 的刃尖沿地面绕落点扫过、只亮当刻子弧。
+ * 数：`data.shards`（物攻派生）绑定碎石与刃光量，`data.intensity`（实际威力派生）抬高亮度，`data.quake` 决定裂痕线长度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const DualchopDefinition: ParticleDefinition = {
@@ -30,7 +31,7 @@ const DualchopDefinition: ParticleDefinition = {
                 },
                 {
                     name: "axis", bind: "source", offset: [0, 0.7, 0.35], height: 0.4, fit: "body", orient: "heading",
-                    particle: "world_combat_core:cobblemon/generic/bigfist",
+                    particle: "world_combat_core:cobblemon/generic/slash",
                     rate: 10, shape: { kind: "box", size: [1.6, 0.08, 0.08] },
                     direction: "shape", speed: [0.02, 0.08], spread: 6, spin: 6,
                     lifetime: [6, 12], size: [0.16, 0.03],
@@ -39,12 +40,12 @@ const DualchopDefinition: ParticleDefinition = {
             ]
         },
         chop1: {
-            duration: 22,
+            duration: 0,
             exit: { drain: 12 },
             emitters: [
                 {
                     name: "blade", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/bigfist",
+                    particle: "world_combat_core:cobblemon/generic/slash",
                     rate: 60, shape: { kind: "polyline", closed: false },
                     direction: "outward", speed: [0.04, 0.18], spread: 8, spin: 9,
                     lifetime: [6, 12], size: [{ data: "edge", fallback: 0.32 }, 0.04], sizeMode: "index",
@@ -69,13 +70,15 @@ const DualchopDefinition: ParticleDefinition = {
             ]
         },
         crack: {
-            duration: 26,
-            exit: { stop: 8, drain: 14 },
+            // 裂痕停留时长接第一刀参数 crackTicks：不同等级/体型裂得一样久，不再固定 26 刻。
+            duration: { data: "crackTicks", fallback: 60 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "seam", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 30, shape: { kind: "polyline", closed: false },
+                    rate: 6, burst: { count: { data: "shards", fallback: 10 }, at: 1 },
+                    shape: { kind: "polyline", closed: false },
                     direction: "outward", speed: [0.02, 0.1], spread: 8, gravity: 0.03,
                     lifetime: [10, 18], size: [0.14, 0.03],
                     color: 0x8E6BD9, alpha: [0.55, 0], light: "world", maxParticles: 60
@@ -83,7 +86,8 @@ const DualchopDefinition: ParticleDefinition = {
                 {
                     name: "glow", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
-                    rate: 18, shape: { kind: "polyline", closed: false },
+                    rate: 4, burst: { count: { data: "shards", fallback: 6 }, at: 1 },
+                    shape: { kind: "polyline", closed: false },
                     direction: "up", speed: [0.04, 0.16], spread: 10,
                     lifetime: [8, 15], size: [0.09, 0.02],
                     color: 0xC79BE8, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 44
@@ -91,25 +95,35 @@ const DualchopDefinition: ParticleDefinition = {
             ]
         },
         chop2: {
-            duration: 24,
+            duration: 0,
             exit: { drain: 13 },
             emitters: [
                 {
-                    name: "arc", bind: "point", fit: "world", orient: "heading",
-                    particle: "world_combat_core:cobblemon/generic/bigfist",
-                    burst: { count: { data: "shards", fallback: 16 }, at: 0, interval: 1, repeats: 2 },
-                    shape: { kind: "sector", radius: { data: "breadth", fallback: 1.8 }, angleDegrees: { data: "span", fallback: 100 } },
-                    direction: "shape", speed: [0.24, 0.6], spread: 10, spin: -12,
-                    lifetime: [6, 12], size: [0.38, 0.06], sizeMode: "index",
+                    // 逐刻上传的当前子弧：一条短横刃掠过落点两侧，判定与画面共用端点。
+                    name: "edge", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/softswipe",
+                    shape: { kind: "polyline", closed: false },
+                    rate: { data: "shards", fallback: 24 }, direction: "shape", speed: [0.18, 0.5], spread: 9, spin: -12,
+                    lifetime: [6, 12], size: [0.34, 0.05], sizeMode: "index",
                     color: 0xC79BE8, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 80
                 },
                 {
-                    name: "dust", bind: "point", fit: "none", orient: "heading",
+                    name: "dust", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 20, shape: { kind: "sector", radius: { data: "breadth", fallback: 1.8 }, angleDegrees: { data: "span", fallback: 100 } },
-                    direction: "shape", speed: [0.05, 0.2], spread: 26, gravity: 0.07, drag: 0.9,
+                    shape: { kind: "polygon" },
+                    rate: { data: "shards", fallback: 16 }, direction: "shape", speed: [0.05, 0.2], spread: 26, gravity: 0.07, drag: 0.9,
                     lifetime: [8, 15], size: [0.1, 0.02],
                     color: 0xE6E2D8, alpha: [0.45, 0], light: "world", maxParticles: 40
+                },
+                {
+                    // 当前刃尖：只有这一点跟着子弧走，不铺满整扇。
+                    name: "tip", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
+                    burst: { count: { data: "shards", fallback: 8 }, at: 0, interval: 2, repeats: 2 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.1, 0.32], spread: 22,
+                    lifetime: [5, 10], size: [0.24, 0.05], sizeMode: "index",
+                    color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 36
                 }
             ]
         },

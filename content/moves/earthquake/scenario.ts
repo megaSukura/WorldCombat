@@ -27,7 +27,7 @@ Smoke.scenario("earthquake", function (stage) {
             stage.expect(stage.casts("earthquake", caster) >= 1, "golem committed earthquake");
             stage.expect(stage.damageTo(heavyA) > 0 || stage.damageTo(heavyB) > 0, "the upheaval dealt damage to a grounded foe");
             stage.expect(stage.changedBlocks().length === 0, "the rupture left the ground blocks untouched");
-            stage.note("knockback resistance should leave the iron golems unlaunched; their travel includes their own approach", {
+            stage.note("knockback resistance should leave the iron golems unlaunched; their travel includes their own approach. Flat stone here means the same-layer ground link always passes; the radiating cracks follow real support samples and may stop at a break", {
                 casts: stage.casts("earthquake", caster),
                 heavyADamage: Math.round(stage.damageTo(heavyA) * 10) / 10,
                 heavyBDamage: Math.round(stage.damageTo(heavyB) * 10) / 10,

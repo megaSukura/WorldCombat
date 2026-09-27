@@ -32,7 +32,7 @@ Smoke.scenario("psychicnoise", function (stage) {
         stage.after(30, function () {
             stage.expect(stage.hasMobEffect(foe, "minecraft:regeneration"), "the target carried the native regeneration used for the check");
             stage.expect(foe.health() <= before + 0.001, "native healing is blocked while the seal is active");
-            stage.note("the block lasts 90-260 ticks (piercing x0.85); a strong native regeneration (LivingHealEvent) is applied during the seal and the target's health does not rise, so the shared healing bridge is exercised; without any healing source only the identity is observable", {
+            stage.note("the block lasts 90-260 ticks (piercing x0.85); a strong native regeneration (LivingHealEvent) is applied during the seal and the target's health does not rise, so the shared healing bridge is exercised; without any healing source only the identity is observable. The seal text is sent only when this move's own carrier actually lands, and the piercing wave passes through 3 for up to 4 targets in total", {
                 casts: stage.casts("psychicnoise", caster),
                 damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,

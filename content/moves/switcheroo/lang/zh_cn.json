@@ -31,6 +31,7 @@
   "world_combat.move.switcheroo.text.swap": "换到了手",
   "world_combat.move.switcheroo.text.empty": "两手空空地掠过",
   "world_combat.move.switcheroo.text.guard": "它的手抓得死",
+  "world_combat.move.switcheroo.text.fail": "没能换过来",
   "world_combat.move.switcheroo.text.miss": "擦身而过",
   "worldcombat.skill.switcheroo.description.additional": "可以空放只当位移；不因原目标的特性拒绝整招。目标带黏着之类拒绝交换持有物的能力时，只有真正撞上它才会交换失败、只当一次擦身；自己被查封时同理。"
 }

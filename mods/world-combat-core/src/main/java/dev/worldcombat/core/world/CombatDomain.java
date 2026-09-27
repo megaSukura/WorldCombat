@@ -20,7 +20,6 @@ public interface CombatDomain {
     /** Public facts other combatants may read about this entity (status, ownership, species...), added to survey records. */
     default void facts(LivingEntity entity, com.google.gson.JsonObject out) {}
     default void healed(LivingEntity entity) {}
-    default boolean deferredDamage() { return false; }
     default void defeated(LivingEntity source, LivingEntity target, ServerPlayer controller) {}
     /** The player this entity belongs to, when the domain knows one. */
     default UUID owner(LivingEntity entity) { return entity instanceof net.minecraft.world.entity.OwnableEntity ownable ? ownable.getOwnerUUID() : null; }

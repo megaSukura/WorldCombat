@@ -30,7 +30,7 @@
   "world_combat.move.snowscape.text.cover": "覆雪 %1$s 格",
   "world_combat.move.snowscape.text.lock": "冻水 %1$s 格",
   "effect.world_combat.snowscape_powder": "覆雪",
-  "worldcombat.skill.snowscape.description.3": "每片雪区使其中的冰属性宝可梦最多提升1级防御，敌我都受益；重叠雪区可叠加，仍受能力上限限制。走出某片雪区或雪停时，只撤去那片雪的提升。",
+  "worldcombat.skill.snowscape.description.3": "每片雪区使其中的冰属性活体最多提升 1 级防御，敌我都受益；普通生物临时获得的冰属性同样参与。重叠雪区可叠加，仍受能力上限限制。走出某片雪区或雪停时，只撤去那片雪的提升。",
   "worldcombat.skill.snowscape.description.4": "厚覆：雪区更广、覆雪与冻水更多，但雪停得更快、冷却更长；薄雪覆盖较小，持续更久、冷却更短。",
   "worldcombat.skill.snowscape.value.groundDuration": "地表恢复时间"
 }

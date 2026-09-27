@@ -3,7 +3,7 @@
   "worldcombat.skill.synthesis.use.0": "A large heal sipped under open sun",
   "worldcombat.skill.synthesis.use.1": "A small top-up in the shade",
   "worldcombat.skill.synthesis.use.2": "A stand-still self rescue",
-  "worldcombat.skill.synthesis.description.0": "The whole photosynthesis restores %1$s of the missing health: higher with brighter sunlight (close to 2/3 at clear noon), only the minimum floor at night or under cover; higher Special Defence makes the leaves tougher. This total is split into 4 sips, each settled at the current sunlight.",
+  "worldcombat.skill.synthesis.description.0": "The whole photosynthesis restores %1$s of the missing health: higher with brighter sunlight (close to 2/3 at clear noon), only the minimum floor at night or under cover; higher Special Defence makes the leaves tougher. This total is split into 4 sips, each settled at the current sunlight, and never exceeds the health missing when the photosynthesis began - taking more damage mid-cast will not enlarge it.",
   "worldcombat.skill.synthesis.description.1": "After %1$s of wind-up it commits and spends PP, then absorbs for %2$s while standing still; being interrupted stops the remaining sips while the health already restored is kept.",
   "worldcombat.skill.synthesis.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.synthesis.growth.0": "At level %1$s the cooldown shortens to %2$s s.",

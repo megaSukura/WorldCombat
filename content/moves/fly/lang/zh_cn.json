@@ -27,7 +27,7 @@
   "worldcombat.skill.fly.preference.ai.maxChase": "俯冲距离",
   "worldcombat.skill.fly.preference.ai.maxChase.help": "伙伴在威胁离自己这么远以内时才考虑飞翔；调小只在近处落击，调大愿意从更远处飞过去。",
   "worldcombat.skill.fly.preference.ai.minHealth": "最低血线",
-  "worldcombat.skill.fly.preference.ai.minHealth.help": "伙伴生命低于这个比例时才把飞翔当成“躲开近战的一击”，priority 提前；调高更常在挨打时飞。",
+  "worldcombat.skill.fly.preference.ai.minHealth.help": "伙伴生命低于这个比例、且身边确实是贴地的近战威胁、头顶也有净空时，才把飞翔当成“躲开近战的一击”提前考虑；任意低血或贴在天花板下都不算安全逃生。调高更常在挨打时飞。",
   "worldcombat.skill.fly.preference.ai.crowd": "落区敌人数",
   "worldcombat.skill.fly.preference.ai.crowd.help": "定点击落时，落点附近至少聚着这么多敌人才飞，好一次压住一群；追踪俯冲不受此限，设为 1 则单个目标也飞。",
   "worldcombat.skill.fly.preference.ai.leaveStation": "离开驻守点",

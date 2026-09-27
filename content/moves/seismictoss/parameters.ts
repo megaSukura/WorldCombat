@@ -37,16 +37,19 @@ namespace PokemonSkills {
         holdTicks: seconds(
             F.base(6).minus(F.stat("speed").minus(55).times(0.05).clamp(-1, 2.5)).clamp(2, 8).round(0),
             "抓握时长", "抓住对手到把它甩出去之间的停顿；越利落，对手越难在这一瞬挣脱。"),
-        /** 水平投速：基础 0.42 格/刻 + 物攻项（夹 −0.08..0.25）+ 自己体重项（夹 −0.05..0.14），再除以目标重量系数（体重/400，夹 0.4..2.5）；砸地 ×0.72；夹在 0.16..0.7。 */
+        /** 水平投速：基础 0.42 格/刻 + 物攻项（夹 −0.08..0.25）+ 自己体重项（夹 −0.05..0.14），再除以目标重量系数（体重/400，夹 0.4..2.5；非宝可梦按真实碰撞体积估重）；砸地 ×0.72；夹在 0.16..0.7。 */
         hurlXZ: formula(
             F.base(0.42).plus(F.stat("attack").minus(60).times(0.0025).clamp(-0.08, 0.25))
                 .plus(F.body("weight").minus(60).times(0.001).clamp(-0.05, 0.14))
-                .div(F.target("body.weight", text("worldcombat.skill.seismictoss.value.targetWeight")).div(400).clamp(0.4, 2.5))
+                .div(F.when(F.target("individual.weight", text("worldcombat.skill.seismictoss.value.targetWeight")),
+                        F.target("individual.weight"),
+                        F.target("actor.width").times(F.target("actor.width")).times(F.target("actor.height")).times(80))
+                    .div(400).clamp(0.4, 2.5))
                 .times(F.when(F.pref("slam", text("worldcombat.skill.seismictoss.preference.slam")), F.const(0.72), F.const(1)))
                 .clamp(0.16, 0.7).round(3),
             "水平投速", {
                 unit: "格/刻",
-                description: "对目标追加的水平投速；物攻越高、自己越重、对手越轻，飞得越远。砸地式把这一下压短。"
+                description: "对实际抓到的这个身体追加的水平投速；物攻越高、自己越重、对手越轻，飞得越远。对手是宝可梦时读真实体重，其他生物按碰撞体积估重。砸地式把这一下压短。"
             }),
         /** 垂直投速：基础 0.44 格/刻，碰撞箱每比 1.4 高 1 格加 0.05；砸地 ×0.85；夹在 0.28..0.62。 */
         hurlUp: formula(

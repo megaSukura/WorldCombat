@@ -5,7 +5,8 @@
  * （curtain）→ 幕下友方身上牵一条细丝连到幕、物理与特殊伤害被一起滤掉（veil / thread / block）→ 天光收拢（fade）。
  * 三幕：起手 → 拉幕 → 幕下受护。
  *
- * 场地高度：提交后从落点向上探一次原生方块，确定极光能挂多高。开阔处挂到天顶；低顶棚就贴着屋顶，改用幕内短垂带。
+ * 场地高度：提交前用 WorldGeometry.blockHit 从落点向上探真正的原生方块面，确定极光能挂多高。开阔处挂到天顶；
+ * 低顶棚贴着真实屋顶、横向虹带随之压短；空间不足 1.6 格时 ready 直接拒绝，不花 PP 也不强撑穿顶。
  * 同一次探得的高度同时写进极光区数据和拉开/持续/收拢的表现，判定与画面用同一份 `ceiling`。
  *
  * 「只有冰雹时才能使出」翻成世界条件：必须是雨/雷暴的天，且施法者脚下不远是雪或冰——即下着雪的冷天。
@@ -35,15 +36,16 @@ namespace PokemonSkills {
         }
         return false;
     }
-    /** 落点上方到第一处原生方块的空间高度；开阔处取上限。极光带据此裁剪，低顶棚落在 3.2 格以下。 */
-    export function auroraVeilCeiling(action: CombatAction, point: CombatPoint): number {
-        const maxHeight = 6.5, minHeight = 1.6;
-        const impact = action.trace(point.plus(WorldCombat.point(0, 0.05, 0)), point.plus(WorldCombat.point(0, maxHeight, 0)), 0.05, false);
-        const cell = impact.blockPosition();
-        if (cell === null) return maxHeight;
-        const height = cell.y() - point.y();
-        if (height <= 0.5) return maxHeight; // 探针起点贴着地面，说明没打到天花板
-        return Math.max(minHeight, Math.min(maxHeight, height));
+    /** 极光能挂的最低高度；再低就真的挂不下一道像样的幕。 */
+    export const auroraVeilMinCeiling = 1.6;
+    /** 落点向上探一次真正的原生方块（WorldGeometry.blockHit 只看实际 BLOCK，忽略上方活体），
+     * 用接触点位置当作可挂高度；开阔处取上限。判定与画面用同一份 `ceiling`，低顶不再强撑穿顶。 */
+    export function auroraVeilCeiling(world: CombatWorld, point: CombatPoint): number {
+        const maxHeight = 6.5;
+        const from = point.plus(WorldCombat.point(0, 0.1, 0));
+        const hit = WorldGeometry.blockHit(world, from, point.plus(WorldCombat.point(0, maxHeight, 0)));
+        if (hit === null) return maxHeight;
+        return Math.max(0, Math.min(maxHeight, hit.position().y() - from.y()));
     }
 
     const auroraVeilBright = flag("bright", "明幕");
@@ -80,7 +82,11 @@ namespace PokemonSkills {
             };
         },
         ready: function (action, config) {
-            return auroraVeilHail(action.sense(), action.origin()) ? "" : "world_combat:no-hail";
+            const world = action.sense();
+            if (!auroraVeilHail(world, action.origin())) return "world_combat:no-hail";
+            // 低顶空间不够就真实施放失败、不花 PP，也不强撑着穿顶。
+            if (auroraVeilCeiling(world, action.targetPosition()) < auroraVeilMinCeiling) return "world_combat:no-ceiling";
+            return "";
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_auroraveil:windup", auroraveilScene, 1, action.targetPosition(),
@@ -94,16 +100,14 @@ namespace PokemonSkills {
             const ribbons = Math.max(2, Math.round(p(auroraveilId, "ribbons", action)));
             const cutPhys = Math.max(0.05, Math.min(0.8, p(auroraveilId, "cutPhys", action)));
             const cutSpec = Math.max(0.05, Math.min(0.8, p(auroraveilId, "cutSpec", action)));
-            const ceiling = auroraVeilCeiling(action, point);
+            const ceiling = auroraVeilCeiling(world, point);
             const low = ceiling < 3.2;
-            const midHeight = Math.max(0.6, Math.round(ceiling * 5) / 10); // 垂带的中心高度 = 高度的一半，取一位小数
             WorldEffects.field(world, auroraveilField, point, radius,
                 { cutPhys: cutPhys, cutSpec: cutSpec, radius: radius, ribbons: ribbons, margin: 60,
-                    ceiling: ceiling, midHeight: midHeight, highRibbons: low ? 0 : ribbons, lowRibbons: low ? ribbons : 0 }, ticks);
+                    ceiling: ceiling, low: low ? 1 : 0 }, ticks);
             world.sound("cobblemon:move.aurorabeam.actor_1", point, 24, "{}");
             WorldFeedback.emit(world, auroraveilScene, 1, point,
-                { moment: "curtain", radius: radius, scale: radius / 4, ribbons: ribbons,
-                    ceiling: ceiling, midHeight: midHeight, highRibbons: low ? 0 : ribbons, lowRibbons: low ? ribbons : 0, ticks: ticks }, 48);
+                { moment: "curtain", radius: radius, ribbons: ribbons, ceiling: ceiling, low: low ? 1 : 0, ticks: ticks }, 48);
             WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1, 0)), auroraveilRaiseText,
                 [Math.round(ticks / 20), Math.round(cutPhys * 100), Math.round(cutSpec * 100)], 44);
             done(action);

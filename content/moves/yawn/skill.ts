@@ -1,14 +1,15 @@
 /**
  * 哈欠 / yawn —— 执行组织。
  *
- * 核心念头：当着对手的面张大口打一个哈欠，一串睡泡沿通视直线飘过去、贴在它头上倒数几秒。这招**必中**，
+ * 核心念头：当着对手的面张大口打一个哈欠，嘴边吐出一口短呼气，目标头顶立刻挂上睡意倒数几秒。这招**必中**，
  *   但睡意是慢慢上来的——目标有一段窗口可以解掉它，或被别的状态占住，哈欠就压不下去。代价全在「等」。
  *
  * 两幕：
  *   起（windup，提交前）：嘴边的圈张开、睡泡攒起，只播预告。
- *   飘（puff → drowsy / sleep / fizzle / immune，提交后）：睡泡沿「自身→目标」的直线飘过去，给目标挂上
- *     本单元的睡意载体 world_combat:yawn_drowsy（共享身份 world_combat:status/yawn，只借身份）；同时起一个
- *     绑定效果 world_combat:yawn_doze 跟着目标，每 10 刻续一次头顶的倒数环（画面读得出还剩多少）。
+ *   飘（puff → drowsy / sleep / fizzle / immune，提交后）：嘴边的一口短呼气与目标身上的即刻标记表达睡意挂上，
+ *     给目标挂上本单元的睡意载体 world_combat:yawn_drowsy（共享身份 world_combat:status/yawn，只借身份）；
+ *     同时起一个绑定效果 world_combat:yawn_doze 跟着目标，每 10 刻用 onEffect 续一次头顶的倒数环——画面绑在
+ *     真实 carrier 上，睡意一被净化/换掉就立即止泡，读得出还剩多少。
  *   落（sleep / fizzle）：睡意自然走完时，用 mob_effect_removed 的 cause 区分「走完」还是「被解」——走完且
  *     目标身上没有别的状态，就转入共享睡眠 world_combat:status/sleep；被解掉或已被别的状态占住就作废。
  *
@@ -37,9 +38,10 @@ namespace PokemonSkills {
         const data = JSON.parse(effect.state());
         const remain = Math.max(0, drowsy.duration());
         const ratio = data.drowsy > 0 ? Math.max(0, Math.min(1, remain / data.drowsy)) : 0;
-        WorldFeedback.keep(world, "yawn:" + String(actor.ref()), yawnScene, 1, body.position(),
+        // 绑在睡意载体自己的托管效果上：按目标续同一实例，载体被净化/到期时画面随之停止，不再靠 24 刻的独立续期残留。
+        WorldFeedback.onEffect(world, effect.id(), "yawn:drowsy:" + String(actor.ref()), yawnScene, 1, body.position(),
             { moment: "drowsy", target: String(actor.ref()), remain: remain, drowsy: data.drowsy, puffs: data.puffs,
-              ringRadius: Math.round((0.25 + 0.7 * ratio) * 100) / 100 }, 24);
+              ringRadius: Math.round((0.25 + 0.7 * ratio) * 100) / 100 });
         effect.schedule("tick", "tick", 10, "{}");
     });
 
@@ -91,7 +93,7 @@ namespace PokemonSkills {
         defaults: { long: false },
         fields: [
             field(pathOf("long"), "长哈欠", "boolean", {
-                help: "开启：睡意窗口 ×1.35、睡眠 ×1.2、射程 ×1.15，但给了目标更多挣脱的时间、冷却 ×1.1；关闭（短哈欠）：窗口 ×0.7、出手快、冷却短，但睡眠 ×0.85——快速按下去、睡得不深。"
+                help: "开启：睡意窗口 ×1.35、睡眠 ×1.2、射程 ×1.15，但给了目标更多挣脱的时间、冷却 ×1.1；关闭（短哈欠）：窗口 ×0.7、冷却短，但睡眠 ×0.85——快速按下去、睡得不深。"
             })
         ],
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -141,14 +143,12 @@ namespace PokemonSkills {
             const sleepTicks = Math.max(60, Math.round(p(yawnId, "sleepTicks", action)));
             const puffs = Math.max(4, Math.round(p(yawnId, "puffs", action)));
             const mouth = Math.max(0.2, p(yawnId, "mouthRadius", action));
-            const span = at.minus(origin).length();
-            const flow = span < 0.05 ? WorldCombat.point(0, 1, 0) : at.minus(origin).unit();
             const ref = String(target.ref());
             sound(action, "cobblemon:move.sleeppowder.actor");
+            // 即刻挂睡意：嘴边一口短呼气 + 目标身上立即出现倒数；睡泡不再假装沿线飘过去。
             WorldFeedback.emit(world, yawnScene, 1, origin,
-                { moment: "puff", path: [String(action.actor().ref()), ref], target: ref,
-                    direction: [flow.x(), flow.y(), flow.z()], span: span, puffs: puffs,
-                    scale: Math.max(0.6, Math.min(1.8, mouth / 0.5)) }, 24);
+                { moment: "puff", target: ref, puffs: puffs,
+                    scale: Math.max(0.6, Math.min(1.8, mouth / 0.5)) }, 18);
             if (MobEffects.apply(world, target, yawnEffect, drowsyTicks, 0) === null) {
                 WorldFeedback.emit(world, yawnScene, 1, at, { moment: "immune", target: ref }, 20);
                 WorldFeedback.text(world, yawnAbove(at), "world_combat.move.yawn.text.immune", [], 24);

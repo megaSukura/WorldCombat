@@ -1,57 +1,76 @@
 /**
  * 魔法叶 / magicalleaf 的出手方式。
  *
- * 核心念头：散出一群会拐弯追人的叶，从四面八方一起收拢——叶会追，所以打得到。
+ * 核心念头：一片接一片把会拐弯的叶从身前发出去。每一片都用发出那一刻的准线重新找目标——
+ *   沿准线锁定第一个合法可见的敌人，有限度地拐弯追上去；没锁到就沿准线直飞。
+ *   已发出的叶不会改追别人；按住技能键可以边发边改准线，把叶分给不同方向的多个目标。
  *
- * 两幕：
- *   起（gather，提交前）：叶在身周旋起、越聚越多（可被打断的预告，叶数按本招算出的实际片数）。
- *   放（launch → seek → hit/block/fade）：提交后叶群迸出；合围时沿整圈散开再加 2 片、转向更强，
- *       从对手四周划弧收拢；直取时从前方小锥面直插。只在发射时给选中的实体分配锁定，每片叶追该目标，
- *       碰到对手即按 `leaf` 结算一片叶的伤害；没有选中实体时按瞄准方向散射，飞出的叶不再另找目标。
- *       撞到方块则在撞点碎开，飞完或落空自然散去。
+ * 幕：
+ *   起（gather，提交前）：叶在身周旋起、越聚越多（叶数按本招算出的实际片数）。
+ *   放（逐片 fire → seek → hit/block/fade）：每 `beat` 刻发一片，各自独立追踪、独立结算。
+ *   收：未发出的叶不再生成，已发出的叶随动作归属清理。
  *
- * 与同族分开：高速星星是向四面迸开后**一颗星一个对手**；魔法叶是**一整群叶全扑向同一个对手**（或朝一个方向散射），
- *   合围时从整圈散开、绕到背后再收拢，把对手包在叶网里。
+ * 与同族分开：高速星星一次批量分配、一颗星一个对手后离手；群魔乱舞整轮固定同体分摊总威力；
+ *   魔法叶的每一片有独立份额，并在发出时按当刻准线重新分配，可顺次扫过多个移动目标。
  */
 namespace PokemonSkills {
     const magicalleafScene = "world_combat:move_magicalleaf";
 
-    /** 以瞄准方向为基准角（水平），没有目标时朝面前。 */
-    function magicalleafHeading(action: CombatAction): number {
-        const delta = action.targetPosition().minus(action.origin());
-        const flat = WorldCombat.point(delta.x(), 0, delta.z());
-        const unit = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-        return Math.atan2(unit.x(), unit.z());
+    /** 当刻持续控制的瞄点；没有新输入（AI 提交或未引导）时为 null。 */
+    function magicalleafControlPoint(action: CombatAction): CombatPoint | null {
+        try {
+            const parsed = JSON.parse(action.control());
+            const samples = parsed && parsed.samples;
+            if (samples && samples.length && samples[0].point && samples[0].point.length === 3)
+                return WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]);
+        } catch (error) { }
+        return null;
+    }
+
+    /** 无持续控制输入时的回退瞄点：动作选点，取不到就用身体正前方。 */
+    function magicalleafAim(action: CombatAction): CombatPoint {
+        try { return action.targetPosition(); } catch (error) { }
+        return action.origin().plus(WorldCombat.point(0, 0, 1));
+    }
+
+    /** 沿当刻准线取第一个合法可见的敌人；判定射线与叶的初始方向共用同一端点。 */
+    function magicalleafLock(action: CombatAction, origin: CombatPoint, direction: CombatPoint,
+                             range: number, radius: number): CombatActor | null {
+        // 默认忽略友体，与本招原生叶片的 hitAllies:false 完全一致；墙和首个敌体由原生 trace 决定。
+        const hit = action.trace(origin, origin.plus(direction.scale(Math.max(.5, range))), Math.max(.05, radius), false);
+        const scope = action.world(), actor = hit.target();
+        if (!hit.hitEntity() || actor === null || !scope.valid(actor) || scope.friendly(actor)) return null;
+        const body = scope.observe(actor);
+        return body !== null && body.visible() ? actor : null;
     }
 
     define({
         id: "magicalleaf",
         cooldownParameter: "recharge",
         name: "Magical Leaf",
-        description: "散出一群会拐弯追人的叶，从四面八方一起收拢——叶会追，所以打得到。选中一个对手时整群叶在发射时锁定它；没有选中实体时朝瞄准方向散射，飞出的叶不再另找目标。合围时从整圈散开绕到对手四周，直取时从前方小锥面直插。",
-        uses: ["散出一群会拐弯的叶追一个对手", "从四面八方合围，逼对手无处可躲", "在对手拉开距离时仍然咬住它"],
+        description: "一片接一片发出会拐弯的叶：每片都用发出那一刻的准线重新找目标，沿准线锁定第一个合法可见的敌人后有限度地拐弯追上去，没锁到就沿准线直飞。已发出的叶不会改追别人；按住技能键可边发边改准线，把叶分给不同方向的多个目标。",
+        uses: ["把连发的叶分给不同方向的移动敌人", "咬住沿准线露出的第一个敌人", "在开阔的持续输出窗口里逐片压上去"],
         kind: "aim",
         range: 11,
         maxRange: 16,
         prepare: 8,
-        active: 30,
+        active: 40,
         recover: 8,
         cooldown: 80,
+        maximumTicks: 300,
         style: "leaf",
-        defaults: { envelop: false, ai: { maxChase: 15, envelopFar: true } },
+        defaults: { ai: { maxChase: 15, trackMovers: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("magicalleaf", "lockRange", pokemon), geometry: "area", style: "leaf", color: 0x7FD34A,
-                label: config && config.envelop === true ? "魔法叶·合围" : "魔法叶" };
+            return { radius: p("magicalleaf", "lockRange", pokemon), geometry: "area", style: "leaf", color: 0x7FD34A, label: "魔法叶" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["magicalleaf"], detail: { values: config },
                 world: world || null, actor: actor || null, attributes };
-            const envelop = !!(config && config.envelop);
             return {
-                prepare: Math.round(p("magicalleaf", "tempo", context)) + (envelop ? 2 : 0),
+                prepare: Math.round(p("magicalleaf", "tempo", context)),
                 recover: Math.round(p("magicalleaf", "settle", context)),
-                cooldown: Math.round(p("magicalleaf", "recharge", context)) + (envelop ? 3 : 0),
+                cooldown: Math.round(p("magicalleaf", "recharge", context)),
                 active: skills["magicalleaf"].active,
                 range: p("magicalleaf", "lockRange", context)
             };
@@ -59,79 +78,106 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const count = Math.max(1, Math.round(p("magicalleaf", "leaves", action)));
             action.present("magicalleaf:gather", magicalleafScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather", windup: prepare, count: count,
-                    target: action.target() === null ? "" : String(action.target()!.ref()),
-                    envelop: !!(config && config.envelop) }));
+                JSON.stringify({ moment: "gather", windup: prepare, count: count }));
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
-            const actor = action.actor();
-            const envelop = !!(config && config.envelop);
             const count = Math.max(1, Math.round(p("magicalleaf", "leaves", action)));
             const power = p("magicalleaf", "leaf", action);
-            const speed = p("magicalleaf", "leafSpeed", action);
+            const speed = Math.max(0.4, p("magicalleaf", "leafSpeed", action));
             const turn = p("magicalleaf", "turn", action);
             const radius = p("magicalleaf", "leafRadius", action);
             const range = p("magicalleaf", "lockRange", action);
+            const gap = Math.max(2, Math.round(p("magicalleaf", "beat", action)));
             const intensity = Math.max(0.5, Math.min(2, power / 26));
             const trail = Math.max(16, Math.round(power * 1.5));
             const notes = Math.max(6, Math.round(power / 4));
             const scale = radius / 0.3;
-            const selected = action.target();
-            // 只在发射时分配锁定：选中的实体离线后，叶保持最后方向自然散去，不自动另找目标。
-            const locked = selected !== null && world.valid(selected) ? String(selected.ref()) : "";
+            const self = String(action.actor().ref());
+            const scenes = WorldFeedback.actionScenes(magicalleafScene);
+            let fired = 0, active = 0, settled = false;
 
-            sound(action, "cobblemon:move.magicalleaf.actor_1");
-            WorldFeedback.emit(world, magicalleafScene, 1, action.origin(),
-                { moment: "launch", count: count, envelop: envelop, intensity: intensity, scale: scale }, 22);
-
-            const base = magicalleafHeading(action);
-            const cone = 70 * Math.PI / 180;
-            let remaining = count;
-            let settled = false;
-            function completeOne(current: CombatAction): void {
-                remaining--;
-                if (remaining > 0 || settled) return;
+            function finish(current: CombatAction): void {
+                if (settled || fired < count || active > 0) return;
                 settled = true;
-                done(current);
+                scenes.finish(current, done);
             }
-            for (let shot = 0; shot < count; shot++) {
-                const angle = envelop ? base + Math.PI * 2 * (shot / count)
-                    : base + (count === 1 ? 0 : (shot / (count - 1) - 0.5) * cone);
-                const direction = WorldCombat.point(Math.sin(angle), 0.14, Math.cos(angle)).unit();
+            function release(current: CombatAction): void { active--; finish(current); }
+
+            /** 发一片叶：方向读当刻准线，沿准线取第一个合法可见敌人作为这一片唯一的有限追踪目标。 */
+            function shoot(current: CombatAction): void {
+                if (settled) return;
+                if (fired >= count) { finish(current); return; }
+                const scope = current.world();
+                const body = scope.observe(action.actor());
+                const origin = body !== null ? body.position() : current.origin();
+                const index = fired + 1;
+                fired++;
+                const control = magicalleafControlPoint(current);
+                const aimed = control !== null ? control : magicalleafAim(current);
+                let direction = aimed.minus(origin);
+                if (direction.length() < 0.05) direction = current.direction();
+                direction = direction.unit();
+                const locked = magicalleafLock(current, origin, direction, range, radius);
+                const ref = locked !== null ? String(locked.ref()) : "";
+                const launch = origin;
+                let resolved = false, closed = false;
+                const key = "leaf-" + index;
                 const appearance: LivingActions.ProjectileAppearance = {
                     sprite: "cobblemon:particle/generic/grass/leaf", glow: true, tint: 0xBFE6A0 };
-                if (locked !== "")
-                    appearance.homing = { target: locked, turn: turn, delay: 1, range: range + 8 };
-                const flight = LivingActions.projectile(action, {
-                    speed: speed, range: range + 8, radius: radius, direction: direction,
+                if (ref !== "") appearance.homing = { target: ref, turn: turn, delay: 1, range: range + 8 };
+                active++;
+                const flight = LivingActions.projectile(current, {
+                    origin: launch, speed: speed, range: range + 8, radius: radius, direction: direction,
+                    lifetime: Math.max(30, Math.round((range + 8) / speed + 20)),
                     appearance: appearance,
-                    impact: function (current: CombatAction, hit: CombatImpact) {
-                        const scope = current.world();
-                        const who = hit.target();
-                        if (who !== null && scope.valid(who) && !scope.friendly(who)) {
-                            const landed = impact(current, hit, "magicalleaf", power,
-                                { damage: damageSpec("magicalleaf", "leaf") });
-                            WorldFeedback.emit(scope, magicalleafScene, 1, hit.position(),
+                    impact: function (inner: CombatAction, hit: CombatImpact) {
+                        resolved = true;
+                        scenes.stop(inner, key); scenes.stop(inner, key + "-seek");
+                        const stage = inner.world(), who = hit.target(), at = hit.position();
+                        if (who !== null && stage.valid(who) && !stage.friendly(who)) {
+                            const landed = impact(inner, hit, "magicalleaf", power,
+                                { damage: damageSpec("magicalleaf", "leaf") }, "leaf" + index);
+                            WorldFeedback.emit(stage, magicalleafScene, 1, at,
                                 { moment: landed ? "hit" : "fade", target: String(who.ref()), intensity: intensity,
                                     notes: notes, scale: scale }, 22);
-                            if (landed) scope.sound("cobblemon:impact.grass", hit.position(), 12, "{}");
-                            return;
-                        }
-                        if (hit.blocked()) {
-                            WorldFeedback.emit(scope, magicalleafScene, 1, hit.position(),
+                            if (landed) stage.sound("cobblemon:impact.grass", at, 12, "{}");
+                        } else if (hit.blocked()) {
+                            WorldFeedback.emit(stage, magicalleafScene, 1, at,
                                 { moment: "block", notes: notes, scale: scale, intensity: intensity }, 18);
-                            scope.sound("minecraft:block.grass.break", hit.position(), 8, "{}");
-                            return;
+                            stage.sound("minecraft:block.grass.break", at, 8, "{}");
+                        } else {
+                            WorldFeedback.emit(stage, magicalleafScene, 1, at,
+                                { moment: "fade", intensity: intensity }, 18);
                         }
-                        WorldFeedback.emit(scope, magicalleafScene, 1, hit.position(),
-                            { moment: "fade", intensity: intensity }, 18);
+                        if (!closed) { closed = true; release(inner); }
                     }
-                }, function (current: CombatAction) { completeOne(current); });
-                WorldFeedback.emit(world, magicalleafScene, 1, action.origin(),
-                    { moment: "seek", projectile: flight, target: locked, intensity: intensity, trail: trail, scale: scale }, 40);
+                }, function (inner: CombatAction) {
+                    if (!resolved) {
+                        scenes.stop(inner, key); scenes.stop(inner, key + "-seek");
+                        // 空飞的真实末点：读该弹完成回调内仍有效的最后位置，不拿旧瞄准点或满射程点假造终点。
+                        const end = inner.world().projectilePosition(flight);
+                        if (end !== null)
+                            WorldFeedback.emit(inner.world(), magicalleafScene, 1, end,
+                                { moment: "fade", intensity: intensity }, 18);
+                    }
+                    if (!closed) { closed = true; release(inner); }
+                });
+                scenes.show(current, key, origin,
+                    { moment: "fire", direction: [direction.x(), direction.y(), direction.z()],
+                        index: index, count: count, locked: ref !== "" ? 1 : 0, intensity: intensity, scale: scale });
+                scenes.show(current, key + "-seek", origin,
+                    { moment: "seek", projectile: flight, trail: trail, intensity: intensity, scale: scale });
+                sound(current, "minecraft:entity.arrow.shoot");
+                if (fired < count) current.after(gap, shoot);
+                else finish(current);
             }
+
+            sound(action, "cobblemon:move.magicalleaf.actor_1");
+            shoot(action);
         }
     });
+
+    // 玩家按住技能键可边发边改准线；AI 提交仍带一个目标点，读同一条控制输入。
+    WorldCombat.preview("world_combat:magicalleaf", JSON.stringify({ input: { version: 1, steps: ["point"], sustained: true } }));
 }

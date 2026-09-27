@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.forestscurse.summary": "保留对象原有属性、再追加一条草属性：给敌方打开弱点，也可给友方添草抗性；根须只是那层草，不缠住它。",
   "worldcombat.skill.forestscurse.use.0": "给对手追加草属性、打开火与冰与虫与飞的弱点",
-  "worldcombat.skill.forestscurse.use.1": "把水与地面的对手逼出四倍草弱点",
+  "worldcombat.skill.forestscurse.use.1": "给水或地面的对手添草：多出冰、虫、飞的弱点，原本的草弱点从四倍降到两倍",
   "worldcombat.skill.forestscurse.use.2": "给友方追加草，挡下水、电、草与地面，深根档更久",
   "worldcombat.skill.forestscurse.description.0": "给目标追加草属性、维持 %1$s；根须只表示这层草，不会缠住或定住它。",
   "worldcombat.skill.forestscurse.description.1": "种咒距离 %1$s 格，起手 %2$s，收招 %3$s，随速度与体型变化。",
@@ -27,8 +27,8 @@
   "world_combat.move.forestscurse.text.curse": "被种下森林诅咒，追加了草属性",
   "world_combat.move.forestscurse.text.lift": "森林诅咒解除，草属性褪去",
   "world_combat.move.forestscurse.text.noroom": "已是草或属性层已满，种不上诅咒",
-  "world_combat.move.forestscurse.text.fizzle": "没有属性可以追加，诅咒落空",
+  "world_combat.move.forestscurse.text.fizzle": "属性被锁定，诅咒落空",
   "world_combat.move.forestscurse.text.empty": "空点只卷起几片叶，没有对象可种",
   "effect.world_combat.forest_curse": "中了森林诅咒（追加草属性）",
-  "worldcombat.skill.forestscurse.description.restrictions": "只对非草属性、且当前属性少于三条的宝可梦生效（这样才还有空位再追加一条）：已是草属性、属性层已满或属性被能力锁定时种不上，诅咒落空。地面不留下种咒区，友方必须明确指定。"
+  "worldcombat.skill.forestscurse.description.restrictions": "对任意活着的对手或友方生效（普通生物同样适用）：已有草属性、当前属性已满三条或属性被能力锁定时种不上，诅咒落空。地面不留下种咒区，友方必须明确指定。"
 }

@@ -5,16 +5,19 @@
  * 拐弯，但每刻能拐的度数有上限，所以直线逃跑甩不掉，急折或绕背能把它带偏。追的能力来自特攻。
  *
  * 三幕：
- *   起（windup，提交前）：前额聚念、目标身上亮起锁定环，只播预告。
- *   击（drive → impact / whiff）：提交后逐刻把冲刺方向朝目标方向转 turnRate 度再前进；trace 撞上活体即
- *       结算 smash 接触伤害、按 flinchChance 掷畏缩、把目标顶开 shove 格；跟丢方向或冲完距离则落空。
- *   果（hit / miss）：命中浮字，畏缩的挂上本单元效果；落空处念力散成一小团紫雾。
+ *   起（windup，提交前）：前额按真实朝向聚念、目标身上锁定环点火，只播预告。
+ *   击（drive → impact / blocked / whiff）：提交后逐刻把冲刺方向朝目标方向转 turnRate 度再前进；trace 撞上
+ *       活体即结算 smash 接触伤害、按 flinchChance 掷畏缩、把目标顶开 shove 格。锁定环由动作场景拥有：
+ *       越过牵引距离即永久断锁并撤环，之后直走剩余固定方向、不再重新捕获；撞实、撞墙或冲完距离都收环。
+ *       友体或拒伤只播接触受阻，不冒称成功爆中；畏缩落上与否、是否真的打断了动作分别回执。
+ *   果（hit / stagger / blocked / miss）：命中浮字，畏缩的挂上本单元效果；落空处念力散成一小团紫雾。
  *
  * 与同族分开：头锤笔直便宜，铁头短程重砸，双刃头锤自损。只有意念头锤会追人，且拐弯能力由特攻决定，
  * 与撞击的物攻分开写在两条参数上。
  *
  * 畏缩：施加本单元声明的 MobEffect（共享身份 `world_combat:status/flinch`，只借身份、行为自写）并投递
- * `world_combat:interrupt`；下方门禁在窗口内拒绝新动作，伤害阶段不受影响。
+ * `world_combat:interrupt`；共享门禁在窗口内拒绝新动作，伤害阶段不受影响。`requestInterrupt` 的实际结束数
+ * 单独回执，用来区分「挂上畏缩」与「真的打断了当前动作」。
  *
  * 配置 `guided`（制导式）由 resolve 改时序、由公式改转向／距离／威力，提交后才触碰世界。
  */
@@ -22,13 +25,14 @@ namespace PokemonSkills {
     const zenheadbuttScene = "world_combat:move_zenheadbutt";
     const zenheadbuttFlinchEffect = "world_combat:zenheadbutt_flinch";
     const zenheadbuttFlinchText = "world_combat.move.zenheadbutt.text.flinch";
+    const zenheadbuttBrokenText = "world_combat.move.zenheadbutt.text.broken";
     const zenheadbuttHitText = "world_combat.move.zenheadbutt.text.hit";
     const zenheadbuttMissText = "world_combat.move.zenheadbutt.text.miss";
 
-    function zenheadbuttFlinch(world: CombatWorld, target: CombatActor, ticks: number): boolean {
-        if (MobEffects.apply(world, target, zenheadbuttFlinchEffect, ticks, 0) === null) return false;
-        world.deliver(target, "world_combat:interrupt");
-        return true;
+    /** 落到畏缩效果与「真的打断了动作」两份回执：前者看效果是否挂上，后者看 requestInterrupt 实际结束了几次。 */
+    function zenheadbuttFlinch(world: CombatWorld, target: CombatActor, ticks: number): { applied: boolean; ended: number } {
+        const applied = MobEffects.apply(world, target, zenheadbuttFlinchEffect, ticks, 0) !== null;
+        return { applied: applied, ended: applied ? LivingActions.requestInterrupt(world, target) : 0 };
     }
 
     /** 把 from 的水平方向朝 to 的方向转至多 maxDegrees 度，返回新的水平单位向量。 */
@@ -73,10 +77,14 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             var selected = action.target();
+            // 前额聚光：按当刻真实朝向把焦点送到身体前方，而不是留在身体中段。
+            var look = WorldGeometry.facing(action.sense(), action.actor());
+            var flat = look !== null ? WorldGeometry.flatUnit(look, WorldCombat.point(0, 0, 1)) : WorldCombat.point(0, 0, 1);
             action.present("zenheadbutt:windup", zenheadbuttScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", guided: config && config.guided === true }));
-            action.present("zenheadbutt:lock", zenheadbuttScene, 1, action.targetPosition(),
-                JSON.stringify({ moment: "lock", target: selected ? String(selected.ref()) : "",
+                JSON.stringify({ moment: "windup", guided: config && config.guided === true,
+                    focus: [flat.x() * 0.32, 0, flat.z() * 0.32], direction: [flat.x(), 0, flat.z()] }));
+            action.present("zenheadbutt:lockflash", zenheadbuttScene, 1, action.targetPosition(),
+                JSON.stringify({ moment: "lockflash", target: selected ? String(selected.ref()) : "",
                     lock: Math.round(p("zenheadbutt", "lockTicks", action)) }));
             return prepare;
         },
@@ -100,11 +108,13 @@ namespace PokemonSkills {
             var target = action.target();
             const scale = radius / 0.48;
             const intensity = Math.max(0.5, Math.min(2.2, power / 80));
-            let travelled = 0, settled = false;
+            let travelled = 0, settled = false, locked = target !== null && world.valid(target);
 
-            WorldFeedback.keep(world, "zenheadbutt:lock", zenheadbuttScene, 1, action.targetPosition(),
-                { moment: "lock", target: target ? String(target.ref()) : "", lock: lockTicks, intensity: intensity }, Math.max(6, lockTicks));
-            movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity, turn: Math.round(turn) });
+            // 锁定环由动作场景拥有：冲出去以后一直跟着目标，撞实／撞墙／冲完就随动作收掉。
+            movementScenes.show(action, "lock", action.targetPosition(),
+                { moment: "lock", target: target ? String(target.ref()) : "", lock: lockTicks, intensity: intensity });
+            movementScenes.show(action, "drive", action.origin(),
+                { moment: "drive", scale: scale, intensity: intensity, turn: Math.round(turn) });
             sound(action, "minecraft:block.amethyst_block.resonate");
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
@@ -127,29 +137,48 @@ namespace PokemonSkills {
                     if (body !== null) {
                         const desired = body.position().minus(origin);
                         const heading = WorldCombat.point(desired.x(), 0, desired.z());
-                        // 念力牵引有距离上限：目标被拉得更远就断开，这一记沿最后方向冲出去。
-                        if (heading.length() > 0.05 && heading.length() <= tether)
+                        // 牵引超过 lockRange 即永久断锁：撤掉锁环，沿最后方向直走，不再重新捕获。
+                        if (heading.length() > tether) {
+                            locked = false;
+                            movementScenes.stop(current, "lock");
+                        } else if (locked && heading.length() > 0.05) {
                             direction = zenheadbuttTurn(direction, heading.unit(), turn);
-                    }
-                }
+                        }
+                    } else locked = false;
+                } else locked = false;
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const at = hit.position();
-                    const landed = victim !== null && impact(current, hit, "zenheadbutt", power,
-                        { damage: damageSpec("zenheadbutt", "smash"), contact: true });
-                    WorldFeedback.emit(scope, zenheadbuttScene, 1, at,
-                        { moment: "impact", target: victim ? String(victim.ref()) : "", scale: scale,
-                            intensity: intensity, hits: Math.round(16 + power * 0.18) }, 26);
-                    if (landed && victim !== null && scope.valid(victim)) {
+                    const landed = victim !== null && scope.valid(victim) && !scope.friendly(victim)
+                        && impact(current, hit, "zenheadbutt", power,
+                            { damage: damageSpec("zenheadbutt", "smash"), contact: true });
+                    if (landed && victim !== null) {
+                        WorldFeedback.emit(scope, zenheadbuttScene, 1, at,
+                            { moment: "impact", target: String(victim.ref()), scale: scale,
+                                intensity: intensity, hits: Math.round(16 + power * 0.18),
+                                direction: [direction.x(), direction.y(), direction.z()] }, 26);
                         scope.hitDisplace(victim, direction.scale(shove));
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), zenheadbuttHitText, [], 22);
-                        if (scope.random() < chance && zenheadbuttFlinch(scope, victim, flinchTicks)) {
-                            WorldFeedback.emit(scope, zenheadbuttScene, 1, at, { moment: "stagger", target: String(victim.ref()) }, 26);
-                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), zenheadbuttFlinchText, [], 24);
+                        if (scope.random() < chance) {
+                            const outcome = zenheadbuttFlinch(scope, victim, flinchTicks);
+                            if (outcome.applied) {
+                                WorldFeedback.emit(scope, zenheadbuttScene, 1, at, { moment: "stagger", target: String(victim.ref()) }, 26);
+                                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), zenheadbuttFlinchText, [], 24);
+                                // 真打断与「只是挂上畏缩」分开回执。
+                                if (outcome.ended > 0) {
+                                    WorldFeedback.emit(scope, zenheadbuttScene, 1, at, { moment: "broken", target: String(victim.ref()) }, 24);
+                                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.5, 0)), zenheadbuttBrokenText, [], 22);
+                                }
+                            }
                         }
+                    } else {
+                        // 友体或拒伤：只报接触受阻，不放成功爆中、不推、不浮命中字。
+                        WorldFeedback.emit(scope, zenheadbuttScene, 1, at,
+                            { moment: "blocked", target: victim !== null ? String(victim.ref()) : "", scale: scale,
+                                intensity: Math.max(0.5, intensity * 0.7), direction: [direction.x(), direction.y(), direction.z()] }, 20);
                     }
                     sound(current, "cobblemon:impact.psychic");
                     finish(current);

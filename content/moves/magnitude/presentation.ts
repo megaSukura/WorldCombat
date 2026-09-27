@@ -6,7 +6,8 @@
  * 色相家族：土黄与灰岩为主体（earth / large_rock / tinydust / ring/groundquake），
  * 灰白只给打断那一下的高光。与地震共用土色，但地震是整块掀起、这里是原地密颤。
  * 拍子：起 brace 沉身 ／ 预 presage 亮出震级并预震 ／ 震 shake 连颤几道 + hit 逐处 ／ 断 stagger ／ 空震 miss。
- * 范围：presage / shake 的地面圈按 `data.radius`（真实震幅）画出，圈就是会颤到的地。
+ * 范围：brace / presage / shake 的地面圈按 `data.radius`（真实震幅，世界单位）画出；`fit: "world"` 让 `data.scale`
+ *   只放大粒子尺寸、不再二次缩放圈。圈锚在服务端算出的真实脚面支撑上，就是会颤到的地。
  * 运动：预震时地面轻颤、碎屑点点跳起；落震命中后尘与碎石才从整片地里强扬，横颤环贴地扩散开。
  * 数：`data.crests`（物攻派生）决定横颤道数，`data.dust`（物攻与体重派生）决定尘与碎石的量，
  *   `data.tremble`（震级派生）决定预震幅度，`data.magnitude`（掷出的震级）驱动强度与亮度，
@@ -30,7 +31,7 @@ const MagnitudeDefinition: ParticleDefinition = {
                     color: 0x9A8A72, alpha: [0.55, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "edge", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    name: "edge", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     rate: 18, shape: { kind: "ring", radius: { data: "radius", fallback: 3.8 } },
                     direction: "up", speed: [0.01, 0.04], spread: 8,
@@ -69,7 +70,7 @@ const MagnitudeDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 20 },
             emitters: [
                 {
-                    name: "ripple", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "ripple", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: { data: "dust", fallback: 20 }, interval: 3, repeats: { data: "crests", fallback: 3 }, at: 1 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 3.8 } },
@@ -78,7 +79,7 @@ const MagnitudeDefinition: ParticleDefinition = {
                     color: 0xA08C6E, alpha: [0.65, 0], light: "world", maxParticles: 160
                 },
                 {
-                    name: "clods", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    name: "clods", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dust", fallback: 20 }, interval: 3, repeats: { data: "crests", fallback: 3 }, at: 1 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 3.8 } },
@@ -88,7 +89,7 @@ const MagnitudeDefinition: ParticleDefinition = {
                     color: 0x8A7A62, alpha: [0.85, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "slabs", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "slabs", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "crests", fallback: 3 }, interval: 5, repeats: 2, at: 2 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 3.8 }, thickness: 0.7 },
@@ -98,7 +99,7 @@ const MagnitudeDefinition: ParticleDefinition = {
                     color: 0x9A8A72, alpha: [0.8, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "haze", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "haze", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "dust", fallback: 20 }, shape: { kind: "circle", radius: { data: "radius", fallback: 3.8 } },
                     direction: "up", speed: [0.01, 0.06], spread: 12,

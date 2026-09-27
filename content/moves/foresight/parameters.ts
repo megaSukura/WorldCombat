@@ -6,10 +6,11 @@
  *   等级被视作 0；③ 原作要求目标已有奇迹之眼时失败。
  *
  * 世界化：即时战场没有回合制的命中判定与挥发槽，所以把「看穿幽灵的虚体」翻译成**在对手身上留下一个识破印记**：
- *   印记期间目标被照亮（minecraft:glowing），它当前的正闪避等级被一次剥掉并在窗口结束时原样还回；同时
- *   `PokemonDamage.metadata` 在伤害结算前读取这层共享身份，把目标属性里的 ghost 摘掉——一般与格斗招式因此
- *   接得上，并在目标身上炸一次「实影闪」，结算仍走共享的本系、相性、暴击与特性。反制：窗口走完、被牛奶一类
- *   效果解掉，或目标被重新提到闪避。
+ *   印记期间目标被照亮（minecraft:glowing），它当前的正闪避由 NativeEffects.boostWindow 绑在印记载体上临时下降
+ *   （印记一结束只收回这一份，别的能力变化保留）；同时 `PokemonDamage.metadata` 在伤害结算前读取这层共享身份，
+ *   把目标属性里的 ghost 摘掉——一般与格斗招式因此接得上，真正造成伤害时（damage_applied 的 actual > 0）才在
+ *   目标身上炸一次「实影闪」，结算仍走共享的本系、相性、暴击与特性。反制：窗口走完、被牛奶一类效果解掉，或
+ *   目标被重新提到闪避。
  *
  * 与同族分开：气味侦测（odorsleuth）借同一份共享身份但窗口更长、还会拖慢目标脚步；奇迹之眼（miracleeye）
  *   改的是超能对恶的免疫并把自己的命中留在身上；识破最短最便宜，只做「剥幽灵 + 一次拔闪避」这一件事，
@@ -38,6 +39,7 @@ namespace PokemonSkills {
     export const foresightFadeText = "world_combat.move.foresight.text.fade";
     export const foresightBlockedText = "world_combat.move.foresight.text.blocked";
     export const foresightEmptyText = "world_combat.move.foresight.text.empty";
+    export const foresightWardedText = "world_combat.move.foresight.text.warded";
 
     actionParameters.define(foresightId, {
         window: seconds(

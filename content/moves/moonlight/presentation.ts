@@ -1,10 +1,10 @@
 /**
  * 月光 / Moonlight 的粒子语言。
  *
- * 一句话：头顶凝起一轮冷月，月色像一层窄纱垂下裹住身体；真正回了血才落银绿回血点，真正清掉灼伤时火星熄成冷光。
+ * 一句话：头顶凝起一轮冷月与一道月弧，月尘像窄帘一样向下垂落；真正回了血才落银绿回血点，真正清掉灼伤时火星熄成冷光。
  * 色相家族：月银蓝 0xBBD8F5 作主体，冷白 0xEAF2FF 作高光，靛蓝 0x6C7CB8 只作余韵。
  * 拍子：起（windup）／落纱（veil，仅真实回复）／薄（hush，没回进生命时的单薄月色）／凉雾（soothe，仅灼伤被清掉时）。
- * 范围：作用于自己，绑 source（fit body）：月轮在头顶、纱幕包住身体，玩家看得出这是自我回复。
+ * 范围：作用于自己，绑 source（fit body）：月轮与月弧在头顶、月尘向下垂落，玩家看得出这是自我回复，而不是一层挡伤的护罩。
  * 机制驱动：veil 的落光数绑定 data.drops（夜里晴空 18、白天 6），身体光点绑定 data.bursts（月色＋回复量算出），
  *   整体尺寸随 data.scale（夜里 1.4、白天 0.85）缩放——白天放这招画面明显单薄。
  */
@@ -55,12 +55,12 @@ const MoonlightDefinition: ParticleDefinition = {
                     color: 0xBBD8F5, alpha: [0.95, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "veil_screen", bind: "source", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/screen",
-                    rate: 6, shape: { kind: "cylinder", radius: 0.6, length: 1.5 },
-                    direction: "up", speed: [0.003, 0.012],
-                    lifetime: [20, 34], size: [0.2, 0.05],
-                    color: 0xBBD8F5, alpha: [0.12, 0.02], light: "full", maxParticles: 26
+                    name: "moon_arc", bind: "source", offset: [0, 1.05, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/balls/moonball/moonballsparkle",
+                    burst: { count: 16, interval: 4, repeats: 2 }, shape: { kind: "arc", radius: 0.5, arcDegrees: 160, thickness: 0.6, rotation: [0, 90, 0] },
+                    direction: "up", speed: [0.01, 0.04],
+                    lifetime: [14, 24], size: [0.09, 0.02],
+                    color: 0xEAF2FF, alpha: [0.8, 0], light: "full", maxParticles: 24
                 },
                 {
                     name: "veil_burst", bind: "source", offset: [0, 0.6, 0], height: 0,
@@ -69,6 +69,14 @@ const MoonlightDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.14], drag: 0.9,
                     lifetime: [12, 22], size: [0.07, 0.01],
                     color: 0xEAF2FF, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 70
+                },
+                {
+                    name: "shroud", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/balls/moonball/moonballsparkle",
+                    rate: 6, shape: { kind: "cylinder", radius: 0.55, length: 1.4, thickness: 1 },
+                    direction: "down", speed: [0.01, 0.04],
+                    lifetime: [16, 28], size: [0.08, 0.02],
+                    color: 0xBBD8F5, alpha: [0.10, 0.02], light: "world", maxParticles: 24
                 },
                 {
                     name: "ground_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
@@ -85,11 +93,11 @@ const MoonlightDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "thin_shroud", bind: "source", offset: [0, 0.6, 0], height: 0.2,
-                    particle: "world_combat_core:cobblemon/generic/screen",
-                    rate: 4, shape: { kind: "cylinder", radius: 0.45, length: 1.2 },
-                    direction: "up", speed: [0.002, 0.01],
-                    lifetime: [18, 30], size: [0.16, 0.03],
+                    name: "hush_glow", bind: "source", offset: [0, 0.6, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/balls/moonball/moonballsparkle",
+                    rate: 3, shape: { kind: "cylinder", radius: 0.4, length: 1.1, thickness: 1 },
+                    direction: "down", speed: [0.006, 0.026],
+                    lifetime: [16, 28], size: [0.07, 0.02],
                     color: 0xBBD8F5, alpha: [{ data: "moon", fallback: 0 }, 0], light: "world", maxParticles: 14
                 }
             ]

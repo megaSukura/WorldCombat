@@ -10,12 +10,13 @@
  * 配置 ai.requireGrounded 决定是否只抬站在地上的目标；ai.avoidProtecting 决定要不要避开地面弱势目标。
  */
 namespace CompanionBehavior {
-    /** 只读事实：目标是否对地面属性弱势（抬起它等于替它免掉地面招）。 */
+    /** 只读事实：目标是否对地面属性弱势（抬起它等于替它免掉地面招）。用整条属性克制的乘积，
+     * 而不是「含任一弱系就算」——火／飞的乘积为 0，抬起它并不会多保护它。 */
     CompanionBehavior.registerFact("world_combat:telekinesis-ground-weak", function (access: CombatWorld, actor: CombatActor): number {
         const facts = PokemonDamage.combatants.read(access, actor);
-        const weak = ["fire", "electric", "poison", "rock", "steel"];
-        for (let i = 0; i < facts.types.length; i++) if (weak.indexOf(String(facts.types[i])) >= 0) return 1;
-        return 0;
+        let factor = 1;
+        for (let i = 0; i < facts.types.length; i++) factor *= CobblemonCombat.typeEffectiveness("ground", String(facts.types[i]));
+        return factor > 1 ? 1 : 0;
     });
 
     function telekinesisWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {

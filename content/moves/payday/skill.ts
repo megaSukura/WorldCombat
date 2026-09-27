@@ -12,8 +12,8 @@
  *   起（windup，提交前）：手里的钱掂亮、金光聚拢（`action.present` 预告）。
  *   撒（throw → hit / scatter）：提交后币串沿直线飞向准线（外观就是真硬币，表现绑在真实弹体 id 上）；
  *     命中或落地时结算一次物理伤害；随后把 `scatter` 枚真币撒在**弹体真正的结束点**周围
- *     （`world.dropItem`，带初速自然落地）。射空时不再用选中目标当前位置，币落在弹体沿准线走到的末端。
- *     只有原生 dropItem 真正放下的硬币才计数、发声与闪光；被拒绝的掉落不显示可捡硬币。
+ *     （`world.dropItem`，带初速自然落地）。射空时用 `world.projectilePosition` 读回弹体末次接触/移除的真位置，
+ *     不拿满射程点或旧瞄准点补画。只有原生 dropItem 真正放下的硬币才计数、发声与闪光；被拒绝的掉落不显示可捡硬币。
  *
  * 与同族分开：淘金潮是自身为中心、铺满一圈的大雨；聚宝功是**单体、快出手、少而实**的一手钱。
  * 配置 `largesse`（大把撒钱）由公式改撒币数与单发、由 resolve 改时序。
@@ -98,7 +98,8 @@ namespace PokemonSkills {
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
             sound(action, "minecraft:entity.arrow.shoot");
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: range, radius: radius, lifetime: 160, direction: direction,
                 appearance: { item: coin, glow: true, scale: Math.max(0.7, Math.min(1.4, scale)) },
                 impact: function (current: CombatAction, hit: CombatImpact) {
@@ -120,8 +121,9 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) {
                 if (!struck) {
-                    // 射空：硬币散在弹体沿准线真正走到的末端，不在选中目标当前位置凭空造钱。
-                    paydayScatter(current, origin.plus(direction.scale(range)), scatter, fling, coin);
+                    // 射空：散在弹体真正的结束点。完成回调内仍能读回末次接触/移除位置；读不到就不补画。
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null) paydayScatter(current, end, scatter, fling, coin);
                 }
                 finish(current);
             });

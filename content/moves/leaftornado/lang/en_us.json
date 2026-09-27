@@ -3,7 +3,7 @@
   "worldcombat.skill.leaftornado.use.0": "Turn a corridor or doorway into a lasting cutting area",
   "worldcombat.skill.leaftornado.use.1": "Cut clustered enemies at once",
   "worldcombat.skill.leaftornado.use.2": "Keep rolling for accuracy drops with leaf flecks",
-  "worldcombat.skill.leaftornado.description.0": "Raise the vortex at the target; every beat deals about %1$s special damage to every enemy inside, with a %2$s chance to lower a target's accuracy by %3$s stage(s) (at most once per target per cast).",
+  "worldcombat.skill.leaftornado.description.0": "Raise the vortex at a reachable spot on real ground; every beat deals about %1$s special damage only to enemies it actually cuts, and only a beat that really dealt damage rolls a %2$s chance to lower that target's accuracy by %3$s stage(s) (at most one success per target per cast); a wall blocks the cut.",
   "worldcombat.skill.leaftornado.description.1": "The vortex has a radius of %1$s blocks, lasts %2$s and cuts once every %3$s.",
   "worldcombat.skill.leaftornado.description.2": "It can be raised at a chosen spot up to %1$s blocks away.",
   "worldcombat.skill.leaftornado.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -27,6 +27,6 @@
   "worldcombat.skill.leaftornado.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.leaftornado.preference.ai.leaveStation.help": "On: it may leave a hold position to place the vortex. Off: it only casts when already in range.",
   "world_combat.move.leaftornado.text.blind": "Leaf flecks in the eyes (accuracy -%1$s)",
-  "worldcombat.skill.leaftornado.description.additional": "The vortex stays where it landed, so an enemy that walks out escapes the later beats; the accuracy drop persists until combat ends.",
+  "worldcombat.skill.leaftornado.description.additional": "The vortex stays where it landed as its own area, so the user is free to act afterwards; an enemy that walks out escapes the later beats, and the accuracy drop persists until combat ends. The spot needs real support and must not be blocked by a wall.",
   "worldcombat.skill.leaftornado.description.tight": "With tight wrap on, the radius shrinks to about 0.7x, per-beat power rises to 1.35x and the blind chance gains 15%, at +2 ticks wind-up and +4 cooldown; with it off the radius grows to about 1.3x, per-beat power falls to 0.8x, and the blind chance stays at its base."
 }

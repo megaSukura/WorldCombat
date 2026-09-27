@@ -17,7 +17,7 @@
   "worldcombat.skill.powerswap.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.powerswap.preference.ai.maxChase.help": "The companion only switches when the threat is within this distance; lower stays close, higher chases the momentum farther out.",
   "worldcombat.skill.powerswap.preference.ai.margin": "Switch margin",
-  "worldcombat.skill.powerswap.preference.ai.margin.help": "The foe's combined Attack and Sp. Atk stages must exceed yours by this many steps. Higher is pickier and waits for a real set-up; lower casts more often.",
+  "worldcombat.skill.powerswap.preference.ai.margin.help": "After weighting by what each side actually attacks with, the foe's side must exceed yours by this many steps. Higher is pickier and waits for a real set-up; lower casts more often.",
   "worldcombat.skill.powerswap.preference.ai.leaveStation": "Leave station to switch",
   "worldcombat.skill.powerswap.preference.ai.leaveStation.help": "On: it leaves its station under a hold order to switch. Off: it only casts when the target is already in reach.",
   "world_combat.move.powerswap.text.swapped": "Momentum switched Atk %1$s SpA %2$s",

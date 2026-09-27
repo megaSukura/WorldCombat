@@ -3,6 +3,9 @@ package dev.worldcombat.core.runtime;
 import java.util.UUID;
 
 public interface CombatHost {
+    /** Opaque current native hurt identity; empty outside its synchronous call stack. */
+    default String damageReceipt() { return ""; }
+    default String attackStarts(ActorHandle observer, ActorHandle actor, long after) { return "{\"cursor\":0,\"records\":[]}"; }
     default String projectile(ActionContext action, Point origin, Point velocity, double gravity, double radius,
                               double range, int lifetime, java.util.function.Consumer<Impact> hit, Runnable complete, String appearance) {
         return projectile(action.id(), action.actor(), action.controller(), origin, velocity, gravity, radius, range, lifetime, hit, complete, appearance);
@@ -19,6 +22,8 @@ public interface CombatHost {
     default void removeProjectile(long owner, String id) { throw new UnsupportedOperationException(); }
     default void stopProjectile(long owner, String id) { throw new UnsupportedOperationException(); }
     default EquipmentObservation[] equipment(ActorHandle source, ActorHandle target) { return new EquipmentObservation[0]; }
+    default String equipmentModifiers(ActorHandle source, ActorHandle target) { return "[]"; }
+    default String equipmentDamageResult(ActorHandle target, String provider, String slot, int index, String expected, int amount) { throw new UnsupportedOperationException(); }
     default boolean equipmentTake(ActorHandle target, String provider, String slot, int index, String expected) { return equipmentTake(target, provider, slot, index, expected, 0); }
     default String equipmentDrop(ActorHandle target, String provider, String slot, int index, String expected, String data) { return equipmentDrop(target, provider, slot, index, expected, data, 0); }
     default boolean equipmentGive(ActorHandle target, String provider, String slot, int index, String expected, String item) { return equipmentGive(target, provider, slot, index, expected, item, 0); }
@@ -58,10 +63,19 @@ public interface CombatHost {
         return trace(actor, controller, from, to, radius);
     }
     default Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius) { throw new UnsupportedOperationException(); }
+    default Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius, java.util.Set<String> ignoredContacts) {
+        if (!ignoredContacts.isEmpty()) throw new UnsupportedOperationException();
+        return moveSweep(actor, controller, delta, radius);
+    }
     boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount);
     default boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata) { return damage(actor, target, controller, amount); }
     default boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata, ExecutionOrigin origin) {
         return damage(actor, target, controller, amount, ExecutionOrigin.stamp(metadata, origin));
+    }
+    default boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata,
+                           ExecutionOrigin origin, DamageRelations relations) {
+        if (!relations.equals(DamageRelations.HOSTILE)) throw new UnsupportedOperationException("Explicit damage relations unavailable");
+        return damage(actor, target, controller, amount, metadata, origin);
     }
     void particle(ActorHandle actor, Point point);
     default void present(long owner, ActorHandle actor, String key, String type, int version, Point point, String data) { throw new UnsupportedOperationException(); }
@@ -97,6 +111,8 @@ public interface CombatHost {
     default boolean transferMobEffect(ActorHandle operator, ActorHandle from, ActorHandle to, String id, String expected, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
     default boolean transferMobEffect(ActorHandle operator, ActorHandle from, ActorHandle to, String id, String expected, String replacement, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
     default boolean replaceMobEffect(ActorHandle operator, ActorHandle target, String id, String expected, int ticks, int amplifier, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
+    default int transformMobEffects(ActorHandle operator, ActorHandle target, String changes, ExecutionOrigin origin) { throw new UnsupportedOperationException(); }
+    default boolean matchesMobEffect(ActorHandle target, String id, String expected) { throw new UnsupportedOperationException(); }
     default boolean groundLift(long owner, ActorHandle actor, double height, double speed, double probe) { throw new UnsupportedOperationException(); }
     default int suppressEquipment(long owner, ActorHandle target) { throw new UnsupportedOperationException(); }
     default AttributeObservation attributeValue(ActorHandle source, ActorHandle target, String id, long excludedOwner) { return attributeValue(source, target, id); }
@@ -113,6 +129,7 @@ public interface CombatHost {
     default boolean teleport(ActorHandle source, ActorHandle target, Point point, UUID controller) { throw new UnsupportedOperationException(); }
     default boolean swap(ActorHandle source, ActorHandle first, ActorHandle second, UUID controller) { throw new UnsupportedOperationException(); }
     default double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause) { throw new UnsupportedOperationException(); }
+    default double payHealth(ActorHandle source, UUID controller, double amount, String cause, double minimumHealth) { throw new UnsupportedOperationException(); }
     default double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause, double minimumHealth) {
         if (minimumHealth != 0) throw new UnsupportedOperationException("Native damage floor unavailable");
         return health(source, target, controller, delta, cause);
@@ -158,6 +175,9 @@ public interface CombatHost {
     default boolean lightning(ActorHandle actor, UUID controller, Point point, boolean visualOnly) { throw new UnsupportedOperationException(); }
     default boolean ignite(ActorHandle target, int ticks) { throw new UnsupportedOperationException(); }
     default boolean target(ActorHandle actor, ActorHandle target) { throw new UnsupportedOperationException(); }
+    default boolean targetLease(long owner, ActorHandle actor, ActorHandle target, int ticks) { throw new UnsupportedOperationException(); }
+    default String targetLeaseState(long owner, ActorHandle actor) { return "{\"active\":false,\"owned\":false}"; }
+    default boolean targetLeaseRelease(long owner, ActorHandle actor) { throw new UnsupportedOperationException(); }
     default boolean weather(ActorHandle actor, String weather, int ticks) { throw new UnsupportedOperationException(); }
     /** Raw native objects for content: the entity behind an actor, the level, a block state or block entity, nearby entities of any kind. */
     default Object nativeEntity(ActorHandle target) { return null; }

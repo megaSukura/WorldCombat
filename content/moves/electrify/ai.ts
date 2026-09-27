@@ -3,8 +3,10 @@
  *
  * 输电是预判式单体干扰：命中不掷骰，但会被拖过时间或浪费在错误的一招上，所以要挑对时机与对象。
  *   何时考虑  有 threat、这招就绪、它在 ai.maxChase 之内、目标还没被通电、视线畅通。
- *   对谁出手  当前威胁；焦点目标直接通过。
- *   出手时机  ai.opening = incoming 时只在威胁正攻击自己/主人（或自己刚受伤）时输电，像是先手打断它这一招。
+ *   对谁出手  当前威胁；焦点目标直接通过（AI 只推荐敌人，友方由玩家手动指定）。
+ *   何时有益  读已知分类（宝可梦读上一招属性，普通生物经 NativeAttackTypes 分类，滤波只认一般、不因 type 空而全拒绝），
+ *             并按这次攻击真正的受害者（威胁的仇恨目标，可能是友方）计算改写后是否更被抗性吃掉。
+ *   出手时机  ai.opening = incoming 时只在威胁正攻击自己/主人（或自己刚受伤）时输电；attacking() 只是仇恨目标，不当作正在准备。
  *   够不到    由共用任务走到 reach；accepts 不按距离硬拒，会先靠近再输电。
  *   放完之后  目标下一次出招带电，随后把伤害交回共用交战计划。
  *   优先级    插在 world_combat:defend 之前，让「先改属性再打」成为默认次序。
@@ -26,23 +28,34 @@ namespace CompanionBehavior {
         for (let i = 0; i < items.length; i++) if (items[i].data.move === "electrify") return items[i];
         return null;
     }
-    function electrifyBenefits(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
-        const scope = world(context), opponent = scope.actor(threat.ref);
-        if (opponent === null) return false;
-        const own = PokemonDamage.combatants.read(scope, scope.source());
-        let type = "";
+    /** Known element of the threat's next attack: a Pokemon move type, or the shared native classification. */
+    function electrifyKnownType(scope: CombatWorld, opponent: CombatActor): string {
         if (String(opponent.domain()) === "cobblemon") {
             const last = NativeEffects.read(scope, opponent).used;
             const move = last ? CobblemonCombat.moveTemplate(last) : null;
-            if (move !== null) type = String(move.type()).toLowerCase();
-        } else if (DamageSemantics.recentAttack(scope, opponent, 120) === null) return false;
+            return move !== null ? String(move.type()).toLowerCase() : "";
+        }
+        const recent = DamageSemantics.recentAttack(scope, opponent, 120);
+        if (recent === null) return "";
+        const data: any = { damageType: recent.type, damageTags: recent.tags, flags: recent.flags };
+        const classified: NativeAttackTypes.Context = { world: scope, source: opponent, target: scope.source(),
+            data: data, baseType: "", type: "" };
+        NativeAttackTypes.classifications.apply(classified);
+        return String(classified.baseType || "").toLowerCase();
+    }
+    function electrifyBenefits(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        const scope = world(context), opponent = scope.actor(threat.ref);
+        if (opponent === null) return false;
+        const type = electrifyKnownType(scope, opponent);
+        if (!type || type === "electric") return false;
         const all = !!(item.data.config && item.data.config.allMoves);
-        if (type === "electric" || !all && type !== "normal") return false;
+        if (!all && type !== "normal") return false;
+        // 评估这次攻击真正的受害者：威胁的仇恨目标；未知时按自己算。受益的可以是友方。
+        let victim = scope.source();
+        if (threat.attacking) { const found = scope.actor(threat.attacking); if (found !== null) victim = found; }
+        const facts = PokemonDamage.combatants.read(scope, victim);
         let before = 1, after = 1;
-        own.types.forEach(defence => {
-            if (type) before *= CobblemonCombat.typeEffectiveness(type, defence);
-            after *= CobblemonCombat.typeEffectiveness("electric", defence);
-        });
+        facts.types.forEach(defence => { before *= CobblemonCombat.typeEffectiveness(type, defence); after *= CobblemonCombat.typeEffectiveness("electric", defence); });
         return after < before;
     }
     function electrifyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {

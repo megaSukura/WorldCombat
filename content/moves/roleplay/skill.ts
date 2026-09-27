@@ -68,11 +68,17 @@ namespace PokemonSkills {
             return "";
         },
         windup: function (action, config, prepare) {
-            const actor = action.actor(), target = action.target();
+            const actor = action.actor(), target = action.target(), world = action.sense();
             const path: (string | number[])[] = target === null ? [String(actor.ref())] : [String(target.ref()), String(actor.ref())];
+            // Preview what will actually be borrowed: the target's current Ability, or the single native trait it leads with.
+            let borrow = "";
+            if (target !== null && world.valid(target)) {
+                if (String(target.domain()) === "cobblemon") borrow = roleplayAbility(world, target);
+                else { const values = copiedNativeTrait(world, target), keys = Object.keys(values); borrow = keys.length ? keys[0] : ""; }
+            }
             action.present("world_combat:roleplay:trace", roleplayScene, 1, action.origin(), JSON.stringify({
                 moment: "trace", target: target === null ? "" : String(target.ref()), path: path,
-                traits: p("roleplay", "traits", action)
+                traits: p("roleplay", "traits", action), borrow: borrow
             }));
             return prepare;
         },
@@ -88,20 +94,21 @@ namespace PokemonSkills {
             const direction = distance < 0.05 ? WorldCombat.point(0, 1, 0) : inward.unit();
             const path: (string | number[])[] = [String(target.ref()), String(actor.ref())];
             const don = {
-                moment: "don", path: path, traits: traits,
+                moment: "don", path: path, traits: traits, borrow: "",
                 span: distance, direction: [direction.x(), direction.y(), direction.z()],
                 intensity: Math.max(0.7, Math.min(2, hold / 160))
             };
             if (String(target.domain()) !== "cobblemon") {
                 const values = PokemonSkills.copiedNativeTrait(world, target);
                 const trait = Object.keys(values)[0] || "";
+                don.borrow = trait;
                 const carrier = MobEffects.apply(world, actor, roleplayMask, hold, 0);
                 if (carrier === null) { done(action); return; }
                 const copy = CombatCopies.apply(world, actor, values, hold, "roleplay", MobEffects.anchor(carrier));
                 WorldFeedback.emit(world, roleplayScene, 1, foe.position(), don, 34);
                 // The mask lives and dies with the copied-trait effect, so cleansing it ends the look with it.
                 if (copy) WorldFeedback.onEffect(world, copy, "world_combat:roleplay:mask:" + String(actor.ref()),
-                    roleplayScene, 1, body.position(), { moment: "mask", traits: traits });
+                    roleplayScene, 1, body.position(), { moment: "mask", traits: traits, borrow: trait });
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), roleplayTraitText,
                     [{ key: "attribute.name." + trait.replace("minecraft:", ""), fallback: trait }], 44);
                 sound(action, "minecraft:entity.illusioner.cast_spell");
@@ -118,13 +125,14 @@ namespace PokemonSkills {
                 return;
             }
             // The marker owns the layer: curing the mask takes the borrowed ability back with it.
+            don.borrow = ability;
             const marker = MobEffects.apply(world, actor, roleplayMask, hold, 0);
             const layer = marker ? NativeModifiers.apply(world, actor,
                 { ability: ability, carrier: MobEffects.anchor(marker) }, hold) : 0;
             WorldFeedback.emit(world, roleplayScene, 1, foe.position(), don, 34);
             // The mask is presented on the ability layer itself: expiry, overwrite or cleansing ends it together.
             if (layer) WorldFeedback.onEffect(world, layer, "world_combat:roleplay:mask:" + String(actor.ref()),
-                roleplayScene, 1, body.position(), { moment: "mask", traits: traits });
+                roleplayScene, 1, body.position(), { moment: "mask", traits: traits, borrow: ability });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), roleplayAbilityText,
                 [{ key: "cobblemon.ability." + ability, fallback: ability }], 44);
             sound(action, "minecraft:entity.illusioner.cast_spell");

@@ -12,13 +12,24 @@ namespace PokemonSkills {
         } catch (error) { return null; }
     }
 
+    function snatchReach(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range
+            : PokemonSkills.p(snatchId, "reach", { world: world, actor: world.source(), skill: skills[snatchId], detail: { values: item.data.config } });
+    }
+
     function snatchWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
-        const self = CompanionBehavior.source(context);
-        if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 14)) return false;
-        if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
+        const here = CompanionBehavior.point(self.point), there = CompanionBehavior.point(target.point);
+        if (!world.clear(here, there)) return false;
+        const gap = CompanionBehavior.distance(self.point, target.point), reach = Math.max(0, snatchReach(context, item));
+        const linked = gap <= reach;
+        const onStation = (context.facts.intent === "hold" || context.facts.intent === "stay")
+            && !CompanionBehavior.ai<boolean>(item, "leaveStation", false);
+        if (onStation && !linked) return false;
+        if (context.facts.focus !== target.ref && gap > Math.min(reach, Math.max(0, CompanionBehavior.ai<number>(item, "maxChase", 14)))) return false;
         if (CompanionBehavior.ai<string>(item, "opening", "setup") === "anytime") return true;
         const last = snatchLastOf(context, target);
         if (last && context.tick - last.tick < 200 && snatchStealable(last.id)) return true;
@@ -44,7 +55,7 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse(snatchId, {
         protocols: ["world_combat:control"],
-        reach: function (_context, item) { return item.data.range; },
+        reach: function (context, item) { return snatchReach(context, item); },
         available: function (context, item, purpose, target) { return target === null ? true : snatchWants(context, item, target); },
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
@@ -57,7 +68,7 @@ namespace PokemonSkills {
     });
 
     const snatchChase = number("ai.maxChase", "考虑距离", 4, 28, 1);
-    snatchChase.help = "伙伴只在威胁离自己这么远以内时才探手；调小只在贴身时夺，调大愿意追出去等着抢。";
+    snatchChase.help = "伙伴只在威胁离自己这么远以内时才探手；实际探手距离是本招自己算出的上限，这个值再收紧时只在更近处夺，调大则愿意追到射程边缘等着抢。";
     const snatchOpening = choice("ai.opening", "出手时机", ["setup", "anytime"], ["等它要加东西", "随时"]);
     snatchOpening.help = "等它要加东西：只在对手有可抢的配招或近期确实获得增益时探手；随时：见威胁就探，当纯投机。";
     const snatchStation = flag("ai.leaveStation", "驻守时允许离位");

@@ -26,7 +26,7 @@
   "worldcombat.skill.hornleech.preference.ai.healBelow": "回血优先阈值",
   "worldcombat.skill.hornleech.preference.ai.healBelow.help": "自身生命低于这个比例时，把木角当续航手段优先出手；越高越早开始靠它回血。",
   "world_combat.move.hornleech.text.gore": "扎中",
-  "world_combat.move.hornleech.text.sap": "养分回流 %1$s%%",
+  "world_combat.move.hornleech.text.sap": "汲取回复 %1$s",
   "world_combat.move.hornleech.text.miss": "冲空",
-  "worldcombat.skill.hornleech.description.targeting": "冲撞沿瞄准方向笔直推进，只扎非友方目标，每个目标只结算一次；开启贯穿式时最多扎中两个，否则只扎一个。被地形挡住或冲完距离就停，一个都没扎中就是冲空。"
+  "worldcombat.skill.hornleech.description.targeting": "冲撞沿瞄准方向笔直推进，只扎非友方目标，每个目标只结算一次；开启贯穿式时最多扎中两个，否则只扎中一个。被免伤挡下、未造成伤害的接触不占名额，也不会带来回血；被地形挡住或冲完距离就停，一个都没扎中才是冲空。"
 }

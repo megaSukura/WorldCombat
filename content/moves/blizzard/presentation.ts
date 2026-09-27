@@ -4,8 +4,9 @@
  * 一句话：指定处先卷起一圈寒风，随后整片范围被翻涌的白风雪幕罩住，一阵阵地朝外扑打；被扑到的人身上炸开
  *   一撮厚霜，风雪停后地面留下一层积雪。
  * 色相家族：冰蓝 0xBFE9FF／0x8FD0EC 与近白 0xF2FAFF 为主；一个冷色相。
- * 层次：聚风（gather）→ 风雪幕（storm）→ 扑击（impact）→ 积雪（settle）。
- * 范围：storm 的每一层都用 `data.radius` 撑开——画面里那团风雪的大小就是判定圈的大小，半径随机制变。
+ * 层次：聚风（gather）→ 风雪幕（storm）→ 扑击脉冲（pulse，每阵一圈）→ 扑击（impact）→ 积雪（settle）。
+ * 范围：gather 与 storm 的每一层都用 `data.radius` 撑开水平范围——预备那圈和之后的风暴圈一样大，画面里那团
+ *   风雪的大小就是判定圈的大小，半径随机制变。
  * 运动：外圈风雪沿圈快速回旋并贴地朝外涌，内层雪粒被风裹着上下翻飞、缓慢外移；扑击时霜团向外炸开、下沉。
  * 数：`data.rate`（每阵威力与阵数派生）决定风雪幕的密度与吞吐，`data.impactCount`（每阵威力派生）决定扑击
  *   霜团数，`data.rakes`／`data.interval` 决定脉冲节奏，`data.progress` 让画面读出这场风雪还剩多少。
@@ -22,7 +23,7 @@ const BlizzardDefinition: ParticleDefinition = {
                 {
                     name: "cold_wind", bind: "point", offset: [0, 0.4, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: 48, shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 }, rotation: [90, 0, 0] },
+                    rate: 48, shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 } },
                     direction: "inward", speed: [0.06, 0.2], spin: 40,
                     lifetime: [10, 18], size: [0.5, 0.1], sizeMode: "index",
                     color: 0xBFE9FF, alpha: [0.4, 0], light: "world", maxParticles: 120
@@ -52,7 +53,7 @@ const BlizzardDefinition: ParticleDefinition = {
                 {
                     name: "vortex", bind: "point", offset: [0, 0.5, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: { data: "rate", fallback: 120 }, shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 }, rotation: [90, 0, 0] },
+                    rate: { data: "rate", fallback: 120 }, shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 } },
                     direction: "outward", speed: [0.08, 0.26], spin: 60, drag: 0.94,
                     lifetime: [10, 18], size: [0.5, 0.1], sizeMode: "index",
                     color: 0xBFE9FF, alpha: [0.4, 0], light: "world", maxParticles: 360
@@ -72,6 +73,30 @@ const BlizzardDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.1, 0.3], spin: 40,
                     lifetime: [8, 14], size: [0.08, 0.01],
                     color: 0x8FD0EC, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 320
+                }
+            ]
+        },
+        pulse: {
+            duration: 24,
+            exit: { stop: 8, drain: 16 },
+            emitters: [
+                {
+                    name: "gust_front", bind: "point", offset: [0, 0.12, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 } },
+                    direction: "outward", speed: [0.06, 0.2],
+                    lifetime: [12, 20], size: [0.4, 1.0], sizeMode: "sin",
+                    color: 0xBFE9FF, alpha: [0.42, 0], light: "world", maxParticles: 6
+                },
+                {
+                    name: "gust_snow", bind: "point", offset: [0, 0.35, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    burst: { count: { data: "impactCount", fallback: 18 }, at: 0 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 }, thickness: 0.5 },
+                    direction: "outward", speed: [0.08, 0.24], gravity: 0.004,
+                    lifetime: [10, 18], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xEAF6FF, alpha: [0.6, 0], light: "world", maxParticles: 90
                 }
             ]
         },
@@ -113,7 +138,7 @@ const BlizzardDefinition: ParticleDefinition = {
                 {
                     name: "calm", bind: "point", offset: [0, 0.4, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: 20, shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 }, rotation: [90, 0, 0] },
+                    rate: 20, shape: { kind: "ring", radius: { data: "radius", fallback: 4.2 } },
                     direction: "outward", speed: [0.02, 0.08], spin: 20,
                     lifetime: [14, 24], size: [0.4, 0.08], sizeMode: "index",
                     color: 0xBFE9FF, alpha: [0.22, 0], light: "world", maxParticles: 90

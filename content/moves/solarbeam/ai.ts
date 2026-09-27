@@ -11,16 +11,22 @@
  * 放完接什么：交回共享交战计划；它是一束贯穿，不负责收尾。
  */
 namespace PokemonSkills {
-    /** 从自己指向 target 的走廊里当前可见敌人的数量；用于站位排序。 */
+    /** 从自己指向 target 的走廊里当前可见敌人的数量；半宽与真实 width 同口径，走廊被真实墙面截断，用于站位排序。 */
     function solarbeamLineup(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
         const reach = typeof capability.data.range === "number" ? capability.data.range : 12;
         const broad = !!(capability.data.config && capability.data.config.broad);
-        const half = (broad ? 1.1 : 0.5) + (self.height === undefined ? 0 : Math.max(0, self.height - 1.4) * 0.2);
+        // 实际半宽：与 width 公式同口径（0.62 + (高−1.4)×0.2，散光 ×1.6 / 聚焦 ×0.7，夹 0.3..1.4）。
+        const base = 0.62 + (self.height === undefined ? 0 : Math.max(0, self.height - 1.4) * 0.2);
+        const half = Math.max(0.3, Math.min(1.4, base * (broad ? 1.6 : 0.7)));
         const access = CompanionBehavior.world(context), origin = CompanionBehavior.point(self.point);
         const delta = CompanionBehavior.point(target.point).minus(origin);
         if (delta.length() < .01) return 1;
-        const region = WorldGeometry.bodySegment(origin, origin.plus(delta.unit().scale(reach)), half);
+        const axis = delta.unit();
+        // 被墙截断段估多穿：只数光柱真正能到的那一段里的人。
+        const wall = WorldGeometry.blockHit(access, origin, origin.plus(axis.scale(reach)));
+        const lineReach = wall === null ? reach : Math.max(0, Math.min(reach, wall.position().minus(origin).length()));
+        const region = WorldGeometry.bodySegment(origin, origin.plus(axis.scale(lineReach)), half);
         let count = 0;
         WorldGeometry.selectBodies(access, region, (other, body) => {
             if (!access.friendly(other) && body.health() > 0 && body.visible()) count++;
@@ -75,7 +81,8 @@ namespace PokemonSkills {
             const lineup = solarbeamLineup(context, capability, target);
             let score = lineup >= 3 ? 44 : lineup >= 2 ? 32 : 24;
             if (CompanionBehavior.ai<boolean>(capability, "sunFirst", true) && solarbeamSunlit(context)) score += 12;
-            if (distance < CompanionBehavior.ai<number>(capability, "minRange", 3)) score -= 10;
+            // 阴天要站着聚光，贴身时被近战打断的风险更大；晴天当场发射，风险小得多。
+            if (distance < CompanionBehavior.ai<number>(capability, "minRange", 3)) score -= solarbeamSunlit(context) ? 4 : 12;
             return score;
         },
         ready: function (context, _capability) {

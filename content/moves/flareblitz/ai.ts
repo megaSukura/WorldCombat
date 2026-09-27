@@ -3,21 +3,29 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 11）格内。它是一记自伤不轻的重冲，
  * 所以门槛比轻招高：自身生命高于 `ai.minHealth`（默认 0.28），或对手已经残到值得一收时才排前面。
- * 对谁出手：优先还没被点着的人（这一撞的价值在挂灼伤），其次血少的收尾；已经烧着的目标排到最后。
- * 放完之后：目标被顶飞了，继续朝它压上去，把撞开的身位变成下一次出手的距离。
+ * 对谁出手：优先还没被点着、且真的能点着的对象（这一撞的价值在挂灼伤），其次血少的收尾；已经烧着的目标排到最后。
+ * 放完之后：目标被顶飞了，继续朝它压上去，把撞开的身位变成下一次出手的距离。追击每刻按当前指令与可见性重判，
+ * 撞完反伤后若自身已跌破保留生命、目标又不残，就不再盲追，就地收势。
  */
 namespace PokemonSkills {
     function flareblitzValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
     }
 
-    function flareblitzAfter(context: WorldBehavior.Context, progress: WorldBehavior.Bag): WorldBehavior.Result | void {
-        if (!progress.chaseUntil) progress.chaseUntil = context.tick + 40;
-        if (context.tick > progress.chaseUntil) return;
+    /** 已知能被打着的目标：宝可梦带火属性时这次挂不上灼伤；非宝可梦缺少类型事实时按可烧处理。 */
+    function flareblitzBurnable(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const facts = CompanionBehavior.pokemonFacts(context, target);
+        if (!facts || !facts.types) return true;
+        return facts.types.indexOf("fire") < 0;
+    }
+
+    function flareblitzAfter(context: WorldBehavior.Context, capability: WorldBehavior.Capability, progress: WorldBehavior.Bag): WorldBehavior.Result | void {
         const threat = CompanionBehavior.goalEntity(context);
-        if (!threat || threat.health <= 0) return;
+        if (!threat || threat.health <= 0 || !threat.visible) return;
         const self = CompanionBehavior.source(context);
         if (CompanionBehavior.distance(self.point, threat.point) <= 3.6) return;
+        const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.28);
+        if (CompanionBehavior.ratio(self) < minHealth && CompanionBehavior.ratio(threat) > 0.3) return;
         const navigation = CompanionBehavior.navigate(context, threat.point, 3);
         return navigation === "moving" || navigation === "arrived" ? WorldBehavior.running() : undefined;
     }
@@ -41,11 +49,11 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 24;
-            if (!CompanionBehavior.status(context, target, "burn")) score += 16;
+            if (!CompanionBehavior.status(context, target, "burn") && flareblitzBurnable(context, target)) score += 16;
             if (CompanionBehavior.ratio(target) <= 0.3) score += 12;
             return score;
         },
-        after: function (context, capability, target, progress) { return flareblitzAfter(context, progress); }
+        after: function (context, capability, target, progress) { return flareblitzAfter(context, capability, progress); }
     });
 
     addPreferences("flareblitz", {}, [

@@ -16,7 +16,7 @@ Smoke.scenario("magneticflux", function (stage) {
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/magnetized"),
             "the iron golem received magnetic defense");
         stage.expect(stage.attribute(ally, "minecraft:generic.armor") > 0, "the ordinary body gained a real native attribute");
-        stage.note("The ordinary iron golem qualifies through its body material; numerical gain is observed through its native attribute.", { stages: stage.stages(ally) });
+        stage.note("The ordinary iron golem qualifies through its body material; the field owns its own per-recipient boost window, so its gain is observed through the native armor attribute and disappears when that field ends or the body leaves.", { stages: stage.stages(ally) });
         stage.done();
     }, "magneticflux links the plus ally");
 });

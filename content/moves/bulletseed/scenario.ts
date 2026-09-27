@@ -20,7 +20,7 @@ Smoke.scenario("bulletseed", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("bulletseed", caster) > 0, "bulletseed was committed");
             stage.expect(stage.damageTo(foe) > 0, "the seed volley dealt damage to the foe");
-            stage.note("the volley length (2-5 shots), per-shot power and spread follow Attack/Speed/level and the heavy/rapid choice (design facts verified in the full assembly)", {
+            stage.note("each seed is an independent real delivery with its own strike: shots (2-5), per-shot power and spread follow Attack/Speed/level and the heavy/rapid choice; with sustained control the current aim is read directly (no old-target velocity lead), and a miss reports the projectile's real last point (design facts verified in the full assembly)", {
                 casts: stage.casts("bulletseed", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive()

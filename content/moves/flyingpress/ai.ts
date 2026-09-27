@@ -41,11 +41,16 @@ namespace PokemonSkills {
             const velocity = target.velocity;
             const speed = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : -1;
             if (speed >= 0) base += speed < 0.05 ? 6 : speed > 0.2 ? -6 : 0;
-            // 头顶留得下真实跃起空间才值得高跳；顶棚太低的场地降权。
+            // 头顶留得下完整身体的真实跃起空间才值得起跳；顶棚太低的场地降权。
             const world = CompanionBehavior.world(context);
             const self = CompanionBehavior.source(context);
-            const probe = CompanionBehavior.point([self.point[0], self.point[1] + 1.3, self.point[2]]);
-            if (!world.freeSpace(probe, 0.7, 0.7)) base -= 8;
+            const width = typeof self.width === "number" && self.width > 0 ? self.width : 0.9;
+            const height = typeof self.height === "number" && self.height > 0 ? self.height : 1.4;
+            const probe = CompanionBehavior.point([self.point[0], self.point[1] + Math.max(1.3, height), self.point[2]]);
+            if (!world.freeSpace(probe, width, height)) base -= 8;
+            // 可下降路线：从目标上方一段到目标自身的直线被掩体挡住，压下去也只会落空。
+            const above = CompanionBehavior.point([target.point[0], target.point[1] + Math.max(2, height), target.point[2]]);
+            if (!world.clear(above, CompanionBehavior.point(target.point))) base -= 8;
             return base;
         }
     });

@@ -3,9 +3,9 @@
  *
  * 什么局面下出手：挂在共享的 attack 位上。带猛推的伙伴把它当**必中的推撞连击**：目标可见、敌对、存活，
  *   在 `ai.maxChase`（默认 6）以内就出手；更远交给共享接近逻辑。
- * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.wall`（默认开）打开时，**身后就有墙、
- *   石头或树干的目标**排得更前——它会被一路推着撞上去，每次撞墙多挨一记 `slam`；背后是空地的目标排后，
- *   因为那一记追加伤害不会发生。
+ * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.wall`（默认开）打开时，**身后有真实方块
+ *   挡住这一推的目标**排得更前——它会被一路推着撞上去，每次撞墙多挨一记 `slam`；背后是空地或只有可穿过的
+ *   装饰方块、以及抗击退不会被硬推的目标排后，因为那一记追加伤害不会发生。
  * 够不到怎么办：reach 就是本招射程，不够先走近；推进式会一路跟着对手走，整串更容易吃满。
  * 放完之后：这一串推完就收手，交回共享交战计划等冷却。
  * 优先级：基础 17；已在射程内 +6；`ai.wall` 开启且目标背后是障碍 +9。仅剩本招可选时，它仍在普通顺序里被选中。
@@ -17,7 +17,7 @@ namespace CompanionBehavior {
         return distance(source(context).point, target.point) <= ai<number>(item, "maxChase", 6);
     }
 
-    /** 目标背后（沿施法者→目标方向再往外一、两格）是否有实心障碍：有就说明它会被推着撞上去。 */
+    /** 目标背后是否有真实方块挡住这一推：沿施法者→目标的水平方向做一次原生方块碰撞线，读实际碰撞面。 */
     function armthrustWalled(context: WorldBehavior.Context, target: Entity): boolean {
         try {
             const world = CompanionBehavior.world(context);
@@ -25,20 +25,12 @@ namespace CompanionBehavior {
             const actor = world.actor(target.ref);
             const resistance = actor !== null ? world.attributeValue(actor, "minecraft:generic.knockback_resistance") : null;
             if (resistance !== null && resistance.value() >= 0.9) return false;
-            const from = source(context).point, to = target.point;
-            const dx = to[0] - from[0], dz = to[2] - from[2];
+            const self = source(context);
+            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
             const length = Math.sqrt(dx * dx + dz * dz) || 1;
-            const ux = dx / length, uz = dz / length;
-            const feet = to[1] - (target.height === undefined ? 1.4 : target.height) / 2;
-            for (let out = 1; out <= 2; out++) for (let up = 0; up <= 2; up++) {
-                const block = world.block(WorldCombat.point(to[0] + ux * out, feet + up, to[2] + uz * out));
-                if (block === null) continue;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air"
-                    || id === "minecraft:water" || id === "minecraft:lava") continue;
-                return true;
-            }
-            return false;
+            const from = CompanionBehavior.point([target.point[0], target.point[1], target.point[2]]);
+            const to = CompanionBehavior.point([target.point[0] + dx / length * 1.6, target.point[1], target.point[2] + dz / length * 1.6]);
+            return WorldGeometry.blockHit(world, from, to) !== null;
         } catch (ignored) { return false; }
     }
 

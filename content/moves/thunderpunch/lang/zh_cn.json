@@ -5,7 +5,7 @@
   "worldcombat.skill.thunderpunch.use.2": "快速给多个目标挂上麻痹",
   "worldcombat.skill.thunderpunch.description.0": "沿瞄准方向的一拳命中造成约 %1$s 点接触+拳伤害，拳面判定半径 %2$s 格；命中后要贴住放电窗口 %3$s，窗口内双方仍在拳程且互相看得见，才补上余下的约三成伤害。",
   "worldcombat.skill.thunderpunch.description.1": "被这一拳直接电中的目标有 %1$s 概率陷入麻痹，麻痹期间移动速度减半、行动有 25%% 概率失败，持续约 40 秒。",
-  "worldcombat.skill.thunderpunch.description.2": "放电成功后，从真实目标 %1$s 格内最多再链到 %2$s 个其他敌人身上，各造成约 %3$s 点伤害并有 %4$s 概率使其麻痹；视线被挡或已经离开的目标不会被链到。",
+  "worldcombat.skill.thunderpunch.description.2": "补伤成功后，从真实目标 %1$s 格内按距离由近到远最多再链到 %2$s 个其他敌人身上，各造成约 %3$s 点伤害并有 %4$s 概率使其麻痹；补伤失败、视线被挡或已经离开的目标不会被链到。",
   "worldcombat.skill.thunderpunch.overcharge.on": "超载式：电弧跳得更远、可链到第三个目标、跃电麻痹更高，但主拳更轻、主目标麻痹略降、冷却更久。",
   "worldcombat.skill.thunderpunch.overcharge.off": "点穴式：主拳更重、麻痹更集中，但电弧链得更近。",
   "worldcombat.skill.thunderpunch.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

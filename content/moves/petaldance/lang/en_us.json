@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.petaldance.summary": "Dance in motion inside a hollow ring of petals: the outer edge cuts and nudges whoever it sweeps past, while the open centre stays safe; petals are left where the user passes. Afterwards the user reels in confusion and its actions may fumble.",
+  "worldcombat.skill.petaldance.summary": "Dance in motion inside a hollow ring of petals: the outer edge cuts and nudges whoever it sweeps past, while the open centre stays safe; petals are left where the user passes. Once the first ring is out the after-dance daze is owed, and stopping early does not escape it; while dazed its actions may fumble.",
   "worldcombat.skill.petaldance.use.0": "Shave a ring of approaching enemies with the outer petal edge",
   "worldcombat.skill.petaldance.use.1": "Handle a crowd of low Sp. Def targets with special damage",
   "worldcombat.skill.petaldance.use.2": "Walk the skirt edge onto enemies while leaving the safe open centre for allies",
@@ -26,6 +26,7 @@
   "worldcombat.skill.petaldance.value.fumble": "Fumble chance",
   "worldcombat.skill.petaldance.value.tempo": "Wind-up",
   "worldcombat.skill.petaldance.value.recover": "Recovery",
+  "worldcombat.skill.petaldance.value.steady": "Recovery time",
   "worldcombat.skill.petaldance.value.recharge": "Cooldown",
   "worldcombat.skill.petaldance.preference.drift": "Whirling",
   "worldcombat.skill.petaldance.preference.drift.help": "On: drifts further, storms wider, petals last longer and the daze lasts longer, but each ring is slightly weaker (×0.96) with a slower wind-up and cooldown - good for kiting. Off (grounded): spins in place, recovers faster and loses control for less time, but the radius and the trace left behind are narrower.",
@@ -40,5 +41,5 @@
   "world_combat.move.petaldance.text.daze": "Reeling after the dance",
   "world_combat.move.petaldance.text.chip": "Cut by petals %1$s",
   "effect.world_combat.petaldance_daze": "Petal Dance (dazed)",
-  "worldcombat.skill.petaldance.description.stance": "The user keeps free movement through the dance and the skirt travels with its real body; the dance cannot be interrupted and only ends when it finishes."
+  "worldcombat.skill.petaldance.description.stance": "The user keeps free movement through the dance and the skirt travels with its real body; the dance cannot be interrupted from outside. Releasing the skill key keeps the committed dance going, but stopping it (input-stop) or being interrupted ends it early - the daze owed from the first ring is still paid."
 }

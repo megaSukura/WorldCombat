@@ -4,7 +4,8 @@
  * 什么局面有意义：场上有一个看得见的威胁，且身边有正在交战的伙伴（共享伙伴感官已按「队友正在出手或刚受伤」挑人）；
  *   伙伴离自己不超过 ai.maxChase，身上还没有同一份帮助。
  * 对谁出手：需要托举的伙伴；由共用服务走近到 reach 内再施放。
- * 放完之后：伙伴下一次命中兑现加成，伙伴交回共享顺序继续战斗；帮助还在时不重复施加。
+ * 放完之后：伙伴下一次直接命中兑现加成，伙伴交回共享顺序继续战斗；帮助还在时不重复施加。
+ * 驻守：未开 ai.leaveStation 时，只有伙伴已经站进 reach 以内才原地托举，够不到就交给共享接近逻辑。
  * 配置：ai.maxChase 限制愿意跑去帮多远；ai.leaveStation 决定驻守时是否离位。
  */
 namespace CompanionBehavior {
@@ -22,8 +23,13 @@ namespace CompanionBehavior {
         available: function (context, capability, _purpose, target) {
             if (context.facts.mounted) return false;
             if (!context.senses["world_combat:threat"]) return false;
-            if (!target) return true;
             const self = source(context);
+            // 驻守且不许离位时仍可原地托举：只在伙伴尚未进入 reach、必须先走过去时才放弃。
+            const stationed = (context.facts.intent === "hold" || context.facts.intent === "stay")
+                && !ai<boolean>(capability, "leaveStation", false);
+            const reach = capability.data.range && capability.data.range > 0 ? capability.data.range : 4;
+            if (stationed && (!target || distance(self.point, target.point) > reach)) return false;
+            if (!target) return true;
             if (String(target.ref) === String(self.ref) || !target.friendly || target.health <= 0) return false;
             if (status(context, target, "helpinghand")) return false;
             return distance(self.point, target.point) <= ai<number>(capability, "maxChase", 10);

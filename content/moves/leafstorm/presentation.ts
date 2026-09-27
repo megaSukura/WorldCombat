@@ -5,8 +5,10 @@
  *   到射程尽头一次散叶收尾。
  * 色相家族：草绿（0x8FD14A）与深叶绿（0x5FA83A）为主体，叶背的浅黄（0xD8E8A0）作高光细节，中性尘少量。
  * 拍子：起 gather（拢叶）→ 卷 fly（沿准线卷动）→ 割 shred（卷到敌人）→ 收 burst（尽头散叶）。
- * 范围：fly 的叶筒绑真实 projectile（`data.projectile`），筒身沿 `data.direction` 指向；burst 的地面圈用 `data.radius`（风柱半径派生）。
- * 运动：叶片沿真实飞行轨迹旋卷前进（trail + 随速度转向的旋转环），命中向外崩散，尽头落地散开。
+ * 范围：fly 的叶筒绑真实 projectile（`data.projectile`），两段有限圆柱筒壁绕真实飞行轴（`orient:"velocity"`）转；
+ *   筒半径以 0.42 为基准、经 `fit:"none"` 的 `data.scale`（=真实风柱半径 / 0.42）缩放为判定半径；
+ *   burst 的散叶只发在服务端给出的真实弹末点。
+ * 运动：叶片沿真实飞行轴旋卷前进（trail + 绕轴的旋转筒壁），命中向外崩散，到真实末点一次散开。
  * 数：叶片数绑定 `data.blades`（速度与等级派生），强度绑定 `data.intensity`（威力 / 120）。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -42,7 +44,8 @@ const LeafstormDefinition: ParticleDefinition = {
                 {
                     name: "vortex", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    trail: { minDistance: 0.28 }, rate: 36, shape: { kind: "ring", radius: 0.42 },
+                    trail: { minDistance: 0.28 }, rate: 36,
+                    shape: { kind: "cylinder", radius: 0.42, length: 0.9, thickness: 1 },
                     orient: "velocity", direction: "outward", speed: [0.05, 0.2], spread: 12, spin: 30,
                     lifetime: [6, 12], size: [0.2, 0.06], sizeMode: "index",
                     color: 0x8FD14A, alpha: [0.9, 0], light: "world", maxParticles: 90
@@ -50,7 +53,8 @@ const LeafstormDefinition: ParticleDefinition = {
                 {
                     name: "tube", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    trail: { minDistance: 0.3 }, rate: 22, shape: { kind: "line", length: 0.9 },
+                    trail: { minDistance: 0.3 }, rate: 22,
+                    shape: { kind: "cylinder", radius: 0.3, length: 1.2, thickness: 1 },
                     orient: "velocity", direction: "outward", speed: [0.03, 0.12], spread: 10, spin: 24,
                     lifetime: [5, 11], size: [0.1, 0.02],
                     color: 0xD8E8A0, alpha: [0.7, 0], light: "world", maxParticles: 60

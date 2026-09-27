@@ -38,7 +38,7 @@ const SecretPowerDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [0.8, 0], light: "full", maxParticles: 30
                 },
                 {
-                    name: "hint_ember", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    name: "hint_ember", bind: "point", fit: "none", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "hintFire", fallback: 0 }, at: 2 }, shape: { kind: "sphere", radius: 0.7 },
                     direction: "inward", speed: [0.05, 0.14], gravity: -0.01,
@@ -46,7 +46,7 @@ const SecretPowerDefinition: ParticleDefinition = {
                     color: 0xFF9A3C, alpha: [0.9, 0], light: "full", maxParticles: 20
                 },
                 {
-                    name: "hint_leaf", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    name: "hint_leaf", bind: "point", fit: "none", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     burst: { count: { data: "hintThicket", fallback: 0 }, at: 2 }, shape: { kind: "sphere", radius: 0.7 },
                     direction: "inward", speed: [0.05, 0.14], spin: 9,
@@ -54,7 +54,7 @@ const SecretPowerDefinition: ParticleDefinition = {
                     color: 0x8FCF6E, alpha: [0.85, 0], light: "full", maxParticles: 20
                 },
                 {
-                    name: "hint_splash", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    name: "hint_splash", bind: "point", fit: "none", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     burst: { count: { data: "hintWater", fallback: 0 }, at: 2 }, shape: { kind: "sphere", radius: 0.7 },
                     direction: "inward", speed: [0.05, 0.14], gravity: 0.01,
@@ -64,7 +64,7 @@ const SecretPowerDefinition: ParticleDefinition = {
             ]
         },
         travel: {
-            duration: 20,
+            duration: { data: "travelTicks", fallback: 20 },
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {

@@ -3,7 +3,7 @@
   "worldcombat.skill.leafage.use.0": "便宜、快速的远程消耗，一记接一记地撒",
   "worldcombat.skill.leafage.use.1": "用一片扇叶兜住来回走位的对手",
   "worldcombat.skill.leafage.use.2": "在近距离补最后一下",
-  "worldcombat.skill.leafage.description.0": "一把撒出 %2$s 片叶，整把叶只结算一次伤害：最先扎中敌人的那一片造成约 %1$s 点物理伤害；对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.leafage.description.0": "一把撒出 %2$s 片叶，整把叶只尝试一次伤害：最先扎中敌人的那一片造成约 %1$s 点物理伤害，其余叶随即落地；若这一片被免疫或挡下，这一把不再补刀。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.leafage.description.1": "射程 %1$s 格，扇面张角 %2$s 度，叶以 %3$s 格/刻走一条短弧；可朝方向或近处地面自由撒出，叶不追踪，撞方块就在落点碎落。",
   "worldcombat.skill.leafage.description.2": "单片叶的横向判定厚度 %1$s 格。",
   "worldcombat.skill.leafage.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒；PP 40 的手感，回得很快。",
@@ -28,5 +28,6 @@
   "worldcombat.skill.leafage.preference.ai.finish": "优先收尾",
   "worldcombat.skill.leafage.preference.ai.finish.help": "开启：生命已不足四成的目标排得更前，拿一把叶收尾；关闭则所有目标同价。",
   "world_combat.move.leafage.text.hit": "绿叶扎中",
-  "world_combat.move.leafage.text.miss": "一把叶撒空了"
+  "world_combat.move.leafage.text.miss": "一把叶撒空了",
+  "world_combat.move.leafage.text.reject": "叶被挡下"
 }

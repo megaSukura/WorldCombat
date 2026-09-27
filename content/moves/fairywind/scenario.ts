@@ -22,7 +22,7 @@ Smoke.scenario("fairywind", function (stage) {
     }, function () {
         stage.expect(stage.casts("fairywind", caster) > 0, "clefairy committed fairy wind");
         stage.expect(stage.damageTo(near) > 0, "the swirling wind struck the front golem");
-        stage.note("the wind keeps travelling on a pierce hit, so the back golem may take a second hit; the sideways fling and the wide-form rolls are read from the trace", {
+        stage.note("the wind keeps travelling on a pierce hit, so the back golem may take a second hit. Each swept foe is shoved with hitDisplace toward the side of the wind axis it stands on (on-axis uses the launch spin), and the wake scene draws the real from/to segment from the actual moved distance; the wind dissipates at the real projectilePosition. The wide-form rolls are read from the trace", {
             casts: stage.casts("fairywind", caster),
             nearDamage: Math.round(stage.damageTo(near) * 10) / 10,
             farDamage: Math.round(stage.damageTo(far) * 10) / 10

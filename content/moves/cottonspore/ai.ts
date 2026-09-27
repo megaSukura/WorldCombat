@@ -23,12 +23,22 @@ namespace CompanionBehavior {
         return Math.max(1.6, Math.min(4.5, radius));
     }
 
+    /** 只数真正会被这一炸拖慢的敌人：能看见、还能再降速、粉末生效、视线不被墙挡住。 */
+    function cottonsporeHittable(context: WorldBehavior.Context, other: Entity): boolean {
+        if (!other.visible || other.friendly || other.health <= 0) return false;
+        if (CompanionBehavior.stage(context, other, "spe") <= -6) return false;
+        const facts = CompanionBehavior.combatStats(context, other);
+        if (facts && facts.types && facts.types.indexOf("grass") >= 0) return false;
+        const self = source(context);
+        return !!world(context).clear(point(self.point), point(other.point));
+    }
+
     function cottonsporeCaught(context: WorldBehavior.Context, centre: number[], radius: number): number {
         const nearby = context.facts.nearby as Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (!other.visible || other.friendly || other.health <= 0) continue;
+            if (!cottonsporeHittable(context, other)) continue;
             if (distance(other.point, centre) <= radius) count++;
         }
         return count;
@@ -38,9 +48,9 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.mounted) return false;
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
         if (status(context, threat, "cottoned")) return false;
+        // 是否离位由共享 approach/leaveStation 决定；只要圈里够人，驻守原地也能放。
         return cottonsporeCaught(context, self.point, cottonsporeRadius(context, item)) >= ai<number>(item, "minFoes", 2);
     }
 

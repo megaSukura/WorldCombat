@@ -112,26 +112,24 @@ const GrassKnotDefinition: ParticleDefinition = {
             ]
         },
         trip: {
-            duration: 30,
-            exit: { stop: 12, drain: 16 },
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
                     name: "leg_knot", bind: "target", offset: [0, 0.12, 0], height: 0.12,
                     particle: "world_combat_core:cobblemon/generic/wrap",
-                    burst: { count: { data: "coils", fallback: 12 }, at: 1, interval: 3, repeats: 2 },
-                    shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
+                    rate: 5, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.24, 0.04],
-                    color: 0x4E7A2E, alpha: [0.8, 0], light: "world", maxParticles: 60
+                    color: 0x4E7A2E, alpha: [0.8, 0], light: "world", maxParticles: 40
                 },
                 {
                     name: "leg_leaves", bind: "target", offset: [0, 0.3, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 16, shape: { kind: "sphere", radius: 0.3 },
+                    rate: 6, shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.03, 0.1],
                     gravity: 0.05, drag: 0.93,
                     lifetime: [10, 16], size: [0.07, 0.01],
-                    color: 0x7CB342, alpha: [0.5, 0], light: "world", maxParticles: 40
+                    color: 0x7CB342, alpha: [0.5, 0], light: "world", maxParticles: 30
                 }
             ]
         },

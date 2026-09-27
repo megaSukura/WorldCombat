@@ -2,14 +2,16 @@
  * 恶梦 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者掌心聚起一团黑紫的影 → 一条影线把施术者与熟睡目标连起来、在睡者身上烙下一圈梦印 →
- *   此后每隔一段，它身下涌起一层层黑影、抽走一缕发暗的生命；这一抽把睡者弄醒，黑影随即被切断 →
- *   若恶梦在睡者仍睡着时走完，黑影只自行消散退去。
+ *   随后黑影持续压低、梦印随倒数向内收缩 → 倒数走完的一瞬碎开、抽走一缕发暗的生命，睡者也随之醒来、黑影被切断；
+ *   若在倒数中被提前唤醒／驱散，黑影只自行消散退去。
  *
- * 色相家族：暗紫（0x4B2A6B）为主体与梦印，近黑紫（0x241535）只压核心与涌起的影，灰紫（0xC9B8E8）只给抽离的命缕高光；单一色相。
- * 拍子：起 windup（掌心聚影）→ 印 seal（影线相连）→ 咒 curse（梦印烙下）→ 跳 pulse（层层黑影＋抽命）→ 醒 wake（醒来断影）／散 fade（睡中到期）。
+ * 色相家族：暗紫（0x4B2A6B）为主体与梦印，近黑紫（0x241535）只压核心与压下的影，灰紫（0xC9B8E8）只给抽离的命缕高光；单一色相。
+ * 拍子：起 windup（掌心聚影）→ 印 seal（影线相连）→ 咒 curse（梦印烙下）→ 候 countdown（黑影压低压密、梦印收缩）→
+ *   收 harvest（一次碎开抽命）→ 醒 wake（醒来断影）／散 fade（睡中消散）。
  * 范围：seal 沿 `data.path`（自身与目标两个真实顶点）画一条连接影线，表示诅咒落点，不做沿线飞行；curse 的梦印半径由 `data.scale` 随 sealRadius 放大。
- * 运动：pulse 的黑影自目标脚下向上涌起再收束，抽离的命缕向上飘散；wake 的黑影向外炸开（醒来切断），fade 的黑影缓缓升散（睡中到期）。
- * 数：`data.shades`（特攻换算）决定黑影层数、连接影线密度与梦印涌出的数量；`data.intensity`（本跳实际扣血占最大生命的比例换算）决定 pulse 各发射器的密度与亮度。
+ * 运动：countdown 的黑影自目标上方持续压下、梦印半径由 `data.ring`（随实际倒数收缩）驱动向内收；harvest 的黑影在收割点一次碎开，抽离的命缕向上飘散。
+ * 数：`data.shades`（特攻换算）决定黑影层数与连接影线密度；`data.progress`（倒数进度）与 `data.ring` 驱动压低与收缩；
+ *   `data.intensity`（本次实际扣血占最大生命的比例换算）决定 harvest 各发射器的密度与亮度。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const NightmareDefinition: ParticleDefinition = {
@@ -81,33 +83,65 @@ const NightmareDefinition: ParticleDefinition = {
                 }
             ]
         },
-        pulse: {
+        // 倒数：黑影持续压低、梦印按 data.ring（随剩余刻数收缩）向内收，越接近收割越密。
+        countdown: {
+            duration: 0,
+            exit: { stop: 0, drain: 8 },
+            emitters: [
+                {
+                    name: "press", bind: "target", height: 1.0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    rate: { data: "intensity", fallback: 1 }, shape: { kind: "cylinder", radius: 0.34, length: 0.9 },
+                    direction: "down", speed: [0.02, 0.1], drag: 0.9,
+                    lifetime: [8, 15], size: [0.22, 0.4],
+                    color: 0x241535, alpha: [0.32, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "squeeze", bind: "target", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/largering",
+                    rate: 4, shape: { kind: "ring", radius: { data: "ring", fallback: 1.5 }, rotation: [90, 0, 0] },
+                    direction: "inward", speed: [0.01, 0.05],
+                    lifetime: [10, 16], size: [0.26, 0.4],
+                    color: 0x4B2A6B, alpha: [0.4, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "sift", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: { data: "shades", fallback: 10 }, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "inward", speed: [0.01, 0.05],
+                    lifetime: [10, 16], size: [0.08, 0.02],
+                    color: 0xC9B8E8, alpha: [0.4, 0], light: "full", bloom: 0.2, maxParticles: 30
+                }
+            ]
+        },
+        // 收割：一次碎开——暗影在命中点炸开、命缕上抽、梦印环碎裂，没有持续跳数。
+        harvest: {
             duration: 26,
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "surge", bind: "target", height: 0.25,
-                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    burst: { count: { data: "shades", fallback: 10 } }, shape: { kind: "cylinder", radius: 0.34, length: 1.0 },
-                    direction: "up", speed: [0.03, 0.12],
-                    lifetime: [10, 18], size: [0.24, 0.44],
-                    color: 0x241535, alpha: [0.35, 0], light: "world", maxParticles: 60
+                    name: "shatter", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: 16 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.06, 0.22],
+                    lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0x4B2A6B, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 32
                 },
                 {
-                    name: "drain_flecks", bind: "target", height: 0.7,
+                    name: "life", bind: "target", height: 0.7,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: { data: "shades", fallback: 10 } }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "up", speed: [0.04, 0.14],
+                    direction: "up", speed: [0.05, 0.16],
                     lifetime: [10, 16], size: [0.1, 0.02],
-                    color: 0xC9B8E8, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 48
+                    color: 0xC9B8E8, alpha: [0.75, 0], light: "full", bloom: 0.25, maxParticles: 48
                 },
                 {
-                    name: "bite", bind: "target", height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
-                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.26 },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [6, 12], size: [0.26, 0.04], sizeMode: "index",
-                    color: 0x4B2A6B, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 28
+                    name: "break_ring", bind: "target", offset: [0, 0.12, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 20 }, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [7, 13], size: [0.24, 0.06],
+                    color: 0x241535, alpha: [0.7, 0], light: "world", maxParticles: 28
                 }
             ]
         },
@@ -133,7 +167,7 @@ const NightmareDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 睡者仍睡着、恶梦自己走完：黑影只是缓缓升散，不播「醒来」的 Z。
+        // 睡者仍睡着、倒数被提前打断／驱散：黑影只是缓缓升散，不播「醒来」的 Z。
         fade: {
             duration: 22,
             exit: { stop: 9, drain: 16 },

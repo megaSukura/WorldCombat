@@ -24,7 +24,7 @@
  *   frostCells 冰面块数：物攻决定碎开时冻住几块地；厚壳式更多。
  *   frostTicks 冰面停留：等级决定冰面留多久；厚壳式更久。
  *   shards    冰屑点数：物攻派生，表现按它发射。
- *   tempo／recover／recharge：速度与配置共同决定起手、收招与冷却。
+ *   tempo／rest／recharge：速度与配置共同决定起手、收招与冷却。
  *
  * 配置 `thick`（厚壳式）双向取舍（默认关）：
  *   开（厚壳）：每中一趟乘 2.3、威力上限 ×1.15、每层加粗 ×1.2、加粗上限 ×1.2、冰面更大更久，代价是球速 ×0.85、
@@ -108,7 +108,7 @@ namespace PokemonSkills {
                 .clamp(0.05, 0.22).round(3),
             "每层加粗", {
                 base: 0.10, unit: "格",
-                description: "每真实命中一趟，下一颗球的半径增加多少；体重越大的个体每层冻得越厚，厚壳式更明显。球越大越容易先撞门框。"
+                description: "每真实命中一趟，下一颗球的半径实际增加多少格；体重越大的个体每层冻得越厚，厚壳式更明显。球越大越容易先撞门框。"
             }),
         /** 加粗上限：1.05 + 宽度偏移[−0.1,0.7] + 等级偏移[0,0.3]，厚壳 ×1.2；夹 1.0..1.8。 */
         girthMax: formula(
@@ -153,8 +153,8 @@ namespace PokemonSkills {
         tempo: seconds(
             F.base(7).minus(F.stat("speed").minus(50).times(0.02).clamp(-0.8, 1.5)).clamp(5, 10).round(0),
             "起手", "蜷身抱成一团、把冰球捧到身前的时间；速度越快越短。"),
-        /** 收招：8 − 速度偏移[−0.8,1.6]，厚壳 +2；夹 5..12。 */
-        recover: seconds(
+        /** 收招：8 − 速度偏移[−0.8,1.6]，厚壳 +2；夹 5..12。避用保留键 recover，让这条公式真正驱动收招。 */
+        rest: seconds(
             F.base(8).minus(F.stat("speed").minus(50).times(0.02).clamp(-0.8, 1.6))
                 .plus(F.when(F.pref("thick", { key: "worldcombat.skill.iceball.preference.thick", fallback: "厚壳式" }), F.const(2), F.const(0)))
                 .clamp(5, 12).round(0),

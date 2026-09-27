@@ -16,7 +16,7 @@
  * 数值分散（每个参数各吃不同的精灵数据，小差距才在场上看得出来）：
  *   roll     撞击威力：目标速度 / 自己速度的比值是主项（陀螺在越快的对手面前转得越猛），
  *            物攻给撞的狠度、体重给压进去的份量；定桩式 ×1.14、轻旋式 ×0.94。
- *   load     速度差载荷（目标速度 ÷ 自己速度，0..6）：详情页可读，也是画面里陀螺体积与转速的来源。
+ *   load     速度差载荷（目标速度 ÷ 自己速度，0..6）：详情页可读，也是画面里轮缘转速与亮度的来源。
  *   lunge    垫前距离：速度给一点点，慢的个体滚不远。
  *   rush     每刻位移：速度，画面里陀螺前进的速度。
  *   collisionRadius 判定半径：碰撞箱宽度与身高。
@@ -33,6 +33,7 @@
 namespace PokemonSkills {
     export const gyroballId = "gyroball";
     export const gyroballScene = "world_combat:move_gyroball";
+    export const gyroballShellScene = "world_combat:move_gyroball/shell";
     export const gyroballHitText = "world_combat.move.gyroball.text.hit";
     export const gyroballMissText = "world_combat.move.gyroball.text.miss";
     export const gyroballSpinText = "world_combat.move.gyroball.text.spin";
@@ -59,7 +60,7 @@ namespace PokemonSkills {
             gyroballGap.as({ key: "worldcombat.skill.gyroball.value.gap", fallback: "速度差载荷" }).round(2),
             "速度差载荷", {
                 unit: "倍",
-                description: "陀螺从「对手比自己快多少」里攒到的载荷（目标速度 ÷ 自己速度，0..6）。它直接进撞击威力的公式；表现里的陀螺体积、转速与钢屑也按它放大，所以对手越快，画面上的陀螺越沉。"
+                description: "陀螺从「对手比自己快多少」里攒到的载荷（目标速度 ÷ 自己速度，0..6）。它直接进撞击威力的公式；轮缘的转速与亮度也按它增强，所以对手越快，画面里的轮缘转得越急越亮。"
             }),
         /** 垫前距离：2.4 + 速度偏移[−0.3,0.7]；定桩 ×0.86；夹 1.8..3.6。 */
         lunge: formula(
@@ -86,7 +87,7 @@ namespace PokemonSkills {
                 .clamp(0.42, 0.92).round(2),
             "判定半径", {
                 unit: "格",
-                description: "陀螺的轮缘能扫到多大一圈；身板越宽的个体扫得越宽，画面里的钢球与它一致。"
+                description: "陀螺的轮缘能扫到多大一圈；身板越宽的个体扫得越宽，画面里绕身的轮缘与它一致。"
             }),
         /** 击退：0.35 + 体重偏移[0,0.55] + 物攻偏移[−0.05,0.3]；定桩 ×1.18；夹 0.2..1.1。 */
         push: formula(

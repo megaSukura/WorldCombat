@@ -3,8 +3,8 @@
  *
  * 核心念头：振翅下令，一队手下从身边依次扑向对手，每只扑到身上刺一下；被中途打掉的手下不再落这一刺。
  *   每只手下各自结算一小段伤害，所以「容易击中要害」在这里就是「小刺越多，越容易撞上要害」。
- *   手下追的是目标身体中心这个真实最近可达点，扎刺前核对真实接触与通视；隔墙不刺，撞不进去就停留或有限绕行，
- *   到时散去。点选空地时整队去集结、到达后散去，不会自行挑敌人。
+ *   手下追的是目标身体中心，扎刺前按实体最近表面核对真实接触与通视；隔墙不刺，撞不进去就停留或有限绕行，
+ *   到时散去；目标一旦变成本人的友方即刻散去，只有真实扣血才发命中反馈。点选空地时整队去集结、到达后散去，不会自行挑敌人。
  *
  * 两幕：
  *   起（call，提交前）：振翅，只播预告。
@@ -41,13 +41,19 @@ namespace PokemonSkills {
         }
     }
 
-    /** 手下每 2 刻推进一次：未起飞就原地待命，起飞后朝集结点或目标追；追到身上就落刺。 */
+    /** 手下每 2 刻推进一次：先重核目标敌友，未起飞就原地待命，起飞后朝集结点或目标追；真实接触就落刺。 */
     function attackorderStep(brain: CombatEffect): void {
         var world = brain.world(), state = attackorderState(brain);
         var self = world.observe(brain.target());
         if (self === null) { brain.end(); return; }
         var owner = world.actor(state.owner);
         if (owner === null || !world.valid(owner)) { brain.end(); return; }
+        // 起飞前后都重核敌友：目标一旦是本主人或转成主人友方，立刻散去，不再追也不再刺。
+        if (state.target) {
+            var checked = world.actor(state.target);
+            if (checked === null || !world.valid(checked)
+                || String(checked.ref()) === String(owner.ref()) || world.allied(owner, checked)) { brain.end(); return; }
+        }
         if (world.tick() < state.launchAt) {
             WorldFeedback.keep(world, "attackorder:gather:" + String(brain.target().ref()), attackorderScene, 1, self.position(),
                 { moment: "gather", target: String(owner.ref()), scale: state.scale, size: 0.14 * state.scale }, 20);
@@ -67,10 +73,10 @@ namespace PokemonSkills {
         if (target === null || !world.valid(target)) { brain.end(); return; }
         var body = world.observe(target);
         if (body === null) { brain.end(); return; }
-        // 真实最近可达点就是身体中心；不再加半个身高，避免高大目标把手下引到头顶悬空点。
         var goal = body.position();
-        var deltaToTarget = goal.minus(self.position());
-        if (deltaToTarget.length() <= body.width() * 0.5 + 0.6 && world.clear(self.position(), goal)) {
+        // 真实接触看实体最近表面，而不是只按中心宽度估算：高大目标也能从侧面够到。
+        var surface = world.closestPoint(target, self.position());
+        if (surface.minus(self.position()).length() <= 0.75 && world.clear(self.position(), surface)) {
             attackorderSting(brain, owner, target, state, self);
             return;
         }
@@ -79,27 +85,31 @@ namespace PokemonSkills {
             { moment: "fly", target: String(target.ref()), scale: state.scale, size: 0.16 * state.scale }, 20);
     }
 
-    /** 手下扑到目标身上：核对真实接触与通视后用施法者的属性结算 sting（各自掷会心），再把结果放回世界。 */
+    /** 手下扑到目标身上：重核敌友、按最近表面确认接触与通视，用施法者属性结算 sting（各自掷会心）；只有真实扣血才发命中反馈。 */
     function attackorderSting(brain: CombatEffect, owner: CombatActor, target: CombatActor, state: any, self: CombatObservation): void {
         var world = brain.world();
         var body = world.observe(target);
         if (body === null) { brain.end(); return; }
-        var at = self.position(), centre = body.position();
-        if (centre.minus(at).length() > body.width() * 0.5 + 0.6 || !world.clear(at, centre)) return;
+        var at = self.position();
+        if (String(target.ref()) === String(owner.ref()) || world.allied(owner, target)) { brain.end(); return; }
+        var surface = world.closestPoint(target, at);
+        if (surface.minus(at).length() > 0.8 || !world.clear(at, surface)) return;
         var template = CobblemonCombat.moveTemplate(attackorderId);
         var features = damageFeatures(attackorderId, "sting");
         features.power = state.power;
         var result = PokemonDamage.resolve(world, owner, target, template, features, 0);
-        var point = self.position();
+        var point = at, applied = false;
         if (result.amount > 0 && world.valid(target)) {
-            world.hurt(target, result.amount, result.metadata);
-            var now = world.observe(target);
-            if (now !== null) point = now.position();
+            applied = world.hurt(target, result.amount, result.metadata);
+            if (applied) { var now = world.observe(target); if (now !== null) point = now.position(); }
         }
-        WorldFeedback.emit(world, attackorderScene, 1, point,
-            { moment: "sting", target: String(target.ref()), scale: state.scale, power: state.power,
-                count: Math.round(6 + state.power * 0.3) }, 20);
-        world.sound("cobblemon:impact.bug", point, 14, "{}");
+        // 伤害被原生拒绝（无敌、免疫、保护）时只收起手下，不冒命中火花、不发命中声。
+        if (applied) {
+            WorldFeedback.emit(world, attackorderScene, 1, point,
+                { moment: "sting", target: String(target.ref()), scale: state.scale, power: state.power,
+                    count: Math.round(6 + state.power * 0.3) }, 20);
+            world.sound("cobblemon:impact.bug", point, 14, "{}");
+        }
         brain.end();
     }
 
@@ -174,7 +184,10 @@ namespace PokemonSkills {
             var radius = 0.5 + body.width() * 0.3, hover = body.height() * 0.5 + 0.2;
             for (var i = 0; i < count; i++) {
                 var angle = i * (Math.PI * 2 / count) + world.random() * 0.4;
-                var point = body.position().plus(WorldCombat.point(Math.cos(angle) * radius, hover, Math.sin(angle) * radius));
+                var preferred = body.position().plus(WorldCombat.point(Math.cos(angle) * radius, hover, Math.sin(angle) * radius));
+                // 出生点先核真实空间：位置被方块占住就就近换空位，避免手下卡进墙里。
+                var spot = LivingActions.hasFreeSpace(world) ? LivingActions.freeSpot(world, preferred, 0.35, 0.35, 1.2) : null;
+                var point = spot !== null ? spot : preferred;
                 WorldBodies.spawn(world, point, {
                     appearance: { sprite: "cobblemon:generic/flying_bugs", scale: 0.8, tint: 0xF2C14E, glow: true },
                     size: [0.35, 0.35], health: health, gravity: false, pushable: false, invulnerable: false,

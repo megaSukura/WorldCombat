@@ -15,27 +15,32 @@
  * 与同族分开：滚动是施法者自己跨出手一趟趟滚、靠自身惯性顶开人；冰球是一次出手内离手的冰弹，靠逐层加宽的空间取舍。
  */
 namespace PokemonSkills {
-    /** 在落点附近找地面，租借几块冰（replace，linger）；找不到地面或格子不可用就跳过。 */
+    /** 在落点找真实地面，租借几块冰（replace，linger）：逐格取实际表面，去重、要求当刻为空并带 expectedState。 */
     function iceballFrost(world: CombatWorld, point: CombatPoint, cells: number, ticks: number): number {
-        let ground: CombatBlock | null = null;
-        for (let step = 0; step < 5 && ground === null; step++) {
-            const block = world.block(point.plus(WorldCombat.point(0, -0.5 * step, 0)));
-            if (block !== null && String(block.id()) !== "minecraft:air") ground = block;
-        }
-        if (ground === null) return 0;
-        const centre = ground.position();
+        const surface = SurfacePaths.support(world, point, 1.5, 4);
+        if (surface === null) return 0;
+        const centre = WorldCombat.point(Math.floor(surface.x()), Math.floor(surface.y()), Math.floor(surface.z()));
+        const seen: { [key: string]: boolean } = Object.create(null);
         let laid = 0;
         for (let index = 0; index < cells; index++) {
             const angle = index * 2.399963229728653;
             const spread = index === 0 ? 0 : 0.9;
             const x = Math.round(centre.x() + Math.cos(angle) * spread);
-            const y = Math.round(centre.y());
             const z = Math.round(centre.z() + Math.sin(angle) * spread);
+            // 每格各取真实表面：不把空隙或植被当冰地基，也不重复冻同一格。
+            const face = SurfacePaths.support(world, WorldCombat.point(x + 0.5, centre.y() + 1.5, z + 0.5), 1, 4);
+            if (face === null) continue;
+            const cell = { x: Math.floor(face.x()), y: Math.floor(face.y()), z: Math.floor(face.z()) };
+            const id = cell.x + "," + cell.y + "," + cell.z;
+            if (seen[id]) continue;
+            seen[id] = true;
+            const block = world.block(WorldCombat.point(cell.x, cell.y, cell.z));
+            if (block === null || String(block.id()) !== "minecraft:air") continue;
             try {
-                if (world.terrain(JSON.stringify({ cells: [{ x: x, y: y, z: z, block: "minecraft:ice" }], replace: true, linger: true }), ticks) <= 0) continue;
+                if (world.terrain(JSON.stringify({ cells: [{ x: cell.x, y: cell.y, z: cell.z, block: "minecraft:ice", expectedState: String(block.state()) }], replace: true, linger: true }), ticks) <= 0) continue;
             } catch (error) { continue; }
             laid++;
-            WorldFeedback.emit(world, iceballScene, 1, WorldCombat.point(x + 0.5, y + 0.5, z + 0.5), { moment: "freeze" }, 18);
+            WorldFeedback.emit(world, iceballScene, 1, WorldCombat.point(cell.x + 0.5, cell.y + 0.5, cell.z + 0.5), { moment: "freeze" }, 18);
         }
         return laid;
     }
@@ -79,7 +84,7 @@ namespace PokemonSkills {
                 world: world || null, actor: actor || null, attributes: attributes };
             return {
                 prepare: Math.round(p(iceballId, "tempo", context)),
-                recover: Math.round(p(iceballId, "recover", context)),
+                recover: Math.round(p(iceballId, "rest", context)),
                 cooldown: Math.round(p(iceballId, "recharge", context)),
                 active: skills[iceballId].active,
                 range: p(iceballId, "flight", context)
@@ -145,6 +150,8 @@ namespace PokemonSkills {
             function launch(current: CombatAction): void {
                 if (settled) return;
                 if (pass >= passes) { finish(current); return; }
+                // 新发前清空上一颗的接触点：这一发若空飞，绝不冻在旧命中处。
+                lastPoint = null;
                 const scope = current.world();
                 const self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
@@ -152,8 +159,8 @@ namespace PokemonSkills {
                 const direction = iceballDirection(current, locked);
                 if (direction.length() < 0.05) { finish(current); return; }
                 const heading = direction.unit();
-                // 真实半径随命中趟数增长并与画面同步；限制在 girthMax 以内，大球会先撞门框。
-                const thisRadius = Math.min(girthMax, radius * (1 + pass * girth));
+                // 真实半径随命中趟数按实际格数增长并与画面同步；限制在 girthMax 以内，大球会先撞门框。
+                const thisRadius = Math.min(girthMax, radius + pass * girth);
                 const scale = Math.max(0.7, Math.min(2.4, thisRadius / iceballReference));
                 const power = Math.min(cap, ball * Math.pow(ramp, pass));
                 const intensity = Math.max(0.6, Math.min(2.6, power / 12));
@@ -207,12 +214,15 @@ namespace PokemonSkills {
                         if (resolved) return;
                         resolved = true;
                         scenes.stop(inner, key);
-                        // 空发：飞满射程没碰到东西，当场碎冰结束，不再绕回。
-                        const away = origin.plus(heading.scale(flightRange));
-                        WorldFeedback.emit(inner.world(), iceballScene, 1, away,
-                            { moment: "breach", pass: pass + 1, passes: passes, radius: Math.round(thisRadius * 100) / 100,
-                                shards: shards, scale: scale, intensity: intensity, blocked: 0,
-                                direction: [heading.x(), heading.y(), heading.z()] }, 20);
+                        // 空发：用弹体真实末点处理，不再用满射程点推算，也不冻在上一颗的接触点。
+                        const end = inner.world().projectilePosition(flight);
+                        if (end !== null) {
+                            lastPoint = end;
+                            WorldFeedback.emit(inner.world(), iceballScene, 1, end,
+                                { moment: "breach", pass: pass + 1, passes: passes, radius: Math.round(thisRadius * 100) / 100,
+                                    shards: shards, scale: scale, intensity: intensity, blocked: 0,
+                                    direction: [heading.x(), heading.y(), heading.z()] }, 20);
+                        }
                         finish(inner);
                     },
                     JSON.stringify(appearance));

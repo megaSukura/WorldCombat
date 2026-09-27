@@ -28,7 +28,7 @@ Smoke.scenario("bounce", function (stage) {
             stage.expect(stage.damageTo(prey) > 0, "the falling body damaged the target");
             stage.expect(stage.travelled(flier) > 1, "bounce carried the user up and down the arc");
             stage.expect(stage.hadMobEffect(flier, "world_combat:bounce_airborne"), "the user carried the airborne status while off the ground");
-            stage.note("the drop is a contact hit from the locked landing point; a target that walks out of it, or a roof that blocks the rise, makes it miss or hit light. Variables: damage roll and crit, whether the target survives, the height actually reached, whether the 30% paralysis triggered, and how many arcs it took to land one.", {
+            stage.note("the drop is a contact hit from the locked landing point and its power follows the highest point the body actually reached; the ground ring only fires on real support, an air body contact is its own branch, a wall that clips the fall plays a blocked puff, and the rebound only reads when the body really lifts. Variables: damage roll and crit, whether the target survives, the height actually reached, whether the 30% paralysis triggered, and how many arcs it took to land one.", {
                 casts: stage.casts("bounce", flier),
                 damageToPrey: Math.round(stage.damageTo(prey) * 10) / 10,
                 flierTravelled: Math.round(stage.travelled(flier) * 10) / 10,

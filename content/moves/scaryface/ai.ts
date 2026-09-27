@@ -1,4 +1,4 @@
-/** 优先拖慢尚未被吓住的快速威胁，按招式距离接近。 */
+/** 优先拖慢尚未被吓住的快速威胁，按招式距离接近；驻守时只瞪已进射程的威胁。 */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("scaryface", { ai: { maxChase: 9, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 20, 1),
@@ -11,9 +11,13 @@ namespace CompanionBehavior {
 
     function scaryfaceWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
-        if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 9)) return false;
-        return scaryfaceEligible(context, threat);
+        if (!scaryfaceEligible(context, threat)) return false;
+        const gap = distance(self.point, threat.point);
+        const holding = (context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false);
+        // 驻守不离位时只瞪已经走进射程的威胁——不用离位也能放；没进射程的留给机动或共享接近逻辑。
+        if (holding) return gap <= item.data.range;
+        if (context.facts.focus !== threat.ref && gap > ai<number>(item, "maxChase", 9)) return false;
+        return true;
     }
 
     registerUse("scaryface", {

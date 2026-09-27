@@ -9,8 +9,9 @@
  * 三幕：
  *   起（windup，提交前）：电弧向身前一点收拢、越收越亮，只播预告，可被打断。
  *   束（beam，提交后）：每个 tick 从喷口沿自由 aim 做一次 `trace`（含友方与墙），把细束画到真实首碰点；
- *       开火第一刻的首碰若是敌人，结算 `beam` 主击并掷一次回灌；之后不再补主击。
- *   咬（residual / fizzle）：收束当刻若主击目标仍在同一束上，`hurt` 再咬一口 `residualShare`；否则只留散电。
+ *       身体到喷口这一段也查遮挡，贴脸的墙先截住。开火第一刻的首碰若是敌人，结算 `beam` 主击并掷一次回灌；
+ *       之后不再补主击。首击后任何一拍失去与同一受击者的接触，就永久失去本次尾流。
+ *   咬（residual / fizzle）：收束当刻若主击目标自首击起从未离开这条束，`hurt` 再咬一口 `residualShare`；否则只留散电。
  *
  * 与同族分开：火之舞是贴着自己跳、覆盖全身、扫一圈；充电光束是远远一条连着的细束、要求持续瞄准同一点。
  *   与十万伏特也不同：它是一条细束、蓄电驱动、命中后涨特攻而不是麻痹。
@@ -99,15 +100,15 @@ namespace PokemonSkills {
             const scale = Math.max(0.5, Math.min(2.2, radius / 0.28));
             const intensity = Math.max(0.5, Math.min(2.4, power / 50));
             const flow = Math.round(50 + power * 0.5);
-            let mainRef = "", lastContactRef = "", lastEndpoint: CombatPoint | null = null;
-            let sawMain = false, settled = false;
+            let mainRef = "", lastEndpoint: CombatPoint | null = null;
+            let sawMain = false, lost = false, settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                // 收束当刻，只有主击受击者仍在同一束接触上，才结算余流；转开、离场或隔墙断束都失去它。
-                if (mainRef !== "" && lastContactRef === mainRef && lastEndpoint !== null) {
+                // 收束当刻，只有主击受击者自首击起从未离开过这条束，才结算余流；转开、离场或隔墙断束都失去它。
+                if (mainRef !== "" && !lost && lastEndpoint !== null) {
                     const victim = scope.actor(mainRef);
                     if (victim !== null && scope.valid(victim)) {
                         const landed = hurt(current, victim, "chargebeam", power * share,
@@ -160,14 +161,18 @@ namespace PokemonSkills {
                 const muzzleLen = Math.min(0.5, 0.2 + self.height() * 0.15);
                 const muzzle = origin.plus(direction.scale(muzzleLen));
                 const end = muzzle.plus(direction.scale(Math.max(0.2, action.range() - muzzleLen)));
-                // 权威判定：线的第一个实体（含友方与自身阻挡）或方块就是细束的真实落点。
-                const contact = current.trace(muzzle, end, radius, true);
+                // 身体到喷口这一段也参与遮挡：贴脸的墙先截住细束，束不越墙。
+                const near = WorldGeometry.blockHit(scope, origin, muzzle);
+                // 权威判定：线的第一个实体（含友方与自身阻挡）或方块就是细束的真实落点；畅通时 trace 返回 MISS，位置是满射程端。
+                const contact = near !== null ? near : current.trace(muzzle, end, radius, true);
                 const endpoint = contact.position();
                 const lander = contact.hitEntity() ? contact.target() : null;
                 const victim = lander !== null && !scope.friendly(lander) && String(lander.ref()) !== actorRef ? lander : null;
+                const touching = contact.blocked() || contact.hitEntity();
 
                 lastEndpoint = endpoint;
-                lastContactRef = victim !== null ? String(victim.ref()) : "";
+                // 首击之后，任何一拍失去与同一受击者的接触，就永久失去本次尾流。
+                if (sawMain && (victim === null || String(victim.ref()) !== mainRef)) lost = true;
 
                 // 主击只在开火第一刻、按实际首碰结算；之后即使扫到新目标也不补整次主击。
                 if (!sawMain && elapsed === 0 && victim !== null && scope.valid(victim)) {
@@ -188,7 +193,8 @@ namespace PokemonSkills {
                 scenes.show(current, "beam", muzzle, {
                     moment: "beam", path: [chargebeamVertex(muzzle), chargebeamVertex(endpoint)],
                     point: chargebeamVertex(endpoint), direction: [direction.x(), direction.y(), direction.z()],
-                    length: span, arcs: arcs, scale: scale, intensity: intensity, flow: flow
+                    length: span, arcs: arcs, scale: scale, intensity: intensity, flow: flow,
+                    contact: touching ? Math.max(1, arcs) : 0
                 });
 
                 if (elapsed + 1 >= hold) { finish(current); return; }

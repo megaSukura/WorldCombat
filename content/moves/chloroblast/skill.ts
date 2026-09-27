@@ -6,8 +6,9 @@
  *
  * 三幕（提交前只播预告）：
  *   起（windup）：叶绿素从四肢向核心汇聚、身体透出青绿的光，只播预告，此时代价未结清。
- *   放（release → hit）：提交后一片叶绿爆流沿准线铺成扇形（`WorldGeometry.sector`，与表现同一组顶点），
- *       扇形里的每个非友方各挨一次 `bloom` 伤害，按到中心的距离衰减 `falloff`。
+ *   放（release → hit）：提交后一片叶绿爆流从身前朝准线推成一整片扇形（`WorldGeometry.sector` 判定，
+ *       表现用同一组 reach/angle/direction 的扇面形状），扇形里的每个非友方各挨一次 `bloom` 伤害，
+ *       按到中心的距离衰减 `falloff`。
  *   枯（wither）：叶绿素放尽后施法者透出的光暗下去，按最大生命 ×`cost` 扣血（浮字提示），只剩枯色余屑。
  *
  * 与同族分开：铁蹄光线重而短、只打第一个；破灭之光粗重贯穿、自损随伤害；随机光没有自损。
@@ -17,21 +18,6 @@
  * 墙后的对象仍经共享 `world.clear` 排除。命中权限由命中层按敌我结算。
  */
 namespace PokemonSkills {
-    /** 以 origin 为顶点、朝 direction 张开 angleDeg 度、半径 reach 的扇形多边形；判定与表现共用这组顶点。 */
-    function chloroblastFan(origin: CombatPoint, direction: CombatPoint, reach: number, angleDeg: number): CombatPoint[] {
-        const flat = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-        const base = Math.atan2(heading.z(), heading.x());
-        const half = angleDeg * Math.PI / 360;
-        const points: CombatPoint[] = [origin];
-        const steps = 10;
-        for (let i = 0; i <= steps; i++) {
-            const angle = base - half + (2 * half) * (i / steps);
-            points.push(origin.plus(WorldCombat.point(Math.cos(angle) * reach, 0, Math.sin(angle) * reach)));
-        }
-        return points;
-    }
-
     define({
         id: chloroblastId,
         cooldownParameter: "recharge",
@@ -50,8 +36,13 @@ namespace PokemonSkills {
         defaults: { burst: false, ai: { maxChase: 9, minFoes: 1, minHealth: 0.4 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: pokemon ? p(chloroblastId, "reach", pokemon) : 7, geometry: "line", style: "verdant",
-                color: 0x8FBF3A, label: config && config.burst === true ? "爆散式叶绿爆震" : "束流式叶绿爆震" };
+            // 用与出招同一个配置求值，指示的半径/张角与真实覆盖一致；标签顺便亮出这一发实际要付的自损比例。
+            const context = pokemon ? { pokemon: pokemon, skill: skills[chloroblastId], detail: { values: config } } : undefined;
+            const reach = p(chloroblastId, "reach", context);
+            const angle = p(chloroblastId, "angle", context);
+            const cost = p(chloroblastId, "cost", context);
+            return { radius: reach, geometry: "cone", orientation: "ground", spread: angle, style: "verdant", color: 0x8FBF3A,
+                label: (config && config.burst === true ? "爆散式叶绿爆震" : "束流式叶绿爆震") + " · 自损 " + Math.round(cost * 100) + "%" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[chloroblastId], detail: { values: config },
@@ -81,16 +72,16 @@ namespace PokemonSkills {
             const falloff = Math.max(0, Math.min(0.9, p(chloroblastId, "falloff", action)));
             const cost = Math.max(0, Math.min(1, p(chloroblastId, "cost", action)));
             const motes = Math.max(1, Math.round(p(chloroblastId, "motes", action)));
-            const vertices = chloroblastFan(origin, direction, reach, angle);
-            const path = vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
+            // 水平朝向：表现用 orient:"heading" 的扇面与判定用 sector 读同一个方向，竖直/零输入有安全回退。
+            const flat = WorldGeometry.flatUnit(direction, action.direction());
+            const heading = [flat.x(), flat.y(), flat.z()];
             const scale = reach / 7;
             const intensity = Math.max(0.6, Math.min(2.6, power / 150));
             let hits = 0;
 
             sound(action, "cobblemon:move.leafstorm.actor");
             WorldFeedback.emit(world, chloroblastScene, 1, origin,
-                { moment: "release", path: path, direction: [direction.x(), direction.y(), direction.z()],
-                    angle: angle, reach: reach, motes: motes, scale: scale, intensity: intensity,
+                { moment: "release", direction: heading, angle: angle, reach: reach, motes: motes, scale: scale, intensity: intensity,
                     flow: Math.round(50 + power * 0.5) }, 26);
 
             const region = WorldGeometry.sector(origin, direction, reach, angle, { below: 2, above: 3 });

@@ -30,11 +30,12 @@
   "worldcombat.skill.zenheadbutt.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.zenheadbutt.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger lets it open from farther, and is more likely to lose the target after locking.",
   "worldcombat.skill.zenheadbutt.preference.ai.opening": "Opening target",
-  "worldcombat.skill.zenheadbutt.preference.ai.opening.help": "Fresh only: skip a target another move already flinched, saving this for one that can still be staggered. Always: treat it as an ordinary attack.",
-  "worldcombat.skill.zenheadbutt.preference.ai.opening.fresh": "Fresh targets only",
+  "worldcombat.skill.zenheadbutt.preference.ai.opening.help": "Prefer fresh: when the target is already flinched this move ranks lower, but it is still used to chase. Always: treat it as an ordinary attack and never down-rank a flinched target.",
+  "worldcombat.skill.zenheadbutt.preference.ai.opening.fresh": "Prefer fresh targets",
   "worldcombat.skill.zenheadbutt.preference.ai.opening.always": "Always",
   "world_combat.move.zenheadbutt.text.hit": "Zen Headbutt",
   "world_combat.move.zenheadbutt.text.flinch": "Flustered",
+  "world_combat.move.zenheadbutt.text.broken": "Interrupted",
   "world_combat.move.zenheadbutt.text.miss": "Drifted off",
   "effect.world_combat.zenheadbutt_flinch": "Flinched"
 }

@@ -47,7 +47,7 @@ public final class WorldMobEffects {
         if (token != null) retire(leases.get(token));
     }
 
-    /** Removal notifications arrive before native cancellation/removal finishes; reconcile at the host tick boundary. */
+    /** Confirmed removal notifications reconcile optional ownership at the host tick boundary. */
     public void reconcile(LivingEntity entity, Holder<MobEffect> type) {
         combat.checkThread();
         var values = current.get(entity);

@@ -19,18 +19,18 @@ const DetectDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 14 },
             emitters: [
                 {
-                    name: "screen", bind: "source", offset: [0, 0.6, 0], height: 0.4, fit: "world", orient: "direction",
+                    name: "screen", bind: "source", offset: [0, 0.6, 0], height: 0.4, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/screen",
-                    rate: 12, shape: { kind: "arc", radius: { data: "reach", fallback: 1.2 }, arcDegrees: 64 },
-                    direction: "shape", speed: [0.0, 0.02], spin: 6,
+                    rate: 12, shape: { kind: "sphere", radius: { data: "reach", fallback: 1.2 }, thickness: 0.85 },
+                    direction: "inward", speed: [0.0, 0.02], spin: 6,
                     lifetime: [8, 16], size: [0.42, 0.3],
                     color: 0x8FD0FF, alpha: [0.3, 0.06], alphaMode: "sin",
                     light: "full", maxParticles: 48
                 },
                 {
-                    name: "gather", bind: "source", offset: [0, 0.6, 0], height: 0.4, fit: "world", orient: "direction",
+                    name: "gather", bind: "source", offset: [0, 0.6, 0], height: 0.4, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/orb/xsalphaboost",
-                    rate: 18, shape: { kind: "arc", radius: { data: "reach", fallback: 1.2 }, arcDegrees: 64 },
+                    rate: 18, shape: { kind: "sphere", radius: { data: "reach", fallback: 1.2 }, thickness: 0.9 },
                     direction: "inward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.09, 0.03], sizeMode: "index",
                     color: 0xCFE8FF, alpha: [0.7, 0], light: "full", maxParticles: 70
@@ -75,9 +75,9 @@ const DetectDefinition: ParticleDefinition = {
                 }
             ]
         },
-        opening: {
-            duration: 34,
-            exit: { stop: 18, drain: 16 },
+        opening_speed: {
+            duration: { data: "opening", fallback: 34 },
+            exit: { drain: 16 },
             emitters: [
                 {
                     name: "steps", bind: "source", offset: [0, 0.12, 0], height: 0.2, fit: "body",
@@ -86,6 +86,28 @@ const DetectDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.02, 0.08], trail: { minDistance: 0.3 },
                     lifetime: [5, 9], size: [0.16, 0.05],
                     color: 0xCFE8FF, alpha: [0.6, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
+        opening_power: {
+            duration: { data: "opening", fallback: 34 },
+            exit: { drain: 16 },
+            emitters: [
+                {
+                    name: "slash", bind: "source", offset: [0, 0.7, 0], height: 0.5, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    rate: 9, shape: { kind: "sphere_surface", radius: 0.55 },
+                    direction: "outward", speed: [0.02, 0.08], spin: 24,
+                    lifetime: [6, 12], size: [0.5, 0.14],
+                    color: 0xFFDCC2, alpha: [0.7, 0], light: "full", maxParticles: 44
+                },
+                {
+                    name: "ember", bind: "source", offset: [0, 0.5, 0], height: 0.4, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 10, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "up", speed: [0.02, 0.09],
+                    lifetime: [8, 16], size: [0.1, 0.02],
+                    color: 0xFFE8D0, alpha: [0.7, 0], light: "full", maxParticles: 40
                 }
             ]
         },

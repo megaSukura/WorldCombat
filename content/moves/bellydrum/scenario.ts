@@ -5,12 +5,20 @@
  *   且身上没有同名力量窗口时起鼓。所以场面必须先造出威胁，再让施术者保持在高血。
  *
  * 场面：晴天白天、开阔平地。只会腹鼓的卡比兽（snorlax，会学这招；技能表只给这一招）站在一侧；7 格外站一只
- *   小拉达并宣战。施术者由服务端 /damage 先压到约九成生命（跨过下限仍保留足够生命），再让 AI 在威胁下调出腹鼓。
+ *   小拉达并宣战。施术者先把「持久鼓劲」固定为关闭（配置事实：保留生命 50%），由服务端 /damage 压到约九成
+ *   生命（跨过起鼓下限仍保留足够生命），再让 AI 在威胁下调出腹鼓。
  *
- * 必然事实：施术者提交过腹鼓；起鼓把生命压到 keep 比例（默认一半），所以结算后生命必定不高于最大生命的一半
- *   多一点；力量窗口以共享状态 world_combat:status/bellydrum 出现。物攻的具体等级在私有装配里没有读取原语，
- *   只在 note 说明。目标的小拉达「撞击」不在私有装配里，不会真的造成伤害干扰读数。
+ * 必然事实：施术者提交过腹鼓；提交时一次性支付生命到配置的保留线（默认一半），力量窗口以共享状态
+ *   world_combat:status/bellydrum 出现；native 等级梯由 stage.stages 直接读取，起手 -6 也可经窗口达到 +6，
+ *   窗口到期只撤回本招的贡献、回到 -6。准备期内 3–5 记腹前敲击（见 skill.ts windup，随体重派生的准备时长而定）
+ *   属于表现过程，由完整装配的人工试玩核对，不在本场景断言。
  */
+const bellyNativeHits: any[] = [];
+WorldCombat.on("checks:bellydrum/native-receipts", "world_combat:damage_applied", "", event => {
+    const data = JSON.parse(String(event.data()));
+    if (data.damageType === "minecraft:mob_attack") bellyNativeHits.push({ source: data.sourceEntity, sourceType: data.sourceType,
+        direct: data.directEntity, directType: data.directType, actor: String(event.actor().ref()), target: event.target() ? String(event.target()!.ref()) : "" });
+});
 Smoke.scenario("bellydrum", function (stage) {
     stage.weather("clear");
     stage.time("day");
@@ -18,6 +26,13 @@ Smoke.scenario("bellydrum", function (stage) {
     var caster = stage.pokemon({ species: "snorlax", level: 30, moves: ["bellydrum"], at: [-3, 0, 0] });
     var foe = stage.pokemon({ species: "rattata", level: 15, moves: ["tackle"], at: [7, 0, 0] });
     stage.hostile(caster, foe);
+    stage.noai(foe);
+    stage.after(1, function () {
+        // 保留生命是配置事实，不是猜测：固定爆发档（保留一半），断言才对准真实支付线。
+        stage.prefer(caster, "bellydrum", { endure: false });
+        stage.boost(caster, { atk: -6 });
+        stage.expect(stage.stages(caster).atk === -6, "the starting Attack ladder is genuinely lowered");
+    });
 
     // 先压到约九成：高于起鼓下限，又让腹鼓的代价（压到一半）可被清晰观察到。
     var maximum = 0;
@@ -38,10 +53,14 @@ Smoke.scenario("bellydrum", function (stage) {
         return stage.casts("bellydrum", caster) >= 1;
     }, function () {
         stage.expect(stage.casts("bellydrum", caster) >= 1, "the threatened snorlax drummed while above its health floor");
-        stage.expect(caster.health() <= maximum * 0.56, "belly drum paid the cost down to about half the maximum health");
+        stage.expect(Math.abs(caster.health() - maximum * 0.5) <= 0.6, "belly drum paid to its configured half-health floor");
         stage.after(60, function () {
+            stage.expect(stage.damageEvents("mob").every(event => event.from !== event.to), "health payment did not make the payer attack itself");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/bellydrum"), "the power window is carried by the shared status world_combat:status/bellydrum");
-            stage.note("物攻等级的具体数值在私有装配里没有读取原语：NativeEffects.boostWindow 以 world_combat:bellydrum 状态为载具写入 +6，窗口结束或被清除时只撤回自己那几级，期间别处降攻不会让到期多扣。起鼓后的生命、力量窗口时长（frenzy 约 10 秒 / endure 约 24 秒）与准备/收招随体重与速度变化，属于设计事实，由完整装配的人工试玩核对。", {
+            stage.expect(stage.stages(caster).atk === 6, "drumming reaches +6 even from a negative starting ladder");
+            stage.setPp(caster, "bellydrum", 0);
+            stage.note("起鼓在准备期内逐拍敲腹（拍数 3–5 随准备时长，服务端按真实朝向/体型分别发出，见 skill.ts windup），提交时一次性支付生命到配置保留线并挂上 world_combat:bellydrum 载体；stage.stages 直接读到物攻等级在窗口内为 +6，窗口到期（frenzy 约 10 秒 / endure 约 24 秒）或被清除时只撤回本招的贡献、回到起手前的 -6。支付由原生 world.health 结算，被拒绝时不发满攻。", {
+                nativeReceipts: bellyNativeHits,
                 casterCasts: stage.casts("bellydrum", caster),
                 maximumHealth: Math.round(maximum * 10) / 10,
                 casterHealth: Math.round(caster.health() * 10) / 10,
@@ -52,7 +71,10 @@ Smoke.scenario("bellydrum", function (stage) {
                 casterAlive: caster.alive(),
                 tick: stage.tick()
             });
-            stage.done();
+            stage.until(550,()=>!stage.hasMobEffect(caster,"world_combat:status/bellydrum"),()=>{
+                stage.expect(stage.stages(caster).atk===-6,"expiry restores the original lowered ladder");
+                stage.done();
+            },"the owned full-strength window expires");
         });
     }, "belly drum is cast within 45 s");
 });

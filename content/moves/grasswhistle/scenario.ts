@@ -26,7 +26,7 @@ Smoke.scenario("grasswhistle", function (stage) {
         stage.expect(stage.casts("grasswhistle", caster) > 0, "grass whistle was committed");
         stage.expect(stage.hadMobEffect(near, "world_combat:status/sleep"), "the near listener carried the shared sleep identity");
         stage.expect(!stage.hadMobEffect(behind, "world_combat:status/sleep"), "the wall cut the lane off before the listener behind it");
-        stage.note("一声哨音沿选定方向扎出、要么响要么裂；响了按 voices 上限穿过音线内通视的非友方。石墙把音线截断，墙后的呆壳兽不会被这一声带走。远处墙前那只是否被同一声穿过见轨迹。", {
+        stage.note("一声哨音沿选定方向扎出、要么响要么裂；响了按 voices 上限穿过音线内通视的非友方，且每个受体各自要有一条没被墙挡住的直线。石墙把中轴音线截断，墙后的呆壳兽不会被这一声带走。远处墙前那只是否被同一声穿过见轨迹。", {
             casts: stage.casts("grasswhistle", caster),
             farSlept: stage.hadMobEffect(far, "world_combat:status/sleep"),
             behindSlept: stage.hadMobEffect(behind, "world_combat:status/sleep"),

@@ -29,10 +29,10 @@
   "worldcombat.skill.cometpunch.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.cometpunch.preference.ai.maxChase.help": "超过这个距离就不主动起拳，先走近。",
   "worldcombat.skill.cometpunch.preference.ai.crowds": "瞄向扎堆",
-  "worldcombat.skill.cometpunch.preference.ai.crowds.help": "开启：本个体选了乱打式、且目标近旁还站着别的敌人时更愿意起拳，因为一记乱拳能同时盖到好几个；关闭或聚焦式则只按普通近身攻击排序。",
+  "worldcombat.skill.cometpunch.preference.ai.crowds.help": "开启：本个体选了乱打式、且朝目标那片真实乱打扇面里还罩着别的敌人时更愿意起拳，因为一记乱拳能同时盖到好几个；关闭或聚焦式则只按普通近身攻击排序。",
   "worldcombat.skill.cometpunch.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.cometpunch.preference.ai.leaveStation.help": "开启后，驻守命令下也会为连续拳离开站位；关闭则只在原地够得到时出手。",
-  "world_combat.move.cometpunch.text.tally": "连拳命中 %1$s / %2$s 拳",
+  "world_combat.move.cometpunch.text.tally": "连拳出 %1$s 拳、命中 %2$s 次",
   "world_combat.move.cometpunch.text.miss": "第 %1$s 拳擦空",
   "world_combat.move.cometpunch.text.out": "目标走出拳道，连拳收手（命中 %1$s 拳）"
 }

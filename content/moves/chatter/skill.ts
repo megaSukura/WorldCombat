@@ -107,12 +107,14 @@ namespace PokemonSkills {
                     hits++;
                     const ref = String(victim.ref());
                     if (caught[ref]) return;
+                    // 只有这一次混乱真的挂上才报鸟／文本；免疫或拒绝时留给后面还没出口的几声再试。
+                    if (!CombatStatus.apply(scope, victim, "confusion", chatterEffect, scramble, fumble, { unique: true })) return;
                     caught[ref] = true;
-                    CombatStatus.apply(scope, victim, "confusion", chatterEffect, scramble, fumble, { unique: true });
                     WorldFeedback.emit(scope, chatterScene, 1, facts.position(),
-                        { moment: "scramble", target: ref, screech: screech, scale: scale }, 36);
+                        { moment: "scramble", target: ref, screech: screech, scale: scale }, 30);
                     WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.3, 0)), chatterScrambleText, [Math.round(scramble / 20)], 34);
                     scope.sound("cobblemon:status.volatile.confusion.actor", facts.position(), 14, "{}");
+                    chatterLingerEnsure(scope, victim, scramble, screech, scale);
                 });
                 scope.sound(pulse % 2 === 0 ? "minecraft:entity.parrot.ambient" : "minecraft:entity.bat.ambient", origin, 16, "{}");
                 pulse++;
@@ -126,12 +128,55 @@ namespace PokemonSkills {
     });
 
 
-    // 反噬：被叫懵的目标打中非友方时，按自身攻击结算一道自伤。
+    /** 把乱鸟绑在目标真实载体上的托管效果：载体到期、被清除或换人，乱鸟随 onEffect 一起收。 */
+    function chatterLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = chatterCarrier(world, target);
+        if (carrier === null) { effect.end(); return; }
+        const state = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "chatter:linger", chatterScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()), screech: typeof state.screech === "number" ? state.screech : 8,
+                scale: typeof state.scale === "number" ? state.scale : 1 });
+        effect.remaining(carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration())));
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(chatterLingerMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid chatter linger mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(chatterLingerMark, "start", chatterLingerWatch);
+    WorldCombat.effectHandler(chatterLingerMark, "watch", chatterLingerWatch);
+    WorldCombat.effectHandler(chatterLingerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 本载体被牛奶／/effect clear 提前拿掉时，立刻撤掉托管乱鸟，不等下一次巡检。
+    WorldCombat.on("world_combat:move_chatter/linger-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== chatterEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, chatterLingerMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
+
+    function chatterLingerEnsure(world: CombatWorld, target: CombatActor, ticks: number, screech: number, scale: number): void {
+        const owner = world.valid(world.source()) ? String(world.source().key()) : "";
+        world.effects(target, chatterLingerMark).forEach(function (view) {
+            if (String(view.source().key()) === owner) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        world.effect(chatterLingerMark, target, JSON.stringify({ screech: screech, scale: scale }),
+            Math.max(1, Math.min(2400, ticks)));
+    }
+
+    // 反噬：被叫懵的目标真正用直接攻击打中非友方时，按本次实际伤害乘攻击倍率自伤；毒等周期掉血不算。
     WorldCombat.on("world_combat:move_chatter/recoil", "world_combat:damage_applied", "", function (event) {
         const world = event.world(), actor = event.actor(), victim = event.target();
         if (victim === null || String(actor.key()) === String(victim.key()) || world.friendly(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
+        // 本招自己的反噬带 world_combat:confusion 因由、且目标是自身，明确跳过，避免任何自反馈。
+        if (String(data.cause || "") === "world_combat:confusion") return;
+        if (!DamageSemantics.directOffense(data)) return;
         if (chatterCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body === null) return;

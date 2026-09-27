@@ -1,13 +1,13 @@
 /**
  * 流沙地狱 / sandtomb 的出手方式。
  *
- * 核心念头：**在瞄准的可达地面预置一片短命流沙坑**。地面先裂开细沙 6 刻作预告，随后沙坑张开、沙粒朝坑心翻流；
+ * 核心念头：**在瞄准的可达地面预置一片短命流沙**。地面先裂开细沙 6 刻作预告，随后流沙张开、沙粒朝坑心翻流；
  * 只有贴地、且脚踩在这层地面上的敌人会被拖住：从轻减速逐步加深，约 12 刻收紧到完全束缚，每 `interval` 磨一次、
- * 每一拍朝坑心收。离地、走出坑沿或地面被毁都立即解除；回到坑里重新渐陷，不叠永久状态。飞行、腾空天然免疫。
+ * 每一拍朝坑心收。离地、走出范围或地面被毁都立即解除；回到流沙里重新渐陷，不叠永久状态。飞行、腾空天然免疫。
  *
  * 三幕：
  *   起（windup，提交前）：沿瞄准射线取真实可达地面，在原地先播 6 刻细沙裂纹，不生成追踪弹。
- *   张（execute）：提交后按该地面点张开流沙坑（`WorldEffects.field`，规则 `world_combat:sandtomb/pit` 由本单元注册），
+ *   张（execute）：提交后按该地面点张开流沙（`WorldEffects.field`，规则 `world_combat:sandtomb/pit` 由本单元注册），
  *       坑位置固定、可预放，表现绑在坑效果本身。
  *   陷（bond）：踏入的贴地非友方获得一份**每目标载体**——借共享身份 `world_combat:status/partiallytrapped`
  *       （本单元 `world_combat:sandtomb_grip`）并挂 `world_combat:sandtomb_bond` 托管效果；每 2 刻把目标朝坑心收、
@@ -74,7 +74,7 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    /** 踏入或留在坑里：确保该目标由本条坑（本施法者）持有一份渐陷载体；已有就不重复挂。 */
+    /** 踏入或留在流沙里：确保该目标由本条流沙（本施法者）持有一份渐陷载体；已有就不重复挂。 */
     function sandtombStep(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
         if (world.friendly(actor)) return;
         const body = world.observe(actor);
@@ -143,7 +143,7 @@ namespace PokemonSkills {
             || !world.effects(effect.source(), "world_combat:field").some(view => view.id() === data.field)) { effect.end(); return; }
         const foot = sandtombFoot(body);
         const anchor = sandtombPoint(data.point);
-        // 离地、离开这层地面或走出坑沿：立即解除自己的束缚。
+        // 离地、离开这层地面或走出范围：立即解除自己的束缚。
         if (!sandtombTouches(world, body, anchor.x(), anchor.y(), anchor.z(), data.radius)) {
             data.slipped = true; effect.state(JSON.stringify(data)); effect.end(); return;
         }
@@ -204,8 +204,8 @@ namespace PokemonSkills {
     define({
         id: "sandtomb",
         name: "流沙地狱",
-        description: "在瞄准的可达地面预置一片短命流沙坑：地面先裂开细沙预告，随后沙坑张开、沙粒朝坑心翻流。只有贴地、脚踩在这层地面上的敌人会被拖住——从轻减速逐步收紧，约 12 刻后完全被束缚，每一拍朝坑心收拢，每过片刻被沙砾磨一次。离地、跳出坑沿或地面被毁都会立即脱身；回到坑里要重新渐陷。可以预放空地，飞行或腾空的生物不受影响。沉陷式坑更久更黏但磨得轻；速陷式磨得更重、收得更快。",
-        uses: ["提前把一片地面变成陷坑，封住走位", "把贴地的重目标拖住往坑心收", "用物理持续伤害磨厚目标", "让起跳或飞行成为对手唯一的选择"],
+        description: "在瞄准的可达地面预置一片短命流沙：地面先裂开细沙预告，随后流沙铺开、沙粒朝坑心翻流。只有贴地、脚踩在这层地面上的敌人会被拖住——从轻减速逐步收紧，约 12 刻后完全被束缚，每一拍朝坑心收拢，每过片刻被沙砾磨一次。离地、跳出范围或地面被毁都会立即脱身；回到流沙里要重新渐陷。可以预放空地，飞行或腾空的生物不受影响。沉陷式铺得更久更广、每拍收得更紧但磨得轻；速陷式磨得更重、结束得更早。",
+        uses: ["提前把一片地面变成流沙，封住走位", "把贴地的重目标拖住往坑心收", "用物理持续伤害磨厚目标", "逼贴地的对手跳起离地来摆脱束缚"],
         kind: "aim",
         range: 10,
         maxRange: 17,

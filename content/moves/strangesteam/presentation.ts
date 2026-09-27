@@ -40,7 +40,7 @@ const StrangesteamDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "jet_core", bind: "source", fit: "none", offset: [0, 0.4, 0], orient: "direction",
+                    name: "jet_core", bind: "source", fit: "world", offset: [0, 0.4, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/vanilla/big_smoke_white",
                     rate: { data: "motes", fallback: 30 }, shape: { kind: "line", length: { data: "distance", fallback: 6 } },
                     direction: "shape", speed: [0.12, 0.3],
@@ -48,7 +48,7 @@ const StrangesteamDefinition: ParticleDefinition = {
                     color: 0xF0C8E0, alpha: [0.45, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "jet_spark", bind: "source", fit: "none", offset: [0, 0.4, 0], orient: "direction",
+                    name: "jet_spark", bind: "source", fit: "world", offset: [0, 0.4, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     rate: { data: "motes", fallback: 16 }, shape: { kind: "line", length: { data: "distance", fallback: 6 } },
                     direction: "shape", speed: [0.1, 0.26],
@@ -62,7 +62,7 @@ const StrangesteamDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "ring", bind: "point", fit: "world", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 1.8 } },
@@ -71,7 +71,7 @@ const StrangesteamDefinition: ParticleDefinition = {
                     color: 0xE89AC8, alpha: [0.6, 0], light: "full", maxParticles: 8
                 },
                 {
-                    name: "burst", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    name: "burst", bind: "point", fit: "world", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/vanilla/big_smoke_white",
                     burst: { count: { data: "motes", fallback: 20 } },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 } },
@@ -85,7 +85,7 @@ const StrangesteamDefinition: ParticleDefinition = {
             exit: { drain: 30 },
             emitters: [
                 {
-                    name: "cloud_steam", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "cloud_steam", bind: "point", fit: "world", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/vanilla/big_smoke_white",
                     rate: { data: "motes", fallback: 24 }, shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 } },
                     direction: "up", speed: [0.01, 0.05], drag: 0.92,
@@ -93,7 +93,7 @@ const StrangesteamDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [0.3, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "cloud_pink", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    name: "cloud_pink", bind: "point", fit: "world", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     rate: { data: "motes", fallback: 12 }, shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 } },
                     direction: "up", speed: [0.01, 0.04],
@@ -101,7 +101,7 @@ const StrangesteamDefinition: ParticleDefinition = {
                     color: 0xE89AC8, alpha: [0.5, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "cloud_low", bind: "point", fit: "none", offset: [0, 0.02, 0],
+                    name: "cloud_low", bind: "point", fit: "world", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
                     rate: { data: "motes", fallback: 8 }, shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 } },
                     direction: "up", speed: [0.01, 0.03],

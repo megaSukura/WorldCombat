@@ -12,20 +12,23 @@ Smoke.scenario("fishiousrend", function (stage) {
     stage.time("night");
     stage.weather("clear");
     const caster = stage.pokemon({ species: "gyarados", level: 45, moves: ["fishiousrend"], at: [-2, 0, 0], properties: "nature=adamant" });
-    const target = stage.pokemon({ species: "raticate", level: 22, moves: ["tackle"], at: [1.5, 0, 0] });
+    const target = stage.pokemon({ species: "raticate", level: 75, moves: ["tackle"], at: [1.5, 0, 0], properties: "nature=bold" });
     stage.hostile(caster, target);
-    // 固定靶：让扑咬在确定距离内可达，拖拽与压速的读数不被逃跑走位干扰。
+    // 固定靶：让扑咬在确定距离内可达，拖拽与压速的读数不被逃跑走位干扰；等级足够高以便读出被拖/被压速后的状态。
     stage.noai(target);
     stage.until(600, function () { return stage.casts("fishiousrend", caster) >= 1 && stage.damageTo(target) > 0; }, function () {
         stage.expect(stage.casts("fishiousrend", caster) >= 1, "gyarados committed fishious rend");
         stage.expect(stage.damageTo(target) > 0, "the gill bite dealt damage");
-        stage.note("the doubling needs the target not to have hit the caster first; drag and the Speed stage drop follow the landed bite", {
+        stage.note("aggro alone is not an attack: the frozen hostile never strikes, so the first-strike window holds and this bite doubles; the landed bite then drags and drops Speed", {
             casts: stage.casts("fishiousrend", caster),
             dealt: Math.round(stage.damageBy(caster) * 10) / 10,
             taken: Math.round(stage.damageTo(caster) * 10) / 10,
             targetDamage: Math.round(stage.damageTo(target) * 10) / 10,
             movedBy: Math.round(stage.travelled(caster) * 10) / 10,
-            targetSpeedAttribute: Math.round(stage.attribute(target, "minecraft:generic.movement_speed") * 100) / 100,
+            targetDraggedBy: Math.round(stage.travelled(target) * 10) / 10,
+            targetSpeedAttribute: target.alive() ? Math.round(stage.attribute(target, "minecraft:generic.movement_speed") * 100) / 100 : 0,
+            targetSpeedStage: target.alive() ? (stage.stages(target).spe || 0) : null,
+            targetAlive: target.alive(),
             tick: stage.tick()
         });
         stage.done();

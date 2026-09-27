@@ -4,7 +4,7 @@
  * 一句话：一只只会乱抓的喵喵贴着卡比兽绕圈，一道道抓下去，至少有一道落在对手身上；它会因为换位而真的挪动位置。
  *
  * 场面：只会乱抓的喵喵（meowth，L30，原生 29 级学习）对一只只会跃起、慢吞吞的卡比兽（snorlax，L30），
- *   贴身相隔 2 格——在射程内，AI 可以直接起手；地面铺平、白天晴天。
+ *   贴身相隔 1 格——本招每道先侧移再抓，必须贴得足够近，侧移后仍留在爪距内，AI 才能直接起手；地面铺平、白天晴天。
  *
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一道的伤害（`stage.damageTo`）；施法者挪动过位置
  *   （`stage.travelled`——每一道都会侧移换位）。
@@ -17,7 +17,7 @@ Smoke.scenario("furyswipes", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "meowth", level: 30, moves: ["furyswipes"], at: [-1, 0, 0] });
-    var foe = stage.pokemon({ species: "snorlax", level: 30, moves: ["splash"], at: [1, 0, 0] });
+    var foe = stage.pokemon({ species: "snorlax", level: 30, moves: ["splash"], at: [0, 0, 0] });
     stage.hostile(caster, foe);
     stage.until(1200, function () {
         return stage.casts("furyswipes", caster) >= 1 && stage.damageTo(foe) > 0;

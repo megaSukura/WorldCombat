@@ -48,8 +48,14 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            // 身侧聚骨随当前朝向定位：取瞄准方向的右侧，作为发射器偏移传给客户端。
+            var aim = action.targetPosition().minus(action.origin());
+            if (aim.length() < 0.01) aim = action.direction();
+            var flat = WorldCombat.point(aim.x(), 0, aim.z());
+            if (flat.length() < 0.01) flat = WorldCombat.point(0, 0, 1);
+            var facing = flat.unit(), side = WorldCombat.point(-facing.z(), 0, facing.x());
             action.present("world_combat:move_shadowbone:windup", shadowboneScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", windup: prepare }));
+                JSON.stringify({ moment: "windup", windup: prepare, offX: side.x() * 0.4, offZ: side.z() * 0.4 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -66,8 +72,21 @@ namespace PokemonSkills {
             const scale = radius / 0.3;
             const target = action.target();
             const origin = action.origin();
-            let settled = false, dropped = false;
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            let settled = false, dropped = false, connected = false, projectileId = "";
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                // 飞尽且没碰到任何身体：在实际飞行终点落一枚装饰骨（撞墙那份已在 impact 里落过）。
+                if (!dropped && !connected && projectileId) {
+                    const scope = current.world(), end = scope.projectilePosition(projectileId);
+                    if (end !== null) {
+                        dropped = true;
+                        scope.dropItem(end, "minecraft:bone", 1, JSON.stringify({ pickupDelay: 40 }));
+                        scope.sound("minecraft:block.bone_block.break", end, 10, "{}");
+                    }
+                }
+                done(current);
+            }
 
             sound(action, "cobblemon:move.shadowball.actor");
 
@@ -83,17 +102,18 @@ namespace PokemonSkills {
                     const scope = current.world();
                     const point = hit.position();
                     const victim = hit.target();
+                    if (hit.hitEntity()) connected = true;
                     if (victim !== null && !scope.friendly(victim)) {
                         const landed = impact(current, hit, "shadowbone", power, { damage: damageSpec("shadowbone", "bone"), contact: false });
                         if (landed && scope.valid(victim) && scope.random() < chance) {
-                            // 实际被慑住（未被免疫）才留慑纹与标记。
-                            if (NativeEffects.boost(scope, victim, "def", -stages) !== 0
-                                && MobEffects.apply(scope, victim, shadowboneMark, markTicks, 0) !== null) {
+                            // 实际被慑住（未被免疫、且真的还能再降一级）才留慑纹与标记；浮字读 boost 实际降了几级。
+                            const applied = NativeEffects.boost(scope, victim, "def", -stages);
+                            if (applied !== 0 && MobEffects.apply(scope, victim, shadowboneMark, markTicks, 0) !== null) {
                                 const body = scope.observe(victim);
                                 if (body !== null) {
                                     WorldFeedback.emit(scope, shadowboneScene, 1, body.position(),
-                                        { moment: "wail", target: String(victim.ref()), stages: stages, scale: 1 }, 26);
-                                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), shadowboneRattleText, [stages], 30);
+                                        { moment: "wail", target: String(victim.ref()), stages: Math.abs(applied), scale: 1 }, 26);
+                                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), shadowboneRattleText, [Math.abs(applied)], 30);
                                     scope.sound("minecraft:entity.vex.ambient", body.position(), 12, "{}");
                                 }
                             }
@@ -110,6 +130,7 @@ namespace PokemonSkills {
                 }
             };
             const projectile = LivingActions.projectile(action, flight, function (current: CombatAction) { finish(current); });
+            projectileId = projectile;
             WorldFeedback.keep(world, "shadowbone:trail:" + action.id(), shadowboneScene, 1, origin,
                 { moment: "throw", projectile: projectile, scale: scale, notes: notes }, flight.lifetime! + 10);
         }

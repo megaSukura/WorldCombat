@@ -13,6 +13,7 @@
     "skill.ts",
     "ai.ts"
   ],
+  "scenarioFixtures": ["content/moves/stockpile"],
   "clientSources": [
     "presentation.ts"
   ],

@@ -17,7 +17,7 @@
   "worldcombat.skill.rockwrecker.value.exhaust": "力竭",
   "worldcombat.skill.rockwrecker.value.rubbleTicks": "碎屑停留",
   "worldcombat.skill.rockwrecker.preference.crush": "碾碎",
-  "worldcombat.skill.rockwrecker.preference.crush.help": "开启：扛起更重的整块巨石——单伤更高、砸得更开、顶得更远，但飞得更慢更容易被躲，力竭也更久；关闭：换成更轻的一块，飞得快、恢复快、碎裂范围更小。",
+  "worldcombat.skill.rockwrecker.preference.crush.help": "开启：扛起更重的整块巨石——单伤更高、碎裂范围更大，但飞得更慢更容易被躲，力竭也更久；关闭：换成更轻的一块，飞得快、恢复快、碎裂范围更小。",
   "worldcombat.skill.rockwrecker.preference.ai.minRange": "最近距离",
   "worldcombat.skill.rockwrecker.preference.ai.minRange.help": "比这更近就不抛石——巨石走弧线，贴脸难砸准。调高让伙伴只在拉开身位时用岩石炮，调到 0 则贴身也抛。",
   "worldcombat.skill.rockwrecker.preference.ai.minHealth": "保留生命",

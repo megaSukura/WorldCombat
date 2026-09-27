@@ -4,8 +4,8 @@
  * 什么局面下出手：目标是可见、敌对、还活着的活体，且在 `ai.maxChase`（默认 10）格内；更远交给共享接近逻辑。
  * 对谁出手：这一束火舌横扫过去，横向并排的目标越多越值，因此目标身边同一扇面里还挤着别的敌人时抬高 priority；
  *   目标携带树果或宝石时最高优先（能真的烧掉并吃到爆燃追加）；空手目标当一记横扫火攻参与排序。
- * 什么时候不选：贴脸（3 格内）且侧后已经挤着两个以上别的敌人时不出手——这时横扫只罩住正面，容易被围；
- *   交给共享的交战/走位计划。
+ * 什么时候压低：贴脸（3 格内）且身边挤着两个以上别的敌人时，横扫只罩住正面，优先级压低一点以先考虑走位，
+ *   但仍可出手解围，不再无条件拒用群攻。
  * `ai.burnItems` 开启后只在目标携带可燃物时出手，作为专门的烧物手段；关闭则空手时也照常扫。
  * 放完之后：火舌扫完即回，交回共享交战计划。
  */
@@ -15,13 +15,15 @@ namespace CompanionBehavior {
         return !!actor && PokemonSkills.incinerateBurnable(world, actor) !== null;
     }
 
-    /** 大致数一数目标前方同一扇面、同一射程内还站着几个可见敌人——横扫一次值不值。 */
+    /** 大致数一数目标前方同一扇面、同一射程内还站着几个可见敌人——横扫一次值不值。扇角取本招实际整张角。 */
     function incinerateFan(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         var self = CompanionBehavior.source(context);
         var dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         var length = Math.sqrt(dx * dx + dz * dz) || 1, fx = dx / length, fz = dz / length;
         var range = typeof item.data.range === "number" ? item.data.range : 3;
-        var cosHalf = Math.cos(40 * Math.PI / 180), count = 0;
+        var fan = 64;
+        try { fan = PokemonSkills.p("incinerate", "fan", CompanionBehavior.world(context)); } catch (error) { }
+        var cosHalf = Math.cos(fan * Math.PI / 360), count = 0;
         var nearby = context.facts.nearby as CompanionBehavior.Entity[];
         for (var i = 0; i < nearby.length; i++) {
             var other = nearby[i];
@@ -53,7 +55,6 @@ namespace CompanionBehavior {
         available: function (context, item, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            if (incinerateFlanked(context, target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(item, "maxChase", 10);
         },
@@ -69,7 +70,9 @@ namespace CompanionBehavior {
             var score = 22;
             if (incinerateTargetBurnable(context, target)) score += 30;
             if (incinerateFan(context, item, target) >= 2) score += 14;
-            return score;
+            // 贴身被围不再无条件弃用群攻：只压低一点优先级，仍可在值得时扫出去解围。
+            if (incinerateFlanked(context, target)) score -= 10;
+            return Math.max(0, score);
         }
     });
 

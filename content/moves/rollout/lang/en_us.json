@@ -23,7 +23,7 @@
   "worldcombat.skill.rollout.value.window": "Chain window",
   "worldcombat.skill.rollout.value.grains": "Rubble count",
   "worldcombat.skill.rollout.value.tempo": "Preparation",
-  "worldcombat.skill.rollout.value.recover": "Recovery",
+  "worldcombat.skill.rollout.value.aftercast": "Recovery",
   "worldcombat.skill.rollout.value.recharge": "Cooldown",
   "worldcombat.skill.rollout.value.stage": "Roll chain level",
   "worldcombat.skill.rollout.preference.heavy": "Heavy ball form",

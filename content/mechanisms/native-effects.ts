@@ -57,7 +57,9 @@ namespace NativeEffects {
             return common;
         }
         var value = model(world, actor), state: State = value === null ? empty() : JSON.parse(String(value.data()));
-        state.layers = NativeModifiers.read(world, actor); return state;
+        state.layers = NativeModifiers.read(world, actor);
+        if (typeof NativeTypes !== "undefined") state.layers.types = NativeTypes.read(world, actor, state);
+        return state;
     }
     export function write(world: CombatWorld, actor: CombatActor, state: State): void {
         if(String(actor.domain())!=="cobblemon") { CombatStages.replace(world,actor,state.stages);return; }
@@ -103,9 +105,14 @@ namespace NativeEffects {
     /** Attacker precision and defender evasion feed the hit model; both read the shared accuracy ladder. */
     export function precision(world: CombatWorld, actor: CombatActor): number { return CombatStages.accuracyMultiplier(effectiveStage(world, actor, "accuracy")); }
     export function evasion(world: CombatWorld, actor: CombatActor): number { return CombatStages.accuracyMultiplier(effectiveStage(world, actor, "evasion")); }
+    export interface AimContext { world: CombatWorld; source: CombatActor; target: CombatActor; precision: number; evasion: number; data?: any; }
+    /** Per-pair hit resolution. Without damage data this is a pure preview; contributors preserve unrelated targets. */
+    export const aimRules = new WorldContributions.Registry<AimContext>();
     /** Actual unaimed hit chance for `attacker` against `defender`, from the shared accuracy/evasion ladder. */
-    export function hitChance(world: CombatWorld, attacker: CombatActor, defender: CombatActor): number {
-        return CombatStages.hitChance(precision(world, attacker), evasion(world, defender));
+    export function hitChance(world: CombatWorld, attacker: CombatActor, defender: CombatActor, data?: any): number {
+        const aim = aimRules.apply({ world, source: attacker, target: defender, precision: precision(world, attacker), evasion: evasion(world, defender), data });
+        if (!isFinite(aim.precision) || aim.precision <= 0 || !isFinite(aim.evasion) || aim.evasion <= 0) throw new Error("Invalid hit precision contribution");
+        return CombatStages.hitChance(aim.precision, aim.evasion);
     }
     export function boost(world: CombatWorld, actor: CombatActor, stat: string, amount: number, ignoreAbility?: boolean,
         source?: string, reason?: string): number {
@@ -152,6 +159,16 @@ namespace NativeEffects {
      */
     export function boostWindow(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source?: string,
         carrier?: CombatMobEffect | null, previous?: CombatMobEffect | null): number {
+        return stageWindow(world,actor,changes,ticks,source,carrier,previous,false);
+    }
+    /** Request explicit effective stage targets for a reversible window. Policies still act on the real delta;
+     * a -6 to +6 transition owns +12, so expiry restores the original ladder instead of rewriting it. */
+    export function boostWindowTo(world: CombatWorld, actor: CombatActor, targets: { [stat: string]: number }, ticks: number, source?: string,
+        carrier?: CombatMobEffect | null, previous?: CombatMobEffect | null): number {
+        return stageWindow(world,actor,targets,ticks,source,carrier,previous,true);
+    }
+    function stageWindow(world: CombatWorld, actor: CombatActor, changes: { [stat: string]: number }, ticks: number, source: string | undefined,
+        carrier: CombatMobEffect | null | undefined, previous: CombatMobEffect | null | undefined, targets: boolean): number {
         if (!world.valid(actor)) return 0;
         var anchor = carrier ? MobEffects.anchor(carrier) : undefined;
         if (anchor && !MobEffects.matches(world, actor, anchor)) return 0;
@@ -173,11 +190,13 @@ namespace NativeEffects {
         Object.keys(retained).forEach(function (stat) { clean[stat] = retained[stat]; });
         Object.keys(changes || {}).forEach(function (stat) {
             var n = Number((<any>changes)[stat]);
-            if (CombatStages.stats.indexOf(stat) < 0 || !isFinite(n) || n === 0) return;
+            if (CombatStages.stats.indexOf(stat) < 0 || !isFinite(n) || !targets&&n === 0) return;
             var state = read(world, actor);
             var before = Math.max(-6, Math.min(6, (state.stages[stat] || 0)
                 + (state.layers && state.layers.stages && state.layers.stages[stat] || 0) + (restoreRetained ? retained[stat] || 0 : 0)));
-            var plan = CombatStages.plan(world, actor, stat, n, source, "window", undefined, before);
+            var request=targets?Math.max(-6,Math.min(6,Math.round(n)))-before:n;
+            if(request===0)return;
+            var plan = CombatStages.plan(world, actor, stat, request, source, "window", undefined, before);
             if (!plan.allowed || !isFinite(plan.amount)) return;
             var value = { stat: stat, amount: plan.amount, source: plan.source, reason: plan.reason };
             if (String(actor.domain()) === "cobblemon") {
@@ -187,8 +206,8 @@ namespace NativeEffects {
             }
             if (!isFinite(value.amount) || value.amount === 0) return;
             var gain = Math.round(value.amount);
-            if (previous !== undefined) gain = Math.max(-6, Math.min(6, before + gain)) - before;
-            clean[stat] = Math.max(-6, Math.min(6, (retained[stat] || 0) + gain));
+            if (previous !== undefined||targets) gain = Math.max(-6, Math.min(6, before + gain)) - before;
+            clean[stat] = (retained[stat] || 0) + gain;
             if (clean[stat] === 0) delete clean[stat];
             plans.push(plan);
         });
@@ -510,6 +529,8 @@ namespace NativeEffects {
         if (NativeAbilities.flag(name, "sleepActionAllowed")) delete context.blocked.asleep;
         if (context.phase !== "damage" && state.flags.flinchUntil > context.world.tick()) context.blocked.flinched = true;
     } });
+    /** Actual cost receipt; observers check actor availability before creating world effects. */
+    export const recoilApplied = new WorldContributions.Registry<{ world: CombatWorld; actor: CombatActor; damage: any; amount: number }>();
     export const healing = new WorldContributions.Registry<{ world: CombatWorld; actor: CombatActor; pokemon: CombatPokemon; amount: number; cause: string }>();
     export function heal(world: CombatWorld, actor: CombatActor, pokemon: CombatPokemon, hp: number, cause: string): number {
         const result = healing.apply({ world, actor, pokemon, amount: hp, cause });
@@ -607,7 +628,7 @@ namespace NativeEffects {
     }
     export function incoming(event: CombatWorldEvent): void {
         var target = event.target(); if (target === null) return;
-        var world = event.world(), data = DamageSemantics.normalize(JSON.parse(String(event.data())));
+        var world = event.world(), data = DamageSemantics.normalize(JSON.parse(String(event.data())), world, event.actor(), target);
         if (data.amount <= 0 || data.bypassesInvulnerability) return;
         incomingRules.apply({ world: world, source: event.actor(), target: target, data: data });
         // Shared hit resolution over the accuracy/evasion ladder. A move's own base accuracy is resolved
@@ -616,9 +637,9 @@ namespace NativeEffects {
         // damage, native sure-hit and content-declared sure-hit / accuracy-immune hits are exempt.
         var selfSourced = String(event.actor().key()) === String(target.key());
         var sure = data.sureHit === true || data.bypassAccuracy === true || data.accuracyImmune === true || data.environment === true;
-        if (!selfSourced && !sure && data.amount > 0) {
-            var hit = hitChance(world, event.actor(), target);
-            if (hit < 1 && world.random() >= hit) {
+        if (!selfSourced && data.amount > 0) {
+            var hit = hitChance(world, event.actor(), target, data);
+            if (!sure && hit < 1 && world.random() >= hit) {
                 data.amount = 0; data.missed = true; event.data(JSON.stringify(data));
                 missFeedback(world, target);
                 return;
@@ -677,6 +698,7 @@ namespace NativeEffects {
             var recoil = data.recoil || 0;
             if (recoil && world.valid(actor) && !NativeAbilities.flag(attackAbility, "recoilImmune")) {
                 var loss = -world.health(actor, -data.actual * recoil, "world_combat:recoil");
+                if (loss > 0) recoilApplied.apply({ world: world, actor: actor, damage: data, amount: loss });
                 if (loss > 0 && world.valid(actor) && attacker) CobblemonCombat.record(world, actor, "recoil", Math.round(loss / attacker.healthScale()));
             }
             if (world.valid(actor) && nativeActor) NativeItems.apply(world, actor, "applied", data, own);

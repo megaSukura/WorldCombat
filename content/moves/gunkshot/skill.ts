@@ -32,6 +32,17 @@ namespace PokemonSkills {
         return WorldCombat.point(x * cos - z * sin, direction.y(), x * sin + z * cos).unit();
     }
 
+    /** 原生方块面字符串对应的外法线；墙污按它贴到真实受击面。 */
+    function gunkshotFaceNormal(face: string): CombatPoint {
+        if (face === "up") return WorldCombat.point(0, 1, 0);
+        if (face === "down") return WorldCombat.point(0, -1, 0);
+        if (face === "north") return WorldCombat.point(0, 0, -1);
+        if (face === "south") return WorldCombat.point(0, 0, 1);
+        if (face === "west") return WorldCombat.point(-1, 0, 0);
+        if (face === "east") return WorldCombat.point(1, 0, 0);
+        return WorldCombat.point(0, 1, 0);
+    }
+
     define({
         id: "gunkshot",
         cooldownParameter: "recharge",
@@ -87,9 +98,12 @@ namespace PokemonSkills {
             // 真实飞行方向（水平分量）：命中后按它顶开，保留原水平推开语义。
             const heading = WorldCombat.point(launch.x(), 0, launch.z()).length() < 0.01
                 ? WorldCombat.point(0, 0, 1) : WorldCombat.point(launch.x(), 0, launch.z()).unit();
-            // 公开 reach 就是实际投射 range；空飞到期时沿真实出膛方向落到这个真实末端。
+            // 炮口按实际朝向显式算点：身体前缘、中心高度，炮口表现不再固定在世界 +Z。
+            const body = world.observe(action.actor());
+            const muzzleReach = body === null ? 0.7 : Math.max(0.4, body.width() * 0.5 + 0.25);
+            const muzzle = origin.plus(launch.unit().scale(muzzleReach));
+            // 公开 reach 就是实际投射 range。
             const flightRange = action.range();
-            const rangeEnd = origin.plus(launch.unit().scale(flightRange));
             let settled = false, resolved = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
@@ -106,7 +120,7 @@ namespace PokemonSkills {
                     { damage: damageSpec("gunkshot", "wad"), contact: false });
                 let poisoned = false;
                 if (dealt && scope.valid(target)) {
-                    scope.displace(target, heading.scale(shove));
+                    scope.hitDisplace(target, heading.scale(shove));
                     if (scope.valid(target) && scope.random() < chance)
                         poisoned = CombatStatus.inflict(scope, target, "poison", venomTicks, 0, { secondary: true });
                 }
@@ -128,9 +142,11 @@ namespace PokemonSkills {
                 resolved = true;
                 scenes.stop(current, "flight");
                 const scope = current.world();
+                const normal = gunkshotFaceNormal(face);
                 WorldFeedback.emit(scope, gunkshotScene, 1, point,
                     { moment: blocked ? "wall" : "whiff", point: [point.x(), point.y(), point.z()],
-                        face: face, chunks: Math.round(chunks * 0.7), scale: scale }, 22);
+                        direction: [normal.x(), normal.y(), normal.z()], face: face,
+                        chunks: Math.round(chunks * 0.7), scale: scale }, 22);
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.6, 0)),
                     blocked ? gunkshotWallText : gunkshotWhiffText, [], 20);
                 finish(current);
@@ -138,9 +154,11 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.sludgebomb.actor");
             sound(action, "minecraft:entity.player.attack.strong");
-            WorldFeedback.emit(world, gunkshotScene, 1, origin,
-                { moment: "blast", direction: [launch.x(), launch.y(), launch.z()], chunks: chunks, scale: scale, intensity: intensity }, 18);
-            const flight = LivingActions.projectile(action, {
+            WorldFeedback.emit(world, gunkshotScene, 1, muzzle,
+                { moment: "blast", point: [muzzle.x(), muzzle.y(), muzzle.z()],
+                    direction: [launch.x(), launch.y(), launch.z()], chunks: chunks, scale: scale, intensity: intensity }, 18);
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: flightRange, radius: radius, gravity: 0, lifetime: 140,
                 direction: launch,
                 appearance: { sprite: "cobblemon:generic/goo/ooze", tint: 0x6E8C3A, glow: false,
@@ -150,8 +168,9 @@ namespace PokemonSkills {
                     else miss(current, hit.position(), true, hit.blockFace());
                 }
             }, function (current: CombatAction) {
-                // 空飞到期：落在真实出膛方向算出的轨迹末端，不用准星点伪补。
-                miss(current, rangeEnd, false, "");
+                // 空飞到期：读弹体真实完成点，不用满射程点/准星点伪补末端。
+                const end = current.world().projectilePosition(flight);
+                miss(current, end === null ? origin : end, false, "");
             });
             scenes.show(action, "flight", origin, { moment: "flight", projectile: flight, chunks: chunks, scale: scale, intensity: intensity });
         }

@@ -5,7 +5,7 @@
   "worldcombat.skill.dragondarts.use.2": "Stack both darts on one target for a burst",
   "worldcombat.skill.dragondarts.description.0": "Fires %2$s homing dragon darts; each dart that hits deals about %1$s damage, with the target's Defence, type and crit settled per dart.",
   "worldcombat.skill.dragondarts.description.1": "The darts chase within %1$s blocks at %2$s blocks/tick and leave the body %3$s blocks apart.",
-  "worldcombat.skill.dragondarts.description.2": "After a dart lands the next follows %1$s later; each turns up to %2$s degrees per tick to chase its target.",
+  "worldcombat.skill.dragondarts.description.2": "The second dart launches %1$s after the first, without waiting for it to land; each turns up to %2$s degrees per tick to chase its target.",
   "worldcombat.skill.dragondarts.option.on": "Split: with two foes each dart chases one, each at x1, covering two targets.",
   "worldcombat.skill.dragondarts.option.off": "Focus: both darts chase the chosen target at x1.2 each, stacking the damage on one foe.",
   "worldcombat.skill.dragondarts.timing": "Range %1$s blocks; windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s from commit.",
@@ -28,7 +28,7 @@
   "worldcombat.skill.dragondarts.preference.ai.finishLow": "Finish low targets",
   "worldcombat.skill.dragondarts.preference.ai.finishLow.help": "On: low-health targets rank higher for a two-dart finish. Off: all targets rank the same.",
   "worldcombat.skill.dragondarts.preference.ai.crowd": "Aim at clusters",
-  "worldcombat.skill.dragondarts.preference.ai.crowd.help": "On: prefer to fire when another foe stands near the target, since Split can chase both. Off: rank like any other ranged attack.",
+  "worldcombat.skill.dragondarts.preference.ai.crowd.help": "On: prefer to fire only in Split mode when a reachable, line-of-sight second foe really exists beyond the target. Off: rank like any other ranged attack.",
   "worldcombat.skill.dragondarts.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.dragondarts.preference.ai.leaveStation.help": "When on, the companion may leave its post to fire under a Hold order; off only fires at what it can reach from where it stands."
 }

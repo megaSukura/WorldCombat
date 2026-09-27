@@ -7,7 +7,7 @@
  * 拍子：起 charge（掀地聚石）→ 射 volley（一块接一块）→ 击 hit（命中石屑崩开）／ 地 ground（撞块崩尘）／ 淡 fade。
  * 范围：本招是自由瞄准的抛物连发，画面靠每块石头的真实弧线标出「这一条抛物线周围会被砸到」，没有地面轮廓。
  * 运动：每块石头沿服务端算出的低弧飞出（`bind:projectile` 跟随真实投递），画出的石头本体由原生实体渲染，
- *   粒子补它身后的尘与旋转的碎点；命中／撞块在真实接触点崩石屑，撞块用 `data.face` 知道是哪个面。
+ *   粒子补它身后的尘与旋转的碎点；命中／撞块在真实接触点崩石屑，撞块把 `data.direction`（面法线）交给 orient，铺在真实碰撞面上。
  * 数：`data.chips`（物攻换算的碎岩量）绑定崩屑量，`data.settle`（落尘停留）绑定余尘寿命，
  *   `data.shot` / `data.shots` 让画面读出演到第几块、还剩几块，`data.intensity`（单石威力 / 25）放大整幕，
  *   `data.scale`（石块判定 / 0.28）让大个子的石头更大。
@@ -106,7 +106,8 @@ const RockblastDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 13 },
             emitters: [
                 {
-                    name: "splat", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    // 撞块：data.direction 是碰撞面法线，orient 把圆面转到真实墙面上（地面命中即保持水平）。
+                    name: "splat", bind: "point", fit: "none", offset: [0, 0.06, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "chips", fallback: 8 }, at: 0 },
                     shape: { kind: "circle", radius: 0.5 },

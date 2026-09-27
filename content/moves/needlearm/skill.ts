@@ -8,8 +8,9 @@
  * 三幕：
  *   起（coil，提交前）：压低身子、把刺拢到臂上，只播预告，可被打断。
  *   扑（drive → rake / whiff）：提交后沿玩家选定的方向短扑一步；扑进被墙或身体挡住就停在那里起抡。
- *   扫（rake × 3）：从右到左按 `arc / 3` 的三段真实扇面依次扫过；每段选中的非友方里，
- *       还没被这一套挥臂打过的结算一次 `rake` 接触伤害、按 `flinchChance` 掷畏缩，然后记下不再重复。
+ *   扫（rake × 3）：从右到左按 `arc / 3` 的三段真实扇面依次扫过；每段再切几小段，逐刻只结算当前这一小段
+ *       真正扫到、且与自身之间通视的非友方；还没被这一套挥臂打过的结算一次 `rake` 接触伤害、按 `flinchChance`
+ *       掷畏缩，然后记下不再重复。判定与画面共用 `needlearmTurn` 的同一偏角端点，同拍臂端由右向左。
  *       三段都没扫到人就是空扫，仍按完整挥臂收招。
  *
  * 选取：`kind: "aim"`——方向或敌人辅助瞄准都行；方块拦身位（扑不过去）但不生成任何地形。
@@ -32,13 +33,12 @@ namespace PokemonSkills {
         return WorldCombat.point(direction.x() * cos - direction.z() * sin, 0, direction.x() * sin + direction.z() * cos);
     }
 
-    /** 一段扇面的有序顶点（原点 + 弧点），与服务端 `WorldGeometry.sector` 用同一组角度约定。 */
+    /** 一段扇面的有序顶点（原点 + 弧点），与 `needlearmTurn` 用同一偏角约定，判定与表现共用端点。 */
     function needlearmArc(origin: CombatPoint, direction: CombatPoint, span: number, startOffset: number, endOffset: number, samples: number): number[][] {
-        const base = Math.atan2(direction.x(), direction.z());
         const points: number[][] = [[origin.x(), origin.y() + 0.08, origin.z()]];
         for (let index = 0; index <= samples; index++) {
-            const angle = base + (startOffset + (endOffset - startOffset) * index / samples) * Math.PI / 180;
-            points.push([origin.x() + Math.sin(angle) * span, origin.y() + 0.08, origin.z() + Math.cos(angle) * span]);
+            const at = needlearmTurn(direction, startOffset + (endOffset - startOffset) * index / samples);
+            points.push([origin.x() + at.x() * span, origin.y() + 0.08, origin.z() + at.z() * span]);
         }
         return points;
     }
@@ -96,23 +96,27 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.0, span / needlearmReference));
             const intensity = Math.max(0.6, Math.min(2.2, power / 70));
             const struck: { [ref: string]: boolean } = {};
-            const beatHalf = arc / needlearmBeats / 2, beatGap = Math.max(4, Math.min(8, Math.round(arc / needlearmBeats / 25)));
+            const beatStep = arc / needlearmBeats, subs = 3, sliceStep = beatStep / subs;
+            const beatGap = Math.max(4, Math.min(8, Math.round(arc / needlearmBeats / 25)));
+            const half = arc / 2;
             let travelled = 0, hits = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
-            /** 从右到左的一段扇面：选敌、每敌一次主伤、播这一段真实弧面。 */
-            function rake(current: CombatAction, beat: number): void {
-                if (beat === 0) movementScenes.stop(current, "drive");
+            /** 一拍里的一段窄扇：判定与路径共用同一偏角一端点，只结算这一段真正扫到的人，每敌整套挥臂一次。 */
+            function rake(current: CombatAction, beat: number, sub: number): void {
+                if (settled) return;
+                if (beat === 0 && sub === 0) movementScenes.stop(current, "drive");
                 const scope = current.world(), origin = current.origin();
-                const half = arc / 2, step = arc / needlearmBeats;
-                const centre = half - step * (beat + 0.5);
-                const beatDirection = needlearmTurn(direction, centre);
-                const region = WorldGeometry.sector(origin, beatDirection, span, step * 1.1, { below: 1.0, above: 2.4 });
-                const path = needlearmArc(origin, direction, span, centre - beatHalf * 1.1, centre + beatHalf * 1.1, 8);
+                const edge = half - beatStep * beat;
+                const to = edge - sliceStep * sub, from = to - sliceStep;
+                const heading = needlearmTurn(direction, (from + to) / 2);
+                const region = WorldGeometry.sector(origin, heading, span, sliceStep * 1.15, { below: 1.0, above: 2.4 });
+                const path = needlearmArc(origin, direction, span, from - sliceStep * 0.08, to + sliceStep * 0.08, 4);
                 WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === String(current.actor().ref()) || struck[ref] === true) return;
+                    if (!scope.clear(origin, facts.position())) return;
                     if (!hurt(current, enemy, needlearmId, power, { damage: damageSpec(needlearmId, "rake"), contact: true })) return;
                     struck[ref] = true; hits++;
                     WorldFeedback.emit(scope, needlearmScene, 1, facts.position(),
@@ -123,10 +127,11 @@ namespace PokemonSkills {
                     }
                 });
                 WorldFeedback.emit(scope, needlearmScene, 1, origin,
-                    { moment: "rake", path: path, thorns: thorns, scale: scale, intensity: intensity }, 20);
+                    { moment: "rake", path: path, thorns: thorns, scale: scale, intensity: intensity }, 8);
                 sound(current, "cobblemon:impact.grass");
+                if (sub + 1 < subs) { current.after(1, function (next: CombatAction) { rake(next, beat, sub + 1); }); return; }
                 if (beat + 1 < needlearmBeats) {
-                    current.after(beatGap, function (next: CombatAction) { rake(next, beat + 1); });
+                    current.after(Math.max(1, beatGap - subs), function (next: CombatAction) { rake(next, beat + 1, 0); });
                     return;
                 }
                 if (hits === 0) {
@@ -141,12 +146,12 @@ namespace PokemonSkills {
             /** 短扑：沿瞄准方向压上，被墙/身体挡住就停在原地起抡；扑击本身不造成伤害。 */
             function advance(current: CombatAction): void {
                 const remaining = Math.max(0, lunge - travelled);
-                if (remaining <= 0.001) { rake(current, 0); return; }
+                if (remaining <= 0.001) { rake(current, 0, 0); return; }
                 const stepDistance = Math.min(speed, remaining);
                 const swept = sweepStep(current, direction.scale(stepDistance), 0.35);
                 const moved = swept.moved;
                 travelled += moved;
-                if (swept.hit.blocked() || swept.hit.hitEntity() || moved < minimum || travelled >= lunge) { rake(current, 0); return; }
+                if (swept.hit.blocked() || swept.hit.hitEntity() || moved < minimum || travelled >= lunge) { rake(current, 0, 0); return; }
                 current.after(1, advance);
             }
 

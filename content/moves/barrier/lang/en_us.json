@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.barrier.summary": "Pick a spot and raise a hard-light wall there, perpendicular to the cast direction, while raising Defense. This Defense increase ends when the wall disappears.",
+  "worldcombat.skill.barrier.summary": "Pick a spot and raise a hard-light wall on the real support near it, perpendicular to the cast direction, while raising Defense. This Defense increase ends when the wall is broken, expires, or you leave it behind.",
   "worldcombat.skill.barrier.use.0": "Raise the wall yourself across the lane an opponent charges down",
   "worldcombat.skill.barrier.use.1": "Place the wall across a side path instead of being forced toward the nearest enemy",
   "worldcombat.skill.barrier.use.2": "Raise it tall to cut off a ranged firing line",
@@ -33,5 +33,5 @@
   "worldcombat.skill.barrier.preference.ai.minGap.help": "Do not raise the wall when a threat is closer than this distance; respond to the close attack instead.",
   "worldcombat.skill.barrier.preference.ai.lead": "Lead the approach",
   "worldcombat.skill.barrier.preference.ai.lead.help": "Lead a moving threat by this many ticks and lay the wall across its incoming path; 0 uses only its current direction.",
-  "worldcombat.skill.barrier.description.place": "Pick a point up to %1$s blocks away; the wall only forms in air cells and leaves a gap for any occupied or solid spot, so a spot with no free cells makes no wall and shows no complete barrier."
+  "worldcombat.skill.barrier.description.place": "Pick a point up to %1$s blocks away; the wall roots on the real support near that point, forms only in air cells and leaves a gap for any occupied or solid spot, so a spot with no free cells makes no wall. Leaving the wall far behind collects it and its Defense."
 }

@@ -4,9 +4,11 @@
  * 一句话：收拳时指节上聚起一层硬光，直拳打出去沿方向掠过一道短刃似的拳风；命中的一下在接触点炸开拳击星火，
  *   拳头上随即亮起一圈更硬的黄光，级别越高越亮——打满时爆出一圈最亮的硬光。
  * 色相家族：格斗暖黄（impact_fighting / hollowfist）与近白（fist / glowingsparkle_yellow）；饱和只在拳与爆发的小面积。
- * 拍子：起 draw（收拳聚光）→ 击 jab（出拳）与 harden（命中硬化）→ 满 peak ／ 空 whiff → 续 linger ／ 散 fade。
- * 范围：jab 的拳风沿 `data.direction` 指向出拳方向、长度取自 `data.reach`；harden 的爆发落在命中点。
- * 运动：拳风沿方向掠出，命中向四周炸开，硬化光从拳面升起并绕拳旋转。
+ * 拍子：起 draw（收拳聚光）→ 击 jab（出拳，沿真实自身→接触点连线）与 hit（目标撞击）、grow（自身增长）
+ *   → 满 peak ／ 空 whiff → 续 linger ／ 散 fade。
+ * 范围：jab 沿 `data.path` 的自身→真实接触点连线，端点由服务端 trace 给出（遇墙止于墙面）；hit 的爆发落在
+ *   命中点；grow/peak 只绑自身，目标与自身的载荷不再各发一遍。
+ * 运动：拳风沿真实连线掠出，命中向四周炸开，硬化光从拳面升起并绕拳旋转。
  * 数：`data.sparks`（物攻派生的拳火花数）驱动拳风与爆发的粒子量；`data.total`（本窗口实际硬化级数，0–6）
  *   决定拳头硬光的层数与亮度，`data.gained` 让本次提升的那一下单独闪一次（续期未涨级时为 0，不冒环片升级）；
  *   `data.intensity`（拳威力与当前物攻等级派生）放大整幕。画面里的数量和机制一致。
@@ -43,26 +45,24 @@ const PoweruppunchDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "gust", bind: "source", offset: [0, 0.5, 0], height: 0.5, fit: "none",
+                    name: "gust", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    orient: "direction",
-                    rate: { data: "sparks", fallback: 16 }, shape: { kind: "line", length: { data: "reach", fallback: 2.4 } },
-                    direction: "shape", speed: [0.06, 0.22], spread: 12,
+                    shape: { kind: "polyline" },
+                    rate: { data: "sparks", fallback: 16 }, direction: "shape", speed: [0.05, 0.2], spread: 10,
                     lifetime: [5, 9], size: [0.14, 0.03], sizeMode: "index",
                     color: 0xFFF0C0, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 60
                 },
                 {
-                    name: "fist", bind: "source", offset: [0, 0.5, 0], height: 0.5,
+                    name: "fist", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/hollowfist",
-                    orient: "direction",
-                    burst: { count: 2, at: 0 }, shape: { kind: "line", length: 0.5 },
-                    direction: "outward", speed: [0.05, 0.18],
+                    shape: { kind: "polyline" },
+                    burst: { count: 3, at: 0 }, direction: "shape", speed: [0.05, 0.18], spread: 6,
                     lifetime: [5, 9], size: [0.24, 0.06],
                     color: 0xFFF4D8, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 16
                 }
             ]
         },
-        harden: {
+        hit: {
             duration: 22,
             exit: { stop: 8, drain: 14 },
             emitters: [
@@ -76,15 +76,6 @@ const PoweruppunchDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 48
                 },
                 {
-                    name: "knuckle", bind: "source", offset: [0, 0.5, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    burst: { count: { data: "total", fallback: 1 }, at: 0, interval: 3, repeats: { data: "gained", fallback: 1 } },
-                    shape: { kind: "circle", radius: 0.24 },
-                    direction: "up", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.14, 0.03],
-                    color: 0xFFC94F, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 30
-                },
-                {
                     name: "shard", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/spike",
                     burst: { count: 6, at: 0 },
@@ -92,6 +83,21 @@ const PoweruppunchDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16], gravity: 0.06, drag: 0.9,
                     lifetime: [9, 16], size: [0.09, 0.02],
                     color: 0xE8C878, alpha: [0.6, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        grow: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "knuckle", bind: "source", offset: [0, 0.5, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
+                    burst: { count: { data: "total", fallback: 1 }, at: 0, interval: 3, repeats: { data: "gained", fallback: 1 } },
+                    shape: { kind: "circle", radius: 0.24 },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.14, 0.03],
+                    color: 0xFFC94F, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 30
                 }
             ]
         },
@@ -116,7 +122,7 @@ const PoweruppunchDefinition: ParticleDefinition = {
                     color: 0xFFD46A, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 8
                 },
                 {
-                    name: "glint", bind: "point", offset: [0, 0.6, 0],
+                    name: "glint", bind: "source", offset: [0, 0.6, 0], height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
                     burst: { count: { data: "sparks", fallback: 16 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.36 },

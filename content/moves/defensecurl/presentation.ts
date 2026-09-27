@@ -2,15 +2,16 @@
  * 变圆 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者把头一缩、尘点向内收拢，身体蜷成一颗滚圆的球；球面上细密的尘点绕着飞快旋转，
- *   挨打时球贴着地面弹开、朝滚向滚出一段，留下一道旋转的尘尾；展开时尘点向外散尽。
+ *   挨打时球贴着地面、按每刻真实滚过的子段拖出一道旋转的尘带；展开时尘点向外散尽。
  *
  * 色相家族：暖木棕（0xD9B382）为主体，浅金（0xF2D8A8）做高光，深棕（0xB98B5A／0xC79B68）做余韵；没有第二个色相。
- * 层次：收拢（起）／成球尘、尘环与亮光（击）／绕球的尘（收）／滚动的尘尾与滚轮（撞）／散开（末）。
+ * 层次：收拢（起）／成球尘、尘环与亮光（击）／绕球的尘（收）／滚动的尘带与滚轮（撞）／散开（末）。
  * 起击收：tuck（缩）→ curl（成球）→ ball（持球）→ roll（滚动）→ uncurl（展开）。
  * 范围：球环绑自身、fit none，半径按 `data.scale`（实际球半径 / 0.8）推出，画出来的球就是判定护到的体积。
- * 运动：尘点由外向内收；成球时尘环向外推开；持球时尘点绕着球面旋转；滚动时尘尾沿 `data.direction` 拖出，滚轮朝滚向立起。
+ * 运动：尘点由外向内收；成球时尘环向外推开；持球时尘点绕着球面旋转；滚动每刻由服务端发当前真实子段（`data.path`），
+ *   尘带沿子段铺开、方向取 `data.direction`、滚轮朝滚向立起，判定与画面共用同一组端点；碰墙即收，不再跳移。
  * 数：滚动尘量绑 `data.spin`（体重派生），球半径与全部尺寸绑 `data.scale`（体型派生），滚距绑 `data.roll`。
- * 持续状态：持球期低密度、贴身、绕体表旋转，玩家仍看得清目标。
+ * 持续状态：持球画面由真实球载体拥有（服务端 onEffect），载体到期、被清除或重施时一起收；低密度、贴身、绕体表旋转。
  */
 const DefenseCurlDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -85,23 +86,29 @@ const DefenseCurlDefinition: ParticleDefinition = {
             ]
         },
         roll: {
-            duration: 22,
-            exit: { stop: 8, drain: 16 },
+            duration: 10,
+            exit: { stop: 3, drain: 10 },
             emitters: [
                 {
-                    name: "roll_dust", bind: "target", fit: "none", height: 0.25,
+                    name: "roll_band", bind: "path", fit: "none", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "spin", fallback: 18 } },
-                    shape: { kind: "sphere", radius: 0.4 },
-                    direction: "away", speed: [0.06, 0.22], gravity: 0.012, drag: 0.9, spin: 26,
+                    shape: { kind: "polyline" }, direction: "shape", speed: [0.02, 0.08], gravity: 0.012, drag: 0.9, spin: 26,
                     lifetime: [10, 18], size: [0.16, 0.03],
                     color: 0xC79B68, alpha: [0.85, 0], light: "world", maxParticles: 120
+                },
+                {
+                    name: "roll_spark", bind: "path", fit: "none", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 6 }, shape: { kind: "polyline" }, direction: "shape", speed: [0.02, 0.07],
+                    lifetime: [10, 16], size: [0.12, 0.02],
+                    color: 0xF2D8A8, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 40
                 },
                 {
                     name: "roll_wheel", bind: "target", fit: "none", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     orient: "direction",
-                    burst: { count: 2, interval: 2 },
+                    burst: { count: 1, interval: 2 },
                     shape: { kind: "ring", radius: 0.6 },
                     direction: "shape", speed: [0.02, 0.06],
                     lifetime: [10, 16], size: [0.34, 0.5], sizeMode: "index",

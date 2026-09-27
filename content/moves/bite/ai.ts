@@ -6,9 +6,19 @@
  * 对正在拉开距离的对手再加一档——那一口正好把人拽回来。
  *
  * `ai.reelIn`（默认开）实际改变选目标与排序：开启时只对「够得着的正常目标」和「正在逃开的目标」优先出手；
- * 关闭时把它当普通近身招，不再为拉人加分。
+ * 关闭时把它当普通近身招，不再为拉人加分。留存收益只对**真的推得动**的目标算：完全抗位移的目标照常吃这一口
+ * 的伤害与否决，但不为「拉回来」虚加权重（受击位移走 hitDisplace，抗性由原生结算）。
  */
 namespace PokemonSkills {
+    /** 目标是否会被这一口的受击位移真的拉动；完全抗位移（原生抗击退 ≥ 0.9）时不为留人加分。 */
+    function bitePullable(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(String(target.ref));
+        if (actor === null) return true;
+        const resistance = world.attributeValue(actor, "minecraft:generic.knockback_resistance");
+        return !(resistance !== null && resistance.value() >= 0.9);
+    }
+
     function biteWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
@@ -31,7 +41,8 @@ namespace PokemonSkills {
             if (!target || !biteWants(context, capability, target)) return 0;
             var close = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range;
             var deep = !!(capability.data.config && capability.data.config.deep === true);
-            if (CompanionBehavior.ai<boolean>(capability, "reelIn", true) && CompanionBehavior.fleeing(context, target)) return 46;
+            if (CompanionBehavior.ai<boolean>(capability, "reelIn", true) && CompanionBehavior.fleeing(context, target)
+                && bitePullable(context, target)) return 46;
             // 死咬式要的是短距控制：贴身且目标还没中招时最值得咬。
             if (close && !CompanionBehavior.status(context, target, "flinch")) return deep ? 44 : 40;
             if (CompanionBehavior.status(context, target, "flinch")) return 16;
@@ -48,7 +59,7 @@ namespace PokemonSkills {
             help: "超过这个距离就不主动扑咬，先走近。越大追得越执着，也越容易扑空后停在对手身边。"
         }),
         field(pathOf("ai.reelIn"), "留人优先", "boolean", {
-            help: "开启：对正在拉开距离或贴身未中招的对手优先咬住，把目标拽回身前；关闭：只把咬住当普通近身招排序，不再为拉人加分。"
+            help: "开启：对正在拉开距离或贴身未中招的对手优先咬住，把目标拽回身前；关闭：只把咬住当普通近身招排序，不再为拉人加分。完全抗击退的目标本来就拽不动，无论开关都不会为「拉回来」加分。"
         })
     ]);
 }

@@ -18,6 +18,44 @@
 namespace PokemonSkills {
     const emberScene = "world_combat:move_ember";
     const emberBurnText = "world_combat.move.ember.text.burn";
+    const emberBurnMark = "world_combat:ember_burn";
+
+    /**
+     * 附着火屑：绑在目标真实灼伤身份上的托管效果。身份还在就每 10 刻续一次画面、并跟随该载体的剩余时长；
+     * 灼伤被清除、到期或换人时随 onEffect 一起收，不留失效锚或驱散后的残火。
+     */
+    function emberBurnWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = CombatStatus.representative(world, target, "burn", true);
+        if (carrier === null) { effect.end(); return; }
+        const state = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "ember:cling", emberScene, 1, body.position(),
+            { moment: "burn", target: String(target.ref()), sparks: state.sparks, scale: state.scale, intensity: state.intensity });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 10, "{}");
+    }
+    WorldCombat.effect(emberBurnMark, 1, 2400, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(emberBurnMark, "start", emberBurnWatch);
+    WorldCombat.effectHandler(emberBurnMark, "watch", emberBurnWatch);
+    WorldCombat.effectHandler(emberBurnMark, "operation:world_combat:dispel", effect => effect.end());
+    // 共享灼伤载体被牛奶／/effect clear 拿掉时，立刻撤掉附着火屑，不等下一次巡检。
+    WorldCombat.on("world_combat:move_ember/burn-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== "world_combat:burn") return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, emberBurnMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
+    function emberBurnAttach(world: CombatWorld, target: CombatActor, sparks: number, scale: number, intensity: number): void {
+        const owner = world.valid(world.source()) ? String(world.source().key()) : "";
+        world.effects(target, emberBurnMark).forEach(function (view) {
+            if (String(view.source().key()) === owner) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        world.effect(emberBurnMark, target, JSON.stringify({ sparks: sparks, scale: scale, intensity: intensity }), 2400);
+    }
 
     define({
         id: "ember",
@@ -69,10 +107,6 @@ namespace PokemonSkills {
             const launch = action.origin();
             const offset = action.targetPosition().minus(launch);
             const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
-            // 空放落点：弹体按给定初速与下坠自己飞到射程尽头，不回到原选中目标。
-            const flightTicks = Math.max(1, reach / Math.max(0.2, speed));
-            const drop = 0.5 * gravity * flightTicks * flightTicks;
-            const emptyEnd = launch.plus(direction.scale(reach)).plus(WorldCombat.point(0, -drop, 0));
             let settled = false, resolved = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
@@ -81,7 +115,8 @@ namespace PokemonSkills {
             const appearance: LivingActions.ProjectileAppearance = {
                 sprite: "cobblemon:generic/fire/flame", tint: 0xFF9A3C, glow: true, scale: scale
             };
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius, gravity: gravity, lifetime: 200,
                 direction: direction, appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
@@ -89,32 +124,38 @@ namespace PokemonSkills {
                     const scope = current.world();
                     const point = hit.position();
                     const target = hit.target();
-                    let burned = false;
+                    let burned = false, landed = false;
                     if (target !== null && scope.valid(target) && !scope.friendly(target)) {
-                        const landed = impact(current, hit, "ember", power,
+                        landed = impact(current, hit, "ember", power,
                             { damage: damageSpec("ember", "spark"), status: "burn", chance: burnChance });
                         if (landed && scope.valid(target)) {
-                            const body = scope.observe(target);
-                            const at = body !== null ? body.position() : point;
-                            // 长烧表现只在真实灼伤身份已存在时开启；没点着就只放短火星。
+                            // 长烧表现绑在真实灼伤身份上；没点着就只放短火星。
                             burned = CombatStatus.has(scope, target, "burn");
                             if (burned) {
-                                WorldFeedback.emit(scope, emberScene, 1, at,
-                                    { moment: "burn", target: String(target.ref()), sparks: sparks, scale: scale, intensity: intensity }, 90);
+                                emberBurnAttach(scope, target, sparks, scale, intensity);
+                                const body = scope.observe(target);
+                                const at = body !== null ? body.position() : point;
                                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), emberBurnText, [], 26);
                             }
                         }
                     }
-                    WorldFeedback.emit(scope, emberScene, 1, point,
-                        { moment: "burst", target: target !== null ? String(target.ref()) : "", burned: burned ? 1 : 0,
-                            sparks: sparks, scale: scale, intensity: intensity }, 24);
-                    sound(current, "cobblemon:impact.fire");
+                    if (landed) {
+                        WorldFeedback.emit(scope, emberScene, 1, point,
+                            { moment: "burst", target: target !== null ? String(target.ref()) : "", burned: burned ? 1 : 0,
+                                sparks: sparks, scale: scale, intensity: intensity }, 24);
+                        sound(current, "cobblemon:impact.fire");
+                    } else {
+                        // 伤害/状态被原生拒绝（免疫、无效目标）或撞墙：只收一撮火星，不显示成功点燃。
+                        WorldFeedback.emit(scope, emberScene, 1, point,
+                            { moment: "fizzle", sparks: Math.max(3, Math.round(sparks * 0.5)), scale: scale }, 18);
+                    }
                     finish(current);
                 }
             }, function (current: CombatAction) {
                 if (!resolved) {
-                    // 空放：在弹体自己飞到的末端收一小撮火星，不回到起始点。
-                    WorldFeedback.emit(current.world(), emberScene, 1, emptyEnd,
+                    // 空放：在弹体自己飞到的真实末端收一小撮火星，不再用初速度另算落点。
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null) WorldFeedback.emit(current.world(), emberScene, 1, end,
                         { moment: "fizzle", sparks: Math.max(3, Math.round(sparks * 0.5)), scale: scale }, 18);
                 }
                 finish(current);

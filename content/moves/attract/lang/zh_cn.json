@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.attract.summary": "把一个飞吻掷向单个敌人；命中后它着迷一阵子：每次试图出手都可能心软收手。着迷只在你们互相看得见、且它没走远时维持——躲到墙后或走远就会清醒。宝可梦需要异性才吃这一套。",
+  "worldcombat.skill.attract.summary": "把一个飞吻掷向单个敌人；命中且牵得住时它着迷一阵子：每次试图出手都可能心软收手。着迷只在你们互相看得见、且它没走远时维持——躲到墙后或走远就会清醒。能受心智干扰的活体都可参与，原生抗控照常拦截。",
   "worldcombat.skill.attract.use.0": "分散注意",
   "worldcombat.skill.attract.use.1": "拖住敌人",
   "worldcombat.skill.attract.use.2": "制造走位机会",
-  "worldcombat.skill.attract.description.0": "飞吻命中后着迷 %2$s 秒：期间目标每次试图出招或发动普通攻击，都有 %1$s%% 的几率心软收手，该次出手作废。",
-  "worldcombat.skill.attract.description.1": "飞吻以约 %2$s 格/刻飞行、半径约 %1$s 格：有飞行时间、会被掩体挡下，但会缓慢追踪目标（点空处则直飞）。着迷只在你们之间视线畅通、且它离你不超过 %3$s 格时维持；它躲到墙后或走远，着迷就解除。对宝可梦要求异性；原版生物、其他模组生物与玩家没有性别概念，直接可被着迷。",
+  "worldcombat.skill.attract.description.0": "飞吻命中且牵得住后着迷 %2$s 秒：期间目标每次试图出招或发动普通攻击，都有 %1$s%% 的几率心软收手，该次出手作废。",
+  "worldcombat.skill.attract.description.1": "飞吻以约 %2$s 格/刻飞行、半径约 %1$s 格：有飞行时间、会被掩体挡下，但会缓慢追踪目标（点空处则直飞）。着迷只在你们之间视线畅通、且它离你不超过 %3$s 格时维持；命中时若已超出这个范围或隔着墙，飞吻当场散掉、不建立着迷。它在羁绊范围内躲到墙后或走远，着迷就解除。任何能受心智干扰的活体都可参与，原生抗控照常拦截。",
   "worldcombat.skill.attract.allure.0": "妩媚风情：心软几率略低、冷却更长，但着迷更久、羁绊范围更大，适合长时间牵制。",
   "worldcombat.skill.attract.allure.1": "甜言蜜语：心软几率更高、冷却更短，但着迷更短、羁绊范围更小，适合立刻打断。",
   "worldcombat.skill.attract.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 掷出飞吻；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -30,5 +30,6 @@
   "effect.world_combat.attract_infatuation": "着迷",
   "world_combat.move.attract.text.charm": "着迷",
   "world_combat.move.attract.text.hesitate": "心软",
-  "world_combat.move.attract.text.snap": "脱离迷恋"
+  "world_combat.move.attract.text.snap": "脱离迷恋",
+  "world_combat.move.attract.text.fizzle": "牵不住"
 }

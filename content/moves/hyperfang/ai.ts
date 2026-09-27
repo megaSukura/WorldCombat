@@ -4,11 +4,53 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 6）格内；它是短近身招，够不到交给共享接近逻辑。
  * 排序：目标还没被甩懵时加分（第一次震慑最值），已经懵了就压低；`ai.press`（默认开）在目标正被钉住或压住时再加分，
  * 趁它动不了再补一口；目标已经很低时也略微抬价，当收尾用。
- * `ai.clearLine`（默认开）：甩向由招式配置的左／右偏好决定，AI 读同一配置，若那一侧正对着队友就压低这招的优先级，
- * 优先等一个不会把敌人甩向队友的位置再出手；配置为「未知」时按配置本身使用。
+ * `ai.clearLine`（默认开）：甩向由招式配置的左／右偏好决定，AI 用本个体 `shove` 公式算出甩后真实落点与扫过的体积，
+ *   只在队友真会被甩到（且中间没有墙挡下）时压低这招的优先级，等一个更干净的位置再出手；配置为「未知」时按配置本身使用。
  * `ai.press` 是玩家能预见的取舍：开启＝专挑动不了的目标补刀；关闭＝不追钉住的目标，当普通近身重咬排序。
  */
 namespace PokemonSkills {
+    /** 本次侧甩的实际总位移（与施放同一公式，含配置）。 */
+    function hyperfangShove(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            return Math.max(0.08, p("hyperfang", "shove", {
+                world: world, actor: world.source(), skill: skills["hyperfang"],
+                detail: { values: capability.data.config } }));
+        } catch (error) { return 0.3; }
+    }
+
+    /** 甩后真实落点：沿配置选定的同一侧平移，墙会把它挡在实际接触处。 */
+    function hyperfangWhipPath(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): { start: CombatPoint; end: CombatPoint } | null {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const heading = Math.sqrt(dx * dx + dz * dz);
+        if (!(heading > 1e-6)) return null;
+        const side = capability.data.config && capability.data.config.side === "left" ? -1 : 1;
+        const shove = hyperfangShove(context, capability);
+        const start = CompanionBehavior.point(target.point);
+        const end = start.plus(WorldCombat.point(-dz / heading * side * shove, 0, dx / heading * side * shove));
+        const wall = WorldGeometry.blockHit(world, start, end);
+        return { start: start, end: wall ? wall.position() : end };
+    }
+
+    /** 甩动扫过的体积里有没有队友：目标与队友的碰撞箱宽度都算进去，隔墙则不误扣。 */
+    function hyperfangClears(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const path = hyperfangWhipPath(context, capability, target);
+        if (path === null) return true;
+        const self = CompanionBehavior.source(context);
+        const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+        const targetHalf = (target.width || 0.9) / 2;
+        for (let index = 0; index < nearby.length; index++) {
+            const other = nearby[index];
+            if (!other.friendly || !(other.health > 0) || other.ref === self.ref || other.ref === target.ref) continue;
+            const half = targetHalf + (other.width || 0.9) / 2;
+            const gap = WorldGeometry.closestOnSegment(CompanionBehavior.point(other.point), path.start, path.end)
+                .minus(CompanionBehavior.point(other.point)).length();
+            if (gap <= half) return false;
+        }
+        return true;
+    }
+
     CompanionBehavior.registerUse("hyperfang", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -30,20 +72,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.ai<boolean>(capability, "press", true)
                 && CompanionBehavior.effect(context, target, "world_combat:rooted")) value += 6;
             if (CompanionBehavior.ratio(target) <= 0.3) value += 4;
-            if (!CompanionBehavior.ai<boolean>(capability, "clearLine", true)) return value;
-            // 招式按配置的侧偏好甩出；若队友正好在那一侧，这把敌人推向队友，压低优先级等更好的位置。
-            const sideConfig = capability.data.config && capability.data.config.side === "left" ? -1 : 1;
-            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-            const heading = Math.sqrt(dx * dx + dz * dz) || 1;
-            const sx = -dz / heading * sideConfig, sz = dx / heading * sideConfig;
-            const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-            for (let index = 0; index < nearby.length; index++) {
-                const other = nearby[index];
-                if (!other.friendly || !(other.health > 0) || other.ref === self.ref) continue;
-                const ox = other.point[0] - target.point[0], oz = other.point[2] - target.point[2];
-                const along = ox * sx + oz * sz;
-                if (along > 0.5 && along < 6) { value -= 10; break; }
-            }
+            // 按本次真实甩动扫过的体积与队友位置判断：严格沿选定侧，隔墙不算。
+            if (CompanionBehavior.ai<boolean>(capability, "clearLine", true) && !hyperfangClears(context, capability, target)) value -= 10;
             return value;
         }
     });
@@ -64,7 +94,7 @@ namespace PokemonSkills {
             help: "开启：目标正被钉住时优先补一口；关闭：不特意追钉住的目标，当普通近身重咬排序。"
         }),
         field(pathOf("ai.clearLine"), "让出队友射线", "boolean", {
-            help: "开启：甩出方向正对着队友时压低这招，优先等一个能把敌人甩离队友的位置；关闭：不检查队友位置，按普通重咬排序。"
+            help: "开启：按本个体实际甩动扫过的范围判断，若会把敌人甩到队友身上就压低这招，优先等一个更干净的位置；关闭：不检查队友位置，按普通重咬排序。"
         })
     ]);
 }

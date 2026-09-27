@@ -10,7 +10,8 @@
  *   扑（pounce，提交后）：沿锁定方向贴地连续突进，用**本体扫掠**走每一段，最多 pounce 格；扫到墙或走完预算
  *     就停在真实位置。
  *   吻（kiss / miss / immune）：扫掠接触到的**第一个敌人**才是这一吻的对象（途中首敌优先，不穿人改选）；
- *     进入接触后掷一次扑中概率（目标速度压过自身速度时才可能扭开）；中则挂共享身份 world_combat:status/sleep，
+ *     进入接触后用**被扫到的这个人**当场重算扑中概率（目标速度压过自身速度时才可能扭开；慢目标也有基础的
+ *     1−0.94 失手）；中则挂共享身份 world_combat:status/sleep，
  *     睡着的余韵由绑定效果 world_combat:lovelykiss_trance 续着；扭开则只落一撮心与烟。未接触到任何人就不下睡。
  *
  * 选取 kind:"aim"：可指定实体，也可朝短方向空扑；空扑与墙挡都可发生。目标为 null 时只扑向落点、收势。
@@ -61,8 +62,8 @@ namespace PokemonSkills {
         style: "kiss",
         defaults: { leap: false },
         fields: [
-            field(pathOf("leap"), "凌空扑吻", "boolean", {
-                help: "开启：扑击距离 ×1.35、速度 ×1.25、冷却 ×0.9，但睡眠 ×0.85，用来追上跑者、快进快出；关闭（重吻）：睡眠 ×1.25、冷却 ×1.15、扑击距离 ×0.85、起手 +3 刻，用来贴上去把人睡死。"
+            field(pathOf("leap"), "疾扑", "boolean", {
+                help: "开启：贴地扑击距离 ×1.35、速度 ×1.25、冷却 ×0.9，但睡眠 ×0.85，用来快速贴身、追住跑者；关闭（重吻）：睡眠 ×1.25、冷却 ×1.15、扑击距离 ×0.85、起手 +3 刻，用来贴上去把人睡久。"
             })
         ],
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -95,7 +96,7 @@ namespace PokemonSkills {
             const context: NumberContext = { pokemon: pokemon!, skill: skills[lovelykissId], detail: { values: config } };
             const reach = pokemon ? p(lovelykissId, "pounce", context) + p(lovelykissId, "kissRadius", context) : 4;
             return { radius: reach, geometry: "circle", style: "kiss", color: 0xB0303A,
-                label: config && config.leap === true ? "恶魔之吻·凌空" : "恶魔之吻·重吻" };
+                label: config && config.leap === true ? "恶魔之吻·疾扑" : "恶魔之吻·重吻" };
         },
         execute: function (action, move, config, done) {
             const scenes = WorldFeedback.actionScenes(lovelykissScene);
@@ -105,7 +106,6 @@ namespace PokemonSkills {
             const pounce = Math.max(1.5, p(lovelykissId, "pounce", action));
             const speed = Math.max(0.3, p(lovelykissId, "pounceSpeed", action));
             const radius = Math.max(0.25, p(lovelykissId, "kissRadius", action));
-            const chance = Math.max(0.05, Math.min(0.98, p(lovelykissId, "landChance", action)));
             const ticks = Math.max(60, Math.round(p(lovelykissId, "sleepTicks", action)));
             const hearts = Math.max(3, Math.round(p(lovelykissId, "hearts", action)));
             const scale = Math.max(0.5, Math.min(2.2, radius / 0.45));
@@ -126,10 +126,12 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 身体扫到的第一个敌人：先掷速度对抗，中了才在真实接触点挂睡眠。 */
+            /** 身体扫到的第一个敌人：用**它自己的速度**当场重算对抗，中了才在真实接触点挂睡眠。 */
             function kiss(current: CombatAction, at: CombatPoint, victim: CombatActor): void {
                 const scope = current.world(), ref = String(victim.ref());
                 scenes.stop(current);
+                // 途中换敌就用当前被扫到的人重算，慢目标也仍保留基础失手（上限 0.95）。
+                const chance = Math.max(0.05, Math.min(0.98, p(lovelykissId, "landChance", withTarget(factContext(current), victim))));
                 if (scope.random() >= chance) {
                     WorldFeedback.emit(scope, lovelykissScene, 1, at, { moment: "miss", target: ref, hearts: hearts }, 24);
                     WorldFeedback.text(scope, lovelykissAbove(at), "world_combat.move.lovelykiss.text.miss", [], 26);

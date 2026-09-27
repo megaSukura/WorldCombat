@@ -5,11 +5,13 @@
  *
  * 两幕：
  *   起：指尖聚电（提交前 windup 预告）。
- *   击：提交后电流从脚下窜出。直击形态沿施法者到目标的直线一瞬折线；`ground`（地导）形态沿瞄准
- *       方向扫过身前贴地的一条窄走廊，命中沿途所有敌人，空扫也成立。首个拦路的身体或方块就是真实
- *       终点，path 按它绘制。目标湿身或天在下雨时，电沿水传导，威力抬高。
+ *   击：提交后电流从脚下窜出，沿施法者到目标的直线一瞬折成一道闪电；首个拦路的身体或方块就是真实
+ *       终点，path 按它绘制，空放也成立。目标湿身或天在下雨时，电沿水传导，威力抬高。
  *
- * 与同族分开：zingzap 是冲上去放电、thunder 是天上落雷，电击波是贴地疾行的电流走廊，湿处更狠。
+ * 回执分层：只有真正造成伤害才报命中文字与命中火花；目标系免疫（`hurt` 返回 false）时报一道暗淡的
+ *           抗性熄火；墙或空放报落空，末端落在真实接触点。
+ *
+ * 与同族分开：zingzap 是冲上去放电、thunder 是天上落雷，电击波是出手即到的一道直击。
  */
 namespace PokemonSkills {
     const shockwaveScene = "world_combat:move_shockwave";
@@ -40,23 +42,11 @@ namespace PokemonSkills {
         return points;
     }
 
-    /** 地导走廊的四个地面角点（近左、远左、远右、近右），供 polygon／polyline 表现与判定同宽。 */
-    function shockwaveCorners(world: CombatWorld, origin: CombatPoint, heading: CombatPoint, length: number, halfWidth: number): number[][] {
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const far = origin.plus(heading.scale(length));
-        function onGround(point: CombatPoint): number[] {
-            const ground = WorldGeometry.ground(world, point, 3);
-            return [ground.x(), ground.y() + 0.05, ground.z()];
-        }
-        return [onGround(origin.plus(side.scale(halfWidth))), onGround(far.plus(side.scale(halfWidth))),
-            onGround(far.minus(side.scale(halfWidth))), onGround(origin.minus(side.scale(halfWidth)))];
-    }
-
     define({
         id: "shockwave",
         name: "Shock Wave",
-        description: "一记出手即到的电击，不做随机命中检定：直击沿直线闪到目标身上，地导形态则沿瞄准方向扫过身前贴地的一条走廊，空扫也成立；首个拦路的身体或方块就是终点。目标湿身或在雨里时电传导得更狠。",
-        uses: ["出手即到的电击", "沿地面扫过一条走廊", "打湿身的目标"],
+        description: "一记出手即到的电击，不做随机命中检定：电流沿施法者到目标的直线一瞬闪到身上，首个拦路的身体或方块就是真实终点，空放也成立。目标湿身或在雨里时电传导得更狠；免疫的目标不吃伤害，墙会截住电流。",
+        uses: ["出手即到的电击", "打湿身或雨里的目标"],
         kind: "aim",
         range: 10,
         maxRange: 14,
@@ -65,36 +55,22 @@ namespace PokemonSkills {
         recover: 8,
         cooldown: 28,
         style: "bolt",
-        defaults: { ground: false, ai: { maxChase: 14, preferWet: true, leaveStation: true } },
+        defaults: { ai: { maxChase: 14, preferWet: true, leaveStation: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("shockwave", "collisionRadius", pokemon) * 1.4, geometry: "line", style: "electric", color: 0xFFF27A, label: "电击波" };
         },
-        resolve: function (pokemon, config, world, actor, attributes) {
-            var context: NumberContext = { pokemon: pokemon, skill: skills["shockwave"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
-            var ground = !!(config && config.ground);
-            return {
-                prepare: p("shockwave", "prepare", context) + (ground ? 2 : 0),
-                recover: p("shockwave", "recover", context),
-                cooldown: p("shockwave", "cooldown", context) + (ground ? 5 : 0),
-                range: ground ? 13 : p("shockwave", "range", context)
-            };
-        },
         windup: function (action, config, prepare) {
-            var ground = !!(config && config.ground);
             action.present("world_combat:move_shockwave:windup", shockwaveScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", windup: prepare, ground: ground }));
+                JSON.stringify({ moment: "charge", windup: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const origin = action.origin();
-            const ground = !!(config && config.ground);
-            const segment = ground ? "surge" : "jolt";
-            const power = p("shockwave", segment, action);
+            const power = p("shockwave", "jolt", action);
             const bonus = p("shockwave", "wetBonus", action);
             const jags = Math.max(3, Math.round(p("shockwave", "jags", action)));
-            const corridor = p("shockwave", "corridor", action);
             const radius = p("shockwave", "collisionRadius", action);
             const target = action.target();
             const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
@@ -104,59 +80,36 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:block.beacon.activate");
 
-            if (ground) {
-                // 地导：沿瞄准方向扫一条贴地窄带；终点取实际瞄准点与射程的较小值，空扫也成立。
-                const delta = landing.minus(origin), flat = WorldCombat.point(delta.x(), 0, delta.z());
-                const heading = WorldGeometry.flatUnit(flat, action.direction());
-                const length = Math.max(0.5, Math.min(action.range(), flat.length()));
-                const lane = WorldGeometry.lane(origin, heading, length, corridor, { below: 2, above: 3 });
-                WorldFeedback.emit(world, shockwaveScene, 1, origin,
-                    { moment: "lane", path: shockwaveCorners(world, origin, heading, length, corridor),
-                        corridor: corridor, reach: length, intensity: intensity, scale: radius / 0.5 }, 30);
-
-                let hits = 0;
-                WorldGeometry.selectEnemies(world, lane, function (enemy: CombatActor, facts: CombatObservation) {
-                    const at = facts.position();
-                    if (!world.clear(origin, at)) return;
-                    const wet = facts.wet() || shockwaveRain(world, at);
-                    hurt(action, enemy, "shockwave", wet ? power * (1 + bonus) : power, { damage: damageSpec("shockwave", "surge") });
-                    hits++;
-                    WorldFeedback.emit(world, shockwaveScene, 1, at,
-                        { moment: "hit", target: String(enemy.ref()), intensity: intensity, wet: wet, notes: 18, scale: radius / 0.5 }, 22);
-                    if (wet) WorldFeedback.emit(world, shockwaveScene, 1, at, { moment: "wet", scale: 1 }, 20);
-                });
-                world.sound("minecraft:entity.lightning_bolt.impact", landing, 16, "{}");
-                if (hits === 0) WorldFeedback.emit(world, shockwaveScene, 1, landing, { moment: "miss", scale: 1 }, 20);
-                WorldFeedback.text(world, landing.plus(WorldCombat.point(0, 1.2, 0)), hits > 0 ? shockwaveHitText : shockwaveMissText,
-                    hits > 0 ? [hits] : [], 26);
-                done(action);
-                return;
-            }
-
             // 直击：一瞬折线，首个拦路的身体或方块就是真实终点，path 按它绘制。
             const probe = action.trace(origin, landing, radius, false);
             const endpoint = probe.position();
             WorldFeedback.emit(world, shockwaveScene, 1, origin,
                 { moment: "bolt", path: shockwaveBolt(origin, endpoint, jags, world), flow: flow, jags: jags,
-                    intensity: intensity, scale: radius / 0.5 }, 30);
+                    intensity: intensity, scale: radius / 0.5 }, 14);
 
             const struck = probe.hitEntity() ? probe.target() : null;
             if (struck !== null && world.valid(struck) && !world.friendly(struck)) {
                 const struckBody = world.observe(struck);
                 const at = struckBody === null ? endpoint : struckBody.position();
                 const wet = struckBody !== null && (struckBody.wet() || shockwaveRain(world, at));
-                hurt(action, struck, "shockwave", wet ? power * (1 + bonus) : power, { damage: damageSpec("shockwave", "jolt") });
-                WorldFeedback.emit(world, shockwaveScene, 1, at,
-                    { moment: "hit", target: String(struck.ref()), intensity: intensity, wet: wet, notes: 20, scale: radius / 0.5 }, 26);
-                if (wet) WorldFeedback.emit(world, shockwaveScene, 1, at, { moment: "wet", scale: 1 }, 22);
-                world.sound("minecraft:entity.lightning_bolt.impact", at, 16, "{}");
-                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), shockwaveHitText, [1], 26);
+                const applied = hurt(action, struck, "shockwave", wet ? power * (1 + bonus) : power, { damage: damageSpec("shockwave", "jolt") });
+                if (applied) {
+                    // 只有真正造成伤害才报命中：文字、火花、湿身水花与落地音效。
+                    WorldFeedback.emit(world, shockwaveScene, 1, at,
+                        { moment: "hit", target: String(struck.ref()), intensity: intensity, wet: wet, notes: 20, scale: radius / 0.5 }, 26);
+                    if (wet) WorldFeedback.emit(world, shockwaveScene, 1, at, { moment: "wet", scale: 1 }, 22);
+                    world.sound("minecraft:entity.lightning_bolt.impact", at, 16, "{}");
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), shockwaveHitText, [], 26);
+                } else {
+                    // 免疫或原生命中拒绝：不报命中，只在真实接触点留一道熄火。共享免疫回执已浮出“免疫”字样。
+                    WorldFeedback.emit(world, shockwaveScene, 1, at, { moment: "resist", scale: 1 }, 18);
+                }
             } else {
-                const blockPoint = probe.blocked() ? probe.blockPosition() : null;
-                WorldFeedback.emit(world, shockwaveScene, 1, blockPoint === null ? endpoint : blockPoint,
+                // 墙或空放：末端落在真实接触点，贴墙给出朝向。
+                WorldFeedback.emit(world, shockwaveScene, 1, endpoint,
                     { moment: "miss", scale: 1, face: probe.blocked() ? probe.blockFace() : "" }, 20);
                 world.sound("minecraft:entity.lightning_bolt.impact", landing, 16, "{}");
-                WorldFeedback.text(world, landing.plus(WorldCombat.point(0, 1.2, 0)), shockwaveMissText, [], 26);
+                WorldFeedback.text(world, endpoint.plus(WorldCombat.point(0, 1.2, 0)), shockwaveMissText, [], 26);
             }
             done(action);
         }

@@ -2,7 +2,7 @@
   "worldcombat.skill.lastrespects.summary": "为倒下的伙伴送行：从地里升起随行的鬼影，一路走向对手落下这一扫。同阵营倒下的伙伴越多，鬼影越多、这一扫越重；随行式扫过一条走廊，送行式聚到一点重打一个。",
   "worldcombat.skill.lastrespects.use.0": "伙伴倒下后替他们扫出这一记",
   "worldcombat.skill.lastrespects.use.1": "随行时沿路清掉一条走廊",
-  "worldcombat.skill.lastrespects.use.2": "送行时把一个人重捶出很远",
+  "worldcombat.skill.lastrespects.use.2": "送行时把重扫聚到一个人身上",
   "worldcombat.skill.lastrespects.description.0": "被这一扫扫中的目标各受到 %1$s 的伤害；同阵营每有 1 位伙伴在本场倒下就加 50（封顶 +250），当前倒下 %2$s 位。倒下记录不会因为这一扫而清空。",
   "worldcombat.skill.lastrespects.description.1": "送出独立鬼影，行进 %1$s 格、每刻 %2$s 格，接触半宽 %3$s 格；真实触到目标才结算，按抗性顶开至多 %4$s 格。施放者释放后可继续行动，墙会截停鬼影。",
   "worldcombat.skill.lastrespects.trail.on": "随行式：鬼影沿路随行，这一扫变成一条走廊、打到路上每个敌人各一次（每人 ×0.85），扫过更宽、冷却 +4。",

@@ -65,7 +65,7 @@ Smoke.scenario("grasspledge", function (stage) {
             stage.expect(grasspledgeAiLead, "the grass AI selects a supported short point ahead of native target velocity");
             stage.expect(stage.damageTo(foe) > 0, "the grass pillar dealt damage");
             stage.expect(stage.hadMobEffect(foe, "minecraft:slowness"), "the pillar entangled and slowed the target");
-            stage.note("草柱命中与拖慢是必然；命中几个、暴击、缠住时长、誓约印停留与共鸣由局面决定。单草印只是短寿共鸣标记、本身不拖慢，共鸣需要另一元素（火／水）的誓约印在落点附近，单招场景里无法合法制造，故不在此断言；柱脚盘根只由粒子表达，不再替换地表方块", {
+            stage.note("草柱命中与拖慢是必然；命中几个、暴击、缠住时长、誓约印停留与共鸣由局面决定。草柱贴落点下方的真实地面升起、撞到上方方块就停在接触面；根须只围绕真正被缠住的命中者脚部，控制被拒绝时只落几片叶子。单草印只是短寿共鸣标记、本身不拖慢，共鸣需要另一元素（火／水）同阵营、尚未组合且通路无阻的誓约印在落点附近，并会当场消费那枚印，单招场景里无法合法制造，故不在此断言；湿地只对真正触地的敌人尝试陷住，柱脚盘根只由粒子表达，不替换地表方块", {
                 casts: stage.casts("grasspledge", caster),
                 foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,
                 slowed: stage.hadMobEffect(foe, "minecraft:slowness")

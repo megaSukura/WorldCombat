@@ -3,8 +3,9 @@
  *
  * 原生事实：Electric／物理／威力 85／命中 100／PP 10／接触；「如果比对手先出手攻击，威力翻倍」（Cobblemon 1.8）。
  *
- * 翻译：即时战斗里没有先手判定，本实现把「比对手先出手」翻成可观察的事实——命中那一刻，目标还没有打过施法者
- * （最近窗口内施法者没被这个目标击中，且目标此刻没有朝施法者出手）。满足时这一啄翻倍，画面换成一道更亮的电。
+ * 翻译：即时战斗里没有先手判定，本实现把「比对手先出手」翻成可观察的事实——命中那一刻，施法者在最近窗口内
+ *   没有被这个目标打中过（只读已落地的原生受伤事实 `hurtAgo` + `lastAttacker`，不读目标仇恨）。满足时这一啄翻倍，
+ *   画面换成一道更亮的电。
  * 与「先手」相配的形状是一次**点到即走的直线电啄**：冲进去啄一口，电还没散就退回来。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
@@ -28,22 +29,23 @@ namespace PokemonSkills {
     export const boltbeakId = "boltbeak";
     export const boltbeakScene = "world_combat:move_boltbeak";
 
-    /** 命中目标是否还没打过施法者：先手成立返回 1，被抢先返回 0。 */
+    /**
+     * 命中目标是否还没打过施法者：先手成立返回 1，被抢先返回 0。
+     *
+     * 只读已落地的受伤事实——施法者最近 window 内被谁打中（`hurtAgo` + `lastAttacker`）。不再读目标的仇恨
+     * （`attacking` 是 `Mob.getTarget`，锁定但尚未出手的原版生物也会被误判成「已先手出手」），普通 MC 生物／
+     * 模组 Boss 因此与精灵读同一条件。先手翻倍以实际碰到的那个目标为准：显式 target 优先于动作选定的目标。
+     */
     export function boltbeakLead(context: FactContext): number {
         const world = context.world, actor = context.actor;
         if (!world || !actor || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return 0;
-        // 先手翻倍以实际碰到的那个目标为准：显式 target 优先于动作选定的目标。
         const target = context.target && context.target.actor ? context.target.actor : context.action ? context.action.target() : null;
         if (!target || !world.valid(target) || world.friendly(target)) return 0;
         const window = p(boltbeakId, "window", <NumberContext>context);
-        const self = world.observe(actor), foe = world.observe(target);
-        if (self !== null) {
+        const self = world.observe(actor);
+        if (self !== null && self.hurtAgo() <= window) {
             const last = self.lastAttacker();
-            if (self.hurtAgo() <= window && last !== null && String(last.ref()) === String(target.ref())) return 0;
-        }
-        if (foe !== null) {
-            const swinging = foe.attacking();
-            if (swinging !== null && String(swinging.ref()) === String(actor.ref())) return 0;
+            if (last !== null && String(last.ref()) === String(target.ref())) return 0;
         }
         return 1;
     }

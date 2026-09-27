@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.destinybond.summary": "当众把一条命线系在自己身上：这段时间里，谁亲手把你打倒，谁就一起倒下。它不护住你，只是把「你来杀我」的代价摆到明面上；已经有命线在身时再施放会失败。",
+  "worldcombat.skill.destinybond.summary": "当众把一条命线系在自己身上：这段时间里，谁用一次真实的攻击亲手把你打倒，就会被这条线按其当前生命的规模反击一次——通常一起倒下，也可能被护盾、无敌或原生保护挡下。它不护住你，只是把「你来杀我」的代价摆到明面上；已经有命线在身时再施放会失败。",
   "worldcombat.skill.destinybond.use.0": "残血时把「最后一击」变成对手自己的代价",
-  "worldcombat.skill.destinybond.use.1": "逼对手收手，争取喘息或撤退",
+  "worldcombat.skill.destinybond.use.1": "让对手在补刀前犹豫，争取喘息或撤退",
   "worldcombat.skill.destinybond.use.2": "临死前把对面的主力一起带走",
-  "worldcombat.skill.destinybond.description.0": "系好的命线在你身上留 %1$s；这段时间里，任何非友方的一击只要真的把你打倒，就一并倒下。",
+  "worldcombat.skill.destinybond.description.0": "系好的命线在你身上留 %1$s；这段时间里，一次真实的非友方攻击只要真的把你打倒，就会按其当前生命的规模反击凶手，把他一起带走——也可能被护盾、无敌或原生保护只削去一部分。",
   "worldcombat.skill.destinybond.description.1": "系结要 %1$s，冷却 %2$s。它不减免伤害、不护住自己，只把代价摆到明面上。",
   "worldcombat.skill.destinybond.tight.0": "死结：命线更久，但整段时间被钉在原地、冷却更长。",
   "worldcombat.skill.destinybond.tight.1": "松结：命线更短，但可以自由走位、冷却更短——也更早松开。",
@@ -28,5 +28,5 @@
   "world_combat.move.destinybond.text.resist": "同命：凶手抵住了这一牵",
   "world_combat.move.destinybond.text.lift": "命线松开",
   "effect.world_combat.destiny_bond": "同命",
-  "worldcombat.skill.destinybond.description.2": "身上已经有一条命线时再施放会失败；命线走完时长或被清除后松开，只要你还没有倒下，就没有人会被拖下去。"
+  "worldcombat.skill.destinybond.description.2": "中毒、灼烧、连锁、反射等间接残伤或环境致死不会触发这条线；身上已经有一条命线时再施放会失败；命线走完时长或被清除后松开，只要你还没有倒下，就没有人会被拖下去。"
 }

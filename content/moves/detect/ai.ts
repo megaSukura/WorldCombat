@@ -19,11 +19,19 @@ namespace PokemonSkills {
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point)
                 <= CompanionBehavior.ai<number>(capability, "range", 6);
         },
-        priority: function (context, capability, target) {
+        priority: function (context, capability) {
             const threat = context.senses["world_combat:threat"], self = CompanionBehavior.source(context);
             if (!threat) return 0;
-            if (threat.attacking === self.ref) return 110;
-            return typeof self.hurtAgo === "number" && self.hurtAgo < 20 ? 55 : 40;
+            const world = CompanionBehavior.world(context), actor = world.source(), values = capability.data.config;
+            const args: any = { world: world, actor: actor, skill: skills["detect"], detail: { values: values } };
+            // Discount by the same timestamped repeat-use failure rate the cast will roll.
+            const effective = GuardEffects.stall(state(world, actor, GuardEffects.stallKey), world.tick(), p("detect", "stallReset", args));
+            const variables: any = {}; variables["state." + GuardEffects.stallKey + "#stall"] = effective;
+            args.variables = variables;
+            const fizzle = p("detect", "fizzle", args);
+            // Only a blow already aimed at us is urgent; a merely nearby enemy is a weak reason to open a read.
+            const base = threat.attacking === self.ref ? 100 : (typeof self.hurtAgo === "number" && self.hurtAgo < 20 ? 45 : 30);
+            return Math.max(0, Math.round(base * (1 - Math.min(0.9, fizzle))));
         }
     });
 

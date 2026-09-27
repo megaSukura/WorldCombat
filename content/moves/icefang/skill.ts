@@ -1,15 +1,17 @@
 /**
  * 冰冻牙 / icefang 的出手方式。
  *
- * 核心念头：**一口咬住，冷气慢慢渗进关节**——咬合本身不高，寒气要隔一拍才在伤口里发作，掷出时把目标冻在原地；
- * 而对已经冻住的目标，冰壳让皮肉发脆，这一口会多咬碎一段。它是本族里唯一**收冻结残局**的牙。
+ * 核心念头：**一口咬住，冷气当场渗进关节**——咬合本身不高，咬中当刻就掷一次冷气把目标冻在原地；
+ * 而对咬中前就已经冻住的目标，冰壳让皮肉发脆，这一口会多咬碎一段。它是本族里唯一**收冻结残局**的牙。
  *
- * 三幕：
+ * 选取为 aim：可点实体、也可点方向或世界点扑空，提交与执行都不要求存在敌人。
+ *
+ * 两幕：
  *   起（windup，提交前）：牙间凝起冷霜、地面结一圈霜，只播预告表现。
- *   咬（pounce → bite）：提交后沿瞄准方向扑出；trace 咬中即结算 fang 接触咬合；若目标在本口咬中前就已被冻住，
- *       追加一段 `shatter` 冷脆伤害（不因这口的迟发冻结回头再触发）。命中点炸开冰色迸溅与獠牙剪影，并按 flinchChance 掷畏缩。
- *   冻（freeze / resist）：咬中后隔 `frostDelay` 刻，冷气在伤口里发作，只对这次实际咬中的对象按 freezeChance 施加
- *       共享身份 `world_combat:status/frozen`（宝可梦同步为原生冰冻）；真冻住才结冰，被免疫不补冻、只散一层霜。
+ *   咬（pounce → bite）：提交后沿瞄准方向扑出；trace 咬中即先做**冻前快照**，结算 fang 接触咬合，
+ *       目标若在咬中前已冻则追加一段 `shatter` 冷脆伤害（只认这段额外伤的真实回执）；随后当刻走共享次级路由
+ *       掷一次冻结（`secondary:true`），真冻住才结冰，被原生/次级免疫拒绝才散霜说明，掷签未中不冒冻结或免疫。
+ *       命中还会按 flinchChance 把对手咬懵并尝试打断。
  *
  * 配置 `deep`（深寒式）由 resolve 改时序、由公式改威力／冻期／冷脆，提交后才触碰世界。
  */
@@ -34,9 +36,9 @@ namespace PokemonSkills {
         id: "icefang",
         cooldownParameter: "recharge",
         name: "Ice Fang",
-        description: "一口咬住、把冷气渗进关节：命中造成咬合伤害，隔一拍后寒气在伤口里发作，按几率把目标冻住；对已经冻住的目标，冰壳发脆、会多咬碎一段，命中还可能把对手咬懵并打断它正在做的事。深寒式冻得更久，急寒式咬得更重。",
+        description: "一口咬住、把冷气当场渗进关节：命中造成咬合伤害，当刻按几率把目标冻住；对咬中前已经冻住的目标，冰壳发脆、会多咬碎一段，命中还可能把对手咬懵并打断它正在做的事。深寒式冻得更久，急寒式咬得更重。",
         uses: ["贴身咬一口并按几率冻住目标", "咬碎已经被冻住的目标", "咬懵对手，打断它正在做的事"],
-        kind: "enemy",
+        kind: "aim",
         range: 2.4,
         maxRange: 3.7,
         prepare: 6,
@@ -76,7 +78,6 @@ namespace PokemonSkills {
             const brittle = p("icefang", "shatter", action);
             const freezeChance = Math.max(0.02, Math.min(0.95, p("icefang", "freezeChance", action)));
             const freezeTicks = Math.max(40, Math.round(p("icefang", "freezeTicks", action)));
-            const frost = Math.max(2, Math.round(p("icefang", "frostDelay", action)));
             const chance = Math.max(0.02, Math.min(0.9, p("icefang", "flinchChance", action)));
             const flinchTicks = Math.max(6, Math.round(p("icefang", "flinchTicks", action)));
             const shards = Math.max(5, Math.round(p("icefang", "shards", action)));
@@ -97,35 +98,12 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 冷气渗进伤口：隔一拍才发作，只对这次实际咬中的对象、掷出真冻住时才结冰；被免疫不补冻，只散一层霜。 */
-            function freeze(current: CombatAction, victimRef: string, at: CombatPoint): void {
-                const scope = current.world();
-                const victim = scope.actor(victimRef);
-                if (victim === null || !scope.valid(victim)) { finish(current); return; }
-                const body = scope.observe(victim);
-                const here = body === null ? at : body.position();
-                if (scope.random() < freezeChance) {
-                    const frozen = CombatStatus.inflict(scope, victim, "frozen", freezeTicks);
-                    if (frozen) {
-                        WorldFeedback.emit(scope, icefangScene, 1, here,
-                            { moment: "freeze", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 26);
-                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), icefangFreezeText, [], 24);
-                        sound(current, "minecraft:block.glass.break");
-                        sound(current, "minecraft:entity.player.hurt_freeze");
-                    } else {
-                        // 状态被免疫/拒绝：不补冻，冷气只在表面结一层霜、随即散掉。
-                        WorldFeedback.emit(scope, icefangScene, 1, here,
-                            { moment: "resist", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 20);
-                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), icefangImmuneText, [], 22);
-                    }
-                }
-                finish(current);
-            }
-
             function latch(current: CombatAction, victim: CombatActor, at: CombatPoint, contact: CombatImpact): void {
                 movementScenes.stop(current);
                 const scope = current.world();
                 const victimRef = String(victim.ref());
+                // 冻前快照：这一口咬下去之前是否已经冻住，决定本次冷脆；随后当刻新冻的这次不算进冷脆。
+                const wasFrozen = CombatStatus.has(scope, victim, "frozen");
                 const landed = impact(current, contact, "icefang", power,
                     { damage: damageSpec("icefang", "fang"), contact: true, bite: true });
                 WorldFeedback.emit(scope, icefangScene, 1, at,
@@ -133,20 +111,38 @@ namespace PokemonSkills {
                 sound(current, "cobblemon:impact.ice");
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), icefangHitText, [], 22);
-                // 冷脆：已经冻住的皮肉发脆，这一口多咬碎一段。
-                if (CombatStatus.has(scope, victim, "frozen")) {
-                    hurt(current, victim, "icefang", brittle, { damage: damageSpec("icefang", "shatter"), contact: true, bite: true });
+                // 冷脆：只有这段额外伤真实结算才播裂冰；被免疫/拒绝不冒假碎冰。
+                if (wasFrozen && hurt(current, victim, "icefang", brittle,
+                    { damage: damageSpec("icefang", "shatter"), contact: true, bite: true })) {
                     WorldFeedback.emit(scope, icefangScene, 1, at,
                         { moment: "shatter", target: victimRef, shards: Math.round(shards * 0.7), scale: scale, intensity: intensity }, 22);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), icefangShatterText, [], 22);
                     sound(current, "minecraft:block.powder_snow.break");
                 }
+                // 咬中当刻掷冻结：走共享次级路由（secondary:true），尊重原生与次级免疫。
+                // 真冻住才结冰；已被冻住又被拒（本来就没法更冻）不喊免疫；掷签未中不冒冻结或免疫。
+                if (scope.valid(victim) && scope.random() < freezeChance) {
+                    const outcome = CombatStatus.impose(scope, victim, "frozen", freezeTicks, { secondary: true });
+                    const body = scope.observe(victim);
+                    const here = body === null ? at : body.position();
+                    if (outcome.applied) {
+                        WorldFeedback.emit(scope, icefangScene, 1, here,
+                            { moment: "freeze", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 26);
+                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), icefangFreezeText, [], 24);
+                        sound(current, "minecraft:block.glass.break");
+                        sound(current, "minecraft:entity.player.hurt_freeze");
+                    } else if (!wasFrozen && outcome.reason.indexOf("immune") >= 0) {
+                        // 真正的免疫/次级免疫：冷气只在表面结一层霜并说明，不补冻。
+                        WorldFeedback.emit(scope, icefangScene, 1, here,
+                            { moment: "resist", target: victimRef, shards: shards, scale: scale, intensity: intensity }, 20);
+                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.2, 0)), icefangImmuneText, [], 22);
+                    }
+                }
                 if (scope.valid(victim) && scope.random() < chance && icefangFlinch(scope, victim, flinchTicks)) {
                     WorldFeedback.emit(scope, icefangScene, 1, at, { moment: "flinch", target: victimRef, scale: scale }, 22);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), icefangFlinchText, [], 22);
                 }
-                if (scope.valid(victim)) current.after(frost, function (next: CombatAction) { freeze(next, victimRef, at); });
-                else finish(current);
+                finish(current);
             }
 
             function advance(current: CombatAction): void {

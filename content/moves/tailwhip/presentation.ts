@@ -1,16 +1,15 @@
 /**
  * 摇尾巴 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者背向敌人摆开尾巴，贴着地面把身后 120 度扇带左右各扫一道弧光；被尾巴晃到、防御真的掉下去的
- *   人身上卷起打转的护甲线，之后头顶持续浮着晃神的余韵。
+ * 一句话：施法者背向敌人摆开尾巴，贴着地面把身后 120 度扇带铺出来，尾尖再从一侧扫到另一侧、间隔 6 刻反扫回来；
+ *   被尾巴晃到、防御真的掉下去的人身上卷起打转的护甲线，之后头顶持续浮着晃神的余韵。
  *
  * 色相家族：暖橙（0xE0A060／0xE08E52）为主体，奶油白（0xFFE8D0／0xFFF2E0）只做尾迹高光，浅褐尘（0xD8C0A0）收地面。
- * 层次：转身预备（起手，身后聚点）→ 贴地扇带与弧光（左右两次连续扫过）→ 落到人身上的晃动护甲线 → 头顶余韵 → 落尘（没甩到人）。
- * 起击收：windup（转身）→ swing（第一扫／第二扫，各由服务端 actionScenes 管理并 stop）→ mark（命中者）→ linger／fizzle。
- * 范围：swing 的扇带用服务端给的同一组顶点（`data.path`）以 polygon 填出，半径 `data.radius` 与判定一致；
- *   它铺在施法者**背后**，所以正面的人读得出自己不在扇里。
- * 运动：扇带从尾根向外铺开、弧光沿扇缘扫过；两次摆动由服务端 6 刻间隔分别触发，方向相反。
- * 数：`data.arcs`（速度派生的尾迹量）驱动扇带与弧光密度，`data.drop` 决定命中护甲线的重数，`data.scale`（半径 / 3）缩放地面范围。
+ * 层次：转身预备（起手，身后聚点）→ 判定扇带（band，铺满背后 120°，一眼看出作用区）→ 尾尖短弧逐刻扫过（swing，每刻一条真实子弧）
+ *   → 落到人身上的晃动护甲线（mark）→ 头顶余韵（linger）→ 落尘（没甩到人，fizzle）。
+ * 范围：band 与服务端 `WorldGeometry.bodyPolygon` 判定读同一份扇带顶点；swing 的 `data.path` 每刻只有当刻子弧的三个端点，
+ *   与服务端那一刀判定的端点同源，尾尖扫到哪就是打到哪，正面与身后分得清。
+ * 数：`data.arcs`（速度派生的尾迹量）驱动扇带与尾尖密度，`data.drop` 决定命中护甲线的重数，`data.scale`（半径 / 3）缩放地面范围。
  */
 const TailwhipDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -26,42 +25,64 @@ const TailwhipDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.07],
                     lifetime: [8, 14], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0xFFE8D0, alpha: [0.55, 0], light: "full", maxParticles: 26
+                },
+                {
+                    // 起手预告：把这次真正的背后 120 度扇带边缘淡淡铺出来，与服务端判定读同一份顶点。
+                    name: "whip_fan", bind: "path", fit: "none", height: 0.06,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 12, shape: { kind: "polyline", closed: true },
+                    direction: "shape", speed: [0.01, 0.045], spread: 6,
+                    lifetime: [8, 14], size: [0.06, 0.015],
+                    color: 0xE0A060, alpha: [0.28, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        band: {
+            duration: 26,
+            exit: { stop: 10, drain: 16 },
+            emitters: [
+                {
+                    name: "band_fill", bind: "path", fit: "none", height: 0.04,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "arcs", fallback: 24 }, shape: { kind: "polygon" },
+                    direction: "outward", speed: [0.02, 0.08], spread: 14, drag: 0.92,
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0xD8C0A0, alpha: [0.28, 0], light: "world", maxParticles: 90
+                },
+                {
+                    name: "band_edge", bind: "path", fit: "none", height: 0.16,
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    rate: { data: "arcs", fallback: 24 }, shape: { kind: "polyline", closed: true },
+                    direction: "shape", speed: [0.03, 0.1], spread: 10, spin: 12,
+                    lifetime: [10, 18], size: [0.12, 0.03], sizeMode: "sin",
+                    color: 0xFFE8D0, alpha: [0.4, 0], light: "full", maxParticles: 120
                 }
             ]
         },
         swing: {
-            duration: 30,
-            exit: { stop: 14, drain: 18 },
+            duration: 16,
+            exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "swing_band", bind: "path", fit: "none", height: 0.04,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "arcs", fallback: 24 }, shape: { kind: "polygon" },
-                    direction: "outward", speed: [0.03, 0.12], spread: 14, drag: 0.92,
-                    lifetime: [10, 18], size: [0.09, 0.02],
-                    color: 0xD8C0A0, alpha: [0.4, 0], light: "world", maxParticles: 90
-                },
-                {
-                    name: "swing_edge", bind: "path", fit: "none", height: 0.18,
-                    particle: "world_combat_core:cobblemon/generic/star",
-                    rate: { data: "arcs", fallback: 24 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.06, 0.2], spread: 10, spin: 14,
-                    lifetime: [10, 18], size: [0.15, 0.04], sizeMode: "sin",
-                    color: 0xFFE8D0, alpha: [0.75, 0], light: "full", maxParticles: 120
-                },
-                {
-                    name: "swing_trail", bind: "path", fit: "none", height: 0.32,
+                    name: "tip_arc", bind: "path", fit: "none", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     rate: { data: "arcs", fallback: 24 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.04, 0.14], spread: 8,
-                    lifetime: [9, 16], size: [0.12, 0.03], sizeMode: "sin",
-                    color: 0xFFF2E0, alpha: [0.7, 0], light: "full", maxParticles: 120
+                    direction: "shape", speed: [0.05, 0.16], spread: 8, spin: 14,
+                    lifetime: [8, 15], size: [0.13, 0.03], sizeMode: "sin",
+                    color: 0xFFF2E0, alpha: [0.8, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "swing_root", bind: "source", fit: "body", height: 0.3,
-                    offset: [{ data: "tailX", fallback: 0 }, 0, { data: "tailZ", fallback: -0.7 }],
+                    name: "tip_edge", bind: "path", fit: "none", height: 0.28,
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    rate: { data: "arcs", fallback: 24 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.04, 0.14], spread: 12, spin: 18,
+                    lifetime: [8, 15], size: [0.16, 0.04], sizeMode: "sin",
+                    color: 0xE0A060, alpha: [0.7, 0], light: "full", maxParticles: 120
+                },
+                {
+                    name: "tail_root", bind: "source", fit: "body", height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
-                    rate: 14, shape: { kind: "sphere", radius: 0.2 },
+                    rate: 12, shape: { kind: "sphere", radius: 0.2 },
                     direction: "outward", speed: [0.04, 0.14], spin: 10,
                     lifetime: [6, 12], size: [0.14, 0.03], sizeMode: "sin",
                     color: 0xE0A060, alpha: [0.7, 0], light: "full", maxParticles: 40

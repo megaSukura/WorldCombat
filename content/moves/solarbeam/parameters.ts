@@ -1,17 +1,18 @@
 /** 日光束：蓄力后贯穿直线上的敌人；阳光影响蓄力和威力，光束与命中碎光承载反馈。 个体差异、配置和现场事实由以下公式定义。 */
 namespace PokemonSkills {
     actionParameters.define("solarbeam", {
-        /** 光束威力：120 + (特攻−60)×0.9（夹 −30..72）+ (等级−24)×0.5（夹 0..30）；散光 ×0.66；雨天 ×0.5；夹 64..236。 */
+        /** 光束威力：核心 120 + (特攻−60)×0.9（夹 −30..72）+ (等级−24)×0.5（夹 0..30）；核心先夹 64..236，再散光 ×0.66、雨天 ×0.5；所以雨天相对同配置确实减半。 */
         ray: formula(
             F.base(120)
                 .plus(F.stat("specialAttack").minus(60).times(0.9).clamp(-30, 72))
                 .plus(F.level().minus(24).times(0.5).clamp(0, 30))
+                .clamp(64, 236)
                 .times(F.when(F.pref("broad", text("worldcombat.skill.solarbeam.preference.broad")), F.const(0.66), F.const(1)))
                 .times(F.when(F.world("rain", text("worldcombat.skill.solarbeam.value.rain")).gte(0.35), F.const(0.5), F.const(1)))
-                .clamp(64, 236).round(1),
+                .round(1),
             "光束威力", { base: 120,
                 unit: "威力",
-                description: "光柱命中每个目标的基础威力；特攻越高光越浓，散光会摊薄单发，阴雨天再折半。对手防御、相性与暴击在命中时另算。"
+                description: "光柱命中每个目标的基础威力：特攻越高光越浓，收束成 64..236 的核心光强，然后散光 ×0.66、阴雨天再 ×0.5——雨天相对同配置确实减半。对手防御、相性与暴击在命中时另算。"
             }),
         /** 光柱长度：12 + (特攻−60)×0.04（夹 −1.5..4）+ 当前日光 × 2.5；夹 9..20 格。 */
         reach: formula(

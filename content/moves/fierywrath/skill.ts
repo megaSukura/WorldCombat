@@ -80,7 +80,6 @@ namespace PokemonSkills {
             const linger = !!(config && config.linger);
             const scale = radius / 3.0;
             // 全部以施法者此刻的真实身体中心为圆心；气场的距离衰减也读这里。
-            const region = WorldGeometry.ring(centre, 0, radius, { below: 2, above: 4 });
             let elapsed = 0, settled = false;
 
             function finish(current: CombatAction, struck: number): void {
@@ -93,28 +92,39 @@ namespace PokemonSkills {
                 scenes.finish(current, done);
             }
 
-            /** 一次结算：按到自身的距离衰减，圈内每个敌人各挨一次。 */
+            /** 一次结算：按到自身的距离衰减，圈内每个敌人各挨一次；按真实爆发球体挑人、近前远后取到上限。 */
             function strike(current: CombatAction, amount: number, segment: string, withFlinch: boolean, moment: string): number {
                 const scope = current.world();
+                const maxTargets = Math.max(1, Math.round(p("fierywrath", "maxTargets", current)));
+                // 真正的爆发球体：用身体碰撞箱与球的精确相交挑人，再按原生通视把墙后的挡掉。
+                const candidates: { actor: CombatActor; at: CombatPoint; distance: number }[] = [];
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySphere(centre, radius), function (enemy, facts) {
+                    const ref = String(enemy.ref());
+                    if (ref === String(current.actor().ref()) || facts.friendly()) return;
+                    if (!scope.clear(centre, facts.position())) return;
+                    const at = facts.position();
+                    candidates.push({ actor: enemy, at: at, distance: at.minus(centre).length() });
+                });
+                // 近的优先，取到声明上限为止。
+                candidates.sort(function (a, b) { return a.distance - b.distance; });
                 let touched = 0;
-                WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                    if (String(enemy.ref()) === String(current.actor().ref())) return;
-                    const distance = facts.position().minus(centre).length();
+                for (let i = 0; i < candidates.length && touched < maxTargets; i++) {
+                    const enemy = candidates[i].actor, at = candidates[i].at, distance = candidates[i].distance;
                     const near = radius <= 0.001 ? 1 : Math.max(edgeKeep, 1 - (1 - edgeKeep) * (distance / radius));
                     const damage = amount * near;
-                    if (!hurt(current, enemy, "fierywrath", damage, { damage: damageSpec("fierywrath", segment) })) return;
+                    if (!hurt(current, enemy, "fierywrath", damage, { damage: damageSpec("fierywrath", segment) })) continue;
                     touched++;
-                    WorldFeedback.emit(scope, fierywrathScene, 1, facts.position(),
+                    WorldFeedback.emit(scope, fierywrathScene, 1, at,
                         { moment: moment, target: String(enemy.ref()), scale: scale, near: near, intensity: Math.max(0.5, Math.min(2.2, damage / 70)) }, 24);
                     if (withFlinch && scope.random() < chance && fierywrathFlinch(scope, enemy, flinchTicks)) {
-                        WorldFeedback.emit(scope, fierywrathScene, 1, facts.position(), { moment: "flinch", target: String(enemy.ref()) }, 24);
-                        WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), fierywrathFlinchText, [], 26);
+                        WorldFeedback.emit(scope, fierywrathScene, 1, at, { moment: "flinch", target: String(enemy.ref()) }, 24);
+                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), fierywrathFlinchText, [], 26);
                     }
                     if (scope.valid(enemy)) {
-                        const away = facts.position().minus(centre);
-                        if (away.length() > 0.15) scope.displace(enemy, away.unit().scale(push));
+                        const away = at.minus(centre);
+                        if (away.length() > 0.15) scope.hitDisplace(enemy, away.unit().scale(push));
                     }
-                });
+                }
                 return touched;
             }
 
@@ -142,7 +152,11 @@ namespace PokemonSkills {
                 scenes.show(action, "aura", centre,
                     { moment: "aura", scale: scale, radius: radius, marks: Math.max(8, struck * 6) });
                 pulse(action, struck);
-            } else finish(action, struck);
+            } else {
+                // 纯爆发：暗焰在一次扩散后自行消散收尾，不留危险场。
+                WorldFeedback.emit(world, fierywrathScene, 1, centre, { moment: "fade", scale: scale, radius: radius }, 26);
+                finish(action, struck);
+            }
         }
     });
 

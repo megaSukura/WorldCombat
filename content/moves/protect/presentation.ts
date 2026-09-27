@@ -19,7 +19,7 @@ const ProtectDefinition: ParticleDefinition = {
                 {
                     name: "rise_ring", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    rate: 40, shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
+                    rate: 40, shape: { kind: "ring", radius: 1.7 },
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.45, 0.12],
                     color: 0xBEE3FF, alpha: [0.5, 0], light: "full", maxParticles: 160
@@ -27,7 +27,7 @@ const ProtectDefinition: ParticleDefinition = {
                 {
                     name: "gather", bind: "source", offset: [0, 0.5, 0], height: 0.4, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
-                    rate: 30, shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1.0 } },
+                    rate: 30, shape: { kind: "sphere_surface", radius: 1.7 },
                     direction: "inward", speed: [0.04, 0.14],
                     lifetime: [8, 14], size: [0.12, 0.03], sizeMode: "index",
                     color: 0xDCF2FF, alpha: [0.7, 0], light: "full", maxParticles: 120
@@ -35,7 +35,7 @@ const ProtectDefinition: ParticleDefinition = {
                 {
                     name: "dust", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 24, shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
+                    rate: 24, shape: { kind: "ring", radius: 1.7 },
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.06, 0.02],
                     color: 0xC7D8E6, alpha: [0.5, 0], light: "world", maxParticles: 120
@@ -48,7 +48,7 @@ const ProtectDefinition: ParticleDefinition = {
                 {
                     name: "dome_shell", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/screen",
-                    rate: 6, shape: { kind: "hemisphere", radius: { data: "scale", fallback: 1.0 } },
+                    rate: 6, shape: { kind: "hemisphere", radius: 1.7 },
                     direction: "shape", speed: [0.0, 0.01], spin: 2,
                     lifetime: [30, 48], size: [0.6, 0.6],
                     color: 0x9CC8E8, alpha: [0.12, 0.05], alphaMode: "sin",
@@ -57,7 +57,7 @@ const ProtectDefinition: ParticleDefinition = {
                 {
                     name: "rim", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 5, shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
+                    rate: 5, shape: { kind: "ring", radius: 1.7 },
                     direction: "up", speed: [0.0, 0.01],
                     lifetime: [26, 40], size: [0.5, 0.5], sizeMode: "sin",
                     color: 0xBEE3FF, alpha: [0.2, 0.06], alphaMode: "sin",
@@ -66,7 +66,7 @@ const ProtectDefinition: ParticleDefinition = {
                 {
                     name: "motes", bind: "source", offset: [0, 0.4, 0], height: 0.4, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 10, shape: { kind: "hemisphere", radius: { data: "scale", fallback: 1.0 } },
+                    rate: 10, shape: { kind: "hemisphere", radius: 1.7 },
                     direction: "up", speed: [0.005, 0.02],
                     lifetime: [16, 28], size: [0.06, 0.01],
                     color: 0xE8F6FF, alpha: [0.5, 0], light: "full", maxParticles: 40

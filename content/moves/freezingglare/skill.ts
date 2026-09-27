@@ -12,6 +12,8 @@
  *       切断就停止后续链。
  *   阻（blocked）：施法者与首个目标之间没有清晰视线时，念力在眼前溃散，不结算任何东西。
  *
+ * 抵抗与传导：免疫或抵抗这一击的敌人不吃伤害、也不会被冻，但念力线仍从它身上继续跳向下一个最近的敌人；
+ *   跳数统计的是线真正抵达的目标，伤害与新增冰冻只按各自的真实回执反馈，绝不虚报。
  * 反制：需要一条通视的线——中间有方块、绕背或躲进掩体，这一记就打不出来；冰冻是概率，且冰属性与免冻
  *   特性/Boss 照常免疫。配置 unblinking（凝视式）：多一跳、射程更远、冰冻概率更高，但起手与冷却更久。
  */
@@ -42,8 +44,8 @@ namespace PokemonSkills {
         id: "freezingglare",
         cooldownParameter: "wait",
         name: "Freezing Glare",
-        description: "从双眼中射出一道瞬发、不飞行的精神视线：念力线在敌人之间跳跃，每个被盯到的目标各挨一次精神伤害并可能被冻住；每一跳都要有真实通视，视线被切断就停止后续链。冰冻照常遵守冰属性、免冻特性与 Boss 控制免疫，命中失败就不会显示冰壳。",
-        uses: ["对需要一条通视的风筝目标一击必中", "在挤在一起的一队敌人之间传导，一次点名多人", "用精神伤害处理冰属性或免冻目标，冰冻不成也照常主伤"],
+        description: "从双眼中射出一道瞬发、不飞行的精神视线：念力线在敌人之间跳跃，每个被盯到的目标各挨一次精神伤害并可能被冻住；每一跳都要有真实通视，视线被切断就停止后续链。抵抗或免疫这一击的目标不吃伤害、也不会被冻，但念力线仍从它身上继续传导。冰冻照常遵守冰属性、免冻特性与 Boss 控制免疫，命中失败就不会显示冰壳。",
+        uses: ["对一条通视上的风筝目标瞬发点名", "在挤在一起的一队敌人之间传导，一次点名多人", "用精神伤害处理冰属性或免冻目标，冰冻不成也照常主伤"],
         kind: "enemy",
         range: 11,
         maxRange: 16,
@@ -102,7 +104,7 @@ namespace PokemonSkills {
             const used: { [ref: string]: boolean } = {};
             used[String(actor.ref())] = true;
             const path: number[][] = [freezingglareCoords(origin)];
-            let current: CombatActor | null = first, currentPower = power, jumps = 0;
+            let current: CombatActor | null = first, currentPower = power, jumps = 0, hits = 0;
 
             for (let step = 0; step < chains && current !== null; step++) {
                 if (!world.valid(current)) break;
@@ -113,23 +115,27 @@ namespace PokemonSkills {
                 path.push(freezingglareCoords(at));
                 used[ref] = true;
                 jumps++;
-                if (hurt(action, current, "freezingglare", currentPower,
-                    { damage: damageSpec("freezingglare", "glare"), status: "frozen", chance: freezeChance })) {
+                // A resistant/immune body still relays the line; only a real damage receipt may report a new freeze.
+                const alreadyFrozen = CombatStatus.has(world, current, "frozen");
+                const landed = hurt(action, current, "freezingglare", currentPower,
+                    { damage: damageSpec("freezingglare", "glare"), status: alreadyFrozen ? "" : "frozen", chance: alreadyFrozen ? 0 : freezeChance });
+                if (landed) {
+                    hits++;
                     WorldFeedback.emit(world, freezingglareScene, 1, at,
                         { moment: "impact", target: ref, intensity: intensity, scale: scale, jump: step + 1 }, 24);
-                    if (CombatStatus.has(world, current, "frozen"))
-                        WorldFeedback.emit(world, freezingglareScene, 1, at,
-                            { moment: "frozen", target: ref, intensity: intensity, scale: scale, jump: step + 1 }, 24);
                     sound(action, "cobblemon:impact.psychic");
                 }
+                if (!alreadyFrozen && CombatStatus.has(world, current, "frozen"))
+                    WorldFeedback.emit(world, freezingglareScene, 1, at,
+                        { moment: "frozen", target: ref, intensity: intensity, scale: scale, jump: step + 1 }, 24);
                 currentPower *= falloff;
                 current = freezingglareNext(world, at, used, chainRange);
             }
 
             WorldFeedback.emit(world, freezingglareScene, 1, origin,
-                { moment: "glare", target: String(first.ref()), path: path, chains: jumps, intensity: intensity, scale: scale,
+                { moment: "glare", target: String(first.ref()), path: path, chains: jumps, hits: hits, intensity: intensity, scale: scale,
                     rate: Math.round(80 + power * 0.8), impactCount: Math.round(14 + power * 0.3) }, 26);
-            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.35, 0)), freezingglareHitText, [jumps], 26);
+            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.35, 0)), freezingglareHitText, [jumps, hits], 26);
             sound(action, lash);
             done(action);
         }

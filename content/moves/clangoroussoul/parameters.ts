@@ -33,12 +33,12 @@ namespace PokemonSkills {
             F.base(14).minus(F.stat("speed").minus(60).max(0).times(0.03)).clamp(7, 16).round(0),
             "拍间隔",
             "两拍之间相隔多久；速度越高越快，暴露时间越短。"),
-        /** 声波半径：身板越大传得越远。 */
+        /** 声波半径：身板越大传得越远；只决定表现的声纹大小，不造成伤害或位移。 */
         pulseRadius: formula(
             F.base(3).plus(F.body("height").times(0.8)).clamp(2.5, 6).round(2),
             "声波半径", {
                 base: 4.1, unit: "格",
-                description: "每一拍向外荡开的声波半径；碰撞箱越高，声音传得越远。"
+                description: "每一拍向外荡开的声波半径，仅作视觉表现；碰撞箱越高，声音传得越远。无论多大都不会造成伤害或位移。"
             })
     });
 

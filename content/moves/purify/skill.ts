@@ -2,7 +2,8 @@
  * 净化 / Purify —— 执行组织。
  *
  * 核心念头：朝瞄准处探出手——直接点到谁就抽谁，点向空处则在落点小范围内挑最近的一个带异常者——把它身上的病痛
- *   整项抽出来；暗雾沿一条线飞回施法者，落地化成生命。它是一个**单点的转化**：净化的是别人（伙伴或对手都行），回血的是自己。
+ *   整项抽出来；暗雾沿一条线飞回施法者，落地化成生命。直接瞄准与范围候选都要在真实射程内、且与施法者之间路径畅通。
+ *   它是一个**单点的转化**：净化的是别人（伙伴或对手都行），回血的是自己。
  *
  * 两幕：
  *   起（windup，提交前）：手心拢起一点净光，并预告这次会抽到谁，可被打断。
@@ -17,24 +18,28 @@
 namespace PokemonSkills {
     function purifyAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
-    /** 落点 `radius` 内最近的、未被排除的、带有害状态效果的战斗者；没有就返回 null。 */
-    function purifyFind(world: CombatWorld, point: CombatPoint, radius: number, self: CombatActor | null): CombatActor | null {
-        const near = world.query(point, Math.max(0.5, radius), false);
+    /** 落点 `radius` 内最近的、未被排除的、带有害状态效果的战斗者；没有就返回 null。
+     *  候选同样要满足真实射程与清晰路径，隔墙者、超出施放距离者都不算可选。 */
+    function purifyFind(world: CombatWorld, action: CombatAction, self: CombatActor, radius: number): CombatActor | null {
+        const origin = action.origin(), range = action.range();
+        const near = world.query(action.targetPosition(), Math.max(0.5, radius), false);
         let best: CombatActor | null = null, bestDistance = 0;
         for (let index = 0; index < near.length; index++) {
             const candidate = near[index];
-            if (self !== null && String(candidate.ref()) === String(self.ref())) continue;
+            if (String(candidate.ref()) === String(self.ref())) continue;
             const body = world.observe(candidate);
             if (body === null || body.health() <= 0) continue;
             if (!CombatStatus.hasHarmful(world, candidate)) continue;
-            const distance = body.position().minus(point).length();
+            const distance = body.position().minus(origin).length();
+            if (distance > range + 0.3) continue;
+            if (!world.clear(origin, body.position())) continue;
             if (best === null || distance < bestDistance) { best = candidate; bestDistance = distance; }
         }
         return best;
     }
 
     /**
-     * 本次瞄准真正会抽取的对象：直接瞄准的实体积优先（任何阵营，只要带着异常且不是自己）；
+     * 本次瞄准真正会抽取的对象：直接瞄准的实体积优先（任何阵营，只要带着异常且不是自己），但它同样要在射程内且路径畅通；
      * 只瞄到地面时才退回「落点 captureRadius 内最近的带异常者」。返回 null 表示这一手会落空。
      */
     function purifyIntended(world: CombatWorld, action: CombatAction, self: CombatActor, radius: number): CombatActor | null {
@@ -43,9 +48,11 @@ namespace PokemonSkills {
             if (String(aimed.ref()) === String(self.ref())) return null;
             const body = world.observe(aimed);
             if (body === null || body.health() <= 0) return null;
+            if (body.position().minus(action.origin()).length() > action.range() + 0.3) return null;
+            if (!world.clear(action.origin(), body.position())) return null;
             return CombatStatus.hasHarmful(world, aimed) ? aimed : null;
         }
-        return purifyFind(world, action.targetPosition(), radius, self);
+        return purifyFind(world, action, self, radius);
     }
 
     /** 抽走一个战斗者身上的全部有害状态效果，返回实际抽走的项数。 */
@@ -141,9 +148,15 @@ namespace PokemonSkills {
             const gained = purifyHeal(world, self, mate.maxHealth() * fraction, "purify");
             const scale = Math.max(0.6, Math.min(1.8, radius / 1.3));
             world.sound("minecraft:block.beacon.power_select", remote, 12, "{}");
+            // 返回雾做一段真实短流动：从目标头顶沿一条线下落到施法者口边，两个顶点都是本次实际世界点。
+            const head = remote.plus(WorldCombat.point(0, mate.height() * 0.45, 0));
+            const mouth = body.position().plus(WorldCombat.point(0, body.height() * 0.42, 0));
             WorldFeedback.emit(world, purifyScene, 1, remote,
-                { moment: "draw", target: String(target.ref()), path: [String(target.ref()), String(self.ref())],
-                    removed: removed, motes: motes, scale: scale }, 28);
+                { moment: "draw", target: String(target.ref()), removed: removed, motes: motes, scale: scale }, 26);
+            WorldFeedback.emit(world, purifyFlowScene, 1, head,
+                { moment: "draw", target: String(target.ref()), source: String(self.ref()),
+                    path: [[head.x(), head.y(), head.z()], [mouth.x(), mouth.y(), mouth.z()]],
+                    start: world.tick(), duration: 14, removed: removed, motes: motes, scale: scale }, 30);
             WorldFeedback.text(world, purifyAbove(remote), purifyDrawText, [removed], 26);
             if (gained > 0) {
                 // absorb 只在真有回血时出现，强度由实际补回的生命占自身上限的比例驱动。

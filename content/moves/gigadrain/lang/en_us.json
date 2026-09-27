@@ -7,7 +7,7 @@
   "worldcombat.skill.gigadrain.deepPour.off": "Three light waves: more total healing and a faster rhythm for staying in the fight.",
   "worldcombat.skill.gigadrain.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.gigadrain.growth.0": "From level %1$s each wave rises to %2$s.",
-  "worldcombat.skill.gigadrain.growth.1": "From level %1$s each wave rises to %2$s, the drain share to %3$s and the waves to %4$s.",
+  "worldcombat.skill.gigadrain.growth.1": "From level %1$s each wave rises to %2$s and the drain share to %3$s.",
   "worldcombat.skill.gigadrain.description.channel": "While held, the root keeps aiming: every wave re-reads the current aim and the real first contact on that line, so a moving target can be followed by turning the aim. A wall or an ally breaks that wave. Releasing, being interrupted or running out of waves retracts the root at once; remaining waves are not made up.",
   "worldcombat.skill.gigadrain.use.0": "Keep one target's life draining from across the field",
   "worldcombat.skill.gigadrain.use.1": "Pull a health line back over several waves when it is running low",

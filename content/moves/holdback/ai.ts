@@ -62,7 +62,10 @@ namespace PokemonSkills {
         }
     });
 
-    addPreferences("holdback", {}, [
+    addPreferences("holdback", { heavy: false }, [
+        field(pathOf("heavy"), "沉腰", "boolean", {
+            help: "开启（沉腰）：威力约 ×1.2、扫距 +0.3 格、扇形 +8 度，代价是起手 +4 刻、冷却 +6 刻，且扫完后被自己的收势钉住「沉腰时长」，用来一次罩住几个厚目标；关闭（快扫）：威力约 ×0.85、出手更快、扫完可立刻移动，用来贴身保持机动。两者都不会打倒目标。"
+        }),
         number("ai.maxChase", "考虑距离", 1, 14, 1),
         flag("ai.preferCrowd", "优先扎堆目标")
     ]);

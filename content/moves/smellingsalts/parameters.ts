@@ -16,7 +16,7 @@
  *   reach   拍击距离 2.2 格 + 速度偏移；也是实际射程来源，短促。
  *   radius  判定半径 0.30 格 + 体型高度偏移。
  *   push    拍开 0.18 格 + 物攻偏移；粗盐式 ×1.5。
- *   stagger 粗盐留下的踉跄 1.2 秒 + 等级偏移（实际治愈麻痹后额外的一段减速）。
+ *   stagger 粗盐留下的踉跄：基础 24 刻，42 级成长台阶到 30 刻（实际治愈麻痹后额外的一段减速，末端守 16..40 刻）。
  *   puff    盐屑数 12 + 速度偏移 + 等级偏移，驱动表现。
  *   spark   醒神火花数 4 − 速度偏移，表现麻痹离体。
  *   start／settle／recharge 速度决定起手、收招、冷却。
@@ -84,10 +84,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "拍中敌方后把它拍开一点的距离；物攻高、用粗盐时拍得更远。拍中友方不会推开它。"
             }),
-        /** 踉跄：24 刻（1.2 秒）+ 等级偏移[0,12 刻]；夹 16..40 刻（粗盐在治愈敌方麻痹后额外留下的减速时长）。 */
+        /** 踉跄：24 刻（1.2 秒）；42 级成长台阶抬到 30 刻（1.5 秒）；末端夹 16..40 刻（粗盐在治愈敌方麻痹后额外留下的减速时长）。 */
         stagger: seconds(
-            F.base(24).plus(F.level().minus(28).times(0.2).clamp(0, 12)).clamp(16, 40).round(0),
-            "踉跄", "粗盐式把敌方拍醒后，它还会踉跄多久（这段减速留在治愈麻痹之后）。"),
+            F.base(24).clamp(16, 40).round(0),
+            "踉跄", "粗盐式把敌方拍醒后，它还会踉跄多久（这段减速留在治愈麻痹之后）。", { base: 24 }),
         /** 盐屑数：12 + 速度偏移[−3,18] + 等级偏移[−2,4]；夹 8..30。 */
         puff: formula(
             F.base(12).plus(F.stat("speed").minus(58).times(0.14).clamp(-3, 18))
@@ -120,7 +120,7 @@ namespace PokemonSkills {
 
     stages(smellingsaltsId, [
         { level: 26, values: { salts: 74 } },
-        { level: 42, values: { salts: 90, stagger: 1.5 } }
+        { level: 42, values: { salts: 90, stagger: 30 } }
     ]);
 
     describe(smellingsaltsId, [

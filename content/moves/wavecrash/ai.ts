@@ -4,12 +4,17 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这一招的价值在“浇湿”——
  * 开启 `ai.preferDry`（默认开）时，还没被浇湿的目标排得更前：把这一发留给还干着的对手；
  * 已经被浇透的目标只按普通近身候选排。施法者本身湿透时水势更盛，这时排得更前。
- * 自己没湿、血又低于 `ai.minHealth` 时不为“上湿”盲冲（对手已经湿时除外）。
- * 够不到交给共享接近逻辑。
+ * 自己没湿、血又低于 `ai.minHealth` 时不为“上湿”盲冲；但对手已残、这一撞能收尾（反伤按实际伤害结算，收尾的一撞反伤小）时照打。
+ * 够不到交给共享接近逻辑；水墙走直线，中间隔墙则不按这条路线加分。
  */
 namespace PokemonSkills {
     function wavecrashValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
+    }
+
+    /** 这一撞能不能收尾：对手生命已很低时，反伤按剩余生命的实际伤害结算，风险小、还除掉一个威胁。 */
+    function wavecrashFinisher(target: CompanionBehavior.Entity): boolean {
+        return CompanionBehavior.ratio(target) <= 0.3;
     }
 
     CompanionBehavior.registerUse("wavecrash", {
@@ -23,9 +28,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point)
                 > CompanionBehavior.ai<number>(capability, "maxChase", 10)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.3);
-            // 未湿且低血时不为“上湿”盲冲；对手已经湿了或自己血够时照常。
-            if (!self.wet && CompanionBehavior.ratio(self) < minHealth
-                && !CompanionBehavior.status(context, target, "soaked")) return false;
+            // 未湿且低血时不为“上湿”盲冲；对手已残、这一撞能收尾时例外（目标是否已湿无关痛痒，不再作例外）。
+            if (!self.wet && CompanionBehavior.ratio(self) < minHealth && !wavecrashFinisher(target)) return false;
             return true;
         },
         accepts: function (context, capability, target) { return wavecrashValid(target); },
@@ -33,16 +37,19 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
+            // 水墙是直线：被墙截断就够不到，不为这条路线加分。
+            if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return 0;
             let score = 24;
             if (CompanionBehavior.ai<boolean>(capability, "preferDry", true) && !CompanionBehavior.status(context, target, "soaked")) score += 16;
             if (self.wet) score += 10;
+            if (wavecrashFinisher(target)) score += 8;
             return score;
         }
     });
 
     addPreferences("wavecrash", {}, [
         field(pathOf("thick"), "厚水壳", "boolean", {
-            help: "开启：水壳更厚，威力更高、反伤更轻、把目标浇得更久，但涌进更短、起手与冷却更慢——重击又保命。关闭（薄水刃）：水壳更薄，涌得更远更快，反伤更重——适合追击与先手。"
+            help: "开启：水壳更厚，威力更高、自身反伤更轻、把目标浇得更久，但涌进更短、起手与冷却更慢——重击又少受反噬。关闭（薄水刃）：水壳更薄，涌得更远更快，自身反伤更重——适合追击与先手。"
         }),
         field(pathOf("ai.maxChase"), "涌进距离", "number", {
             min: 2, max: 18, step: 1,
@@ -50,7 +57,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.minHealth"), "保留生命", "number", {
             min: 0, max: 0.9, step: 0.05,
-            help: "自己没湿时血低于这个比例就不再为“上湿”盲冲（对手已经湿了除外）。越高越珍惜自己，也越少抢着先手。"
+            help: "自己没湿时血低于这个比例就不再为“上湿”盲冲；但对手已残、这一撞能收尾（对手生命低于 30%%）时仍会出手。越高越珍惜自己，也越少抢着先手。"
         }),
         field(pathOf("ai.preferDry"), "留给还干着的目标", "boolean", {
             help: "开启：优先对还没被浇湿的目标出手（命中会挂上湿身）；关闭：只按威胁与距离排序。"

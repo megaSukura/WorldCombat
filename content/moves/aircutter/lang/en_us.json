@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.aircutter.summary": "Spread a single sheet of thin wind blades toward a direction or world point, sweeping that sector and cutting several foes at once, and it can be loosed at empty air; short wind-up, low cooldown, high critical chance. Focus form is narrower and heavier; wide-fan form is wider and denser.",
+  "worldcombat.skill.aircutter.summary": "Spread a single sheet of thin wind blades horizontally toward a direction or world point, sweeping the sector ahead and cutting several foes at once, and it can be loosed at empty air; short wind-up, low cooldown, high critical chance. Focus form is narrower and heavier; wide-fan form is wider and denser.",
   "worldcombat.skill.aircutter.use.0": "Sweep a whole arc of foes in front in one spread",
   "worldcombat.skill.aircutter.use.1": "Cut several targets bunched inside the fan at once",
   "worldcombat.skill.aircutter.use.2": "Instant and cheap, forcing foes to move during the short wind-up",
   "worldcombat.skill.aircutter.description.0": "Sweep the sector ahead, hitting up to %2$s enemies once each for about %1$s special damage. This move has a heightened critical-hit chance.",
-  "worldcombat.skill.aircutter.description.1": "The fan reaches %1$s blocks with a %2$s-degree span.",
+  "worldcombat.skill.aircutter.description.1": "The horizontal fan reaches %1$s blocks with a %2$s-degree span.",
   "worldcombat.skill.aircutter.focus.on": "Focus form: each blade is heavier (power ×1.22) and range is +1 block, but the span shrinks to 0.62x and cooldown is 5 ticks longer.",
   "worldcombat.skill.aircutter.focus.off": "Wide-fan form (default): the fan spans its full width, but each blade is lighter (power ×0.94).",
   "worldcombat.skill.aircutter.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

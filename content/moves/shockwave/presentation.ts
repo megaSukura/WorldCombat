@@ -1,11 +1,10 @@
 /**
  * 电击波 / shockwave 的客户端表现。
  *
- * 一句话：指尖攒起电光，随后电流出手即到——直击是一道折线电路闪到目标身上，地导是贴地的一条窄带扫过身前；
- *         命中处炸开电火花，湿地或雨中多溅起一层水花。
+ * 一句话：指尖攒起电光，随后电流出手即到——一道折线电路闪到真实终点；命中处炸开电火花，湿地或雨中多溅一层水花。
  * 色相家族：电黄与近白（electricity_white、electricity_yellow、impact_electric），湿地补一层水青。
- * 拍子：起（charge 聚电）→ 击（bolt 直击折线、lane 地导窄带、hit 命中）→ 收（wet 水花、miss 余电）。
- * 范围：bolt 与 lane 都用 path 画出服务端判定的同一组顶点（直击是折线终点、地导是走廊四角），画面与判定同宽。
+ * 拍子：起（charge 聚电）→ 击（bolt 直击折线、hit 命中、resist 抗性熄火）→ 收（wet 水花、miss 余电）。
+ * 范围：bolt 用 path 画出服务端判定折线的同一组顶点，末端就是真实接触点，画面与判定同一条。
  * 运动：电流一瞬铺满整条 path，没有推进的飞行前缘；命中点向四周溅开。
  * 数：`data.flow`（折数换算的流量）绑定 bolt 的发射率，`data.notes`（命中强度换算的碎电数）绑定 hit 的爆发数量，
  * `data.intensity`（威力 / 70）抬高亮度，`data.scale` 缩放判定环，`data.wet` 决定是否加一层水花。
@@ -37,8 +36,8 @@ const ShockwaveDefinition: ParticleDefinition = {
             ]
         },
         bolt: {
-            duration: 30,
-            exit: { stop: 18, drain: 16 },
+            duration: 12,
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
                     name: "core", bind: "path", offset: [0, 0.1, 0],
@@ -55,46 +54,6 @@ const ShockwaveDefinition: ParticleDefinition = {
                     rate: { data: "flow", fallback: 90 }, direction: "shape", speed: [0.05, 0.2], spread: 20,
                     lifetime: [4, 10], size: [0.12, 0.03],
                     color: 0xFFF27A, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 220
-                },
-                {
-                    name: "ground_dust", bind: "path", offset: [0, 0.04, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polyline" },
-                    rate: 34, direction: "shape", speed: [0.03, 0.12], spread: 24,
-                    gravity: 0.03, drag: 0.92,
-                    lifetime: [8, 16], size: [0.06, 0.02],
-                    color: 0x9C8455, alpha: [0.4, 0], light: "world", maxParticles: 160
-                }
-            ]
-        },
-        lane: {
-            duration: 30,
-            exit: { stop: 18, drain: 16 },
-            emitters: [
-                {
-                    name: "lane_fill", bind: "path", fit: "world", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    shape: { kind: "polygon" },
-                    rate: 26, direction: "shape", speed: [0.01, 0.05],
-                    lifetime: [6, 12], size: [0.16, 0.05],
-                    color: 0xFFF27A, alpha: [0.2, 0], light: "full", maxParticles: 220
-                },
-                {
-                    name: "lane_edge", bind: "path", fit: "world", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
-                    shape: { kind: "polyline", closed: true },
-                    rate: 60, direction: "shape", speed: [0.02, 0.08], spread: 6,
-                    lifetime: [5, 11], size: [0.2, 0.05], sizeMode: "sin",
-                    color: 0xF2FBFF, alpha: [0.75, 0], light: "full", bloom: 0.5, maxParticles: 300
-                },
-                {
-                    name: "lane_dust", bind: "path", fit: "world", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polygon" },
-                    rate: 22, direction: "shape", speed: [0.02, 0.08], spread: 24,
-                    gravity: 0.03, drag: 0.92,
-                    lifetime: [8, 16], size: [0.05, 0.02],
-                    color: 0x9C8455, alpha: [0.35, 0], light: "world", maxParticles: 140
                 }
             ]
         },
@@ -144,6 +103,21 @@ const ShockwaveDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [5, 10], size: [0.12, 0.03],
                     color: 0xEAFBFF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 50
+                }
+            ]
+        },
+        resist: {
+            duration: 16,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "doused", bind: "point", offset: [0, 0.3, 0],
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [5, 10], size: [0.16, 0.03],
+                    color: 0x6E7A82, alpha: [0.5, 0], light: "world", maxParticles: 24
                 }
             ]
         },

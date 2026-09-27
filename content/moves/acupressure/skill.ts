@@ -1,11 +1,14 @@
 /**
  * 点穴 / acupressure — 执行组织。
  *
- * 核心念头：贴近给自己或伙伴随机点通一项尚未满的能力——按中哪个穴道，哪项能力短时抬起来。
- *   共用七项能力阶梯（物攻/防御/特攻/特防/速度/命中/闪避）都按共享身份读、按真实有效值排除满级；
- *   一轮点穴只强化一项，通畅窗口结束或被清除时，只撤本招这一次贡献的那一项。
+ * 核心念头：贴近给自己或伙伴点通一项能力。先找当前有效等级最低的一项——若是负等级，这一按就集中把它补回来；
+ *   没有负项才在未满项里随机点。回合只强化一项，通畅窗口结束或被清除时，只撤本招这一次贡献的那一项。
+ *
+ * 选穴（新的取舍）：负等级优先按最低者，同级平局随机；补 1/2 级可越过 0 但不超 +6。
+ *   沿用暂时贡献，不永久清掉敌方的降阶——窗口一收只收回本招份额，原来的负项原样保留。
  *
  * 近身契约：执行时再次核对真实距离与接触——目标走开、中间隔墙都按空放收手，绝不隔空点穴、不穿墙摸人。
+ * 穴点由受术者的朝向与体型构造，准备时先亮候选穴点，真正触达后才点亮被点中的那处。
  */
 namespace PokemonSkills {
     const acupressureScene = "world_combat:move_acupressure";
@@ -15,15 +18,15 @@ namespace PokemonSkills {
     const acupressureStats = ["atk", "def", "spa", "spd", "spe", "accuracy", "evasion"];
     /** 表现里的参考半径：`data.scale = 实际点穴距离 / 这个数`。 */
     const acupressureReference = 2.0;
-    /** 抽中项对应身上固定的一处小穴点（相对中等体型，`fit:"body"` 再按实际体型缩放）。 */
-    const acupressurePoints: { [stat: string]: number[] } = {
-        atk: [0.24, 0.34, 0.12],
-        def: [0.02, 0.14, -0.22],
-        spa: [0.12, 0.6, 0.08],
-        spd: [-0.2, 0.36, -0.12],
-        spe: [0.18, -0.28, 0.02],
-        accuracy: [0.0, 0.62, 0.16],
-        evasion: [-0.22, 0.32, 0.16]
+    /** 抽中项对应身上固定的一处小穴点，按 [前, 右, 上] 相对半宽/半高的分量表达，客户端用受术者锚点换算世界点。 */
+    const acupressureSites: { [stat: string]: number[] } = {
+        atk: [0.70, 0.45, 0.10],
+        def: [0.60, -0.50, -0.10],
+        spa: [0.40, 0.45, 0.65],
+        spd: [0.40, -0.50, 0.60],
+        spe: [0.80, 0.20, -0.60],
+        accuracy: [0.30, 0.15, 0.95],
+        evasion: [0.10, 0.85, 0.30]
     };
     /** 被点中的那项能力的浮字键；一项一句，玩家一眼看出这次点到了哪里。 */
     const acupressureTextKeys: { [stat: string]: string } = {
@@ -38,8 +41,8 @@ namespace PokemonSkills {
     function acupressureText(stat: string): string {
         return acupressureTextKeys[stat] || "world_combat.move.acupressure.text.atk";
     }
-    function acupressurePoint(stat: string): number[] {
-        return acupressurePoints[stat] || acupressurePoints.atk;
+    function acupressureSite(stat: string): number[] {
+        return acupressureSites[stat] || acupressureSites.atk;
     }
 
     /** 目标身上可点的那几项（未满 +6）。 */
@@ -49,6 +52,28 @@ namespace PokemonSkills {
             if (NativeEffects.effectiveStage(world, target, acupressureStats[index]) < 6) open.push(acupressureStats[index]);
         }
         return open;
+    }
+    /** 当前有效等级最低的一项；有负项时只在这些负项之间平局随机，否则在全部未满项里随机。 */
+    function acupressureChoose(world: CombatWorld, target: CombatActor): string | null {
+        const open = acupressureOpen(world, target);
+        if (open.length === 0) return null;
+        let lowest = 0, weakest: string[] = [];
+        for (let index = 0; index < open.length; index++) {
+            const stage = NativeEffects.effectiveStage(world, target, open[index]);
+            if (stage < lowest) { lowest = stage; weakest = [open[index]]; }
+            else if (stage === lowest && stage < 0) weakest.push(open[index]);
+        }
+        const pool = weakest.length > 0 ? weakest : open;
+        return pool[Math.max(0, Math.min(pool.length - 1, Math.floor(world.random() * pool.length)))];
+    }
+    /** 准备期先亮起的候选穴点：有负项只亮负项，否则亮全部未满项。 */
+    function acupressureCandidates(world: CombatWorld, target: CombatActor): string[] {
+        const open = acupressureOpen(world, target);
+        const negative: string[] = [];
+        for (let index = 0; index < open.length; index++) {
+            if (NativeEffects.effectiveStage(world, target, open[index]) < 0) negative.push(open[index]);
+        }
+        return negative.length > 0 ? negative : open;
     }
     /** 空选按既有 self 许可回落到自己；显式选择的友方原样返回。 */
     function acupressureTarget(action: CombatAction, config: any): CombatActor | null {
@@ -73,8 +98,8 @@ namespace PokemonSkills {
         id: "acupressure",
         cooldownParameter: "wait",
         name: "点穴",
-        description: "贴近给自己或近处伙伴随机点通一项尚未满的能力：按中哪个穴道，哪项能力就短时抬起来。一轮只点一项，通畅结束或被清除时只收回该项贡献。目标走开或隔墙都按空放。",
-        uses: ["交战前为自己随机强化一项能力", "给近处伙伴一段短时强化", "安全时用稳按取得两级强化"],
+        description: "贴近给自己或近处伙伴点穴：先找当前被压低得最狠的一项能力，把它补 1 到 2 级（可越过 0，不超过 +6）；没有负项才在未满项里随机点。一轮只点一项，通畅结束或被清除时只收回该项贡献，原来的削弱原样保留。目标走开或隔墙都按空放。",
+        uses: ["把伙伴被削掉的关键能力托回来", "交战前为自己点一项尚未满的能力", "安全时用稳按取得两级强化"],
         kind: "friend",
         range: 2,
         maxRange: 4,
@@ -111,9 +136,17 @@ namespace PokemonSkills {
             return acupressureOpen(world, target).length > 0 ? "" : "no-open-point";
         },
         windup: function (action, config, prepare) {
-            const target = acupressureTarget(action, config);
-            action.present("world_combat:move_acupressure:seek", acupressureScene, 1, action.origin(),
-                JSON.stringify({ moment: "seek", target: target === null ? "" : String(target.ref()), steady: config && config.steady === true ? 1 : 0 }));
+            const world = action.sense(), target = acupressureTarget(action, config);
+            const data: any = { moment: "seek", target: target === null ? "" : String(target.ref()),
+                steady: config && config.steady === true ? 1 : 0, start: world.tick(), duration: prepare, sites: [] };
+            if (target !== null && world.valid(target)) {
+                const candidates = acupressureCandidates(world, target);
+                for (let index = 0; index < candidates.length; index++) {
+                    const site = acupressureSite(candidates[index]);
+                    data.sites.push({ stat: candidates[index], f: site[0], r: site[1], u: site[2] });
+                }
+            }
+            action.present("world_combat:move_acupressure:seek", acupressureScene, 1, action.origin(), JSON.stringify(data));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -122,8 +155,8 @@ namespace PokemonSkills {
             if (MobEffects.read(world, target, acupressureFlow)) { done(action); return; }
             // 真实近身接触：跑开、隔墙都按空放，不隔空点穴。
             if (!acupressureTouch(action, target)) { done(action); return; }
-            const open = acupressureOpen(world, target);
-            if (open.length === 0) { done(action); return; }
+            const stat = acupressureChoose(world, target);
+            if (stat === null) { done(action); return; }
             const pressed = world.observe(target), body = world.observe(actor);
             if (pressed === null || body === null) { done(action); return; }
             const steady = !!(config && config.steady === true);
@@ -132,8 +165,6 @@ namespace PokemonSkills {
             const reach = Math.max(1.0, p("acupressure", "reach", action));
             const motes = Math.max(10, Math.round(p("acupressure", "motes", action)));
             const beats = Math.max(2, Math.min(4, Math.round(p("acupressure", "beats", action))));
-            const roll = Math.max(0, Math.min(open.length - 1, Math.floor(world.random() * open.length)));
-            const stat = open[roll];
             const index = acupressureStats.indexOf(stat);
             const before = NativeEffects.effectiveStage(world, target, stat), changes: { [stat: string]: number } = {};
             changes[stat] = Math.min(press, 6 - before);
@@ -147,15 +178,15 @@ namespace PokemonSkills {
                 done(action); return;
             }
             const scale = reach / acupressureReference;
-            const at = acupressurePoint(stat);
+            const site = acupressureSite(stat);
             const data = { moment: "press", target: String(target.ref()), stat: stat, index: index, press: levels,
-                motes: motes, beats: beats, scale: scale, steady: steady ? 1 : 0, ax: at[0], ay: at[1], az: at[2],
-                intensity: Math.max(0.8, Math.min(2, levels / 2 + motes / 60)) };
+                motes: motes, beats: beats, scale: scale, steady: steady ? 1 : 0, f: site[0], r: site[1], u: site[2],
+                start: world.tick(), intensity: Math.max(0.8, Math.min(2, levels / 2 + motes / 60)) };
             WorldFeedback.emit(world, acupressureScene, 1, pressed.position(), data, 30);
             // 通畅期间只在被点中的穴道留一枚小点；窗口到期、被清除或刷新时随窗口一起收。
             WorldFeedback.onEffect(world, windowId, "world_combat:move_acupressure/flow", acupressureScene, 1, pressed.position(),
                 { moment: "flow", target: String(target.ref()), stat: stat, index: index, motes: Math.max(8, Math.round(motes / 3)),
-                    scale: scale, ax: at[0], ay: at[1], az: at[2] });
+                    scale: scale, f: site[0], r: site[1], u: site[2] });
             WorldFeedback.text(world, pressed.position().plus(WorldCombat.point(0, 1.3, 0)), acupressureText(stat), [levels > 0 ? "+" + levels : String(levels)], 32);
             world.sound("minecraft:block.stone_pressure_plate.click_on", pressed.position(), 14, "{}");
             done(action);
@@ -171,6 +202,6 @@ namespace PokemonSkills {
         const body = world.observe(target);
         if (body === null) return;
         WorldFeedback.emit(world, acupressureScene, 1, body.position(),
-            { moment: "fade", target: String(target.ref()) }, 22);
+            { moment: "fade", target: String(target.ref()), start: world.tick() }, 22);
     });
 }

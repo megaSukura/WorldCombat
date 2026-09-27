@@ -5,9 +5,10 @@
  *   若余毒按进伤口，伤口上再浮起该余毒的一层（绿毒／黄麻／蓝眠三种 moment 各自一色）。
  * 色相家族：毒绿 0x9BE86B 与深创绿 0x4F7A2A 为主，中性伤口灰 0x2E3B2E 作底；
  *   余毒 moment 只有该状态一色——麻痹黄 0xFFE14D、睡眠蓝 0x8FA6C4，这是机制三选一在画面上的读法。
- * 拍子：起（windup 聚毒）→ 撕（rake 三道爪痕）→ 中（venom／numb／drowse 按进余毒，或 wound 只留伤口）→ 收。
- * 范围：rake 用 `data.path`（与服务端判定同一组顶点）画三道平行爪痕，画到的就是打到的那块窄面；
- *   `data.wound`／`data.cleave` 决定三道线分多开、多长。
+ * 拍子：起（windup 聚毒）→ 撕（blade 三道短刃从手边推进到目标）→ 留痕（gash 命中才画三道爪痕，venom／numb／drowse
+ *   按进余毒，或 wound 只留伤口）→ 收。
+ * 范围：blade／gash 用 `data.path`（与服务端判定同一组端点）画当前这一小段短刃或伤口上的三道平行爪痕，
+ *   画到的就是打到的那块窄面；`data.cleave`／`data.wound` 决定三道线分多开、多长，落空或零伤不留痕。
  * 运动：起手毒液向内收；rake 沿爪痕由下往上拉、毒液向外溅并受重力下落；余毒浮起后缓慢消散。
  * 数：`data.venom`（物攻派生）决定毒液滴数与雾量，`data.intensity`（爪伤威力派生）抬亮命中那一下，
  *   `data.primary` 让中间那道爪痕更亮。
@@ -39,15 +40,39 @@ const DireclawDefinition: ParticleDefinition = {
                 }
             ]
         },
-        rake: {
+        blade: {
             duration: 22,
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "gash", bind: "path", offset: [0, 0, 0],
+                    // 当前这一小段推进中的短刃；服务端每刻换上的同一组端点，画到哪就是判定推进到哪。
+                    name: "edge", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/cut",
                     shape: { kind: "polyline" },
                     rate: 40, direction: "shape", speed: [0.03, 0.12],
+                    lifetime: [5, 10], size: [0.22, 0.03], sizeMode: "index",
+                    color: 0xDFFFCF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 50
+                },
+                {
+                    name: "trail", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/scratch",
+                    shape: { kind: "polyline" },
+                    rate: 22, direction: "shape", speed: [0.04, 0.16], spread: 12, spin: 20,
+                    lifetime: [6, 12], size: [0.18, 0.03],
+                    color: 0x9BE86B, alpha: [0.7, 0], light: "full", maxParticles: 50
+                }
+            ]
+        },
+        gash: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    // 命中才留痕：三道平行竖向爪痕，伤口平面由服务端从真实身体朝向算出。
+                    name: "scar", bind: "path", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    shape: { kind: "polyline" },
+                    rate: 44, direction: "shape", speed: [0.03, 0.12],
                     lifetime: [5, 11], size: [0.24, 0.03], sizeMode: "index",
                     color: 0xDFFFCF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 60
                 },

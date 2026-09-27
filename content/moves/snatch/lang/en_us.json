@@ -19,7 +19,7 @@
   "worldcombat.skill.snatch.preference.patient": "Grab style",
   "worldcombat.skill.snatch.preference.patient.help": "Bide: open hand x1.5, +3 ticks wind-up, x1.2 cooldown, to wait for a slower setup. Snap: -2 ticks wind-up, x0.85 cooldown, open hand x0.9, to grab a single beat.",
   "worldcombat.skill.snatch.preference.ai.maxChase": "Consider range",
-  "worldcombat.skill.snatch.preference.ai.maxChase.help": "The partner only reaches out while a threat is this close; smaller keeps it for melee, larger chases out to wait for the grab.",
+  "worldcombat.skill.snatch.preference.ai.maxChase.help": "The partner only reaches out while a threat is this close; the actual reach is this move's own ceiling, so a smaller value keeps it near while a larger one chases to the edge of the reach.",
   "worldcombat.skill.snatch.preference.ai.opening": "When to grab",
   "worldcombat.skill.snatch.preference.ai.opening.help": "Wait for setup: watch a known stealable move or a recent real beneficial effect. Anytime: wait speculatively as configured.",
   "worldcombat.skill.snatch.preference.ai.opening.setup": "Wait for setup",

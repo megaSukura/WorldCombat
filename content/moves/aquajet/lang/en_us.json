@@ -33,5 +33,5 @@
   "effect.world_combat.aquajet_soaked": "Aqua Jet: Soaked",
   "worldcombat.skill.aquajet.preference.ai.preserveBurn": "Preserve burn",
   "worldcombat.skill.aquajet.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value.",
-  "worldcombat.skill.aquajet.description.douse": "If the target is carrying a burn, the jet clears the burn and puts out the fire on it."
+  "worldcombat.skill.aquajet.description.douse": "If the target carries a burn or is actually on fire, the jet clears the burn and puts the fire out; the two states are read independently."
 }

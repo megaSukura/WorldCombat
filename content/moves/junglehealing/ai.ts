@@ -5,6 +5,7 @@
  *   带着有害状态效果的人有几个。有人带病就值得唤（洗状态是本招独有的价值）；只有受伤时，
  *   要凑够 ai.rescueCount（默认 2）人才愿意动用这场昂贵的群救，单人小伤不抢。
  * 对谁出手：共享的「伤者」感官挑出最需要的人作为接近对象；施放仍以自身为心，伙伴必须被罩进半径。
+ * 人数与接近距离都读配置：候选取 ai.maxChase 以内的伙伴，是否值得再对照 ai.healBelow 与 ai.rescueCount。
  * 够不到怎么办：approachTarget 指向伤者，由共享任务把身体带进 radius 内再放。
  * 站哪儿更值：脚下是自然地面时整招回得更多、圈更大，priority 因此更高。
  * 配置：deeproot 在参数层换「根深圈大」与「浅根快放」；ai.healBelow / ai.maxChase / ai.rescueCount
@@ -33,11 +34,11 @@ namespace CompanionBehavior {
         return fact<boolean>(context, "world_combat:move_junglehealing/harmful", target) === true;
     }
 
-    /** 数一数这一圈里真正受益的人：受伤的、带病的、以及最低血量比例。 */
+    /** 数一数这一圈里真正受益的人：受伤的、带病的、以及最低血量比例。接近距离读 ai.maxChase。 */
     function junglehealingBeneficiaries(context: WorldBehavior.Context, item: WorldBehavior.Capability): { wounded: number; afflicted: number; lowest: number } {
         const self = source(context);
         const below = ai<number>(item, "healBelow", 0.82);
-        const reach = Math.max(1.5, Number(item.data.range) || 2.6) + 0.6;
+        const reach = Math.max(1.5, ai<number>(item, "maxChase", 12));
         let wounded = 0, afflicted = 0, lowest = 1;
         const candidates: Entity[] = [self];
         (context.facts.nearby as Entity[]).forEach(function (other) {

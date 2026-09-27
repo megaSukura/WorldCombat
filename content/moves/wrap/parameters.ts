@@ -17,7 +17,7 @@ namespace PokemonSkills {
             F.base(130).plus(F.level().minus(25).times(1.0).clamp(0, 50))
                 .times(F.when(F.pref("cocoon", text("worldcombat.skill.wrap.preference.cocoon")), F.const(1.25), F.const(1)))
                 .clamp(80, 240).round(0),
-            "藤茧持续", "藤茧在目标身上留多久；期间目标被钉住、攻击被压低、每隔一会儿被绞一次。"),
+            "藤茧持续", "藤茧在目标身上留多久；期间目标仍能移动，攻击被压低、每隔一会儿被绞一次。"),
         /** 两绞间隔：26 − 速度偏移[−7,7]；密缠 ×1.2 / 速缠 ×0.9；夹 12..34 刻。 */
         interval: seconds(
             F.base(26).minus(F.stat("speed").minus(60).times(0.06).clamp(-7, 7))

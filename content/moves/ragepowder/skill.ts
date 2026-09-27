@@ -6,11 +6,11 @@
  *
  * 两幕：
  *   扬（windup 在提交前只观察与预告；准备期很短，忠实原生优先度 +2）。
- *   铺（提交后）：在选定的近地撒下一团固定不动的粉尘云（托管效果，存续期内与施法者距离无关，自己可走开）。
- *     云每 `interval` 刻扫一遍：对刚刚走进来、可受粉末、且不在再次入云冷却里的个体各发一次原生仇恨请求
- *     （world.target）；请求被接受就放一条从入云者指向施术者的短连线，被拒绝的 Boss 只是不触发，不绕免疫。
- *     留在云里不会被反复强续；同一个个体的再次入云冷却走完才会被重新牵引；离开云后不再追写。
- * 结束：存续走完或被清除时收回粉尘，画面随之整体淡去。
+ *   铺（提交后）：先退掉上一团云，再在选定的近地撒下一团固定不动的粉尘云（托管效果，存续期内与施法者距离无关，自己可走开）。
+ *     云每 `interval` 刻扫一遍：只取真正踏进接触区、与本层地面连通（云中心一条方块 clip 畅通）的个体；对刚走进来、可受粉末、
+ *     且不在再次入云冷却里者各发一次原生仇恨请求（world.target）；请求被接受就放一条从入云者指向施术者的短连线，
+ *     被拒绝的 Boss 只是不触发，不绕免疫。留在云里不会被反复强续；同一个个体的再次入云冷却走完才会被重新牵引。
+ * 结束：存续走完或被清除时，只有这团云自己的载体仍在才由它清除身份，画面随之整体淡去。
  */
 namespace PokemonSkills {
     WorldCombat.effect(ragePowderMark, 1, 1200, "actor", function (json) {
@@ -24,17 +24,21 @@ namespace PokemonSkills {
         if (value.contacts === null || typeof value.contacts !== "object" || Array.isArray(value.contacts))
             throw new Error("Invalid rage powder contacts");
         if (!Array.isArray(value.inside)) throw new Error("Invalid rage powder inside");
+        if (value.carrier !== undefined && value.carrier !== null && !MobEffects.validAnchor(value.carrier))
+            throw new Error("Invalid rage powder carrier");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(ragePowderMark, "start", function (effect) { effect.schedule("scan", "scan", 1, "{}"); });
     WorldCombat.effectHandler(ragePowderMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
     WorldCombat.effectHandler(ragePowderMark, "end", function (effect) {
         const world = effect.world(), self = effect.target(), state = JSON.parse(effect.state());
-        if (world.valid(self) && CombatStatus.has(world, self, ragePowderStatus)) CombatStatus.cure(world, self, ragePowderStatus);
+        // 只有这团云自己的 carrier 仍在时才由它清除身份：被更新的一团替换后，旧云结束不能删掉新状态。
+        if (world.valid(self) && state.carrier && MobEffects.matches(world, self, state.carrier)
+            && CombatStatus.has(world, self, ragePowderStatus)) CombatStatus.cure(world, self, ragePowderStatus);
         if (!Array.isArray(state.centre) || state.centre.length !== 3) return;
         const centre = WorldCombat.point(state.centre[0], state.centre[1], state.centre[2]);
         WorldFeedback.emit(world, ragePowderScene, 1, centre,
-            { moment: "fade", radius: state.radius, motes: state.motes, scale: Math.max(0.5, Math.min(2.2, state.radius / 2.3)) }, 26);
+            { moment: "fade", radius: state.radius, motes: state.motes }, 26);
         WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 0.9, 0)), ragePowderTextFade, [], 24);
     });
 
@@ -55,7 +59,9 @@ namespace PokemonSkills {
         const radius = Math.max(1, data.radius), now = world.tick();
         // 施法者完全离开后，这团留在原地的短寿粉云自然收掉。
         if (selfBody.position().minus(centre).length() > 60) { effect.end(); return; }
-        const found = world.query(centre, radius, false);
+        // 云是贴地的一小段空间：只吸真正踏进接触区、与本层地面连通的生物，隔墙或站在上层的不受影响。
+        const eye = centre.plus(WorldCombat.point(0, 0.4, 0));
+        const found = world.query(centre, radius + 1, false);
         const inside: string[] = [];
         let lured = 0, immune = 0, fresh = 0;
         for (let index = 0; index < found.length; index++) {
@@ -64,6 +70,12 @@ namespace PokemonSkills {
             if (world.friendly(other)) continue;
             const facts = world.observe(other);
             if (facts === null || facts.health() <= 0 || facts.player()) continue;
+            const low = facts.boundsMin(), high = facts.boundsMax();
+            const nearX = Math.max(low.x(), Math.min(high.x(), centre.x()));
+            const nearZ = Math.max(low.z(), Math.min(high.z(), centre.z()));
+            if (Math.sqrt((nearX - centre.x()) * (nearX - centre.x()) + (nearZ - centre.z()) * (nearZ - centre.z())) > radius) continue;
+            if (high.y() < centre.y() - 0.2 || low.y() > centre.y() + 1.6) continue;
+            if (WorldGeometry.blockHit(world, eye, facts.position()) !== null) continue;
             const ref = String(other.ref());
             inside.push(ref);
             if (ragePowderImmune(world, other)) { immune++; continue; }
@@ -87,18 +99,18 @@ namespace PokemonSkills {
         effect.state(JSON.stringify(data));
         // 粉尘云视觉绑在这片云自己的效果上：自然到期或被驱散时画面一起收掉。
         WorldFeedback.onEffect(world, effect.id(), "world_combat:move_ragepowder/cloud", ragePowderScene, 1, centre,
-            { moment: "cloud", radius: radius, motes: data.motes, lured: lured, immune: immune,
-                scale: Math.max(0.5, Math.min(2.2, radius / 2.3)) });
+            { moment: "cloud", radius: radius, motes: data.motes, lured: lured, immune: immune });
         if (fresh > 0) world.sound("minecraft:block.grass.break", centre, 12, "{}");
         effect.schedule("scan", "scan", Math.max(4, Math.round(data.interval)), "{}");
     });
 
-    // 身份被清掉（时长走完以外的手段：牛奶／/effect clear）时收回粉尘。
+    // 身份被清掉（时长走完以外的手段：牛奶／/effect clear）时收回粉尘；只是被刷新则留给新云。
     WorldCombat.on("world_combat:move_ragepowder/release", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== ragePowderEffect) return;
         const world = event.world(), self = event.actor();
         if (!world.valid(self)) return;
+        if (CombatStatus.has(world, self, ragePowderStatus)) return;
         const marks = world.effects(self, ragePowderMark);
         for (let index = 0; index < marks.length; index++) world.operation(marks[index].id(), "world_combat:dispel", "{}");
     });
@@ -106,7 +118,7 @@ namespace PokemonSkills {
     define({
         id: ragePowderId,
         cooldownParameter: "recharge", name: "愤怒粉",
-        description: "在选定近地撒下一团固定不动、短寿的粉尘云，自己可以走开；刚走进云、可受粉末的生物会被请求把攻击转向你，同一个体要等再次入云冷却走完才会再次被牵引，留在云里不强续。因为是粉末，草属性免疫。",
+        description: "在选定近地撒下一团固定不动、短寿的粉尘云，自己可以走开；刚走进云、可受粉末的生物会被请求把攻击转向你，同一个体要等再次入云冷却走完才会再次被牵引，留在云里不强续。云只吸真正踏进这片接触区、与本层地面连通的敌人，隔着墙或站在上层不算入云。因为是粉末，草属性免疫。",
         uses: ["把粉撒在退路上，自己走开让追兵踩进来", "提前把粉铺在敌人必经的通道口", "罩住一小片位置经营，把交战点钉在那里"],
         kind: "point", range: 4, maxRange: 7, prepare: 6, active: 0, recover: 5, cooldown: 110, style: "powder",
         stationary: true, maximumTicks: 400,
@@ -147,15 +159,17 @@ namespace PokemonSkills {
             const recontact = Math.max(20, Math.round(p(ragePowderId, "recontact", action)));
             const radius = Math.max(2, p(ragePowderId, "cloudRadius", action));
             const motes = Math.max(12, Math.round(p(ragePowderId, "motes", action)));
-            const scale = Math.max(0.5, Math.min(2.2, radius / 2.3));
             sound(action, "minecraft:entity.witch.throw");
-            if (!CombatStatus.apply(world, self, ragePowderStatus, ragePowderEffect, ticks, 0, { unique: true })) { done(action); return; }
+            // 先退掉旧云，再挂本次载体：旧云结束不得清掉刚加上的新身份。
             const marks = world.effects(self, ragePowderMark);
             for (let index = 0; index < marks.length; index++) world.operation(marks[index].id(), "world_combat:dispel", "{}");
+            if (!CombatStatus.apply(world, self, ragePowderStatus, ragePowderEffect, ticks, 0, { unique: true })) { done(action); return; }
+            const applied = MobEffects.read(world, self, ragePowderEffect);
+            const carrier = applied === null ? null : MobEffects.anchor(applied);
             world.effect(ragePowderMark, self, JSON.stringify({ centre: [centre.x(), centre.y(), centre.z()],
-                radius: radius, interval: interval, recontact: recontact, motes: motes, contacts: {}, inside: [] }), ticks);
+                radius: radius, interval: interval, recontact: recontact, motes: motes, carrier: carrier, contacts: {}, inside: [] }), ticks);
             WorldFeedback.emit(world, ragePowderScene, 1, centre,
-                { moment: "burst", radius: radius, motes: motes, scale: scale }, 28);
+                { moment: "burst", radius: radius, motes: motes }, 28);
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 0.9, 0)), ragePowderTextCloud, [radius], 26);
             done(action);
         }

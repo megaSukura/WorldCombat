@@ -22,6 +22,7 @@ namespace PokemonSkills {
     const bittermaliceScene = "world_combat:move_bittermalice";
     const bittermaliceGraspText = "world_combat.move.bittermalice.text.grasp";
     const bittermaliceDevourText = "world_combat.move.bittermalice.text.devour";
+    const bittermaliceDevourOnlyText = "world_combat.move.bittermalice.text.devourOnly";
     const bittermaliceMissText = "world_combat.move.bittermalice.text.miss";
     /** 被吞掉的异常对应的颜色，让「抽进手」的那束光贴住那份状态。 */
     const bittermaliceStatusColor: { [name: string]: number } = {
@@ -58,7 +59,7 @@ namespace PokemonSkills {
             const context: NumberContext = { pokemon, skill: skills["bittermalice"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p("bittermalice", "tempo", context)),
-                recover: Math.round(p("bittermalice", "recover", context)),
+                recover: Math.round(p("bittermalice", "aftercast", context)),
                 cooldown: Math.round(p("bittermalice", "recharge", context)),
                 active: 0,
                 range: p("bittermalice", "reach", context)
@@ -79,13 +80,14 @@ namespace PokemonSkills {
             const target = action.target();
             action.releaseTarget();
             const grudge = !!(config && config.grudge === true);
-            const power = p("bittermalice", "curse", action);
+            // 无目标上下文只用来定画面强度；真正的伤害在命中回调里按实际被攥住的对象重算。
+            const basePower = p("bittermalice", "curse", action);
             const speed = p("bittermalice", "velocity", action);
             const radius = Math.max(0.35, p("bittermalice", "radius", action));
             const stages = Math.max(1, Math.min(2, Math.round(p("bittermalice", "stages", action))));
             const motes = Math.max(10, Math.round(p("bittermalice", "motes", action)));
             const scale = Math.max(0.6, Math.min(2.2, radius / 0.45));
-            const intensity = Math.max(0.6, Math.min(2.6, power / 66));
+            const intensity = Math.max(0.6, Math.min(2.6, basePower / 66));
             const seen = world.observe(actor);
             const wound = seen === null ? 1 : bittermaliceWound(seen.health(), seen.maxHealth());
             const seethe = Math.max(10, Math.round(motes * wound));
@@ -106,6 +108,12 @@ namespace PokemonSkills {
             const track = target !== null && world.valid(target) ? target : null;
             if (track !== null) appearance.homing = { target: String(track.ref()), turn: 10, delay: 3, range: action.range() };
 
+            /** 空放/被挡：在真实发生的那个点散去怨念，不假装命中。 */
+            function scatter(scope: CombatWorld, at: CombatPoint, ticks: number): void {
+                WorldFeedback.emit(scope, bittermaliceScene, 1, at, { moment: "miss", motes: motes, scale: scale }, ticks);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), bittermaliceMissText, [], 20);
+            }
+
             const bolt = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, lifetime: 140,
                 appearance: appearance,
@@ -114,38 +122,39 @@ namespace PokemonSkills {
                     const victim = hit.target();
                     const at = hit.position();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        // 增幅由**实际被攥住的那个目标**决定：原目标被无异常者挡住时这一记不翻倍。
+                        const power = p("bittermalice", "curse", withTarget(factContext(current), victim));
                         const landed = impact(current, hit, "bittermalice", power, { damage: damageSpec("bittermalice", "curse") });
                         let consumed = "";
                         if (landed && grudge && scope.valid(victim)) {
                             const name = CombatStatus.major(scope, victim);
                             if (name && CombatStatus.cure(scope, victim, name)) consumed = name;
                         }
-                        if (landed && scope.valid(victim)) NativeEffects.boost(scope, victim, "atk", -stages);
+                        // 按 boost 的**实际落级**提示：已在最低攻时不报计划级数，也不谎称掉了攻。
+                        const dropped = landed && scope.valid(victim) ? Math.abs(NativeEffects.boost(scope, victim, "atk", -stages)) : 0;
                         const body = scope.valid(victim) ? scope.observe(victim) : null;
                         const where = body !== null ? body.position() : at;
                         if (landed) {
                             WorldFeedback.emit(scope, bittermaliceScene, 1, where,
-                                { moment: "grasp", target: String(victim.ref()), motes: motes, stages: stages, wound: Math.round(wound * 100),
+                                { moment: "grasp", target: String(victim.ref()), motes: motes, stages: dropped, wound: Math.round(wound * 100),
                                     consumed: consumed ? 1 : 0, consumedColor: consumed ? (bittermaliceStatusColor[consumed] || 0x8FE0A8) : 0x8FE0A8,
-                                    scale: scale, intensity: intensity }, 30);
-                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)),
-                                consumed ? bittermaliceDevourText : bittermaliceGraspText, [stages], 26);
+                                    scale: scale, intensity: Math.max(0.6, Math.min(2.6, power / 66)) }, 30);
+                            if (dropped > 0)
+                                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)),
+                                    consumed ? bittermaliceDevourText : bittermaliceGraspText, [dropped], 26);
+                            else if (consumed)
+                                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), bittermaliceDevourOnlyText, [], 26);
                             scope.sound("cobblemon:impact.ghost", at, 16, "{}");
-                        } else {
-                            WorldFeedback.emit(scope, bittermaliceScene, 1, at, { moment: "miss", motes: motes, scale: scale }, 22);
-                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), bittermaliceMissText, [], 20);
-                        }
-                    } else {
-                        WorldFeedback.emit(scope, bittermaliceScene, 1, at, { moment: "miss", motes: motes, scale: scale }, 22);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), bittermaliceMissText, [], 20);
-                    }
+                        } else scatter(scope, at, 22);
+                    } else scatter(scope, at, 22);
                     finish(current);
                 }
             }, function (current: CombatAction) {
                 if (!settled) {
-                    const at = current.targetPosition();
-                    WorldFeedback.emit(current.world(), bittermaliceScene, 1, at, { moment: "miss", motes: motes, scale: scale }, 20);
-                    WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.0, 0)), bittermaliceMissText, [], 20);
+                    // 用原生弹移除后仍可读的真实末点收场，不用旧目标点或满射程点假造终点。
+                    const scope = current.world();
+                    const real = scope.projectilePosition(bolt);
+                    scatter(scope, real !== null ? real : current.targetPosition(), 20);
                 }
                 finish(current);
             });

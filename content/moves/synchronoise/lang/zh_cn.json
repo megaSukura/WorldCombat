@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.synchronoise.summary": "用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。宝可梦按属性同频，普通生物按身体种类判定。",
+  "worldcombat.skill.synchronoise.summary": "用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。频率取有效属性（含临时属性变化），无类型事实的普通生物按身体种类判定。",
   "worldcombat.skill.synchronoise.use.0": "对同属性的敌人一次扫到一圈",
   "worldcombat.skill.synchronoise.use.1": "在混战里专挑与自己同频的人打",
   "worldcombat.skill.synchronoise.use.2": "给同频目标留下记号，方便接着追",
@@ -20,11 +20,11 @@
   "worldcombat.skill.synchronoise.preference.tight": "收束同调",
   "worldcombat.skill.synchronoise.preference.tight.help": "开启：电波收到约 0.62 倍、共振威力约 ×1.42、同频记号更久，起手 +2 刻、冷却 +6 刻，用来把单个同频目标打穿。关闭（宽播同调）：电波约 ×1.0、威力不变，用来在一片混战里尽量扫到同频的人。",
   "worldcombat.skill.synchronoise.preference.ai.maxChase": "考虑距离",
-  "worldcombat.skill.synchronoise.preference.ai.maxChase.help": "伙伴只在同频目标离自己这么远以内时才考虑同步干扰；调小只在贴身播，调大愿意先追进去。",
+  "worldcombat.skill.synchronoise.preference.ai.maxChase.help": "伙伴只在同频目标离自己这么远以内时才考虑同步干扰；真的电波半径仍按该个体公式取值，这个值只放宽/收紧它愿意先追进去的距离。",
   "worldcombat.skill.synchronoise.preference.ai.minMatches": "同频人数",
-  "worldcombat.skill.synchronoise.preference.ai.minMatches.help": "身周这么远内至少要站着这么多可见、敌对、同属性的目标才播；调大只在同频的人扎堆时用，调 1 见一个同频的就打。",
+  "worldcombat.skill.synchronoise.preference.ai.minMatches.help": "实际电波半径与高度带内至少要站着这么多可见、敌对、同频的目标才播；调大只在同频的人扎堆时用，调 1 见一个同频的就打。",
   "world_combat.move.synchronoise.text.hit": "同频共振 %1$s 个",
   "world_combat.move.synchronoise.text.pass": "没有同频的目标",
   "effect.world_combat.resonance": "同频锁定",
-  "worldcombat.skill.synchronoise.description.3": "普通生物的频率：亡灵对应幽灵，节肢对应虫，水生对应水，烈焰人和岩浆怪对应火，铁傀儡对应钢，雪傀儡对应冰，末影龙对应龙；其余通常对应一般。"
+  "worldcombat.skill.synchronoise.description.3": "频率先取有效属性：宝可梦的当前属性与身体上的临时属性变化（浸水、加草等）都算数；没有类型事实的普通生物才按种类映射——亡灵对应幽灵，节肢对应虫，水生对应水，烈焰人和岩浆怪对应火，铁傀儡对应钢，雪傀儡对应冰，末影龙对应龙，其余通常对应一般；模组可用 world_combat:resonance/<名> 标签自声明。"
 }

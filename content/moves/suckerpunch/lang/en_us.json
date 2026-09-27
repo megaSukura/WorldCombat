@@ -26,5 +26,5 @@
   "world_combat.move.suckerpunch.text.read": "Read it",
   "world_combat.move.suckerpunch.text.hit": "Sucker Punch!",
   "world_combat.move.suckerpunch.text.whiff": "Read wrong",
-  "worldcombat.skill.suckerpunch.description.path": "It blinks toward the aimed direction; the first body it strikes whiffs unless that body is inside its attack window, and terrain or an empty path whiffs the same way. The direction is free to gamble on, and a whiff still spends."
+  "worldcombat.skill.suckerpunch.description.path": "It blinks toward the aimed direction, trailing a short shadow; the read marker only lands on an enemy the current aim line can reach inside the blink distance. The first body it strikes whiffs unless that body is inside its attack window, and terrain or an empty path whiffs the same way. The direction is free to gamble on, and a whiff still spends."
 }

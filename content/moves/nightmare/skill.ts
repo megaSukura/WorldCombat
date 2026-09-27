@@ -1,85 +1,97 @@
 /**
  * 恶梦 / nightmare —— 执行组织。
  *
- * 核心念头：只对**已经睡熟**的人下手。几层黑影压下去，隔一段从它身上抽走一口生命——固定比例，不看防御
- *   与相性；这一口抽下去，疼痛会把人从睡眠里拽醒，而恶梦正随那一下醒来散去。它借别人的睡眠窗口打一记
- *   惩戒，不再把人按在睡眠里；想让恶梦多抽几口，得靠队友在你抽完之后继续补睡。
+ * 核心念头：只对**已经睡熟**的人下手。几层黑影压下去，倒数一段；倒数走完时若它仍是同一场睡眠、施术者还在射程内，
+ *   就从它身上抽走一口最大生命——固定比例，不看防御与相性。这一口抽下去，疼痛会把人从睡眠里拽醒，而恶梦正随那一下醒来散去。
+ *   它借别人的睡眠窗口打一记延迟的收割，不再把人按在睡眠里；想让恶梦再来一次，得等对方重新睡下并重新下咒。
  *
- * 两幕：
+ * 三幕：
  *   起（windup，提交前）：施法者掌心聚起一团黑影，只播预告。
  *   咒（seal → curse，提交后）：给睡者挂上本单元的载体 world_combat:nightmare（共享身份 world_combat:status/nightmare），
- *     并起一个绑定效果 world_combat:nightmare_bind（源为施法者、目标为睡者）。
- *   跳（pulse）：只要自然仍有有效睡眠、施术者还在射程内，就每 interval 抽走一份最大生命；伤害会触发共享的
- *     「受伤即醒」，睡者醒来的一刻恶梦立刻收场，一层层黑影随之被切断。每一跳比上一跳轻（固定衰减 0.8）。
+ *     并起一个绑定效果 world_combat:nightmare_bind（源为施法者、目标为睡者），记录倒数与**当时那场睡眠的载体身份**。
+ *   候（countdown）：绑定效果每几刻确认一次——睡者还睡着、恶梦印记仍归本次所有、施术者仍在；同时续上逐渐压低的梦影表现。
+ *   收（payoff）：倒数到点时再确认一次；全部成立就抽走一口并按实际扣血播收割与碎影，否则梦影直接消散。
  *
  * 反制：清掉恶梦本身（牛奶／清状态）、把施术者打倒或逼离射程、或让睡者被任意伤害打醒，恶梦都会散。
- *   睡眠不再由恶梦续上——醒来就脱离折磨。Boss 若免疫睡眠便始终不满足「已睡」的前置，无法被下咒。
+ *   睡眠刷新／替换等于换了一场梦，作废旧倒数；重新睡不继承。Boss 若免疫睡眠便始终不满足「已睡」的前置，无法被下咒。
  */
 namespace PokemonSkills {
     function nightmareAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
+    function nightmareSleepAnchor(world: CombatWorld, victim: CombatActor): MobEffects.Anchor | null {
+        const carrier = CombatStatus.representative(world, victim, "sleep");
+        return carrier === null ? null : MobEffects.anchor(carrier);
+    }
+    function nightmareSleepMatches(world: CombatWorld, victim: CombatActor, data: any): boolean {
+        return typeof data.sleepId === "string" && data.sleepId.length > 0
+            && MobEffects.matches(world, victim, { id: data.sleepId, key: data.sleepKey });
+    }
 
-    // 恶梦绑定：源为施法者、目标为睡者，携带逐跳数值。它只在睡者仍睡着、施术者仍在射程内时抽血。
+    // 恶梦绑定：源为施法者、目标为睡者，携带倒数与本次收割数值。它只在睡者仍睡着、原睡眠载体未变、施术者仍在时收割一次。
     WorldCombat.effect(nightmareBind, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
-        ["interval", "drain", "left", "reach"].forEach(function (key) {
+        ["countdown", "drain", "shades", "reach"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid nightmare bind: " + key);
         });
-        if (value.interval < 1 || value.drain <= 0 || value.left < 0 || value.reach <= 0) throw new Error("Invalid nightmare bind");
+        if (value.countdown < 1 || value.drain <= 0 || value.reach <= 0) throw new Error("Invalid nightmare bind");
         if (typeof value.caster !== "string") throw new Error("Invalid nightmare bind: caster");
+        if (typeof value.sleepId !== "string" || typeof value.sleepKey !== "string") throw new Error("Invalid nightmare bind: sleep");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(nightmareBind, "start", function (effect) {
-        const data = JSON.parse(effect.state());
-        effect.schedule("watch", "watch", 10, "{}");
-        effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        data.start = world.tick();
+        // 托管恶梦印记的所有权：印记被刷新／替换／清除时这份租约失效，本效果随之退场。
+        data.lease = MobEffects.bind(world, victim, nightmareEffect);
+        effect.state(JSON.stringify(data));
+        effect.schedule("watch", "watch", 1, "{}");
+        effect.schedule("payoff", "payoff", Math.max(1, Math.round(data.countdown)), "{}");
     });
     WorldCombat.effectHandler(nightmareBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
-    // 每 10 刻确认一次：睡者还在、恶梦印记还在、施术者还在。睡者被任意方式弄醒，恶梦立刻收场。
+    // 每刻确认一次：睡者还在、恶梦印记仍归本次所有、仍是同一场睡眠、施术者还在。任一不成立就消散。
     WorldCombat.effectHandler(nightmareBind, "watch", function (effect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) { effect.end(); return; }
-        if (MobEffects.read(world, victim, nightmareEffect) === null) { effect.end(); return; }
-        if (!CombatStatus.behaves(world, victim, "sleep")) { CombatStatus.cure(world, victim, "nightmare"); effect.end(); return; }
-        if (!world.valid(effect.source())) { CombatStatus.cure(world, victim, "nightmare"); effect.end(); return; }
-        effect.schedule("watch", "watch", 10, "{}");
-    });
-    WorldCombat.effectHandler(nightmareBind, "pulse", function (effect) {
-        const world = effect.world(), victim = effect.target();
-        const data = JSON.parse(effect.state());
-        const dream = world.valid(victim) ? MobEffects.read(world, victim, nightmareEffect) : null;
-        if (dream === null) { effect.end(); return; }
-        if (!CombatStatus.behaves(world, victim, "sleep")) { CombatStatus.cure(world, victim, "nightmare"); effect.end(); return; }
-        if (!world.valid(effect.source())) { CombatStatus.cure(world, victim, "nightmare"); effect.end(); return; }
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(victim) || !MobEffects.present(world, data.lease)) { effect.end(); return; }
+        if (!nightmareSleepMatches(world, victim, data) || !CombatStatus.behaves(world, victim, "sleep")
+            || !world.valid(effect.source())) { effect.end(); return; }
         const body = world.observe(victim), source = world.observe(effect.source());
-        if (body === null || source === null) { CombatStatus.cure(world, victim, "nightmare"); effect.end(); return; }
-        // 施术者离得太远时这一跳抽不到血；印记按原节奏继续走，直到走完或睡者醒来。
-        if (body.position().minus(source.position()).length() > data.reach + 0.5) {
-            data.left = data.left - 1;
-            effect.state(JSON.stringify(data));
-            if (data.left > 0) effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
-            else { CombatStatus.cure(world, victim, "nightmare"); effect.end(); }
-            return;
+        if (body === null || source === null || body.position().minus(source.position()).length() > data.reach + .5) {
+            effect.end(); return;
         }
+        if (body !== null) {
+            const remaining = Math.max(0, data.countdown - (world.tick() - data.start));
+            const progress = Math.max(0, Math.min(1, 1 - remaining / Math.max(1, data.countdown)));
+            const ring = Math.max(0.35, 1.5 - progress * 0.9) * Math.max(0.5, Math.min(1.6, data.shades / 12));
+            WorldFeedback.onEffect(world, effect.id(), "nightmare:count", nightmareScene, 1, body.position(),
+                { moment: "countdown", target: String(victim.ref()), shades: Math.max(4, Math.round(data.shades)),
+                    remaining: remaining, total: data.countdown, ring: Math.round(ring * 100) / 100,
+                    progress: Math.round(progress * 100) / 100, intensity: Math.round((1 + progress) * 100) / 100 });
+        }
+        effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(nightmareBind, "payoff", function (effect) {
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(victim) || !MobEffects.present(world, data.lease)
+            || !nightmareSleepMatches(world, victim, data) || !CombatStatus.behaves(world, victim, "sleep")
+            || !world.valid(effect.source())) { effect.end(); return; }
+        const body = world.observe(victim), source = world.observe(effect.source());
+        if (body === null || source === null) { effect.end(); return; }
+        // 施术者离得太远时这一口收割不到：梦影消散，不结算伤害。
+        if (body.position().minus(source.position()).length() > data.reach + 0.5) { effect.end(); return; }
         const amount = Math.max(1, Math.floor(body.maxHealth() * Math.max(0.05, data.drain)));
         const loss = -world.health(victim, -amount, "world_combat:nightmare");
         if (loss > 0) {
-            const shades = Math.max(4, Math.round(data.shades || 10));
-            // intensity 由本跳实际扣血占最大生命的比例换算，直接缩放 pulse 各发射器的密度与亮度。
+            // intensity 由本次实际扣血占最大生命的比例换算，缩放收割各发射器的密度与亮度。
             const intensity = Math.max(0.5, Math.min(2.2, loss / Math.max(1, body.maxHealth() * 0.12)));
             WorldFeedback.emit(world, nightmareScene, 1, body.position(),
-                { moment: "pulse", target: String(victim.ref()), shades: shades, intensity: Math.round(intensity * 100) / 100 }, 26);
+                { moment: "harvest", target: String(victim.ref()), shades: Math.max(4, Math.round(data.shades)),
+                    intensity: Math.round(intensity * 100) / 100 }, 26);
             WorldFeedback.text(world, nightmareAbove(body.position()), "world_combat.move.nightmare.text.drain", [Math.round(loss * 10) / 10], 24);
             world.sound("minecraft:particle.soul_escape", body.position(), 12, "{}");
         }
-        data.drain = data.drain * nightmareDecay;
-        data.left = data.left - 1;
-        effect.state(JSON.stringify(data));
-        // 这一抽本身就是伤害：共享的「受伤即醒」把人弄醒，恶梦随醒来结束，不再把人按回去。
-        if (!CombatStatus.behaves(world, victim, "sleep")) { CombatStatus.cure(world, victim, "nightmare"); effect.end(); return; }
-        if (data.left > 0) effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
-        else { CombatStatus.cure(world, victim, "nightmare"); effect.end(); }
+        // 这一抽本身就是伤害：共享的「受伤即醒」把人弄醒；无论如何此次恶梦都到此为止。
+        effect.end();
     });
-    // 恶梦收场：此刻还睡着＝印记消散（fade）；已经被弄醒＝醒来切断全部黑影（wake）。
+    // 恶梦收场：此刻还睡着＝梦影消散（fade）；已经被弄醒＝醒来切断全部黑影（wake）。
     WorldCombat.effectHandler(nightmareBind, "end", function (effect) {
         const world = effect.world(), victim = effect.target();
         if (!world.valid(victim)) return;
@@ -106,8 +118,8 @@ namespace PokemonSkills {
     define({
         id: nightmareId,
         cooldownParameter: "recharge",
-        name: "恶梦",
-        description: "趁对手睡熟给它压上恶梦：隔一段抽走一份最大生命，这一抽的疼痛会把它弄醒，恶梦也随醒来散去。只对睡着的目标生效，伤害按最大生命比例结算、不经过防御与相性；想让恶梦多抽几口，得靠队友在抽取之后继续补睡。Boss 免疫睡眠便无法被下咒。",
+        name: "Nightmare",
+        description: "趁对手睡熟给它压上恶梦：黑影倒数一段，走完时若它仍是同一场睡眠且在射程内，就一次抽走一份最大生命，这一抽的疼痛会把它弄醒，恶梦也随醒来散去。只对睡着的目标生效，伤害按最大生命比例结算、不经过防御与相性；提前被打醒、被驱散、睡者重新入睡或施术者离开射程，恶梦都会立即消散。Boss 免疫睡眠便无法被下咒。",
         uses: ["收割自己或队友制造的睡眠窗口", "在睡者身上打出一记不看防御的重击", "逼对手花资源解掉恶梦或来保护睡者"],
         kind: "enemy",
         range: 8,
@@ -120,7 +132,7 @@ namespace PokemonSkills {
         defaults: { deep: false },
         fields: [
             field(pathOf("deep"), "深梦", "boolean", {
-                help: "开启：每跳抽取 ×1.15、间隔更紧（总时长 ×0.8、跳数更少）、起手 +2 刻、冷却 +6 刻，用来快速收割；关闭（长梦）：每跳 ×0.85，但总时长 ×1.25、跳数更多，用来慢慢磨。"
+                help: "开启：一次收割 ×1.15，但倒数更慢（+15 刻，约 45 刻）、起手 +2 刻、冷却 +6 刻，用来压得更重；关闭（浅梦）：一次收割 ×0.85，但倒数更快（约 30 刻），趁睡眠窗口更早结清。"
             })
         ],
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -152,7 +164,7 @@ namespace PokemonSkills {
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills[nightmareId], detail: { values: config } };
             return { radius: pokemon ? p(nightmareId, "reach", context) : 8, geometry: "line", style: "nightmare", color: 0x4B2A6B,
-                label: config && config.deep === true ? "恶梦·深梦" : "恶梦·长梦" };
+                label: config && config.deep === true ? "恶梦·深梦" : "恶梦·浅梦" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), target = action.target();
@@ -164,20 +176,19 @@ namespace PokemonSkills {
             const body = world.observe(target);
             const at = body === null ? action.targetPosition() : body.position();
             const origin = action.origin();
-            const nightTicks = Math.max(40, Math.round(p(nightmareId, "nightTicks", action)));
+            const countdown = Math.max(1, Math.round(p(nightmareId, "countdown", action)));
             const drain = Math.max(0.05, p(nightmareId, "drain", action));
-            const interval = Math.max(10, Math.round(p(nightmareId, "interval", action)));
             const shades = Math.max(4, Math.round(p(nightmareId, "shades", action)));
             const radius = Math.max(0.2, p(nightmareId, "sealRadius", action));
             const reach = Math.max(1, p(nightmareId, "reach", action));
             const ref = String(target.ref());
-            const left = Math.max(1, Math.floor(nightTicks / interval));
+            const anchor = nightmareSleepAnchor(world, target);
             sound(action, "minecraft:entity.evoker.prepare_attack");
             // seal 是一条连接施术者与睡者的真实影线（非沿线飞行）；curse 的梦印半径随 sealRadius 放大。
             WorldFeedback.emit(world, nightmareScene, 1, origin,
                 { moment: "seal", path: [String(action.actor().ref()), ref], target: ref,
                     shades: shades, scale: Math.max(0.6, Math.min(1.8, radius / 0.5)) }, 28);
-            if (MobEffects.apply(world, target, nightmareEffect, nightTicks, 0) === null) {
+            if (MobEffects.apply(world, target, nightmareEffect, countdown + 10, 0) === null) {
                 WorldFeedback.emit(world, nightmareScene, 1, at, { moment: "immune", target: ref }, 20);
                 WorldFeedback.text(world, nightmareAbove(at), "world_combat.move.nightmare.text.immune", [], 24);
                 done(action);
@@ -186,9 +197,10 @@ namespace PokemonSkills {
             const existing = world.effects(target, nightmareBind);
             for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
             world.effect(nightmareBind, target,
-                JSON.stringify({ interval: interval, drain: drain, left: left, shades: shades, caster: String(action.actor().ref()), reach: reach }), nightTicks + 10);
-            WorldFeedback.emit(world, nightmareScene, 1, at, { moment: "curse", target: ref, shades: shades }, 28);
-            WorldFeedback.text(world, nightmareAbove(at), "world_combat.move.nightmare.text.curse", [left], 28);
+                JSON.stringify({ countdown: countdown, drain: drain, shades: shades, caster: String(action.actor().ref()), reach: reach,
+                    sleepId: anchor === null ? "" : anchor.id, sleepKey: anchor === null ? "" : anchor.key }), countdown + 20);
+            WorldFeedback.emit(world, nightmareScene, 1, at, { moment: "curse", target: ref, shades: shades, remaining: countdown }, 28);
+            WorldFeedback.text(world, nightmareAbove(at), "world_combat.move.nightmare.text.curse", [Math.round(countdown / 20 * 10) / 10], 28);
             sound(action, "minecraft:entity.evoker.cast_spell");
             done(action);
         }

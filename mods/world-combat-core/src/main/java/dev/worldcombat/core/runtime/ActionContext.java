@@ -201,13 +201,22 @@ public final class ActionContext {
 
     /** Move the native body along one straight segment and issue only the contact actually reached. */
     public Impact moveSweep(Point delta, double radius) {
+        return moveSweep(delta, radius, "[]");
+    }
+    /** Excludes named actors only from attack-margin contacts; native physical blockers remain. */
+    public Impact moveSweep(Point delta, double radius, String ignoredContacts) {
         worldEffect();
         if (delta == null || !Double.isFinite(delta.length()) || delta.length() > 4)
             throw new IllegalArgumentException("Displacement exceeds step budget");
         if (!Double.isFinite(radius) || radius < 0) throw new IllegalArgumentException("Sweep radius must be a non-negative number");
         world().requireMutation(actor);
         if (!runtime.controlAllowed(id, actor, "movement")) return new Impact(origin(), null, true);
-        var result = runtime.host.moveSweep(actor, controller, delta, Math.min(1, radius));
+        var ignored = new java.util.HashSet<String>();
+        for (var value : com.google.gson.JsonParser.parseString(ignoredContacts).getAsJsonArray()) {
+            if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) throw new IllegalArgumentException("Contact exclusions require actor refs");
+            ignored.add(value.getAsString());
+        }
+        var result = runtime.host.moveSweep(actor, controller, delta, Math.min(1, radius), ignored);
         if (result.hitEntity()) traces.add(result);
         return result;
     }

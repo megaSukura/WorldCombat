@@ -1,27 +1,12 @@
 /**
- * 浸水 / soak — 出手方式。
- *
- * 核心念头：把对象整个浇透——一道水柱从施法者手里沿视线冲到它身上，把属性冲掉、换成水。
- *   敌友都可以指：浇敌人是摘掉它的本系、打开雷与草的弱点；浇友方是给它一身水抗性（代价是怕雷怕草）。
- *   空点只把水泼在地上，没有属性目标。
- *
- * 幕：
- *   聚（windup，提交前）：手里聚起水，只观察与预告，可被打断且不花代价。
- *   浇（pour，提交后）：水沿视线冲到对象身上；命中的目标被写进共享 NativeModifiers types 层（单一水属性，
- *     到期自动还原原生属性），挂共享身份 `world_combat:status/soak` 的标记，并由一个独立的托管效果
- *     持有持续的水膜表现；漫流档只波及与主目标同敌我类别、显式配置才生效。
- *   落（splash）：水花只在真正被改类型的目标身上炸开——没浇进去的不冒泡。
- *   干（dry）：水属性身份到期时，从目标身上滴下水珠、水膜一起散去，告诉玩家这一浇已经过去。
- *
- * 反制：已经是纯水的目标浇不进去（预检直接拒绝，不浪费 20 发 PP）；非宝可梦没有属性可换，明确失败不冒充成功。
- *   瞄准是热键选择的：kind:aim 只放开选择，不改写属性层，伤害与权限仍由各自结算层控制。
+ * A drench carrier owns the temporary Water-type layer and its visible film for every living domain.
+ * The water pours over the real sight line for a short, distance-derived span before the new Water-type
+ * lands, so the type change follows an actual watering process instead of happening at commit.
  */
-
 namespace PokemonSkills {
     export const soakId = "soak";
     export const soakScene = "world_combat:move_soak";
     export const soakEffect = "world_combat:soaked_through";
-    export const soakFilmEffect = "world_combat:soak_film";
     export const soakDrenchText = "world_combat.move.soak.text.drench";
     export const soakDryText = "world_combat.move.soak.text.dry";
     export const soakFizzleText = "world_combat.move.soak.text.fizzle";
@@ -32,40 +17,21 @@ namespace PokemonSkills {
     /** 顶点数组形式，给表现的 path 使用。 */
     function soakVertex(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
 
-    /** 目标当前生效的属性（含临时层）；非宝可梦返回空。 */
-    function soakTypes(world: CombatWorld, target: CombatActor): string[] {
-        if (String(target.domain()) !== "cobblemon" || !world.valid(target)) return [];
-        return NativeEffects.types(CobblemonCombat.pokemon(target), NativeEffects.read(world, target));
+    /** 短浇水时长：水柱按约一格每刻沿视线冲过去，再留两刻收口。纯几何常量，不占玩家参数。 */
+    function soakPourTicks(origin: CombatPoint, landing: CombatPoint): number {
+        return Math.max(4, Math.min(18, Math.round(landing.minus(origin).length()) + 2));
     }
 
-    /** 能不能浇：非宝可梦没有属性；已经是纯水也浇不进去。返回拒绝原因或空串。 */
+    /** Current effective types, including provider facts and temporary layers. */
+    function soakTypes(world: CombatWorld, target: CombatActor): string[] {
+        return world.valid(target) ? PokemonDamage.combatants.read(world, target).types : [];
+    }
+
+    /** Pure Water and a native type lock refuse a new drench. */
     function soakRefusal(world: CombatWorld, target: CombatActor): string {
         const types = soakTypes(world, target);
-        if (types.length === 0) return "no-types";
         if (NativeModifiers.typeLocked(world, target)) return "type-locked";
         return types.join(",") === "water" ? "already-water" : "";
-    }
-
-    // 水膜：一个与属性层同寿命的独立托管效果，自己持有贴身的湿身表现；
-    // 属性层提前被驱散时由下面的移除事件一并收掉，不留一层干在皮肤上的水。
-    WorldCombat.effect(soakFilmEffect, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.target !== "string") throw new Error("Invalid soak film: target");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(soakFilmEffect, "start", function (effect) {
-        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(target)) { effect.end(); return; }
-        const body = world.observe(target);
-        if (body === null) { effect.end(); return; }
-        WorldFeedback.onEffect(world, effect.id(), "film", soakScene, 1, body.position(),
-            { moment: "film", target: String(target.ref()), drops: Math.max(6, Math.round(Number(data.drops) || 8)) });
-    });
-    WorldCombat.effectHandler(soakFilmEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    function soakReleaseFilm(world: CombatWorld, target: CombatActor): void {
-        const views = world.effects(target, soakFilmEffect);
-        for (let index = 0; index < views.length; index++) world.operation(views[index].id(), "world_combat:dispel", "{}");
     }
 
     // 水属性身份到期：从目标身上滴下水珠、水膜散去。属性层随效果同寿命自动还原。
@@ -73,7 +39,6 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== soakEffect) return;
         const world = event.world(), target = event.actor();
-        soakReleaseFilm(world, target);
         if (String(data.cause) !== "expired") return;
         if (!world.valid(target)) return;
         const body = world.observe(target);
@@ -145,62 +110,79 @@ namespace PokemonSkills {
             const at = target === null ? null : world.observe(target);
             const point = at === null ? action.targetPosition() : at.position();
             const targetRef = target === null || at === null ? "" : String(target.ref());
-            let hits = 0;
+            const pour = soakPourTicks(action.origin(), point);
 
-            function drench(other: CombatActor): void {
-                if (!world.valid(other)) return;
-                if (soakRefusal(world, other)) return;
-                NativeModifiers.apply(world, other, { types: ["water"] }, hold);
-                MobEffects.apply(world, other, soakEffect, hold, flood ? 1 : 0);
-                soakReleaseFilm(world, other);
-                world.effect(soakFilmEffect, other, JSON.stringify({ target: String(other.ref()) }), hold);
-                hits++;
+            /** 落定一个目标：先落身份载体，再用同一 carrier 写 CombatTypes 水层；水膜由类型层拥有，随 carrier 生灭。 */
+            function drench(world: CombatWorld, other: CombatActor, from: CombatPoint | null, spread: boolean): boolean {
+                if (!world.valid(other)) return false;
+                if (soakRefusal(world, other)) return false;
+                const previous = MobEffects.read(world, other, soakEffect);
+                const carrier = MobEffects.apply(world, other, soakEffect, hold, flood ? 1 : 0);
+                if (carrier === null) return false;
+                const layer = CombatTypes.apply(world, other, { operation: "replace", types: ["water"] }, carrier);
+                if (layer <= 0) {
+                    if (previous === null || String(previous.key()) !== String(carrier.key()))
+                        world.removeMobEffect(other, soakEffect, carrier.key());
+                    return false;
+                }
                 const body = world.observe(other);
-                if (body === null) return;
-                scenes.show(action, "coat:" + String(other.ref()), body.position(),
+                if (body === null) return true;
+                WorldFeedback.onEffect(world, layer, "soak:film", soakScene, 1, body.position(),
+                    { moment: "film", target: String(other.ref()), drops: streaks });
+                // 漫流的人不在主水柱上：从落点补一道短水流回执，让「水铺过去」看得见。
+                if (spread && from !== null)
+                    WorldFeedback.emit(world, soakScene, 1, body.position(),
+                        { moment: "pour", target: String(other.ref()), path: [soakVertex(from), String(other.ref())],
+                            streaks: Math.max(4, Math.round(streaks / 2)), ripples: ripples, splash: splash, scale: scale }, 22);
+                WorldFeedback.emit(world, soakScene, 1, body.position(),
                     { moment: "splash", target: String(other.ref()), splash: splash, ripples: ripples,
-                        streaks: streaks, scale: scale });
+                        streaks: streaks, scale: scale }, 30);
                 WorldFeedback.text(world, soakAbove(body.position()), soakDrenchText, [], 30);
+                return true;
             }
 
-            // 空点：只泼水，没有属性目标。
-            if (target === null || at === null) {
-                scenes.show(action, "pour", point, { moment: "pour", target: "",
-                    path: [String(actor.ref()), soakVertex(point)], streaks: streaks, ripples: ripples, splash: splash, scale: scale });
-                scenes.show(action, "empty", point, { moment: "empty", ripples: ripples, splash: splash, scale: scale });
-                WorldFeedback.text(world, soakAbove(point), soakEmptyText, [], 26);
-                sound(action, "cobblemon:move.watergun.actor");
-                world.sound("minecraft:entity.generic.splash", point, 14, "{}");
-                scenes.finish(action, done);
-                return;
-            }
-
-            const refusal = soakRefusal(world, target);
+            const refusal = target === null ? "" : soakRefusal(world, target);
             if (refusal) {
                 scenes.show(action, "fizzle", point, { moment: "fizzle", target: targetRef });
                 WorldFeedback.text(world, soakAbove(point), soakFizzleText, [], 26);
-                sound(action, "cobblemon:move.watergun.actor");
-                scenes.finish(action, done);
-                return;
+                scenes.finish(action, done); return;
             }
-
-            drench(target);
-            // 漫流只波及与主目标同一敌我类别的人：浇敌人不顺带浇伙伴，浇友军不顺带浇敌人。
-            if (flood) {
-                const sameSide = world.friendly(target);
-                WorldGeometry.select(world, WorldGeometry.ring(point, 0, splash, { below: 2, above: 3 }),
-                    function (other, facts) {
-                        if (String(other.ref()) === targetRef) return;
-                        if (facts.friendly() !== sameSide) return;
-                        drench(other);
-                    });
+            let elapsed = 0;
+            function water(current: CombatAction): void {
+                const scope = current.world(), live = current.target();
+                const body = live === null || !scope.valid(live) ? null : scope.observe(live);
+                const aim = body === null ? point : body.position(), from = current.origin();
+                const delta = aim.minus(from), inRange = delta.length() <= current.range();
+                const limit = inRange ? aim : from.plus(delta.unit().scale(current.range()));
+                const clip = scope.clipBlocks(from, limit);
+                if (clip === null) { scenes.finish(current, done); return; }
+                const contact = clip.blocked() ? clip.position() : limit;
+                const reachable = !clip.blocked() && inRange && (target === null || body !== null);
+                scenes.show(current, "pour", contact, { moment: "pour", target: "",
+                    path: [soakVertex(from), soakVertex(contact)], streaks: streaks, ripples: ripples, splash: splash, scale: scale });
+                if (reachable && elapsed < pour) { elapsed++; current.after(1, water); return; }
+                scenes.stop(current, "pour");
+                if (reachable && live !== null && body !== null) {
+                    drench(scope, live, contact, false);
+                    if (flood) {
+                        const sameSide = scope.friendly(live);
+                        WorldGeometry.select(scope, WorldGeometry.ring(contact, 0, splash, { below: 2, above: 3 }),
+                            function (other, facts) {
+                                if (String(other.ref()) === String(live.ref()) || facts.friendly() !== sameSide) return;
+                                if (!scope.clear(contact, facts.position())) return;
+                                drench(scope, other, contact, true);
+                            });
+                    }
+                } else {
+                    WorldFeedback.emit(scope, soakScene, 1, contact, { moment: "empty", point: soakVertex(contact),
+                        ripples: ripples, splash: splash, scale: scale }, 22);
+                    WorldFeedback.text(scope, soakAbove(contact), target === null ? soakEmptyText : soakFizzleText, [], 26);
+                }
+                sound(current, "cobblemon:move.watergun.actor");
+                scope.sound("minecraft:entity.generic.splash", contact, 14, "{}");
+                scenes.finish(current, done);
             }
-
-            scenes.show(action, "pour", point, { moment: "pour", target: targetRef,
-                path: [String(actor.ref()), targetRef], streaks: streaks, ripples: ripples, splash: splash, hits: hits, scale: scale });
-            sound(action, "cobblemon:move.watergun.actor");
-            world.sound("minecraft:entity.generic.splash", point, 14, "{}");
-            scenes.finish(action, done);
+            water(action);
         }
     });
 }

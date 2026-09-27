@@ -48,7 +48,7 @@ const PowerGemDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "beam_core", bind: "path", fit: "none", offset: [0, 0.7, 0],
+                    name: "beam_core", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
                     shape: { kind: "polyline" },
                     rate: 90, direction: "shape", speed: [0.02, 0.08],
@@ -56,7 +56,7 @@ const PowerGemDefinition: ParticleDefinition = {
                     color: 0xBFE8FF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 90
                 },
                 {
-                    name: "beam_edge", bind: "path", fit: "none", offset: [0, 0.7, 0],
+                    name: "beam_edge", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smallbeam",
                     shape: { kind: "polyline" },
                     rate: 60, direction: "shape", speed: [0.06, 0.18], spread: 6,
@@ -64,7 +64,7 @@ const PowerGemDefinition: ParticleDefinition = {
                     color: 0xEDF7FF, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 70
                 },
                 {
-                    name: "beam_refract", bind: "path", fit: "none", offset: [0, 0.7, 0],
+                    name: "beam_refract", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
                     shape: { kind: "polyline" },
                     burst: { count: { data: "shards", fallback: 10 }, at: 0 },
@@ -73,7 +73,7 @@ const PowerGemDefinition: ParticleDefinition = {
                     alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 60
                 },
                 {
-                    name: "beam_muzzle", bind: "point", fit: "none", offset: [0, 0.6, 0], orient: "direction",
+                    name: "beam_muzzle", bind: "point", fit: "none", offset: [0, 0, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: 0.3 },

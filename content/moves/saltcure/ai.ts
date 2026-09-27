@@ -14,9 +14,9 @@ namespace CompanionBehavior {
     ]);
 
     function saltcureBrittleTarget(context: WorldBehavior.Context, target: Entity): boolean {
-        if (target.wet) return true;
+        // 与执行侧共用同一脆化判据；装备金属无法从决策事实读取，按未知处理。
         const facts = pokemonFacts(context, target);
-        return !!facts && (facts.types.indexOf("steel") >= 0 || facts.types.indexOf("water") >= 0);
+        return PokemonSkills.saltcureBrittleBasis(target.wet === true, facts ? facts.types : [], null);
     }
 
     registerUse("saltcure", {

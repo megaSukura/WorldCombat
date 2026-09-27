@@ -72,7 +72,7 @@ const SpeedSwapDefinition: ParticleDefinition = {
             exit: { drain: 20 },
             emitters: [
                 {
-                    name: "ring", bind: "source", fit: "body", offset: [0, 0.05, 0], height: 0,
+                    name: "ring", bind: "target", fit: "body", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     rate: 2, shape: { kind: "ring", radius: 0.42 },
                     direction: "up", speed: [0.004, 0.016],
@@ -80,9 +80,9 @@ const SpeedSwapDefinition: ParticleDefinition = {
                     color: 0x6FC7E8, alpha: [0.22, 0], alphaMode: "sin", light: "world", maxParticles: 12
                 },
                 {
-                    name: "marks", bind: "source", fit: "body", offset: [0, 0.07, 0], height: 0,
+                    name: "marks", bind: "target", fit: "body", offset: [0, 0.07, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: { data: "marks", fallback: 6 }, interval: 24, repeats: 3 },
+                    rate: { data: "marks", fallback: 6 },
                     shape: { kind: "ring", radius: 0.4 }, direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.18, 0.02], sizeMode: "index",
                     color: 0xFFC24A, alpha: [0.32, 0], light: "world", maxParticles: 44
@@ -94,7 +94,7 @@ const SpeedSwapDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "settle", bind: "source", fit: "body", offset: [0, 0.06, 0], height: 0,
+                    name: "settle", bind: "target", fit: "body", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 10 }, shape: { kind: "ring", radius: 0.5 },
                     direction: "inward", speed: [0.04, 0.12],
@@ -102,7 +102,7 @@ const SpeedSwapDefinition: ParticleDefinition = {
                     color: 0x9FB6C8, alpha: [0.4, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "dust", bind: "source", fit: "body", offset: [0, 0.08, 0], height: 0,
+                    name: "dust", bind: "target", fit: "body", offset: [0, 0.08, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 12 }, shape: { kind: "ring", radius: 0.4 },
                     direction: "down", speed: [0.02, 0.08],

@@ -7,15 +7,38 @@
  * 安抚形态下同样按圈内人数评估，用降攻换取交换优势。
  */
 namespace PokemonSkills {
-    /** 声场半径内可见的非友方数量。 */
+    /**
+     * 声场是贴着施法者身体高度、半径 reach 的圆柱区，不是纯水平圆：按地面水平距离加上身体的竖直跨度判断，
+     * 才和 WorldGeometry.ring({below:2, above:3}) 的实际 hitbox 判定一致。
+     */
+    function disarmingvoiceInField(self: CompanionBehavior.Entity, other: CompanionBehavior.Entity, reach: number): boolean {
+        const dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
+        if (Math.sqrt(dx * dx + dz * dz) > reach) return false;
+        const half = (typeof other.height === "number" && other.height > 0 ? other.height : 1.4) / 2;
+        return other.point[1] + half >= self.point[1] - 2 && other.point[1] - half <= self.point[1] + 3;
+    }
+    /** 声场体积内可见的非友方数量，按实际声场高度计数。 */
     function disarmingvoiceCaught(context: WorldBehavior.Context, reach: number): number {
-        const self = CompanionBehavior.source(context).point;
+        const self = CompanionBehavior.source(context);
         let count = 0;
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self, other.point) <= reach) count++;
+            if (disarmingvoiceInField(self, other, reach)) count++;
+        }
+        return count;
+    }
+    /** 还能被震到错拍（速度等级没到下限）的目标；封底的人仍吃声伤，但不再算作一次有效错拍。 */
+    function disarmingvoiceStaggerable(context: WorldBehavior.Context, reach: number): number {
+        const self = CompanionBehavior.source(context);
+        let count = 0;
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || !other.visible) continue;
+            if (!disarmingvoiceInField(self, other, reach)) continue;
+            if (CompanionBehavior.stage(context, other, "spe") > -6) count++;
         }
         return count;
     }
@@ -34,7 +57,9 @@ namespace PokemonSkills {
             var caught = disarmingvoiceCaught(context, capability.data.range);
             if (caught <= 0) return 0;
             if (!CompanionBehavior.ai<boolean>(capability, "group", true)) return 20;
-            return 20 + Math.max(0, caught - 1) * 12;
+            // 能真正被错拍的人权重更高；已经在极限的人只算声伤，不浪费优先度。
+            var staggerable = disarmingvoiceStaggerable(context, capability.data.range);
+            return 20 + Math.max(0, staggerable - 1) * 12 + Math.max(0, caught - staggerable) * 4;
         }
     });
 

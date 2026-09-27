@@ -1,78 +1,45 @@
-/** 暂时平衡双方的防御：较高的一方降低，较低的一方提高。宝可梦平分防御与特防，普通生物按包含装备的护甲参与。 */
+/** 暂时平衡双方的实际护甲与护甲韧性：较厚的一方降低、较薄的一方提高，两边用同一套世界护甲单位。 */
 namespace PokemonSkills {
     export const guardsplitScene = "world_combat:move_guardsplit";
     export const guardsplitWindow = "world_combat:guardsplit_window";
-    export const guardsplitMark = "world_combat:guardsplit_mark";
-    export const guardsplitShift = "world_combat:guardsplit_shift";
+    export const guardsplitHum = "world_combat:guardsplit_hum";
+    export const guardsplitArmor = "minecraft:generic.armor";
+    export const guardsplitToughness = "minecraft:generic.armor_toughness";
+    export const guardsplitSource = "world_combat:guardsplit";
     export const guardsplitLevelText = "world_combat.move.guardsplit.text.leveled";
     export const guardsplitFlatText = "world_combat.move.guardsplit.text.flat";
     export const guardsplitBackText = "world_combat.move.guardsplit.text.reverted";
     export const guardsplitMissText = "world_combat.move.guardsplit.text.miss";
+    export const guardsplitNoneText = "world_combat.move.guardsplit.text.none";
 
-    interface GuardsplitMark { layer: number; pair: string; }
-
-    // 非宝可梦的平分载体：把原版护甲属性按存下来的差值抬/削；修饰随这个效果结束一起撤销。
-    WorldCombat.effect(guardsplitShift, 1, 12000, "actor", function (json) {
+    // 平分窗口期间的持续表现：真正的托管效果拥有它，随窗口一起结束，不留视觉残留。
+    WorldCombat.effect(guardsplitHum, 1, 12000, "actor", function (json) {
         const value = JSON.parse(json || "{}");
-        if (typeof value.armour !== "number" || !isFinite(value.armour)) throw new Error("Invalid guard split carrier");
+        if (typeof value.pair !== "string") throw new Error("Invalid guard split hum");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(guardsplitShift, "start", function (effect) {
-        const world = effect.world(), actor = effect.target();
-        const data = JSON.parse(String(effect.state()));
-        const attribute = world.attributeValue(actor, "minecraft:generic.armor");
-        if (attribute !== null) world.attribute(actor, "minecraft:generic.armor", data.armour, "add_value");
-    });
-    WorldCombat.effectHandler(guardsplitShift, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    // 记号：记录这次平分的改动由哪层效果承载，窗口提前结束时照它精确撤掉（其余修饰效果不受影响）。
-    WorldCombat.effect(guardsplitMark, 1, 12000, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.layer !== "number" || !isFinite(value.layer)) throw new Error("Invalid guard split mark");
-        if (typeof value.pair !== "string") throw new Error("Invalid guard split partner");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    // 持续表现在 created managed mark 上：随它自然到期或被 revert 提前 dispel 一起清理，不再另开定时器。
-    WorldCombat.effectHandler(guardsplitMark, "start", function (effect) {
+    WorldCombat.effectHandler(guardsplitHum, "start", function (effect) {
         const world = effect.world(), actor = effect.target();
         const body = world.valid(actor) ? world.observe(actor) : null;
         if (body === null) return;
-        const mark: GuardsplitMark = JSON.parse(String(effect.state()));
+        const value = JSON.parse(String(effect.state()));
         WorldFeedback.onEffect(world, effect.id(), "world_combat:move_guardsplit/hum", guardsplitScene, 1, body.position(),
-            { moment: "hum", target: String(actor.ref()), pair: String(mark.pair),
-                path: [String(actor.ref()), String(mark.pair)], motes: 6, remaining: effect.remaining() });
+            { moment: "hum", target: String(actor.ref()), pair: value.pair, motes: 6, remaining: effect.remaining() });
     });
-    WorldCombat.effectHandler(guardsplitMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(guardsplitHum, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 一位战斗者某一项能力的原始数值：宝可梦读共享临时层后的原生培养值，其他生物读含装备的有效护甲并剔除能力等级。 */
-    export function guardsplitRawStat(world: CombatWorld, actor: CombatActor, stat: string): number {
-        if (!world.valid(actor)) return 0;
-        if (String(actor.domain()) === "cobblemon") {
-            const state = NativeEffects.read(world, actor);
-            return Math.max(0, NativeEffects.stat(CobblemonCombat.pokemon(actor), state, stat));
-        }
-        const attribute = world.attributeValue(actor, "minecraft:generic.armor");
-        return attribute === null ? 0 : Math.max(0, attribute.value() - CombatStages.stage(world, actor, "def") * CombatStages.armorPerStage);
-    }
-    /** 守势底子合计（防 + 特防的原始值），供本招 AI 判断值不值得平。 */
+    /** 一位战斗者当前的实际世界防护合计（护甲 + 护甲韧性），供本招 AI 按同一单位比较。 */
     export function guardsplitGuard(world: CombatWorld, actor: CombatActor): number {
-        return guardsplitRawStat(world, actor, "def") + guardsplitRawStat(world, actor, "spd");
-    }
-    /** 把一位战斗者的防/特防底子调到 def/spd；宝可梦走共享临时属性层，其他生物走原版护甲载体。返回承载这次改动的效果 id。 */
-    function guardsplitSettle(world: CombatWorld, actor: CombatActor, def: number, spd: number, ticks: number): number {
-        if (String(actor.domain()) === "cobblemon")
-            return NativeModifiers.apply(world, actor, { stats: { def: Math.max(1, Math.round(def)), spd: Math.max(1, Math.round(spd)) } }, ticks);
-        const current = guardsplitRawStat(world, actor, "def");
-        const value = Math.max(1, Math.round((def + spd) / 2));
-        return world.effect(guardsplitShift, actor, JSON.stringify({ armour: value - current }), ticks);
+        const values = CombatCopies.read(world, actor, [guardsplitArmor, guardsplitToughness]);
+        return (values[guardsplitArmor] || 0) + (values[guardsplitToughness] || 0);
     }
 
     define({
         id: "guardsplit",
         cooldownParameter: "recharge",
         name: "防守平分",
-        description: "暂时平衡双方的防御：较高的一方降低，较低的一方提高。宝可梦平分防御与特防，普通生物按包含装备的护甲参与。敌人和伙伴都可选。",
-        uses: ["把自己的薄防抬到对手的厚度", "把对手的厚壁削到自己的水平", "把自己的厚防分给需要护甲的伙伴"],
+        description: "暂时把双方的实际护甲与护甲韧性拉到同一水平：较高的一方降低、较低的一方提高，两边共用同一套世界护甲单位。宝可梦的原生防御/特防与能力等级保持原样；只作用于经过原生护甲计算的攻击，显式无视护甲的伤害照常绕过。敌人和伙伴都可选。",
+        uses: ["把自己的薄甲抬到对手的厚度", "把对手的厚甲削到自己的水平", "把自己的厚甲分给需要护甲的伙伴"],
         kind: "aim",
         range: 6,
         maxRange: 12,
@@ -131,18 +98,21 @@ namespace PokemonSkills {
             const window = Math.max(100, Math.round(p("guardsplit", "span", action)));
             const motes = Math.max(1, Math.round(p("guardsplit", "motes", action)));
             const scale = (body.width() + body.height()) / 2.3;
-            // 双方各读一次快照，之后只写一次平均值；窗口内其他来源的变化各自独立保留。
-            const mineDef = guardsplitRawStat(world, actor, "def"), mineSpd = guardsplitRawStat(world, actor, "spd");
-            const theirDef = guardsplitRawStat(world, target, "def"), theirSpd = guardsplitRawStat(world, target, "spd");
-            const avgDef = Math.max(1, Math.round((mineDef + theirDef) / 2));
-            const avgSpd = Math.max(1, Math.round((mineSpd + theirSpd) / 2));
-            const gap = Math.abs(theirDef - mineDef) + Math.abs(theirSpd - mineSpd);
-            const reference = Math.max(1, Math.max(mineDef + mineSpd, theirDef + theirSpd));
+            const dims = [guardsplitArmor, guardsplitToughness];
+            // 两端各读一次同一套世界护甲事实；只有双方都存在的维度才参与平分。
+            const mine = CombatCopies.read(world, actor, dims), theirs = CombatCopies.read(world, target, dims);
+            const shared: CombatCopies.Values = {};
+            dims.forEach(function (id) {
+                if (mine[id] !== undefined && theirs[id] !== undefined) shared[id] = (mine[id] + theirs[id]) / 2;
+            });
+            const mineTotal = (mine[guardsplitArmor] || 0) + (mine[guardsplitToughness] || 0);
+            const theirTotal = (theirs[guardsplitArmor] || 0) + (theirs[guardsplitToughness] || 0);
+            const gap = Math.abs(theirTotal - mineTotal);
+            const reference = Math.max(1, Math.max(mineTotal, theirTotal));
             const gauge = Math.max(0, Math.min(1, gap / reference));
             const flow = Math.max(4, Math.min(96, Math.round(motes * (0.4 + gauge * 1.6))));
-            const mineTotal = mineDef + mineSpd, theirTotal = theirDef + theirSpd;
-            const selfShare = mineTotal / Math.max(1, mineTotal + theirTotal);
-            const foeShare = 1 - selfShare;
+            const total = Math.max(1, mineTotal + theirTotal);
+            const selfShare = mineTotal / total, foeShare = 1 - selfShare;
             const selfFlow = Math.max(2, Math.round(flow * selfShare * 1.5));
             const foeFlow = Math.max(2, Math.round(flow * foeShare * 1.5));
             const selfSize = Math.round((0.1 + 0.24 * selfShare) * 100) / 100;
@@ -153,54 +123,75 @@ namespace PokemonSkills {
             const back = [-toward[0], -toward[1], -toward[2]];
             const approach = Math.max(0.12, Math.min(0.8, reach / 16));
             const mid = body.position().plus(foe.position()).scale(0.5);
-            const changed = mineDef !== avgDef || mineSpd !== avgSpd || theirDef !== avgDef || theirSpd !== avgSpd;
-            if (changed) {
-                const layerSelf = guardsplitSettle(world, actor, avgDef, avgSpd, window + 40);
-                const layerFoe = guardsplitSettle(world, target, avgDef, avgSpd, window + 40);
-                MobEffects.apply(world, actor, guardsplitWindow, window, 0);
-                MobEffects.apply(world, target, guardsplitWindow, window, 0);
-                world.effect(guardsplitMark, actor, JSON.stringify({ layer: layerSelf, pair: String(target.ref()) }), window + 60);
-                world.effect(guardsplitMark, target, JSON.stringify({ layer: layerFoe, pair: String(actor.ref()) }), window + 60);
+            const avgArmor = shared[guardsplitArmor], avgTough = shared[guardsplitToughness];
+            const changed = dims.some(function (id) {
+                return shared[id] !== undefined && (Math.abs(mine[id] - shared[id]) > 1e-4 || Math.abs(theirs[id] - shared[id]) > 1e-4);
+            });
+            const shown = function (value: number | undefined): string { return value === undefined ? "—" : String(Math.round(value * 10) / 10); };
+            const fizzle = function (text: string): void {
+                WorldFeedback.emit(world, guardsplitScene, 1, body.position(), { moment: "fizzle", target: String(target.ref()) }, 16);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), text, [], 22);
+            };
+            if (Object.keys(shared).length === 0) { fizzle(guardsplitNoneText); done(action); return; }
+            if (!changed) {
+                WorldFeedback.emit(world, guardsplitScene, 1, body.position(),
+                    { moment: "merge", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
+                        point: [mid.x(), mid.y(), mid.z()], motes: motes, flow: 0, selfFlow: 0, foeFlow: 0,
+                        selfSize: selfSize, foeSize: foeSize, toward: toward, back: back, approach: approach,
+                        gauge: 0, armor: avgArmor, toughness: avgTough, scale: scale, exchange: 0, intensity: 0.8 }, 30);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardsplitFlatText, [], 26);
+                sound(action, "minecraft:entity.illusioner.cast_spell");
+                done(action);
+                return;
             }
+            // 先两端 carrier 成功：窗口既是共享身份，也是临时修饰的载体；任一端失败整对回滚。
+            const windowSelf = MobEffects.apply(world, actor, guardsplitWindow, window, 0);
+            if (windowSelf === null) { fizzle(guardsplitMissText); done(action); return; }
+            const windowFoe = MobEffects.apply(world, target, guardsplitWindow, window, 0);
+            if (windowFoe === null) {
+                world.removeMobEffect(actor, guardsplitWindow, String(windowSelf.key()));
+                fizzle(guardsplitMissText); done(action); return;
+            }
+            const layerSelf = CombatCopies.equalize(world, actor, shared, window, guardsplitSource, MobEffects.anchor(windowSelf));
+            const layerFoe = layerSelf > 0
+                ? CombatCopies.equalize(world, target, shared, window, guardsplitSource, MobEffects.anchor(windowFoe)) : -1;
+            if (!(layerSelf > 0) || !(layerFoe > 0)) {
+                if (layerSelf > 0) world.operation(layerSelf, "world_combat:dispel", "{}");
+                const remainSelf = MobEffects.read(world, actor, guardsplitWindow);
+                if (remainSelf !== null && String(remainSelf.key()) === String(windowSelf.key())) world.removeMobEffect(actor, guardsplitWindow, String(windowSelf.key()));
+                const remainFoe = MobEffects.read(world, target, guardsplitWindow);
+                if (remainFoe !== null && String(remainFoe.key()) === String(windowFoe.key())) world.removeMobEffect(target, guardsplitWindow, String(windowFoe.key()));
+                fizzle(guardsplitMissText); done(action); return;
+            }
+            world.effect(guardsplitHum, actor, JSON.stringify({ pair: String(target.ref()) }), window);
+            world.effect(guardsplitHum, target, JSON.stringify({ pair: String(actor.ref()) }), window);
             WorldFeedback.emit(world, guardsplitScene, 1, body.position(),
                 { moment: "merge", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                    point: [mid.x(), mid.y(), mid.z()],
-                    motes: motes, flow: flow, selfFlow: selfFlow, foeFlow: foeFlow,
+                    point: [mid.x(), mid.y(), mid.z()], motes: motes, flow: flow, selfFlow: selfFlow, foeFlow: foeFlow,
                     selfSize: selfSize, foeSize: foeSize, toward: toward, back: back, approach: approach,
-                    gauge: gauge, average: avgDef, scale: scale,
-                    intensity: Math.max(0.7, Math.min(2.2, gauge * 1.6 + 0.6)), even: changed ? 0 : 1 }, 36);
-            if (changed) {
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardsplitLevelText,
-                    [avgDef, avgSpd], 30);
-                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.0, 0)), guardsplitLevelText,
-                    [avgDef, avgSpd], 30);
-            } else {
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardsplitFlatText, [], 26);
-            }
+                    gauge: gauge, armor: avgArmor, toughness: avgTough, scale: scale, exchange: 1,
+                    intensity: Math.max(0.7, Math.min(2.2, gauge * 1.6 + 0.6)) }, 36);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardsplitLevelText,
+                [shown(avgArmor), shown(avgTough)], 30);
+            WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.0, 0)), guardsplitLevelText,
+                [shown(avgArmor), shown(avgTough)], 30);
             sound(action, "minecraft:entity.illusioner.cast_spell");
             world.sound("minecraft:block.beacon.activate", body.position(), 14, "{}");
             done(action);
         }
     });
 
-    // 窗口走完或被清除：按记号撤掉那层改动，数值回到原来的底子；其余修饰不受影响。
+    // 窗口结束（自然到期、被驱散或被新一层替换）：撤回窗口拥有的场景，数值随载体一起回到原来的底子。
     WorldCombat.on("world_combat:move_guardsplit/revert", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== guardsplitWindow) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const marks = world.effects(actor, guardsplitMark);
-        let pair = "";
-        if (marks.length) {
-            const mark: GuardsplitMark = JSON.parse(String(marks[0].data()));
-            if (typeof mark.layer === "number" && mark.layer >= 0) world.operation(mark.layer, "world_combat:dispel", "{}");
-            pair = String(mark.pair);
-            world.operation(marks[0].id(), "world_combat:dispel", "{}");
-        }
+        world.effects(actor, guardsplitHum).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, guardsplitScene, 1, body.position(),
-            { moment: "revert", target: String(actor.ref()), pair: pair, path: [String(actor.ref()), pair] }, 26);
+            { moment: "revert", target: String(actor.ref()), path: [String(actor.ref())] }, 26);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), guardsplitBackText, [], 26);
         world.sound("minecraft:block.beacon.deactivate", body.position(), 12, "{}");
     });

@@ -28,7 +28,7 @@
   "worldcombat.skill.round.preference.ai.maxChase.help": "Beyond this distance the companion closes in before singing. Larger values let it start from further out.",
   "worldcombat.skill.round.preference.ai.joinRound": "Answer a partner's round",
   "worldcombat.skill.round.preference.ai.joinRound.help": "On: when a nearby ally carries the refrain it prefers to sing and keep the round going. Off: it only prioritises when it has actually received the refrain itself, otherwise it sorts like an ordinary ranged attack.",
-  "world_combat.move.round.text.join": "Round: joined in",
+  "world_combat.move.round.text.join": "Round refrain: %1$s s",
   "world_combat.move.round.text.verse": "Answering! %1$s",
   "world_combat.move.round.text.miss": "Round missed",
   "effect.world_combat.round_carol": "Round: Refrain",

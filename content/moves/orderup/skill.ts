@@ -6,7 +6,8 @@
  *   Stretchy 提速度、其余提攻击；分餐式再把这个增益分给身旁队友。它不拆防护幕。
  * 三幕：
  *   起（windup，提交前）：托手成盘，盘中聚起一点暖光（`action.present`）。
- *   令（order）：伙伴到施法者之间亮起一道短指令线；能力只在**实际存在伙伴**时补上，补到谁就在谁身上亮出小符。
+ *   令（order）：伙伴到施法者之间亮起一道短指令线；能力和指令线只在**真实通视的伙伴**带来实际增级时补上，
+ *       补到谁就在谁身上亮出对应能力的小符；能力已满（增级 0）就不再停留，直接端出。
  *   端（serve → fly/hit）：提交后从身体平抛出一枚托盘形龙气，沿瞄准方向短程飞出；首个接触的身体结算一次
  *       非接触伤害后菜势收掉；没碰到人则原地散掉。空点也能出手，增益照旧由真实伙伴决定。
  *
@@ -15,10 +16,11 @@
  */
 namespace PokemonSkills {
     const orderupScene = "world_combat:move_orderup";
+    const orderupSigilScene = "world_combat:move_orderup_sigil";
     const orderupDishText = "world_combat.move.orderup.text.dish";
     const orderupMissText = "world_combat.move.orderup.text.miss";
 
-    /** 「菜」：自身 dishRange 内、比自身明显小的友方里最小的一只。 */
+    /** 「菜」：自身 dishRange 内、比自身明显小的友方里最小的一只，且必须与施法者真实通视。 */
     function orderupDish(world: CombatWorld, actor: CombatActor, self: CombatObservation, range: number): CombatActor | null {
         const actors = world.query(self.position(), range, false);
         let best: CombatActor | null = null, bestWidth = Infinity;
@@ -28,6 +30,8 @@ namespace PokemonSkills {
             if (!world.friendly(other)) continue;
             const body = world.observe(other);
             if (body === null || body.width() > self.width() * 0.75) continue;
+            // 墙后的伙伴端不到「菜」：补菜点与分餐都按真实可达判定。
+            if (!world.clear(self.position(), body.position())) continue;
             if (body.width() < bestWidth) { bestWidth = body.width(); best = other; }
         }
         return best;
@@ -104,6 +108,7 @@ namespace PokemonSkills {
             function present(current: CombatAction, key: string, point: CombatPoint, data: any): void {
                 scenes.show(current, key, point, data);
             }
+            /** 一次上菜：锁定当次合法伙伴（通视且比自身小）与它决定的能力，只对真实增级者计收益与反馈。 */
             function orderAndDish(current: CombatAction, self: CombatObservation): boolean {
                 const scope = current.world();
                 const dish = orderupDish(scope, current.actor(), self, range);
@@ -117,29 +122,42 @@ namespace PokemonSkills {
                     path: [[dishBody.position().x(), dishBody.position().y(), dishBody.position().z()],
                         [caster.x(), caster.y(), caster.z()]],
                     direction: [direction.x(), direction.y(), direction.z()],
+                    stat: orderupStatIndex(stat),
                     scale: scale
                 });
+                let served = 0;
                 const selfStages = share ? stages : stages + 1;
-                NativeEffects.boost(scope, current.actor(), stat, selfStages);
-                WorldFeedback.emit(scope, orderupScene, 1, caster,
-                    { moment: "dish", stat: orderupStatIndex(stat), stages: selfStages, target: String(current.actor().ref()), scale: scale }, 30);
-                WorldFeedback.text(scope, caster.plus(WorldCombat.point(0, 1.3, 0)), orderupDishText, [selfStages], 32);
+                const selfGain = NativeEffects.boost(scope, current.actor(), stat, selfStages);
+                if (selfGain > 0) {
+                    served++;
+                    WorldFeedback.emit(scope, orderupScene, 1, caster,
+                        { moment: "dish", stat: orderupStatIndex(stat), stages: selfGain, target: String(current.actor().ref()), scale: scale }, 30);
+                    WorldFeedback.emit(scope, orderupSigilScene, 1, caster,
+                        { stat: orderupStatIndex(stat), target: String(current.actor().ref()) }, 30);
+                    WorldFeedback.text(scope, caster.plus(WorldCombat.point(0, 1.3, 0)), orderupDishText, [selfGain], 32);
+                }
                 if (share) {
                     const allies = scope.query(caster, shareRadius, false);
-                    let served = 0;
-                    for (let i = 0; i < allies.length && served < 4; i++) {
+                    let shared = 0;
+                    for (let i = 0; i < allies.length && shared < 4; i++) {
                         const other = allies[i];
                         if (!other || !scope.valid(other) || String(other.key()) === String(current.actor().key())) continue;
                         if (!scope.friendly(other)) continue;
-                        NativeEffects.boost(scope, other, stat, stages);
                         const body = scope.observe(other);
-                        if (body !== null) {
-                            WorldFeedback.emit(scope, orderupScene, 1, body.position(),
-                                { moment: "dish", stat: orderupStatIndex(stat), stages: stages, target: String(other.ref()), scale: scale }, 28);
-                        }
+                        if (body === null) continue;
+                        // 分餐只端给真实可达的队友，能力已满（增益为 0）的不计入受益人也不乱发反馈。
+                        if (!scope.clear(caster, body.position())) continue;
+                        const gain = NativeEffects.boost(scope, other, stat, stages);
+                        if (gain <= 0) continue;
+                        shared++;
                         served++;
+                        WorldFeedback.emit(scope, orderupScene, 1, body.position(),
+                            { moment: "dish", stat: orderupStatIndex(stat), stages: gain, target: String(other.ref()), scale: scale }, 28);
+                        WorldFeedback.emit(scope, orderupSigilScene, 1, body.position(),
+                            { stat: orderupStatIndex(stat), target: String(other.ref()) }, 28);
                     }
                 }
+                if (served === 0) { scenes.stop(current, "order"); return false; }
                 sound(current, "minecraft:block.note_block.bell");
                 return true;
             }

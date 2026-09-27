@@ -22,7 +22,7 @@ Smoke.scenario("psywave", function (stage) {
         stage.expect(stage.casts("psywave", user) > 0, "starmie committed psywave");
         stage.expect(stage.damageTo(front) > 0, "the wave dealt damage to the first target");
         stage.expect(stage.damageTo(back) > 0, "the wave pierced through to the second target");
-        stage.note("the wave is aimed freely and pierces a line of non-allies; the per-cast intensity is rolled once during preparation from (1 - swing) to (1 + swing), locked into this cast's action data, and applied to every target the front passes (and shown by the preparation rings).", {
+        stage.note("the wave is aimed freely and pierces a line of non-allies; the per-cast intensity is a managed actor-owned pending value, shown during preparation and consumed on commit, then the next value is drawn - cancelling the preparation keeps the displayed cast. The front ends at the real projectilePosition (pierce spent, wall or full range), not the aim point. The flight draws a finite ring column whose count equals data.rings with the world width applied once.", {
             casts: stage.casts("psywave", user),
             dealt: Math.round(stage.damageBy(user) * 10) / 10,
             frontDamage: Math.round(stage.damageTo(front) * 10) / 10,

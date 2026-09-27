@@ -4,9 +4,24 @@ namespace CompanionBehavior {
         const held = NativeItems.heldOf(access, actor);
         return held === null ? "" : held.id;
     });
+    /**
+     * 这件道具是否真的会被查封影响：走 item_use 门禁的饮食（food 组件）、饮用（potion 组件）、
+     * 格挡（盾牌）与蓄弓（弓、弩、三叉戟、奶桶）算数；只拿来砍人的普通剑、斧与盔甲不算，
+     * 它们的主用途不经过物品使用入口，封它只会白白占一个出手。
+     */
+    registerFact("world_combat:move_embargo/sealable", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
+        const held = NativeItems.heldOf(access, actor);
+        if (held === null || !held.id) return false;
+        const item = access.item(held.id);
+        if (item !== null && (item.hasComponent("minecraft:food") || item.hasComponent("minecraft:potion_contents"))) return true;
+        return /(^|:)(bow|crossbow|trident|shield|milk_bucket)$/.test(String(held.id));
+    });
 
     function embargoHeldOf(context: WorldBehavior.Context, target: Entity): string {
         return CompanionBehavior.fact<string>(context, "world_combat:move_embargo/held", target) || "";
+    }
+    function embargoSealableOf(context: WorldBehavior.Context, target: Entity): boolean {
+        return CompanionBehavior.fact<boolean>(context, "world_combat:move_embargo/sealable", target) === true;
     }
 
     registerUse("embargo", {
@@ -26,7 +41,9 @@ namespace CompanionBehavior {
         },
         priority: function (context, _item, target) {
             if (!target || status(context, target, "embargo")) return 0;
-            return embargoHeldOf(context, target) !== "" ? 58 : 24;
+            if (embargoHeldOf(context, target) === "") return 24;
+            // 能真正被封住的饮食／饮用／格挡／蓄弓才值得优先；只拿普通剑的目标降到低位。
+            return embargoSealableOf(context, target) ? 58 : 24;
         }
     });
 

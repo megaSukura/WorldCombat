@@ -4,9 +4,9 @@
  * 一句话：施法者蹲身一压、脚下扬起一圈尘土，随即沿一道竖直的气柱跃到空中，随后斜线俯冲压下——落点同时
  * 炸开格斗系的拳形冲击与飞行系的下压气流，把站着的对手连人带地压出一圈尘土。
  * 色相家族：暖金与近白（impact_fighting / impact_flying / dashburst / speedlines）为主体，落尘用中性 tinydust。
- * 拍子：起（crouch 收尘）→ 跃（leap 气柱）→ 标（mark 锁定落点短影）→ 压（press 双属性冲击、glance 撞墙擦尘、whiff 压空）→ 收（land 落尘）。
- * 范围：press 的一圈按 `data.scale`（压击判定 / 0.9）铺开；leap 的气柱高度读 `data.height`（真实可升程）；mark 短影钉在锁死的俯冲终点。
- * 运动：leap 是竖直上升的气柱，press 是向外压平的冲击环与四散碎块，glance/whiff 只有一小圈擦尘。
+ * 拍子：起（crouch 收尘）→ 跃（leap 气柱）→ 标（mark 锁点脚环）→ 冲（dive 沿真实下压路线的尾迹）→ 压（press 双属性冲击、glance 撞墙擦尘、whiff 压空）→ 收（land 落尘）。
+ * 范围：press 的一圈按 `data.scale`（压击判定 / 0.9）铺开；leap 的气柱高度读 `data.height`（真实可升程）；mark 脚环钉在锁点下方的支撑面。
+ * 运动：leap 是竖直上升的气柱，dive 的尾迹随身体沿真实俯冲路线发射，press 是向外压平的冲击环与四散碎块，glance/whiff 只有一小圈擦尘。
  * 数：`data.count`（重压威力派生）决定落点冲击量，`data.intensity` 抬高亮度。
  */
 const FlyingpressDefinition: ParticleDefinition = {
@@ -67,6 +67,28 @@ const FlyingpressDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.0, 0.04],
                     lifetime: [10, 16], size: [0.24, 0.06], sizeMode: "index",
                     color: 0xC8A86A, alpha: [0.4, 0], light: "world", maxParticles: 26
+                }
+            ]
+        },
+        dive: {
+            duration: 60,
+            exit: { stop: 20, drain: 14 },
+            emitters: [
+                {
+                    name: "dive_streak", bind: "source", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    trail: { minDistance: 0.3 },
+                    rate: 40, direction: "velocity", spread: 8,
+                    lifetime: [6, 10], size: [0.3, 0.06], sizeMode: "index",
+                    color: 0xFFF2D0, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 60
+                },
+                {
+                    name: "dive_wind", bind: "source", height: 0.2,
+                    particle: "world_combat_core:cobblemon/vanilla/small_gust",
+                    trail: { minDistance: 0.5 },
+                    rate: 16, direction: "velocity", spread: 14,
+                    lifetime: [6, 11], size: [0.12, 0.03],
+                    color: 0xDCEBFA, alpha: [0.4, 0], light: "world", maxParticles: 40
                 }
             ]
         },

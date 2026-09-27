@@ -2,12 +2,12 @@
  * 玩泥巴 / mudsport 的伙伴 AI 用途与自己的铺泥计划。
  *
  * 只认确知的电属性招式／伤害信息：宝可梦的已配招式里有电属性招式，或最近 10 秒内真的打出过电属性伤害，
- * 才算「会电攻」。不因为看不见电系就假定对手的输出都是电，也不靠属性猜。对手确知电攻时 priority 58，
- * 其余不该由本招兜底（40 只是排位基准，`mudsportWants` 仍要求确知电攻）。己方（含自己）也靠电攻时降到 30——泥滩压
- * 电对双方一视同仁，别把自家电输出一起压掉。
+ * 才算「会电攻」。不因为看不见电系就假定对手的输出都是电，也不靠属性猜。
  *
- * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 13）格内、已确知会用电攻、自己还不在泥滩里。
- * `ai.advance` 开启时把泥滩压到威胁脚下（压住已观测电攻的站位）；关闭时按在脚下先护住自己与队伍。
+ * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 13）格内、自己还不在泥滩里。泥是真实阵地，不只是压电圈：
+ * 电攻威胁 priority 58（压它的输出），正朝自己压近的威胁 priority 50（在它的追击路线上截泥）；两者都排位靠前。
+ * 己方（含自己）也靠电攻时整段降到 30——泥滩压电对双方一视同仁，别把自家电输出一起压掉。
+ * `ai.advance` 开启时把泥滩压到威胁脚下（压住电攻站位或截住追击路线）；关闭时按在脚下先护住自己与队伍。
  */
 namespace PokemonSkills {
     /** 观测记忆：最近一次看到某个 ref 打出电属性伤害的 tick。 */
@@ -61,8 +61,14 @@ namespace PokemonSkills {
         if (!threat || threat.health <= 0 || !threat.visible || threat.friendly) return false;
         if (context.facts.intent === "hold" && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         if (CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point) > CompanionBehavior.ai<number>(item, "maxChase", 13)) return false;
-        if (!mudsportElectric(context, threat)) return false;
         return !mudsportInside(context);
+    }
+    /** 威胁是否正朝自己压近；用于把泥截在它的追击路线上。 */
+    function mudsportClosing(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context).point, velocity = CompanionBehavior.velocity(context, threat);
+        if (!velocity) return false;
+        const dx = threat.point[0] - self[0], dz = threat.point[2] - self[2], span = Math.sqrt(dx * dx + dz * dz) || 1;
+        return (velocity[0] * dx + velocity[2] * dz) / span > 0.08;
     }
 
     CompanionBehavior.registerUse(mudsportId, {
@@ -70,7 +76,8 @@ namespace PokemonSkills {
         reach: function (_context, item) { return item.data.range; },
         priority: function (context, item) {
             const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"];
-            const base = threat && mudsportElectric(context, threat) ? 58 : 40;
+            let base = 40;
+            if (threat) base = mudsportElectric(context, threat) ? 58 : mudsportClosing(context, threat) ? 50 : 40;
             return mudsportAllyElectric(context) ? Math.min(base, 30) : base;
         },
         available: function (context, item, _purpose, _target) {
@@ -107,9 +114,9 @@ namespace PokemonSkills {
 
     addPreferences(mudsportId, { ai: { maxChase: 13, advance: false, leaveStation: false } }, [
         field(pathOf("ai.maxChase"), "铺泥距离", "number", { min: 4, max: 22, step: 1,
-            help: "伙伴只在已确知电攻的威胁离自己这么远以内时才铺泥；调小只在贴身时铺，调大愿意提前布置。" }),
-        field(pathOf("ai.advance"), "把泥滩压向电攻站位", "boolean",
-            { help: "开启：把泥滩压到已确知电攻的对手脚下，压住他的电输出；关闭：按在脚下先护住自己与队伍。" }),
+            help: "伙伴只在可见威胁离自己这么远以内时才铺泥；电攻威胁优先，正逼近的其他敌人也会被截住。调小只在贴身时铺，调大愿意提前布置。" }),
+        field(pathOf("ai.advance"), "把泥滩压向威胁站位", "boolean",
+            { help: "开启：把泥滩压到威胁脚下（压住电攻站位或截住追击路线）；关闭：按在脚下先护住自己与队伍。" }),
         field(pathOf("ai.leaveStation"), "离开驻守点", "boolean",
             { help: "开启后，驻守中的伙伴会离开原位去铺泥。" })
     ]);

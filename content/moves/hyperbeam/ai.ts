@@ -9,11 +9,19 @@
  * 出手前后：放完交回共享交战计划；熄火期间招式由共享起手门禁自动屏蔽。
  */
 namespace PokemonSkills {
-    /** 从自己指向 target 的走廊里，当前可见敌人的数量；用于「排队站」判断与排序。 */
+    /** 与参数公式同源的走廊半宽：身板越高越宽，聚焦收窄、散焦铺开；用于线计数。 */
+    function hyperbeamWidth(capability: WorldBehavior.Capability, self: CompanionBehavior.Entity): number {
+        const height = typeof self.height === "number" ? self.height : 1.4;
+        const focus = !!(capability.data.config && capability.data.config.focus);
+        return Math.max(0.28, Math.min(1.5, (0.7 + (height - 1.4) * 0.22) * (focus ? 0.55 : 1.25)));
+    }
+
+    /** 从自己指向 target 的走廊里，当前可见、且声路没有被墙挡住的敌人数量；用于「排队站」判断与排序。 */
     function hyperbeamLineup(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
+        const world = CompanionBehavior.world(context);
         const reach = typeof capability.data.range === "number" ? capability.data.range : 11;
-        const half = !!(capability.data.config && capability.data.config.focus) ? 0.7 : 1.5;
+        const half = hyperbeamWidth(capability, self);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return 1;
@@ -27,7 +35,9 @@ namespace PokemonSkills {
             const along = ox * hx + oz * hz;
             if (along <= 0.2 || along > reach) continue;
             const side = Math.abs(ox * hz - oz * hx);
-            if (side <= half) count++;
+            if (side > half) continue;
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return Math.max(1, count);
     }

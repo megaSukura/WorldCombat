@@ -27,6 +27,12 @@
   "world_combat.move.reflecttype.text.one": "映照成 %1$s 属性",
   "world_combat.move.reflecttype.text.pair": "映照成 %1$s、%2$s 属性",
   "world_combat.move.reflecttype.text.fail": "没有可以映照的属性",
-  "world_combat.move.reflecttype.text.armor": "映照了护甲",
-  "worldcombat.skill.reflecttype.world": "照住普通生物时，暂时复制其当前护甲；开启镜像全部时还复制护甲韧性与抗击退能力，持续 %1$s，到期或镜像被清除后恢复。照来的防护也可能比自己的弱，之后装备和效果仍会改变实际属性。"
+  "world_combat.move.reflecttype.text.armor": "映照了护甲（净变化 %1$s）",
+  "world_combat.move.reflecttype.text.armor.pair": "映照了护甲与韧性（净变化 %1$s / %2$s）",
+  "world_combat.move.reflecttype.text.preview.one": "将映照 %1$s 属性",
+  "world_combat.move.reflecttype.text.preview.pair": "将映照 %1$s、%2$s 属性",
+  "world_combat.move.reflecttype.text.preview.armor": "将借护甲，净变化 %1$s",
+  "world_combat.move.reflecttype.text.preview.armor.pair": "将借护甲与韧性，净变化 %1$s / %2$s",
+  "worldcombat.skill.reflecttype.world": "照住普通生物时，暂时复制其当前护甲；开启镜像全部时还复制护甲韧性，持续 %1$s，到期或镜像被清除后恢复。照来的防护也可能比自己的弱，之后装备和效果仍会改变实际属性。",
+  "effect.world_combat.reflecttype_alternate": "镜面属性"
 }

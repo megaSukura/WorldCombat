@@ -6,9 +6,10 @@
  *
  * 三幕（提交前只播预告）：
  *   起（windup）：全身表层的钢光向身前收拢、脚下起屑，只播预告，此时代价未结清；收拢的金属量随 `cost` 可见。
- *   铸（lance → impact / fizzle / wall）：提交后钢梁沿准线射出，用与表现同一组顶点围出的走廊判定；钢梁受真实
- *       方块遮挡——`clipBlocks` 在第一个挡墙处截断走廊，判定与画面读到同一条截断线。命中走廊里离自己最近的
- *       一个非友方，结算 `lance` 伤害并沿射向把它撞开 `knock` 格；打空在尽头散光，撞墙在墙面迸屑。
+ *   铸（lance → impact / fizzle / wall）：提交后钢梁沿准线射出。先用真实身体几何挑出走廊里离自己最近的一个
+ *       非友方——按梁面到对方真实碰撞箱的接触距离，而不是中心距，宽体 Boss 的体表更近时也能排在第一；
+ *       再让钢梁的判定与画面一起收束到首敌（或第一面墙）的真实接触处就停。命中结算 `lance` 伤害并沿射向把
+ *       它撞开 `knock` 格；打空在尽头散光，撞墙在墙面迸屑。
  *   剥（shed）：钢梁出手后，施法者身上崩落钢屑、血色骤降——**只有真的扣了血才散甲片**，扣除最大生命 ×`cost`。
  *
  * 与同族分开：破坏光线细长贯穿、代价是熄火；破灭之光粗重贯穿、代价随伤害走；叶绿爆震扇形放光。
@@ -84,42 +85,49 @@ namespace PokemonSkills {
             const scale = half / 0.85;
             const intensity = Math.max(0.6, Math.min(2.6, power / 140));
 
-            // 直线受真实方块遮挡：clipBlocks 给出射线上第一个方块格；有挡墙就把走廊截断在墙面，判定与画面读同一条线。
+            // 直线受真实方块遮挡：clipBlocks 给出射线上第一个方块格；有挡墙就把走廊截断在墙面。
             const fullEnd = origin.plus(direction.scale(reach));
             const clip = world.clipBlocks(origin, fullEnd);
             const wall = clip !== null && clip.blocked() ? clip : null;
             const laneReach = clip === null ? 0 : wall !== null ? wall.position().minus(origin).length() : reach;
-            const vertices = steelbeamLane(origin, direction, laneReach, half);
-            const tip = origin.plus(direction.scale(laneReach));
+
+            // 首敌按梁面到真实身体碰撞箱的接触距离挑选：宽体 Boss 的体表更近时排在第一，而不是中心最近的人。
+            const found: { actor: CombatActor; at: CombatPoint; along: number }[] = [];
+            if (half > 0.01 && laneReach > 0.001) {
+                WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(origin, origin.plus(direction.scale(laneReach)), half),
+                    function (enemy: CombatActor, facts: CombatObservation) {
+                        if (world.friendly(enemy) || String(enemy.ref()) === String(actor.ref())) return;
+                        if (!world.clear(origin, facts.position())) return;
+                        const offset = world.closestPoint(enemy, origin).minus(origin);
+                        const along = Math.max(0, offset.x() * direction.x() + offset.y() * direction.y() + offset.z() * direction.z());
+                        found.push({ actor: enemy, at: facts.position(), along: along });
+                    });
+            }
+            found.sort(function (a, b) { return a.along - b.along; });
+            const first = found.length > 0 ? found[0] : null;
+
+            // 钢梁在首敌或墙面处收束：判定与画面读同一条截断到真实接触的线，不再把梁画穿首敌。
+            const beamLength = first !== null ? Math.max(0.05, Math.min(laneReach, first.along)) : laneReach;
+            const vertices = steelbeamLane(origin, direction, beamLength, half);
+            const tip = origin.plus(direction.scale(beamLength));
             let hits = 0;
 
             sound(action, "minecraft:item.trident.throw");
             WorldFeedback.emit(world, steelbeamScene, 1, origin,
                 { moment: "lance", path: steelbeamPath(vertices), direction: [direction.x(), direction.y(), direction.z()],
-                    scale: scale, intensity: intensity, shards: shards, reach: laneReach,
+                    scale: scale, intensity: intensity, shards: shards, reach: beamLength,
                     blocked: wall !== null ? 1 : 0,
                     notes: Math.round(40 + power * 0.5) }, 26);
 
-            if (half > 0.01 && laneReach > .001) {
-                const region = WorldGeometry.bodySegment(origin, tip, half);
-                const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-                WorldGeometry.selectBodies(world, region, function (enemy, facts) {
-                    if (world.friendly(enemy) || String(enemy.ref()) === String(actor.ref())) return;
-                    if (!world.clear(origin, facts.position())) return;
-                    candidates.push({ actor: enemy, at: facts.position() });
-                });
-                candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
-                if (candidates.length > 0) {
-                    const first = candidates[0];
-                    if (hurt(action, first.actor, steelbeamId, power, { damage: damageSpec(steelbeamId, "lance") })) {
-                        hits++;
-                        if (world.valid(first.actor)) world.hitDisplace(first.actor, direction.scale(knock));
-                        WorldFeedback.emit(world, steelbeamScene, 1, first.at,
-                            { moment: "impact", target: String(first.actor.ref()), shards: shards, scale: scale,
-                                intensity: intensity }, 26);
-                        sound(action, "cobblemon:impact.steel");
-                        WorldFeedback.text(world, first.at.plus(WorldCombat.point(0, 1.2, 0)), steelbeamHitText, [Math.round(knock * 10) / 10], 26);
-                    }
+            if (first !== null) {
+                if (hurt(action, first.actor, steelbeamId, power, { damage: damageSpec(steelbeamId, "lance") })) {
+                    hits++;
+                    if (world.valid(first.actor)) world.hitDisplace(first.actor, direction.scale(knock));
+                    WorldFeedback.emit(world, steelbeamScene, 1, first.at,
+                        { moment: "impact", target: String(first.actor.ref()), shards: shards, scale: scale,
+                            intensity: intensity }, 26);
+                    sound(action, "cobblemon:impact.steel");
+                    WorldFeedback.text(world, first.at.plus(WorldCombat.point(0, 1.2, 0)), steelbeamHitText, [Math.round(knock * 10) / 10], 26);
                 }
             }
 

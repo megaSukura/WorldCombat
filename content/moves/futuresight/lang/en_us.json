@@ -1,9 +1,9 @@
 {
   "effect.world_combat.futuresight_seal": "Foreseen",
-  "worldcombat.skill.futuresight.summary": "Sends a mote of its own psychic energy to hover over the target and follow it; after a delay it falls for one special hit. The foe can use the delay to heal or buff, but cannot dodge it by moving, and clearing the mark will not cancel it.",
+  "worldcombat.skill.futuresight.summary": "Reserve a psychic mote above one target for a delayed special hit. Healing and defense still help; clearing the hint does not cancel the appointment. The caster must remain present, and the appointment ends if the target leaves observation range.",
   "worldcombat.skill.futuresight.use.0": "Lock a distant target before the fight starts",
   "worldcombat.skill.futuresight.use.1": "Force the foe to spend the delay reacting",
-  "worldcombat.skill.futuresight.use.2": "Set up an unavoidable strike from a safe distance",
+  "worldcombat.skill.futuresight.use.2": "Schedule one delayed strike and continue acting",
   "worldcombat.skill.futuresight.description.0": "The psychic mote falls after %2$s and deals about %1$s special damage to the locked target.",
   "worldcombat.skill.futuresight.description.1": "The mote hovers above the target and can lock targets within %1$s blocks.",
   "worldcombat.skill.futuresight.description.2": "Prepare %1$s s, recover %2$s s, cooldown %3$s s.",
@@ -15,7 +15,7 @@
   "worldcombat.skill.futuresight.value.delay": "Landing delay",
   "worldcombat.skill.futuresight.value.hangHeight": "Hover height",
   "worldcombat.skill.futuresight.value.reach": "Lock range",
-  "worldcombat.skill.futuresight.value.radius": "Landing radius",
+  "worldcombat.skill.futuresight.value.radius": "Mote size",
   "worldcombat.skill.futuresight.value.tempo": "Prepare",
   "worldcombat.skill.futuresight.value.settle": "Recover",
   "worldcombat.skill.futuresight.value.recharge": "Cooldown",
@@ -26,5 +26,5 @@
   "world_combat.move.futuresight.text.send": "Future Sight: lands in %1$s s",
   "world_combat.move.futuresight.text.hit": "The vision strikes %1$s",
   "world_combat.move.futuresight.text.fizzle": "The vision fizzles",
-  "worldcombat.skill.futuresight.description.3": "The target is marked as Foreseen for the delay; the mark only records the lock - it neither slows nor damages, and the companion will not cast Future Sight on a target already bearing it. The mote keeps following the target, so running does not dodge it; when the delay ends it strikes the target's current position, or fizzles if the target is gone. Clearing the mark does not cancel the mote."
+  "worldcombat.skill.futuresight.description.3": "The target is marked as Foreseen; the mark only records the lock - it neither slows nor damages. The mote is pure presentation, not an attackable body, so hitting it cannot cancel the appointment. The mote keeps following the target, so running does not dodge it; when the delay ends it strikes the target's current position, or fizzles if the target is gone. The appointment belongs to the caster: recalling or leaving ends it. Clearing the mark (milk or another move) does not cancel the mote."
 }

@@ -40,24 +40,23 @@ const HammerarmDefinition: ParticleDefinition = {
             ]
         },
         swing: {
-            duration: 12,
-            exit: { stop: 5, drain: 10 },
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "fist_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/hollowfist",
-                    shape: { kind: "polyline" }, burst: { count: 26 },
+                    shape: { kind: "polyline" }, rate: 80,
                     direction: "shape", orient: "direction", speed: [0.05, 0.16], spread: 6, spin: 8,
                     lifetime: [4, 8], size: [0.32, 0.06], sizeMode: "index",
-                    color: 0xE8A24A, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
+                    color: 0xE8A24A, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 120
                 },
                 {
                     name: "smear", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    shape: { kind: "polyline" }, burst: { count: 14 },
+                    shape: { kind: "polyline" }, rate: 32,
                     direction: "shape", orient: "direction", speed: [0.04, 0.14],
                     lifetime: [4, 7], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0xF6C271, alpha: [0.6, 0], light: "world", maxParticles: 30
+                    color: 0xF6C271, alpha: [0.6, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -82,9 +81,15 @@ const HammerarmDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.3], spread: 28,
                     lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xF6C271, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 80
-                },
+                }
+            ]
+        },
+        dust: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
                 {
-                    name: "dust_line", bind: "point", fit: "none", offset: [0, 0.22, 0],
+                    name: "dust_line", bind: "point", fit: "world", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: { data: "dents", fallback: 10 }, at: 0 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.1 } },
@@ -94,10 +99,10 @@ const HammerarmDefinition: ParticleDefinition = {
                     color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.8, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "chips", bind: "point", fit: "none", offset: [0, 0.3, 0],
+                    name: "chips", bind: "point", fit: "world", offset: [0, 0.14, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dents", fallback: 10 }, at: 0 },
-                    shape: { kind: "sphere", radius: 0.4 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.1 } },
                     direction: "outward", speed: [0.06, 0.26], spin: 12, spread: 30,
                     gravity: 0.08, drag: 0.9,
                     lifetime: [10, 18], size: [0.1, 0.02],
@@ -110,6 +115,15 @@ const HammerarmDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 13 },
             emitters: [
                 {
+                    name: "flash", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.08, 0.28],
+                    lifetime: [6, 12], size: [0.36, 0.06], sizeMode: "index",
+                    color: 0xF6C271, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 20
+                },
+                {
                     name: "dents", bind: "point", fit: "none", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dents", fallback: 10 }, at: 0 },
@@ -117,16 +131,7 @@ const HammerarmDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.28], spread: 30,
                     gravity: 0.08, drag: 0.9,
                     lifetime: [9, 16], size: [0.1, 0.02],
-                    color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.85, 0], light: "world", maxParticles: 60
-                },
-                {
-                    name: "fall", bind: "point", fit: "none", offset: [0, 0.16, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "dents", fallback: 10 }, at: 0 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.1 } },
-                    direction: "outward", speed: [0.03, 0.14], gravity: 0.05, drag: 0.92,
-                    lifetime: [11, 19], size: [0.06, 0.02],
-                    color: { data: "tint", fallback: 0x8C7448 }, alpha: [0.4, 0], light: "world", maxParticles: 60
+                    color: 0x8A8A86, alpha: [0.85, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -179,3 +184,41 @@ const HammerarmDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_hammerarm", 1, HammerarmDefinition);
+
+/**
+ * 过顶拳路里的那枚拳：服务端每刻给出拳当前真实所在的世界点与世界速度方向，客户端在原地画一枚带短尾的拳形，
+ * 随弧推进切换帧，落地/撞墙即被 lifecycle 停掉。固定绘制（一枚拳 + 一段尾线），复用原生图集，不生成粒子或额外实体。
+ */
+const HammerarmFistScene = "world_combat:move_hammerarm/fist";
+const HammerarmFistSprite = "cobblemon:particle/generic/bigfist";
+const HammerarmFistFrames = 9;
+
+function hammerarmTriple(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function hammerarmNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(HammerarmFistScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "fist" || data.lifecycle) return;
+    const point = hammerarmTriple(data.point);
+    if (point === null) return;
+    const from = hammerarmTriple(data.from);
+    const scale = Math.max(0.6, Math.min(2.0, hammerarmNumber(data.scale, 1)));
+    const intensity = Math.max(0.6, Math.min(2.2, hammerarmNumber(data.intensity, 1)));
+    const progress = Math.max(0, Math.min(1, hammerarmNumber(data.progress, 0)));
+    const alpha = Math.round(Math.max(150, Math.min(245, 170 + intensity * 35)));
+    const bright = (alpha << 24 | 0xF6C271) | 0;
+    const tail = (Math.round(alpha * 0.5) << 24 | 0xE8A24A) | 0;
+    if (from !== null) frame.line(from[0], from[1], from[2], point[0], point[1], point[2], tail);
+    const spriteFrame = Math.max(0, Math.min(HammerarmFistFrames - 1, Math.floor(progress * HammerarmFistFrames)));
+    frame.sprite(HammerarmFistSprite, point[0], point[1], point[2], 0.42 * scale + 0.12, 0, bright, spriteFrame, true);
+});

@@ -17,7 +17,7 @@
   "worldcombat.skill.scaryface.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.scaryface.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑瞪它；调小只在贴身时吓人，调大愿意先手。",
   "worldcombat.skill.scaryface.preference.ai.leaveStation": "驻守时离位",
-  "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去瞪人。",
+  "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去瞪人；关闭时驻守只瞪已经走进射程的威胁。",
   "world_combat.move.scaryface.text.gaze": "被吓住（速度 -%1$s）",
   "world_combat.move.scaryface.text.blocked": "视线被挡，鬼脸落空",
   "effect.world_combat.scary_face_terror": "被吓住",

@@ -13,9 +13,14 @@
  */
 namespace PokemonSkills {
     const silkTrapScene = "world_combat:move_silktrap";
+    /** 围身丝线的自定义绘制场景；与护池同生命周期，随 `WorldFeedback.onEffect` 收回。 */
+    const silkTrapWebScene = "world_combat:move_silktrap_web";
+    /** 接触收束的自定义绘制场景：真实线头从受击点牵向来犯者。 */
+    const silkTrapCinchScene = "world_combat:move_silktrap_cinch";
     export const SilkTrapRule = "world_combat:move_silktrap";
     const silkTrapEffect = "world_combat:silk_guard";
     const silkTrapHoldKey = "world_combat:move_silktrap:hold";
+    const silkTrapWebKey = "world_combat:move_silktrap:web";
     const silkTrapBlockText = "world_combat.move.silktrap.text.block";
     const silkTrapPunishText = "world_combat.move.silktrap.text.punish";
     const silkTrapFallText = "world_combat.move.silktrap.text.fall";
@@ -46,6 +51,19 @@ namespace PokemonSkills {
         const prefix = String(effectId) + ":";
         Object.keys(silkTrapSnared).forEach(function (entry) { if (entry.indexOf(prefix) === 0) delete silkTrapSnared[entry]; });
     }
+    /** 身份被驱散/替换时，只收回由这层身份自己建立的护池，不扫别的来源留下的同规则护池。 */
+    function silkTrapDropGuards(world: CombatWorld, actor: CombatActor): void {
+        const views = world.effects(actor, "world_combat:guard");
+        for (let i = 0; i < views.length; i++) {
+            let state: any;
+            try { state = JSON.parse(String(views[i].data())); } catch (error) { continue; }
+            if (state.rule !== SilkTrapRule || !state.carrier) continue;
+            if (!MobEffects.matches(world, actor, state.carrier)) {
+                silkTrapClear(views[i].id());
+                world.operation(views[i].id(), "world_combat:dispel", "{}");
+            }
+        }
+    }
 
     GuardEffects.register(SilkTrapRule, {
         /** 只挡敌对来源的伤害；变化招式与自身来源都不进这条。 */
@@ -57,11 +75,18 @@ namespace PokemonSkills {
             const world = effect.world(), body = world.observe(effect.target());
             if (body === null) return;
             if (effect.remaining() <= 8) silkTrapClear(effect.id());
-            const initial = (<any>state).initial || state.capacity || 1;
-            WorldFeedback.keep(world, silkTrapHoldKey, silkTrapScene, 1, body.position(), {
-                moment: "hold", target: String(effect.target().ref()),
-                scale: silkTrapScale((<any>state).radius), intensity: silkTrapIntensity(state.capacity, initial)
-            }, 20);
+            const custom: any = state, initial = custom.initial || state.capacity || 1;
+            const radius = Math.max(1.2, custom.radius || silkTrapReferenceRadius);
+            const threads = Math.max(6, Math.round((custom.drop || 1) * 5));
+            // 围身交织丝线：根数由降速级数派生，半径就是真实铺开的丝网半径；随护池一起清理。
+            WorldFeedback.onEffect(world, effect.id(), silkTrapWebKey, silkTrapWebScene, 1, body.position(), {
+                moment: "hold", radius: radius, threads: threads, height: body.height(),
+                intensity: silkTrapIntensity(state.capacity, initial)
+            });
+            WorldFeedback.onEffect(world, effect.id(), silkTrapHoldKey, silkTrapScene, 1, body.position(), {
+                moment: "hold", target: String(effect.target().ref()), radius: radius,
+                scale: silkTrapScale(radius), intensity: silkTrapIntensity(state.capacity, initial)
+            });
         },
         guarded: function (effect, state, amount, incoming) {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -78,18 +103,22 @@ namespace PokemonSkills {
                     const point = attackerBody.position();
                     const hit = silkTrapContactPoint(world, attacker, incoming.data) || body.position();
                     // 一记接触把余网抽干：只给原降速（不再附 rooted），随后收网脱身。
-                    NativeEffects.boost(world, attacker, "spe", -drop);
+                    // 原生顶回或已经到底时实际降幅可能小于名义值，反馈按实际值。
+                    const actualDrop = Math.max(0, -NativeEffects.boost(world, attacker, "spe", -drop));
                     const cinch: any = { moment: "cinch", target: String(target.ref()), point: [hit.x(), hit.y(), hit.z()],
-                        blocked: Math.round(amount * 10) / 10, drop: drop, scale: scale,
-                        intensity: Math.max(0.4, Math.min(1.5, drop / 2)),
+                        blocked: Math.round(amount * 10) / 10, drop: actualDrop, scale: scale,
+                        intensity: Math.max(0.4, Math.min(1.5, Math.max(1, actualDrop) / 2)),
                         path: [[body.position().x(), body.position().y(), body.position().z()], String(attacker.ref())] };
                     const away = point.minus(body.position());
                     if (away.length() > 0.01) { const direction = away.unit(); cinch.direction = [direction.x(), direction.y(), direction.z()]; }
+                    cinch.start = world.tick(); cinch.duration = 24;
                     WorldFeedback.emit(world, silkTrapScene, 1, body.position(), cinch, 24);
+                    // 真实线头：受击处凹陷，网丝沿现场连线牵向来犯者。
+                    WorldFeedback.emit(world, silkTrapCinchScene, 1, body.position(), cinch, 24);
                     WorldFeedback.emit(world, silkTrapScene, 1, point, { moment: "punish", target: String(attacker.ref()),
-                        threads: Math.max(4, Math.round(drop * 5)), drop: drop, scale: scale,
-                        intensity: Math.max(0.4, Math.min(1.5, drop / 2)) }, 26);
-                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.2, 0)), silkTrapPunishText, [drop], 30);
+                        threads: Math.max(4, Math.round(Math.max(1, actualDrop) * 5)), drop: actualDrop, scale: scale,
+                        intensity: Math.max(0.4, Math.min(1.5, Math.max(1, actualDrop) / 2)) }, 26);
+                    if (actualDrop > 0) WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.2, 0)), silkTrapPunishText, [actualDrop], 30);
                     world.sound("minecraft:block.cobweb.hit", point, 14, "{}");
                 }
                 // 接触成功挡下：立刻抽干余网、结束保护，fall 里自己脱网。
@@ -120,6 +149,8 @@ namespace PokemonSkills {
         if (String(data.id) !== silkTrapEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        // 身份被净化/破屏/替换：属于这层身份的护池一并收回，不留隐形防护。
+        silkTrapDropGuards(world, actor);
         const body = world.observe(actor);
         if (body === null) return;
         const broken = String(data.cause) === "removed";
@@ -176,9 +207,12 @@ namespace PokemonSkills {
             const previous = state(world, actor, GuardEffects.stallKey), now = world.tick();
             const count = previous && typeof previous.stall === "number" && now - (previous.at || 0) <= p("silktrap", "stallReset", action) ? previous.stall : 0;
             setState(world, actor, GuardEffects.stallKey, { stall: count + 1, at: now });
-            MobEffects.apply(world, actor, silkTrapEffect, window, 0);
+            // 标识拒绝（例如被更强来源顶回）就不生成隐形网：先落身份，落成才建护池并绑在它上面。
+            const carrier = MobEffects.apply(world, actor, silkTrapEffect, window, 0);
+            if (carrier === null) { done(action); return; }
             GuardEffects.apply(world, actor, { rule: SilkTrapRule, mode: "pool", capacity: capacity, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: 0, initial: capacity, radius: radius, drop: drop } as any, window);
+                minimumHealth: 0, charges: 0, linkRange: 0, initial: capacity, radius: radius, drop: drop,
+                carrier: MobEffects.anchor(carrier) } as any, window);
             sound(action, "minecraft:block.cobweb.place");
             action.present("world_combat:move_silktrap:raise2", silkTrapScene, 1, action.origin(),
                 JSON.stringify({ moment: "raise", scale: silkTrapScale(radius), threads: Math.max(6, Math.round(drop * 5)) }));

@@ -7,8 +7,9 @@
  * 色相家族：冷白偏蓝（0xEAF2FF / 0xBFC8FF），亮心近白，尘用中性暖灰，拒绝用中性灰（0xC6CED9）；没有第二组色相。
  * 拍子：起 charge（蹬地拉影）→ 冲 leap（整条残影直线）→ 击 ram（巨大白环）→ 穿 through（身后淡残影）→ 收 brake（急收尘）／拒 blocked／空 miss。
  * 范围：leap 的残影沿施法者实际走过的轨迹铺开，就是判定扫过的那条长线；ram 绑命中点画在接触处，brake 绑真实停住的位置。
- * 运动：起手是贴地向外蹬开的环，冲刺是把残影与速度线甩在身后，命中是向外扩张的巨大白环，
- *   贯穿是身体带着淡残影从目标身上穿过去继续拉线，收势是在停住处腾起一撮向外的尘。
+ * 运动：起手是贴地向外蹬开的环，冲刺是把残影与速度线沿本次实际冲刺的反向 `data.backward` 甩在身后，
+ *   命中是向外扩张的巨大白环，贯穿是身体带着淡残影从目标身上穿过去继续拉线，收势是在停住处腾起一撮向外的尘。
+ *   无目标 away 会回退成径向内收，因此速度类 emitter 都改读 `data.backward`。
  * 数：leap 的残影道数绑定 `data.wake`（速度换算），ram 的冲击量绑定 `data.count`（撞击威力换算），
  *   亮度绑定 `data.intensity`（撞击威力 / 85），贯穿与收势的残影密度同样绑定 `data.wake`。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -34,7 +35,7 @@ const ExtremespeedDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: { data: "wake", fallback: 6 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
-                    direction: "away", speed: [0.06, 0.22],
+                    direction: [{ data: "backward.0", fallback: 0 }, { data: "backward.1", fallback: 0 }, { data: "backward.2", fallback: -1 }], speed: [0.06, 0.22],
                     lifetime: [5, 10], size: [0.24, 0.05], sizeMode: "index",
                     color: 0xBFC8FF, alpha: [0.7, 0], light: "full", maxParticles: 60
                 }
@@ -49,7 +50,7 @@ const ExtremespeedDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: { data: "wake", fallback: 6 }, at: 0, interval: 4, repeats: 8 },
                     shape: { kind: "sphere", radius: 0.42 },
-                    direction: "away", speed: [0.08, 0.3], spread: 12,
+                    direction: [{ data: "backward.0", fallback: 0 }, { data: "backward.1", fallback: 0 }, { data: "backward.2", fallback: -1 }], speed: [0.08, 0.3], spread: 12,
                     lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xBFC8FF, alpha: [0.85, 0], light: "full", maxParticles: 160
                 },
@@ -58,7 +59,7 @@ const ExtremespeedDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     rate: 60, trail: { minDistance: 0.2 },
                     shape: { kind: "point" },
-                    direction: "away", speed: [0.04, 0.16],
+                    direction: [{ data: "backward.0", fallback: 0 }, { data: "backward.1", fallback: 0 }, { data: "backward.2", fallback: -1 }], speed: [0.04, 0.16],
                     lifetime: [4, 9], size: [0.22, 0.04],
                     color: 0xEAF2FF, alpha: [0.6, 0], light: "full", maxParticles: 200
                 },
@@ -116,7 +117,7 @@ const ExtremespeedDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: { data: "wake", fallback: 6 }, at: 0, interval: 2, repeats: 6 },
                     shape: { kind: "sphere", radius: 0.38 },
-                    direction: "away", speed: [0.05, 0.2],
+                    direction: [{ data: "backward.0", fallback: 0 }, { data: "backward.1", fallback: 0 }, { data: "backward.2", fallback: -1 }], speed: [0.05, 0.2],
                     lifetime: [6, 12], size: [0.24, 0.04], sizeMode: "index",
                     color: 0xBFC8FF, alpha: [0.5, 0], light: "full", maxParticles: 90
                 },
@@ -150,7 +151,7 @@ const ExtremespeedDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: { data: "wake", fallback: 6 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
-                    direction: "away", speed: [0.03, 0.12],
+                    direction: [{ data: "backward.0", fallback: 0 }, { data: "backward.1", fallback: 0 }, { data: "backward.2", fallback: -1 }], speed: [0.03, 0.12],
                     lifetime: [4, 9], size: [0.2, 0.04], sizeMode: "index",
                     color: 0xBFC8FF, alpha: [0.55, 0], light: "full", maxParticles: 40
                 }

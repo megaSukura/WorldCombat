@@ -6,6 +6,7 @@
  * 控制免疫：共享门禁判定这具目标挂不上混乱时不再连续送礼（免得白送攻击又拉不到仇恨），留给别的选择。
  * 能不能吃得下它的强化攻击：目标当前有效物攻已经够一拳打倒我们，或我们自己生命比例过低时降低优先，
  * 因为礼物会立刻变成威胁；它已经被抬过攻击时也降低优先，收益递减。
+ * 引火收益：附近有同伴正被这个目标追着打、或已经残血时提高优先——把火拉到自己身上，是这招真正赚到的地方。
  * 够不到怎么办：reach 就是本招射程，accepts 不按距离硬拒；伙伴会先走近到射程再开口。
  * 放完之后：目标攻击更高、出手可能作废、仇恨被拉向自己——所以出手后交回共享顺序，让伙伴重新判断站位。
  * 配置 goad（尖刻／冷嘲）决定礼物分量与怒火长度；ai.maxChase 决定追多远点火。
@@ -29,16 +30,26 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 12);
     }
 
-    /** 能承受它被强化后的攻击才优先点火：一拳能打倒我们、自己已经虚弱、或它已经被抬过攻击时都降档。 */
+    /** 能承受它被强化后的攻击、且能救下友军才优先点火：一拳能打倒我们、自己已经虚弱、或它已被抬过攻击时降档。 */
     function swaggerTolerance(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const stats = CompanionBehavior.combatStats(context, target);
         const values = stats && stats.stats;
-        const attack = values && isFinite(Number(values.atk)) ? Number(values.atk) : 0;
+        let attack = values && isFinite(Number(values.atk)) ? Number(values.atk) : 0;
+        const stage = CompanionBehavior.stage(context, target, "atk");
+        // 宝可梦的 stats.atk 不含等级阶梯，礼物的攻击等级会一起抬高它的实伤；普通实体已含阶，不再乘。
+        if (CompanionBehavior.domain(context, target) === "cobblemon" && stage !== 0) attack *= NativeEffects.multiplier(stage);
         const self = CompanionBehavior.source(context);
         let score = 60;
         if (attack > 0 && attack >= self.health) score -= 20;
         if (CompanionBehavior.ratio(self) < 0.35) score -= 25;
-        if (CompanionBehavior.stage(context, target, "atk") >= 2) score -= 15;
+        if (stage >= 2) score -= 15;
+        // 引火收益：有同伴正被这个目标追着打、或者同伴已经残，把它的火拉过来更值。
+        const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
+        for (let i = 0; i < nearby.length; i++) {
+            const ally = nearby[i];
+            if (!ally.visible || !ally.friendly || ally.health <= 0 || String(ally.ref) === String(target.ref)) continue;
+            if (ally.attacking === target.ref || target.attacking === ally.ref || CompanionBehavior.ratio(ally) < 0.4) { score += 12; break; }
+        }
         return Math.max(0, score);
     }
 

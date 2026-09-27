@@ -4,9 +4,10 @@
  * 原生事实：Dark／物理／威力 80／命中 100／PP 15／接触；命中后目标陷入 volatile throatchop
  *   （duration 2），期间所有带 sound 标记的招式被封禁；「在2回合内变得无法使出声音类招式」（Cobblemon 1.8）。
  *
- * 翻译：一记直取咽喉的突刺——命中那一下是物理伤害，之后咽喉被掐住说不出声，任何**声音类招式**在
- *   出手提交的一刻被顶回去。它不是隔空的必定封锁：突刺是近身直线，够不到就落空。
- *   与同族分开：挑衅封的是所有变化招式、且是隔空喊话；地狱突刺是物理命中、只封声音类招式。
+ * 翻译：一记直取咽喉的突刺——命中那一下是物理伤害，之后咽喉被掐住说不出声。宝可梦的**声音类招式**在
+ *   出手提交的一刻被顶回去；原版生物的原生音攻（如 Warden 的声波）在伤害阶段按真实 sound 语义同样被顶回去，
+ *   普通近战与未知攻击照常。它不是隔空的必定封锁：突刺是近身直线，够不到就落空。
+ *   与同族分开：挑衅封的是所有变化招式、且是隔空喊话；地狱突刺是物理命中、只封声音类攻击。
  *
  * 数据分散（每个参数各吃不同的精灵数据）：
  *   chop         威力随物攻与等级（越壮越响）。
@@ -45,10 +46,12 @@ namespace PokemonSkills {
         } catch (error) { }
         return false;
     }
-    /** 目标是否在最近一段时间内实际提交过声音类招式。 */
+    /** 目标是否在最近一段时间内实际提交或打出过声音类攻击（含 Warden 声波等非招式的原生音攻）。 */
     export function throatChopRecentSound(world: CombatWorld, actor: CombatActor): boolean {
         var at = throatChopSoundAt[String(actor.ref())];
-        return at !== undefined && world.tick() - at < 120;
+        if (at !== undefined && world.tick() - at < 120) return true;
+        var recent = DamageSemantics.recentAttack(world, actor, 120);
+        return recent !== null && !!(recent.flags && recent.flags.sound);
     }
 
     WorldCombat.on("world_combat:move_throatchop/sound", "world_combat:committed", "", function (event: CombatWorldEvent) {
@@ -58,15 +61,27 @@ namespace PokemonSkills {
         if (throatChopSoundMove(id)) throatChopSoundAt[String(actor.ref())] = world.tick();
     });
 
-    // 封声门禁：带着本单元咽喉载体的活体，任何带 sound 标记的招式在提交时被顶回去。
-    // 走共享动作策略，原生配招与通用动作共用同一个提交闸门；放在原生 skill-policy 之后，才能读到 flags。
+    // 封声门禁：带着本单元咽喉载体的活体，声音类攻击被顶回去。宝可梦招式在提交时按原生 sound 标记拒绝；
+    // 原生音攻（如 Warden 声波）在伤害阶段按 DamageSemantics 的真实 sound 标记拒绝，普通近战／未知攻击照常。
+    // 放在原生 skill-policy 之后，才能读到原生招式快照的 flags。
     CombatStatus.actions.define({ id: "world_combat:move/throatchop/silence",
-        after: ["cobblemon_world_combat:skill-policy"], applies: function (context) { return context.phase !== "damage"; },
+        after: ["cobblemon_world_combat:skill-policy"],
         apply: function (context) {
             if (!CombatStatus.has(context.world, context.actor, throatChopStatus)) return;
+            if (context.phase === "damage") {
+                var facts = DamageSemantics.read(context.metadata);
+                if (facts.attack && facts.flags.sound) {
+                    context.blocked.silenced = true;
+                    context.detail.silenced = { status: throatChopStatus, native: true, type: String(context.metadata && context.metadata.damageType || "") };
+                }
+                return;
+            }
             if (!context.move) return;
             var flags = context.metadata && context.metadata.flags;
-            if (flags && flags.sound) context.blocked.silenced = true;
+            if (flags && flags.sound) {
+                context.blocked.silenced = true;
+                context.detail.silenced = { status: throatChopStatus, native: false, move: String(context.move.id()) };
+            }
         } });
 
     defineDamage(throatChopId, "chop", {}, { contact: true });

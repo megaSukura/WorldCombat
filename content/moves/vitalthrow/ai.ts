@@ -2,8 +2,8 @@
  * 借力摔 / vitalthrow 的 AI 用途。
  *
  * 什么局面下出手：只对已经凑到近处（`ai.maxChase`，默认 6 格）的敌对目标列入候选；够不到交给共享接近逻辑。
- * `ai.counter`（默认开）：目标正朝自己压过来（速度朝向施法者）时抬高 priority——后发摔就是用来接扑击的；
- * 关闭后对任何近身目标都可当普通摔技使用。
+ * priority 结合可抓体积（按目标真实碰撞箱最近点算够不够得到）、`ai.counter`（默认开：目标正朝自己压过来时抬高）
+ * 与拒控（完全抗击退的目标甩不动，降意愿）；背向自己两格内被墙堵住时也只当压制用。
  *
  * 这招起手很长（「在对手之后出手」），所以 AI 只在对手已经进入抓握圈、或正压上来时才真正起手，避免空等。
  */
@@ -22,7 +22,12 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            var me = CompanionBehavior.source(context).point;
+            var access = CompanionBehavior.world(context), me = CompanionBehavior.source(context).point, here = CompanionBehavior.point(me);
+            var actor = access.actor(target.ref);
+            // 可抓体积：按目标真实碰撞箱的最近点判断够不够得到，而不是只看身体中心。
+            var closest = actor ? access.closestPoint(actor, here) : null;
+            var gap = closest ? closest.minus(here).length() : CompanionBehavior.distance(me, target.point);
+            var base = gap <= capability.data.range ? 22 : 2;
             var closing = false;
             var velocity = CompanionBehavior.velocity(context, target);
             if (velocity) {
@@ -31,9 +36,15 @@ namespace PokemonSkills {
                 var reach = Math.sqrt(toMe[0] * toMe[0] + toMe[1] * toMe[1]);
                 if (speed > 0.02 && reach > 0.01) closing = (velocity[0] * toMe[0] + velocity[2] * toMe[1]) / (speed * reach) > 0.3;
             }
-            var base = CompanionBehavior.distance(me, target.point) <= capability.data.range ? 22 : 2;
-            if (!CompanionBehavior.ai<boolean>(capability, "counter", true)) return base;
-            return closing ? base + 16 : base;
+            if (CompanionBehavior.ai<boolean>(capability, "counter", true) && closing) base += 16;
+            // 拒控：完全抗击退的目标甩不动，只算一记硬摔，降低意愿。
+            var resistance = actor ? access.attributeValue(actor, "minecraft:generic.knockback_resistance") : null;
+            if (resistance && resistance.value() >= 1) base -= 10;
+            // 可投空间：背向使用者约两格内被墙堵住时，只当压制用。
+            var away = [target.point[0] - me[0], target.point[2] - me[2]], span = Math.sqrt(away[0] * away[0] + away[1] * away[1]) || 1;
+            var laneEnd = CompanionBehavior.point([target.point[0] + away[0] / span * 2, target.point[1], target.point[2] + away[1] / span * 2]);
+            if (actor && !access.clear(CompanionBehavior.point(target.point), laneEnd)) base -= 4;
+            return Math.max(0, base);
         }
     });
 

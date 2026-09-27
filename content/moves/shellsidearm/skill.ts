@@ -8,9 +8,12 @@
  * 幕：
  *   起（windup，提交前）：把毒壳压进发射腔、毒气从缝里冒出的预告（`action.present`，可被打断、不花 PP）。
  *   发（execute）：
- *     · 钝击（`swing` → `ram`）：朝瞄准方向伸臂做一次短 3D 横砸，`action.trace` 只结算真实首碰；命中处炸开壳屑与冲击环。
- *     · 喷射（`fire`/`shell` → `spray`）：毒液投射物有限追踪飞出，命中处扩散毒云。
- *   中（ram / spray / whiff）：命中处按这一面结算物理或特殊伤害；随后按概率让目标中毒。没碰到就落空。
+ *     · 钝击（`swing` → `ram`）：从身体一侧伸出壳臂，做一次到真实接触的短横砸；`action.trace` 只结算真实首碰，
+ *       判定与画面共用同一组端点，命中处炸开壳屑与冲击环。
+ *     · 喷射（`fire`/`shell` → `spray`）：毒液投射物有限追踪飞出，只有真正命中的目标处才扩散毒云；
+ *       中途撞墙／不可命中接触改在真实接触点溅开毒液（`wall`），不把预选目标的坐标当落点。
+ *   中（ram / spray / wall / immune / whiff）：命中处按这一面结算物理或特殊伤害；成功后按概率让目标中毒，被原生拒绝走免疫反馈。
+ *       没碰到就落空，落点取弹体的真实结束位置。
  *
  * 形态 `form`（配置）：
  *   0 自动（默认）：释放时先看实际距离——近处可触范围内按 CombatantStats 物特比较决定砸/喷，远处只能用喷射；
@@ -28,22 +31,41 @@ namespace PokemonSkills {
     const shellsidearmWhiffText = "world_combat.move.shellsidearm.text.whiff";
 
     /**
+     * 钝击（物理）与喷射（特殊）按对手物防/特防比出的伤害差；正数偏钝击，负数偏喷射，0 为打平。
+     * 两份伤害共用同一份 power，power 取值不影响比较结果，只决定量级。
+     */
+    function shellsidearmCompare(world: CombatWorld, actor: CombatActor, target: CombatActor, power: number): number {
+        const me = PokemonDamage.combatants.read(world, actor);
+        const you = PokemonDamage.combatants.read(world, target);
+        const spec = damageSpec("shellsidearm", "power");
+        const physical = CombatantStats.calculate(power, me.stats.atk || 0, CombatantStats.defence(you, "def"), spec).amount;
+        const special = CombatantStats.calculate(power, me.stats.spa || 0, CombatantStats.defence(you, "spd"), spec).amount;
+        return physical - special;
+    }
+
+    /** 同一份比较的判定：正偏钝击、负偏喷射，打平时按世界随机取一面。 */
+    function shellsidearmPhysicalAt(world: CombatWorld, actor: CombatActor, target: CombatActor, power: number): boolean {
+        const margin = shellsidearmCompare(world, actor, target, power);
+        if (margin > 0) return true;
+        if (margin < 0) return false;
+        return world.random() < 0.5;
+    }
+
+    /**
      * 自动形态的近身选择：钝击（物理）与喷射（特殊）各按对手的物防/特防比一比，取伤害更高的一面。
      * 只在对方真的在近身可触范围内才调用；无目标时由调用方直接选喷射。
      */
     function shellsidearmPhysical(action: CombatAction): boolean {
-        const world = action.world();
         const target = action.target();
-        if (target === null || !world.valid(target)) return false;
-        const me = PokemonDamage.combatants.read(world, action.actor());
-        const you = PokemonDamage.combatants.read(world, target);
-        const spec = damageSpec("shellsidearm", "power");
-        const power = Math.max(1, p("shellsidearm", "power", action));
-        const physical = CombatantStats.calculate(power, me.stats.atk || 0, CombatantStats.defence(you, "def"), spec).amount;
-        const special = CombatantStats.calculate(power, me.stats.spa || 0, CombatantStats.defence(you, "spd"), spec).amount;
-        if (physical > special) return true;
-        if (special > physical) return false;
-        return world.random() < 0.5;
+        if (target === null) return false;
+        const world = action.world();
+        if (!world.valid(target)) return false;
+        return shellsidearmPhysicalAt(world, action.actor(), target, Math.max(1, p("shellsidearm", "power", action)));
+    }
+
+    /** 供 AI 决策帧只读比较：打平时不掷随机，按喷射处理。 */
+    export function shellsidearmPrefersPhysical(world: CombatWorld, actor: CombatActor, target: CombatActor): boolean {
+        return shellsidearmCompare(world, actor, target, 90) > 0;
     }
 
     define({
@@ -75,10 +97,23 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            // 提交前没有可写世界：只读观察经 action.sense()，预告经 action.present()。
+            const world = action.sense();
             const cloud = Math.max(6, Math.round(p("shellsidearm", "venomCloud", action)));
             const form = config && typeof config.form === "number" ? config.form : 0;
+            // 准备末预告这一发会怎么打开壳体：固定形态直接给出；自动形态按当前目标与距离先预判，真正锁定仍在释放时。
+            const target = action.target();
+            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
+            const self = world.observe(action.actor());
+            const origin = self === null ? action.origin() : self.position();
+            const touch = Math.max(1.6, Math.min(3, p("shellsidearm", "touch", action)));
+            const inTouch = targetBody !== null && targetBody.position().minus(origin).length() <= touch + targetBody.width() * 0.5;
+            const power = Math.max(1, p("shellsidearm", "power", action));
+            const physicalPreview = form === 1 ? true : form === 2 ? false
+                : (target !== null && inTouch && shellsidearmPhysicalAt(world, action.actor(), target, power));
             action.present("shellsidearm:charge:" + action.id(), shellsidearmScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", windup: prepare, cloud: cloud, form: form }));
+                JSON.stringify({ moment: "charge", windup: prepare, cloud: cloud, form: form,
+                    color: physicalPreview ? 0x8A6BA8 : 0x9BE86B }));
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -119,9 +154,16 @@ namespace PokemonSkills {
                 const victim = hit.hitEntity() ? hit.target() : null;
                 const contact = hit.position();
                 const reach = Math.max(0.4, Math.min(span, contact.minus(origin).length()));
+                // 身侧壳臂到真接触的一次短横砸路径（world 尺度）：起点在身体一侧，末端就是这次判定真正到达的接触点。
+                const frame = WorldGeometry.basis(direction);
+                const side = Math.max(0.35, halfSelf);
+                const start = origin.plus(frame.right.scale(side)).plus(frame.up.scale(0.15));
+                const bulge = Math.min(0.6, reach * 0.3) + side * 0.25;
+                const mid = start.plus(contact).scale(0.5).plus(frame.right.scale(bulge)).plus(frame.up.scale(0.12));
+                const swingPath = [[start.x(), start.y(), start.z()], [mid.x(), mid.y(), mid.z()], [contact.x(), contact.y(), contact.z()]];
                 sound(action, "minecraft:item.trident.throw");
                 WorldFeedback.emit(world, shellsidearmScene, 1, origin,
-                    { moment: "swing", direction: [direction.x(), direction.y(), direction.z()], reach: reach,
+                    { moment: "swing", path: swingPath, direction: [direction.x(), direction.y(), direction.z()], reach: reach,
                         cloud: Math.round(cloud * 0.5), scale: scale, intensity: intensity }, 20);
                 if (victim !== null && !world.friendly(victim)) {
                     const dealt = hurt(action, victim, "shellsidearm", power,
@@ -141,7 +183,7 @@ namespace PokemonSkills {
                         world.sound("minecraft:entity.generic.explode", at, 18, "{}");
                     } else {
                         WorldFeedback.emit(world, shellsidearmScene, 1, contact,
-                            { moment: "whiff", cloud: Math.round(cloud * 0.5), scale: scale }, 18);
+                            { moment: "immune", target: String(victim.ref()), cloud: Math.round(cloud * 0.5), scale: scale }, 20);
                         WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 0.9, 0)), shellsidearmImmuneText, [], 22);
                     }
                 } else {
@@ -154,10 +196,10 @@ namespace PokemonSkills {
             }
 
             // 喷射：有限追踪的毒液投射物，特殊/非接触。
-            let ref = target !== null && world.valid(target) ? String(target.ref()) : "";
+            const ref = target !== null && world.valid(target) ? String(target.ref()) : "";
             const appearance: any = { sprite: "cobblemon:generic/goo/chemicalball", tint: 0x8A6BA8, glow: true, scale: Math.max(0.9, radius / 0.3) };
             if (ref) appearance.homing = { target: ref, turn: 12, range: action.range() };
-            let struck = false, settled = false;
+            let struck = false, settled = false, flight = "";
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
@@ -165,39 +207,52 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, shellsidearmScene, 1, action.origin(),
                 { moment: "fire", direction: [direction.x(), direction.y(), direction.z()], cloud: cloud,
                     scale: scale, intensity: intensity, physical: 0 }, 22);
-            const flight = LivingActions.projectile(action, {
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, direction: direction, appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact, age: number) {
                     struck = true;
                     const scope = current.world();
                     const victim = hit.target();
                     const point = hit.position();
-                    let poisoned = false;
                     if (victim !== null && scope.valid(victim)) {
-                        ref = String(victim.ref());
                         const dealt = impact(current, hit, "shellsidearm", power,
                             { damage: damageSpec("shellsidearm", "power"), category: category, contact: false });
                         if (!dealt) {
+                            // 被原生拒绝：只在真实接触点播免疫反馈，不播毒爆，也不发中毒字。
+                            WorldFeedback.emit(scope, shellsidearmScene, 1, point,
+                                { moment: "immune", target: String(victim.ref()), scale: scale }, 20);
                             const at = scope.observe(victim);
                             if (at !== null) WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), shellsidearmImmuneText, [], 22);
+                        } else {
+                            const poisoned = scope.random() < chance
+                                ? CombatStatus.inflict(scope, victim, "poison", venomTicks, 0, { secondary: true }) : false;
+                            WorldFeedback.emit(scope, shellsidearmScene, 1, point,
+                                { moment: "spray", target: String(victim.ref()), cloud: cloud, projectile: flight,
+                                    scale: scale, intensity: intensity }, 30);
+                            if (poisoned) {
+                                const at = scope.observe(victim);
+                                if (at !== null) WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), shellsidearmVenomText, [], 26);
+                                scope.sound("cobblemon:impact.poison", point, 16, "{}");
+                            }
                         }
-                        if (dealt && scope.valid(victim) && scope.random() < chance)
-                            poisoned = CombatStatus.inflict(scope, victim, "poison", venomTicks, 0, { secondary: true });
-                    }
-                    WorldFeedback.emit(scope, shellsidearmScene, 1, point,
-                        { moment: "spray", target: ref, cloud: cloud, projectile: flight,
-                            scale: scale, intensity: intensity }, 30);
-                    if (poisoned) {
-                        const at = scope.observe(victim!);
-                        if (at !== null) WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), shellsidearmVenomText, [], 26);
-                        scope.sound("cobblemon:impact.poison", point, 16, "{}");
+                    } else {
+                        // 墙／不可命中接触：只在真实接触点溅开毒液，不沿用预选 target，避免把毒爆画在远处目标身上。
+                        const directionValues = [direction.x(), direction.y(), direction.z()];
+                        WorldFeedback.emit(scope, shellsidearmScene, 1, point,
+                            { moment: "wall", direction: directionValues, cloud: cloud, projectile: flight,
+                                scale: scale, intensity: intensity }, 26);
+                        if (hit.blocked()) scope.sound("cobblemon:impact.poison", point, 14, "{}");
                     }
                 }
             }, function (current: CombatAction) {
                 if (!struck) {
-                    WorldFeedback.emit(current.world(), shellsidearmScene, 1, current.targetPosition(),
-                        { moment: "whiff", cloud: Math.round(cloud * 0.5), scale: scale }, 18);
-                    WorldFeedback.text(current.world(), current.targetPosition().plus(WorldCombat.point(0, 0.5, 0)), shellsidearmWhiffText, [], 18);
+                    // 完成回调读弹体的真实最后位置；读不到就不画，绝不用满射程点/旧瞄准点/发射原点假造终点。
+                    const settledPoint = current.world().projectilePosition(flight);
+                    if (settledPoint !== null) {
+                        WorldFeedback.emit(current.world(), shellsidearmScene, 1, settledPoint,
+                            { moment: "whiff", cloud: Math.round(cloud * 0.5), scale: scale }, 18);
+                        WorldFeedback.text(current.world(), settledPoint.plus(WorldCombat.point(0, 0.5, 0)), shellsidearmWhiffText, [], 18);
+                    }
                 }
                 finish(current);
             });

@@ -3,16 +3,33 @@ namespace PokemonSkills {
     const spitupSpitText = "world_combat.move.spitup.text.spit";
     const spitupMissText = "world_combat.move.spitup.text.miss";
 
-    /** 喷散锥形的三个顶点（源点、左右两条边）：判定 `WorldGeometry.sector` 与表现同一组顶点。 */
-    function spitupCone(origin: CombatPoint, direction: CombatPoint, reach: number, degrees: number): any[] {
+    /**
+     * 喷散扇面的有序顶点：源点 + 沿张角采样的外弧点。每条射线用真实墙面截短（`WorldGeometry.blockHit`），
+     * 判定与表现读同一组端点，墙后画面同样在墙面停下，弧面外沿就是实际判定边界。
+     */
+    function spitupFan(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number, degrees: number): number[][] {
         const heading = WorldCombat.point(direction.x(), 0, direction.z());
         const base = heading.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : heading.unit();
-        const half = Math.min(89, Math.max(5, degrees / 2)) * Math.PI / 180, cos = Math.cos(half), sin = Math.sin(half);
-        const left = WorldCombat.point(base.x() * cos - base.z() * sin, 0, base.x() * sin + base.z() * cos).scale(reach);
-        const right = WorldCombat.point(base.x() * cos + base.z() * sin, 0, -base.x() * sin + base.z() * cos).scale(reach);
-        return [[origin.x(), origin.y(), origin.z()],
-            [origin.x() + left.x(), origin.y(), origin.z() + left.z()],
-            [origin.x() + right.x(), origin.y(), origin.z() + right.z()]];
+        const angle = Math.min(170, Math.max(5, degrees));
+        const half = angle / 2 * Math.PI / 180;
+        const start = Math.atan2(base.z(), base.x());
+        const steps = Math.max(3, Math.round(angle / 12) + 1);
+        const vertices: number[][] = [[origin.x(), origin.y(), origin.z()]];
+        for (let index = 0; index <= steps; index++) {
+            const at = start - half + (2 * half) * (index / steps);
+            const ray = WorldCombat.point(Math.cos(at), 0, Math.sin(at));
+            const wanted = origin.plus(ray.scale(reach));
+            const wall = WorldGeometry.blockHit(world, origin, wanted);
+            const stop = wall === null ? wanted : wall.position();
+            vertices.push([stop.x(), stop.y(), stop.z()]);
+        }
+        return vertices;
+    }
+
+    /** 扇面顶点转成判定用的水平多边形（外弧已被墙截短，判定与画面共用同一边界）。 */
+    function spitupRegion(vertices: number[][], origin: CombatPoint): WorldGeometry.BodyRegion {
+        const points: CombatPoint[] = vertices.map(function (value) { return WorldCombat.point(value[0], value[1], value[2]); });
+        return WorldGeometry.bodyPolygon(points, origin.y() - 2, origin.y() + 3);
     }
 
     define({
@@ -72,25 +89,27 @@ namespace PokemonSkills {
             }
             const power = p(spitupId, "spit", action);
             const motes = Math.max(10, Math.round(p(spitupId, "motes", action)));
+            const intensity = Math.max(0.6, Math.min(2.4, power / 120));
             const spray = !!(config && config.spray);
             if (spray) {
                 const direction = aim(action);
                 const reach = Math.max(4, p(spitupId, "reach", action) * 0.72);
                 const degrees = Math.max(30, p(spitupId, "spread", action));
-                const path = spitupCone(origin, direction, reach, degrees);
-                const region = WorldGeometry.sector(origin, direction, reach, degrees, { below: 2, above: 3 });
+                // 判定与画面同源：同一组被真实墙面截短的扇弧顶点围成整片锥形。
+                const path = spitupFan(world, origin, direction, reach, degrees);
+                const region = spitupRegion(path, origin);
                 let hits = 0;
-                WorldGeometry.selectEnemies(world, region, function (victim, facts) {
+                WorldGeometry.selectBodies(world, region, function (victim, facts) {
+                    if (facts.friendly() || String(victim.ref()) === String(actor.ref())) return;
                     const landed = hurt(action, victim, spitupId, power, { damage: damageSpec(spitupId, "spit") });
                     if (!landed) return;
                     hits++;
                     WorldFeedback.emit(world, spitupScene, 1, facts.position(),
-                        { moment: "burst", target: String(victim.ref()), motes: motes, layers: layers,
-                            intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 26);
+                        { moment: "burst", target: String(victim.ref()), motes: motes, layers: layers, intensity: intensity }, 26);
                 });
                 WorldFeedback.emit(world, spitupScene, 1, origin,
                     { moment: "spray", path: path, motes: motes, layers: layers, hits: hits, reach: reach, degrees: degrees,
-                        intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 30);
+                        intensity: intensity }, 30);
                 sound(action, "minecraft:entity.llama.spit");
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), spitupSpitText, [layers, hits], 26);
                 done(action);
@@ -101,12 +120,15 @@ namespace PokemonSkills {
             const reach = Math.max(5, p(spitupId, "reach", action));
             const scale = radius / spitupReference;
             let struck = false;
+            let lastPoint: CombatPoint | null = null;
             const launch = aim(action);
             WorldFeedback.emit(world, spitupScene, 1, origin,
                 { moment: "spit", motes: motes, layers: layers, scale: scale, direction: [launch.x(), launch.y(), launch.z()],
-                    intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 22);
+                    intensity: intensity }, 22);
             sound(action, "minecraft:entity.llama.spit");
-            LivingActions.projectile(action, {
+            // 本股的唯一身份：命中或空放都以这条 flight 的真实位置收尾，不拿旧瞄准点或满射程点假造终点。
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius,
                 appearance: { sprite: "cobblemon:generic/orb/energyorb", tint: 0xF0B23A, glow: true,
                     scale: Math.max(0.8, Math.min(1.8, radius / 0.22)) } as any,
@@ -115,18 +137,22 @@ namespace PokemonSkills {
                     const landed = impact(current, hit, spitupId, power, { damage: damageSpec(spitupId, "spit") });
                     if (!landed) return;
                     struck = true;
-                    WorldFeedback.emit(current.world(), spitupScene, 1, hit.position(),
-                        { moment: "burst", target: String(hit.target()!.ref()), motes: motes, layers: layers,
-                            intensity: Math.max(0.6, Math.min(2.4, power / 120)) }, 28);
-                    WorldFeedback.text(current.world(), hit.position().plus(WorldCombat.point(0, 1.1, 0)), spitupSpitText, [layers, 1], 24);
-                    current.world().sound("minecraft:entity.wind_charge.wind_burst", hit.position(), 14, "{}");
+                    const contact = hit.position();
+                    lastPoint = contact;
+                    WorldFeedback.emit(current.world(), spitupScene, 1, contact,
+                        { moment: "burst", target: String(hit.target()!.ref()), motes: motes, layers: layers, intensity: intensity }, 28);
+                    WorldFeedback.text(current.world(), contact.plus(WorldCombat.point(0, 1.1, 0)), spitupSpitText, [layers, 1], 24);
+                    current.world().sound("minecraft:entity.wind_charge.wind_burst", contact, 14, "{}");
                 }
             }, function (current) {
                 const scope = current.world();
                 if (!struck) {
-                    WorldFeedback.emit(scope, spitupScene, 1, current.targetPosition(),
-                        { moment: "whiff", motes: Math.round(motes * 0.6), layers: layers }, 18);
-                    WorldFeedback.text(scope, current.targetPosition().plus(WorldCombat.point(0, 1.1, 0)), spitupMissText, [], 22);
+                    // 完成回调内仍可读已移除弹体的最后接触/结束点；拿不到时不假造终点。
+                    const end = scope.projectilePosition(flight) || lastPoint;
+                    if (end !== null) {
+                        WorldFeedback.emit(scope, spitupScene, 1, end, { moment: "whiff", motes: Math.round(motes * 0.6), layers: layers }, 18);
+                        WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.1, 0)), spitupMissText, [], 22);
+                    }
                 }
                 done(current);
             });

@@ -10,6 +10,7 @@
 | 临时借用原生属性、针对已观察伤害提供防护 | [CombatCopies](../../content/mechanisms/combat-copies.ts)。属性快照以所属效果的临时修饰表达，到期或载体失效时回收，装备与其他效果继续参与计算；内容选择复制哪些属性、受益对象、时限和伤害类型。 |
 | 天气、地面场景、陷阱、屏障和环境采样 | [WorldEffects](../../content/mechanisms/world-effects.ts)、[WorldEnvironment](../../content/mechanisms/world-environment.ts)。生产者声明身份与类别；消费者按标签和实际位置查询。需要施法者退场后继续存在的场景，明确选择 `detachedField`。 |
 | 地形写入与原生实体交付 | [世界 SDK](../../sdk/core/world.d.ts)、[LivingActions](../../content/mechanisms/living-actions.ts)。地形回执列出成功格与跳过原因；是否允许跳过由调用者决定。友方投射交付可设置 `hitAllies`，命中后的用途仍由回调决定。 |
+| 观察进攻起始与借用准备 | [AttackStarts](../../content/mechanisms/attack-starts.ts)读取仍在进行的共享准备与原生新尝试身份；[NativeAttackProjection](../../content/mechanisms/native-attack-projection.ts)显式登记可回应的原生形状和基础预算。[NativeLoadout](../../content/mechanisms/native-loadout.ts)可限制借来动作的共享准备，保留末次合法性与提交。原生起始入口和支持范围以[世界 SDK](../../sdk/core/world.d.ts)为准。 |
 | 装备转手、消耗、树果、原生队伍 | [NativeItems](../../content/mechanisms/native-items.ts)、[队伍接棒库](../../content/library/skills/party-relay.ts)。以当前槽位快照进行条件写入，按颗操作保留余量与组件；先检查原生操作回执再结算收益。树果基本摄食效果可注册，各招保留自己的摄取规则。 |
 | AI 看谁、用什么、如何接近和收尾 | [WorldMethods](../../content/behavior/world-methods.ts)、[观察宿主](../../content/behavior/world-host.ts)和[宝可梦适配](../../content/behavior/pokemon-host.ts)。观察、用途与决策分开贡献；接战意愿与实际施放距离分别表达，使用当前个体的动态射程。 |
 | 物种习惯、独立行为与原生配招之外的能力 | [个体贡献入口](../../content/behavior/individuals.ts)、[行为组合](../../content/behavior/composition.ts)、[独立世界能力](../../content/mechanisms/world-abilities.ts)。向现有主体贡献事实、能力和策略；招式说明自身用途，物种与性格决定怎样组合使用。 |
@@ -20,6 +21,8 @@
 转移与精确替换使用共享层的条件提交：原生状态走 `MobEffects.transferOne/set`，默认主异常走 `CombatStatus.transferMajor`，能力等级走 `NativeEffects.transferStage`。这些入口保留各自的许可、旧状态比较和归属；具体转换、预算与代价由内容决定。新增多状态操作需要同时提交时，世界 SDK 提供 `compareEffectStates`，提交后的通知属于后续事件。
 
 伤害附带的推退使用世界 SDK 的 `knockback/hitImpulse/hitDisplace`，由原生击退事件、抗性和权限决定实际运动。身体接触、薄扇与体积区域可复用 [WorldGeometry](../../content/mechanisms/world-geometry.ts) 的真实身体相交接口；执行和客户端表现共用当次实际端点、范围或顶点。独立余波由其托管效果持有，使用 [WorldFeedback](../../content/mechanisms/world-feedback.ts) 的效果归属入口清理表现。
+
+原生投射可显式给出加速度与空气/水中速度保留率，沿实际碰撞、折返后的方向继续运动；形状、重力、范围和寿命仍由调用者声明。接口见 [LivingActions.ProjectileAppearance](../../content/mechanisms/living-actions.ts)，运动顺序见 [ProjectileMotion](../../mods/world-combat-core/src/main/java/dev/worldcombat/core/runtime/ProjectileMotion.java)。
 
 AI 对已有交战、指挥或记忆引用的对象，可通过 [WorldMethods.observeKnown](../../content/behavior/world-methods.ts) 显式取得当帧事实，保留真实可见性，并让普通任务按同一引用执行。默认附近感知保持独立；已知对象是否仍值得追踪、弧线是否可达等判断由具体行为决定。
 

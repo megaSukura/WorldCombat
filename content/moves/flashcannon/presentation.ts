@@ -6,7 +6,8 @@
  * 色相家族：冷钢白（0xBFE8FF）为主，近白（0xF2FAFF）只给杆心与击点，钢灰（0x4E6A80）做余韵。
  * 拍子：起 converge（收光）→ 发 muzzle（离手）→ 行 lance（光杆飞行，随真实投射物）→ 击 hit（逐个命中）／散 shatter（撞墙）。
  * 范围：lance 的杆长由 `shape: line` 沿速度 orient 画出（判定半径不变）；贯穿时同一道杆继续向后。
- * 运动：光束 `inward` 收进杆心；光杆以服务端速度沿准线飞出并穿过目标，`lance` 随投射物生命周期收放。
+ * 运动：光束 `inward` 收进杆心；光杆以服务端速度沿准线飞出并穿过目标，`lance` 为持续幕（duration 0），
+ *   一直发射到动作通过 `scenes.finish`/`scenes.stop` 结束，不因固定 tick 提前停发而让隐藏弹体空飞。
  * 数：converge／hit 的光束数绑定 `data.beams`（特攻与等级换算），强度绑定 `data.intensity`（该次实际威力 / 80），
  *   每穿一人同一个 key 更新一次、杆光随之变暗；shatter 按 `data.direction`（原生方块面法线）贴面铺开。
  */
@@ -67,8 +68,7 @@ const FlashCannonDefinition: ParticleDefinition = {
             ]
         },
         lance: {
-            duration: 60,
-            exit: { stop: 8, drain: 12 },
+            duration: 0,
             emitters: [
                 {
                     name: "lance_rod", bind: "projectile", fit: "none", orient: "velocity",

@@ -11,8 +11,8 @@ namespace PokemonSkills {
     define({
         id: "focusblast",
         name: "Focus Blast",
-        description: "按住蓄势，准备完成后松手打出真气重弹，额外至多十六刻便自动放出。最后短窗瞄得越稳，散射越小，最低降到四分之一；威力沿原预算，命中推开并可能降特防。",
-        uses: ["拉开距离对站桩目标砸出最重的一发", "把贴脸的对手或掩体后的人推出去", "用最高单发伤害先行减员"],
+        description: "按住蓄势，准备完成后松手打出真气重弹，额外至多十六刻便自动放出。最后短窗每刻瞄准变化不超过 2° 就累积稳定，慢慢转向也能攒满，散射最低降到四分之一；威力沿原预算，命中推开并可能降特防。",
+        uses: ["拉开距离对站桩目标砸出最重的一发", "把贴脸的对手推开", "用最高单发伤害先行减员"],
         kind: "aim",
         range: 16,
         maxRange: 22,
@@ -51,6 +51,7 @@ namespace PokemonSkills {
                 const state=JSON.parse(current.data("focusblast/charge")||"{}");if(state.fired)return;
                 const now=focusblastAim(current),old=WorldCombat.point(state.direction[0],state.direction[1],state.direction[2]);
                 const dot=now.x()*old.x()+now.y()*old.y()+now.z()*old.z();
+                // 稳定看的是每刻角速度：转得慢（≤2°）照样累积，不要求把准线钉死在一个方向。
                 state.stable=dot>=Math.cos(2*Math.PI/180)?Math.min(8,state.stable+1):Math.max(0,state.stable-4);
                 state.direction=[now.x(),now.y(),now.z()];current.data("focusblast/charge",JSON.stringify(state));
                 const spread=p("focusblast","scatter",current)*(1-.75*state.stable/8);
@@ -82,17 +83,19 @@ namespace PokemonSkills {
             const motes = Math.max(16, Math.round(p("focusblast", "motes", action)));
             const scale = Math.max(0.6, Math.min(2.6, power / 116));
             const intensity = Math.max(0.6, Math.min(2.6, power / 116));
+            const scenes = WorldFeedback.actionScenes(focusblastScene);
             let settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            // 动作与原生飞行共用一个场景句柄：气团一落定就 stop，随后由动作拥有并清理。
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.stop(current); done(current); } }
 
-            // 散布：把准线在水平面上随机偏转 `scatter` 度以内的一个角度，这就是原生 70 命中的即时翻译。
+            // 散布：把准线在 `scatter` 度以内随机偏转，这是原生 70 命中的即时翻译。用稳定正交基（WorldGeometry.basis）
+            // 取侧轴，竖直瞄准时也有固定平面，不再退化成多余的 x 偏移。
             const base = focusblastAim(action);
             action.releaseTarget();
+            const frame = WorldGeometry.basis(base);
             const tilt = (world.random() * 2 - 1) * scatter * Math.PI / 180;
-            const side = WorldCombat.point(-base.z(), 0, base.x());
-            const lateral = side.length() < 0.001 ? WorldCombat.point(1, 0, 0) : side.unit();
-            const heading = base.scale(Math.cos(tilt)).plus(lateral.scale(Math.sin(tilt))).unit();
+            const heading = frame.forward.scale(Math.cos(tilt)).plus(frame.right.scale(Math.sin(tilt))).unit();
 
             sound(action, "cobblemon:impact.fighting");
 
@@ -110,6 +113,7 @@ namespace PokemonSkills {
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const landed = impact(current, hit, "focusblast", power, { damage: damageSpec("focusblast", "core") });
                         if (landed) {
+                            // 只有真正结算成功才推开、降特防、播强爆；被原生拒绝/免疫只给接触散气。
                             const outward = point.minus(origin);
                             if (outward.length() > 0.1 && scope.valid(victim))
                                 scope.hitDisplace(victim, WorldCombat.point(outward.x(), 0, outward.z()).unit().scale(blowback));
@@ -119,18 +123,19 @@ namespace PokemonSkills {
                                 if (body !== null)
                                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), focusblastSunderText, [stages], 30);
                             }
+                            WorldFeedback.emit(scope, focusblastScene, 1, point,
+                                { moment: "blast", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 28);
+                            sound(current, "cobblemon:impact.fighting");
+                        } else {
+                            WorldFeedback.emit(scope, focusblastScene, 1, point, { moment: "fizzle", motes: motes, scale: scale }, 22);
                         }
-                        WorldFeedback.emit(scope, focusblastScene, 1, point,
-                            { moment: "blast", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 28);
-                        sound(current, "cobblemon:impact.fighting");
                     } else {
-                        WorldFeedback.emit(scope, focusblastScene, 1, point,
-                            { moment: "fizzle", motes: motes, scale: scale }, 22);
+                        WorldFeedback.emit(scope, focusblastScene, 1, point, { moment: "fizzle", motes: motes, scale: scale }, 22);
                     }
                 }
             }, function (current: CombatAction) { finish(current); });
 
-            WorldFeedback.actionScenes(focusblastScene).show(action,"flight",origin,{moment:"travel",projectile:flight,motes:motes,scale:scale,intensity:intensity});
+            scenes.show(action,"flight",origin,{moment:"travel",projectile:flight,motes:motes,scale:scale,intensity:intensity});
             }
             release(action);
         }

@@ -2,7 +2,8 @@
  * 攻击指令 / attackorder 的客户端表现。
  *
  * 一句话：施法者振翅、身后炸开一群琥珀色小虫 → 手下按间隔一只只起飞、拖着细尘扑向目标 → 每只落到身上刺出
- *   一记虫击火花 → 打掉的手下当场散去，够不到的手下慢慢飘没。
+ *   一记虫击火花 → 打掉的手下当场散去，够不到的手下慢慢飘没。聚集、飞行与尸散统一用虫形贴图，飞行细尘
+ *   刻意弱于手下自身的实体轮廓，玩家能数出还剩几只。
  * 色相家族：蜜蜡琥珀（0xF2C14E 主体、0xB07A2E 暗部）＋暖白（0xFFF3C4）只出现在振翅与刺中，与回复指令同一族——同一个虫群。
  * 拍子：起 call（振翅放虫）→ 扑 gather（待命）／ fly（飞行）→ 刺 sting（命中）→ 散 slain／ spent。
  * 范围：sting 的虫击火花绑在目标身上；手下自身的位置由它们各自的 `gather`／`fly` 场景标出，玩家能数出还剩几只。
@@ -19,7 +20,7 @@ const AttackOrderDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "swarmburst", bind: "source", offset: [0, 0.5, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/moves/populationbomb_maus",
+                    particle: "world_combat_core:cobblemon/generic/flying_bugs",
                     burst: { count: { data: "burst", fallback: 24 } }, shape: { kind: "sphere_surface", radius: 0.7 },
                     direction: "outward", speed: [0.1, 0.3], drag: 0.9, spin: 8,
                     lifetime: [12, 22], size: [0.2, 0.05],
@@ -61,7 +62,7 @@ const AttackOrderDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "body", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/moves/populationbomb_maus",
+                    particle: "world_combat_core:cobblemon/generic/flying_bugs",
                     rate: 8, shape: { kind: "sphere", radius: 0.16 },
                     direction: "outward", speed: [0.01, 0.04], spin: 8,
                     lifetime: [10, 18], size: { data: "size", fallback: 0.16 },
@@ -70,10 +71,10 @@ const AttackOrderDefinition: ParticleDefinition = {
                 {
                     name: "trail", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 12, shape: { kind: "sphere", radius: 0.14 },
+                    rate: 9, shape: { kind: "sphere", radius: 0.14 },
                     direction: "outward", speed: [0.005, 0.02], trail: { minDistance: 0.2 },
                     lifetime: [8, 15], size: [0.05, 0.01],
-                    color: 0xB07A2E, alpha: [0.55, 0], light: "world", maxParticles: 30
+                    color: 0x8A5F22, alpha: [0.35, 0], light: "world", maxParticles: 24
                 }
             ]
         },

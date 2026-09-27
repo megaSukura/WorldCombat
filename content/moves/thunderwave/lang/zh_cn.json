@@ -12,7 +12,7 @@
   "worldcombat.skill.thunderwave.value.reach": "放电距离",
   "worldcombat.skill.thunderwave.value.lockTicks": "麻痹时长",
   "worldcombat.skill.thunderwave.value.shockRadius": "判定半径",
-  "worldcombat.skill.thunderwave.value.arcs": "电弧条数",
+  "worldcombat.skill.thunderwave.value.sparkDensity": "火花密度",
   "worldcombat.skill.thunderwave.value.joltSpeed": "放电火花",
   "worldcombat.skill.thunderwave.value.tempo": "起手",
   "worldcombat.skill.thunderwave.value.recharge": "冷却",

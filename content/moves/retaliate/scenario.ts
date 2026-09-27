@@ -1,35 +1,38 @@
 /**
  * 报仇 / retaliate —— 可执行设计说明。
  *
- * 一句话：带着「同伴倒下」的哀兵之痛，朝敌人直直撞过去；这一记比平时翻倍。
- * 场面：Lucario（Lv45，只带报仇）对一只僵尸；开场后脚本直接给 Lucario 挂上本单元的共享身份
- *   world_combat:retaliate（等同同伴倒下后留下的哀兵），AI 带着它起手。
- * 断言：本招被撞出过、僵尸吃到过伤害、Lucario 身上带着共享身份 retaliate（消费方按身份读到）。
- * 「哀兵由同伴倒下自动挂上」的那条链靠 world_combat:damage_applied + isAlliedTo，见报告说明。
+ * 一句话：带着「同伴倒下」的哀兵之痛，朝敌人直直撞过去；这一记比平时加重。
+ * 场面：Lucario（Lv36，只带报仇）与同队的 Magikarp（Lv2，只带跃起），面对一只不会还手的高血 Blissey。
+ *   开场直接击杀同队、20 格内的 Magikarp——真的走一遍 world_combat:actor_died：活着的观察者 Lucario
+ *   在快照 friendly=true 时自动获得共享身份 world_combat:status/retaliate，并记下凶手 Blissey。
+ * 断言：本招被撞出过、Blissey 吃到过伤害、Lucario 身上出现过共享身份 retaliate（自动链真的发生）。
+ * 是否翻倍、命中后哀兵是否泄掉、暴击与移动距离写进 note 供读轨迹判断。
  */
 Smoke.scenario("retaliate", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
     stage.time("day");
     stage.weather("clear");
-    var user = stage.pokemon({ species: "lucario", level: 45, moves: ["retaliate"], at: [-1.5, 0, 0] });
-    var foe = stage.mob({ type: "minecraft:zombie", at: [4, 0, 0] });
-    stage.hostile(user, foe);
-    stage.after(20, function () { stage.command("effect give @e[type=cobblemon:pokemon] world_combat:retaliate_mourning 600 0"); });
+    var mourner = stage.pokemon({ species: "lucario", level: 36, moves: ["retaliate"], at: [-2, 0, 0] });
+    var ally = stage.pokemon({ species: "magikarp", level: 2, moves: ["splash"], at: [-2, 0, 2] });
+    var foe = stage.pokemon({ species: "blissey", level: 50, moves: ["splash"], at: [3, 0, 0] });
+    stage.team("mourners", [mourner, ally]);
+    stage.noai(foe);
+    stage.hostile(mourner, foe);
+    // 真正的同伴死亡链：同队的 Magikarp 被 Blissey 击杀，同队、20 格内的 Lucario 由 actor_died 自动获得哀兵。
+    stage.after(1, function () { stage.hurt(ally, 100000, "minecraft:generic", { source: foe }); });
     stage.until(1600, function () {
-        return stage.casts("retaliate", user) > 0 && stage.damageTo(foe) > 0;
+        return stage.casts("retaliate", mourner) > 0 && stage.damageTo(foe) > 0 && stage.hadMobEffect(mourner, "world_combat:status/retaliate");
     }, function () {
-        stage.after(40, function () {
-            stage.expect(stage.casts("retaliate", user) > 0, "lucario struck back");
-            stage.expect(stage.damageTo(foe) > 0, "the retribution damaged the foe");
-            stage.expect(stage.hadMobEffect(user, "world_combat:status/retaliate"), "the grief identity was on the avenger");
-            stage.note("哀兵状态由脚本直接挂上以固定触发；翻倍由共享身份 retaliate 决定，AI 也按这个身份排序。", {
-                casts: stage.casts("retaliate", user),
-                damage: Math.round(stage.damageTo(foe) * 10) / 10,
-                moved: Math.round(stage.travelled(user) * 10) / 10,
-                mourning: stage.hadMobEffect(user, "world_combat:status/retaliate"),
-                foeAlive: foe.alive()
-            });
-            stage.done();
+        stage.expect(stage.casts("retaliate", mourner) > 0, "the mourner struck back");
+        stage.expect(stage.damageTo(foe) > 0, "the retribution damaged the foe");
+        stage.expect(stage.hadMobEffect(mourner, "world_combat:status/retaliate"), "the auto death chain left the grief identity on the nearby ally");
+        stage.note("哀兵由 world_combat:actor_died 自动挂上：magikarp 被 blissey 击杀，同队且 20 格内的 lucario 获得共享身份 retaliate 并记下凶手。翻倍与命中后解除由共享身份决定，AI 也按这个身份排序。", {
+            casts: stage.casts("retaliate", mourner),
+            damage: Math.round(stage.damageTo(foe) * 10) / 10,
+            moved: Math.round(stage.travelled(mourner) * 10) / 10,
+            mourning: stage.hadMobEffect(mourner, "world_combat:status/retaliate"),
+            foeAlive: foe.alive()
         });
-    }, "retribution lands");
+        stage.done();
+    }, "retaliate auto-grief chain");
 });

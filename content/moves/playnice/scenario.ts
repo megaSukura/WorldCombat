@@ -24,7 +24,7 @@ Smoke.scenario("playnice", function (stage) {
         stage.until(60, function () { return !stage.hasMobEffect(target, "world_combat:status/befriended"); }, function () {
             stage.expect(!stage.hasMobEffect(target, "world_combat:status/befriended"), "friendly fire from the caster's side broke the calm");
             stage.expect(stage.attribute(target, "minecraft:generic.attack_damage") < baseAttack - 0.001, "the Attack drop stayed after the calm broke");
-            stage.note("play nice landed then broke on friendly fire; whether the zombie stopped attacking and the bow posture are not part of this run", {
+            stage.note("play nice landed then broke on friendly fire; the calm is carried by a native Mob.setTarget lease that this headless run does not probe, so whether the zombie stopped attacking and the bow posture stay unasserted", {
                 casts: stage.casts("playnice"), baseAttack: baseAttack,
                 attack: stage.attribute(target, "minecraft:generic.attack_damage"),
                 casterHp: caster.health(), targetHp: target.health()

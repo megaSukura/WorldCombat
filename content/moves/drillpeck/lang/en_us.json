@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.drillpeck.summary": "The user spins in place, winding itself into a drill, and bores its sharp beak again and again along a short axis in front: not one blow but a run of bites, each shoving the target back a little. Against an airborne target every bite bites deeper, the beak hunting the gap in the air. The only sustained-contact drill of the family.",
+  "worldcombat.skill.drillpeck.summary": "The user spins up, winding itself into a drill, and bores its sharp beak again and again along a short axis in front: not one blow but a run of bites, each shoving the target back a little. The axis follows the current body position, so it can drill while moving. Against an airborne target every bite bites deeper, the beak hunting the gap in the air. The only sustained-contact drill of the family.",
   "worldcombat.skill.drillpeck.use.0": "Spin into a drill and bore one target with repeated bites",
   "worldcombat.skill.drillpeck.use.1": "Shove a point-blank target back bite by bite",
   "worldcombat.skill.drillpeck.use.2": "Bite an airborne target harder",
@@ -30,5 +30,5 @@
   "worldcombat.skill.drillpeck.preference.ai.finish": "Finish the wounded",
   "world_combat.move.drillpeck.text.hit": "Drilled %1$s bites",
   "world_combat.move.drillpeck.text.miss": "Spun through empty air",
-  "worldcombat.skill.drillpeck.description.3": "It first steps %1$s blocks toward the target, stopping at the edge of the hitbox without passing through it; each bite strikes only the nearest visible foe on the fixed drill axis in front, and after the target leaves that axis the remaining bites miss but the drill still spins through all its bites before recovering."
+  "worldcombat.skill.drillpeck.description.3": "It first steps %1$s blocks toward the target, stopping at the edge of the hitbox without passing through it; each bite strikes only the nearest visible foe on the fixed drill axis in front, and the axis end tracks the current body position, so the head presses forward and the spiral turns around the axis as the user moves; after the target leaves that axis the remaining bites miss but the drill still spins through all its bites before recovering."
 }

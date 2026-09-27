@@ -20,6 +20,24 @@ namespace PokemonSkills {
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
     }
 
+    /** 两具真实碰撞箱之间的表面距离；贴住或重叠时为 0。准备与执行读同一把尺，大体型不再因体心远被拒。 */
+    function tickleSurfaceGap(a: CombatObservation, b: CombatObservation): number {
+        const low = b.boundsMin(), high = b.boundsMax();
+        const dx = Math.max(low.x() - a.boundsMax().x(), a.boundsMin().x() - high.x(), 0);
+        const dy = Math.max(low.y() - a.boundsMax().y(), a.boundsMin().y() - high.y(), 0);
+        const dz = Math.max(low.z() - a.boundsMax().z(), a.boundsMin().z() - high.z(), 0);
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /** 目标碰撞箱上离施法者体心最近的点，用来把伸手预告画在真正会接触的位置。 */
+    function tickleContactPoint(from: CombatObservation, to: CombatObservation): CombatPoint {
+        const center = from.position(), low = to.boundsMin(), high = to.boundsMax();
+        return WorldCombat.point(
+            Math.max(low.x(), Math.min(high.x(), center.x())),
+            Math.max(low.y(), Math.min(high.y(), center.y())),
+            Math.max(low.z(), Math.min(high.z(), center.z())));
+    }
+
     /** 一道短弯痕：贴着接触点、朝爪锋方向弓起；几道并排就是一次挠。判定与表现共用这道顶点。 */
     function tickleClawPath(centre: CombatPoint, strike: CombatPoint, index: number, marks: number, span: number): number[][] {
         const side = WorldCombat.point(-strike.z(), 0, strike.x());
@@ -70,7 +88,8 @@ namespace PokemonSkills {
                 if (me !== null && at !== null) {
                     const strike = tickleDirection(at.position().minus(me.position()));
                     direction = [strike.x(), 0, strike.z()];
-                    point = me.position().plus(strike.scale(Math.max(1.6, p(tickleId, "reach", action)) * 0.6));
+                    // 预告画到双方真实碰撞箱之间的最近接触点，而不是体心外的一截固定距离。
+                    point = tickleContactPoint(me, at).minus(strike.scale(0.18));
                 }
             }
             action.present("tickle-windup", tickleScene, 1, point,
@@ -78,9 +97,12 @@ namespace PokemonSkills {
                     target: target === null ? "" : String(target.ref()) }));
             return prepare;
         },
-        indicator: function (config) {
+        indicator: function (config, pokemon, inspection) {
             const firm = !!(config && config.firm);
-            return { radius: firm ? 2.6 : 2.2, geometry: "line", style: "tickle", color: 0xF2C94C,
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[tickleId], detail: { values: config || {} },
+                world: inspection && inspection.world, actor: inspection && inspection.actor, attributes: inspection && inspection.attributes };
+            const radius = pokemon ? Math.max(1.6, p(tickleId, "reach", context)) : (firm ? 2.4 : 2.0);
+            return { radius: radius, geometry: "line", style: "tickle", color: 0xF2C94C,
                 label: firm ? "挠痒·猛挠" : "挠痒" };
         },
         execute: function (action, move, config, done) {
@@ -109,8 +131,8 @@ namespace PokemonSkills {
             const marks = Math.max(2, Math.min(3, atkDrop));
             const span = Math.max(0.18, Math.min(0.7, (selfBody.width() + at.width()) * 0.25));
             const half = Math.max(0.18, Math.min(0.6, selfBody.width() * 0.4));
-            // 结算时重查距离与视线：目标退开就够不到，隔着墙第一条接触也不是目标，都算挠空。
-            if (to.minus(from).length() > reach + 0.6) {
+            // 结算时重查体表距与视线：目标退开就够不到，隔着墙第一条接触也不是目标，都算挠空。
+            if (tickleSurfaceGap(selfBody, at) > reach) {
                 WorldFeedback.emit(world, tickleScene, 1, from.plus(strike.scale(reach * 0.6)),
                     { moment: "whiff", direction: [strike.x(), 0, strike.z()], marks: marks, firm: firm ? 1 : 0 }, 20);
                 done(action);
@@ -131,19 +153,26 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            // 真的贴上了：身份、双降都落在这次接触的位置上，目标才抖出碎点。
+            // 真的贴上了：两项降级各自读实际回执；免疫或已满负级时这一挠不出成绩，不播成功。
             const hitPoint = contact.position();
-            MobEffects.apply(world, target, tickleEffect, giggle, 0);
-            NativeEffects.boost(world, target, "atk", -atkDrop);
-            NativeEffects.boost(world, target, "def", -defDrop);
-            for (let index = 0; index < marks; index++)
+            const droppedAtk = Math.max(0, -NativeEffects.boost(world, target, "atk", -atkDrop));
+            const droppedDef = Math.max(0, -NativeEffects.boost(world, target, "def", -defDrop));
+            if (droppedAtk === 0 && droppedDef === 0) {
                 WorldFeedback.emit(world, tickleScene, 1, hitPoint,
-                    { moment: "claw", path: tickleClawPath(hitPoint, strike, index, marks, span),
-                        index: index, marks: marks, firm: firm ? 1 : 0 }, 16);
+                    { moment: "fizzle", direction: [strike.x(), 0, strike.z()] }, 16);
+                done(action);
+                return;
+            }
+            MobEffects.apply(world, target, tickleEffect, giggle, 0);
+            const landedMarks = Math.max(1, Math.min(3, droppedAtk > 0 ? droppedAtk : 1));
+            for (let index = 0; index < landedMarks; index++)
+                WorldFeedback.emit(world, tickleScene, 1, hitPoint,
+                    { moment: "claw", path: tickleClawPath(hitPoint, strike, index, landedMarks, span),
+                        index: index, marks: landedMarks, firm: firm ? 1 : 0 }, 16);
             WorldFeedback.emit(world, tickleScene, 1, at.position(),
                 { moment: "fit", target: String(target.ref()), firm: firm ? 1 : 0,
-                    atkDrop: atkDrop, defDrop: defDrop, sparks: sparks }, 30);
-            WorldFeedback.text(world, tickleAbove(at.position()), "world_combat.move.tickle.text.fit", [atkDrop, defDrop], 40);
+                    atkDrop: droppedAtk, defDrop: droppedDef, sparks: sparks }, 30);
+            WorldFeedback.text(world, tickleAbove(at.position()), "world_combat.move.tickle.text.fit", [droppedAtk, droppedDef], 40);
             world.sound("minecraft:entity.allay.ambient_with_item", at.position(), 14, "{}");
             done(action);
         }

@@ -78,12 +78,12 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("acrid", text("worldcombat.skill.belch.preference.acrid")), F.const(1.4), F.const(1)))
                 .clamp(120, 380).round(0),
             "中毒时长", "中毒后带着共享中毒身份掉血的时间；特攻越强、等级越高、呛辣式越久。"),
-        /** 残气时长：70 + 特攻偏移[−10,30]；呛辣 ×1.4；夹 40..160。 */
+        /** 残气时长：50 + 特攻偏移[−6,20]；呛辣 ×1.3；夹 24..90。只作画面，短促散去。 */
         hazeTicks: seconds(
-            F.base(70).plus(F.stat("specialAttack").minus(60).times(0.3).clamp(-10, 30))
-                .times(F.when(F.pref("acrid", text("worldcombat.skill.belch.preference.acrid")), F.const(1.4), F.const(1)))
-                .clamp(40, 160).round(0),
-            "残气时长", "喷出去的气团在原地飘多久（只作画面，不再结算）；气足的个体和呛辣式留得更久。"),
+            F.base(50).plus(F.stat("specialAttack").minus(60).times(0.2).clamp(-6, 20))
+                .times(F.when(F.pref("acrid", text("worldcombat.skill.belch.preference.acrid")), F.const(1.3), F.const(1)))
+                .clamp(24, 90).round(0),
+            "残气时长", "喷出去的气团在原地飘多久（只作画面，不再结算）；短促散去，气足的个体与呛辣式略久一点。"),
         /** 气团粒子量：30 + 特攻偏移[−8,22]；夹 18..70。同时驱动画面密度。 */
         motes: formula(
             F.base(30).plus(F.stat("specialAttack").minus(60).times(0.25).clamp(-8, 22)).clamp(18, 70).round(0),

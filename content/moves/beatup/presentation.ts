@@ -1,10 +1,10 @@
 /**
  * 围攻 / beatup 的客户端表现。
  *
- * 一句话：施法者脚下先翻起一圈召集的暗影 → 每位真正出力的同伴身边先亮一下识别色、影从它当前位置飞出 →
- *   撞到活体迸出同色碎屑，撞墙只留一小撮，最后一团暗雾散开。
+ * 一句话：施法者脚下先翻起一圈召集的暗影，目标地上落一个小锁点 → 每位真正出力的同伴身边先亮一下识别色、影从它当前位置飞出 →
+ *   撞到活体迸出同色碎屑，撞墙只留一小撮，最后一团暗雾散开；锁点随本次动作消失。
  * 色相家族：暗紫 0x6E5AA8 画群影，近黑 0x2E2340 画暗雾，成员识别色由服务端按出手顺序给出（`data.color`）。
- * 起击收：起 muster 20t ／ 集 gather 20t ／ 亮 charge 14t ／ 扑 rush 每道暗影一条轨迹 ／ 击 hit 20t ／ 收 scatter 24t。
+ * 起击收：起 muster 20t ／ 锁 lock（随动作存续）／ 集 gather 20t ／ 亮 charge 14t ／ 扑 rush 每道暗影一条轨迹 ／ 击 hit 20t ／ 收 scatter 24t。
  * 范围：召集半径是一块真的区域，gather 的贴地环半径按 `data.scale`（本招算出的暗影判定半径派生）；
  *   玩家看得出「站在这一圈里的同伴会一起上」。
  * 运动：rush 的发射器绑 `data.projectile` 跟随每道暗影本体；影从同伴当前站位直线飞向锁点，机制里的 arrival 与它同步。
@@ -46,6 +46,28 @@ const BeatUpDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [16, 26], size: [0.3, 0.1], sizeMode: "index",
                     color: 0x6E5AA8, alpha: [0.6, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        lock: {
+            // 目标地上的小锁点：随本次动作提交出现、动作结束移除，不是一道会追的影。
+            exit: { drain: 12 },
+            emitters: [
+                {
+                    name: "reticle", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 4, shape: { kind: "ring", radius: 0.55 },
+                    direction: "outward", speed: [0.0, 0.01],
+                    lifetime: [10, 16], size: [0.3, 0.08],
+                    color: 0x9F86D6, alpha: [0.5, 0.1], light: "full", maxParticles: 20
+                },
+                {
+                    name: "mark", bind: "point", fit: "none", offset: [0, 0.3, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
+                    rate: 3, shape: { kind: "point" },
+                    direction: "up", speed: [0.0, 0.01],
+                    lifetime: [10, 16], size: [0.24, 0.08],
+                    color: 0xB9A6E0, alpha: [0.6, 0], light: "full", maxParticles: 12
                 }
             ]
         },

@@ -19,7 +19,17 @@ public final class NativeHitMotionChecks {
     private static UUID subject;
     private static String mode = "";
     private static int events;
+    private static int scriptEvents;
     private static boolean listening;
+    public static void onMotion(dev.worldcombat.core.runtime.WorldEvent event) {
+        if (subject == null || !event.actor().entity().equals(subject)) return;
+        scriptEvents++;
+        var data = com.google.gson.JsonParser.parseString(event.data()).getAsJsonObject();
+        if (mode.equals("script-half") || mode.equals("both")) {
+            data.addProperty("strength", data.get("strength").getAsDouble() / 2); event.data(data.toString());
+        }
+        if (mode.equals("script-cancel")) event.reject("fixture-movement-refused");
+    }
     public static void run(MinecraftCombat combat, ServerLevel level) {
         if (!listening) {
             listening = true;
@@ -27,14 +37,14 @@ public final class NativeHitMotionChecks {
                 if (subject == null || !subject.equals(event.getEntity().getUUID())) return;
                 events++;
                 if (mode.equals("cancel")) event.setCanceled(true);
-                if (mode.equals("half")) event.setStrength(event.getStrength() / 2);
+                if (mode.equals("half") || mode.equals("both")) event.setStrength(event.getStrength() / 2);
                 if (mode.equals("turn")) { event.setRatioX(0); event.setRatioZ(-1); }
             });
         }
         var source = mob(EntityType.COW, level, 2); var target = mob(EntityType.COW, level, 6);
         var actor = combat.bind(source); var victim = combat.bind(target);
         var wall = new BlockPos(7, 100, 2);
-        subject = target.getUUID(); events = 0;
+        subject = target.getUUID(); events = 0; scriptEvents = 0;
         try {
             target.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0);
             target.setOnGround(true); target.setDeltaMovement(.2, .1, .3);
@@ -56,12 +66,26 @@ public final class NativeHitMotionChecks {
             combat.hitImpulse(actor, victim, null, new Point(0, -.8, 0));
             near(target.getDeltaMovement(), new Vec3(0, -.4, 0), "Vertical impulse gained a fabricated horizontal direction");
 
+            target.setDeltaMovement(Vec3.ZERO); mode = "script-half";
+            combat.hitImpulse(actor, victim, null, new Point(.6, .8, 0));
+            near(target.getDeltaMovement(), new Vec3(.15, .2, 0), "Content strength did not compose once with native resistance");
+            target.setDeltaMovement(Vec3.ZERO); mode = "both";
+            combat.hitImpulse(actor, victim, null, new Point(.6, .8, 0));
+            near(target.getDeltaMovement(), new Vec3(.075, .1, 0), "Content overwrote an earlier Mod strength contribution");
+            target.setDeltaMovement(Vec3.ZERO); mode = "script-half";
+            combat.hitImpulse(actor, victim, null, new Point(0, -.8, 0));
+            near(target.getDeltaMovement(), new Vec3(0, -.2, 0), "Content strength failed on purely vertical received movement");
+            target.setDeltaMovement(Vec3.ZERO); mode = "script-cancel";
+            require(!combat.hitImpulse(actor, victim, null, new Point(.6, .8, 0)), "Content refusal did not cancel received movement");
+            int beforeScript = scriptEvents;
+
             mode = "cancel"; var before = target.getDeltaMovement(); var position = target.position();
             require(!combat.hitImpulse(actor, victim, null, new Point(.6, .8, 0))
                 && !combat.knockback(actor, victim, null, .4, new Point(1, 0, 0))
                 && combat.hitDisplace(actor, victim, null, new Point(1, 0, 0)) == 0, "Cancelled native received movement was applied");
             near(target.getDeltaMovement(), before, "Cancellation modified velocity");
             near(target.position(), position, "Cancellation modified position");
+            require(scriptEvents == beforeScript, "A refused native event still entered content policies");
             mode = ""; target.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1);
             require(!combat.hitImpulse(actor, victim, null, new Point(.6, .8, 0))
                 && combat.hitDisplace(actor, victim, null, new Point(1, 0, 0)) == 0, "Full resistance did not refuse received movement");

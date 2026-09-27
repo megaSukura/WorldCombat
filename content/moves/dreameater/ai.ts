@@ -9,10 +9,23 @@
  * 放完之后：共享睡眠在受伤时解除，所以一次抽取后目标会醒；交回共享顺序，等下一个睡眠窗口。
  */
 namespace CompanionBehavior {
+    registerFact("world_combat:move_dreameater/sleep", function (world, actor, _argument) {
+        const dream = CombatStatus.representative(world, actor, "sleep");
+        return dream === null ? 0 : Math.max(0, dream.duration());
+    });
+
+    /** 目标身上这条睡眠还剩多少刻；没有就 0。 */
+    function dreameaterSleepLeft(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const left = CompanionBehavior.fact<number>(context, "world_combat:move_dreameater/sleep", target);
+        return typeof left === "number" && isFinite(left) ? Math.max(0, left) : 0;
+    }
+
     function dreameaterWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         if (!CompanionBehavior.status(context, target, "sleep")) return false;
+        // 起手可能还没走完目标就醒了：剩余睡眠够不到起手长度时不出手，别白花一次 PP。
+        if (dreameaterSleepLeft(context, target) < CompanionBehavior.ai<number>(item, "minSleep", 16)) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= CompanionBehavior.ai<number>(item, "maxChase", 13);
     }
 
@@ -26,7 +39,8 @@ namespace CompanionBehavior {
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible
-                && CompanionBehavior.status(context, target, "sleep");
+                && CompanionBehavior.status(context, target, "sleep")
+                && dreameaterSleepLeft(context, target) >= CompanionBehavior.ai<number>(capability, "minSleep", 16);
         },
         priority: function (context, capability, target) {
             if (!target || !capability) return 0;
@@ -48,6 +62,10 @@ namespace CompanionBehavior {
         PokemonSkills.field(PokemonSkills.pathOf("ai.healBelow"), "回血优先阈值", "number", {
             min: 0.3, max: 1, step: 0.05,
             help: "自身生命低于这个比例时，把食梦当续航手段优先出手；越高越早靠它回血。"
+        }),
+        PokemonSkills.field(PokemonSkills.pathOf("ai.minSleep"), "起手睡眠余量", "number", {
+            min: 4, max: 80, step: 4,
+            help: "只在目标剩余睡眠不少于这么多刻时才主动食梦，避免起手还没结束目标就醒了、白花一次；调高更谨慎，调低更愿意抢短睡眠。"
         })
     ]);
 }

@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.iciclecrash.summary": "在选定落点的正上方凝出一根大冰柱竖直砸下：落地那圈里的敌人被碎冰扫到，砸实的可能畏缩。落点出手时定死、冰柱不再追人，目标可以在冰柱落下前走开；高空式更重更好躲，近落式更快更稳。",
+  "worldcombat.skill.iciclecrash.summary": "在选定落点的正上方凝出一块大冰竖直砸下：落地那圈里、三维无遮挡的敌人被碎冰扫到，砸实的可能畏缩。落点准备期就定死、冰块不再追人，目标可以在落下前走开；高空式更重更好躲，近落式更快更稳。",
   "worldcombat.skill.iciclecrash.use.0": "单点重击",
   "worldcombat.skill.iciclecrash.use.1": "远程砸懵目标",
   "worldcombat.skill.iciclecrash.use.2": "越过矮墙砸掩体后的落点",
   "worldcombat.skill.iciclecrash.use.3": "把移动慢的目标钉在落点上",
-  "worldcombat.skill.iciclecrash.description.0": "冰柱落点 %2$s 格内的敌人各吃一记约 %1$s 的伤害（同一目标只结算一次）；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.iciclecrash.description.1": "冰柱在落点上方最多 %1$s 格凝成（顶棚会更矮），以每刻 %2$s 格竖直落下，判定半径 %3$s 格；落点在你出手时定死，目标可以走开躲开。",
+  "worldcombat.skill.iciclecrash.description.0": "落点 %2$s 格内、与碎裂点之间没有方块遮挡的敌人各吃一记约 %1$s 的伤害（同一目标只结算一次，直接砸中的也算命中）；对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.iciclecrash.description.1": "冰块在落点上方最多 %1$s 格凝成，只按方块顶棚截短（实体不遮挡屋顶），以每刻 %2$s 格竖直落下，判定半径 %3$s 格；落点在准备期就定死，目标可以走开躲开。",
   "worldcombat.skill.iciclecrash.description.2": "可对 %1$s 格内的落点或目标施放，点地面、点实体或点空处都行。",
   "worldcombat.skill.iciclecrash.description.3": "每个被这记冰柱砸中的目标各有 %1$s 概率畏缩 %2$s：打断其可被中断的动作，期间无法发动新招或进行普通攻击。",
   "worldcombat.skill.iciclecrash.tall.on": "开启高空坠柱：冰柱从更高处落下，威力 ×1.15、碎裂圈 ×1.2，但准备 +6 刻、下落速度 ×0.72、冷却 +8 刻，目标有更多时间走开。",
@@ -24,7 +24,7 @@
   "worldcombat.skill.iciclecrash.preference.tall": "高空坠柱",
   "worldcombat.skill.iciclecrash.preference.tall.help": "开启：冰柱从更高处落下，更重、波及更广，但准备更久、下落更慢，目标更容易走开。关闭：近距快落，更轻更窄，几乎躲不掉。",
   "worldcombat.skill.iciclecrash.preference.ai.maxChase": "出手距离",
-  "worldcombat.skill.iciclecrash.preference.ai.maxChase.help": "超过这个距离就不主动落冰柱，先走近。越大越会在远处先手，但飞行时间也让目标更容易让开落点。",
+  "worldcombat.skill.iciclecrash.preference.ai.maxChase.help": "超过这个距离就不主动落冰柱，先走近。越大越会在远处先手；距离只决定能不能先手，不改变冰块下落的速度，目标能否躲开仍由它自己的移动和落点净空决定。",
   "worldcombat.skill.iciclecrash.preference.ai.opening": "起手目标",
   "worldcombat.skill.iciclecrash.preference.ai.opening.help": "只对未畏缩目标：跳过已经被别的招顶懵的人，把这一记留给还能被砸懵的目标。随时：把它当普通攻击，不挑目标状态。",
   "worldcombat.skill.iciclecrash.preference.ai.opening.fresh": "只对未畏缩目标",
@@ -32,5 +32,6 @@
   "world_combat.move.iciclecrash.text.hit": "砸中 %1$s 个",
   "world_combat.move.iciclecrash.text.flinch": "被砸懵",
   "world_combat.move.iciclecrash.text.miss": "冰柱落空",
+  "world_combat.move.iciclecrash.text.blocked": "头顶空间不足",
   "effect.world_combat.iciclecrash_flinch": "畏缩"
 }

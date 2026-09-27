@@ -66,7 +66,7 @@ function observation(actor){return {actor:()=>actor,position:()=>point(0,0,0),he
 const coordinates=value=>[value.x(),value.y(),value.z()];
 const effectRecords=new Map();let nextEffect=0,nextAction=0;
 const world={source:()=>self,tick:()=>now,valid:actor=>actor===self||actor===owner,friendly:actor=>actor===self||actor===owner,
-  observe:observation,query:()=>[owner],mobEffect:()=>null,mobEffects:()=>[],originInstance:()=>'',
+  observe:observation,query:()=>[owner],mobEffect:()=>null,mobEffects:()=>[],matchesMobEffect:()=>false,originInstance:()=>'',
   originData(_key,value){assert.equal(value,undefined,'An unattributed scope cannot write execution state');return null;},
   effects(actor,definition){return [...effectRecords.values()].filter(record=>record.target===actor&&(!definition||record.definition===definition))
     .map(record=>({id:()=>record.id,data:()=>record.data,source:()=>record.source,target:()=>record.target}));},

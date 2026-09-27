@@ -1,12 +1,4 @@
-/**
- * 雷鸣蹴击 / thunderouskick —— 可执行设计说明。
- *
- * 一句话：绕步闪到目标侧后方，再从它没在看的一侧踢出一脚，踢开护架并顶开目标。
- *
- * 场面：会雷鸣蹴击的飞腿郎（45 级，只给这一招）对一只厚血、站桩的卡比兽（50 级，只会跃起）绕步踢击；
- * 硬石地面，断言只取必然事实：这招被提交过、目标受到过伤害。
- * 绕步几次、是否踢空、踢开几级护架（绕步达到三次以上会多一级）都写进 note 供读轨迹判断。
- */
+/** Actual supported side steps lead to one finite kick and an owned defence window; positional bonuses remain observational. */
 Smoke.scenario("thunderouskick", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
     stage.time("day");

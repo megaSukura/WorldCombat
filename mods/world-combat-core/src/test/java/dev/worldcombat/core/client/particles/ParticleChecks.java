@@ -16,7 +16,9 @@ public final class ParticleChecks {
         run("emitter", EmitterChecks::main);
         run("madparticle-mapping", MadParticleMappingChecks::main);
         run("instance", InstanceChecks::main);
+        run("sound-cue", SoundCueChecks::main);
         run("local-entry", LocalEntryChecks::main);
+        run("entity-echo", dev.worldcombat.core.client.EntityEchoChecks::main);
         System.out.println("particleChecks: all check groups passed");
     }
 

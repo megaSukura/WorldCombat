@@ -22,8 +22,8 @@ namespace PokemonSkills {
     function waterpledgeChoice(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): WaterPledgeChoice | null {
         const key = "waterpledge:point:" + item.id + ":" + target.ref;
         if (Object.prototype.hasOwnProperty.call(context.scratch, key)) return context.scratch[key];
-        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
-        const scope = { world: world, actor: world.source(), detail: { values: item.data.config || {} } };
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context), caster = world.source();
+        const scope = { world: world, actor: caster, detail: { values: item.data.config || {} } };
         const prepare = Math.max(5, Math.round(p(waterpledgeId, "tempo", scope)));
         const detect = p(waterpledgeId, "comboDetect", scope);
         const comboRadius = Math.max(1, p(waterpledgeId, "markRadius", scope)) * p(waterpledgeId, "comboScale", scope);
@@ -33,31 +33,25 @@ namespace PokemonSkills {
         if (length > cap) { dx *= cap / length; dz *= cap / length; }
         const moving = Math.sqrt(dx * dx + dz * dz) > 0.15;
         const here = CompanionBehavior.point(target.point), candidates = moving ? [here, here.plus(WorldCombat.point(dx, 0, dz))] : [here];
-        const areas = WorldEffects.areas(world), nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+        const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         let best: WaterPledgeChoice | null = null;
         candidates.forEach(function (candidate, index) {
             const ground = waterpledgeGround(world, self, target, candidate);
             if (!ground) return;
-            let combo = "", nearest = detect;
-            for (let i = 0; i < areas.length; i++) {
-                const area = areas[i], centre = CompanionBehavior.point(area.position), distance = centre.minus(ground).length();
-                if (area.data.combo && distance <= 1 + area.radius) return;
-                if (area.pending || area.remaining <= prepare) continue;
-                if (area.rule !== "world_combat:field/pledge_fire" && area.rule !== "world_combat:field/pledge_grass") continue;
-                if (distance <= nearest && world.clear(ground.plus(WorldCombat.point(0, 0.25, 0)), centre.plus(WorldCombat.point(0, 0.25, 0)))) {
-                    nearest = distance;
-                    combo = area.rule === "world_combat:field/pledge_fire" ? "rainbow" : "wetland";
-                }
-            }
+            // 组合资格与 execute 同源：同阵营、未组合、留有余时且通路无阻的真实誓约印。
+            const match = waterpledgeResonance(world, caster, ground, detect);
+            const combo = match && match.remaining > prepare ? waterpledgeComboKind(match.rule) : "";
             // A short leading point is useful for a grass combination, not a reason to postpone the ordinary push.
             if (index > 0 && combo !== "wetland") return;
             let score = combo ? 54 : 34;
             if (combo === "rainbow") {
+                const centre = WorldCombat.point(match!.position[0], match!.position[1], match!.position[2]);
                 const friends = [self].concat(nearby);
                 for (let i = 0; i < friends.length; i++) {
                     const friend = friends[i];
-                    if (friend.ref !== self.ref && !friend.friendly || friend.health <= 0 || CompanionBehavior.ratio(friend) >= 0.9) continue;
-                    if (CompanionBehavior.distance(friend.point, [ground.x(), ground.y(), ground.z()]) <= comboRadius
+                    if (friend.health <= 0 || CompanionBehavior.ratio(friend) >= 0.9) continue;
+                    if (friend.ref !== self.ref && !friend.friendly) continue;
+                    if (CompanionBehavior.distance(friend.point, [centre.x(), centre.y(), centre.z()]) <= comboRadius
                         && world.clear(ground.plus(WorldCombat.point(0, 0.25, 0)), CompanionBehavior.point(friend.point))) { score = 58; break; }
                 }
             } else if (combo === "wetland" && index > 0) score = 62;

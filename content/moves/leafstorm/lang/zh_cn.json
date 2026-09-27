@@ -26,6 +26,9 @@
   "worldcombat.skill.leafstorm.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.leafstorm.preference.ai.maxChase.help": "超过这个距离就不主动卷风暴，先走近；越大越愿意在更远处先手。",
   "worldcombat.skill.leafstorm.preference.ai.line": "纵列优先",
-  "worldcombat.skill.leafstorm.preference.ai.line.help": "开启：目标身后还排着敌人的目标排前，用移动的风暴一次卷过一列；关闭则只按普通远程攻击排序。",
-  "world_combat.move.leafstorm.text.miss": "风柱扑空，叶片散了一地"
+  "worldcombat.skill.leafstorm.preference.ai.line.help": "仅在卷叶式生效：目标身后沿同一条线还排着敌人的目标排前，用慢速移动的风暴一次卷过一列（按真实射程、风柱半径、高度与墙判定）；穿叶式不越体，本项无效。关闭则只按普通远程攻击排序。",
+  "worldcombat.skill.leafstorm.preference.ai.regain": "耗后收敛",
+  "worldcombat.skill.leafstorm.preference.ai.regain.help": "开启：自身特攻已被压低时（例如刚卷过一次风暴）明显降低再卷的优先级，避免不断付同样的代价；关闭则不顾当前特攻等级，只按普通排序。",
+  "world_combat.move.leafstorm.text.miss": "风柱扑空，叶片散了一地",
+  "world_combat.move.leafstorm.text.slump": "叶子离手：特攻 −%1$s"
 }

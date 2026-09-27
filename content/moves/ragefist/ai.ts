@@ -4,8 +4,9 @@
  * 什么局面下出手：挂在共享 attack 位上；这是一串近距离鬼拳，够不到时交给共享接近逻辑把身位收进射程，
  *   `ai.maxChase` 只决定「多远之内值得先手」，超过时压低排序但仍会走近——被击退后也会走回来接着打。
  * 对谁出手：`accepts` 只排除友方、已死、看不见的；`approachTarget` 就是目标本人。
- * 什么时候抬价：`ai.vengeful`（默认开）打开时，身上每攒 1 记拳印就 +5 分——挨过打正是这一拳最重的时候；
- *   一记没攒时压到 16 分，只在没有更好的选择时用它。关闭则不问拳印，一律按普通近身攻击排序。
+ * 什么时候抬价：`ai.vengeful`（默认开）打开时，**能维持接触**（在射程内）时身上每攒 1 记拳印就 +5 分；
+ *   射程外但还在先手距离内只 +2 分/记、上限 10 分，免得抱着高优先却追不到。一记没攒时压到 14 分，
+ *   只在没有更好的选择时用它。关闭则不问拳印，一律按普通近身攻击排序。
  * 放完接什么：交回共享交战计划；拳印不因出拳清空，接下来的愤怒之拳继续吃同一份积怨。
  */
 namespace PokemonSkills {
@@ -35,9 +36,14 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const gap = CompanionBehavior.distance(self.point, target.point);
             const limit = CompanionBehavior.ai<number>(capability, "maxChase", 8);
-            let value = gap <= capability.data.range ? 30 : gap <= limit ? 16 : 5;
-            if (CompanionBehavior.ai<boolean>(capability, "vengeful", true))
-                value += Math.min(25, ragefistStoredNow(context, self) * 5);
+            const close = gap <= capability.data.range;
+            let value = close ? 30 : gap <= limit ? 14 : 4;
+            // 拳印只在能维持接触时才算资本；离得远时压低，免得抱着高优先却追不到。
+            if (CompanionBehavior.ai<boolean>(capability, "vengeful", true)) {
+                const stored = ragefistStoredNow(context, self);
+                if (close) value += Math.min(25, stored * 5);
+                else if (gap <= limit) value += Math.min(10, stored * 2);
+            }
             return Math.min(82, value);
         }
     });

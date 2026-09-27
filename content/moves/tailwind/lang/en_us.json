@@ -3,6 +3,7 @@
   "worldcombat.skill.tailwind.use.0": "Pad the whole team's Speed before a fight starts",
   "worldcombat.skill.tailwind.use.1": "Get the team moving before it is caught",
   "worldcombat.skill.tailwind.use.2": "Link allies into one line and push in together",
+  "worldcombat.skill.tailwind.use.3": "Raise a wind for yourself alone when chasing or retreating",
   "worldcombat.skill.tailwind.description.0": "Tailwind raises the Speed of the caster and allies within range by %1$s stages, lasting about %2$s s.",
   "worldcombat.skill.tailwind.description.1": "The wind spreads %1$s blocks.",
   "worldcombat.skill.tailwind.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
@@ -28,5 +29,5 @@
   "world_combat.move.tailwind.text.ride": "Tailwind (Speed +%1$s / %2$s carried / %3$s s)",
   "world_combat.move.tailwind.text.fade": "Tailwind died down",
   "effect.world_combat.tailwind_gale": "Tailwind",
-  "worldcombat.skill.tailwind.description.release": "When the wind ends or is cleared, each carrier loses exactly the Speed stages it gained; a combatant already carrying the same wind is not raised again."
+  "worldcombat.skill.tailwind.description.release": "When the wind ends or is cleared, each carrier loses exactly the Speed stages it gained; a combatant already at the Speed cap or carrying the same wind is not raised again."
 }

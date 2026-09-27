@@ -59,6 +59,13 @@ const SpotlightDefinition: ParticleDefinition = {
         lit: {
             exit: { drain: 26 },
             emitters: [
+                { name: "spot_cone", bind: "target", offset: [0, 2.6, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: { data: "motes", fallback: 20 },
+                    shape: { kind: "cone_volume", radius: 1.0, length: 2.6, angleDegrees: 20, rotation: [0, 180, 0] },
+                    direction: "shape", speed: [0.005, 0.03], drag: 0.97,
+                    lifetime: [8, 14], size: [0.1, 0.03],
+                    color: 0xFFF0A8, alpha: [0.5, 0], light: "full", maxParticles: 64 },
                 { name: "glow", bind: "target", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     rate: { data: "motes", fallback: 20 }, shape: { kind: "sphere_surface", radius: 0.55 },

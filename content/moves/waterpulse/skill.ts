@@ -33,9 +33,13 @@ namespace PokemonSkills {
     /** 把嗡鸣挂到目标身上：借共享身份 confusion，振幅存失手概率百分数，独一无二地替换同类载体。 */
     function waterpulseDaze(world: CombatWorld, victim: CombatActor, at: CombatPoint, ticks: number, fumblePct: number): boolean {
         if (!CombatStatus.apply(world, victim, "confusion", waterpulseDazeEffect, ticks, fumblePct, { unique: true })) return false;
-        // 状态真落上才挂托管表现；同一目标已有载体时不重复挂。
-        if (world.effects(victim, waterpulseDazeMark).length === 0)
+        // 状态真落上才同步续上托管表现：已有载体就地刷新，别等 20 刻巡检让临近过期的旧 watcher 先死。
+        const marks = world.effects(victim, waterpulseDazeMark);
+        if (marks.length > 0) {
+            for (let i = 0; i < marks.length; i++) world.operation(marks[i].id(), "world_combat:refresh", "{}");
+        } else {
             world.effect(waterpulseDazeMark, victim, "{}", Math.max(1, Math.min(2400, ticks)));
+        }
         const body = world.observe(victim);
         const point = body !== null ? body.position() : at;
         WorldFeedback.emit(world, waterpulseScene, 1, at, { moment: "rattle", target: String(victim.ref()) }, 22);
@@ -138,9 +142,10 @@ namespace PokemonSkills {
                             function (other, facts) {
                                 const ref = String(other.ref());
                                 if (hitSet[ref]) return;
-                                hitSet[ref] = true;
-                                // 水波不穿墙：落点与目标之间视线被挡就不再扩大命中。
+                                // 水波不穿墙：先确认落点到目标的真实波面没有被掩体挡住，再记这一次命中资格；
+                                // 被挡住的目标不消耗资格，走出掩体后仍能被后面的合法波面扫到。
                                 if (!scope.clear(point, facts.position())) return;
+                                hitSet[ref] = true;
                                 const landed = hurt(current, other, "waterpulse", echoPower,
                                     { damage: damageSpec("waterpulse", "echo"), pulse: true });
                                 // 伤害被拒（免疫、不可选中）就不溅水花、也不声称已命中。
@@ -152,7 +157,10 @@ namespace PokemonSkills {
                                     waterpulseDaze(scope, other, facts.position(), daze, fumblePct);
                             });
                         WorldFeedback.emit(scope, waterpulseScene, 1, point,
-                            { moment: "wave", radius: outer, step: step, pulses: pulses, blast: blast, flows: flows }, Math.max(10, interval + 8));
+                            { moment: "wave", inner: inner, outer: outer, step: step, pulses: pulses, blast: blast, flows: flows,
+                                // 本圈真实覆盖的是 inner→outer：画面在 inner 出生、只外移不到 outer；最外圈不再向外虚扩。
+                                creep: step < pulses ? Math.max(0, Math.min(0.1, (outer - inner) / 12)) : 0 },
+                            Math.max(10, interval + 8));
                         if (step >= pulses) { finish(current); return; }
                         current.after(interval, wave);
                     }
@@ -178,8 +186,9 @@ namespace PokemonSkills {
         WorldFeedback.onEffect(world, effect.id(), "linger", waterpulseScene, 1, body.position(),
             { moment: "daze", target: String(target.ref()) });
         const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
-        effect.remaining(remaining);
-        effect.schedule("watch", "watch", 20, "{}");
+        // 让标记活得比载体久一点，并提前到临近到期时巡检，保证最后 20 刻仍有飞鸟标识。
+        effect.remaining(Math.min(2400, remaining + 6));
+        effect.schedule("watch", "watch", Math.max(1, Math.min(20, remaining + 1)), "{}");
     }
     WorldCombat.effect(waterpulseDazeMark, 1, 2400, "actor", function (json) {
         const value = JSON.parse(json || "{}");
@@ -188,6 +197,7 @@ namespace PokemonSkills {
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(waterpulseDazeMark, "start", waterpulseDazeWatch);
     WorldCombat.effectHandler(waterpulseDazeMark, "watch", waterpulseDazeWatch);
+    WorldCombat.effectHandler(waterpulseDazeMark, "operation:world_combat:refresh", waterpulseDazeWatch);
     WorldCombat.effectHandler(waterpulseDazeMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
     // 混乱被牛奶／/effect clear 提前拿掉时，立即撤掉托管表现，不等它自己的下一次巡检。
     WorldCombat.on("world_combat:move_waterpulse/daze-release", "world_combat:mob_effect_removed", "", function (event) {

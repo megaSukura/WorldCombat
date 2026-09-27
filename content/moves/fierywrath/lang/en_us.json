@@ -5,7 +5,7 @@
   "worldcombat.skill.fierywrath.use.2": "Hold a patch of ground",
   "worldcombat.skill.fierywrath.use.3": "Hurt worse as you get cornered",
   "worldcombat.skill.fierywrath.description.0": "Dark-type wrath bursts outward to a %2$s block radius around the user, dealing about %1$s damage to each foe inside (heavier nearer the centre); the target's defence, type and crit are settled on the hit.",
-  "worldcombat.skill.fierywrath.description.1": "Foes on the rim still take at least %1$s of the burst; a hit knocks them about %2$s blocks outward.",
+  "worldcombat.skill.fierywrath.description.1": "Foes on the rim still take at least %1$s of the burst; a hit knocks them about %2$s blocks outward, and a solid wall truncates that path (nothing behind it is caught).",
   "worldcombat.skill.fierywrath.description.2": "A solid hit has a %1$s flinch chance: it applies a %2$s s flinch and tries to interrupt an interruptible action the target is already performing; while flinched the target can start no new moves and make no ordinary attacks.",
   "worldcombat.skill.fierywrath.description.3": "Lingering: the wrath at the burst centre lasts %2$s s, searing each foe inside for about %1$s more damage every %3$s s and pushing those who stay outward again.",
   "worldcombat.skill.fierywrath.linger.on": "Lingering on: the burst deals about 20%% less and pushes weaker, but the aura stays and keeps burning; 2 ticks more wind-up and 10 ticks more cooldown.",

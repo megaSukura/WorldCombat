@@ -34,11 +34,14 @@ namespace PokemonSkills {
         return length < 0.05 ? WorldCombat.point(0, 0, 1) : WorldCombat.point(dx / length, 0, dz / length);
     }
 
-    /** 立墙点离自己在半个射程，但至少留出 minGap，也不越过威胁本身。 */
+    /** 立墙点离自己在半个射程内、至少留出 minGap，也不越过威胁本身；被 minGap 推到能力范围外就返回 0（不回退自点）。 */
     function barrierStandoff(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: CompanionBehavior.Entity): number {
         const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point);
         const reach = Number(item.data.range) || 4, floor = CompanionBehavior.ai<number>(item, "minGap", 3);
-        return Math.max(floor, Math.min(distance - 1.5, reach * 0.55));
+        const wanted = Math.min(distance - 1.5, reach * 0.55);
+        if (!(wanted > 0.5)) return 0;
+        const standoff = Math.max(floor, wanted);
+        return standoff <= reach - 0.4 ? standoff : 0;
     }
 
     /** 拟建墙的横宽会不会把贴着墙面的友方隔在威胁一侧；会就别立。 */
@@ -73,13 +76,24 @@ namespace PokemonSkills {
             const heading = barrierHeading(context, capability, threat);
             const standoff = barrierStandoff(context, capability, threat);
             if (standoff <= 1.0) return null;
-            const tall = !!(capability.data.config && capability.data.config.tall);
-            if (barrierBlocksAlly(context, self, heading, standoff, tall ? 1.4 : 2.8)) return null;
+            const values = { world: world, actor: world.source(), skill: skills["barrier"], detail: { values: capability.data.config } };
+            const span = Math.max(1.4, p("barrier", "span", values));
+            const height = Math.max(1, Math.min(4, Math.round(p("barrier", "height", values))));
+            if (barrierBlocksAlly(context, self, heading, standoff, span / 2)) return null;
             const centre = CompanionBehavior.point(self.point).plus(heading.scale(standoff));
             const ground = WorldGeometry.ground(world, centre, 5);
-            if (!world.freeSpace(ground.plus(WorldCombat.point(0, 0.1, 0)), 1, 1)) return null;
-            // 超出射程就交给共享接近逻辑，先用自身目标走近。
-            if (ground.minus(CompanionBehavior.point(self.point)).length() > Number(capability.data.range)) return _selected;
+            if (ground.minus(CompanionBehavior.point(self.point)).length() > Number(capability.data.range)) return null;
+            if (!world.freeSpace(ground, 1, 1)) return null;
+            // 按本招真实宽高探支撑与占体：至少要有一列在真实支撑上立满高，才值得出手。
+            const plan = barrierBuild(world, ground, heading, span, height);
+            const heights: { [key: string]: number } = Object.create(null);
+            for (let i = 0; i < plan.cells.length; i++) {
+                const key = plan.cells[i].x + "," + plan.cells[i].z;
+                heights[key] = (heights[key] || 0) + 1;
+            }
+            let full = false;
+            Object.keys(heights).forEach(function (key) { if (heights[key] >= height) full = true; });
+            if (!full) return null;
             const choice = JSON.parse(JSON.stringify(self));
             choice.ref = ""; choice.point = [ground.x(), ground.y(), ground.z()];
             return choice;

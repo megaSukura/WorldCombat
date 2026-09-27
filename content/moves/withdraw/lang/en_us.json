@@ -23,10 +23,12 @@
   "worldcombat.skill.withdraw.preference.ai.maxChase": "Tuck distance",
   "worldcombat.skill.withdraw.preference.ai.maxChase.help": "Consider tucking in when a threat is within this distance; larger pulls in from further out.",
   "worldcombat.skill.withdraw.preference.ai.panic": "Emergency health",
-  "worldcombat.skill.withdraw.preference.ai.panic.help": "Below this health fraction the companion tucks in ahead of the shared order; higher enters the turtle stance earlier, lower waits until nearly down.",
+  "worldcombat.skill.withdraw.preference.ai.panic.help": "Below this health fraction, and once the threat's attack is imminent (aimed at it or just landed), the companion tucks in ahead of the shared order; higher enters the turtle stance earlier, lower waits until nearly down.",
   "world_combat.move.withdraw.text.seal": "Withdraw (Defense +%1$s, %2$s blocks)",
   "world_combat.move.withdraw.text.block": "Shell blocked a hit (%1$s left)",
   "world_combat.move.withdraw.text.open": "Shell opened",
   "effect.world_combat.withdraw_shell": "Shell",
-  "worldcombat.skill.withdraw.description.shell": "The shell only stops attacks from enemies, not self-inflicted or environmental damage; it shows the blocks left as one large shell petal each, and when the hits run out or the time ends the shell opens at once, releasing this cast's root and the Defence it raised."
+  "worldcombat.skill.withdraw.menu.release": "Open shell",
+  "worldcombat.skill.withdraw.menu.release.hint": "Open the shell at once, releasing the shell, this cast's root and its block ward.",
+  "worldcombat.skill.withdraw.description.shell": "The shell only stops attacks from enemies, not self-inflicted or environmental damage; it shows the blocks left as one large shell petal each, and when the hits run out or the time ends the shell opens at once, releasing this cast's root and the Defence it raised. While the shell is up you can choose Open shell from the G menu to end it early."
 }

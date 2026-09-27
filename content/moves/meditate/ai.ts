@@ -15,14 +15,29 @@ namespace CompanionBehavior {
     const meditateCalm = PokemonSkills.flag("ai.calmFirst", "宁静静候");
     meditateCalm.help = "开启：只在最近没挨打时才开始冥想（多唤醒一级）；关闭：被打着也照常冥想（少一级）。";
 
+    /** 与「唤醒级数」公式同源的宁静门槛：深长呼吸 3 秒、普通呼吸 7 秒。AI 判断与预览读同一个值。 */
+    function meditateCalmWait(capability: WorldBehavior.Capability): number {
+        const config = capability.data && capability.data.config;
+        return config && config.deepBreath === true ? PokemonSkills.meditateCalmDeep : PokemonSkills.meditateCalmBase;
+    }
+
+    /** 纯特攻手：瑜伽只抬物攻，几乎用不上。只有特攻明显压过物攻才跳过，物特相近的个体照常使用。 */
+    function meditatePureSpecial(context: WorldBehavior.Context, self: Entity): boolean {
+        const facts = CompanionBehavior.combatStats(context, self), stats = facts && facts.stats;
+        if (!stats) return false;
+        const atk = Number(stats.atk), spa = Number(stats.spa);
+        return isFinite(atk) && isFinite(spa) && atk > 0 && spa > 0 && spa >= atk * 1.5;
+    }
+
     registerUse("meditate", {
         protocols: ["world_combat:fortify"],
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
-            if (["atk"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             const self = source(context);
-            const calm = typeof self.hurtAgo === "number" && self.hurtAgo >= 60;
+            if (CompanionBehavior.stage(context, self, "atk") >= 6) return false;
+            if (meditatePureSpecial(context, self)) return false;
+            const calm = typeof self.hurtAgo === "number" && self.hurtAgo >= meditateCalmWait(capability);
             if (ai<boolean>(capability, "calmFirst", true) && !calm) return false;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return false;
@@ -36,7 +51,7 @@ namespace CompanionBehavior {
             if (!threat) return 0;
             const self = source(context);
             if (distance(self.point, threat.point) < ai<number>(capability, "minGap", 2)) return 0;
-            const calm = typeof self.hurtAgo === "number" && self.hurtAgo >= 60;
+            const calm = typeof self.hurtAgo === "number" && self.hurtAgo >= meditateCalmWait(capability);
             if (calm) return 95;
             return ai<boolean>(capability, "calmFirst", true) ? 0 : 45;
         }

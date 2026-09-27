@@ -25,7 +25,7 @@
   "worldcombat.skill.spitup.preference.ai.maxChase": "喷出距离",
   "worldcombat.skill.spitup.preference.ai.maxChase.help": "目标超过这个距离就不吐，先走近。越大越会当作远程攻击从远处放，也越容易在起手时被躲开。",
   "worldcombat.skill.spitup.preference.ai.minLayers": "蓄到几层才放",
-  "worldcombat.skill.spitup.preference.ai.minLayers.help": "层数低于这个值就先不放，回去继续蓄力。调高更贪、等更重的发射；调低则一有两层就吐出去。",
+  "worldcombat.skill.spitup.preference.ai.minLayers.help": "层数低于这个值就先不放，回去继续蓄力。调高更贪、等更重的发射；调低则一有两层就吐出去。层数同时提供防御与特防加成，伙伴受伤时会把这份生存成本算进去，不总以层数越多越立刻吐。",
   "world_combat.move.spitup.text.spit": "喷出 · %1$s 层 · 命中 %2$s",
   "world_combat.move.spitup.text.miss": "喷空了",
   "worldcombat.skill.spitup.spend": "出手会一次放空全部蓄力层数：每层给的防御与特防加成随层数一起交出去；即使喷空没有命中，层数同样清空。没有至少一层蓄力时，这一招无法发动。"

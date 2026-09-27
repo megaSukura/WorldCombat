@@ -7,8 +7,9 @@
  * 拍子：起 boast（0–10t 亮风羽）→ 冲 rush（贴地直冲）→ 击 hit／挡 blocked／穿 through → 收 miss。
  * 范围：这是一记接触冲撞，冲击画在命中/被挡住的那一点；rush 的风羽沿身位历史拖尾，画出的就是冲过的路线。
  * 运动：rush 沿施法者历史拖出风羽与暗烟；hit 从命中者向外炸开并把人顶飞。
- * 数：起手风羽数绑 `data.raised`（提升项数）、总浓度绑 `data.boost`（架势层数）；rush 的羽量绑 `data.plumes`；
- *   hit 的强度绑 `data.intensity`（本撞威力 / 60）。层数决定身后羽纹数量与气势，结束原增益符号仍在。
+ * 数：起手风羽数绑 `data.raised`（提升项数）、总浓度绑 `data.boost`（架势层数）；rush 的尾迹按身位距离触发，
+ *   尺寸与亮度绑 `data.trail`/`data.glow`（强化越盛越粗越亮），不再声称拖出几道；hit 的强度绑 `data.intensity`
+ *   （本撞威力 / 60）。结束原增益符号仍在。
  * 参照节：视觉语言第二、三、四、六、九节。
  */
 const PowerTripDefinition: ParticleDefinition = {
@@ -63,20 +64,20 @@ const PowerTripDefinition: ParticleDefinition = {
                 {
                     name: "feather", bind: "source", offset: [0, 0.12, 0], height: 0.16,
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: { data: "plumes", fallback: 10 }, trail: { minDistance: 0.32 }, spin: 28,
+                    rate: 20, trail: { minDistance: 0.32 }, spin: 28,
                     shape: { kind: "point" },
                     direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [7, 12], size: [0.15, 0.03],
-                    color: 0x8A6BD0, alpha: [0.6, 0], light: "full", maxParticles: 120
+                    lifetime: [7, 12], size: [{ data: "trail", fallback: 0.15 }, 0.03],
+                    color: 0x8A6BD0, alpha: [{ data: "glow", fallback: 0.6 }, 0], light: "full", maxParticles: 120
                 },
                 {
                     name: "wake", bind: "source", offset: [0, 0.1, 0], height: 0.12,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    rate: { data: "plumes", fallback: 10 }, trail: { minDistance: 0.32 },
+                    rate: 18, trail: { minDistance: 0.32 },
                     shape: { kind: "point" },
                     direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.22, 0.05],
-                    color: 0x4A2E8A, alpha: [0.45, 0], light: "world", maxParticles: 120
+                    lifetime: [10, 18], size: [{ data: "trail", fallback: 0.22 }, 0.05],
+                    color: 0x4A2E8A, alpha: [{ data: "glow", fallback: 0.45 }, 0], light: "world", maxParticles: 120
                 },
                 {
                     name: "grit", bind: "source", offset: [0, 0.06, 0], height: 0,

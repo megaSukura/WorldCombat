@@ -12,12 +12,14 @@ namespace CompanionBehavior {
         return !!(config && config.plain === true);
     }
 
-    /** 目标脚下会抽出的状态：直击形态固定麻痹，其余按取样场所。 */
+    /** 目标脚下会抽出的状态：直击形态固定麻痹，其余按真实脚点取样；与命中、预告共用同一函数。 */
     function secretpowerPredicted(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject): string {
         if (secretpowerPlain(item))
             return "paralysis";
-        var world = CompanionBehavior.world(context), point = target.point;
-        var foot = WorldCombat.point(point[0], point[1] - 1, point[2]);
+        var world = CompanionBehavior.world(context);
+        var actor = world.actor(target.ref), body = actor === null ? null : world.observe(actor);
+        var foot = body !== null ? PokemonSkills.secretpowerFoot(body)
+            : WorldCombat.point(target.point[0], target.point[1] - (target.height || 1.4) / 2, target.point[2]);
         return PokemonSkills.secretpowerStatus(PokemonSkills.secretpowerSite(world, foot));
     }
 
@@ -25,7 +27,7 @@ namespace CompanionBehavior {
         protocols: ["world_combat:attack", "world_combat:contact"],
         reach: function (context: WorldBehavior.Context, item: WorldBehavior.Capability): number { return item.data.range; },
         available: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, purpose: string, target: WorldMethods.Subject | null): boolean {
-            if (!target || !target.health || target.health <= 0)
+            if (!target || target.friendly || !target.visible || !target.health || target.health <= 0)
                 return false;
             if (!ai(item, "opening", false))
                 return true;
@@ -33,6 +35,8 @@ namespace CompanionBehavior {
             return !(predicted && status(context, target, predicted));
         },
         accepts: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject): boolean {
+            if (target.friendly || !target.visible || target.health <= 0)
+                return false;
             var goal: any = context.choice && context.choice.goal && context.choice.goal.data;
             if (goal && goal.ref === target.ref)
                 return true;
@@ -41,9 +45,14 @@ namespace CompanionBehavior {
         priority: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject | null): number {
             if (!target)
                 return 0;
+            // opening 打开时才因「目标已带该异常」退让；关闭时保留这一记有效直接伤害的正常优先级。
             var predicted = secretpowerPredicted(context, item, target);
-            if (predicted && status(context, target, predicted))
+            if (ai(item, "opening", false) && predicted && status(context, target, predicted))
                 return 0;
+            var world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            // 可达判断：中间隔墙时直线借力够不到，只留低分，让位给可绕行的目标。
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point)))
+                return predicted === "burn" || predicted === "sleep" ? 4 : 2;
             return predicted === "burn" || predicted === "sleep" ? 20 : 10;
         }
     });

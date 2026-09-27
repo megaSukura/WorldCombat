@@ -4,10 +4,11 @@
  * 场面：一只只会找伙伴的爱心鱼（懒惰特性，等级 40）对 4 格外的卡蒂狗（威吓特性，没有招式）。
  *   自己的特性是拖累（懒惰），AI 愿意把它递出去；双方特性不同、都是宝可梦，预检通过。
  * 必然事实：本招被提交过；目标身上出现过共享身份 world_combat:status/entrainment 的标记
- *   （只有特性层真正写入时才会挂上）。
+ *   （标记只在能力层真实写入同一 carrier 时才保留，层写入失败会当场撤标）。
  * 随机结果：节拍飞行与落地时机、目标是否走动写进 note 供读轨迹判断。
- * 特性顶替走共享 NativeModifiers ability 层；普通生物的分支改由有界原生属性修饰把步速向施法者拉近，
- * 本场景只用宝可梦目标，因此不触发那一支。
+ * 特性顶替走共享 NativeModifiers ability 层，并绑定同一个标记载体；普通生物的分支改由有界原生属性修饰
+ *   （CombatCopies.equalize，按原生 movement_speed 属性、真实写入成功才报同步）把步速向施法者拉近，
+ *   本场景只用宝可梦目标，因此不触发那一支。命中后另起一个托管效果把持续小拍点跟到标记期满。
  */
 Smoke.scenario("entrainment", function (stage) {
     stage.fill([-6, -1, -6], [6, -1, 6], "minecraft:stone");
@@ -18,7 +19,7 @@ Smoke.scenario("entrainment", function (stage) {
     stage.until(1200, function () { return stage.hadMobEffect(target, "world_combat:status/entrainment"); }, function () {
         stage.expect(stage.casts("entrainment", caster) >= 1, "entrainment was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/entrainment"), "the entrainment status appeared on the chosen target");
-        stage.note("entrainment committed; the beat is a real homing projectile and only the chosen target's Ability is replaced with the caster's through the shared NativeModifiers ability layer", {
+        stage.note("entrainment committed; the beat is a real homing projectile and only the chosen target's Ability is replaced with the caster's through the shared NativeModifiers ability layer, anchored to the same mark carrier (a failed layer would have removed the mark). The persistent small-beat visual is a managed effect watching that carrier.", {
             casts: stage.casts("entrainment", caster),
             casterAlive: caster.alive(),
             targetAlive: target.alive()

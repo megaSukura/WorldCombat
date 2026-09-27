@@ -14,8 +14,10 @@ namespace PokemonSkills {
             if (!target.grounded || Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) < .04) return target;
             const access = CompanionBehavior.world(context), self = CompanionBehavior.source(context), from = CompanionBehavior.point(self.point);
             const heading = WorldGeometry.flatUnit(CompanionBehavior.point(target.point).minus(from));
-            const lead = CompanionBehavior.point(target.point).plus(WorldCombat.point(velocity[0] * 5, 0, velocity[2] * 5)).minus(heading.scale(.4));
-            const point = WorldGeometry.ground(access, lead);
+            // 提前量包含蛋的飞行与落地后的短滚，不再固定只算 5 刻。
+            const lead = CompanionBehavior.ai<number>(item, "lead", 8);
+            const aim = CompanionBehavior.point(target.point).plus(WorldCombat.point(velocity[0] * lead, 0, velocity[2] * lead)).minus(heading.scale(.4));
+            const point = WorldGeometry.ground(access, aim);
             if (point.minus(from).length() > item.data.range) return target;
             const choice = JSON.parse(JSON.stringify(target)); choice.ref = ""; choice.point = [point.x(), point.y(), point.z()]; return choice;
         },
@@ -49,6 +51,10 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.opportunist"), "挑站定的人", "boolean", {
             help: "开启：站着不动、没在跑的对手排得更前，离地的目标降到最后（原生 75 命中，打移动目标容易抡偏）；关闭则所有目标同价。"
+        }),
+        field(pathOf("ai.lead"), "移动目标提前量", "number", {
+            min: 0, max: 24, step: 1,
+            help: "对移动中的地面目标，往它去路前方预判这么多刻再落蛋；默认已算上蛋的飞行与落地后的短滚。越大越往远处拦，越小越贴着当前身位丢。"
         })
     ]);
 }

@@ -5,9 +5,15 @@
  * 为什么保持距离：这是一记**离手往返**——`ai.minGap`（默认 1.5）以内不再掷，让共享近战去接手，因为贴脸时
  *   骨头没有绕行的空间、第二次掠过的价值也小；落在 `capability.data.range` 之内的甜区时 priority 最高。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。
+ * 为什么看墙：骨头去程是一条固定折线，回程再扫一次；身前的墙会让它在半路碎失、白白花掉一趟，所以 priority
+ *   用一条只读的当刻视线探针「主人↔目标」判一次，被挡时降到 0，把机会让给共享接近近战。
  * 放完之后：骨头自己飞回来，交回共享交战计划；带着冷却时不会重复掷。
  */
 namespace PokemonSkills {
+    CompanionBehavior.registerFact("world_combat:move_bonemerang/sight", function (access, target) {
+        const self = access.observe(access.source()), body = access.observe(target);
+        return !!(self && body && access.clear(self.position(), body.position()));
+    });
     CompanionBehavior.registerUse("bonemerang", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -28,6 +34,7 @@ namespace PokemonSkills {
             if (gap > capability.data.range) return 0;
             const minGap = CompanionBehavior.ai<number>(capability, "minGap", 1.5);
             if (gap < minGap) return 8;
+            if (CompanionBehavior.fact<boolean>(context, "world_combat:move_bonemerang/sight", target) === false) return 0;
             return gap > capability.data.range * 0.45 ? 26 : 20;
         }
     });

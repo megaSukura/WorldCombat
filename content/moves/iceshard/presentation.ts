@@ -4,8 +4,8 @@
  * 一句话：冷气在手前收成一颗冰砾，随即沿直线高速甩出，拖着一条细冰碴尾；撞上谁就在接触处炸成一团冰屑、
  *   把那人裹上一层寒雾。砸到地形只炸起一撮雪尘，飞尽自然消散；不在落点铺冰、不留任何场地。
  * 色相家族：冰蓝一族（0xBFE8F8 主体、0xE8F8FF 高光、0x8FC8E0 暗冰、0xD8E8F0 雪雾白）。
- * 拍子：起 charge（结冰）→ 飞 fly（冰砾与冰碴尾）→ 击 shatter（冰屑爆开）／冻 chill → 方块/飞尽 dud。
- * 范围：fly 绑在飞行物本体上；shatter／chill 绑命中点，`data.scale` 是冰砾粗细，只用于这一记的尺度。
+ * 拍子：起 charge（结冰）→ 飞 fly（冰砾与冰碴尾）→ 击 shatter（接触点冰屑爆开）→ 冻 chill（余霜）。
+ * 范围：fly 绑在飞行物本体上；shatter 绑命中点；chill 是绑在真实 chill 载体上的持续余霜（时长由载体决定）。
  * 运动：冰砾沿自身运动（orient: velocity）直线飞行，冰碴反向拖尾；崩开时冰屑向外翻、雪雾向下沉。
  * 数：fly 与 shatter 的冰碴量绑定 `data.splinters`（速度与等级换算），亮暗绑定 `data.intensity`（冰砾威力换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -84,31 +84,28 @@ const IceshardDefinition: ParticleDefinition = {
                     gravity: 0.07, drag: 0.9, spin: 14,
                     lifetime: [8, 15], size: [0.18, 0.03], sizeMode: "index",
                     color: 0xBFE8F8, alpha: [0.9, 0], light: "full", maxParticles: 70
-                },
-                {
-                    name: "shatter_ring", bind: "point", fit: "none", offset: [0, 0.5, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: 0.3 },
-                    direction: "outward", speed: [0.08, 0.24],
-                    lifetime: [8, 15], size: [0.28, 0.6],
-                    color: 0xE8F8FF, alpha: [0.5, 0], light: "full", maxParticles: 6
                 }
             ]
         },
         chill: {
-            duration: 14,
-            exit: { stop: 5, drain: 12 },
+            duration: 0,
             emitters: [
                 {
                     name: "chill_frost", bind: "target", offset: [0, 0.5, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    burst: { count: 10, at: 0 },
-                    shape: { kind: "sphere", radius: 0.28 },
-                    direction: "outward", speed: [0.02, 0.1],
-                    gravity: 0.04, drag: 0.94,
-                    lifetime: [8, 14], size: [0.12, 0.03],
-                    color: 0xD8E8F0, alpha: [0.5, 0], light: "world", maxParticles: 22
+                    rate: 4, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "inward", speed: [0.01, 0.05],
+                    gravity: 0.03, drag: 0.94,
+                    lifetime: [10, 16], size: [0.1, 0.03],
+                    color: 0xD8E8F0, alpha: [0.55, 0], light: "world", maxParticles: 22
+                },
+                {
+                    name: "chill_crystals", bind: "target", offset: [0, 0.45, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    rate: 2, shape: { kind: "sphere", radius: 0.26 },
+                    direction: "down", speed: [0.0, 0.02], spin: 8,
+                    lifetime: [10, 18], size: [0.12, 0.03],
+                    color: 0xBFE8F8, alpha: [0.6, 0], light: "full", maxParticles: 14
                 }
             ]
         },

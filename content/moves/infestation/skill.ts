@@ -76,7 +76,7 @@ namespace PokemonSkills {
         defaults: { ai: { maxChase: 14, leaveStation: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("infestation", "collisionRadius", pokemon) * 1.4, geometry: "line", style: "swarm", label: "死缠烂打" };
+            return { radius: p("infestation", "collisionRadius", pokemon), geometry: "line", style: "swarm", label: "死缠烂打" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["infestation"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
@@ -88,7 +88,8 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:move_infestation:windup", infestationScene, 1, action.origin(), JSON.stringify({ moment: "windup" }));
+            const charge = Math.max(1, Math.round(p("infestation", "charge", action)));
+            action.present("world_combat:move_infestation:windup", infestationScene, 1, action.origin(), JSON.stringify({ moment: "windup", charge: charge }));
             return prepare;
         },
         execute: function (action, move, config, done) {

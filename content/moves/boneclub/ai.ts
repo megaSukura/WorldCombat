@@ -14,14 +14,23 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 8);
     }
 
-    /** 目标近旁（2.5 格内）还挤着几个别的敌人；横扫式据此刻画出一次能兜住几个。 */
-    function boneclubCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 目标方向、真实扫扇内的其他敌人数量；用本招自己的 reach 与 arcDegrees，而不是目标周围固定 2.5 球。 */
+    function boneclubCrowd(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
+        const actor = world.actor(self.ref);
+        if (actor === null) return 0;
+        const reach = PokemonSkills.p("boneclub", "reach", { world: world, actor: actor });
+        const arc = PokemonSkills.p("boneclub", "arcDegrees", { world: world, actor: actor });
+        const from = CompanionBehavior.point(self.point), to = CompanionBehavior.point(target.point);
+        const region = WorldGeometry.sector(from, WorldGeometry.flatUnit(to.minus(from), WorldCombat.point(0, 0, 1)), reach, arc);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 2.5) count++;
+            const point = CompanionBehavior.point(other.point);
+            if (!region.contains(point) || !world.clear(from, point)) continue;
+            count++;
         }
         return count;
     }
@@ -41,7 +50,7 @@ namespace PokemonSkills {
             if (!target || !boneclubWants(context, capability, target)) return 0;
             var distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             var sweep = !!(capability.data.config && capability.data.config.sweep === true);
-            var crowd = boneclubCrowd(context, target);
+            var crowd = boneclubCrowd(context, capability, target);
             // 横扫式看并肩的敌人：挤着几个就值得抡一道弧；直刺式看距离：还在近身之外够得到就抢先手。
             if (sweep && crowd >= 1) return 42;
             if (CompanionBehavior.ai<boolean>(capability, "spacing", true) && distance >= 2.0 && distance <= capability.data.range) return 40;

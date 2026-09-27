@@ -7,8 +7,8 @@
  * 两幕：
  *   起（windup，提交前）：低身收势，把气从四周收进拳里；收得越久越亮（present brace）。同时把这次聚气的
  *       实例登记下来——聚气期间任何外来伤害都会打断它。
- *   击（execute）：聚满后沿瞄准方向短促踏进，撞上首个敌人即按 `punch` 结算接触+拳伤害并顶开；一路撞空则
- *       收势落空（whiff）。
+ *   击（execute）：聚满后沿瞄准方向短促踏进，一枚显式拳从聚气位置随身体送出；撞上首个敌人即按 `punch` 结算
+ *       接触+拳伤害并顶开，原生确认伤害后才报命中成功，被拒绝时只留「被挡下」的回执；一路撞空则收势落空（whiff）。
  *
  * 与同族分开：双倍奉还/以牙还牙吃的是「被打过」，真气拳吃的是「没被打到」；只有它把胜负押在一段
  * 看得见、可被打断的长收势上。畏缩打不断收势（`interruptible: false`），伤害可以。
@@ -48,7 +48,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const world = action.sense(), self = action.actor();
-            focuspunchGatherStart(self, action.id(), world.tick());
+            focuspunchGatherStart(self, action.id(), world.tick(), prepare);
             const body = world.observe(self);
             const scale = body === null ? 1 : body.height() / 1.4;
             action.present("focuspunch:brace", focuspunchScene, 1, action.origin(),
@@ -71,6 +71,13 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.firepunch.actor");
             WorldFeedback.emit(world, focuspunchScene, 1, action.origin(),
                 { moment: "release", scale: radius / 0.5, count: count }, 24);
+            // 显式拳从聚气位置随身体送出：一次整段，客户端按真实起点/终点插值拳头前伸再收回。
+            const stance = world.observe(self), me = stance ? stance.position() : action.origin();
+            const front = me.plus(direction.scale(length));
+            const lungeTicks = Math.max(4, Math.ceil(length / Math.max(0.1, step)));
+            WorldFeedback.emit(world, focuspunchFistScene, 1, front,
+                { moment: "thrust", from: [me.x(), me.y() + 0.2, me.z()], at: [front.x(), front.y(), front.z()],
+                    start: world.tick(), dur: lungeTicks }, lungeTicks + 12);
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -89,16 +96,22 @@ namespace PokemonSkills {
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const landed = impact(current, hit, focuspunchId, power,
                             { damage: damageSpec(focuspunchId, "punch"), contact: true, punch: true });
+                        const away = hit.position().minus(here);
                         if (landed) {
-                            const away = hit.position().minus(here);
                             if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
+                            WorldFeedback.emit(scope, focuspunchScene, 1, hit.position(),
+                                { moment: "strike", target: String(victim.ref()), count: count, scale: radius / 0.5,
+                                    power: Math.round(power * 10) / 10 }, 30);
+                            scope.sound("cobblemon:impact.fighting", hit.position(), 16, "{}");
+                            WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), focuspunchHitText,
+                                [Math.round(power)], 26);
+                        } else {
+                            // 原生拒绝这次伤害：不报重击成功，只留一枚被挡下的回执，位移同样不提示。
+                            WorldFeedback.emit(scope, focuspunchScene, 1, hit.position(),
+                                { moment: "resist", target: String(victim.ref()), scale: radius / 0.5 }, 24);
+                            scope.sound("minecraft:entity.player.attack.weak", hit.position(), 12, "{}");
+                            WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), focuspunchResistText, [], 22);
                         }
-                        WorldFeedback.emit(scope, focuspunchScene, 1, hit.position(),
-                            { moment: "strike", target: String(victim.ref()), count: count, scale: radius / 0.5,
-                                power: Math.round(power * 10) / 10 }, 30);
-                        scope.sound("cobblemon:impact.fighting", hit.position(), 16, "{}");
-                        WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), focuspunchHitText,
-                            [Math.round(power)], 26);
                     }
                     done(current);
                     return;

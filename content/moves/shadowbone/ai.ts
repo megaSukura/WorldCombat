@@ -2,8 +2,9 @@
  * 暗影之骨 / shadowbone 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
- * `reach` 直接取招式射程，所以它会在中远距离先手出手；`ai.spookFirst`（默认开）在目标还没被慑住时抬高优先级——
- * 先用远程一记挂上慑防；目标已经带着破防身份就把优先级降下来。贴脸时优先让近身招式处理，不抢快拳。
+ * `reach` 直接取招式射程，所以它会在中远距离先手出手；`ai.spookFirst`（默认开）按目标的**当前防御等级**
+ *   判断这一记还能不能继续压防：还能再降一级就抬高优先级；已经掉到底，或强化被清掉而只剩旧标记，都不被旧标记
+ *   误导，降下来当普通远程攻击。贴脸时优先让近身招式处理，不抢快拳。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("shadowbone", {
@@ -25,7 +26,15 @@ namespace PokemonSkills {
             if (distance > capability.data.range) return 0;
             const spook = CompanionBehavior.ai<boolean>(capability, "spookFirst", true);
             if (!spook) return 22;
-            if (CompanionBehavior.status(context, target, "guardbroken")) return 10;
+            // 本次实际收益：还能把防御再压低几级（已是 -6 就没收益），不看会过期的身份标记。
+            let grade = 1;
+            try {
+                grade = Math.max(1, Math.round(PokemonSkills.p("shadowbone", "rattleStages",
+                    { world: CompanionBehavior.world(context), actor: CompanionBehavior.world(context).source(),
+                        skill: PokemonSkills.skills["shadowbone"], detail: { values: capability.data.config || {} } })));
+            } catch (error) { }
+            const gain = Math.max(0, Math.min(grade, 6 + CompanionBehavior.stage(context, target, "def")));
+            if (gain <= 0) return 10;
             // 远程一记在中远处最值：贴脸时先让近身招式处理。
             return distance > 3 ? 32 : 18;
         }
@@ -37,7 +46,7 @@ namespace PokemonSkills {
             help: "超过这个距离就不掷骨，先走近。越大越会在更远处先手。"
         }),
         field(pathOf("ai.spookFirst"), "先手慑防", "boolean", {
-            help: "开启：优先对还没带破防身份的目标掷骨，先挂上慑防；关闭：当普通远程攻击排序。"
+            help: "开启：按目标当前防御等级判断——这一记还能再压一级时才优先掷骨；已经掉到底或强化被清掉就降权当普通远程攻击。关闭：一律当普通远程攻击排序。"
         })
     ]);
 }

@@ -3,8 +3,8 @@
  *
  * 一句话：施法者蹲身、身周静电噼啪 → 带着一路黄白电花冲出去、电花随冲程变密 → 撞上时炸开一圈电光、
  * 目标身上噼啪留一小段 → 电沿一条电弧跳到旁边的人 → 被电懵的人头上晃星。
- * 色相家族：电黄与近白（electricity_yellow / electricity_white / impact_electric / paralysis_spark）为主体，
- *   青白只在电弧那一拍进入。
+ * 色相家族：电黄与近白（electricity_yellow / electricity_white / impact_electric）为主体，
+ *   青白只在电弧那一拍进入；目标身上的残留电花也用纯电贴图，不借麻痹贴图暗示麻痹状态。
  * 拍子：起 windup（蹲身）→ 冲 start/charge（带电梯口）→ 放 discharge（炸开）→ 跳 arc（电弧）→ 懵 flinch。
  * 范围：charge 沿冲刺逐刻铺开；discharge 在接触点炸一圈，圈内点数按 `data.sparks`（冲程蓄电派生）与强度决定。
  * 运动：charge 的电花朝向 `orient: velocity` 沿冲刺方向；arc 沿机制给的 path 画出电从命中点到第二人的走线。
@@ -149,7 +149,7 @@ const ZingZapDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "crackle", bind: "target", offset: [0, 0, 0], height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     rate: { data: "sparks", fallback: 10 }, shape: { kind: "sphere", radius: 0.42 },
                     direction: "outward", speed: [0.02, 0.1], spread: 30,
                     lifetime: [8, 16], size: [0.08, 0.01],

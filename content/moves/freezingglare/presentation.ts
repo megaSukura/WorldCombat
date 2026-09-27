@@ -5,8 +5,9 @@
  *   下一个敌人，一路在敌人之间传递；每个被盯到的人身上炸开一圈精神冲击与霜，真的被冻住的人才罩上一层冰壳。
  * 色相家族：念力紫 0xB48CE8 与近白 0xF0E6FF 为主，冰冻的冷青 0x9FE0FF 只在冻结相关的层出现。
  * 层次：凝神（focus）→ 锁定（mark）→ 视线链（glare）→ 命中（impact）／冻结（frozen）／被挡（blocked）。
- * 范围：glare 用 `data.path`（施法者 + 每一次跳跃的落点）以 polyline 画出服务端结算用的同一串顶点，
- *   线连到谁就是谁被点到；视线跳空或被挡就停在最后一个真实跳点。frozen 只在服务端确认冻住时出现。
+ * 范围：glare 用 `data.path`（施法者身体中心 + 每一次跳跃的真实落点）以 polyline 画出服务端结算用的同一串顶点，
+ *   不做额外世界轴抬高，线连到谁就是谁被点到；视线跳空或被挡就停在最后一个真实跳点。`data.hits` 是真正
+ *   吃到伤害的人数，`data.chains` 是线抵达的人数。frozen 只在服务端确认这一跳新冻住时才出现。
  * 运动：视线粒子沿 path 高速铺开并在每个落点向内收束，落点处的精神环向外扩散；被挡时在施法者身前打旋散去。
  * 数：`data.rate`（首目标威力派生）决定视线链的密度，`data.impactCount`（威力派生）决定命中冲击量，
  *   `data.chains` 决定画面的跳数，`data.jump` 标出这一击是第几跳、后续跳数按 `data.scale` 收小。
@@ -64,7 +65,7 @@ const FreezingglareDefinition: ParticleDefinition = {
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "sight_line", bind: "path", offset: [0, 0.9, 0], fit: "none",
+                    name: "sight_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/moves/psychicsend",
                     shape: { kind: "polyline" }, positionJitter: [0.12, 0.12, 0.12],
                     rate: { data: "rate", fallback: 160 }, direction: "shape", speed: [0.02, 0.08], spin: 60,
@@ -72,7 +73,7 @@ const FreezingglareDefinition: ParticleDefinition = {
                     color: 0xF0E6FF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 240
                 },
                 {
-                    name: "sight_aura", bind: "path", offset: [0, 0.9, 0], fit: "none",
+                    name: "sight_aura", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
                     shape: { kind: "polyline" }, positionJitter: [0.16, 0.16, 0.16],
                     rate: { data: "rate", fallback: 160 }, direction: "shape", speed: [0.04, 0.14], spin: 80,
@@ -80,7 +81,7 @@ const FreezingglareDefinition: ParticleDefinition = {
                     color: 0xB48CE8, alpha: [0.6, 0], light: "full", maxParticles: 220
                 },
                 {
-                    name: "frost_line", bind: "path", offset: [0, 0.9, 0], fit: "none",
+                    name: "frost_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
                     shape: { kind: "polyline" }, positionJitter: [0.14, 0.14, 0.14],
                     rate: { data: "rate", fallback: 160 }, direction: "shape", speed: [0.0, 0.06], gravity: 0.006, drag: 0.94,

@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.drumbeating.summary": "每拍鼓点把根头沿真实地面逐段送出，拍起时固定那一拍的落点；抵达才破土结算。末拍实际命中后缠脚降速，断地会截停当前根路。",
-  "worldcombat.skill.drumbeating.description.0": "共 %3$s 拍，两拍间隔 %4$s；前拍主伤 %1$s、末拍主伤 %2$s。路径上的推进段只负责行程，不另加伤害。",
+  "worldcombat.skill.drumbeating.description.0": "共 %3$s 拍，每拍根头抵达后才停 %4$s 再起下一拍，越远整段连奏越久；前拍主伤 %1$s、末拍主伤 %2$s。路径上的推进段只负责行程，不另加伤害。",
   "worldcombat.skill.drumbeating.description.1": "根头最远走 %1$s 格，每刻前进 %2$s 格，到达后作用半径 %3$s 格，每拍最多3敌。实体目标每拍重新取位置，点选位置固定。",
   "worldcombat.skill.drumbeating.description.2": "末拍命中使速度下降 %1$s 级，缠脚身份维持 %2$s，其中短束为 %3$s；%4$s 道短根纹显示真实接触，地面不替换。",
   "worldcombat.skill.drumbeating.deep.on": "深根式：根留得更久、多压一级速度、破土更宽，但每拍更轻、冷却更久。",

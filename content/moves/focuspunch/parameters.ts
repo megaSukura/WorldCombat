@@ -26,17 +26,19 @@
 namespace PokemonSkills {
     export const focuspunchId = "focuspunch";
     export const focuspunchScene = "world_combat:move_focuspunch";
+    export const focuspunchFistScene = "world_combat:move_focuspunch_fist";
     export const focuspunchBraceText = "world_combat.move.focuspunch.text.brace";
     export const focuspunchHitText = "world_combat.move.focuspunch.text.hit";
     export const focuspunchBrokenText = "world_combat.move.focuspunch.text.broken";
     export const focuspunchWhiffText = "world_combat.move.focuspunch.text.whiff";
+    export const focuspunchResistText = "world_combat.move.focuspunch.text.resist";
 
-    /** 一次聚气的实例与开始时刻；按施法者保存，命中施法者的外来伤害按它打断。 */
-    export interface FocuspunchGather { instance: number; tick: number; }
+    /** 一次聚气的实例、开始时刻与总时长；按施法者保存，命中施法者的外来伤害按它打断。 */
+    export interface FocuspunchGather { instance: number; tick: number; total: number; }
     export var focuspunchGathers: { [ref: string]: FocuspunchGather } = Object.create(null);
 
-    export function focuspunchGatherStart(actor: CombatActor, instance: number, tick: number): void {
-        focuspunchGathers[String(actor.ref())] = { instance: instance, tick: tick };
+    export function focuspunchGatherStart(actor: CombatActor, instance: number, tick: number, total: number): void {
+        focuspunchGathers[String(actor.ref())] = { instance: instance, tick: tick, total: Math.max(1, Math.round(total)) };
     }
     export function focuspunchGatherEnd(actor: CombatActor): void { delete focuspunchGathers[String(actor.ref())]; }
     export function focuspunchGathering(actor: CombatActor): FocuspunchGather | null {
@@ -114,7 +116,8 @@ namespace PokemonSkills {
         { key: "growth.1", values: ["tier.1.level", "tier.1.punch", "tier.1.reach"] }
     ]);
 
-    // 聚气期间命中施法者的外来伤害打破这一拳：按实例中断，不花 PP、不进冷却，只留一声「真气散了」。
+    // 聚气期间命中施法者的外来伤害打破这一拳：只认「敌伤/环境伤」这类实际伤害（actual > 0），
+    // 自己打自己不算；按实例中断，不花 PP、不进冷却，只留一声「真气散了」。
     WorldCombat.on("world_combat:focuspunch/break", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
         var data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
@@ -125,11 +128,20 @@ namespace PokemonSkills {
         var record = focuspunchGathering(victim);
         if (record === null) return;
         if (world.tick() - record.tick > 240) { focuspunchGatherEnd(victim); return; }
+        // 聚满的同刻：收势已经结束，这一拳不再散，只清账。
+        if (world.tick() - record.tick >= record.total) { focuspunchGatherEnd(victim); return; }
         var body = world.observe(victim);
         var ended = world.interrupt(victim, record.instance, "focus-broken");
         focuspunchGatherEnd(victim);
         if (!ended || body === null) return;
         WorldFeedback.emit(world, focuspunchScene, 1, body.position(), { moment: "broken", target: String(victim.ref()) }, 26);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), focuspunchBrokenText, [], 26);
+    });
+    // 动作因任何原因结束（含其它取消、目标失效、死亡）时按实例清账，聚气记录不遗留。
+    WorldCombat.on("world_combat:focuspunch/ended", "world_combat:action_ended", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data())), actor = event.actor();
+        if (actor === null) return;
+        var record = focuspunchGathering(actor);
+        if (record !== null && record.instance === Number(data.instance)) focuspunchGatherEnd(actor);
     });
 }

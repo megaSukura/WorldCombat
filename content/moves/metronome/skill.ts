@@ -18,27 +18,74 @@ namespace PokemonSkills {
         }
         return metronomePoolCache = pool;
     }
-    function metronomeEnemy(action: CombatAction, origin: CombatPoint, radius: number): { actor: CombatActor; body: CombatObservation } | null {
-        var world = action.sense(), found = world.query(origin, Math.min(32, Math.max(1, radius)), false);
-        var best: { actor: CombatActor; body: CombatObservation } | null = null, distance = Infinity;
+    /** A live body chosen as the borrowed move's recipient or aim point. */
+    interface MetronomeTarget { actor: CombatActor; body: CombatObservation; }
+    /** The drawn move's own resolved range for this individual (configuration and level), or its design range. */
+    function metronomeRange(world: CombatWorld, actor: CombatActor, id: string): number {
+        var skill = skills[id]; if (!skill) return 0;
+        if (!skill.resolve) return skill.range;
+        var runtime = skill.resolve(CobblemonCombat.pokemon(actor), config(world, actor, id), world, actor);
+        return runtime.range === undefined ? skill.range : runtime.range;
+    }
+    /** Nearest non-friendly body actually in sight within reach; a wall does not discard the whole candidate. */
+    function metronomeEnemy(world: CombatWorld, origin: CombatPoint, maxDistance: number): MetronomeTarget | null {
+        var found = world.query(origin, Math.min(32, Math.max(1, maxDistance)), false);
+        var best: MetronomeTarget | null = null, distance = Infinity;
         for (var i = 0; i < found.length; i++) {
             var actor = found[i];
             if (world.friendly(actor) || !world.valid(actor)) continue;
-            var body = world.observe(actor);
-            if (!body) continue;
-            var current = body.position().minus(origin).length();
-            if (current < distance) { distance = current; best = { actor: actor, body: body }; }
+            var body = world.observe(actor); if (!body) continue;
+            var point = body.position(), current = point.minus(origin).length();
+            if (current > maxDistance || current >= distance || !world.clear(origin, point)) continue;
+            distance = current; best = { actor: actor, body: body };
         }
         return best;
     }
+    /** The friendly body (the waggler included) most in need of the drawn move, reachable in sight. */
+    function metronomeFriend(world: CombatWorld, origin: CombatPoint, selfRef: string, maxDistance: number): MetronomeTarget | null {
+        var found = world.query(origin, Math.min(32, Math.max(1, maxDistance)), false);
+        var best: MetronomeTarget | null = null, need = Infinity;
+        for (var i = 0; i < found.length; i++) {
+            var actor = found[i];
+            if (!world.valid(actor) || !world.friendly(actor)) continue;
+            var body = world.observe(actor); if (!body) continue;
+            var point = body.position();
+            if (point.minus(origin).length() > maxDistance) continue;
+            if (String(actor.ref()) !== selfRef && !world.clear(origin, point)) continue;
+            var ratio = body.health() / Math.max(1, body.maxHealth());
+            if (ratio < need) { need = ratio; best = { actor: actor, body: body }; }
+        }
+        return best;
+    }
+    /** Forward point on the waggler's heading for a drawn placement/aim move; no enemy is required for it. */
+    function metronomeAimPoint(action: CombatAction, reach: number): CombatPoint {
+        var heading = WorldGeometry.flatUnit(action.direction(), action.targetPosition().minus(action.origin()));
+        return action.origin().plus(heading.scale(reach));
+    }
+    /** A real spot for a drawn point/aim move: toward the visible foe, clamped to the drawn move's own reach, else the waggler's heading. */
+    function metronomeIntent(action: CombatAction, target: MetronomeTarget | null, reach: number): CombatPoint {
+        if (!target) return metronomeAimPoint(action, reach);
+        var delta = target.body.position().minus(action.origin()), length = delta.length();
+        var direction = length > 0.001 ? delta.unit() : action.direction();
+        return action.origin().plus(direction.scale(Math.min(reach, Math.max(0.5, length))));
+    }
+    /** Map a drawn move by its kind: self on the waggler, friend on the most wounded partner, enemy on a visible foe, point/aim on a visible foe or the waggler's heading. */
     function metronomeCall(action: CombatAction, id: string): NativeLoadout.CallOptions | null {
         var skill = skills[id]; if (!skill) return null;
+        var world = action.sense(), origin = action.origin(), selfRef = String(action.actor().ref());
         var input: NativeLoadout.CallOptions["input"] | null;
-        if (skill.kind === "self" || skill.kind === "friend") input = NativeLoadout.inputFor(action, id, action.actor());
-        else {
-            var found = metronomeEnemy(action, action.origin(), action.range() + 2);
-            if (!found) return null;
-            input = NativeLoadout.inputFor(action, id, found.actor, found.body.position());
+        if (skill.kind === "self") input = NativeLoadout.inputFor(action, id, action.actor());
+        else if (skill.kind === "friend") {
+            var friend = metronomeFriend(world, origin, selfRef, action.range());
+            input = NativeLoadout.inputFor(action, id, friend ? friend.actor : action.actor());
+        } else if (skill.kind === "enemy") {
+            var foe = metronomeEnemy(world, origin, action.range());
+            if (!foe) return null;
+            input = NativeLoadout.inputFor(action, id, foe.actor, foe.body.position());
+        } else {
+            var target = metronomeEnemy(world, origin, action.range());
+            var reach = Math.min(action.range(), metronomeRange(world, action.actor(), id));
+            input = NativeLoadout.inputFor(action, id, null, metronomeIntent(action, target, reach));
         }
         return input ? { eligibility: "caller", input: input } : null;
     }
@@ -71,15 +118,16 @@ namespace PokemonSkills {
             };
         },
         run: function (action, move, config) {
-            var hues = p("metronome", "hues", action);
-            action.present("metronome:wag", "world_combat:move_metronome", 1, action.origin(), JSON.stringify({ moment: "wag", hues: hues }));
-            action.after(p("metronome", "wag", action), function (current) {
+            var hues = p("metronome", "hues", action), wag = p("metronome", "wag", action);
+            action.present("metronome:wag", "world_combat:move_metronome", 1, action.origin(), JSON.stringify({ moment: "wag", hues: hues, wag: wag }));
+            action.after(wag, function (current) {
                 var ids = metronomePool();
                 if (!ids.length) { current.reject("no-move"); return; }
                 var bias = config && typeof config.bias === "string" ? String(config.bias) : "none";
                 var preferred = ids;
                 if (bias === "near" || bias === "far") preferred = ids.filter(function (id) {
-                    var range = skills[id] ? skills[id].range : 0;
+                    // The individual's own resolved range, not the static design value: the bias bucket matches what the draw can actually reach.
+                    var range = metronomeRange(current.sense(), current.actor(), id);
                     return bias === "near" ? range <= 6 : range >= 10;
                 });
                 var pick = function (candidate: string) { return metronomeCall(current, candidate); };

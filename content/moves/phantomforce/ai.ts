@@ -4,8 +4,8 @@
  * 这招的 AI 围绕「穿过守护」：普通目标它只是一记偏重的幽灵劈击，真正值得出手的是撑了罩的对手。
  *   - 何时考虑：目标看得见、活着、非友方，在 `ai.maxChase` 内（或它就是焦点）；普通属性打不动（幽灵免疫），直接跳过。
  *   - 对谁出手：优先身上带着守护（任何 GuardEffects 池）的目标——现身那一刻能把它整层震碎；其余按普通近战排序。
- *   - 落点：用 `CompanionBehavior.world(context).freeSpace` 探一下目标身后那一步放不放得下自己；放不下就降权，不硬潜。
- *   - 出手前：由共用任务走到 reach；消失一拍期间它打不着也看不出来，落点仍然贴着目标。
+ *   - 落点：同时用 `freeSpace` 与脚下支撑探一下目标身后那一步放不放得下自己；放不下或悬空就降权，不硬潜。
+ *   - 出手前：由共用任务走到 reach；消失一拍的影罩只挡敌对来袭攻击，落点仍然贴着目标。
  *   - 够不到：由共用任务靠近；驻守且没开 leaveStation 时不硬追。
  *   - 放完之后：目标守护被震碎、这一刀落下，交回共享交战计划。
  *   - 什么时候紧急：自身生命低于 `ai.escapeBelow` 且目标在射程内时 priority 提到 60——消失既是躲点名，
@@ -27,14 +27,24 @@ namespace CompanionBehavior {
         const value = CompanionBehavior.fact<number>(context, "world_combat:move_phantomforce/guards", target);
         return typeof value === "number" ? value : 0;
     }
-    /** 现身落点探针：目标身后约一步处要真的放得下这具身体，否则不如不潜。 */
+    /** 目标身后落点脚下要有一格实心地面，避免把一次潜袭送到悬崖外。 */
+    function phantomForceSupport(access: CombatWorld, at: number[]): boolean {
+        const block = access.block(point([at[0], Math.floor(at[1] - 0.5), at[2]]));
+        if (block === null) return false;
+        const id = String(block.id());
+        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
+            && id !== "minecraft:water" && id !== "minecraft:lava";
+    }
+    /** 现身落点探针：目标身后约一步处要真的放得下这具身体、且脚下有支撑，否则不如不潜。 */
     function phantomForceLanding(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         const access = world(context), self = source(context);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1e-6) return true;
-        const behind = point([target.point[0] + dx / length * 1.2, target.point[1], target.point[2] + dz / length * 1.2]);
-        try { return access.freeSpace(behind, self.width || 0.9, self.height || 1.4); }
+        const bx = target.point[0] + dx / length * 1.2, bz = target.point[2] + dz / length * 1.2;
+        const feetY = target.point[1] - (self.height || 1.4) / 2;
+        if (!phantomForceSupport(access, [bx, feetY, bz])) return false;
+        try { return access.freeSpace(point([bx, target.point[1], bz]), self.width || 0.9, self.height || 1.4); }
         catch (error) { return true; }
     }
 

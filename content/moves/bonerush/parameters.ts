@@ -22,7 +22,6 @@
  *   lift       挑起：物攻决定冲击把目标顶起多高。
  *   boneRadius 骨判定：身高决定一根骨头的碰撞大小。
  *   gap        击间隔：速度决定夯得多密。
- *   accuracy   每击命中率：速度提高它（原生 90% 起）。
  *   dust       扬尘数量：物攻换算的碎石量，直接驱动发射数量。
  *   tempo／settle／recharge：速度与等级定起手、收招与冷却。
  *
@@ -130,10 +129,6 @@ namespace PokemonSkills {
         gap: seconds(
             F.base(5).minus(F.stat("speed").minus(55).times(0.02).clamp(-1, 1.8)).clamp(3, 8).round(0),
             "间隔", "两击之间隔多久；速度越快夯得越密。"),
-        /** 每击命中率：0.9 + 速度偏移[−0.03,0.05]；夹 0.75..0.98。 */
-        accuracy: percent(
-            F.base(0.9).plus(F.stat("speed").minus(55).times(0.001).clamp(-0.03, 0.05)).clamp(0.75, 0.98).round(3),
-            "每击命中率", "每一击独立掷的命中率（原生 90% 起）；速度提高它。目标在骨头落地前走开，这一击就砸在空地上。"),
         /** 扬尘数量：14 + 物攻偏移[−3,14]；夹 10..34。 */
         dust: formula(
             F.base(14).plus(F.stat("attack").minus(55).times(0.12).clamp(-3, 14)).clamp(10, 34).round(0),

@@ -5,28 +5,16 @@
  * 气流由近及远逐步铺满整片锥形，先被扫到的目标先吃伤（impact），同一目标只吃一次 → 收尾留一缕雾气（linger）。
  *
  * 方向与遮挡：`kind: "aim"` 在提交时锁定一个方向，之后不追着目标转向；可以选择空地空喷。判定用的
- * `WorldGeometry.sector` 与表现用的 `polygon` 顶点是同一组扇形，玩家看到的锥面就是会被扫到的地；
+ * `WorldGeometry.sector` 与表现用的 sector/arc 形状读同一组刻刻推进的 span／arc，玩家看到的锥面就是会被扫到的地；
  * 每个候选目标还要通过 `world.clear` 的真实通视检查，墙后的敌人不会被扫到，前沿到哪、能不能打到都从画面读得出。
+ * 推进按**实际刻数**走：`breathTicks` 是真实总时长，每刻推进一段，`elapsed` 不再按 2 刻走。
+ * 表现由本次 execute 建立的 `WorldFeedback.actionScenes` 持有，每刻上传正在推进的前沿与新扫过的环带，结束即停。
  * 两幕：windup → breath（可带多个 impact）+ linger。提交后才触碰世界。
  */
 namespace PokemonSkills {
     const dragonbreathScene = "world_combat:move_dragonbreath";
     const dragonbreathHitText = "world_combat.move.dragonbreath.text.hit";
     const dragonbreathMissText = "world_combat.move.dragonbreath.text.miss";
-
-    /** 以施法者为顶点、朝方向张开 arc 度的扇面顶点；判定（sector）与表现（polygon）读同一份形状。 */
-    function dragonbreathCone(origin: CombatPoint, direction: CombatPoint, reach: number, arc: number): number[][] {
-        var forward = WorldCombat.point(direction.x(), 0, direction.z());
-        var heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        var base = Math.atan2(heading.z(), heading.x());
-        var half = (arc * Math.PI / 180) / 2, steps = 8;
-        var vertices: number[][] = [[origin.x(), origin.y() + 0.5, origin.z()]];
-        for (var i = 0; i <= steps; i++) {
-            var angle = base - half + 2 * half * (i / steps);
-            vertices.push([origin.x() + Math.cos(angle) * reach, origin.y() + 0.5, origin.z() + Math.sin(angle) * reach]);
-        }
-        return vertices;
-    }
 
     define({
         id: "dragonbreath",
@@ -69,7 +57,11 @@ namespace PokemonSkills {
             const ticks = Math.max(6, Math.round(p("dragonbreath", "breathTicks", action)));
             const limit = Math.max(1, Math.round(p("dragonbreath", "maxTargets", action)));
             const hitRefs: { [ref: string]: boolean } = {};
-            let hits = 0, elapsed = 0;
+            const flat = WorldGeometry.flatUnit(direction, action.direction());
+            const heading = [flat.x(), flat.y(), flat.z()];
+            // 整个吐息段由本次 execute 持有：每刻把正在推进的 span/arc 上传，收势时统一 stop／finish。
+            const scenes = WorldFeedback.actionScenes(dragonbreathScene, 1);
+            let hits = 0, elapsed = 0, previous = 0;
 
             sound(action, "cobblemon:move.dragonclaw.actor");
             function finish(current: CombatAction): void {
@@ -77,12 +69,13 @@ namespace PokemonSkills {
                 const body = scope.observe(current.actor());
                 if (body !== null)
                     WorldFeedback.emit(scope, dragonbreathScene, 1, body.position(), { moment: "linger", hits: hits }, 24);
-                WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.4, 0)), hits > 0 ? dragonbreathHitText : dragonbreathMissText, hits > 0 ? [hits] : [], 28);
-                done(current);
+                WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.4, 0)), hits > 0 ? dragonbreathHitText : dragonbreathMissText, hits > 0 ? [hits] : [], 28);
+                scenes.finish(current, done);
             }
             function advance(current: CombatAction): void {
                 const scope = current.world();
                 const here = current.origin();
+                // 每刻按真实刻数推进一段：ticks 刻走完整条吐息，声明时长与实际时长一致。
                 const grow = Math.min(1, (elapsed + 1) / ticks);
                 const span = Math.max(0.6, reach * grow);
                 const region = WorldGeometry.sector(here, direction, span, arc, { below: 2, above: 3 });
@@ -101,11 +94,14 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, dragonbreathScene, 1, facts.position(),
                         { moment: "impact", target: key, intensity: Math.max(0.5, Math.min(1.8, power / 60)) }, 26);
                 });
-                WorldFeedback.keep(scope, "world_combat:move_dragonbreath:cone", dragonbreathScene, 1, here,
-                    { moment: "breath", path: dragonbreathCone(here, direction, span, arc), reach: span, flow: Math.round(span * 22), scale: span / reach }, 14);
+                // 判定扇区与画出的前沿／新扫过环带来自同一组 span/arc：前沿到哪、哪才会被扫到。
+                scenes.show(current, "breath", here,
+                    { moment: "breath", direction: heading, reach: span, inner: Math.max(0, previous - 0.1), arc: arc,
+                        flow: Math.round(span * 22), scale: span / Math.max(1, reach) });
+                previous = span;
                 elapsed++;
                 if (elapsed >= ticks) { finish(current); return; }
-                current.after(2, function (next: CombatAction) { advance(next); });
+                current.after(1, function (next: CombatAction) { advance(next); });
             }
             advance(action);
         }

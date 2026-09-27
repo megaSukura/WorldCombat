@@ -3,8 +3,8 @@
  *
  * 什么局面有意义：共享的「伤者」感官挑出一个生命低于 ai.healBelow（默认 0.82）的自己或伙伴，且它在
  *   ai.maxChase（默认 12）以内。
- * 对谁出手：那个伤者；自己受伤也可以。水波以自身为心，所以伙伴必须被罩进半径。
- * 够不到怎么办：approachTarget 指向伤者，由共享任务把身体带进 radius 内再放（自己施放、先靠近伙伴）。
+ * 对谁出手：那个伤者；自己受伤也可以。水波以自身为心贴地铺开，所以伙伴必须被罩进半径、贴地，且水路上无遮挡。
+ * 够不到怎么办：approachTarget 指向伤者，由共享任务把身体带进半径内再放（自己施放、先靠近伙伴）。
  * 候选之间怎么排：伤者生命低于 0.35 时 priority 抬到 100，抢在共享交战次序前先救；其余 45。
  * 配置：surge 在参数层换「水足而慢」与「水细而快」；ai.healBelow / ai.maxChase 是救助阈值与愿意跑多远。
  */
@@ -24,7 +24,13 @@ namespace CompanionBehavior {
             if (!target) return false;
             const self = source(context);
             if (!target.friendly || target.health <= 0) return false;
-            if (String(target.ref) !== String(self.ref) && distance(self.point, target.point) > ai<number>(item, "maxChase", 12)) return false;
+            // 水波贴地推进：离地的伙伴不会入圈。
+            if (target.grounded === false) return false;
+            if (String(target.ref) !== String(self.ref)) {
+                if (distance(self.point, target.point) > ai<number>(item, "maxChase", 12)) return false;
+                // 水路上有墙或台阶挡着就够不到，改选别的伤者或先靠近。
+                if (!world(context).clear(point(self.point), point(target.point))) return false;
+            }
             return ratio(target) < ai<number>(item, "healBelow", 0.82);
         },
         accepts: function (_context, _item, target) { return target.friendly && target.health > 0; },

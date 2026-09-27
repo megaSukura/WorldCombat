@@ -5,10 +5,19 @@
  *   有交战需求时才准备凝神。
  * 什么时候最想出手：差距 ≥ ai.safeGap（默认 10）且 ≤ ai.maxChase（默认 18）时 priority 100 越过共享交战次序；
  *   生命低于一半时抬到 110——被打残之前先把特攻拉起来反打，正是最需要它的时候。
+ *   开窗距离随预计来袭强度上调：对手当前有效物攻相对自身最大生命越高，越要拉开（最多把安全距离翻倍），
+ *   免得刚入定就被一记重击打散。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
  * 放完之后：特攻 +3、身上挂着凝神窗口；窗口还在时不再重复凝神，交回共享交战计划。
  */
 namespace PokemonSkills {
+    /** 对手这次出手的预计强度：读它此刻的有效物攻；读不到按 0（不额外加码）。 */
+    function tailglowIncoming(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): number {
+        const stats = CompanionBehavior.combatStats(context, threat);
+        const atk = stats && stats.stats ? Number(stats.stats.atk) : NaN;
+        return isFinite(atk) && atk > 0 ? atk : 0;
+    }
+
     CompanionBehavior.registerUse("tailglow", {
         protocols: ["world_combat:fortify"],
         reach: function (context, capability) { return capability.data.range; },
@@ -17,9 +26,11 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (CompanionBehavior.status(context, self, "tailglow")) return false;
             if (!threat) return false;
+            // 预计来袭越强，越要拉开距离再开窗：需要距离随 对手有效物攻 / 自身最大生命 上调，最多翻倍。
             const gap = CompanionBehavior.distance(self.point, threat.point);
-            return gap >= CompanionBehavior.ai<number>(capability, "safeGap", 10)
-                && gap <= CompanionBehavior.ai<number>(capability, "maxChase", 18);
+            const need = CompanionBehavior.ai<number>(capability, "safeGap", 10)
+                * (1 + Math.min(1, tailglowIncoming(context, threat) / Math.max(1, self.maximum)));
+            return gap >= need && gap <= CompanionBehavior.ai<number>(capability, "maxChase", 18);
         },
         accepts: function (context, capability, target) {
             return target.ref === CompanionBehavior.source(context).ref;

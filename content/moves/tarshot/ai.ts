@@ -31,7 +31,10 @@ namespace CompanionBehavior {
                 if (equipped === null || equipped.pp() <= 0) continue;
                 const selected = NativeLoadout.selection(access, slot, equipped, actor);
                 const move = CobblemonCombat.moveTemplate(selected.id);
-                if (String(move.type()).toLowerCase() === "fire" && String(move.category()).toLowerCase() !== "status") return true;
+                if (String(move.type()).toLowerCase() !== "fire" || String(move.category()).toLowerCase() === "status") continue;
+                // 现在就能用的火招才算兑现方：被封锁/禁止、PP 已空的槽不抬高出手意愿。
+                if (NativeModifiers.restriction(access, actor, move) !== "") continue;
+                return true;
             }
         }
         return false;
@@ -40,7 +43,11 @@ namespace CompanionBehavior {
     function tarshotWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
+        // 驻守且不许离位时仍可原地泼：只有威胁超出泼洒距离、必须先走过去才放弃。
+        const stationed = (context.facts.intent === "hold" || context.facts.intent === "stay")
+            && !ai<boolean>(item, "leaveStation", false);
+        const reach = typeof item.data.range === "number" && item.data.range > 0 ? item.data.range : 9;
+        if (stationed && distance(self.point, threat.point) > reach) return false;
         if (ai<boolean>(item, "coatFirst", true) && status(context, threat, "tarshot")) return false;
         return context.facts.focus === threat.ref || distance(self.point, threat.point) <= ai<number>(item, "maxChase", 12);
     }

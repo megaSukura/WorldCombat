@@ -52,7 +52,7 @@ namespace PokemonSkills {
 
     addPreferences(zapcannonId, {}, [
         field(pathOf("quickload"), "速装式", "boolean", {
-            help: "开启：蓄力 ×0.6、弹速 ×1.3、转向 ×1.35、冷却 ×0.9，更容易在走位中打中，但威力 ×0.78、爆开范围 ×0.8、麻痹时长 ×0.85；关闭：满装，蓄得久、弹更重更慢、麻得更长。"
+            help: "开启：蓄力 ×0.6、弹速 ×1.3、冷却 ×0.9，更容易在走位中打中，但威力 ×0.78、冲击表现 ×0.8、麻痹时长 ×0.85；关闭：满装，蓄得久、弹更重更慢、麻得更长。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 3, max: 26, step: 1,

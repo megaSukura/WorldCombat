@@ -45,7 +45,7 @@ const MagicpowderDefinition: ParticleDefinition = {
                 {
                     name: "puff", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/powder",
-                    rate: 22, trail: { minDistance: 0.16 },
+                    rate: { data: "motes", fallback: 16 },
                     shape: { kind: "sphere", radius: 0.1 },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [8, 14], size: [0.12, 0.03], spin: 18,
@@ -54,7 +54,7 @@ const MagicpowderDefinition: ParticleDefinition = {
                 {
                     name: "trail_glint", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "motes", fallback: 10 }, trail: { minDistance: 0.32 },
+                    rate: 10, trail: { minDistance: 0.32 },
                     direction: "away", speed: [0.0, 0.04], spread: 20,
                     lifetime: [8, 16], size: [0.05, 0.01],
                     color: 0xFFF0FA, alpha: [0.6, 0], light: "full", maxParticles: 70
@@ -66,31 +66,53 @@ const MagicpowderDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 18 },
             emitters: [
                 {
-                    name: "burst", bind: "point", offset: [0, 0.5, 0],
+                    name: "burst", bind: "point", offset: [0, 0.5, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/powder",
                     burst: { count: { data: "motes", fallback: 18 }, interval: 2 },
-                    shape: { kind: "sphere", radius: { data: "cloud", fallback: 1.2 } },
+                    shape: { kind: "sphere", radius: { data: "radius", fallback: 0.4 } },
                     direction: "outward", speed: [0.05, 0.2], spread: 45, drag: 0.9, gravity: 0.008,
                     lifetime: [12, 22], size: [0.14, 0.04], spin: 16,
                     color: 0xE86CC8, alpha: [0.85, 0], light: "world", maxParticles: 100
                 },
                 {
-                    name: "glints", bind: "point", offset: [0, 0.5, 0], height: 0.6,
+                    name: "glints", bind: "point", offset: [0, 0.5, 0], height: 0.6, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     burst: { count: { data: "glints", fallback: 10 } },
-                    shape: { kind: "sphere", radius: { data: "cloud", fallback: 1.2 } },
+                    shape: { kind: "sphere", radius: { data: "radius", fallback: 0.4 } },
                     direction: "outward", speed: [0.06, 0.24],
                     lifetime: [10, 18], size: [0.09, 0.01],
                     color: 0xFFF0FA, alpha: [0.9, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "ring", bind: "point", offset: [0, 0.55, 0], fit: "none",
+                    name: "ring", bind: "point", offset: [0, 0.55, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
                     burst: { count: 1 },
-                    shape: { kind: "ring", radius: { data: "cloud", fallback: 1.2 } },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 0.4 } },
                     direction: "outward", speed: [0.04, 0.14],
                     lifetime: [10, 18], size: [0.24, 0.6], sizeMode: "index",
                     color: 0xE86CC8, alpha: [0.6, 0], light: "full", maxParticles: 8
+                }
+            ]
+        },
+        mark: {
+            // 改写期间体表持续挂着粉：由 carrier（属性层效果）拥有，净化或到期即收，不留残留。
+            exit: { drain: 24 },
+            emitters: [
+                {
+                    name: "film", bind: "target", offset: [0, 0.45, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/powder",
+                    rate: 3, shape: { kind: "sphere_surface", radius: 0.34 },
+                    direction: "up", speed: [0.0, 0.03], spin: 10,
+                    lifetime: [16, 28], size: [0.08, 0.02],
+                    color: 0xE86CC8, alpha: [0.5, 0], light: "world", maxParticles: 26
+                },
+                {
+                    name: "skin_glint", bind: "target", offset: [0, 0.55, 0], fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    rate: 2, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.01, 0.04],
+                    lifetime: [10, 18], size: [0.05, 0.01],
+                    color: 0xFFF0FA, alpha: [0.6, 0], light: "full", maxParticles: 18
                 }
             ]
         },

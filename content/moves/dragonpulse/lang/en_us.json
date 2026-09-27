@@ -5,7 +5,7 @@
   "worldcombat.skill.dragonpulse.use.2": "Chain form: run down the same line through the foes behind the first",
   "worldcombat.skill.dragonpulse.description.0": "The wavefront sweeps through enemies along its path, dealing one hit of about %1$s special damage to each target it catches; the wavefront is %2$s blocks thick.",
   "worldcombat.skill.dragonpulse.description.1": "The wave reaches %1$s blocks and advances %2$s blocks per tick.",
-  "worldcombat.skill.dragonpulse.chain.on": "Chain form: the wave gathers on the first foe it meets, dealing it one hit of about %1$s wavefront damage, then runs along the same line, catching up to %4$s more foes within a %3$s-block half-width band for special damage starting at about %2$s and fading each step (it travels no farther).",
+  "worldcombat.skill.dragonpulse.chain.on": "Chain form: the wave gathers on the first foe it meets, dealing it one hit of about %1$s wavefront damage, then sweeps forward segment by segment along the same real 3D line, catching up to %4$s more foes within a %3$s-block half-width for special damage starting at about %2$s and multiplied by 0.72 each step; a wall stops it at the real contact and it never pierces through.",
   "worldcombat.skill.dragonpulse.chain.off": "Pierce form: it passes through up to %1$s more foes on the line.",
   "worldcombat.skill.dragonpulse.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, cost %4$s PP, cooldown %5$s.",
   "worldcombat.skill.dragonpulse.growth.0": "From level %1$s the wavefront power rises to %2$s and the range to %3$s blocks.",

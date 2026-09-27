@@ -5,11 +5,11 @@
  *   踢中的那一下热纹沿腿散开、草绿冲击与火星上溅（攻击下降）→ 回身收脚时脚边扬起一小撮尘叶。
  * 色相家族：南国热浪的橙（0xE8B87A 主体、0xFFD08A 亮面）与草叶绿（0x9BE86A 细节），击点近白。
  * 拍子：沉 wind 0–6t ／ 踢 kick（低平）／ 中 hit ／ 收 retract ／ 空 miss。
- * 范围：kick／hit 绑施法者与目标；收脚后撤由服务端给的实际位移 `data.moved` 决定 retract 尘量。
+ * 范围：kick／hit 绑施法者与目标；收脚后撤由服务端按实际位移阈值换算的整数尘量 `data.motes` 决定 retract 发射。
  * 运动：wind 的火星与草叶向脚踝内收；kick 的火星沿低平方向扫出；hit 的热纹沿腿横向铺开、火星上溅；
- *   retract 的尘叶在脚下扬起——后撤多少就带起多少。
- * 数：`data.embers`（物攻与速度派生的火星数）驱动 wind／kick／hit／retract 发射量，`data.moved`（实际后撤格数）
- *   决定 retract 的尘量，`data.intensity`（威力 / 62）抬高密度。
+ *   retract 的尘叶在脚下扬起——实际后撤多少就带起多少。
+ * 数：`data.embers`（物攻与速度派生的火星数）驱动 wind／kick／hit／retract 发射量，`data.motes`（实际后撤
+ *   格数按阈值取整后的尘量）决定 retract 的尘量，`data.intensity`（威力 / 62）抬高密度。
  */
 const TropKickSceneDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -41,9 +41,9 @@ const TropKickSceneDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "arc", bind: "source", offset: [0, 0.2, 0], height: 0, orient: "heading",
+                    name: "arc", bind: "source", offset: [0, 0.16, 0], height: 0, orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 34, trail: { minDistance: 0.22 }, shape: { kind: "line", length: 0.7 },
+                    rate: 34, trail: { minDistance: 0.22 }, shape: { kind: "line", length: 0.8 },
                     direction: "shape", speed: [0.02, 0.1], spin: 16,
                     lifetime: [4, 9], size: [0.24, 0.07], sizeMode: "index",
                     color: 0xE8B87A, alpha: [0.75, 0], light: "full", maxParticles: 100
@@ -71,7 +71,7 @@ const TropKickSceneDefinition: ParticleDefinition = {
                     color: 0xffffff, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 70
                 },
                 {
-                    name: "heatline", bind: "target", offset: [0, 0.2, 0], height: 0, orient: "heading",
+                    name: "heatline", bind: "target", offset: [0, 0.2, 0], height: 0, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "embers", fallback: 16 }, interval: 2 }, shape: { kind: "line", length: 0.9 },
                     direction: "shape", speed: [0.06, 0.22], spread: 12,
@@ -95,7 +95,7 @@ const TropKickSceneDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "scuff", bind: "source", offset: [0, 0.12, 0], height: 0.05,
-                    burst: { count: { data: "moved", fallback: 1 }, interval: 1 },
+                    burst: { count: { data: "motes", fallback: 0 }, interval: 1 },
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     shape: { kind: "hemisphere", radius: 0.4 },
                     direction: "up", speed: [0.04, 0.16], gravity: 0.05,
@@ -104,7 +104,7 @@ const TropKickSceneDefinition: ParticleDefinition = {
                 },
                 {
                     name: "grit", bind: "source", offset: [0, 0.14, 0], height: 0.06,
-                    burst: { count: { data: "moved", fallback: 1 }, interval: 1 },
+                    burst: { count: { data: "motes", fallback: 0 }, interval: 1 },
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
                     shape: { kind: "hemisphere", radius: 0.4 },
                     direction: "up", speed: [0.04, 0.16], gravity: 0.05, spin: 18,

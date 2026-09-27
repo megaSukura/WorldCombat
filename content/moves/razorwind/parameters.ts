@@ -5,7 +5,8 @@
  *   critRatio 2（暴击率高出一档）。原生描述：「制造风之刃，于第２回合攻击对手，容易击中要害。」
  *
  * 翻译：把「蓄一回合、第二回合甩出风之刃」落成一记**蓄风成扇**——提交前站定把四周的气流拧成一把把风之刃，
- *   蓄得越久刃越多越亮；提交后一口气把整把扇子朝身前甩出去，覆盖一个扇形，被扫到的每个敌人各挨一记风刃。
+ *   蓄得越久刃越多越亮；提交后一口气把整把扇子朝身前甩出去，风刃面从身体边缘起、沿每条射线被实心墙截短前缘，
+ *   覆盖一个扇形，被扫到的每个敌人各挨一记风刃。
  *   原生的「容易击中要害」沿用 critRatio 2 的共享结算；蓄力期可被打断、打断不花 PP，是它在即时战斗里的代价。
  *   它是本族唯一的**蓄力扇形远程**：不像水波刀/精神利刃沿一条线走，而是铺开一个正面。
  *
@@ -27,6 +28,8 @@
 namespace PokemonSkills {
     export const razorwindId = "razorwind";
     export const razorwindScene = "world_combat:move_razorwind";
+    /** 当拍真实前缘的短亮由自定义场景按外弧顶点绘制（与判定同源）。 */
+    export const razorwindEdgeScene = "world_combat:move_razorwind_edge";
     export const razorwindHitText = "world_combat.move.razorwind.text.hit";
     export const razorwindCritText = "world_combat.move.razorwind.text.crit";
     export const razorwindMissText = "world_combat.move.razorwind.text.miss";
@@ -74,7 +77,7 @@ namespace PokemonSkills {
                 .clamp(3, 12).round(0),
             "风刃数量", {
                 unit: "把",
-                description: "一次拧出的风刃数量，也是这一扇最多能切到几个敌人的上限；速度快、特攻高的个体拧得更多，散流式成倍增加。"
+                description: "一次拧出的风刃覆盖面，也是这一扇最多能切到几个敌人的上限（不是独立风刃实体）；速度快、特攻高的个体拧得更多，散流式成倍增加。"
             }),
         /** 蓄风时间：30 − (速度−50)×0.08（夹 0..16）；夹 12..30 刻。 */
         chargeTicks: seconds(

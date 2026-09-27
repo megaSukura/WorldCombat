@@ -60,7 +60,8 @@ namespace PokemonSkills {
         const amount = Math.max(1, Math.floor(body.maxHealth() * (Number(field.data.scour) || 0.0625)));
         const dealt = -world.health(actor, -amount, "world_combat:sandstorm");
         const wind = sandstormWind(field), drift = Number(field.data.drift) || 0;
-        if (drift > 0) world.displace(actor, wind.scale(drift));
+        // 受风位移走原生 hitDisplace：保留击退事件、抗性与权限，位移被拒不影响已结算的伤害。
+        if (drift > 0) world.hitDisplace(actor, wind.scale(drift));
         WorldFeedback.emit(world, sandstormScene, 1, body.position(),
             { moment: "scour", target: String(actor.ref()), grains: Math.max(8, Math.round(6 + dealt * 1.5)),
                 direction: [wind.x(), 0, wind.z()], drift: drift, scale: field.radius / 9 }, 20);
@@ -115,15 +116,21 @@ namespace PokemonSkills {
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             sandstormLay(world, actor, field);
-            if (!field.data.pulse) return;
+            // 类型改后及时开闭 owner 的特防窗口：每次扫描都重判，岩石之躯在沙里就保有本场窗口，失去岩石属性就地收回。
+            sandstormRockWindow(world, actor, field);
             if (sandstormImmune(world, actor)) return;
             const body = world.observe(actor);
             if (body === null) return;
             if (!sandstormBand(field).contains(body.position())) return;
+            const pass = Number(field.data.pass) || 0, ref = String(actor.ref());
+            const hits: any = field.data.hits || (field.data.hits = {});
+            // 每趟每敌只结算一次：条带扫过时不会在同一趟里反复磨同一个人。
+            if (Number(hits[ref]) === pass) return;
+            hits[ref] = pass;
             if (sandstormSheltered(world, body, field)) {
                 const wind = sandstormWind(field);
                 WorldFeedback.emit(world, sandstormScene, 1, body.position(),
-                    { moment: "lee", target: String(actor.ref()), density: 10,
+                    { moment: "lee", target: ref, density: 10,
                         direction: [wind.x(), 0, wind.z()], scale: field.radius / 9 }, 18);
                 return;
             }
@@ -135,29 +142,32 @@ namespace PokemonSkills {
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = sandstormPoint(field), wind = sandstormWind(field);
             const width = Math.max(0.5, Number(field.data.gustWidth) || field.radius * 0.35);
-            const step = Math.max(0.5, Number(field.data.gustStep) || field.radius * 0.7);
             const interval = Math.max(10, Math.round(Number(field.data.interval) || 70));
             const now = world.tick();
-            if (!(Number(field.data.next) > 0)) field.data.next = now + interval;
-            field.data.pulse = now >= Number(field.data.next);
-            if (field.data.pulse) {
-                field.data.next = now + interval;
-                // 每趟沙阵从上风缘起沿风向推进一条窄带；越过下风缘后从上风缘重新起风。
-                let band = isFinite(Number(field.data.band)) ? Number(field.data.band) : -field.radius;
-                band += step;
-                if (band > field.radius + width) band = -field.radius;
-                field.data.band = band;
-                const bandPoint = centre.plus(wind.scale(band));
-                WorldFeedback.emit(world, sandstormScene, 1, bandPoint,
-                    { moment: "gust", direction: [wind.x(), 0, wind.z()], width: width,
-                        radius: field.radius, density: field.data.density || 30, scale: field.radius / 9 }, interval);
-            }
+            // 条带在整段间隔里连续从沙幕上风缘推进到下风缘；每过一个间隔算新的一趟。
+            if (!(Number(field.data.cycleStart) > 0)) field.data.cycleStart = now;
+            const elapsed = Math.max(0, now - Number(field.data.cycleStart));
+            const pass = Math.floor(elapsed / interval);
+            const progress = Math.min(1, (elapsed - pass * interval) / interval);
+            const span = 2 * field.radius + width;
+            field.data.band = -field.radius + progress * span;
+            field.data.pass = pass;
+            if (Number(field.data.hitPass) !== pass) { field.data.hitPass = pass; field.data.hits = {}; }
+            const bandPoint = centre.plus(wind.scale(Number(field.data.band)));
+            const height = Number(field.data.height) || Math.max(1.2, Math.min(3.2, width));
+            const yaw = Number(field.data.yaw) || Math.atan2(wind.x(), wind.z()) * 180 / Math.PI;
+            WorldFeedback.keep(world, "world_combat:move_sandstorm/gust", sandstormScene, 1, bandPoint,
+                { moment: "gust", direction: [wind.x(), 0, wind.z()], width: width, radius: field.radius,
+                    density: field.data.density || 30, scale: field.radius / 9,
+                    span: Number(field.data.span) || field.radius * 2, height: height, yaw: yaw },
+                Math.max(10, Math.round(interval / 4)));
             // 持续表现绑在沙幕效果自己身上：天然到期、提前驱散或施法者离场时随效果一起收。
             if (!field.data.bound) {
                 field.data.bound = true;
                 WorldFeedback.onEffect(world, effect.id(), "world_combat:move_sandstorm/field", sandstormScene, 1, centre,
                     { moment: "field", direction: [wind.x(), 0, wind.z()], density: field.data.density || 30,
-                        radius: field.radius, scale: field.radius / 9 });
+                        radius: field.radius, scale: field.radius / 9,
+                        span: Number(field.data.span) || field.radius * 2, width: width, height: height, yaw: yaw });
             }
         }
     }, { identity: WorldEnvironment.weatherTag("sandstorm"), tags: [WorldEffects.categories.weather, WorldEnvironment.weatherTag("sandstorm")], lineOfSight: false });

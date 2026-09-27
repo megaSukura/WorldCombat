@@ -3,14 +3,24 @@
  *
  * 一句话：一道金线绕着对手描出它的形状 → 描下的那张“扮相”沿连线飞回施法者脸上，贴上时炸开一圈金光 →
  *         披着扮相的一段时间里，施法者身上低密度地闪着对手的样子。
- * 色相家族：描摹金 0xFFC24A 作主体，暖白 0xFFF0C8 作高光；只在飞回的扮相上留一点亮青白 0xFFE9A8 的边。
- * 拍子：起 trace 0–14t ／ 击 don 34t（扮相飞回＋贴脸）／ 收 mask 低密度续期。
+ * 色相家族：描摹金 0xFFC24A 作特性/默认色，暖白 0xFFF0C8 作高光；原生特点按 `data.borrow` 取各自色调
+ *   （攻击橙、速度青、护甲金、坚韧暖白、抗击退紫），所以看得出这次借的是哪一种。
+ * 拍子：起 trace 0–14t（描摹＋预览）／ 击 don 34t（扮相飞回＋贴脸）／ 收 mask 持续披着，直到 carrier 到期或被驱散。
  * 范围：trace/don 的发射器绑 `data.path`（对手与施法者两个实体顶点画的 polyline），画的就是“从多远之外描过来”；
- *   对手身上的描摹面绑 target，贴脸的金光绑 source。
+ *   对手身上的描摹面绑 target，贴脸的金光绑 source，持续面具绑 source（真实 carrier 的持有者）。
  * 运动：描摹面在对手身上开合、扮相沿连线飞回、贴脸时向四面炸开再向上收束。
  * 数：线条数绑 `data.traits`（特攻派生），贴脸强度绑 `data.intensity`（扮演时长派生）。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
+/** 借到的原生特点各给一种色调；特性没有专属条目时落到描摹金，仍由文本写出具体名字。 */
+const RoleplayBorrowPalette: { [id: string]: number } = {
+    "minecraft:generic.attack_damage": 0xFF7A3C,
+    "minecraft:generic.movement_speed": 0x5FC8FF,
+    "minecraft:generic.armor": 0xFFD24A,
+    "minecraft:generic.armor_toughness": 0xFFF0C8,
+    "minecraft:generic.knockback_resistance": 0xC79BFF
+};
+
 const RoleplaySceneDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -25,7 +35,7 @@ const RoleplaySceneDefinition: ParticleDefinition = {
                     shape: { kind: "box", size: [0.7, 1.3, 0.7] },
                     direction: "outward", speed: [0.03, 0.12], spin: 30,
                     lifetime: [8, 15], size: [0.11, 0.02], sizeMode: "sin",
-                    color: 0xFFC24A, alpha: [0.85, 0], light: "full", maxParticles: 120
+                    color: { attribute: "borrow", colors: RoleplayBorrowPalette, fallback: 0xFFC24A }, alpha: [0.85, 0], light: "full", maxParticles: 120
                 },
                 {
                     name: "trace_frame", bind: "target", fit: "body", offset: [0, 0.5, 0],
@@ -64,7 +74,7 @@ const RoleplaySceneDefinition: ParticleDefinition = {
                     shape: { kind: "line", length: { data: "span", fallback: 4 } },
                     rate: { data: "traits", fallback: 10 }, direction: "shape", speed: [0.16, 0.42], spread: 6,
                     lifetime: [7, 13], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xFFC24A, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 160
+                    color: { attribute: "borrow", colors: RoleplayBorrowPalette, fallback: 0xFFC24A }, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 160
                 },
                 {
                     name: "don_flare", bind: "source", fit: "body", offset: [0, 0.55, 0],
@@ -87,7 +97,8 @@ const RoleplaySceneDefinition: ParticleDefinition = {
             ]
         },
         mask: {
-            exit: { stop: 8, drain: 16 },
+            // 无 duration 也无 stop：这层扮相由真实 carrier（复制效果/特性层）拥有的 onEffect 持续发射，直到它到期或被驱散。
+            exit: { drain: 16 },
             emitters: [
                 {
                     name: "mask_glow", bind: "source", fit: "body", offset: [0, 0.5, 0],
@@ -96,7 +107,7 @@ const RoleplaySceneDefinition: ParticleDefinition = {
                     shape: { kind: "sphere_surface", radius: 0.45 },
                     direction: "up", speed: [0.004, 0.02],
                     lifetime: [14, 24], size: [0.07, 0.01], sizeMode: "sin",
-                    color: 0xFFE9A8, alpha: [0.38, 0], alphaMode: "sin", light: "full", maxParticles: 40
+                    color: { attribute: "borrow", colors: RoleplayBorrowPalette, fallback: 0xFFE9A8 }, alpha: [0.38, 0], alphaMode: "sin", light: "full", maxParticles: 40
                 },
                 {
                     name: "mask_face", bind: "source", fit: "body", offset: [0, 0.62, 0],
@@ -104,7 +115,7 @@ const RoleplaySceneDefinition: ParticleDefinition = {
                     rate: 3, shape: { kind: "ring", radius: 0.34 },
                     direction: "up", speed: [0.003, 0.015],
                     lifetime: [16, 26], size: [0.06, 0.01], sizeMode: "sin",
-                    color: 0xFFC24A, alpha: [0.3, 0], alphaMode: "sin", light: "full", bloom: 0.2, maxParticles: 24
+                    color: { attribute: "borrow", colors: RoleplayBorrowPalette, fallback: 0xFFC24A }, alpha: [0.3, 0], alphaMode: "sin", light: "full", bloom: 0.2, maxParticles: 24
                 }
             ]
         },

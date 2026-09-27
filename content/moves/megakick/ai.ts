@@ -5,6 +5,7 @@
  * 所以要求自身生命高于 `ai.minHealth`，或对手已经残到值得一收。踢飞的一脚也用来把目标踢出阵型、逼它离开站位。
  * 对谁出手：当前近身威胁；不可见、友方、已倒下的不接受。
  * 够不到怎么办：距离交给 `reach`，共享任务贴身；这一招的射程就是那次突进，不负责远程。
+ * 目标在横移、或自身到目标被墙挡住时这一脚容易落空，起手长、后摇也长，所以这类目标降低出手倾向。
  * 放完接什么：交回共享交战计划；`ai.finish` 开启时残血目标排得更前。
  */
 namespace PokemonSkills {
@@ -28,10 +29,20 @@ namespace PokemonSkills {
         accepts: function (context, capability, target) { return megakickValid(target); },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            const self = CompanionBehavior.source(context);
+            const gap = CompanionBehavior.distance(self.point, target.point);
+            if (gap > capability.data.range) return 0;
             let score = 24;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.35) score += 26;
             if (target.grounded === false) score -= 12;
+            // 目标横移判断：沿踢路横向速度越大，这记高后摇的重踢越容易落空，降低倾向。
+            if (target.velocity && target.velocity.length === 3 && gap > 0.5) {
+                const ux = (target.point[0] - self.point[0]) / gap, uz = (target.point[2] - self.point[2]) / gap;
+                const lateral = Math.abs(target.velocity[0] * uz - target.velocity[2] * ux);
+                if (lateral > 0.08) score -= 14;
+            }
+            // 实际踢路判断：自身到目标若被墙挡住，这一脚会先撞墙，降低倾向。
+            if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) score -= 8;
             return score;
         }
     });

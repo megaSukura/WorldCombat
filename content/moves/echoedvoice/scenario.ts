@@ -5,6 +5,7 @@
  * 场面：Jigglypuff（Lv40）只带回声，对一只平地上的僵尸；AI 会重复起唱。
  * 断言只取必然事实：本招被唱出过、僵尸吃到过伤害、自己身上出现过共享身份 echoed_voice（余响）。
  * 叠到几层、每声伤害多少属时序结果，写进 note 供读轨迹判断（轨迹里的 damage 逐步应随层数变大）。
+ * 接唱口径已统一为「发声者传播距」，余韵标记由服务端真实回声载体持有；两者都不改本场景的必然事实。
  */
 Smoke.scenario("echoedvoice", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");

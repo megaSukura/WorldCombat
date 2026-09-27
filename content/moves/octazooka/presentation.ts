@@ -2,10 +2,11 @@
  * 章鱼桶炮 / octazooka 的客户端表现。
  *
  * 一句话：一口墨在口中聚成球，随后按节奏连喷数股漆黑的墨弹；每股各有一个炮口收缩与真实弹体，
- *       打中目标时溅开，降准成功那一次才在脸上罩墨；首碰方块只留一小块装饰墨。
+ *       打伤目标时溅开，降准成功那一次才在脸上罩墨；首碰方块只留一小块会自己落尽的墨滴。
  * 色相家族：墨黑（0x14141C）与冷灰蓝（0x3A3A5A），高光收在近白（墨面反光）。
  * 拍子：起 gather（口中蓄墨）→ 每股一次 jet（炮口收缩，`data.shot` 区分第几股）与 flight（弹体飞出）、
- *       splash（命中溅墨）→ 收 face（降准成功才罩脸）与 stain（首碰方块的装饰墨）与 settle（余墨散尽）。
+ *       splash（真正打伤的溅墨）或 dud（接触却无伤的小冷墨）→ 收 face（降准成功才罩脸）与 stain（首碰方块的墨滴）与 settle（余墨散尽）。
+ * stain：墨滴寿命与反馈效果时长都取 `data.stain`，画多久就活多久，不留空转的长效果。
  * 范围：stain 的墨印盘与 splash 的溅散半径都按 `data.scale`（碰撞箱比）铺开，不画危险圈。
  * 运动：每股墨弹沿服务端方向直线飞行、拖墨滴；命中处墨点向外抛落。
  * 数：墨滴数绑定 `data.drops`（特攻与等级换算），炮口收缩粒子数绑定 `data.muzzle`（drops 派生），
@@ -19,7 +20,7 @@ const OctazookaDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "ink_ball", bind: "source", offset: [0, 0.6, 0], height: 0.55,
+                    name: "ink_ball", bind: "point", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/goo/chemicalball",
                     rate: 8, shape: { kind: "sphere", radius: 0.28 },
                     direction: "inward", speed: [0.05, 0.16],
@@ -27,7 +28,7 @@ const OctazookaDefinition: ParticleDefinition = {
                     color: 0x14141C, alpha: [0.85, 0.15], light: "world", maxParticles: 26
                 },
                 {
-                    name: "draw", bind: "source", offset: [0, 0.6, 0], height: 0.5,
+                    name: "draw", bind: "point", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
                     rate: 10, shape: { kind: "sphere_surface", radius: 0.42 },
                     direction: "inward", speed: [0.05, 0.14],
@@ -41,7 +42,7 @@ const OctazookaDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "muzzle", bind: "source", offset: [0, 0.6, 0], height: 0.55,
+                    name: "muzzle", bind: "point", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/goo/chemicalball",
                     burst: { count: { data: "muzzle", fallback: 8 } },
                     shape: { kind: "sphere_surface", radius: 0.32 },
@@ -131,9 +132,25 @@ const OctazookaDefinition: ParticleDefinition = {
                     burst: { count: { data: "drops", fallback: 10 } },
                     shape: { kind: "circle", radius: 0.4 },
                     orient: "direction", direction: "shape", speed: [0.0, 0.02], spread: 20,
-                    gravity: 0.02, drag: 0.88,
-                    lifetime: [16, 28], size: [0.16, 0.04], sizeMode: "index",
+                    gravity: 0.015, drag: 0.9,
+                    lifetime: { data: "stain", fallback: 28 }, size: [0.16, 0.04], sizeMode: "index",
                     color: 0x14141C, alpha: [0.7, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        dud: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "dud_splash", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
+                    burst: { count: { data: "drops", fallback: 8 } },
+                    shape: { kind: "sphere", radius: 0.18 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 24,
+                    gravity: 0.03, drag: 0.9,
+                    lifetime: [6, 12], size: [0.12, 0.02], sizeMode: "index",
+                    color: 0x3A3A5A, alpha: [0.6, 0], light: "world", maxParticles: 30
                 }
             ]
         },

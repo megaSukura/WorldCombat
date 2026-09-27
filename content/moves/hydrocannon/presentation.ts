@@ -61,7 +61,7 @@ const HydrocannonDefinition: ParticleDefinition = {
             ]
         },
         jet: {
-            duration: 90,
+            duration: { data: "life", fallback: 90 },
             exit: { stop: 20, drain: 18 },
             emitters: [
                 {

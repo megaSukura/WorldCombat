@@ -11,6 +11,14 @@ namespace PokemonSkills {
         const record = metalburstRecord(access, actor);
         frame.facts.metalburstDebt = record === null ? 0 : record.amount;
         frame.facts.metalburstDebtor = record === null ? "" : record.source;
+        frame.facts.metalburstBrace = 5;
+        frame.facts.metalburstLeft = record === null ? 0 : 999999;
+        if (record !== null) {
+            try {
+                frame.facts.metalburstBrace = Math.max(1, Math.round(p(metalburstId, "brace", access)));
+                frame.facts.metalburstLeft = Math.max(0, Math.round(p(metalburstId, "window", access) - (access.tick() - record.tick)));
+            } catch (error) { frame.facts.metalburstLeft = 0; }
+        }
     });
 
     CompanionBehavior.registerUse(metalburstId, {
@@ -19,9 +27,14 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!(context.facts.metalburstDebt > 0)) return false;
+            const self = CompanionBehavior.source(context);
+            const distance = target ? CompanionBehavior.distance(self.point, target.point) : 0;
+            // 记录有时限：追近再起手也要花时间，剩余窗口不够就不空追这笔账。
+            const left = context.facts.metalburstLeft;
+            const budget = (context.facts.metalburstBrace || 0) + distance * 3;
+            if (typeof left === "number" && left > 0 && left <= budget) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
+            return distance <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
@@ -46,7 +59,7 @@ namespace PokemonSkills {
 
     addPreferences(metalburstId, {}, [
         field(pathOf("shrapnel"), "破片式", "boolean", {
-            help: "开启：爆炸半径更大、周围敌人分摊得更多，但主目标那一份降到八成、起手多 2 刻、冷却多 8 刻。关闭：外炸得更小，把全部应力压在主目标身上。"
+            help: "开启：周围敌人分摊得更多（周围每名敌人各吃返还额的 70%），但主目标那一份降到八成、起手多 2 刻、冷却多 8 刻。关闭：周围分摊更小（45%），把全部应力压在主目标身上。"
         }),
         field(pathOf("ai.maxChase"), "引爆距离", "number", {
             min: 2, max: 12, step: 1,

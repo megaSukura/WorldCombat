@@ -2,8 +2,8 @@
  * 戏法防守 的伙伴 AI 用途：这是这招自己的一套出手计划——在对手真的用起变化招式、或队友已被异常拿捏时织起符阵。
  *
  * 什么局面有意义：有可见威胁、自己还没被符阵罩住、且它在 ai.maxChase 以内。默认 ai.opening=受压时织阵，只在
- *   确有变化压力时织：本单元的观察点见过某个敌人出手变化招式，或附近友方身上已经带着关键异常；威胁正扑向某个
- *   友方（即将挨招）也算一拍。=随时时见威胁就先织上，当常备防御。只看敌人在附近不织阵，没法预判时留给玩家手动。
+ *   确有变化压力时织：本单元的观察点见过某个敌人出手变化招式，或附近友方身上已经带着关键异常（历史风险，本招不治疗）；
+ *   单凭敌人正扑过来（aggro）不足以当成即将放变化招。=随时时见威胁就先织上，当常备防御。只看敌人在附近不织阵。
  * 对谁出手：自己；符阵会以自身为锚顺手把队友一起罩住，所以不需要选中队友。
  * 候选之间怎么排：身边有友方还没被符阵罩住时排得更前（58）——织阵是为了护住这一片；
  *   只剩自己需要时 48；0 或负值仍可由共享顺序兜底选中。
@@ -43,19 +43,6 @@ namespace CompanionBehavior {
         return false;
     }
 
-    /** 威胁是否正扑向自己或附近的某个友方——变化招式多半也是这么递过来的，算「即将承关键异常」。 */
-    function craftyShieldImminent(context: WorldBehavior.Context, threat: CompanionBehavior.Entity, radius: number): boolean {
-        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        if (threat.attacking === self.ref) return true;
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (!other.friendly || other.health <= 0 || other.ref === self.ref) continue;
-            if (CompanionBehavior.distance(other.point, self.point) > radius) continue;
-            if (threat.attacking === other.ref) return true;
-        }
-        return false;
-    }
-
     CompanionBehavior.registerUse("craftyshield", {
         protocols: ["world_combat:fortify"],
         reach: function () { return 0; },
@@ -68,8 +55,9 @@ namespace CompanionBehavior {
             const chase = CompanionBehavior.ai<number>(capability, "maxChase", 13);
             if (CompanionBehavior.distance(self.point, threat.point) > chase) return false;
             if (CompanionBehavior.ai<string>(capability, "opening", "incoming") !== "incoming") return true;
-            return craftyShieldStatusPressure(context, chase) || craftyShieldAllyAfflicted(context, chase)
-                || craftyShieldImminent(context, threat, chase);
+            // 受压时织阵：只凭真的见过敌方出手变化招式，或附近队友已带关键异常（历史风险）；
+            // 单凭敌人正扑过来（aggro）不足以当成即将放变化招。
+            return craftyShieldStatusPressure(context, chase) || craftyShieldAllyAfflicted(context, chase);
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

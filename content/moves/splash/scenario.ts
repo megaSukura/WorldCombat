@@ -18,7 +18,7 @@ Smoke.scenario("splash", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("splash", caster) > 0, "splash was committed");
             stage.expect(stage.travelled(caster) > 0.5, "the flop moved the caster");
-            stage.note("the flop is movement only; nothing else changes on any actor", {
+            stage.note("the flop is movement only; nothing else changes on any actor. It requires footing (ground or water), estimates the arc from the live gravity attribute and native drag, and lands for real; a safety timeout only drops the air trail instead of faking a landing. Landing reads the actor's actual wet state to pick water splash or dust.", {
                 casts: stage.casts("splash", caster),
                 travelled: Math.round(stage.travelled(caster) * 10) / 10,
                 casterHp: Math.round(caster.health() * 10) / 10,

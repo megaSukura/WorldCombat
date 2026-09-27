@@ -33,6 +33,7 @@
 namespace PokemonSkills {
     export const cometpunchId = "cometpunch";
     export const cometpunchScene = "world_combat:move_cometpunch";
+    export const cometpunchFistScene = "world_combat:move_cometpunch_fist";
     export const cometpunchTallyText = "world_combat.move.cometpunch.text.tally";
     export const cometpunchMissText = "world_combat.move.cometpunch.text.miss";
     export const cometpunchOutText = "world_combat.move.cometpunch.text.out";

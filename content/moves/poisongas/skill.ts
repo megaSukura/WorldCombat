@@ -3,8 +3,8 @@
  *
  * 念头的形状：朝选定的点吐出一股瓦斯（windup → exhale），瓦斯落地摊成一片低垂的云（cloud）；
  * 云罩住谁，谁就中毒，站在里面毒素一直被维持，走出云外按自己的时间走完。
- * 云还有一种结局：云里有人带着灼伤、或云下压着火／岩浆，整片云被点着（ignite），
- * 里面的人同时吃一记火属性爆燃并被烧伤，之外的人只看见云变成火云（burncloud）。
+ * 云还有一种结局：云里有人真的在烧（带灼伤身份或原生身火）、或云下压着可达的火／岩浆，整片云被点着（ignite），
+ * 里面可达且未超人数预算的人同时吃一记火属性爆燃并被烧伤，之外的人只看见云变成火云（burncloud）。
  * 两幕加一个分支：exhale → cloud →（被点着）ignite/burncloud。
  *
  * 云由共享的场地机制 `WorldEffects.field` 承担，规则 `world_combat:field/poisoncloud` 定义在本单元；
@@ -21,10 +21,22 @@ namespace PokemonSkills {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
 
-    /** 云里是否出现火源：有人带着灼伤，或云下有火／岩浆。逐格取样并覆盖中心，控制开销。 */
+    /** 这个活体是不是真在燃烧：带共享灼伤身份，或原生身火。 */
+    function poisongasAblaze(world: CombatWorld, actor: CombatActor): boolean {
+        if (CombatStatus.has(world, actor, "burn")) return true;
+        var entity = world.nativeEntity(actor);
+        return entity !== null && typeof entity.isOnFire === "function" && entity.isOnFire() === true;
+    }
+
+    /** 云里是否出现火源：可达的燃烧活体，或云下可达的火／岩浆。逐格取样并覆盖中心，控制开销。 */
     function poisongasBurning(world: CombatWorld, centre: CombatPoint, radius: number): boolean {
         var actors = world.query(centre, radius, false);
-        for (var i = 0; i < actors.length; i++) if (world.valid(actors[i]) && CombatStatus.has(world, actors[i], "burn")) return true;
+        for (var i = 0; i < actors.length; i++) {
+            var actor = actors[i];
+            if (!world.valid(actor)) continue;
+            var body = world.observe(actor);
+            if (body !== null && world.clear(centre, body.position()) && poisongasAblaze(world, actor)) return true;
+        }
         var r = Math.ceil(radius);
         for (var dx = -r; dx <= r; dx++) for (var dz = -r; dz <= r; dz++) {
             if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
@@ -32,22 +44,25 @@ namespace PokemonSkills {
                 var block = world.block(WorldCombat.point(centre.x() + dx, centre.y() + dy, centre.z() + dz));
                 if (block === null) continue;
                 var id = String(block.id());
-                if (id === "minecraft:fire" || id === "minecraft:soul_fire" || id === "minecraft:lava") return true;
+                if (id !== "minecraft:fire" && id !== "minecraft:soul_fire" && id !== "minecraft:lava") continue;
+                if (world.clear(centre, WorldCombat.point(centre.x() + dx + 0.5, centre.y() + dy + 0.5, centre.z() + dz + 0.5))) return true;
             }
         }
         return false;
     }
 
-    /** 云被点着：对云内所有非友方结算一记火属性爆燃并点着，然后播放爆燃。 */
+    /** 云被点着：对云内可达、未超人数预算的每个非友方结算一记火属性爆燃并点着，成功才回执。 */
     function poisongasBlast(world: CombatWorld, field: WorldEffects.Field, centre: CombatPoint, radius: number): void {
         var actors = world.query(centre, radius, false), hits = 0;
-        for (var i = 0; i < actors.length; i++) {
+        var budget = Math.max(1, Math.round(Number(field.data.maxTargets) || 4));
+        for (var i = 0; i < actors.length && hits < budget; i++) {
             var actor = actors[i];
             if (!world.valid(actor) || world.friendly(actor)) continue;
             var body = world.observe(actor);
-            if (body === null) continue;
+            if (body === null || !world.clear(centre, body.position())) continue;
             hurt(world, actor, "poisongas", field.data.blast, { damage: damageSpec("poisongas", "blast"), type: "fire" });
-            if (world.valid(actor)) CombatStatus.inflict(world, actor, "burn", field.data.burn);
+            if (world.valid(actor) && CombatStatus.inflict(world, actor, "burn", field.data.burn))
+                WorldFeedback.emit(world, poisongasScene, 1, body.position(), { moment: "burning", target: String(actor.ref()) }, 20);
             hits++;
         }
         var scale = radius / 2.4;
@@ -57,7 +72,7 @@ namespace PokemonSkills {
         world.sound("minecraft:entity.generic.explode", centre, 24, "{}");
     }
 
-    /** 一个身处云中的战斗者：按当前状态上毒或上火，并按 refresh 节流，避免每 5 刻重掷一次。 */
+    /** 一个身处云中的战斗者：按当前状态上毒或上火，成功才回执并返回 true；按 refresh 节流，避免每 5 刻重掷一次。 */
     function poisongasExpose(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, fresh: boolean): boolean {
         if (world.friendly(actor)) return false;
         var ref = String(actor.ref()), next = field.data.next || (field.data.next = {}), now = world.tick();
@@ -66,16 +81,17 @@ namespace PokemonSkills {
         next[ref] = now + Math.max(10, Math.round(field.data.refresh || 40));
         var body = world.observe(actor);
         if (field.data.burning) {
-            CombatStatus.inflict(world, actor, "burn", field.data.burn);
-            if (body !== null) WorldFeedback.emit(world, poisongasScene, 1, body.position(), { moment: "burning", target: ref }, 20);
-        } else {
-            CombatStatus.inflict(world, actor, "poison", field.data.poison);
-            if (body !== null) {
-                WorldFeedback.emit(world, poisongasScene, 1, body.position(), { moment: "poisoned", target: ref }, 20);
-                if (first) WorldFeedback.text(world, body.position(), poisongasPoisonText, [], 24);
-            }
+            var burned = CombatStatus.inflict(world, actor, "burn", field.data.burn);
+            if (burned && body !== null)
+                WorldFeedback.emit(world, poisongasScene, 1, body.position(), { moment: "burning", target: ref }, 20);
+            return burned;
         }
-        return true;
+        var poisoned = CombatStatus.inflict(world, actor, "poison", field.data.poison);
+        if (poisoned && body !== null) {
+            WorldFeedback.emit(world, poisongasScene, 1, body.position(), { moment: "poisoned", target: ref }, 20);
+            if (first) WorldFeedback.text(world, body.position(), poisongasPoisonText, [], 24);
+        }
+        return poisoned;
     }
 
     // 云的行为：维持画面、按节流上毒、检测火源并爆燃。规则登记一次，全场共用。
@@ -88,8 +104,8 @@ namespace PokemonSkills {
                 poisongasBlast(world, field, centre, radius);
             }
             var scale = radius / 2.4;
-            WorldFeedback.keep(world, "poisongas:cloud", poisongasScene, 1, centre,
-                { moment: field.data.burning ? "burncloud" : "cloud", scale: scale, burning: field.data.burning ? 1 : 0 }, 40);
+            WorldFeedback.onEffect(world, effect.id(), "poisongas:cloud", poisongasScene, 1, centre,
+                { moment: field.data.burning ? "burncloud" : "cloud", scale: scale, burning: field.data.burning ? 1 : 0 });
             var actors = world.query(centre, radius, false), applied = 0, cap = Math.max(1, Math.round(field.data.maxTargets || 4));
             for (var i = 0; i < actors.length && applied < cap; i++) {
                 var actor = actors[i];

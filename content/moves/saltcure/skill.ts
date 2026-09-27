@@ -2,7 +2,7 @@
  * 盐腌 / saltcure 的出手方式。
  *
  * 核心念头：抓一把粗盐摔在对手身上——命中那一下是物理伤害，之后盐粒嵌进皮肉，每隔一段蛰掉一口；
- *   钢/水（以及世界里湿透或披着金属甲）的身体更痛。盐壳一直留在身上，直到时间走完或被清掉。
+ *   钢/水（以及世界里湿透或穿着已知金属护甲）的身体更痛。盐壳一直留在身上，直到时间走完或被清掉。
  *
  * 两幕 + 收：
  *   起：提交前 windup 在掌心聚起盐霜（action.present）。
@@ -17,19 +17,32 @@ namespace PokemonSkills {
     const saltcureCrustText = "world_combat.move.saltcure.text.crust";
     const saltcureFizzleText = "world_combat.move.saltcure.text.fizzle";
 
-    /** 钢/水属性，或世界里湿透、披着金属甲的身体：盐渍更痛，蛰痛系数翻倍。 */
-    function saltcureBrittle(world: CombatWorld, target: CombatActor): boolean {
-        const body = world.observe(target);
-        if (body !== null && body.wet()) return true;
-        const types = PokemonDamage.combatants.read(world, target).types;
-        if (types.indexOf("steel") >= 0 || types.indexOf("water") >= 0) return true;
+    /** 原生护甲槽；只看实际穿在身上的护甲，手持铁器不算。 */
+    const saltcureArmorSlots: { [slot: string]: boolean } = { head: true, chest: true, legs: true, feet: true, body: true };
+
+    /** 只认明确已知的金属材料：原版铁/金/锁链/下界合金护甲，或显式打上共用金属标签的护甲。 */
+    function saltcureMetalArmor(world: CombatWorld, target: CombatActor): boolean {
         const worn = world.equipment(target);
         for (let i = 0; i < worn.length; i++) {
-            const item = String(worn[i].item());
-            if (item.indexOf("iron") >= 0 || item.indexOf("chainmail") >= 0
-                || item.indexOf("netherite") >= 0 || item.indexOf("copper") >= 0) return true;
+            const entry = worn[i];
+            if (String(entry.provider()) !== "minecraft" || !saltcureArmorSlots[String(entry.slot())]) continue;
+            if (NativeItems.magneticEquipment(entry)) return true;
         }
         return false;
+    }
+
+    /** 盐渍更痛的共用判据：湿透或钢/水属性即成立；护甲金属未知时按未知处理，不猜。 */
+    export function saltcureBrittleBasis(wet: boolean, types: string[], metalArmor: boolean | null): boolean {
+        if (wet) return true;
+        for (let i = 0; i < types.length; i++) if (types[i] === "steel" || types[i] === "water") return true;
+        return metalArmor === true;
+    }
+
+    /** 钢/水属性，或世界里湿透、穿着已知金属护甲的身体：盐渍更痛，蛰痛系数翻倍。 */
+    function saltcureBrittle(world: CombatWorld, target: CombatActor): boolean {
+        const body = world.observe(target);
+        const types = PokemonDamage.combatants.read(world, target).types;
+        return saltcureBrittleBasis(body !== null && body.wet(), types, saltcureMetalArmor(world, target));
     }
 
     function saltcureBindData(json: string): string {
@@ -65,7 +78,7 @@ namespace PokemonSkills {
         data.left = data.left - 1;
         effect.state(JSON.stringify(data));
         if (data.left > 0) effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
-        else effect.end();
+        // 最后一跳后不提前结束：盐壳留到 saltTicks，由载体到期或被清除时才收尾。
     });
     WorldCombat.effectHandler(saltcureBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
     PokemonDamage.onDamageApplied("world_combat:saltcure/residual", receipt => {
@@ -81,7 +94,7 @@ namespace PokemonSkills {
         id: "saltcure",
         cooldownParameter: "wait",
         name: "盐腌",
-        description: "把一身粗盐摔在对手身上：命中造成物理伤害，之后盐壳每隔一段按目标最大生命蛰掉一口；钢或水属性（以及湿透、披着金属甲的）身体更痛。",
+        description: "把一身粗盐摔在对手身上：命中造成物理伤害，之后盐壳每隔一段按目标最大生命蛰掉一口；钢或水属性（以及湿透、穿着已知金属护甲的）身体更痛。",
         uses: ["磨掉高生命的肉盾", "对钢系与水系加倍惩罚", "逼对手分心去清状态"],
         kind: "aim",
         range: 6,
@@ -108,8 +121,9 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", brine: config && config.brine ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) {
-            return { radius: 6, geometry: "line", style: "salt", label: config && config.brine ? "盐腌·浓卤" : "盐腌" };
+        indicator: function (config, pokemon) {
+            return { radius: Math.max(1, p("saltcure", "reach", pokemon)), geometry: "line", style: "salt",
+                label: config && config.brine ? "盐腌·浓卤" : "盐腌" };
         },
         execute: function (action, move, config, done) {
             const world = action.world();

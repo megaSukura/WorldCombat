@@ -12,7 +12,8 @@ namespace CompanionBehavior {
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (distance(other.point, target.point) <= radius) count++;
+            const dx = other.point[0] - target.point[0], dy = other.point[1] - target.point[1], dz = other.point[2] - target.point[2];
+            if (Math.sqrt(dx * dx + dy * dy + dz * dz) <= radius) count++;
         }
         return count;
     }
@@ -23,11 +24,11 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", true)) return false;
         if (status(context, target, "scented")) return false;
         if (distance(source(context).point, target.point) > ai<number>(item, "maxChase", 9)) return false;
-        // 目标脚下已经有一片甜云就不重复铺：读共享的场地查询，而不是自己再扫一遍世界。
+        // 目标脚下已经有一片甜云就不重复铺：读共享的场地查询，用场地实际半径与三维距离，而不是自己再扫一遍世界。
         const areas = WorldEffects.areas(world(context), PokemonSkills.sweetscentField);
         for (let i = 0; i < areas.length; i++) {
-            const dx = areas[i].position[0] - target.point[0], dz = areas[i].position[2] - target.point[2];
-            if (Math.sqrt(dx * dx + dz * dz) <= areas[i].radius) return false;
+            const dx = areas[i].position[0] - target.point[0], dy = areas[i].position[1] - target.point[1], dz = areas[i].position[2] - target.point[2];
+            if (Math.sqrt(dx * dx + dy * dy + dz * dz) <= areas[i].radius) return false;
         }
         return true;
     }
@@ -40,8 +41,11 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !sweetscentWants(context, item, target)) return 0;
             const needed = ai<number>(item, "cluster", 2);
+            // 簇判断按本招香气半径的当前取向估算（基准 2.2，馥郁 0.8／清甜 1.2），不再用固定值。
+            const aroma = !!(item.data.config && item.data.config.aroma === true);
+            const cloud = 2.2 * (aroma ? 0.8 : 1.2);
             const elusive = fleeing(context, target) || target.hidden || stage(context, target, "evasion") > 0;
-            return (elusive ? 52 : 10) + (sweetscentCluster(context, target, 2.4) >= needed ? 15 : 0);
+            return (elusive ? 52 : 10) + (sweetscentCluster(context, target, cloud) >= needed ? 15 : 0);
         }
     });
 }

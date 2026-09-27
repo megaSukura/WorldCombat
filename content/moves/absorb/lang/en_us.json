@@ -25,6 +25,6 @@
   "worldcombat.skill.absorb.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.absorb.preference.ai.healBelow.help": "Below this health ratio the user prefers absorb as sustain; higher starts leaning on it for healing sooner.",
   "world_combat.move.absorb.text.hit": "Siphoned",
-  "world_combat.move.absorb.text.sap": "Sap drawn back %1$s%%",
+  "world_combat.move.absorb.text.sap": "Sap drawn back %1$s",
   "world_combat.move.absorb.text.miss": "Caught nothing"
 }

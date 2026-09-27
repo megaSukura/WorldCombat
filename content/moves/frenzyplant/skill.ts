@@ -6,28 +6,41 @@ namespace PokemonSkills {
     const frenzyplantSnareText = "world_combat.move.frenzyplant.text.snare";
     const frenzyplantSpentText = "world_combat.move.frenzyplant.text.spent";
     const frenzyplantMissText = "world_combat.move.frenzyplant.text.miss";
+    /** Root-tip half-width; the same value drives wall tracing and body selection so画面危险区与判定一致。 */
+    const frenzyplantTipRadius = 0.32;
 
-    /** 根须褪去：挂上力竭状态（共享身份 mustrecharge）并停步，播放收场表现与浮字。 */
-    function frenzyplantSpent(action: CombatAction, ticks: number, hits: number, intensity: number): void {
+    /** One radius-aware block stop along a real arm segment. Entities never mask a wall behind them. */
+    function frenzyplantWall(action: CombatAction, from: CombatPoint, to: CombatPoint): CombatPoint | null {
+        const swept = action.trace(from, to, frenzyplantTipRadius, false);
+        if (swept.blocked() && !swept.hitEntity()) return swept.position();
+        const clip = WorldGeometry.blockHit(action.sense(), from, to);
+        return clip ? clip.position() : null;
+    }
+
+    /** 开始抽合的一刻登记力竭责任：托管效果独立于动作，之后取消或被打断也不白逃。 */
+    function frenzyplantSpent(action: CombatAction, ticks: number, intensity: number): boolean {
         const world = action.world();
-        MobEffects.apply(world, action.actor(), frenzyplantSpentEffect, ticks, 0);
+        const carrier = MobEffects.apply(world, action.actor(), frenzyplantSpentEffect, ticks, 0);
         WorldEffects.apply(world, action.actor(), "rooted", {}, ticks);
         world.stopMovement(action.actor());
+        if (carrier === null) return false;
         const body = world.observe(action.actor());
         if (body !== null) {
+            const life = Math.max(30, Math.min(WorldFeedback.maxTicks, Math.round(ticks)));
             WorldFeedback.emit(world, frenzyplantScene, 1, body.position(),
-                { moment: "spent", scale: intensity, seconds: ticks / 20, hits: hits, count: Math.round(8 + (ticks / 20) * 5) }, 30);
+                { moment: "spent", scale: intensity, seconds: ticks / 20, count: Math.round(8 + (ticks / 20) * 5) }, life);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.5, 0)), frenzyplantSpentText,
-                [Math.round(ticks / 20 * 10) / 10], 30);
+                [Math.round(ticks / 20 * 10) / 10], life);
         }
         sound(action, "cobblemon:impact.grass");
+        return true;
     }
 
     define({
         freeMovement: true,
         id: "frenzyplant",
         name: "Frenzy Plant",
-        description: "几条粗根从落点周边的真实支撑面升起，再向中心抽合。根尖实际扫到才受击，每敌一次；墙截住根臂，收根后力竭。",
+        description: "几条粗根从落点周边的真实支撑面升起，再向中心抽合。根尖实际扫到才受击，每敌一次；墙截住根臂；根臂一旦开始抽合，施放者即进入力竭。",
         uses: ["从地面窜出的巨木根须", "同时抽打挤在一块地上的对手", "把目标按在原地再交给队友"],
         kind: "point",
         range: 10,
@@ -81,21 +94,25 @@ namespace PokemonSkills {
                     const progress=Math.min(1,Math.max(0,(age-5)/10));
                     const desired=age<=5?arm.base.plus(WorldCombat.point(0,rise*age/5,0)):
                         arm.base.plus(ground.minus(arm.base).scale(progress)).plus(WorldCombat.point(0,.35+(rise-.35)*(1-progress),0));
-                    const clip=scope.clipBlocks(arm.tip,desired);if(!clip){arm.stopped=true;return;}
-                    const end=clip.blocked()?clip.position():desired;
-                    if(age>5)WorldGeometry.selectBodies(scope,WorldGeometry.bodySegment(arm.tip,end,.32),function(enemy,facts){
+                    const from=arm.tip;
+                    const wall=frenzyplantWall(current,from,desired);
+                    const end=wall||desired;
+                    if(age>5)WorldGeometry.selectBodies(scope,WorldGeometry.bodySegment(from,end,frenzyplantTipRadius),function(enemy,facts){
                         const ref=String(enemy.ref());if(scope.friendly(enemy)||seen[ref])return;seen[ref]=true;
                         if(hurt(current,enemy,"frenzyplant",power,{damage:damageSpec("frenzyplant","bloom")})){
                             hits++;if(grip&&snare>0&&scope.valid(enemy))WorldEffects.apply(scope,enemy,"rooted",{},snare);
                             WorldFeedback.emit(scope,frenzyplantScene,1,facts.position(),{moment:"slam",target:ref,notes:Math.round(14+power*.3),scale:1,intensity},22);
                         }
                     });
-                    arm.tip=end;arm.stopped=clip.blocked();
+                    arm.tip=end;arm.stopped=!!wall;
                     scenes.show(current,"arm"+index,arm.base,{moment:"arm",path:[[arm.base.x(),arm.base.y(),arm.base.z()],[end.x(),end.y(),end.z()]],intensity});
+                    if(age>5&&from.minus(end).length()>0.01)
+                        scenes.show(current,"tip"+index,end,{moment:"tip",path:[[from.x(),from.y(),from.z()],[end.x(),end.y(),end.z()]],intensity});
                 });
+                if(age===6)frenzyplantSpent(current,exhaust,intensity);
                 if(age>=15||arms.every(arm=>arm.stopped)){
                     WorldFeedback.emit(scope,frenzyplantScene,1,ground,{moment:"leaves",scale:radius/2.4,radius,seconds:leaves/20,hits},Math.min(40,leaves));
-                    frenzyplantSpent(current,exhaust,hits,intensity);scenes.finish(current,done);return;
+                    scenes.finish(current,done);return;
                 }current.after(1,extend);
             }
             extend(action);

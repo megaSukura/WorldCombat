@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.aeroblast.summary": "Twist the air into a thin vortex and press out three short beats along a chosen direction; each beat bites only the first visible enemy along the ray, shoving it along the path, and a wall truncates the beam. It no longer bursts into a circular ring, and has a high critical-hit chance. Charge for greater power and reach, or use the quick-fire variant for tighter beats.",
+  "worldcombat.skill.aeroblast.summary": "Twist the air into a thin vortex and press out three short beats along a chosen direction; each beat bites only the first visible enemy along the ray, shoving it along the path, and a wall truncates the beam. It has a high critical-hit chance. Charge for greater power and reach, or use the quick-fire variant for tighter beats.",
   "worldcombat.skill.aeroblast.use.0": "Pin a thin air vortex onto a distant line",
   "worldcombat.skill.aeroblast.use.1": "Press three beats that only bite the first visible enemy along the ray",
   "worldcombat.skill.aeroblast.use.2": "Point at one big target or a choke's front foe from afar",

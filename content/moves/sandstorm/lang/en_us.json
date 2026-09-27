@@ -30,7 +30,7 @@
   "worldcombat.skill.sandstorm.preference.ai.advance": "Push the curtain at the foe",
   "worldcombat.skill.sandstorm.preference.ai.advance.help": "On, the curtain is raised between you and the threat, closer to the threat, so the wind runs down the enemy corridor; off, it is raised at your feet to shield yourself first.",
   "worldcombat.skill.sandstorm.preference.ai.avoidAllies": "Spare downwind allies",
-  "worldcombat.skill.sandstorm.preference.ai.avoidAllies.help": "On, the companion will not raise the storm here if a non-Rock/Ground/Steel ally already lies in its downwind corridor; off, it drops the sand on them too.",
+  "worldcombat.skill.sandstorm.preference.ai.avoidAllies.help": "On, the companion will not raise the storm here if a non-Rock/Ground/Steel ally would be scoured inside the real radius, downwind and without cover upwind; off, it drops the sand on them too.",
   "worldcombat.skill.sandstorm.preference.ai.leaveStation": "Leave the station",
   "worldcombat.skill.sandstorm.preference.ai.leaveStation.help": "On, a companion holding its station will step out to raise sand.",
   "world_combat.move.sandstorm.text.scour": "Scoured",

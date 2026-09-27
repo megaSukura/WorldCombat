@@ -47,7 +47,6 @@ object PokemonHealthBridge {
         if (beforeExact - afterExact > 0.000001) {
             dev.worldcombat.cobblemon.script.CaptureContent.damaged(entity, source)
             if (before > pokemon.currentHealth) dev.worldcombat.cobblemon.script.GrowthContent.damaged(entity, before - pokemon.currentHealth, source.msgId)
-            dev.worldcombat.core.world.CombatServices.get((entity.level() as net.minecraft.server.level.ServerLevel).server).applied(entity, source)
         }
     }
 

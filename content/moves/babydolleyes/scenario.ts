@@ -1,5 +1,6 @@
 // 圆瞳的可执行设计说明：一只宝可梦对一个贴身的原版生物睁一次圆眼睛，只说这一招。
 // 必然事实：圆瞳被放出来过；目标带上共享的「被看软」身份（charmed）；目标的攻击属性随下降的攻击一起走低。
+// 本次降攻挂在心软载体窗口上，所以断言要在这个窗口仍开着时读到下降；窗口到期后等级会随之复原。
 // 起手有多短、凝视还是疾视、视线与距离都不是本场景的必然事实，写进 note。
 Smoke.scenario("babydolleyes", function (stage) {
     stage.fill([-10, -1, -10], [10, -1, 10], "minecraft:stone");
@@ -17,7 +18,7 @@ Smoke.scenario("babydolleyes", function (stage) {
         stage.expect(stage.casts("babydolleyes") > 0, "baby-doll eyes was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/charmed"), "the target carried the shared charmed identity");
         stage.expect(stage.attribute(target, "minecraft:generic.attack_damage") < baseAttack - 0.001, "the target's attack fell with the Attack drop");
-        stage.note("圆瞳落地；起手极短、凝视与疾视的取舍、视线与距离都不是本场的必然事实。执行按本次真实 gazeRange 复查距离与视线，只有 NativeEffects.boost 真的扣出等级才会垂下攻势符号；实际降了几级写进 note 供核对。", {
+        stage.note("圆瞳落地；起手极短、凝视与疾视的取舍、视线与距离都不是本场的必然事实。执行按本次真实 gazeRange 复查距离与视线，降攻走 NativeEffects.boostWindow 绑在心软载体上（载体到期或被清掉时等级复原），只有有效等级真的掉了才垂下攻势符号；实际降了几级写进 note 供核对。", {
             casts: stage.casts("babydolleyes"), baseAttack: baseAttack,
             attack: stage.attribute(target, "minecraft:generic.attack_damage"),
             casterHp: caster.health(), targetHp: target.health()

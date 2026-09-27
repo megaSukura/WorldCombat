@@ -26,6 +26,14 @@ namespace PokemonSkills {
         return side.length() < 0.001 ? WorldCombat.point(1, 0, 0) : side.unit();
     }
 
+    /** 侧移后按当前真实落点重取朝向；目标绕到太偏的角度就保持原线，让这一道照抓空。 */
+    function furyswipesTurn(heading: CombatPoint, desired: CombatPoint, limitDegrees: number): CombatPoint {
+        const from = WorldGeometry.flatUnit(heading);
+        const to = WorldGeometry.flatUnit(desired, from);
+        const dot = Math.max(-1, Math.min(1, WorldGeometry.dot(from, to)));
+        return Math.acos(dot) * 180 / Math.PI <= limitDegrees ? to : from;
+    }
+
     define({
         freeMovement: true,
         id: furyswipesId,
@@ -106,12 +114,13 @@ namespace PokemonSkills {
                 if (index >= cuts) { settle(current); return; }
                 const scope = current.world();
                 const victim = targetRef === "" ? null : scope.actor(targetRef);
-                const vbody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                 let self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
-                // 目标还在就按它当下位置重取朝向；离场或只给方向时沿用上一次的真实朝向。
-                if (vbody !== null) {
-                    const toward = vbody.position().minus(self.position());
+                // 目标还在就按它当下位置重取侧移朝向；离场或只给方向时沿用上一次的真实朝向。
+                const before = self.position();
+                const ahead = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                if (ahead !== null) {
+                    const toward = ahead.position().minus(before);
                     if (toward.length() > 0.05) heading = WorldGeometry.flatUnit(toward, heading);
                 }
                 const side = furyswipesSide(heading);
@@ -122,15 +131,22 @@ namespace PokemonSkills {
                     self = scope.observe(actor) || self;
                 }
                 const origin = self.position();
+                // 侧移后从新身位重新指向当前可见/接触落点，只做有限转向；目标绕背时保持原线，这一道照抓空。
+                const victimNow = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                if (victimNow !== null) {
+                    const desired = victimNow.position().minus(origin);
+                    if (desired.length() > 0.05) heading = furyswipesTurn(heading, desired, 100);
+                }
                 // 命中 80：共享偏角让方向真的会歪；歪出扇面就抓空。
                 const aimed = NativeSemantics.aim(current, move, heading, 1.2);
                 const shot = index + 1;
                 // 左右爪交替：tilt 传给客户端让爪痕按左右两侧交替翻转。
                 const tilt = (index % 2 === 0 ? 1 : -1) * 22;
+                // gap 传给客户端：每道爪弧的寿命收在本拍之内，旧弧不再叠到下一拍。
                 WorldFeedback.emit(scope, furyswipesScene, 1, origin,
-                    { moment: "cut", index: shot, cuts: cuts, reach: reach, span: span, dust: dust, tilt: tilt,
+                    { moment: "cut", index: shot, cuts: cuts, reach: reach, span: span, gap: gap, dust: dust, tilt: tilt,
                         intensity: Math.max(0.5, Math.min(2, power / 22)),
-                        direction: [aimed.x(), aimed.y(), aimed.z()], pounce: pounce ? 1 : 0 }, 18);
+                        direction: [aimed.x(), aimed.y(), aimed.z()], pounce: pounce ? 1 : 0 }, Math.max(4, Math.round(gap) + 4));
                 if (scope.random() > accuracy) {
                     WorldFeedback.emit(scope, furyswipesScene, 1, origin,
                         { moment: "miss", direction: [aimed.x(), aimed.y(), aimed.z()], index: shot, cuts: cuts, reach: reach, span: span, dust: dust }, 18);
@@ -139,14 +155,17 @@ namespace PokemonSkills {
                     return;
                 }
                 let hits = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, aimed, reach, span, band), function (other, facts) {
+                // 判定用真实实体箱：大身体贴到扇面边缘也算被抓到，不再只按身体中心取点。
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySector(origin, aimed, reach, span, band), function (other, facts) {
                     if (hits >= cap) return;
+                    if (String(other.ref()) === String(actor.ref()) || facts.friendly()) return;
                     // 不越墙追伤：扇面里也要真实通视才算接触。
-                    if (!scope.clear(origin, facts.position())) return;
+                    const near = scope.closestPoint(other, origin);
+                    if (!scope.clear(origin, near)) return;
                     if (!hurt(current, other, furyswipesId, power, { damage: damageSpec(furyswipesId, "rake"), contact: true })) return;
                     hits++;
                     landed++;
-                    const at = facts.position();
+                    const at = near;
                     WorldFeedback.emit(scope, furyswipesScene, 1, at,
                         { moment: "hit", target: String(other.ref()), index: shot, cuts: cuts, dust: dust,
                             pounce: pounce ? 1 : 0, intensity: Math.max(0.5, Math.min(2, power / 22)),

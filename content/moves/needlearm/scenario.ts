@@ -4,7 +4,7 @@
  * 铁傀儡不逃不还手，所以扫中的伤害只可能来自本招的 `rake` 段。
  *
  * 必然事实：本招被提交过（`stage.casts`）；刺臂扫中目标并造成伤害（`damageTo`）。
- * 三拍扇面各扫到几次、30% 畏缩是否触发，都写进 note 供读轨迹判断；`rake` 每敌只结算一次由代码保证。
+ * 逐段扫过各扫到几次、30% 畏缩是否触发，都写进 note 供读轨迹判断；`rake` 每敌只结算一次由代码保证。
  */
 Smoke.scenario("needlearm", function (stage) {
     stage.fill([-10, -1, -6], [10, -1, 6], "minecraft:stone");

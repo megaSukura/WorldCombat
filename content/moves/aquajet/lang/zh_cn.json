@@ -33,5 +33,5 @@
   "effect.world_combat.aquajet_soaked": "水流喷射·浇透",
   "worldcombat.skill.aquajet.preference.ai.preserveBurn": "保留灼伤",
   "worldcombat.skill.aquajet.preference.ai.preserveBurn.help": "开启：对灼伤敌人降低本招优先级，优先保留持续伤害；紧急顶退和残血补刀仍可出手。关闭：按普通进攻收益排序。",
-  "worldcombat.skill.aquajet.description.douse": "若目标正带着灼伤，这一冲会解除它的灼伤并熄灭它身上的火。"
+  "worldcombat.skill.aquajet.description.douse": "若目标带着灼伤或身上真的着火，这一冲都会解除灼伤并把火浇熄；两种状态各自独立读取。"
 }

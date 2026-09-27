@@ -9,7 +9,7 @@ Smoke.scenario("luminacrash", function (stage) {
     stage.until(900, function () { return stage.casts("luminacrash", gothita) > 0 && stage.damageTo(machop) > 0; }, function () {
         stage.expect(stage.casts("luminacrash", gothita) > 0, "琉光冲激被放出来了");
         stage.expect(stage.damageTo(machop) > 0, "怪光柱砸到了目标身上");
-        stage.note("特防下降 2 级（最终锚点直击必中）与坠落前段目标是否走出追踪距离、炸落是否卷到旁人，都是固定/位置结果，只作记录。",
+        stage.note("冻结柱内被砸到的人各吃直击与特防 −2，旁人按真实爆点溅射且墙后会挡；坠落前段目标是否走出追踪距离、柱是否被屋顶截断，都是位置结果，只作记录。",
             { casts: stage.casts("luminacrash", gothita), damage: Math.round(stage.damageTo(machop) * 10) / 10 });
         stage.done();
     }, "怪光柱砸到目标");

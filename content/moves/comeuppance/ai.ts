@@ -1,8 +1,8 @@
 /**
  * 复仇 / comeuppance 的 AI 用途。
  *
- * 什么局面下出手：只有账本上有新鲜的伤害（`comeuppanceDebt > 0`）时才可选——不花 PP 空追。
- * 账主在射程内时 priority 70，其他敌人 50。暗影会追人，所以它不是非贴身不可；手动施放不受此限。
+ * 什么局面下出手：只有账本上有新鲜、且仍在记账窗口（含记仇式延长的窗口）内的伤害（`comeuppanceDebt > 0`）时才可选——不花 PP 空追。
+ * 账主在射程内时 priority 70，其他敌人 50；射程按实际追讨范围核实可达。暗影会追人，所以它不是非贴身不可；手动施放不受此限。
  */
 namespace PokemonSkills {
     CompanionBehavior.readFacts("world_combat:move_comeuppance/ai-fact", function (frame, access) {

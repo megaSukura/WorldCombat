@@ -1,33 +1,32 @@
-/**
- * 绝对零度 / sheercold 的可执行设计说明。
- *
- * 场面：晴天白天、开阔平地。只会绝对零度的冰属性拉普拉斯（lapras，40 级）对一只只会「跃起」的低级
- *   鲤鱼王（magikarp，12 级），相距 2.5 格；冰属性使用者把结霜延迟压到最短，等级差再缩短一截。
- *
- * 必然事实：本招被提交过；鲤鱼王受到过绝对零度的处决伤害（生命被一次冻毙）。
- *   命中与否不写死：目标若在结霜前走出那一圈就会落空（冰属性目标免疫），写进 note 供读轨迹判断。
- */
+/** One cast among five stationary ordinary targets verifies finite victim and damage caps. */
 Smoke.scenario("sheercold", function (stage) {
     stage.weather("clear");
-    stage.time("day");
+    stage.time("night");
 
-    var caster = stage.pokemon({ species: "lapras", level: 40, moves: ["sheercold"], at: [-2.5, 0, 0] });
-    var foe = stage.pokemon({ species: "magikarp", level: 12, moves: ["splash"], at: [0, 0, 0] });
-    // 目标脚下留草块；寒霜只作表现，原地表保持。
-    stage.block([0, -1, 0], "minecraft:grass_block");
+    var casterAt = [-2.6, 0, 0];
+    var foeAt: number[][] = [[0, 0, 0], [1.4, 0, 0.6], [1.4, 0, -0.6], [0.4, 0, 1.5], [0.4, 0, -1.5]];
+    var caster = stage.pokemon({ species: "lapras", level: 40, moves: ["sheercold"], at: casterAt });
+    var foes: Smoke.Actor[] = [];
+    for (var i = 0; i < foeAt.length; i++) {
+        foes.push(stage.mob({ type: "minecraft:zombie", at: foeAt[i] }));
+        stage.noai(foes[i]);
+    }
+    // 只留一发，让「一次结霜」的合计上界可以被断言。寒霜只作表现，原地表保持。
+    stage.setPp(caster, "sheercold", 1);
 
-    stage.until(360, function () { return caster.alive() && foe.alive(); }, function () {
-        stage.hostile(caster, foe);
+    stage.until(360, function () { return caster.alive() && foes[0].alive(); }, function () {
+        for (var i = 0; i < foes.length; i++) stage.hostile(caster, foes[i]);
         stage.until(1200, function () {
-            return stage.casts("sheercold", caster) > 0 && stage.damageTo(foe) > 0;
+            return stage.casts("sheercold", caster) > 0 && stage.damageBy(caster) > 0;
         }, function () {
             stage.expect(stage.casts("sheercold", caster) > 0, "绝对零度被放出来了");
-            stage.expect(stage.damageTo(foe) > 0, "整圈结霜冻毙了目标，造成了伤害");
+            stage.expect(stage.damageBy(caster) > 0, "整圈结霜冻伤了圈内的目标");
             stage.expect(stage.changedBlocks().length === 0, "寒霜余光保持原地面");
-            stage.note("命中取决于目标是否还站在冻结圈内；冰属性使用者结霜更快，冰属性目标免疫。",
-                { casts: stage.casts("sheercold", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
-                  foeAlive: foe.alive(), foeHealth: Math.round(foe.health() * 10) / 10,
-                  changed: stage.changedBlocks().length });
+            stage.expect(stage.hits(caster) <= 4, "一次冷域最多四个真实命中");
+            stage.expect(stage.damageBy(caster) <= 400, "一次结霜的合计伤害不超过 400");
+            stage.note("命中按以落点为心的真实三维冷域与圈心遮挡取最近的受体；非冰目标各承受一笔有限固定伤害，最多四个；冰属性目标免疫。",
+                { casts: stage.casts("sheercold", caster), dealt: Math.round(stage.damageBy(caster) * 10) / 10,
+                  casterAlive: caster.alive(), changed: stage.changedBlocks().length });
             stage.done();
         }, "绝对零度命中");
     }, "双方存活");

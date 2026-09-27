@@ -9,8 +9,9 @@
  * 持续状态：field 贴地、低 alpha 的顺风飞沙加一层薄尘幕；沙幕本来就该挡住视线，密度按机制给足，
  * 地面一圈沙环始终把「站哪里会被磨到」画出来。
  * 机制驱动：沙幕半径决定飞沙与沙环的大小（data.scale = 半径/9），飞沙数量直接读本招算出的 grainDensity，
- * 条带宽窄与推进读 gustWidth/gustStep（data.width / data.band），每趟磨蚀的沙砾数量由这一趟实际伤害派生（data.grains）；
- * `orient:"direction"` 与 `direction:"shape"` 让所有顺风层真的沿服务端定格的风向流动。
+ * 条带的跨度/厚度读 data.span/data.width，竖直厚度读 data.height；每趟磨蚀的沙砾数量由这一趟实际伤害派生（data.grains）。
+ * 条带用有限高度的 box（fit:"world" 直接使用世界格尺寸，不再把 data.radius 再乘一次 data.scale），
+ * 由服务端算出的 data.yaw 把盒子对准风向，颗粒再沿 data.direction 顺风流动——画面因此是低矮的风带而非巨立筒。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  * windup 回沙 swirlingwind     沿环内收＋上旋 0.5-0.1 12-20 0.55→0 ≤120
@@ -53,18 +54,21 @@ const SandstormDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.24, 0.4],
                     lifetime: [20, 34], size: [3.0, 0.6],
                     color: 0xD8B26A, alpha: [0.6, 0], light: "world", maxParticles: 40 },
-                { name: "front", bind: "point", offset: [0, 0.7, 0], height: 0, fit: "none",
+                { name: "front", bind: "point", offset: [0, 0.7, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "density", fallback: 30 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: { data: "width", fallback: 2.6 } },
-                    orient: "direction", direction: "shape", speed: [0.18, 0.44], spin: 40, drag: 0.97,
+                    shape: { kind: "box", size: [{ data: "span", fallback: 18 }, { data: "height", fallback: 2.4 }, { data: "width", fallback: 2.6 }],
+                        rotation: [{ data: "yaw", fallback: 0 }, 0, 0] },
+                    direction: [{ data: "direction.0", fallback: 0 }, { data: "direction.1", fallback: 0 }, { data: "direction.2", fallback: 1 }],
+                    speed: [0.18, 0.44], spin: 40, drag: 0.97,
                     lifetime: [12, 24], size: [0.5, 0.12], sizeMode: "index",
                     color: 0xD8B26A, alpha: [0.6, 0], light: "world", maxParticles: 400 },
-                { name: "dust", bind: "point", offset: [0, 1.0, 0], height: 0, fit: "none",
+                { name: "dust", bind: "point", offset: [0, 1.0, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "density", fallback: 30 }, interval: 3, repeats: 12 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: 3 },
-                    direction: "outward", speed: [0.06, 0.22], gravity: -0.004, drag: 0.97,
+                    shape: { kind: "box", size: [{ data: "span", fallback: 18 }, { data: "height", fallback: 2.4 }, 2.5],
+                        rotation: [{ data: "yaw", fallback: 0 }, 0, 0] },
+                    direction: "up", speed: [0.06, 0.22], gravity: -0.004, drag: 0.97,
                     lifetime: [14, 26], size: [0.14, 0.03],
                     color: 0xF4E4C0, alpha: [0.55, 0], light: "world", maxParticles: 360 }
             ]
@@ -72,20 +76,22 @@ const SandstormDefinition: ParticleDefinition = {
         field: {
             exit: { drain: 30 },
             emitters: [
-                { name: "streaks", bind: "point", offset: [0, 0.6, 0], height: 0, fit: "none",
+                { name: "streaks", bind: "point", offset: [0, 0.6, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "density", fallback: 30 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: 2.6 },
-                    orient: "direction", direction: "shape", speed: [0.16, 0.46], drag: 0.98, spin: 30,
+                    shape: { kind: "box", size: [{ data: "span", fallback: 18 }, { data: "height", fallback: 2.4 }, { data: "width", fallback: 2.6 }],
+                        rotation: [{ data: "yaw", fallback: 0 }, 0, 0] },
+                    direction: [{ data: "direction.0", fallback: 0 }, { data: "direction.1", fallback: 0 }, { data: "direction.2", fallback: 1 }],
+                    speed: [0.16, 0.46], drag: 0.98, spin: 30,
                     lifetime: [10, 20], size: [0.12, 0.03],
                     color: 0xD8B26A, alpha: [0.5, 0], light: "world", maxParticles: 500 },
-                { name: "haze", bind: "point", offset: [0, 0.35, 0], height: 0, fit: "none",
+                { name: "haze", bind: "point", offset: [0, 0.35, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: 26, shape: { kind: "circle", radius: { data: "radius", fallback: 9 } },
                     direction: "outward", speed: [0.02, 0.1], gravity: -0.002, drag: 0.95,
                     lifetime: [16, 30], size: [0.5, 0.2], sizeMode: "index",
                     color: 0xC8A860, alpha: [0.28, 0], light: "world", maxParticles: 300 },
-                { name: "edge", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
+                { name: "edge", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     rate: 6, shape: { kind: "ring", radius: { data: "radius", fallback: 9 } },
                     direction: "up", speed: [0.004, 0.012],
@@ -94,21 +100,25 @@ const SandstormDefinition: ParticleDefinition = {
             ]
         },
         gust: {
-            duration: 44,
+            // 不设固定 duration：随沙幕扫描持续更新，条带在整段间隔里连续推进；沙幕结束即停止续期。
             exit: { stop: 18, drain: 26 },
             emitters: [
-                { name: "band", bind: "point", offset: [0, 0.7, 0], height: 0, fit: "none",
+                { name: "band", bind: "point", offset: [0, 0.7, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "density", fallback: 30 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: { data: "width", fallback: 2.6 } },
-                    orient: "direction", direction: "shape", speed: [0.2, 0.48], spin: 40, drag: 0.97,
+                    shape: { kind: "box", size: [{ data: "span", fallback: 18 }, { data: "height", fallback: 2.4 }, { data: "width", fallback: 2.6 }],
+                        rotation: [{ data: "yaw", fallback: 0 }, 0, 0] },
+                    direction: [{ data: "direction.0", fallback: 0 }, { data: "direction.1", fallback: 0 }, { data: "direction.2", fallback: 1 }],
+                    speed: [0.2, 0.48], spin: 40, drag: 0.97,
                     lifetime: [12, 24], size: [0.5, 0.12], sizeMode: "index",
                     color: 0xD8B26A, alpha: [0.6, 0], light: "world", maxParticles: 420 },
-                { name: "grit", bind: "point", offset: [0, 0.5, 0], height: 0, fit: "none",
+                { name: "grit", bind: "point", offset: [0, 0.5, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "density", fallback: 30 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: { data: "width", fallback: 2.6 } },
-                    orient: "direction", direction: "shape", speed: [0.22, 0.5], drag: 0.98,
+                    shape: { kind: "box", size: [{ data: "span", fallback: 18 }, { data: "height", fallback: 2.4 }, { data: "width", fallback: 2.6 }],
+                        rotation: [{ data: "yaw", fallback: 0 }, 0, 0] },
+                    direction: [{ data: "direction.0", fallback: 0 }, { data: "direction.1", fallback: 0 }, { data: "direction.2", fallback: 1 }],
+                    speed: [0.22, 0.5], drag: 0.98,
                     lifetime: [8, 16], size: [0.12, 0.03],
                     color: 0xF4E4C0, alpha: [0.5, 0], light: "world", maxParticles: 260 }
             ]

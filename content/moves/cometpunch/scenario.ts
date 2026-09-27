@@ -20,7 +20,7 @@ Smoke.scenario("cometpunch", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("cometpunch", caster) > 0, "cometpunch was committed");
             stage.expect(stage.damageTo(foe) > 0, "the punch flurry dealt damage to the foe");
-            stage.note("punch count (2-5) follows Attack/level and the scatter/focused choice; each punch rolls 85%; focused mode lands all punches on one point while scatter spreads a fan that can cover a second enemy (design facts verified in the full assembly)", {
+            stage.note("punch count (2-5) follows Attack/level and the scatter/focused choice; each punch rolls 85%; gaps start at gap and tighten by one tick each punch (never below 2); focused mode lands on one body-intersection lane while scatter holds a real fan, and the custom fist scene alternates left/right hands one punch at a time (design facts verified in the full assembly)", {
                 casts: stage.casts("cometpunch", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

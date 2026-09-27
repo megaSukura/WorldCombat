@@ -9,9 +9,9 @@
  *
  * 两幕：
  *   起（windup，提交前）：电花从全身窜起、向内收拢，只播预告。
- *   撞（dash → zap / fizzle）：提交后逐刻沿瞄准方向突进；trace 撞上活体即按 jolt 结算接触伤害，
- *       按 numbChance 灌入麻痹（共享状态），把目标顶开 push 格；目标本来已残（生命低于三成五）时威力更高、
- *       画面也更亮。冲到底或推不动就是空（fizzle），不自伤。
+ *   撞（dash → zap / fizzle）：提交后逐刻沿瞄准方向突进；trace 撞上活体即以**该实际受害者**重算 jolt（残血
+ *       收尾倍率按它当刻生命），按 numbChance 灌入麻痹（共享状态）、把目标顶开 push 格；伤害或状态被原生拒绝、
+ *       或撞到友方时只在此接触收势、电就地泄掉，不冒充命中。冲到底或推不动就是空（fizzle），不自伤。
  *
  * 与同族分开：疯狂伏特与伏特攻击是带电的重装冲锋并反伤、火焰轮是滚动的火；电光的辨识点是那一点蓝白电花
  * 与最高的麻痹可靠性。配置 overcharge（蓄电式）由 resolve 改时序、由公式改威力/麻痹，提交后才触碰世界。
@@ -38,7 +38,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 16,
         style: "spark",
-        defaults: { overcharge: false, ai: { maxChase: 7, finish: true } },
+        defaults: { overcharge: false, ai: { maxChase: 4, finish: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("spark", "radius", pokemon) * 1.6, geometry: "line", style: "spark",
@@ -82,12 +82,10 @@ namespace PokemonSkills {
             const scale = radius / 0.45;
             const intensity = Math.max(0.6, Math.min(2.2, power / 68));
             const start = action.origin();
-            const end = start.plus(direction.scale(length));
             let travelled = 0, settled = false;
 
             sound(action, "cobblemon:move.thundershock.actor");
             movementScenes.show(action, "dash", start, { moment: "dash", direction: [direction.x(), direction.y(), direction.z()],
-                    path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
                     arcs: arcs, scale: scale, intensity: intensity });
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
@@ -112,26 +110,34 @@ namespace PokemonSkills {
                 const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
+                    // 撞到真实首体：用实际受害者重算残血收尾倍率，不再沿用发射时锁住的瞄准目标。
+                    const hitPower = target !== null ? p("spark", "jolt", withTarget(factContext(current), target)) : power;
                     let finisher = false;
                     if (target !== null && scope.valid(target)) {
                         const body = scope.observe(target);
                         if (body !== null && body.maxHealth() > 0) finisher = body.health() / body.maxHealth() < 0.35;
                     }
                     const already = target !== null && scope.valid(target) && CombatStatus.has(scope, target, "paralysis");
-                    const landed = impact(current, hit, "spark", power,
+                    const landed = impact(current, hit, "spark", hitPower,
                         { damage: damageSpec("spark", "jolt"), contact: true,
                             status: already ? "" : "paralysis", chance: already ? 0 : chance });
-                    WorldFeedback.emit(scope, sparkScene, 1, point,
-                        { moment: "zap", target: target ? String(target.ref()) : "", arcs: arcs, scale: scale,
-                            intensity: Math.max(0.6, Math.min(2.2, power / 62)), finisher: finisher ? 1 : 0 }, 26);
-                    sound(current, "cobblemon:move.thundershock.target");
-                    sound(current, "cobblemon:impact.electric");
                     if (landed && target !== null && scope.valid(target)) {
+                        WorldFeedback.emit(scope, sparkScene, 1, point,
+                            { moment: "zap", target: String(target.ref()), arcs: arcs, scale: scale,
+                                intensity: Math.max(0.6, Math.min(2.2, hitPower / 62)), finisher: finisher ? 1 : 0 }, 26);
+                        sound(current, "cobblemon:move.thundershock.target");
+                        sound(current, "cobblemon:impact.electric");
                         scope.hitDisplace(target, direction.scale(push));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), sparkHitText, [], 24);
                         if (finisher) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.7, 0)), sparkFinishText, [], 26);
                         if (!already && CombatStatus.has(scope, target, "paralysis"))
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 2.1, 0)), sparkNumbText, [], 28);
+                    } else {
+                        // 友方或伤害被拒：只在接触处收势，冲出的电就地泄掉，不冒充命中。
+                        WorldFeedback.emit(scope, sparkScene, 1, point,
+                            { moment: "fizzle", arcs: Math.max(4, Math.round(arcs * 0.6)), scale: scale,
+                                intensity: Math.max(0.4, intensity * 0.6) }, 16);
+                        sound(current, "cobblemon:impact.electric");
                     }
                     finish(current);
                     return;

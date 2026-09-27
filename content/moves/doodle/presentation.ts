@@ -37,13 +37,17 @@ const DoodleSceneDefinition: ParticleDefinition = {
                     color: 0x6E7BFF, alpha: [0.85, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "sketch_thread", bind: "path",
+                    name: "sketch_thread", bind: "path", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/thought_trail_small",
                     shape: { kind: "polyline" },
                     rate: { data: "marks", fallback: 6 }, direction: "shape", speed: [0.03, 0.1], spread: 10,
                     lifetime: [8, 15], size: [0.08, 0.02],
                     color: 0x6E7BFF, alpha: [0.6, 0], light: "full", maxParticles: 80
-                }
+                },
+                { name: "planned_canvas", bind: "source", height: 0, fit: "world", offset: [0, .04, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 28, shape: { kind: "ring", radius: { data: "canvas", fallback: 4.5 } },
+                    speed: 0, lifetime: [3, 5], size: [.07, .02], color: 0x6E7BFF, alpha: [.6, 0], maxParticles: 16 }
             ]
         },
         canvas: {
@@ -67,7 +71,7 @@ const DoodleSceneDefinition: ParticleDefinition = {
                     color: 0x6E7BFF, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 120
                 },
                 {
-                    name: "canvas_sheet", bind: "source", fit: "none", offset: [0, 0.06, 0],
+                    name: "canvas_sheet", bind: "source", height: 0, fit: "world", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/scaling",
                     burst: { count: { data: "marks", fallback: 8 }, interval: 2, repeats: 2 },
                     shape: { kind: "ring", radius: { data: "canvas", fallback: 4.5 } },
@@ -76,7 +80,7 @@ const DoodleSceneDefinition: ParticleDefinition = {
                     color: 0x6E7BFF, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 160
                 },
                 {
-                    name: "canvas_edge", bind: "source", fit: "none", offset: [0, 0.05, 0],
+                    name: "canvas_edge", bind: "source", height: 0, fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "canvas", fallback: 4.5 } },
@@ -85,7 +89,7 @@ const DoodleSceneDefinition: ParticleDefinition = {
                     color: 0xEDEFFF, alpha: [0.55, 0], light: "full", maxParticles: 20
                 },
                 {
-                    name: "canvas_dust", bind: "source", fit: "none", offset: [0, 0.1, 0],
+                    name: "canvas_dust", bind: "source", height: 0, fit: "world", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "marks", fallback: 10 }, interval: 2, repeats: 3 },
                     shape: { kind: "circle", radius: { data: "canvas", fallback: 4.5 } },

@@ -2,6 +2,8 @@
 namespace PokemonSkills {
     export const lastrespectsId = "lastrespects";
     export const lastrespectsScene = "world_combat:move_lastrespects";
+    /** 固定数量的鬼影队列：服务端每刻给出弹后实际排布点，客户端按点数各画一枚。 */
+    export const lastrespectsGhostScene = "world_combat:move_lastrespects_ghosts";
     export const lastrespectsStrikeText = "world_combat.move.lastrespects.text.strike";
     export const lastrespectsMarchText = "world_combat.move.lastrespects.text.march";
     export const lastrespectsMissText = "world_combat.move.lastrespects.text.miss";

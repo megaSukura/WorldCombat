@@ -25,17 +25,20 @@
  *   fumble   恍惚失手率：物攻决定这段时间出手被打散的概率，存进载体振幅。
  *   tempo／recover／recharge：速度决定起手／收招／冷却，狂乱式更慢。
  *
- * 配置 wild（狂乱）双向取舍：开启＝罩得更宽、推得更狠、末挥更重，但每一挥都会磕伤自己、冷却更久、恍惚更长；
- *   关闭（乱打）＝只震不伤己、收放更快，代价是范围与击退都收窄。两个方向各有适用局面。
+ * 配置 wild（狂乱）双向取舍：开启＝罩得更宽、推得更狠、恍惚更长、起手与冷却更久，且每一挥都磕伤自己（单次威力略降，
+ *   finisher 末挥倍率不变，所以末跺是“更宽的挥 + 自身稍轻的基底”再乘同一倍率）；关闭（乱打）＝只震不伤己、收放更快，
+ *   单次威力略高，代价是范围与击退都收窄。两个方向各有适用局面。
  *
  * 伤害段 bash：这一挥随精灵数据变化的那部分，走共享换算（对手防御、相性与暴击在命中时另算）。
  */
 namespace PokemonSkills {
     export const thrashId = "thrash";
     export const thrashScene = "world_combat:move_thrash";
+    export const thrashSweepScene = "world_combat:move_thrash_sweep";
     export const thrashDaze = "world_combat:thrash_daze";
     export const thrashFlailText = "world_combat.move.thrash.text.flail";
     export const thrashStompText = "world_combat.move.thrash.text.stomp";
+    export const thrashAirText = "world_combat.move.thrash.text.air";
     export const thrashDazeText = "world_combat.move.thrash.text.daze";
     export const thrashChipText = "world_combat.move.thrash.text.chip";
 

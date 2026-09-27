@@ -6,7 +6,8 @@
  * 色相家族：粉白与嫩绿（cherry_petal / swirlingwind / grass.leaf / impact_grass / glowingsparkle_pink）为主体，
  * 花瓣用贴图原色，只在风层上做轻微偏色。
  * 拍子：起（gather 卷瓣）→ 旋（draw 向内收）→ 甩（lash 向外甩，可重复、`data.pass` 记第几阵、`cut` 逐处割中）→ 收（settle 落瓣散尽 / miss）。
- * 范围：draw / lash / settle 的地面圈按服务端传的 `data.radius`（真实风暴半径）画出，玩家看到的圈就是会被割到的地。
+ * 范围：draw / lash / settle 的地面圈按服务端传的 `data.radius`（真实风暴半径，世界单位）画出，形体的 `fit: "world"`
+ *   让它不再被 `data.scale` 二次缩放；`data.scale` 只放大粒子尺寸。玩家看到的圈就是会被割到的地。
  * 运动：第一阵花瓣与风贴地向内收束，其后几阵反过来向外炸开，散落的花瓣竖直下落——向内还是向外，一眼可读。
  * 数：`data.petals`（物攻与等级派生）决定卷起的花瓣密度，`data.settle`（落瓣余韵）决定 settle 那一幕的时长，
  * `data.flow`（半径派生）决定每一阵的密度，`data.count`（每阵威力派生）决定命中碎叶量。
@@ -37,7 +38,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
                     alpha: [0.9, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "edge", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "edge", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: 26, shape: { kind: "ring", radius: { data: "area", fallback: 4 } },
                     direction: "up", speed: [0.02, 0.08], spread: 10,
@@ -51,7 +52,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 18 },
             emitters: [
                 {
-                    name: "pull", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "pull", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
                     rate: { data: "flow", fallback: 80 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.85 },
                     direction: "inward", speed: [0.12, 0.4], spread: 18,
@@ -60,7 +61,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
                     alpha: [0.9, 0], light: "world", maxParticles: 220
                 },
                 {
-                    name: "wind", bind: "point", offset: [0, 0.07, 0], height: 0, fit: "none",
+                    name: "wind", bind: "point", offset: [0, 0.07, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "flow", fallback: 60 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.9 },
                     direction: "inward", speed: [0.08, 0.24], spread: 14,
@@ -68,7 +69,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
                     color: 0xE0B8CC, alpha: [0.4, 0], light: "world", maxParticles: 180
                 },
                 {
-                    name: "leaves", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    name: "leaves", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     rate: { data: "flow", fallback: 60 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.9 },
                     direction: "inward", speed: [0.1, 0.3], spread: 20,
@@ -82,7 +83,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 18 },
             emitters: [
                 {
-                    name: "burst", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "burst", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
                     rate: { data: "flow", fallback: 100 }, shape: { kind: "ring", radius: { data: "radius", fallback: 4 } },
                     direction: "outward", speed: [0.25, 0.7], spread: 20,
@@ -91,7 +92,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
                     alpha: [0.95, 0], light: "world", maxParticles: 260
                 },
                 {
-                    name: "wind", bind: "point", offset: [0, 0.07, 0], height: 0, fit: "none",
+                    name: "wind", bind: "point", offset: [0, 0.07, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "flow", fallback: 70 }, shape: { kind: "ring", radius: { data: "radius", fallback: 4 } },
                     direction: "outward", speed: [0.2, 0.5], spread: 14,
@@ -99,7 +100,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
                     color: 0xE8B8CC, alpha: [0.45, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "shards", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    name: "shards", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     rate: { data: "flow", fallback: 70 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.9 },
                     direction: "outward", speed: [0.2, 0.6], spread: 24,
@@ -139,7 +140,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 24 },
             emitters: [
                 {
-                    name: "fall", bind: "point", offset: [0, 0.6, 0], height: 0, fit: "none",
+                    name: "fall", bind: "point", offset: [0, 0.6, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
                     rate: { data: "flow", fallback: 60 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.9 },
                     direction: "down", speed: [0.04, 0.16], spread: 16,
@@ -148,7 +149,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
                     alpha: [0.7, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "motes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "motes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.9 },
                     direction: "up", speed: [0.01, 0.05], spread: 10,
@@ -162,7 +163,7 @@ const PetalblizzardDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "drift", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "drift", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
                     burst: { count: 18 },
                     shape: { kind: "ring", radius: 0.6 },

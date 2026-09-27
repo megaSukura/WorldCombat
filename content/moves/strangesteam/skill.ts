@@ -41,6 +41,7 @@ namespace PokemonSkills {
             let applied = 0;
 
             // 先处理首次入云的新目标：它们优先占用上限，等待下次续熏的目标不占位。
+            // 只有首喷真正造成伤害后才记账（进入续熏节拍），被原生拒绝/免伤的目标不占预算、下一轮仍按首喷重试。
             for (let i = 0; i < actors.length && applied < cap; i++) {
                 const actor = actors[i];
                 if (!world.valid(actor) || world.friendly(actor)) continue;
@@ -48,16 +49,18 @@ namespace PokemonSkills {
                 if (hit[ref]) continue;
                 const body = world.observe(actor);
                 if (body === null || !world.clear(centre, body.position())) continue;
-                hit[ref] = true;
-                next[ref] = now + refresh;
                 const landed = hurt(world, actor, strangesteamId, field.data.scald, { damage: damageSpec(strangesteamId, "scald") });
                 if (!landed) continue;
+                hit[ref] = true;
+                next[ref] = now + refresh;
                 applied++;
-                if (world.valid(actor) && world.random() < field.data.chance)
-                    CombatStatus.apply(world, actor, "confusion", strangesteamEffect, field.data.daze, field.data.fumble, { unique: true });
+                const dazed = world.valid(actor) && world.random() < field.data.chance
+                    && CombatStatus.apply(world, actor, "confusion", strangesteamEffect, field.data.daze, field.data.fumble, { unique: true });
                 WorldFeedback.emit(world, strangesteamScene, 1, body.position(),
                     { moment: "hit", target: ref, motes: field.data.motes, scale: scale }, 24);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), strangesteamDazeText, [], 26);
+                // 迷幻宣告只在状态真的落在目标身上时出现，被免疫或概率没过时不报成功。
+                if (dazed)
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), strangesteamDazeText, [], 26);
             }
             // 再轮到已经在节拍上、到点的续熏。
             for (let i = 0; i < actors.length && applied < cap; i++) {
@@ -83,7 +86,7 @@ namespace PokemonSkills {
         id: strangesteamId,
         cooldownParameter: "recharge",
         name: "Strange Steam",
-        description: "朝选定地点喷出一柱迷幻蒸汽，蒸汽沿直线前进、被真墙挡在到达处：云里第一次被喷到的人挨一记烫伤并可能迷得恍惚；留在云里会被持续熏着，恍惚被不断续上。门墙后不会凭空开雾。",
+        description: "朝选定地点瞬时喷入一柱迷幻蒸汽，蒸汽被真墙挡在实际接触面、当场散成一片低垂的云：云里第一次被喷到的人挨一记烫伤并可能迷得恍惚；留在云里会被持续熏着，恍惚被不断续上。门墙后不会凭空开雾。",
         uses: ["封住一个落点或门口", "一次罩住几个挤在一起的敌人", "用停留的云持续压制进出的人"],
         kind: "point",
         range: 8,

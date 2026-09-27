@@ -58,12 +58,14 @@ namespace PokemonSkills {
             "同行上限", { unit: "只", description: "一次最多把图样盖到几只同伴身上；等级越高一次能带上越多。" })
     });
 
-    stages("doodle", [{ level: 35, values: { cooldown: 80 } }, { level: 50, values: { cooldown: 68 } }]);
+    stages("doodle", [{ level: 35, values: { recharge: 80 } }, { level: 50, values: { recharge: 68 } }]);
 
     describe("doodle", [
         { key: "world", values: ["hold", "canvas", "squad"] },
         { key: "description.0", values: ["reach", "tempo"] },
         { key: "description.1", values: ["canvas", "squad", "hold"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.recharge"] },
+        { key: "growth.1", values: ["tier.1.level", "tier.1.recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

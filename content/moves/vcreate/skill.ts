@@ -21,6 +21,25 @@
  * 配置 `nova`（尽燃式）由 `resolve` 改时序与射程、由公式改威力／弹速／降级，提交后才触碰世界。
  */
 namespace PokemonSkills {
+    /** 一直挂在动作上的前额 V 轮廓场景；两翼由客户端按真实 bodyYaw 每帧重算。 */
+    const vcreateVScene = "world_combat:move_vcreate/v";
+
+    /**
+     * 用施法者当前真实朝向算出一组稳定基：forward 取水平 look，right/up 撑起额前 V 的横向与竖向。
+     * 客户端优先按锚点 bodyYaw 实时重算，这里同时带上出生时的基作为无锚点时的兜底。
+     */
+    function vcreatePlacement(world: CombatWorld, actor: CombatActor, body: CombatObservation | null): any {
+        const look = WorldGeometry.facing(world, actor);
+        const heading = WorldGeometry.flatUnit(look === null ? WorldCombat.point(0, 0, 1) : look);
+        const axis = WorldGeometry.basis(heading);
+        return {
+            forward: [axis.forward.x(), axis.forward.y(), axis.forward.z()],
+            right: [axis.right.x(), axis.right.y(), axis.right.z()],
+            up: [axis.up.x(), axis.up.y(), axis.up.z()],
+            height: body === null ? 1.4 : body.height()
+        };
+    }
+
     define({
         freeMovement: true,
         id: vcreateId,
@@ -55,9 +74,20 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const body = action.sense().observe(action.actor());
+            const flames = Math.round(p(vcreateId, "flames", action));
+            const radius = p(vcreateId, "radius", action);
+            const placement = vcreatePlacement(action.sense(), action.actor(), body);
+            // 只在这里播一次起火预告，并把真实 prepare 作为时长；execute 不再重发 kindle。
             action.present("world_combat:move_vcreate:kindle", vcreateScene, 1, action.origin(),
-                JSON.stringify({ moment: "kindle", nova: config && config.nova === true ? 1 : 0,
-                    flames: Math.round(p(vcreateId, "flames", action)) }));
+                JSON.stringify({ moment: "kindle", windup: prepare, nova: config && config.nova === true ? 1 : 0,
+                    flames: flames }));
+            // 准备期的额前 V：客户端按 bodyYaw 实时跟随身体，转身时两翼仍在身前张开。
+            action.present(vcreateVScene, vcreateVScene, 1, action.origin(),
+                JSON.stringify({ moment: "kindle", windup: prepare, start: action.sense().tick(),
+                    nova: config && config.nova === true ? 1 : 0, flames: flames, span: radius, rise: radius * 1.4,
+                    scale: Math.max(0.6, Math.min(2.0, radius / 0.5)), forward: placement.forward, right: placement.right,
+                    up: placement.up, height: placement.height }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -81,14 +111,17 @@ namespace PokemonSkills {
             const up = WorldCombat.point(0, 1.3, 0);
             let travelled = 0, struck = false, settled = false;
 
-            // 舍身的代价在提交那一刻付：三段降级无论中与不中都照付。
-            NativeEffects.boost(world, actor, "def", -guardLoss);
-            NativeEffects.boost(world, actor, "spd", -poiseLoss);
-            NativeEffects.boost(world, actor, "spe", -speedLoss);
+            // 舍身的代价在提交那一刻付：三段降级无论中与不中都照付；实际降幅受能力规则限制，回执只报真正落下的级数。
+            const guardPaid = Math.max(0, -NativeEffects.boost(world, actor, "def", -guardLoss));
+            const poisePaid = Math.max(0, -NativeEffects.boost(world, actor, "spd", -poiseLoss));
+            const speedPaid = Math.max(0, -NativeEffects.boost(world, actor, "spe", -speedLoss));
             sound(action, "minecraft:item.firecharge.use");
-            WorldFeedback.emit(world, vcreateScene, 1, action.origin(),
-                { moment: "kindle", nova: nova ? 1 : 0, flames: flames, scale: scale, intensity: intensity,
-                    guardLoss: guardLoss, poiseLoss: poiseLoss, speedLoss: speedLoss }, 22);
+            // 冲刺阶段：把额前 V 从准备切到全张，交给自定义场景按真实朝向跟随身体。
+            const placement = vcreatePlacement(world, actor, world.observe(actor));
+            action.present(vcreateVScene, vcreateVScene, 1, action.origin(),
+                JSON.stringify({ moment: "dash", start: world.tick(), nova: nova ? 1 : 0, flames: flames,
+                    span: radius, rise: radius * 1.4, scale: scale, intensity: intensity,
+                    forward: placement.forward, right: placement.right, up: placement.up, height: placement.height }));
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -102,9 +135,15 @@ namespace PokemonSkills {
                 }
                 WorldFeedback.emit(scope, vcreateScene, 1, at,
                     { moment: "slump", flames: flames, scale: scale, intensity: intensity, landed: struck ? 1 : 0,
-                        guardLoss: guardLoss, poiseLoss: poiseLoss, speedLoss: speedLoss,
-                        slump: 8 + (guardLoss + poiseLoss + speedLoss) * 5 }, 26);
-                WorldFeedback.text(scope, at.plus(up), vcreateSlumpText, [guardLoss, poiseLoss, speedLoss], 30);
+                        guardLoss: guardPaid, poiseLoss: poisePaid, speedLoss: speedPaid,
+                        slump: 8 + (guardPaid + poisePaid + speedPaid) * 5 }, 26);
+                WorldFeedback.text(scope, at.plus(up), vcreateSlumpText, [guardPaid, poisePaid, speedPaid], 30);
+                // 收势的残焰 V：仍绑在身体上，按真实降级幅度压暗缩短；动作结束随动作清理。
+                const slumpPlacement = vcreatePlacement(scope, actor, self);
+                current.present(vcreateVScene, vcreateVScene, 1, at,
+                    JSON.stringify({ moment: "slump", start: scope.tick(), flames: flames, scale: scale, intensity: intensity,
+                        span: radius * 0.7, rise: radius, forward: slumpPlacement.forward, right: slumpPlacement.right,
+                        up: slumpPlacement.up, height: slumpPlacement.height }));
                 movementScenes.finish(current, done);
             }
 
@@ -125,6 +164,11 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, vcreateScene, 1, at,
                             { moment: "impact", target: String(victim.ref()), nova: nova ? 1 : 0, flames: flames,
                                 scale: scale, intensity: intensity }, 30);
+                        // 接触瞬间把 V 碎散：真实接触点向外抛短段；carry 的 V 随即由 finish 切成残焰。
+                        current.present("world_combat:move_vcreate:shatter", vcreateVScene, 1, at,
+                            JSON.stringify({ moment: "shatter", start: scope.tick(),
+                                direction: [direction.x(), direction.y(), direction.z()],
+                                reach: radius, scale: scale, intensity: intensity }));
                         if (landed && scope.valid(victim)) scope.hitDisplace(victim, direction.scale(push));
                         scope.sound("cobblemon:impact.fire", at, 15, "{}");
                         scope.sound("minecraft:entity.generic.explode", at, 12, "{}");

@@ -31,12 +31,20 @@ function world(source){return {source:()=>source,tick:()=>1,valid:target=>!!targ
     const records=updates.map(u=>effects.find(e=>e.live&&e.id===u.id));
     if(blocked||updates.some((u,i)=>!records[i]||records[i].data!==u.expected))return false;
     const data=updates.map((u,i)=>definitions.get(records[i].definition)(u.data));records.forEach((e,i)=>e.data=data[i]);onCommit?.();return true;},
-  attributeValue:()=>null,attribute:()=>true,mobEffect:()=>null};}
+  attributeValue:()=>null,attribute:()=>true,mobEffect:()=>null,matchesMobEffect:()=>false};}
 function base(target,stages){if(target.domain()==='cobblemon'){const state=N.empty();state.stages=stages;create(target,target,'cobblemon_world_combat:individual',JSON.stringify(state),1000);}
   else if(Object.keys(stages).length)create(target,target,C.definition,JSON.stringify({stages}),600);}
 function reset(from={atk:3},to={atk:1},other={}){effects=[];blocked=false;onCommit=null;actors.forEach(a=>{a.live=true;a.ability='';});base(a,from);base(b,to);base(ordinary,other);}
 function check(name,run){reset();run();assert(!effects.some(e=>e.live&&JSON.parse(e.data).pending),'No provisional state survives the operation');checks++;console.log('PASS '+name);}
 const transfer=(from=a,to=b,amount=2,handoff=false)=>N.transferStage(world(a),from,to,'atk',amount,handoff);
+check('optional window ownership round-trips without undefined/null origin pollution',()=>{
+  const normalize=definitions.get(C.windowDefinition);
+  const plain=normalize('{"source":"fixture:field","stages":{"def":1},"origin":null}');
+  assert.deepEqual(JSON.parse(plain),{source:'fixture:field',stages:{def:1}});
+  const owned=JSON.parse(plain);owned.owner={actor:'source',definition:'fixture:field',id:71};
+  const again=JSON.parse(normalize(JSON.stringify(owned)));
+  assert.equal(again.owner.id,71);assert(!Object.hasOwn(again,'origin'));
+});
 check('persistent transfer publishes a complete two-party commit',()=>{onCommit=()=>{assert.equal(N.effectiveStage(world(a),a,'atk'),1);assert.equal(N.effectiveStage(world(a),b,'atk'),3);};
   assert.equal(transfer(),2);});
 check('donor removal refusal leaves receiver unchanged',()=>{C.change.define({id:'fixture:deny',apply:p=>{if(p.reason==='transfer'&&p.actor===a)p.allowed=false;}});
@@ -73,5 +81,20 @@ check('negative persistent stages and temporary stages transfer with the same si
 check('temporary CAS refusal removes its prepared adopted carrier',()=>{
   reset({},{});create(a,a,'cobblemon_world_combat:modifier',JSON.stringify({stages:{atk:3},source:'fixture'}),80);blocked=true;
   assert.equal(transfer(a,ordinary,2,true),0);assert.equal(N.effectiveStage(world(a),a,'atk'),3);assert.equal(N.effectiveStage(world(a),ordinary,'atk'),0);
+});
+check('an explicit effective-stage window crosses zero and restores the original ladder',()=>{
+  for(const target of [a,ordinary]){
+    reset({atk:-6},{},{atk:-6});
+    const id=N.boostWindowTo(world(a),target,{atk:6},80,'fixture:target');
+    assert(id>0);assert.equal(N.effectiveStage(world(a),target,'atk'),6);
+    assert.equal(JSON.parse(effects.find(e=>e.id===id).data).stages.atk,12,'owned offset accounts for the negative base');
+    N.windowClose(world(a),id);assert.equal(N.effectiveStage(world(a),target,'atk'),-6,'expiry removes only its own contribution');
+  }
+});
+check('targeted stage windows still respect native rewrite and refusal',()=>{
+  reset({atk:-4},{});
+  C.change.define({id:'fixture:target-refusal',apply:plan=>{if(plan.source==='fixture:denied')plan.allowed=false;}});
+  assert.equal(N.boostWindowTo(world(a),a,{atk:6},80,'fixture:denied'),0);
+  assert.equal(N.effectiveStage(world(a),a,'atk'),-4);C.change.remove('fixture:target-refusal');
 });
 console.log(`PASS stage transfer: ${checks} atomic conservation, policy refusal, stale snapshot and owned-lifetime scenarios`);

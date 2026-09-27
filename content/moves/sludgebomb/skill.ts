@@ -7,24 +7,27 @@
  *
  * 幕：
  *   起（windup，提交前）：毒泥在身前压进弹壳、引信点着的预告（`action.present`，可被打断、不花 PP）。
- *   掷（flight，提交后）：炸弹沿真实抛物线飞出；动作只负责这一掷，撞到实体/方块立刻把引信交给有限托管效果并结束，
- *       施法者随即可以移动或接下一招（`actionScenes` 只在这个动作内维持飞行表现，转段 stop、结束 finish）。
- *   炸（fuse → burst，托管效果）：动作结束后由 `world_combat:sludgebomb_fuse` 在**真实碰撞点**捧着炸弹走完引信；
+ *   掷（flight，提交后）：炸弹沿真实抛物线飞出；动作只负责这一掷，撞到实体/方块后顺重力沉到其下方的合法支撑，
+ *       再立刻把引信交给有限托管效果并结束，施法者随即可以移动或接下一招（`actionScenes` 只在这个动作内维持飞行表现）。
+ *   炸（fuse → burst，托管效果）：动作结束后由 `world_combat:sludgebomb_fuse` 在**真实落点**捧着炸弹走完引信；
  *       引信烧完在真实爆点结算一次 `blast`、按遮挡筛掉被墙挡住的候选、按实际目标位置求推力并可能挂毒，随后收掉效果与警戒圈。
  *
- * 落点规则：真实首碰点就是爆点，墙前落弹不会穿到墙后的准星点爆炸；飞行自然到期（打空）时安全散去，
- *   不把炸弹挪到准星再炸。引信表现绑定在同一托管效果上，随它自然结束或被驱散一起收掉。
+ * 落点规则：真实首碰点下面若有可站立的支撑，炸弹沉到那层支撑上才起引信；够不到支撑就散落、不炸。
+ *   真实首碰点就是爆点，墙前落弹不会穿到墙后的准星点爆炸；飞行自然到期（打空）时安全散去，不把炸弹挪到准星再炸。
+ *   弹壳由托管效果自己的客户端贴图承载，引信烧完立即消失；引信表现随该效果自然结束或被驱散一起收掉。
  *
  * 与同族分开：污泥攻击是低弧小泥团直接糊人、垃圾射击是负重直线炮、浊雾是正前方雾锥；
  *   只有污泥炸弹是**落地插引信的延时爆弹**，反制方式是在引信烧完前离开爆心。
  */
 namespace PokemonSkills {
     const sludgebombScene = "world_combat:move_sludgebomb";
+    const sludgebombShellScene = "world_combat:move_sludgebomb_shell";
     const sludgebombFuse = "world_combat:sludgebomb_fuse";
     const sludgebombBurstText = "world_combat.move.sludgebomb.text.burst";
     const sludgebombFuseText = "world_combat.move.sludgebomb.text.fuse";
     const sludgebombPoisonText = "world_combat.move.sludgebomb.text.poison";
     const sludgebombFizzText = "world_combat.move.sludgebomb.text.fizz";
+    const sludgebombScatterText = "world_combat.move.sludgebomb.text.scatter";
 
     function sludgebombPoint(value: number[]): CombatPoint { return WorldCombat.point(value[0], value[1], value[2]); }
 
@@ -34,7 +37,7 @@ namespace PokemonSkills {
         if (!Array.isArray(state.point) || state.point.length !== 3
             || !state.point.every(function (value: any) { return typeof value === "number" && isFinite(value); }))
             throw new Error("Invalid sludgebomb point");
-        ["power", "radius", "fuse", "chance", "venom", "push", "fumes", "cap", "scale", "intensity"].forEach(function (key: string) {
+        ["power", "radius", "fuse", "chance", "venom", "push", "fumes", "cap", "scale", "intensity", "start"].forEach(function (key: string) {
             if (typeof state[key] !== "number" || !isFinite(state[key])) throw new Error("Invalid sludgebomb value: " + key);
         });
         if (!(state.power > 0) || !(state.radius > 0) || !(state.fuse >= 1)) throw new Error("Invalid sludgebomb values");
@@ -47,6 +50,10 @@ namespace PokemonSkills {
         // 引信滋烟与警戒圈只画在真实爆点，并随这个效果自然结束/被驱散一起收掉。
         WorldFeedback.onEffect(world, effect.id(), "sludgebomb:fuse:" + effect.id(), sludgebombScene, 1, at,
             { moment: "fuse", point: state.point, fuse: state.fuse, radius: state.radius, fumes: state.fumes,
+                scale: state.scale, sealed: state.sealed === true });
+        // 弹壳与警戒圈由托管效果自己的客户端贴图承载：效果一结束就整只消失，不留悬空残弹。
+        WorldFeedback.onEffect(world, effect.id(), "sludgebomb:shell:" + effect.id(), sludgebombShellScene, 1, at,
+            { moment: "fuse", point: state.point, fuse: state.fuse, radius: state.radius, start: state.start,
                 scale: state.scale, sealed: state.sealed === true });
         world.sound("minecraft:block.fire.ambient", at, 10, "{}");
         effect.schedule("detonate", "detonate", Math.max(1, Math.round(state.fuse)), "{}");
@@ -141,15 +148,26 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
-            /** 真实首碰：把炸弹与引信交给有限托管效果，动作立即结束，施法者恢复自由。 */
+            /** 真实首碰：顺重力沉到下方合法支撑再起引信；够不到支撑就散落。动作立即结束，施法者恢复自由。 */
             function arm(current: CombatAction, point: CombatPoint): void {
                 if (armed) return;
                 armed = true;
+                const scope = current.world();
                 scenes.stop(current, "flight");
-                current.world().effect(sludgebombFuse, current.actor(), JSON.stringify({
-                    point: [point.x(), point.y(), point.z()], power: power, radius: radius, fuse: fuse,
+                // 弹壳落点的实际支撑：撞墙侧面/活体后仍然落到它下面的地面；悬空无处可落时散落。
+                const support = SurfacePaths.support(scope, point, 2.0, 8.0);
+                if (support === null) {
+                    WorldFeedback.emit(scope, sludgebombScene, 1, point,
+                        { moment: "scatter", point: [point.x(), point.y(), point.z()], fumes: fumes, scale: scale }, 18);
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.8, 0)), sludgebombScatterText, [], 24);
+                    scope.sound("minecraft:entity.slime.squish", point, 14, "{}");
+                    finish(current);
+                    return;
+                }
+                scope.effect(sludgebombFuse, current.actor(), JSON.stringify({
+                    point: [support.x(), support.y(), support.z()], power: power, radius: radius, fuse: fuse,
                     chance: chance, venom: venomTicks, push: push, fumes: fumes, cap: cap, scale: scale,
-                    intensity: intensity, sealed: sealed }), fuse + 60);
+                    intensity: intensity, sealed: sealed, start: scope.tick() }), fuse + 60);
                 finish(current);
             }
 

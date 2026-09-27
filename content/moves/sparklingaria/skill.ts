@@ -72,9 +72,10 @@ namespace PokemonSkills {
             const scale = radius / 4.5;
             let struck = 0, cured = 0;
 
-            WorldGeometry.select(world, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 4 }), function (other, facts) {
+            // 真实体积：以身体中心为心的球体与真实实体箱求交，和气泡包络一致，不再是一圈薄面。
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(centre, radius), function (other, facts) {
                 if (String(other.ref()) === String(actor.ref())) return;
-                // 声与水的真实可达性：被墙/地形完全挡住的个体不因同在一个圆里直接被洗或被打。
+                // 声与水的真实可达性：被墙/地形完全挡住的个体不因同在一个球里直接被洗或被打。
                 if (!world.clear(centre, facts.position())) return;
                 if (CombatStatus.has(world, other, "burn") && CombatStatus.cure(world, other, "burn")) {
                     cured++;

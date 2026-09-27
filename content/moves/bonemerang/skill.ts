@@ -76,13 +76,13 @@ namespace PokemonSkills {
                     const contact=current.trace(at,actual,radius),victim=contact.target();
                     if(victim&&scope.valid(victim)&&!scope.friendly(victim)){
                         hit=true;
-                        if(impact(current,contact,"bonemerang",p("bonemerang",phase,current),{segment:phase})){
+                        if(impact(current,contact,"bonemerang",p("bonemerang",phase,current),{segment:phase},phase)){
                             hits++;WorldFeedback.emit(scope,bonemerangScene,1,contact.position(),{moment:"strike",target:String(victim.ref()),segment:phase,hits:hits,count:12,scale:radius/.7},16);
                         }
                     }
                 }
                 scenes.show(current,"flight",actual,{moment:phase,path:[[at.x(),at.y(),at.z()],[actual.x(),actual.y(),actual.z()]],target:String(bone.ref()),count:p("bonemerang","spin",current),scale:radius/.7});
-                if(block.blocked()||travelled<step.length()*.5){finish(current,"drop");return;}
+                if(block.blocked()||travelled<step.length()*.5){finish(current,"break");return;}
                 if(++age>80){finish(current,"drop");return;}current.after(1,fly);
             }
             sound(action,"minecraft:entity.fishing_bobber.throw");fly(action);

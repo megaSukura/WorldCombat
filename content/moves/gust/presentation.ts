@@ -8,8 +8,9 @@
  * 范围：`burst` 的地面环半径由 `data.scale`（风团判定 / 0.55）缩放，玩家一眼知道这一圈会被风兜住。
  * 运动：风弹沿直线走并小幅转向目标；命中后一圈风环贴地向外翻卷，`push` 速度线沿 `data.direction`（风实际吹到的方向）
  *   拉出方向感；只有真的把离地目标吹动时（`data.lift` 非零）才补上托气流。
- * 数：`data.motes`（特攻换算的风团量）绑定飞行与爆开的气团数量，`data.lift`（离地且真的被吹动才非零）绑定上托气流，
- *   `data.scale`（风团判定 / 0.55）缩放地面风环，`data.intensity`（威力 / 34）放大整幕。
+ * 数：`data.motes`（特攻换算的风团量）绑定爆开的气团数量，`data.density`（风团量派生）绑定飞行 trail 的每点数量、
+ *   `data.scale`（风团判定 / 0.55）缩放风核与地面风环、使风核尺寸贴合真实 radius，`data.lift`（离地且真的被吹动才非零）
+ *   绑定上托气流，`data.intensity`（威力 / 34）放大整幕。
  */
 const GustDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -19,7 +20,7 @@ const GustDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "spin_in", bind: "source", offset: [0, 0.8, 0.3], height: 0, fit: "none",
+                    name: "spin_in", bind: "source", offset: [0, 0.8, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: 26, shape: { kind: "ring", radius: 0.6 },
                     direction: "inward", speed: [0.04, 0.16], spin: 10,
@@ -27,7 +28,7 @@ const GustDefinition: ParticleDefinition = {
                     color: 0xDCE9F0, alpha: [0.6, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "chip", bind: "source", offset: [0, 0.8, 0.3], height: 0, fit: "none",
+                    name: "chip", bind: "source", offset: [0, 0.8, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/vanilla/small_gust",
                     rate: 16, shape: { kind: "sphere", radius: 0.4 },
                     direction: "inward", speed: [0.03, 0.12],
@@ -41,7 +42,7 @@ const GustDefinition: ParticleDefinition = {
             exit: { stop: 3, drain: 10 },
             emitters: [
                 {
-                    name: "squeeze", bind: "source", offset: [0, 0.85, 0.35], height: 0, fit: "none",
+                    name: "squeeze", bind: "source", offset: [0, 0.85, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/vanilla/small_gust",
                     burst: { count: 10, at: 0 },
                     shape: { kind: "sphere", radius: 0.3 },
@@ -58,18 +59,19 @@ const GustDefinition: ParticleDefinition = {
                 {
                     name: "core", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/vanilla/gust",
-                    trail: { minDistance: 0.28 }, rate: { data: "motes", fallback: 14 },
+                    // trail 模式下 rate 不参与发射（占位 0 只为通过 schema）；密度用 amount 接有效值。size 基准 0.55 × data.scale（radius/0.55）≈ 真实 radius。
+                    rate: 0, trail: { minDistance: 0.28 }, amount: { data: "density", fallback: 2 },
                     direction: "outward", speed: [0.0, 0.04], spin: 9, spriteFrom: "age",
-                    lifetime: [4, 9], size: [0.34, 0.12], sizeMode: "linear",
-                    color: 0xDCE9F0, alpha: [0.75, 0], light: "full", maxParticles: 46
+                    lifetime: [4, 9], size: [0.55, 0.18], sizeMode: "linear",
+                    color: 0xDCE9F0, alpha: [0.75, 0], light: "full", maxParticles: 120
                 },
                 {
                     name: "spiral", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    trail: { minDistance: 0.4 }, rate: 12,
+                    rate: 0, trail: { minDistance: 0.4 }, amount: { data: "density", fallback: 2 },
                     direction: "outward", speed: [0.01, 0.06], spin: 14,
                     lifetime: [5, 11], size: [0.24, 0.08],
-                    color: 0xEDF6FA, alpha: [0.5, 0], light: "full", maxParticles: 30
+                    color: 0xEDF6FA, alpha: [0.5, 0], light: "full", maxParticles: 80
                 }
             ]
         },

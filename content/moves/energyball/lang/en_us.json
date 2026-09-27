@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.energyball.summary": "Draw the life force out of the plants around you into a bright seed, then hurl it in a straight line: it deals special damage and may lower the target's Sp. Def by 1 stage, bursting into a small patch of growth where it lands. The more nature around you, the heavier the ball.",
+  "worldcombat.skill.energyball.summary": "Draw the life force out of the plants around you into a bright seed, then hurl it in a straight line: it deals special damage and may lower the target's Sp. Def by 1 stage, bursting into a small patch of growth where it strikes a body or the ground — only on a surface that can grow, and not on a pure whiff. The more nature around you, the heavier the ball.",
   "worldcombat.skill.energyball.use.0": "A heavy hit while standing in greenery",
   "worldcombat.skill.energyball.use.1": "Mid-range single-target fire that wears down Sp. Def",
   "worldcombat.skill.energyball.use.2": "Leave a fleeting patch of growth where it lands",
@@ -26,5 +26,6 @@
   "worldcombat.skill.energyball.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it open fire from further away.",
   "worldcombat.skill.energyball.preference.ai.verdantFirst": "Prefer standing in nature",
   "worldcombat.skill.energyball.preference.ai.verdantFirst.help": "On: when there is vegetation around the caster that can be drawn from, this ball ranks higher. Off: it ignores the surroundings and ranks like an ordinary ranged attack.",
-  "world_combat.move.energyball.text.sunder": "Sp. Def -%1$s"
+  "world_combat.move.energyball.text.sunder": "Sp. Def -%1$s",
+  "world_combat.move.energyball.text.gather": "Nature x%1$s · Power %2$s"
 }

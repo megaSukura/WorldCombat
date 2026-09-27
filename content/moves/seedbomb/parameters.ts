@@ -12,16 +12,16 @@ namespace PokemonSkills {
                 base: 74, unit: "威力",
                 description: "整荚硬种砸下来那一下的基础威力；物攻越高荚越有力，身体越沉种子越硬。这是没算落种数量的整荚值。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 落种数量：14 + 物攻偏移[−4,22] + 等级(≥25)偏移[0,16]；重荚 ×0.7 / 散荚 ×1.35；夹 6..48。 */
+        /** 碎种数量：14 + 物攻偏移[−4,22] + 等级(≥25)偏移[0,16]；重荚 ×0.7 / 散荚 ×1.35；夹 6..48。 */
         seeds: formula(
             F.base(14)
                 .plus(F.stat("attack").minus(60).times(0.16).clamp(-4, 22))
                 .plus(F.level().minus(25).times(0.4).clamp(0, 16))
                 .times(F.when(F.pref("heavy", text("worldcombat.skill.seedbomb.preference.heavy")), F.const(0.7), F.const(1.35)))
                 .clamp(6, 48).round(0),
-            "落种数量", {
+            "碎种数量", {
                 base: 14, unit: "颗",
-                description: "从上方撒下多少颗硬种；物攻与等级越高越多，它也决定画面里种雨的密度。"
+                description: "开壳时从荚里崩出的碎种颗粒数量；物攻与等级越高越多，它决定命中碎屑与空爆残种的密度。"
             }),
         /** 落点半径：1.5 + 宽度偏移[0,2.0]；重荚 ×0.85 / 散荚 ×1.15；夹 1.2..3.4。 */
         spread: formula(

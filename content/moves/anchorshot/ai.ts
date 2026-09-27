@@ -5,6 +5,7 @@
  *   这是一记昂贵的重招，偏好中距离一对一。
  * 对谁出手：已经带着 `trapped` 身份的目标会被跳过（链已经拴住了，再甩一次是浪费）；`ai.escapers`（默认开）
  *   打开时，正在远离自己的目标多一档分——掷锚是用来抓住想跑的人；关闭则只按普通近战排序。
+ *   只有目标脚边真能钉下锚（真实碰撞地面）时才给链的控制价值加价；钉不下去就只当一记重击排序。
  * 够不到怎么办：reach 就是本招射程，不够先走近；锚走小弧，足够近时很少落空。
  * 放完之后：目标被钉在锚点上，交回共享交战计划；对方挣脱前不必重复。
  */
@@ -45,6 +46,10 @@ namespace PokemonSkills {
             let score = 18;
             if (distance <= Number(capability.data.range)) score += 5;
             if (CompanionBehavior.ai<boolean>(capability, "escapers", true) && anchorshotEscaping(context, target)) score += 10;
+            // 只有目标脚边真能钉下锚时，才为链的控制价值加价；钉不下去只是重击，不加控制分。
+            const height = typeof target.height === "number" && target.height > 0 ? target.height : 1.4;
+            if (anchorshotFooting(CompanionBehavior.world(context),
+                CompanionBehavior.point([target.point[0], target.point[1] - height / 2, target.point[2]]))) score += 8;
             return score;
         }
     });

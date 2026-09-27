@@ -39,8 +39,12 @@ namespace PokemonSkills {
             for (var i = 0; i < refs.length; i++) if (now - counterLedger[refs[i]].tick > 1200) delete counterLedger[refs[i]];
         }
     }
+    /** Drop one actor's account; the account is finite and falls with the body, not only when it is spent. */
+    export function counterForget(victim: CombatActor): void {
+        delete counterLedger[String(victim.ref())];
+    }
     export function counterConsume(world: CombatWorld | null, actor: CombatActor): void {
-        delete counterLedger[String(actor.ref())];
+        counterForget(actor);
         if (world !== null && world.valid(actor)) {
             var marks = world.effects(actor, counterDebtMark);
             for (var i = 0; i < marks.length; i++) world.operation(marks[i].id(), "world_combat:dispel", "{}");
@@ -75,9 +79,9 @@ namespace PokemonSkills {
     function counterDebtWatch(effect: CombatEffect): void {
         var world = effect.world(), target = effect.target();
         var body = world.valid(target) ? world.observe(target) : null;
-        if (body === null) { effect.end(); return; }
+        if (body === null) { counterForget(target); effect.end(); return; }
         var record = counterRecord(world, target);
-        if (record === null) { effect.end(); return; }
+        if (record === null) { counterForget(target); effect.end(); return; }
         WorldFeedback.onEffect(world, effect.id(), "crack", counterScene, 1, body.position(),
             { moment: "crack", target: String(target.ref()), gather: Math.round(10 + Math.min(64, record.amount * 0.5)) });
         effect.remaining(counterRemaining(world, target));
@@ -90,7 +94,10 @@ namespace PokemonSkills {
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(counterDebtMark, "start", counterDebtWatch);
     WorldCombat.effectHandler(counterDebtMark, "watch", counterDebtWatch);
-    WorldCombat.effectHandler(counterDebtMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(counterDebtMark, "operation:world_combat:dispel", function (effect) {
+        counterForget(effect.target());
+        effect.end();
+    });
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
     export function counterRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
         var world = action.world();
@@ -127,6 +134,12 @@ namespace PokemonSkills {
             && world.effects(victim, counterDebtMark).length === 0) {
             world.effect(counterDebtMark, victim, "{}", Math.max(1, Math.round(counterWindowFor(world, victim))));
         }
+    });
+
+    // 账跟着人走：账主倒下时立即清掉那一笔，不靠窗口过期和容量裁剪兜底。
+    WorldCombat.on("world_combat:move_counter/death", "world_combat:actor_died", "", function (event: CombatWorldEvent) {
+        var victim = event.target();
+        if (victim !== null) counterForget(victim);
     });
 
     // 返还命中后由真实伤害回执驱动：浮字与碎片量读这次实际扣的血（护甲、免疫、Boss 规则之后的结果），

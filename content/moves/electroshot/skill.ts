@@ -5,11 +5,12 @@
  *           下雨时电直接从雨里取，抬手即发。
  *
  * 两幕（雨天只有第二幕）：
- *   起（gather，提交前）：电沿着地面与身体四周爬升、卷成一道矛尖；只播预告，可被打断（打断不花 PP）。
- *   击（shot → travel → burst / resist / ward / fizzle）：提交后先结算特攻 +1，再射出电矛；
- *       选中了非友方实体时它会朝目标修正（homing，转向强度由 `homing` 决定），只选了地点就沿该方向直飞。
- *       真打中活体并结算成功才炸开电花并落一道光；被免疫或护住只留一记散电，撞墙则贴在方块面上散掉，打空沿末方向散掉。
- *       特攻提升在聚电完成时已经结算，落空也保留。
+ *   起（gather，提交前，仅非雨天）：电沿着地面与身体四周爬升、在身前卷起；只播预告，可被打断（打断不花 PP）。
+ *   击（shot → travel → burst / resist / ward / fizzle）：提交后先结算特攻 +1（文字读实际生效级数），再射出电矛
+ *       ——球头、短电杆与尾迹组成的一束；选中了非友方实体时它会朝目标有限修正（homing，转向强度由 `homing` 决定），
+ *       只选了地点就沿该方向直飞。真打中活体并结算成功才炸开电花并落一道光；被免疫或护住只留一记散电；
+ *       撞墙则贴在真实接触面外侧散掉，打空沿末方向散掉。特攻提升在聚电完成时已经结算，落空也保留。
+ *       雨天聚电为 0，不播起幕，提交即为一次短闪。
  *
  * 与同族分开：日光束是晴天里的宽光带、日光刃是贴身斩、流星光束一定蓄且走弧；
  *   电光束是唯一「雨天即时、按实体有限追踪」的那个——它的价值在晴天要站定聚电、雨天立刻抬手打出去。
@@ -23,11 +24,28 @@ namespace PokemonSkills {
     const electroshotWardText = "world_combat.move.electroshot.text.ward";
     const electroshotMissText = "world_combat.move.electroshot.text.miss";
 
+    /** 撞墙面的外法线；只用来把落点从方块格坐标挪到实际接触面外侧。 */
+    function electroshotNormal(face: string): number[] {
+        if (face === "down") return [0, -1, 0];
+        if (face === "up") return [0, 1, 0];
+        if (face === "north") return [0, 0, -1];
+        if (face === "south") return [0, 0, 1];
+        if (face === "west") return [-1, 0, 0];
+        if (face === "east") return [1, 0, 0];
+        return [0, 1, 0];
+    }
+
+    /** 实际接触点沿墙面外法线抬出一点，散电贴在表面而不落进方块格。 */
+    function electroshotSurface(point: CombatPoint, face: string): CombatPoint {
+        const normal = electroshotNormal(face);
+        return point.plus(WorldCombat.point(normal[0], normal[1], normal[2]).scale(0.03));
+    }
+
     define({
         id: "electroshot",
         name: "电光束",
         description: "站定把电从四周抽进身体、特攻提升，再射出一束高压电矛：瞄准实体时有限追踪，只瞄地点就沿该方向直射。下雨时直接从雨里取电、当场发射。晴天要站定聚电，雨天立刻抬手打出去。",
-        uses: ["雨天里的即时高压点射", "追着走位也甩不掉的一束", "先攒一级特攻再出手"],
+        uses: ["雨天里的即时高压点射", "朝选中实体有限修正的一束", "先攒一级特攻再出手"],
         kind: "aim",
         range: 15,
         maxRange: 24,
@@ -57,8 +75,10 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const arcs = Math.max(10, Math.round(p("electroshot", "arcs", action)));
             const instant = p("electroshot", "charge", action) <= 0 ? 1 : 0;
-            action.present("electroshot:gather", electroshotScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather", windup: prepare, arcs: arcs, rain: instant, chase: config && config.chase ? 1 : 0 }));
+            // 雨天聚电为 0：不播这幕，否则 0 时长会一直留到动作结束继续发射；提交的短闪由 execute 的 shot 幕承担。
+            if (prepare > 0)
+                action.present("electroshot:gather", electroshotScene, 1, action.origin(),
+                    JSON.stringify({ moment: "gather", windup: prepare, arcs: arcs, rain: instant, chase: config && config.chase ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -79,12 +99,13 @@ namespace PokemonSkills {
             const travel = WorldFeedback.actionScenes(electroshotScene);
             let settled = false;
 
-            // 聚电完成：特攻提升落在共享能力等级上，命中与否都保留。
-            NativeEffects.boost(world, actor, "spa", stages);
+            // 聚电完成：特攻提升落在共享能力等级上，命中与否都保留；文字读实际生效的级数。
+            const applied = NativeEffects.boost(world, actor, "spa", stages);
             const body = world.observe(actor);
             if (body !== null) {
                 WorldFeedback.emit(world, electroshotScene, 1, body.position(), { moment: "shot", target: String(actor.ref()), arcs: arcs, scale: scale }, 22);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.5, 0)), electroshotBoostText, [stages], 26);
+                if (applied > 0)
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.5, 0)), electroshotBoostText, [applied], 26);
             }
             if (p("electroshot", "charge", action) <= 0 && body !== null)
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.8, 0)), electroshotRainText, [], 24);
@@ -127,10 +148,11 @@ namespace PokemonSkills {
                             { moment: "ward", target: String(victim.ref()), arcs: Math.max(4, Math.round(arcs * 0.4)), scale: scale }, 20);
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), electroshotWardText, [], 20);
                     } else if (hit.blocked()) {
-                        const cell = hit.blockPosition();
-                        const stop = cell === null ? point : cell;
-                        WorldFeedback.emit(scope, electroshotScene, 1, stop,
-                            { moment: "fizzle", point: [stop.x(), stop.y(), stop.z()], face: hit.blockFace(), arcs: arcs, scale: scale }, 20);
+                        // 撞墙：散电贴在真实接触面外侧，不落进方块格坐标。
+                        const surface = electroshotSurface(point, hit.blockFace());
+                        WorldFeedback.emit(scope, electroshotScene, 1, surface,
+                            { moment: "fizzle", point: [surface.x(), surface.y(), surface.z()],
+                                direction: electroshotNormal(hit.blockFace()), arcs: arcs, scale: scale }, 20);
                     } else {
                         WorldFeedback.emit(scope, electroshotScene, 1, point,
                             { moment: "fizzle", point: [point.x(), point.y(), point.z()], arcs: arcs, scale: scale }, 20);

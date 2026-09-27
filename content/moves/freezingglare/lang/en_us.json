@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.freezingglare.summary": "Shoot an instant, travel-less psychic glare from your eyes: the psi line leaps between enemies in clear sight, and every target it lands on takes Psychic damage and may be frozen. Each leap needs real line of sight, and a cut line stops the chain; the freeze still obeys Ice typing, freeze-immune abilities and Boss control immunity.",
-  "worldcombat.skill.freezingglare.use.0": "Land an unavoidable hit on a kiting target in the open",
+  "worldcombat.skill.freezingglare.summary": "Shoot an instant, travel-less psychic glare from your eyes: the psi line leaps between enemies in clear sight, and every target it lands on takes Psychic damage and may be frozen. Each leap needs real line of sight, and a cut line stops the chain; a target that resists or is immune takes no damage and is not frozen, yet the line still relays onward through it. The freeze still obeys Ice typing, freeze-immune abilities and Boss control immunity.",
+  "worldcombat.skill.freezingglare.use.0": "Name a kiting target along a clear line of sight in an instant",
   "worldcombat.skill.freezingglare.use.1": "Chain through a packed group and name several targets at once",
   "worldcombat.skill.freezingglare.use.2": "Deal Psychic damage to Ice or freeze-immune targets even when the freeze cannot land",
   "worldcombat.skill.freezingglare.description.0": "The first target takes about %1$s Psychic damage; the psi line then leaps to the nearest enemy, hitting up to %2$s enemies in all (the first included), with each further leap multiplying the power by %3$s.",
@@ -26,7 +26,7 @@
   "worldcombat.skill.freezingglare.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.freezingglare.preference.ai.maxChase.help": "The companion only considers Freezing Glare while a target is within this many blocks; smaller keeps it close, larger locks on from further away.",
   "worldcombat.skill.freezingglare.preference.ai.preferChains": "Prefer chainable targets",
-  "worldcombat.skill.freezingglare.preference.ai.preferChains.help": "When on, the companion prefers targets with others packed around them (the psi line leaps on); off considers a single target only.",
-  "world_combat.move.freezingglare.text.hit": "Freezing Glare chained through %1$s targets",
+  "worldcombat.skill.freezingglare.preference.ai.preferChains.help": "When on, the companion prefers targets the psi line can actually reach along the current leap distance and line of sight; off considers a single target only.",
+  "world_combat.move.freezingglare.text.hit": "Freezing Glare chained through %1$s targets (%2$s hit)",
   "world_combat.move.freezingglare.text.blocked": "The line of sight was blocked"
 }

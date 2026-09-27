@@ -1,12 +1,12 @@
 /**
  * 青草搅拌器 的伙伴 AI 用途：一套自己的出手计划。
  *
- * 什么局面下出手：有可见威胁、在 `ai.maxChase` 之内。`ai.crowd`（默认开）让它检查目标身边有多少敌人：
+ * 什么局面下出手：有可见威胁、在 `ai.maxChase` 之内。`ai.crowd`（默认开）让它用本招**真实的旋涡半径**数目标身边能罩住几个敌人：
  * 能围住两个以上时 priority 明显抬高，因为旋风是持续的区域切割，罩得越多越值；只有单个目标时按普通攻击排序。
  * 对谁出手：当前威胁；不可见、友方或已倒下的目标不接受。旋风是留在原地的区域，所以站定/慢速的敌人更值；
  *   走得快的目标预期会很快离开切割圈，priority 反而下调。`ai.lead` 允许把旋风提前放在移动目标的去路上。
  * 够不到怎么办：reach 就是落点射程，不够就先走近；`ai.leaveStation` 决定驻守时是否离位。
- * 放完之后：旋风在原地继续切，伙伴交回共享顺序继续战斗，被罩住的敌人需要自己走开。
+ * 放完之后：旋风作为独立区域在原地继续切，伙伴立即交回共享顺序继续战斗，被罩住的敌人需要自己走开。
  * 选取是 point：玩家可提前放在空地/走道，AI 仍只为攻击用途推荐敌人，两者分开处理。
  */
 namespace PokemonSkills {
@@ -15,6 +15,14 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 17);
+    }
+
+    /** 用本招真实的旋涡半径来数落点附近能罩住几个人，而不是固定近似值。 */
+    function leaftornadoRadius(capability: WorldBehavior.Capability, world: CombatWorld): number {
+        try {
+            return PokemonSkills.p("leaftornado", "radius", { world: world, actor: world.source(),
+                skill: PokemonSkills.skills["leaftornado"], detail: { values: capability.data.config } });
+        } catch (error) { return 2.6; }
     }
 
     CompanionBehavior.registerUse("leaftornado", {
@@ -40,17 +48,21 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !leaftornadoWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
+            const world = CompanionBehavior.world(context);
+            const radius = leaftornadoRadius(capability, world);
             let base = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 22 : 0;
+            // 落点必须是可达的真实地面；预测点悬空或铺在墙后，不值得立旋风。
+            if (SurfacePaths.support(world, CompanionBehavior.point(target.point), 1.5, 6) === null) base -= 10;
             if (!CompanionBehavior.ai<boolean>(capability, "crowd", true)) {
                 base += leaftornadoStay(target);
                 return base;
             }
             const nearby = context.facts.nearby as CompanionBehavior.Entity[];
             let caught = 1;
-            for (let i = 0; i < nearby.length && caught < 5; i++) {
+            for (let i = 0; i < nearby.length && caught < 8; i++) {
                 const other = nearby[i];
                 if (other.friendly || other.health <= 0 || other.ref === self.ref || other.ref === target.ref) continue;
-                if (CompanionBehavior.distance(other.point, target.point) <= 3.6) caught++;
+                if (CompanionBehavior.distance(other.point, target.point) <= radius) caught++;
             }
             if (caught >= 2) base += 18;
             return base + leaftornadoStay(target);

@@ -24,7 +24,7 @@ Smoke.scenario("grassyterrain", function (stage) {
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/grassyterrain"), "the grounded caster carries the shared grassyterrain identity");
         stage.after(160, function () {
             stage.expect(caster.alive() && caster.health() > wounded, "the grass restored the wounded caster");
-            stage.note("grass laid under the caster while it was the side more hurt; it recovered while standing on the grass. Grass x1.3 and defender-side Earthquake x0.5 and plant tending are left to play.",
+            stage.note("grass laid under the caster while it was the side more hurt; it recovered while standing on the grass. Presence is the same-layer grounded contact (no mark on upstairs/airborne bodies); Grass x1.3, defender-side Earthquake x0.5, plant tending and the no-threat rescue cast are left to play.",
                 { casts: stage.casts("grassyterrain", caster), wounded: Math.round(wounded * 10) / 10,
                   recovered: Math.round(caster.health() * 10) / 10 });
             stage.done();

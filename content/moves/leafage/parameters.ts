@@ -32,6 +32,8 @@ namespace PokemonSkills {
     export const leafageScene = "world_combat:move_leafage";
     export const leafageHitText = "world_combat.move.leafage.text.hit";
     export const leafageMissText = "world_combat.move.leafage.text.miss";
+    /** 第一片叶碰到敌体却被原生拒绝（免疫/保护/无敌）时的失败反馈。 */
+    export const leafageRejectText = "world_combat.move.leafage.text.reject";
     /** 表现里单叶判定的参考值（格）；服务端传 scale = 实际判定 / 这个值。 */
     export const leafageReference = 0.22;
 

@@ -4,8 +4,9 @@
  * 一句话：施法者举起一根挂着毒滴的细针甩出去，针拖一条很细的毒绿灯尾飞出；扎进目标身上只留一根针，
  *   过一拍针口才渗出毒泡。甩空时那点毒液在落点散掉。
  * 色相家族：毒绿（0x9BE86B）与浅黄绿（0xC8F0A0）为主，近白只做针尖亮点——比毒击更细、更快、量更小。
- * 拍子：起 aim（举针）→ 飞 fly（细尾）→ 扎 stick（留针）→ 渗 embed（托管载体上持续的小针）→ seep（毒泡）→ 空 whiff。
- * 范围：fly 沿投射物本体走，stick 在真实接触点、embed/seep 绑在受击者身上，画面本身就是「这一针扎到哪」。
+ * 拍子：起 aim（举针）→ 飞 fly（细尾）→ 扎 stick/embed（针留实际接触的伤口，分「扎入」与「毒成」两拍）
+ *   → seep（毒成，只在真的渗下毒时）／fade（毒没成，退针）→ 空 whiff（消在弹体真实末点）。
+ * 范围：fly 沿投射物本体走，stick/embed 停在真实接触的伤口点，seep/fade 绑在受击者身上，画面本身就是「这一针扎到哪」。
  * 运动：一根细针沿直线（对空直飞、有目标才有限追踪）飞出去，真的扎出伤害后针口才留在身上慢慢冒泡，毒到 `seep`
  *   才扩开；托管载体被提前清掉时 embed 一起消失、也不结算毒。一眼看出是「中针 → 中毒」两拍。
  * 数：`data.needles`（由物攻派生）绑定针尾毒滴与渗毒泡的数量，`data.scale`（由判定半径派生）缩放整体尺寸，
@@ -63,11 +64,12 @@ const PoisonstingDefinition: ParticleDefinition = {
             ]
         },
         stick: {
+            // 扎入：固定在实际接触那一小块伤口，不跟着身体中心乱飘。
             duration: 18,
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "embed", bind: "target", height: 0.45,
+                    name: "embed", bind: "point", fit: "none", height: 0, offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/spike",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "sphere", radius: 0.12 },
@@ -76,7 +78,7 @@ const PoisonstingDefinition: ParticleDefinition = {
                     color: 0x9BE86B, alpha: [0.9, 0], light: "full", maxParticles: 6
                 },
                 {
-                    name: "prick", bind: "target", height: 0.45,
+                    name: "prick", bind: "point", fit: "none", height: 0, offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_poison",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "sphere", radius: 0.18 },
@@ -87,11 +89,12 @@ const PoisonstingDefinition: ParticleDefinition = {
             ]
         },
         embed: {
-            duration: 0,
-            exit: { stop: 4, drain: 10 },
+            // 针留伤口附近一小段；毒到 `seep` 才另起一拍。
+            duration: 8,
+            exit: { stop: 3, drain: 10 },
             emitters: [
                 {
-                    name: "needle", bind: "target", height: 0.45,
+                    name: "needle", bind: "point", fit: "none", height: 0, offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/spike",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "sphere", radius: 0.1 },
@@ -100,12 +103,37 @@ const PoisonstingDefinition: ParticleDefinition = {
                     color: 0x9BE86B, alpha: [0.9, 0], light: "full", maxParticles: 4
                 },
                 {
-                    name: "well", bind: "target", height: 0.45,
+                    name: "well", bind: "point", fit: "none", height: 0, offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     rate: 3, shape: { kind: "sphere", radius: 0.1 },
                     direction: "outward", speed: [0.01, 0.04],
                     lifetime: [6, 12], size: [0.06, 0.012],
                     color: 0x9BE86B, alpha: [0.6, 0], light: "world", maxParticles: 14
+                }
+            ]
+        },
+        fade: {
+            // 毒没成：针干涸退回，只有暗绿小点，不播满圈的渗毒泡。
+            duration: 14,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "dry", bind: "target", fit: "none", height: 0.05, offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "sphere", radius: 0.08 },
+                    direction: "outward", speed: [0.01, 0.04],
+                    lifetime: [6, 12], size: [0.1, 0.02],
+                    color: 0x9BE86B, alpha: [0.45, 0], light: "world", maxParticles: 4
+                },
+                {
+                    name: "dust", bind: "target", fit: "none", height: 0.05, offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 5, at: 0 },
+                    shape: { kind: "sphere", radius: 0.12 },
+                    direction: "outward", speed: [0.02, 0.08], gravity: 0.04, drag: 0.9,
+                    lifetime: [6, 12], size: [0.05, 0.012],
+                    color: 0xC8F0A0, alpha: [0.5, 0], light: "world", maxParticles: 14
                 }
             ]
         },

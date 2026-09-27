@@ -57,9 +57,14 @@ namespace PokemonSkills {
                 range: p("flareblitz", "charge", context) + 0.5
             };
         },
+        // 冲锋起步按原生 defrost 允许在被冻时起手：只解除自身冰冻这一项限制。
+        eligibility: function (context) {
+            if (context.phase === "damage") return;
+            CombatStatus.selfCure(context, ["frozen"]);
+        },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_flareblitz:ignite", flareblitzScene, 1, action.origin(),
-                JSON.stringify({ moment: "ignite", afterburn: !!(config && config.afterburn) }));
+                JSON.stringify({ moment: "ignite", afterburn: !!(config && config.afterburn), windup: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -87,14 +92,18 @@ namespace PokemonSkills {
             const scale = radius / 0.56;
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
             const start = action.origin();
-            const end = start.plus(direction.scale(length));
             let travelled = 0, settled = false;
 
             sound(action, "cobblemon:move.flamecharge.actor");
             CombatStatus.cure(world, actor, "frozen");
-            movementScenes.show(action, "charge", start, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
-                    path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
+
+            // 火线只画真正冲过的路段：每次把上一落点到当前实际落点交给 track，未到与墙后不再预先整线撒火。
+            function showCharge(current: CombatAction, from: CombatPoint, to: CombatPoint): void {
+                movementScenes.show(current, "charge", to, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
+                    path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]],
                     embers: embers, scale: scale, intensity: intensity });
+            }
+            showCharge(action, start, start);
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
@@ -111,7 +120,7 @@ namespace PokemonSkills {
             }
 
             function advance(current: CombatAction): void {
-                const scope = current.world(), origin = current.origin();
+                const scope = current.world(), before = current.origin();
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001) { skid(current); return; }
                 const delta = direction.scale(step);
@@ -119,27 +128,24 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const target = hit.target(), point = hit.position();
                     const already = target !== null && scope.valid(target) && CombatStatus.has(scope, target, "burn");
+                    // 自损表现上下文：recoilApplied 回执读到它才画回火；原生拒绝或免反伤不画，也不喊受反伤。
+                    scope.originData("world_combat:move_flareblitz/recoil", JSON.stringify({ embers: Math.round(embers * 0.6), scale: scale }));
                     const landed = impact(current, hit, "flareblitz", power,
                         { damage: damageSpec("flareblitz", "blaze"), contact: true, recoil: recoil,
                             status: already ? "" : "burn", chance: already ? 0 : chance, statusTicks: burnTicks });
+                    // 只有这一次真的把目标点着了才亮 burn_glow，而不是「目标原本没烧」就默认点亮。
+                    const burnedNow = landed && !already && target !== null && scope.valid(target) && CombatStatus.has(scope, target, "burn");
                     WorldFeedback.emit(scope, flareblitzScene, 1, point,
                         { moment: "impact", target: target ? String(target.ref()) : "", embers: embers, scale: scale,
-                            intensity: Math.max(0.6, Math.min(2.4, power / 115)), burn: already ? 0 : 1 }, 32);
+                            intensity: Math.max(0.6, Math.min(2.4, power / 115)), burn: burnedNow ? 1 : 0 }, 32);
                     sound(current, "cobblemon:move.flamecharge.target");
                     sound(current, "cobblemon:impact.fire");
-                    // 只有这次接触真的造成了伤害才顶飞、点着、反伤；伤害被拒时接触表现保留，但不声称命中，也不反伤。
+                    // 只有这次接触真的造成了伤害才顶飞、点着；反伤表现由 recoilApplied 回执驱动。
                     if (landed && target !== null && scope.valid(target)) {
                         scope.hitDisplace(target, direction.scale(shove));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), flareblitzHitText, [], 28);
-                        if (!already && CombatStatus.has(scope, target, "burn"))
+                        if (burnedNow)
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.9, 0)), flareblitzBurnText, [], 30);
-                        const self = scope.observe(actor);
-                        if (self !== null) {
-                            WorldFeedback.emit(scope, flareblitzScene, 1, self.position(),
-                                { moment: "recoil", embers: Math.round(embers * 0.6), scale: scale,
-                                    intensity: Math.max(0.5, Math.min(2.4, power * recoil / 55)) }, 26);
-                            WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.3, 0)), flareblitzRecoilText, [], 24);
-                        }
                         sound(current, "minecraft:entity.player.hurt_on_fire");
                     }
                     finish(current);
@@ -147,12 +153,25 @@ namespace PokemonSkills {
                 }
                 // 没撞到可命中活体：只走原生实际推进的距离，绝不用剩余预算穿过任何接触。
                 travelled += swept.moved;
+                if (swept.moved > 0.001) showCharge(current, before, current.origin());
                 if (hit.blocked() || swept.moved < minimumMove || travelled >= length) { skid(current); return; }
-                movementScenes.show(current, "wake", origin, { moment: "wake", embers: embers, scale: scale, intensity: intensity });
+                movementScenes.show(current, "wake", current.origin(), { moment: "wake", embers: embers, scale: scale, intensity: intensity });
                 current.after(1, advance);
             }
 
             advance(action);
         }
     });
+
+    // 真付生命才画回火：recoilApplied 只在本招实际反噬落地时触发，原生拒绝或免反伤不会走到这里。
+    NativeEffects.recoilApplied.define({ id: "world_combat:move_flareblitz/recoil", apply: function (receipt) {
+        if (receipt.damage.move !== "flareblitz" || !receipt.world.valid(receipt.actor)) return;
+        const body = receipt.world.observe(receipt.actor), raw = receipt.world.originData("world_combat:move_flareblitz/recoil");
+        if (!body || !raw) return;
+        const data = JSON.parse(raw);
+        WorldFeedback.emit(receipt.world, flareblitzScene, 1, body.position(),
+            { moment: "recoil", embers: data.embers, scale: data.scale,
+                intensity: Math.max(0.5, Math.min(2.4, receipt.amount / 55)) }, 26);
+        WorldFeedback.text(receipt.world, body.position().plus(WorldCombat.point(0, 1.3, 0)), flareblitzRecoilText, [], 24);
+    } });
 }

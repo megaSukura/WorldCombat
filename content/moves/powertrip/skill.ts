@@ -63,8 +63,11 @@ namespace PokemonSkills {
             let travelled = 0, hits = 0, settled = false;
 
             sound(action, "cobblemon:move.pursuit.target");
+            // 尾迹按位置距离触发，不再声称几道；强化越盛尾迹越粗越亮，用现实尺寸而非道数表达。
+            const trail = Math.max(0.12, Math.min(0.34, 0.12 + boosts * 0.02));
+            const glow = Math.max(0.4, Math.min(0.95, 0.45 + boosts * 0.04));
             scenes.show(action, "rush", action.origin(),
-                { moment: "rush", boost: boosts, raised: raised, plumes: plumes, scale: scale, intensity: intensity, drive: drive ? 1 : 0 });
+                { moment: "rush", boost: boosts, raised: raised, plumes: plumes, trail: trail, glow: glow, scale: scale, intensity: intensity, drive: drive ? 1 : 0 });
 
             function finish(current: CombatAction, landed: boolean, at: CombatPoint): void {
                 if (settled) return;
@@ -87,8 +90,10 @@ namespace PokemonSkills {
                 if (impact(current, hit, powertripId, power, { damage: damageSpec(powertripId, "swagger"), contact: true })) {
                     hits++;
                     if (scope.valid(victim)) {
+                        // 只取被测者的水平背离；正上方命中时水平为零，退回本次冲撞方向，避免空向量归一。
                         const away = hit.position().minus(current.origin());
-                        if (away.length() > 0.2) scope.hitDisplace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                        const flatAway = WorldCombat.point(away.x(), 0, away.z());
+                        scope.hitDisplace(victim, (flatAway.length() > 0.05 ? flatAway.unit() : direction).scale(push));
                     }
                     WorldFeedback.emit(scope, powertripScene, 1, hit.position(),
                         { moment: "hit", target: String(victim.ref()), boost: boosts, raised: raised, plumes: plumes, scale: scale, intensity: intensity }, 22);

@@ -2,11 +2,13 @@
  * 仆刀 / kowtowcleave 的参数与伤害段。
  *
  * 原生事实：Dark、物理、威力 85、命中必定（accuracy true）、PP 10、接触、劈斩（slicing）（Cobblemon 1.8）。
- * 翻译：把“下跪让对手大意后发起袭击劈向对手”翻成先制造破绽再兑现的两段——跪拜只对近处合法目标打上 dropguard
- * （空门）身份并降防，随后逐刻欺身；只有真实接触距离且视线无阻才劈中，贴上后不掷命中，所以不做随机失手。
- * 追近预算（本招射程）耗尽、被墙挡住或目标离场就挥空。空瞄也能空刀。
- * 数据分散：物攻定劈砍威力、空门加成、卸防等级、空门时长与击退，速度定欺身步长与蓄拜时长，
- * 身高定判定半径，等级定拜击范围。配置 feint（深拜）经 resolve 拉长起手与冷却，换来更深的空门。
+ * 翻译：把“下跪让对手大意后发起袭击劈向对手”翻成一次可观察的诱敌再兑现——跪拜时只有原本的目标真正朝自己逼近
+ * （>= 0.4 格）或真的对自己发起过一次原生攻击才算上钩；上钩只给这一次对该人的空门加成，没有上钩照常出刀。
+ * 不再前置降防、也不留通用空门标记。蓄拜后朝瞄准方向逐刻欺近；只有真实接触距离且视线无阻才劈中，
+ * 第一个碰到的非友方身体承刀，贴上后不掷命中，所以不做随机失手。追近预算（本招射程）耗尽、被墙挡住或走不动就挥空。
+ * 空瞄也能空刀。
+ * 数据分散：物攻定劈砍威力、空门加成与击退，速度定欺身步长与蓄拜时长，身高定判定半径，等级定拜击范围。
+ * 配置 feint（深拜）经 resolve 拉长起手与冷却，换来更深的空门加成。
  *
  * 伤害段：cleave 是那一刀劈砍。
  */
@@ -24,35 +26,20 @@ namespace PokemonSkills {
             F.base(0.5).plus(F.stat("attack").minus(60).times(0.002))
                 .plus(F.when(F.pref("feint"), F.const(0.15), F.const(0)))
                 .clamp(0.3, 0.95),
-            "空门加成", "目标还带着空门时，劈砍额外增加的威力幅度。"),
-        /** 卸防等级：基础 1，物攻每比 60 多 1 加 0.01，深拜再 +1，夹在 1..3 并向下取整。 */
-        guardStages: formula(
-            F.base(1).plus(F.stat("attack").minus(60).times(0.01))
-                .plus(F.when(F.pref("feint"), F.const(1), F.const(0)))
-                .clamp(1, 3).floor(),
-            "卸防等级", {
-                unit: "级",
-                description: "跪拜让目标防御下降的能力等级；物攻越高、深拜越深，空门开得越大。"
-            }),
-        /** 空门时长：基础 50 刻，物攻每比 60 多 1 加 0.3，深拜再 +20，夹在 30..120。 */
-        guardTicks: seconds(
-            F.base(50).plus(F.stat("attack").minus(60).times(0.3))
-                .plus(F.when(F.pref("feint"), F.const(20), F.const(0)))
-                .clamp(30, 120).round(0),
-            "空门时长", "目标空门身份停留的时长；这段窗口里劈砍才吃得到加成。"),
+            "空门加成", "目标在跪拜时上钩了才生效：这一刀额外增加的威力幅度。"),
         /** 拜击范围：基础 4 格，等级每比 30 高 1 加 0.05，夹在 3..6。 */
         baitRange: formula(
             F.base(4).plus(F.level().minus(30).times(0.05)).clamp(3, 6).round(1),
             "拜击范围", {
                 unit: "格",
-                description: "跪拜能骗到多远的对手；等级高的个体能把更远的目标带进空门。"
+                description: "跪拜能骗到多远的对手上钩；等级高的个体能把更远的目标带进这一刀。"
             }),
         /** 欺身步长：基础 2.5 格，速度每比 60 快 1 加 0.02，夹在 2..4。 */
         lunge: formula(
             F.base(2.5).plus(F.stat("speed").minus(60).times(0.02)).clamp(2, 4).round(2),
             "欺身步长", { base: 2.5,
                 unit: "格",
-                description: "跪拜后每刻向目标推进的距离；速度快的个体扑得更快。总追近预算为本招射程，耗完仍没贴上就挥空。"
+                description: "跪拜后每刻向瞄准方向推进的距离；速度快的个体扑得更快。总追近预算为本招射程，耗完仍没贴上就挥空。"
             }),
         /** 击退：基础 0.6 格，物攻每比 60 多 1 加 0.004，夹在 0.4..1.2。 */
         push: formula(
@@ -66,7 +53,7 @@ namespace PokemonSkills {
             F.base(0.5).plus(F.body("height").minus(1.4).times(0.1)).clamp(0.4, 0.8).round(2),
             "判定半径", {
                 unit: "格",
-                description: "劈砍的横向判定半径；大个子劈得更宽。"
+                description: "欺身刀路的横向判定半径；大个子劈得更宽。"
             }),
         /** 蓄拜时长：基础 8 刻，速度每比 60 快 1 少 0.02 刻，夹在 4..12。 */
         bowTicks: seconds(
@@ -83,7 +70,7 @@ namespace PokemonSkills {
 
     describe("kowtowcleave", [
         { key: "description.0", values: ["cleave","guardBonus"] },
-        { key: "description.1", values: ["guardStages","guardTicks","baitRange"] },
+        { key: "description.1", values: ["baitRange"] },
         { key: "description.2", values: ["lunge","push","collisionRadius"] },
         { key: "description.3", values: ["bowTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

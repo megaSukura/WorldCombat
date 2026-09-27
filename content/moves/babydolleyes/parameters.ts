@@ -5,16 +5,17 @@
  *   目标 normal（单体）、boosts { atk: −1 }（降低攻击）。原文「必定能够先制攻击」。
  *
  * 世界化：不是隔空扣等级，而是**睁大一双圆眼睛盯住对手**——它举起的手先软下来。它是一件单体的凝视，
- *   需要视线，只认一个目标；命中后先挂共享身份 world_combat:status/charmed 的真实 MobEffect，再
- *   NativeEffects.boost 下降攻击：宝可梦损失原生攻击等级，其他生物落到攻击属性。
- *   原生的 +1 优先度翻成**极短的起手**（比同族任何一招都先落下），让它真能抢在对手出手前压低它。
- * 「疾视」快、范围小、卸得浅；「凝视」卸得更深更久、范围更远，但起手与冷却都更长，先手优势变小。
- *   视线与距离是它天然的空门。
+ *   需要视线，只认一个目标；命中后先挂共享身份 world_combat:status/charmed 的真实 MobEffect，
+ *   再以 NativeEffects.boostWindow 把攻击下降挂在**同一份心软载体**上：载体在，降攻就在；载体到期、
+ *   被牛奶清掉或被驱散，等级随窗口一起精确复原（只撤本源，他源窗口不动）。宝可梦损失原生攻击等级，
+ *   其他生物落到攻击属性。原生的 +1 优先度翻成**极短的起手**（比同族任何一招都先落下），让它真能抢在
+ *   对手出手前压低它。「疾视」快、范围小、卸得浅；「凝视」卸得更深更久、范围更远，但起手与冷却都更长，
+ *   先手优势变小。视线与距离是它天然的空门。
  *
  * 数值来源（每个参数读不同的精灵数据）：
  *   drop         攻击下降：凝视 2 级／疾视 1 级，夹 1..2；送法决定深度。
  *   gazeRange    凝视距离：基础 3.5 + 身高 × 0.8，凝视 ×1.25，夹 3..7；身形越高够得越远。
- *   softenTicks  心软时长：基础 100 刻 + 亲密度 × 0.9，凝视 ×1.4，夹 80..280；越亲近越留得住。
+ *   softenTicks  心软时长：基础 100 刻 + 亲密度 × 0.9，凝视 ×1.4，夹 80..280；这也是降攻窗口的时长，越亲近留得越久。
  *   glints       眼波量：基础 14 + 特攻 × 0.15，凝视 ×1.15，夹 10..32；心神越盛，画面里的眼波越多。
  *   tempo        起手：基础 5 − (速度 − 60) × 0.02（只取正值），凝视 +3，夹 3..10；速度越快越早睁眼。
  *   recover      收招：基础 4 + 碰撞箱高度 × 1.1，夹 3..8。
@@ -23,6 +24,7 @@
 namespace PokemonSkills {
     export const babydolleyesId = "babydolleyes";
     export const babydolleyesScene = "world_combat:move_babydolleyes";
+    export const babydolleyesEyesScene = "world_combat:move_babydolleyes_eyes";
     export const babydolleyesEffect = "world_combat:babydoll_eyes";
     export const babydolleyesMark = "world_combat:babydolleyes_mark";
     export const babydolleyesStatus = "charmed";
@@ -50,7 +52,7 @@ namespace PokemonSkills {
             F.base(100).plus(F.individual("friendship").times(0.9))
                 .times(F.when(F.pref("stare", text("worldcombat.skill.babydolleyes.preference.stare")), F.const(1.4), F.const(1)))
                 .clamp(80, 280).round(0),
-            "心软时长", "对手下不去手多久；施法者越亲近留得越久，凝视更长。"),
+            "心软时长", "对手下不去手多久，也是这次攻击下降的持续窗口：这段时间内攻击保持被削，窗口结束、被牛奶清掉或被驱散时精确复原。施法者越亲近留得越久，凝视更长。"),
         glints: formula(
             F.base(14).plus(F.stat("specialAttack").times(0.15))
                 .times(F.when(F.pref("stare", text("worldcombat.skill.babydolleyes.preference.stare")), F.const(1.15), F.const(1)))

@@ -19,7 +19,7 @@
   "worldcombat.skill.bloodmoon.value.pierce": "Line pierce limit",
   "worldcombat.skill.bloodmoon.value.charge": "Charge-up",
   "worldcombat.skill.bloodmoon.value.motes": "Moonlight motes",
-  "worldcombat.skill.bloodmoon.value.recover": "Recovery",
+  "worldcombat.skill.bloodmoon.value.aftercast": "Recovery",
   "worldcombat.skill.bloodmoon.value.recharge": "Cooldown",
   "worldcombat.skill.bloodmoon.value.spent": "Spent window",
   "worldcombat.skill.bloodmoon.preference.eclipse": "Eclipse style",

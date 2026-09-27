@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.infestation.summary": "甩出四簇虫黏住目标持续啃咬。目标可以移动，每跑过一段距离便甩落一簇，剩下的虫越少，啃咬越轻。",
   "worldcombat.skill.infestation.description.0": "命中造成约 %1$s 点特殊伤害，并把虫群挂到目标身上。",
-  "worldcombat.skill.infestation.description.1": "虫群最多附着 %1$s；完整虫群每隔 %3$s 按目标最大生命的 %2$s 请求啃咬伤害，甩落虫簇按余份减轻。实际伤害受原生规则裁定，清除虫群立即结束。",
+  "worldcombat.skill.infestation.description.1": "虫群最多附着 %1$s；完整虫群每隔 %3$s 咬一口：按目标最大生命的 %2$s 计算、向下取整且每口至少 1 点，再乘以剩余虫份（剩余簇数 ÷ 4）请求伤害，所以低血目标每口也至少 1 点。实际伤害受原生规则裁定，清除虫群立即结束。",
   "worldcombat.skill.infestation.description.2": "射程 %1$s 格、虫群弹速 %2$s 格每刻；飞行途中撞上目标即附着（判定半径 %4$s 格），若先撞上方块则散开。起手 %3$s。",
   "worldcombat.skill.infestation.use.0": "给难缠的目标挂持续啃咬",
   "worldcombat.skill.infestation.use.1": "迫使站定输出的敌人走动甩虫",

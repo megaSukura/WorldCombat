@@ -10,13 +10,16 @@ import static dev.worldcombat.core.checks.TestWorld.*;
 
 /** A late Mod multiplier must not turn a scoped sparing hit into a kill. */
 public final class NativeDamageFloorChecks {
-    private static boolean installed, amplify;
+    private static boolean installed, amplify, refuse;
     private static UUID victim;
     public static void run(MinecraftCombat combat, ServerLevel level) {
         if (!installed) {
             installed = true;
             NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST, (LivingDamageEvent.Pre event) -> {
                 if (amplify && event.getEntity().getUUID().equals(victim)) event.setNewDamage(event.getNewDamage() * 100);
+            });
+            NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent event) -> {
+                if (refuse && event.getEntity().getUUID().equals(victim)) event.setCanceled(true);
             });
         }
         var from = mob(EntityType.COW, level, 2); var to = mob(EntityType.COW, level, 8);
@@ -27,8 +30,11 @@ public final class NativeDamageFloorChecks {
             require(combat.damage(source, target, null, 2, "{\"minimumHealth\":1}"), "Sparing hit was rejected");
             require(to.isAlive() && to.getHealth() == 1, "Late native multiplier bypassed health floor");
             to.setHealth(8); to.invulnerableTime = 0;
+            var lastAttacker = to.getLastHurtByMob(); var lastAttacked = to.getLastHurtByMobTimestamp();
             require(combat.health(target, target, null, -2, "checks:share", 1) == -7 && to.getHealth() == 1,
                 "Native self-cost did not retain scoped health floor");
+            require(to.getLastHurtByMob() == lastAttacker && to.getLastHurtByMobTimestamp() == lastAttacked && to.getTarget() != to,
+                "Health payment replaced the real attacker with its payer");
             to.setHealth(8); to.invulnerableTime = 0; to.setAbsorptionAmount(3);
             combat.damage(source, target, null, 2, "{\"minimumHealth\":1}");
             require(to.getHealth() >= 1 && to.getHealth() < 8 && to.getAbsorptionAmount() == 0, "Native absorption no longer reduces a sparing hit");
@@ -37,5 +43,22 @@ public final class NativeDamageFloorChecks {
             require(!to.isAlive(), "Floor leaked into a later independent hit");
             mark("Native damage floor verified: late multipliers, scoped self-cost, absorption and independent next hit");
         } finally { victim = null; amplify = false; from.discard(); to.discard(); }
+        var payer = mob(EntityType.COW, level, 12); var payerActor = combat.bind(payer);
+        victim = payer.getUUID();
+        try {
+            payer.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR).setBaseValue(30);
+            payer.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE, 100, 4));
+            payer.setHealth(8); payer.invulnerableTime = 20;
+            require(combat.payHealth(payerActor, null, 3, "checks:payment", 1) == 3 && payer.getHealth() == 5,
+                "Life payment was reduced by armor/resistance or hurt cooldown");
+            refuse = true;
+            require(combat.payHealth(payerActor, null, 2, "checks:payment", 0) == 0 && payer.getHealth() == 5,
+                "Life payment bypassed native cancellation");
+            refuse = false;
+            payer.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.TOTEM_OF_UNDYING));
+            double paid = combat.payHealth(payerActor, null, 5, "checks:payment", 0);
+            require(payer.isAlive() && paid < 5 && payer.getMainHandItem().isEmpty(), "Life payment bypassed native survival");
+            mark("Native life payment verified: exact armored payment, incoming cancellation and totem survival");
+        } finally { victim = null; refuse = false; payer.discard(); }
     }
 }

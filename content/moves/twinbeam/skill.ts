@@ -1,37 +1,53 @@
 /**
  * 双光束 / twinbeam —— 出手方式。
  *
- * 核心念头：一记**双目并射**。两只眼睛各射出一道灵光，从各自的真实眼位朝同一个瞄点射出——两条射线在所选
- *   距离收拢于一点，再各自沿原直线穿过交点、飞完自己的射程。每道光只结算它碰到的**第一个**接触；两道光若
- *   确实打到同一个目标，那一点才会共鸣，第二道才吃到加成。
+ * 核心念头：一记**双目并射**。头部两侧各有一个按体型估算的射口，两处射口各射出一道灵光，朝同一个瞄点射出——
+ *   两条射线在所选距离收拢于一点，再各自沿原直线穿过交点、飞完自己的射程。每道光只结算它碰到的**第一个**
+ *   接触；两道光若确实打到同一个目标，那一点才会共鸣，第二道才吃到加成。
  *
  * 幕：
- *   起（raise，提交前）：双眼聚光、两点光在眼前凝成将射未射的亮点（`action.present`，可打断、不花 PP）。
- *   一（beam，提交后）：左眼射出一道。`action.trace` 从真实左眼位朝瞄点方向打到本招射程，取第一接触；
+ *   起（raise，提交前）：两个射口各自聚起一点光，两点光在各自射口凝成将射未射的亮点（`action.present`，
+ *       可打断、不花 PP）。准备点与发射点读同一组射口坐标，近墙会把射口退回真实墙面。
+ *   一（beam，提交后）：左射口射出一道。`action.trace` 从该射口朝瞄点方向打到本招射程，取第一接触；
  *       第一接触是非友方活体就结算一记 `ray` 特殊伤害，是墙或友方就停在接触点、只留光路。
- *   二（beam）：`gap` 之后第二道从右眼位发射。共鸣式下，只有当第一道也打中**同一个目标**时，第二道才吃到
+ *   二（beam）：`gap` 之后第二道从右射口发射。共鸣式下，只有当第一道也打中**同一个目标**时，第二道才吃到
  *       `resonance` 加成；并射式两道几乎同时、各自独立、没有加成。
  *   收（settle）：目光收拢的余辉。
  *
- * 选取：`kind: "aim"`——自由点选交汇距离，实体输入取其身体中心作为瞄点；障碍会分别遮住对应那一道眼线，
- *   空放也照常射出两道。目标离场时只是那一道射空，动作仍走完两眼。
+ * 选取：`kind: "aim"`——自由点选交汇距离，实体输入取其身体中心作为瞄点；障碍会分别遮住对应那一道射口，
+ *   空放也照常射出两道。目标离场时只是那一道射空，动作仍走完两处射口。
  *
- * 与同族分开：双针是两根细针沿同一条线先后射出、毒击是近身重刺、双翼是掠飞两拍；双光束是**两只眼睛发出的
- *   两道光从各自的眼位收拢到同一点**，画面里两条发光的线与两只手/两根针完全不同，射程也最远。
+ * 与同族分开：双针是两根细针沿同一条线先后射出、毒击是近身重刺、双翼是掠飞两拍；双光束是**头部两个射口发出的
+ *   两道光从各自的射口收拢到同一点**，画面里两条发光的线与两只手/两根针完全不同，射程也最远。
  */
 namespace PokemonSkills {
-    /** 水平侧向单位向量：两个眼位的左右方向；方向接近竖直时退化为世界 X 轴。 */
+    /** 水平侧向单位向量：两个射口的左右方向；方向接近竖直时退化为世界 X 轴。 */
     function twinbeamSide(direction: CombatPoint): CombatPoint {
         const side = WorldCombat.point(-direction.z(), 0, direction.x());
         return side.length() < 0.001 ? WorldCombat.point(1, 0, 0) : side.unit();
+    }
+    /** 两个射口的世界坐标：按体型从身体中心推射口高度、再向两侧分开射口间距。
+     *  每个射口各核一次「身体到射口」的近墙遮挡，被近墙截住就取真实墙面接触点，光束不会从墙里起步；
+     *  准备与发射读同一组结果，画面里的聚光点就是这一道的起点。 */
+    function twinbeamPorts(action: CombatAction, facing: CombatPoint, eyeHeight: number, eyeSpan: number): { left: CombatPoint; right: CombatPoint } | null {
+        const scope = action.sense();
+        const self = scope.observe(action.actor());
+        if (self === null) return null;
+        const side = twinbeamSide(facing);
+        const centre = self.position().plus(WorldCombat.point(0, eyeHeight - self.height() / 2, 0));
+        const clip = function (port: CombatPoint): CombatPoint {
+            const wall = WorldGeometry.blockHit(scope, self.position(), port);
+            return wall === null ? port : wall.position();
+        };
+        return { left: clip(centre.plus(side.scale(eyeSpan / 2))), right: clip(centre.minus(side.scale(eyeSpan / 2))) };
     }
 
     define({
         id: twinbeamId,
         cooldownParameter: "recharge",
         name: "Twin Beam",
-        description: "从两只眼睛各射出一道灵光，两道光从各自的真实眼位朝同一个瞄点射出、在所选距离收拢于一点。每道光只打它碰到的第一个接触；两道光确实打到同一个目标时那一点才共鸣，第二道才更强。共鸣式出手更慢但后劲更足；并射式两道几乎同时射出、出手快，但没有共鸣加成。",
-        uses: ["两只眼睛各射一道光，收拢到同一点", "两道光打中同一目标才触发共鸣", "远距离点名，不接触"],
+        description: "从头部两侧的两个射口各射出一道灵光，两道光朝同一个瞄点射出、在所选距离收拢于一点。每道光只打它碰到的第一个接触；两道光确实打到同一个目标时那一点才共鸣，第二道才更强。共鸣式出手更慢但后劲更足；并射式两道几乎同时射出、出手快，但没有共鸣加成。",
+        uses: ["两个射口各射一道光，收拢到同一点", "两道光打中同一目标才触发共鸣", "远距离点名，不接触"],
         kind: "aim",
         range: 12,
         maxRange: 16,
@@ -56,9 +72,15 @@ namespace PokemonSkills {
             const motes = Math.max(8, Math.round(p("twinbeam", "motes", action)));
             const eyeHeight = p("twinbeam", "eyeHeight", action);
             const eyeSpan = p("twinbeam", "eyeSpan", action);
-            action.present("twinbeam:raise:" + action.id(), twinbeamScene, 1, action.origin(),
-                JSON.stringify({ moment: "raise", windup: prepare, eyes: 2, motes: motes, eyeHeight: eyeHeight, eyeSpan: eyeSpan,
-                    resonance: config && config.resonance === true ? 1 : 0 }));
+            const ports = twinbeamPorts(action, aim(action), eyeHeight, eyeSpan);
+            const data = { moment: "raise", windup: prepare, eyes: 2, motes: motes,
+                resonance: config && config.resonance === true ? 1 : 0 };
+            // 两个射口各自出一个聚光实例，准备点与发射点一致；拿不到身体就退回原点单点。
+            if (ports === null) action.present("twinbeam:raise:" + action.id(), twinbeamScene, 1, action.origin(), JSON.stringify(data));
+            else {
+                action.present("twinbeam:raise:0:" + action.id(), twinbeamScene, 1, ports.left, JSON.stringify(data));
+                action.present("twinbeam:raise:1:" + action.id(), twinbeamScene, 1, ports.right, JSON.stringify(data));
+            }
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -86,30 +108,30 @@ namespace PokemonSkills {
 
             function fire(current: CombatAction, index: number): void {
                 const scope = current.world();
-                const self = scope.observe(actor);
-                if (self === null) {
+                const facing = aim(current);
+                // 两个射口坐标已各自核过身体到射口的近墙遮挡；准备期用的是同一组结果。
+                const ports = twinbeamPorts(current, facing, eyeHeight, eyeSpan);
+                if (ports === null) {
                     if (index === 1) { finish(current); return; }
                     current.after(2, function (next: CombatAction) { fire(next, 1); });
                     return;
                 }
-                const facing = aim(current);
-                const side = twinbeamSide(facing);
-                const eyes = self.position().plus(WorldCombat.point(0, eyeHeight - self.height() / 2, 0));
-                const from = eyes.plus(side.scale(index === 0 ? eyeSpan / 2 : -eyeSpan / 2));
+                const from = index === 0 ? ports.left : ports.right;
                 const aimPoint = current.targetPosition();
                 const delta = aimPoint.minus(from);
                 const ray = delta.length() < 0.01 ? (facing.length() < 0.01 ? WorldCombat.point(0, 0, 1) : facing) : delta.unit();
                 const to = from.plus(ray.scale(reach));
                 const heading = [ray.x(), ray.y(), ray.z()];
-                // 权威判定：这一道从真实眼位打出的第一条接触（含友方身体与实墙）。
+                // 权威判定：这一道从射口打出的第一条接触（含友方身体与实墙）。
                 const contact = current.trace(from, to, beamRadius, true);
                 const at = contact.position();
                 const lander = contact.hitEntity() ? contact.target() : null;
                 const victim = lander !== null && String(lander.ref()) !== String(actor.ref()) && !scope.friendly(lander) ? lander : null;
                 const line = [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]];
+                // 判定是瞬时的：整条光路同刻闪一次，画多长判定就到哪里。
                 WorldFeedback.emit(scope, twinbeamScene, 1, from,
-                    { moment: "beam", path: line, side: index === 0 ? 1 : -1, eyeSpan: eyeSpan, beamRadius: beamRadius,
-                        motes: motes, reach: reach, direction: heading, index: index + 1 }, 20);
+                    { moment: "beam", path: line, side: index === 0 ? 1 : -1, beamRadius: beamRadius,
+                        motes: motes, reach: reach, direction: heading, index: index + 1 }, 10);
                 if (victim !== null && scope.valid(victim)) {
                     const same = index === 1 && firstRef !== null && String(victim.ref()) === firstRef;
                     const mult = same ? 1 + bonus : 1;

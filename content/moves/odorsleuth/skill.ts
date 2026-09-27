@@ -107,8 +107,7 @@ namespace PokemonSkills {
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p(odorsleuthId, "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
-            if (CombatStatus.has(world, target, odorsleuthStatus) || CombatStatus.has(world, target, "foresight")) return "already-smelled";
-            if (CombatStatus.has(world, target, "miracleeye")) return "miracle-eyed";
+            // 已识破/奇迹眼目标仍可再嗅：这是本人独立追味信息的来源，只跳过重叠的闪避剥离，不禁整招。
             return "";
         },
         windup: function (action, config, prepare) {
@@ -141,7 +140,11 @@ namespace PokemonSkills {
             const motes = Math.max(8, Math.round(p(odorsleuthId, "motes", action)));
             const strips = Math.max(0, Math.round(p(odorsleuthId, "strips", action)));
             const drag = Math.max(0, Math.min(0.8, p(odorsleuthId, "drag", action)));
-            const taken = Math.min(strips, Math.max(0, NativeEffects.stage(NativeEffects.read(world, target), "evasion")));
+            // 已带本人气味记录时只续追踪，不重复剥已重叠的闪避；记录里的实际剥离量原样保留。
+            const existing = odorsleuthRecordOf(world, target);
+            const already = !!existing && typeof existing.taken === "number";
+            const taken = already ? Math.max(0, Math.round(existing.taken))
+                : Math.min(strips, Math.max(0, NativeEffects.stage(NativeEffects.read(world, target), "evasion")));
             const carrier = MobEffects.apply(world, target, odorsleuthMarkEffect, window, 0);
             if (!carrier) { done(action); return; }
             if (taken) NativeEffects.boostWindow(world, target, { evasion: -taken }, window, "world_combat:move/odorsleuth", carrier);

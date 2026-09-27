@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.drumbeating.summary": "Each beat sends a root head over real support toward that beat's fixed destination. Damage occurs only on arrival. The final arriving contact binds and slows; missing ground stops that root path.",
-  "worldcombat.skill.drumbeating.description.0": "Play %3$s beats separated by %4$s: early beats use %1$s power and the last uses %2$s. Travelling segments add no extra damage.",
+  "worldcombat.skill.drumbeating.description.0": "Play %3$s beats, each pausing %4$s after its root head arrives before the next begins, so a longer reach makes the whole roll take longer; early beats use %1$s power and the last uses %2$s. Travelling segments add no extra damage.",
   "worldcombat.skill.drumbeating.description.1": "The root travels up to %1$s blocks at %2$s blocks/tick and settles within radius %3$s, for at most three enemies per beat. Entity positions are resampled for each beat; chosen points remain fixed.",
   "worldcombat.skill.drumbeating.description.2": "The final hit lowers Speed by %1$s stages, with a binding carrier for %2$s and a brief root for %3$s. %4$s short root strands mark actual contact without replacing terrain.",
   "worldcombat.skill.drumbeating.deep.on": "Deep root: the roots stay longer, press one more Speed stage and break through wider, at the cost of a lighter beat and a longer cooldown.",

@@ -52,7 +52,9 @@ const ReturnDefinition: ParticleDefinition = {
                 {
                     name: "gold_trail", bind: "source", offset: [0, 0.5, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: { data: "trail", fallback: 40 }, trail: { minDistance: 0.28 },
+                    // trail 模式下 rate 不参与发射（占位 0 只为通过 schema）；密度改由 minDistance（威力越大越密）与 amount（每点数量）控制。
+                    rate: 0, trail: { minDistance: { data: "spacing", fallback: 0.28 } },
+                    amount: { data: "density", fallback: 1 },
                     shape: { kind: "point" },
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [5, 11], size: [0.1, 0.02],
@@ -151,6 +153,22 @@ const ReturnDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.94,
                     lifetime: [7, 14], size: [0.07, 0.02],
                     color: 0xC9A66B, alpha: [0.45, 0], light: "world", maxParticles: 70
+                }
+            ]
+        },
+        brake: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "chock", bind: "source", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 14 },
+                    shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.03, 0.12],
+                    gravity: 0.03, drag: 0.93,
+                    lifetime: [7, 13], size: [0.08, 0.02],
+                    color: 0xC9A66B, alpha: [0.55, 0], light: "world", maxParticles: 70
                 }
             ]
         },

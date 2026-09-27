@@ -39,8 +39,8 @@ namespace PokemonSkills {
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
             const motes = Math.max(10, Math.round(Number(field.data.motes) || 18));
-            WorldFeedback.keep(world, "aromatherapy:cloud:" + String(effect.id()), aromatherapyScene, 1, centre,
-                { moment: "cloud", radius: field.radius, motes: motes, scale: field.radius / aromatherapyReferenceRadius }, 12);
+            WorldFeedback.onEffect(world, effect.id(), "aromatherapy:cloud", aromatherapyScene, 1, centre,
+                { moment: "cloud", radius: field.radius, motes: motes, scale: field.radius / aromatherapyReferenceRadius });
         }
     });
 

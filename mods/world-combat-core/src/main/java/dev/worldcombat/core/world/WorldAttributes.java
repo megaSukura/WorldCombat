@@ -43,13 +43,20 @@ public final class WorldAttributes {
         if (holder == null) return null;
         var instance = entity.getAttribute(holder); if (instance == null) return null;
         var own = leases.get(new Key(owner, target, id));
-        if (own == null) return new AttributeObservation(instance.getBaseValue(), instance.getValue());
+        return observe(instance, own == null ? null : own.modifier());
+    }
+    public static AttributeObservation observe(AttributeInstance instance) { return observe(instance, null); }
+    private static AttributeObservation observe(AttributeInstance instance, ResourceLocation excluded) {
         double added = instance.getBaseValue();
-        for (var modifier : instance.getModifiers()) if (!modifier.id().equals(own.modifier()) && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) added += modifier.amount();
-        double value = added;
-        for (var modifier : instance.getModifiers()) if (!modifier.id().equals(own.modifier()) && modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE) value += added * modifier.amount();
-        for (var modifier : instance.getModifiers()) if (!modifier.id().equals(own.modifier()) && modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) value *= 1 + modifier.amount();
-        return new AttributeObservation(instance.getBaseValue(), holder.value().sanitizeValue(value));
+        for (var modifier : instance.getModifiers()) if (!modifier.id().equals(excluded) && modifier.operation() == AttributeModifier.Operation.ADD_VALUE) added += modifier.amount();
+        double value = added, slope = 1;
+        for (var modifier : instance.getModifiers()) if (!modifier.id().equals(excluded) && modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE) {
+            value += added * modifier.amount(); slope += modifier.amount();
+        }
+        for (var modifier : instance.getModifiers()) if (!modifier.id().equals(excluded) && modifier.operation() == AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL) {
+            value *= 1 + modifier.amount(); slope *= 1 + modifier.amount();
+        }
+        return new AttributeObservation(instance.getBaseValue(), instance.getAttribute().value().sanitizeValue(value), value, slope);
     }
     public void release(long owner) {
         leases.entrySet().removeIf(entry -> {

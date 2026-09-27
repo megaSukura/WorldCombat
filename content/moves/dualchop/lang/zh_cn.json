@@ -6,7 +6,7 @@
   "worldcombat.skill.dualchop.description.0": "第一刀沿准线窄而重地竖劈：约 %1$s 点物理伤害，能够到 %2$s 格，刀路半宽 %3$s 格，只取刀路上的第一个目标。",
   "worldcombat.skill.dualchop.description.1": "第二刀以第一刀落点为圆心横展开 %2$s 格半径、%3$s 度的宽短横斩，最多劈到 %4$s 个目标，每个造成约 %1$s 点物理伤害。",
   "worldcombat.skill.dualchop.description.2": "两刀间隔 %1$s；第一刀把刀路上的目标顶开 %2$s 格。",
-  "worldcombat.skill.dualchop.description.3": "第一刀在身前犁出一道短暂的视觉裂痕；它只画线，不改动方块。",
+  "worldcombat.skill.dualchop.description.3": "只有第一刀真正劈到身体或墙，才在落点留下一道短暂的视觉裂痕；它只画线、不改动方块，空劈不留。",
   "worldcombat.skill.dualchop.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.dualchop.growth.0": "达到 %1$s 级，第一刀威力升至 %2$s。",
   "worldcombat.skill.dualchop.growth.1": "达到 %1$s 级，第一刀威力 %2$s、第二刀威力 %3$s。",

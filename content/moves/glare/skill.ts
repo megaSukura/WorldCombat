@@ -1,13 +1,13 @@
 /**
  * 大蛇瞪眼 / Glare — 出手方式。
  *
- * 核心念头：一记瞬发、不飞行的扇形怒目。施法者昂起身体、把腹部的花纹朝前撑开，面前扇形里每一个和它眼睛之间
+ * 核心念头：一记瞬发、不飞行的扇形怒目。施法者把腹部的花纹朝前亮起成一片扇形，面前扇形里每一个和它眼睛之间
  *   没有遮挡的敌人一起被镇住。它不造成伤害（原生威力 0），靠的是覆盖面；代价是够得最近、起手最久，
  *   而且**必须看得见**——躲到墙后、绕到侧背或站到扇形之外的人完全不受影响。
  *
  * 幕：
- *   起（windup，提交前）：昂首、花纹亮起的预告（`action.present`）。
- *   凝（sweep → caught / avert）：提交后瞬发。用与判定同一组顶点撑起扇形（`WorldGeometry.polygon`），
+ *   起（windup，提交前）：花纹在身前成形的预告（`action.present`）。
+ *   凝（sweep → caught / avert）：提交后瞬发。用与判定同一组顶点亮起扇形（`WorldGeometry.polygon`），
  *       逐个筛出扇形内、与施法者通视的非友方，各自挂上共享的 `world_combat:status/paralysis`
  *       （宝可梦那一层由共享默认效果同步成原生麻痹）；一个都没罩到时花纹空转消散。
  *
@@ -74,25 +74,27 @@ namespace PokemonSkills {
             const world = action.world(), self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
+            const half = selfBody === null ? 0.7 : Math.max(0.4, selfBody.height() / 2);
             const reach = Math.max(1.5, p(glareId, "gazeReach", action));
             const angle = Math.max(30, p(glareId, "gazeAngle", action));
             const lockTicks = Math.max(40, Math.round(p(glareId, "lockTicks", action)));
             const rings = Math.max(2, Math.round(p(glareId, "patternRings", action)));
-            const sweepSpeed = Math.max(0.8, p(glareId, "gazeSpeed", action));
+            const gazeSpeed = Math.max(0.8, p(glareId, "gazeSpeed", action));
             const intensity = Math.max(0.6, Math.min(2.4, lockTicks / 260));
             // 方向点或实体都能放：facing 就是判定扇形的中线，也是画面里腹纹正面朝向。
             const facing = aim(action);
             const vertices = glareFan(origin, facing, reach, angle, 8);
             const path = vertices.map(glareCoords);
             sound(action, "cobblemon:move.scaryface.actor");
+            // 可视扇面就是判定扇面：同一组顶点、同一段由施法者体型定出的竖直厚度。
             WorldFeedback.emit(world, glareScene, 1, origin,
                 { moment: "sweep", path: path, reach: reach, angle: angle, rings: rings,
-                    flux: Math.round(26 + sweepSpeed * 10), sweep: Math.max(1, Math.round(8 - sweepSpeed)),
+                    flux: Math.round(26 + gazeSpeed * 10), half: half,
                     intensity: intensity, scale: Math.max(0.5, Math.min(2.2, reach / 6)),
                     direction: [facing.x(), facing.y(), facing.z()] }, 30);
 
             let caught = 0;
-            WorldGeometry.select(world, WorldGeometry.polygon(vertices, { below: 2, above: 3 }), function (actor, facts) {
+            WorldGeometry.select(world, WorldGeometry.polygon(vertices, { below: half + 0.4, above: half + 0.5 }), function (actor, facts) {
                 if (String(actor.key()) === String(self.key()) || facts.friendly()) return;
                 if (!world.clear(origin, facts.position())) return;
                 if (!CombatStatus.inflict(world, actor, "paralysis", lockTicks)) return;

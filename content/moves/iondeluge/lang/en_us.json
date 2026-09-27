@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.iondeluge.summary": "Lay a bath of charged particles on a chosen patch of ground: while inside it, anyone's Normal-type moves become Electric. It affects both sides, so where you lay it is the real choice.",
+  "worldcombat.skill.iondeluge.summary": "Lay a bath of charged particles on a chosen patch of ground: while inside it (or just after leaving), anyone's Normal-type moves become Electric, and a plain MC mob's ordinary melee is converted too. It affects both sides, so where you lay it is the real choice.",
   "worldcombat.skill.iondeluge.use.0": "Turn Normal into Electric",
   "worldcombat.skill.iondeluge.use.1": "Lay a disruptive field",
   "worldcombat.skill.iondeluge.use.2": "Support an Electric team",
-  "worldcombat.skill.iondeluge.description.0": "Choose ground within %1$s blocks and lay a bath of radius %2$s blocks lasting %3$s s; anyone inside with line of sight to its centre carries an ion film, and their Normal-type moves become Electric. The bath stays where it is laid and ends automatically if its centre gets more than 48 blocks from you.",
+  "worldcombat.skill.iondeluge.description.0": "Choose ground within %1$s blocks and lay a bath of radius %2$s blocks lasting %3$s s; anyone inside with line of sight to its centre carries an ion film, and their Normal-type moves become Electric (a plain MC mob's ordinary melee is converted too). The bath stays where it is laid and ends automatically if its centre gets more than 48 blocks from you.",
   "worldcombat.skill.iondeluge.description.1": "After leaving the bath the ion film lingers about %1$s ticks, and Normal-type moves still become Electric while it lasts. The bath treats both sides the same: it can empower you or turn an enemy's Normal move Electric (blocked by Ground or absorbed by Electric-absorbing abilities).",
   "worldcombat.skill.iondeluge.wide.0": "Wide bath: radius x1.3, but duration -30% and cooldown +0.6 s, made to reshape a front fast.",
   "worldcombat.skill.iondeluge.wide.1": "Lasting bath: radius x0.85, but duration +40% and cooldown -0.6 s, made to hold a small patch.",

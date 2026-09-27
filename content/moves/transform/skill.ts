@@ -6,9 +6,10 @@
  *
  * 所有权：每次变身是一枚自己的 transformMark（记录这次复制层、载体锚点、到期刻与画面数），加一枚真正
  *   在身上显示的 MobEffect 载体（共享身份 world_combat:status/transformed）。宝可梦分支的
- *   NativeModifiers.copy 层用 world_combat:stage_owner 挂到 mark 上，mark 里再存 carrier——mark 一结束
- *   或载体一被替换，windowAlive 立即让这层停止贡献。刷新时先立新载体、新层、新 mark，再收回旧 mark；
- *   旧回调只撤自己记下的层与自己的载体锚点，不会碰到新形态。
+ *   NativeModifiers.copy 层用 world_combat:stage_owner 挂到 mark 上，mark 里再存 carrier；mark 每刻都核对
+ *   自己的层还在、载体锚点仍匹配，二者任一消失就同步清掉自己的标记。刷新按「先证成新的、再撤旧的」：
+ *   先建新复制层，成功后才换新载体、挂新 mark，最后才收回旧 mark；旧回调只撤自己记下的层与自己的载体
+ *   锚点，失败时旧形态与旧载体原样保留，不会误伤新形态。外形模型不随形态改变，画的是「借了什么构成」。
  */
 namespace PokemonSkills {
     interface TransformState {
@@ -44,14 +45,39 @@ namespace PokemonSkills {
         if (typeof value.motes !== "number" || !isFinite(value.motes) || value.motes < 0) throw new Error("Invalid transform motes");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
+    /** 这次 mark 记下的复制层是否仍在自己身上；被单独撤层后标记要同步退出。 */
+    function transformLayerAlive(world: CombatWorld, actor: CombatActor, state: TransformState): boolean {
+        const definition = state.branch === "native" ? "cobblemon_world_combat:modifier" : "world_combat:attribute_copy";
+        const views = world.effects(actor, definition);
+        for (let i = 0; i < views.length; i++) if (views[i].id() === state.layer) return true;
+        return false;
+    }
+    /** 上一份普通分支复制的值与剩余时长；普通复制按 CombatCopies 同源合同重建，失败时据此还原。 */
+    function transformPriorCopy(world: CombatWorld, actor: CombatActor): { values: CombatCopies.Values; ticks: number } | null {
+        const views = world.effects(actor, "world_combat:attribute_copy");
+        for (let i = 0; i < views.length; i++) {
+            const data = JSON.parse(String(views[i].data()));
+            if (data && data.source === "transform" && !data.additive)
+                return { values: data.values || {}, ticks: Math.max(1, views[i].remaining()) };
+        }
+        return null;
+    }
+    /** 扫描用自定义 scene 逐帧推进：两端顶点读真实实体，静止时也能看到扫线掠过。 */
+    function transformScan(action: CombatAction, self: CombatActor, target: CombatActor, motes: number, moveCount: number): void {
+        const world = action.world();
+        WorldFeedback.emit(world, transformScanScene, 1, action.origin(),
+            { moment: "scan", path: [String(target.ref()), String(self.ref())], motes: motes,
+                moveCount: moveCount, start: world.tick(), duration: 12 }, 20);
+    }
     WorldCombat.effectHandler(transformMark, "start", function (effect) {
         const world = effect.world(), actor = effect.target(), state: TransformState = JSON.parse(effect.state());
-        if (!world.valid(actor) || !state.carrier || !MobEffects.matches(world, actor, state.carrier)) { effect.end(); return; }
+        if (!world.valid(actor) || !transformLayerAlive(world, actor, state)) { effect.end(); return; }
         effect.schedule("watch", "watch", 1, "{}");
     });
     WorldCombat.effectHandler(transformMark, "watch", function (effect) {
         const world = effect.world(), actor = effect.target(), state: TransformState = JSON.parse(effect.state());
-        if (!world.valid(actor) || !state.carrier || !MobEffects.matches(world, actor, state.carrier)) { effect.end(); return; }
+        if (!world.valid(actor) || !state.carrier || !MobEffects.matches(world, actor, state.carrier)
+            || !transformLayerAlive(world, actor, state)) { effect.end(); return; }
         effect.schedule("watch", "watch", 1, "{}");
     });
     WorldCombat.effectHandler(transformMark, "end", function (effect) {
@@ -149,8 +175,8 @@ namespace PokemonSkills {
         ready: function (action) {
             const world = action.sense(), self = action.actor(), target = action.target();
             if (String(self.domain()) !== "cobblemon" || !world.valid(self)) return "no-form";
-            // 中性瞄准：空点／空放交给 execute 说明，不在这里强求存在敌人。
-            if (target === null) return "";
+            // 变身必须有可描的对象；手动空选在这里明确拒绝，AI 会先选好真实目标再提交。
+            if (target === null) return "no-target";
             if (!world.valid(target)) return "target-left";
             if (String(target.ref()) === String(self.ref())) return "invalid-target";
             if (CombatStatus.has(world, target, transformStatus)) return "already-copy";
@@ -179,11 +205,15 @@ namespace PokemonSkills {
             const hold = Math.max(80, Math.round(p(transformId, "hold", action)));
             const motes = Math.max(6, Math.round(p(transformId, "motes", action)));
             const branch: "native" | "attributes" = String(target.domain()) === "cobblemon" ? "native" : "attributes";
-            // Replace this form's native carrier before creating the new temporary copy layer.
-            const carrier = MobEffects.set(world, self, transformEffect, hold, 0);
-            if (carrier === null) { transformFail(world, self, transformFailText); done(action); return; }
-            const anchor = MobEffects.anchor(carrier);
             let layer = 0, species = "native", form = "", ability = "", moves: string[] = [], keys: string[] = [];
+            let priorCopy: { values: CombatCopies.Values; ticks: number } | null = null;
+            // 任何一步失败都保留旧成功形态：宝可梦层不碰旧层；普通层按同源合同重建，失败时用快照还原。
+            function abandon(): void {
+                if (layer > 0) world.operation(layer, "world_combat:dispel", "{}");
+                if (priorCopy !== null) CombatCopies.apply(world, self, priorCopy.values, priorCopy.ticks, "transform");
+                transformFail(world, self, transformFailText); done(action);
+            }
+            // 1. 先建新的复制层；宝可梦层独立于载体，普通层用同源合同保证数值以原生基值重算。
             if (branch === "native") {
                 const pokemon = CobblemonCombat.pokemon(target);
                 species = String(pokemon.species()); form = String(pokemon.form());
@@ -193,29 +223,33 @@ namespace PokemonSkills {
             } else {
                 const type = world.entityType(target);
                 species = type ? String(type.id()) : "native";
+                priorCopy = transformPriorCopy(world, self);
                 const values = CombatCopies.read(world, target);
                 keys = Object.keys(values);
-                layer = CombatCopies.apply(world, self, values, hold, "transform", anchor);
+                layer = CombatCopies.apply(world, self, values, hold, "transform");
             }
-            if (layer <= 0) { MobEffects.consume(world, self, transformEffect); transformFail(world, self, transformFailText); done(action); return; }
-            // 新层已就位，再按明确 owned 收回旧形态；旧 mark 只清自己那次。
-            world.effects(self, transformMark).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+            if (layer <= 0) { abandon(); return; }
+            // 2. 新层成立后才换新载体；替换被拒时撤掉新层并还原旧复制，旧载体仍在。
+            const carrier = MobEffects.set(world, self, transformEffect, hold, 0);
+            if (carrier === null) { abandon(); return; }
+            const anchor = MobEffects.anchor(carrier);
+            // 3. mark 记下这次层与载体；建不成就把新层和新载体收干净，旧 mark 不动。
             const mark = world.effect(transformMark, self, JSON.stringify({
                 branch: branch, layer: layer, carrier: anchor, species: species, form: form, ability: ability,
                 moves: moves, keys: keys, max: hold, until: world.tick() + hold, motes: motes
             }), hold);
-            if (mark <= 0) { world.operation(layer, "world_combat:dispel", "{}"); MobEffects.consume(world, self, transformEffect); transformFail(world, self, transformFailText); done(action); return; }
+            if (mark <= 0) { MobEffects.consume(world, self, transformEffect); abandon(); return; }
             if (branch === "native" && !world.operation(layer, "world_combat:stage_owner",
                 JSON.stringify({ actor: String(self.ref()), definition: transformMark, id: mark }))) {
                 world.operation(mark, "world_combat:dispel", "{}");
-                transformFail(world, self, transformFailText); done(action); return;
+                MobEffects.consume(world, self, transformEffect);
+                abandon(); return;
             }
+            // 4. 新形态就位后再按明确 owned 收回旧形态；旧 mark 只清自己那次。
+            world.effects(self, transformMark).forEach(view => { if (view.id() !== mark) world.operation(view.id(), "world_combat:dispel", "{}"); });
 
-            // 表现：扫描线沿目标到自身的实际连线，落定后按分支显示形态或有限属性纹；持续镜光绑在本次 mark 上。
-            const path = [String(target.ref()), String(self.ref())];
-            WorldFeedback.emit(world, transformScene, 1, other.position(),
-                { moment: "scan", target: String(target.ref()), path: path, motes: motes,
-                    moveCount: branch === "native" ? moves.length : keys.length }, 26);
+            // 表现：扫描沿目标到自身的真实连线逐帧推进，落定后按分支显示形态或有限属性纹；持续镜光绑在本次 mark 上。
+            transformScan(action, self, target, motes, branch === "native" ? moves.length : keys.length);
             WorldFeedback.emit(world, transformScene, 1, body.position(),
                 { moment: branch === "native" ? "shift" : "marks", target: String(self.ref()),
                     motes: motes, moveCount: moves.length, marks: keys.length,

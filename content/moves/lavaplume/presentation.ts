@@ -5,9 +5,11 @@
  * 浓烟式时余热仍留在同一根柱子里暗红闷烧，而不是铺在地上。
  * 色相家族：火焰橙与余烬黄（fire/flame / fire/ember / impact_fire）为主体，黑烟（smoke）做衬托，近白只做柱根的高光。
  * 拍子：起（stoke 攒火）→ 击（plume 逐层升起、hit 烧身、cap 顶棚横散）→ 收（ember 柱内余热 / miss 散去）。
- * 范围：plume/ember 的柱体按服务端传的 `data.height`、`data.radius` 与 `data.scale` 画出真实体积；cap 只作顶棚处的装饰横散。
+ * 范围：plume/ember 的柱体绑在提交时锁定的 base（`bind: "point"`，fit world），按服务端传的 `data.height`、
+ *   `data.radius` 与 `data.scale` 画出真实体积；施法者走开旧柱仍在原地。cap 是顶棚处的装饰横散。
  * 运动：烟柱竖直向上逐层长高，余热仍在同一柱内反复泛红。
  * 数：`data.height`（体型与特攻派生）决定烟柱高度，`data.flow`（高度派生）决定柱内密度，`data.count`（威力派生）决定命中火量。
+ *   ember 的 moment 时长读 `data.duration`（实际余热总长），随托管场景一起到危险期结束。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const LavaplumeDefinition: ParticleDefinition = {
@@ -41,7 +43,7 @@ const LavaplumeDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "column", bind: "source", offset: [0, 0, 0], height: 0, fit: "world",
+                    name: "column", bind: "point", offset: [0, 0, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
                     rate: { data: "flow", fallback: 70 },
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 3.2 }, length: { data: "height", fallback: 1.6 } },
@@ -50,7 +52,7 @@ const LavaplumeDefinition: ParticleDefinition = {
                     color: 0xFF8A33, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 150
                 },
                 {
-                    name: "core", bind: "source", offset: [0, 0, 0], height: 0, fit: "world",
+                    name: "core", bind: "point", offset: [0, 0, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
                     rate: { data: "flow", fallback: 40 },
                     shape: { kind: "cylinder", radius: { data: "core", fallback: 2.2 }, length: { data: "height", fallback: 1.6 } },
@@ -59,7 +61,7 @@ const LavaplumeDefinition: ParticleDefinition = {
                     color: 0xFFE2A0, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 100
                 },
                 {
-                    name: "smoke", bind: "source", offset: [0, 0.2, 0], height: 0, fit: "world",
+                    name: "smoke", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: 26,
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 3.2 }, length: { data: "height", fallback: 1.6 } },
@@ -75,10 +77,10 @@ const LavaplumeDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "spread", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "spread", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: { data: "flow", fallback: 20 }, at: 1 },
-                    shape: { kind: "circle", radius: 3.2 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 3.2 } },
                     direction: "outward", speed: [0.05, 0.2], spread: 18,
                     drag: 0.9,
                     lifetime: [12, 22], size: [0.34, 0.5],
@@ -111,11 +113,11 @@ const LavaplumeDefinition: ParticleDefinition = {
             ]
         },
         ember: {
-            duration: 24,
+            duration: { data: "duration", fallback: 60 },
             exit: { drain: 20 },
             emitters: [
                 {
-                    name: "column_heat", bind: "source", offset: [0, 0, 0], height: 0, fit: "world",
+                    name: "column_heat", bind: "point", offset: [0, 0, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     rate: 24,
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 3.2 }, length: { data: "height", fallback: 1.6 } },
@@ -125,7 +127,7 @@ const LavaplumeDefinition: ParticleDefinition = {
                     color: 0xFF6A24, alpha: [0.7, 0], light: "full", maxParticles: 110
                 },
                 {
-                    name: "column_smoke", bind: "source", offset: [0, 0, 0], height: 0, fit: "world",
+                    name: "column_smoke", bind: "point", offset: [0, 0, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: 12,
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 3.2 }, length: { data: "height", fallback: 1.6 } },
@@ -140,7 +142,7 @@ const LavaplumeDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "collapse", bind: "source", offset: [0, 0.08, 0], height: 0, fit: "world",
+                    name: "collapse", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 16, at: 1 },
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 2.2 }, length: { data: "height", fallback: 1.2 } },

@@ -2,25 +2,24 @@
  * 蘑菇孢子 / Spore —— 执行组织。
  *
  * 核心念头：原地抖开一身蘑菇孢子，孢子在一瞬间炸满周围一小片，贴得越近越躲不掉。它是四式中**最可靠的一记**：
- *   命中接近必然（参数只读施法者自己），但只够到很近的地方、冷却最长，而且什么都不留下。草属性穿过孢子。
+ *   命中接近必然（参数只读施法者自己），但只够到很近的地方、冷却最长，而且什么都不留下。草属性穿过孢子，
+ *   墙也能把粉末挡在外面。
  *
  * 幕：
  *   起（windup，提交前）：孢子从菌盖/身上鼓起、攒成一圈，只播预告。
  *   爆（burst → asleep / immune，提交后）：以自身为圆心炸开，半径内每个非友方按 `landChance` 各自判定，
  *      沾上的立刻挂共享的 world_combat:status/sleep（宝可梦那一层同步成原生睡眠），最多 `maxTargets` 人；
- *      草属性与免疫睡眠的目标只看孢子散开。
+ *      与中心之间隔墙的、按当前有效类型算草属性的、以及免疫睡眠的目标只看孢子散开。
  *
- * 反制：贴身之前先拉开距离或绕开；草属性穿过孢子。它不造成伤害，也不在世界上留任何东西。
+ * 反制：贴身之前先拉开距离或绕开，或退到墙后；草属性（含被改成的草属性）穿过孢子。它不造成伤害，也不在世界上留任何东西。
  */
 namespace PokemonSkills {
     function sporeAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
-    /** 草属性对粉末免疫：它直接穿过这团孢子。 */
+    /** 草属性对粉末免疫：它直接穿过这团孢子。按当前有效类型判断（含特性／效果改过的类型），与共享粉末路线一致。 */
     function sporeGrassImmune(world: CombatWorld, actor: CombatActor): boolean {
         if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return false;
-        const pokemon = CobblemonCombat.pokemon(actor);
-        for (let i = 0; i < pokemon.typeCount(); i++) if (String(pokemon.type(i)) === "grass") return true;
-        return false;
+        return PokemonDamage.combatants.read(world, actor).types.indexOf("grass") >= 0;
     }
 
     define({
@@ -83,6 +82,8 @@ namespace PokemonSkills {
                 if (String(other.key()) === String(self.key())) return;
                 const body = world.observe(other);
                 if (body === null) return;
+                // 粉末传播认真实墙面：隔墙的人孢子飘不过去。
+                if (WorldGeometry.blockHit(world, origin, body.position()) !== null) return;
                 const ref = String(other.ref());
                 if (sporeGrassImmune(world, other)) {
                     immune++;

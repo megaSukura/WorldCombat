@@ -39,7 +39,7 @@ namespace PokemonSkills {
         id: "headbutt",
         cooldownParameter: "recharge",
         name: "Headbutt",
-        description: "低头向前短促一顶：射程短、冷却短、随时能用；撞实的人有几率被顶懵，而趁对手还在畏缩时再顶一记会更凶狠——它的价值在连续压制里。",
+        description: "低头向前短促一顶：射程短、冷却短、随时能用；撞实的人有几率被顶懵，趁对手还在畏缩时再顶一记更狠。它靠队友的先手控制稳定接上这一口，单靠自己不易无限连懵。",
         uses: ["短冷却的连续近身压制", "趁对手刚被顶懵时补一记更狠的", "低消耗地把对手顶离掩体"],
         kind: "aim",
         range: 2.6,
@@ -77,20 +77,19 @@ namespace PokemonSkills {
             const length = p("headbutt", "lunge", action);
             const speed = p("headbutt", "rush", action);
             const radius = p("headbutt", "collisionRadius", action);
-            const power = p("headbutt", "smash", action);
             const chance = p("headbutt", "flinchChance", action);
             const flinchTicks = Math.round(p("headbutt", "flinchTicks", action));
             const shove = p("headbutt", "shove", action);
             const direction = aim(action);
             const heading = [direction.x(), direction.y(), direction.z()];
             const scale = radius / 0.5;
-            const intensity = Math.max(0.5, Math.min(2.2, power / 70));
+            const telegraph = Math.max(0.5, Math.min(2.2, p("headbutt", "smash", action) / 70));
             const stride = Math.max(2, Math.round(length / 0.7));
             let travelled = 0, settled = false;
 
             // 一记短促前伸：脚下只掀起一小片土，主体是前额亮点沿瞄准方向顶出去的那一下。
             movementScenes.show(action, "jab", action.origin(),
-                { moment: "charge", direction: heading, scale: scale, intensity: intensity,
+                { moment: "charge", direction: heading, scale: scale, intensity: telegraph,
                     reach: Math.round(length * 100) / 100, stride: stride });
             sound(action, "minecraft:entity.goat.prepare_ram");
 
@@ -115,12 +114,18 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const at = hit.position();
+                    // 畏缩加成属于真正被顶中的那个人，不是起手时选中的对象；拦截者或换人会按自己的状态重算。
+                    const aimed = target !== null ? withTarget(factContext(current), target) : factContext(current);
+                    const power = p("headbutt", "smash", aimed);
+                    const intensity = Math.max(0.5, Math.min(2.2, power / 70));
                     const landed = target !== null && impact(current, hit, "headbutt", power,
                         { damage: damageSpec("headbutt", "smash"), contact: true });
-                    WorldFeedback.emit(scope, headbuttScene, 1, at,
-                        { moment: "impact", target: target ? String(target.ref()) : "", scale: scale,
-                            intensity: intensity, hits: Math.round(8 + power * 0.10) }, 24);
+                    // 伤害被拒绝（友方、免疫等）时不发命中表现与浮字，只按落空收势。
                     if (landed && target !== null && scope.valid(target)) {
+                        WorldFeedback.emit(scope, headbuttScene, 1, at,
+                            { moment: "impact", target: String(target.ref()), scale: scale,
+                                intensity: intensity, hits: Math.round(8 + power * 0.10) }, 24);
+                        sound(current, "minecraft:entity.goat.ram_impact");
                         scope.hitDisplace(target, direction.scale(shove));
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), headbuttHitText, [], 22);
                         if (scope.random() < chance && headbuttFlinch(scope, target, flinchTicks)) {
@@ -128,7 +133,6 @@ namespace PokemonSkills {
                             WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.35, 0)), headbuttFlinchText, [], 24);
                         }
                     }
-                    sound(current, "minecraft:entity.goat.ram_impact");
                     finish(current);
                     return;
                 }

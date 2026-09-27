@@ -23,11 +23,14 @@ namespace PokemonSkills {
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 
-    /** 目标身后沿同一条射线还排着几个活的非友方；月蚀式据此判断值不值得铺开穿透。 */
+    /** 目标身后沿同一条射线还排着几个活的非友方；月蚀式据此判断值不值得铺开穿透。
+     *  只算首敌身后、且仍在月束自身 reach 以内、宽度带匹配、中间无墙的后排，超程的人不算。 */
     function bloodmoonAligned(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const world = CompanionBehavior.world(context);
         const self = CompanionBehavior.source(context).point;
-        const reach = p(bloodmoonId, "reach", world);
+        let reach = 11, radius = 0.5;
+        try { const value = p(bloodmoonId, "reach", world); if (isFinite(value)) reach = value; } catch (error) { }
+        try { const value = p(bloodmoonId, "beamRadius", world); if (isFinite(value)) radius = value; } catch (error) { }
         const ax = target.point[0] - self[0], az = target.point[2] - self[2];
         const length = Math.sqrt(ax * ax + az * az);
         if (length < 0.5) return 0;
@@ -39,9 +42,11 @@ namespace PokemonSkills {
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
             const dx = other.point[0] - self[0], dz = other.point[2] - self[2];
             const along = dx * ux + dz * uz;
-            if (along <= length + 0.5 || along > length + reach) continue;
+            if (along <= length + 0.5 || along > reach) continue;
             const across = Math.abs(dx * uz - dz * ux);
-            if (across <= 1.1) count++;
+            if (across > Math.max(0.4, radius)) continue;
+            if (!world.clear(CompanionBehavior.point(self), CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }

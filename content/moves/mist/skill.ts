@@ -95,9 +95,12 @@ namespace PokemonSkills {
         effect.end();
     });
 
-    // 在能力变化写入前拦下负面变化；窗口自然结束沿用自己的生命周期。
+    // 只拦外来负等级：施法者自己招式自愿付的代价（飞叶风暴降自身特攻、臂锤降自身速度……）在它自己的作用域里
+    // 结清，world.source 与受护者是同一个体，白雾不替它免这一层；敌方在自己的作用域里降雾内目标时 source 是敌人，
+    // 与受护者不同，才被雾吞掉。窗口自然结束沿用自己的生命周期。
     CombatStages.change.define({ id: "world_combat:move_mist/guard", apply: function (change) {
         if (!(change.amount < 0) || change.options.ignoreAbility || !CombatStatus.has(change.world, change.actor, "mist")) return;
+        if (String(change.world.source().key()) === String(change.actor.key())) return;
         change.allowed = false;
         const ref = String(change.actor.ref());
         mistBlocked[ref] = (mistBlocked[ref] || 0) + Math.abs(change.amount);
@@ -127,6 +130,10 @@ namespace PokemonSkills {
         StatusContributions.present(world, actor, mistEffect, "world_combat:move_mist/veiled/" + ref, mistScene, 1,
             body.position(), { moment: "veiled", target: ref, density: payload ? payload.density : 24,
                 scale: payload ? Math.max(0.6, Math.min(2, payload.radius / 3)) : 1 });
+        // 施法者自己另外沿真实半径续一圈淡薄补给边缘，标出这份雾实际罩到哪；受护队友只显示自己的身周雾。
+        const anchoring = world.effects(actor, mistMark).some(function (view) { return String(view.source().key()) === String(actor.key()); });
+        if (anchoring) StatusContributions.present(world, actor, mistEffect, "world_combat:move_mist/supply/" + ref, mistScene, 1,
+            body.position(), { moment: "supply", target: ref, field: payload ? Math.max(1, payload.radius) : 3 });
     });
 
     // 雾从某人身上消失：施法者自己丢雾就结束它的来源标记（收回这份贡献）；
@@ -139,7 +146,8 @@ namespace PokemonSkills {
         const views = world.effects(actor, mistMark);
         let anchor = false;
         for (let i = 0; i < views.length; i++) {
-            if (String(views[i].source().key()) === String(views[i].target().key())) {
+            // 施法者统一按 key 与自身比较：source 就是这份标记的来源，等于自己才是这条雾的锚。
+            if (String(views[i].source().key()) === String(actor.key())) {
                 anchor = true;
                 world.operation(views[i].id(), "world_combat:dispel", "{}");
             }
@@ -155,7 +163,7 @@ namespace PokemonSkills {
         id: mistId,
         cooldownParameter: "recharge",
         name: "白雾",
-        description: "用白雾覆盖身体与身边的队友；雾里谁的能力等级都不会被对手压低。雾跟着施法者走，离开范围的人会失去这层保护；多个白雾来源各自维持，一个结束不会撤掉另一个。",
+        description: "用白雾覆盖身体与身边的队友；雾里谁的能力等级都不会被对手压低，但它不替施法者免掉自己招式自愿付的降级代价。雾跟着施法者走，离开范围的人会失去这层保护；多个白雾来源各自维持，一个结束不会撤掉另一个。",
         uses: ["挡住成片的降防、降攻、降速", "护住正在蓄力或布置的队友", "在对方准备削弱前先一步张雾"],
         kind: "self",
         range: 1,

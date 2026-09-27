@@ -32,6 +32,10 @@
 namespace PokemonSkills {
     export const waterpledgeId = "waterpledge";
     export const waterpledgeScene = "world_combat:move_waterpledge";
+    /** 印记／组合的真实边界与剩余（自定义绘制，绑在场地效果上）。 */
+    export const waterpledgeFieldScene = "world_combat:move_waterpledge_field";
+    /** 彩虹组合的真正弧冠。 */
+    export const waterpledgeCrownScene = "world_combat:move_waterpledge_crown";
     /** 本单元的水之誓约印（只由本单元注册；共鸣后仍是这一条规则）。 */
     export const waterpledgeScar = "world_combat:field/pledge_water";
     export const waterpledgeHitText = "world_combat.move.waterpledge.text.hit";

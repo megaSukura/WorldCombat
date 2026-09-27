@@ -7,9 +7,10 @@
  *
  * 幕：
  *   起（windup，提交前）：拢粉的预告（`action.present`）。
- *   掷（throw）：提交后低弧抛出粉团，`LivingActions.projectile` 负责飞行与碰撞。
- *   散（scatter → poisoned）：落地立刻炸开，落点半径内的非友方各挂一次共享的 `world_combat:status/poison`
- *       （宝可梦那一层由共享默认效果同步成原生中毒），随后尘粒散去，不留任何东西。
+ *   掷（throw）：提交后低弧抛出粉团，`LivingActions.projectile` 负责飞行与碰撞；飞行按出手瞬间冻结的落点距离收束，
+ *       终点取弹体真实末点，不会飞越后再瞬移回瞄准点。
+ *   散（scatter → poisoned）：落地立刻炸开，爆点半径内、从爆点真实可达的非友方各挂一次共享的 `world_combat:status/poison`
+ *       （宝可梦那一层由共享默认效果同步成原生中毒），随后尘粒散去，不留任何东西；隔着墙的人不沾毒。
  *
  * 反制：命中率 75，粉团落下前走开即可；草属性穿过粉末，毒属性与钢属性穿过中毒。
  */
@@ -73,6 +74,8 @@ namespace PokemonSkills {
             const poisonTicks = Math.max(60, Math.round(p(poisonpowderId, "poisonTicks", action)));
             const motes = Math.max(8, Math.round(p(poisonpowderId, "motes", action)));
             const scale = Math.max(0.5, Math.min(2.2, radius / 1.5));
+            // 落点在出手瞬间冻结：飞行按到它的真实距离收束，不会飞越后再瞬移回瞄准点。
+            const landing = action.targetPosition();
             let settled = false;
 
             function scatter(current: CombatAction, point: CombatPoint, primary: CombatActor | null): void {
@@ -92,8 +95,10 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, body.position(), poisonpowderPoisonText, [Math.round(poisonTicks / 20)], 28);
                 }
                 if (primary !== null && String(primary.key()) !== String(self.key())) bite(primary);
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, radius, { below: 2, above: 2 }), function (other) {
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, radius, { below: 2, above: 2 }), function (other, facts) {
                     if (primary !== null && String(other.ref()) === String(primary.ref())) return;
+                    // 从真实爆点到每个新受体的可达视线：隔墙的人不沾毒。
+                    if (!scope.clear(point, facts.position())) return;
                     bite(other);
                 });
                 WorldFeedback.emit(scope, poisonpowderScene, 1, point,
@@ -104,11 +109,18 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.poisonpowder.actor");
-            const flight = LivingActions.projectile(action, {
-                speed: speed, range: action.range(), radius: 0.24, lifetime: 90,
+            const travel = landing.minus(origin).length();
+            const throwRange = Math.min(action.range(), Math.max(0.6, travel));
+            let flight = "";
+            flight = LivingActions.projectile(action, {
+                speed: speed, range: throwRange, radius: 0.24, lifetime: 90, origin: origin,
                 appearance: { sprite: "cobblemon:particle/generic/powder", scale: 0.85, tint: 0x9BE04A },
                 impact: function (current, hit) { scatter(current, hit.position(), hit.target()); }
-            }, function (current) { scatter(current, current.targetPosition(), null); });
+            }, function (current) {
+                // 真实末点来自持有中的弹体回执；读取不到才退回本次冻结的落点，不用满射程点或发射原点假造。
+                const end = current.world().projectilePosition(flight);
+                scatter(current, end !== null ? end : landing, null);
+            });
             WorldFeedback.emit(world, poisonpowderScene, 1, origin,
                 { moment: "throw", projectile: flight, target: action.target() === null ? "" : String(action.target()!.ref()),
                     scale: scale, motes: motes }, 28);

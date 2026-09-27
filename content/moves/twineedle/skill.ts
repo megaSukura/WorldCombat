@@ -9,8 +9,8 @@
  *   一（first）：提交后从真实发射口射出第一根针，拖一条虫绿+毒的细尾。
  *   二（second）：第一针**出手后**隔 `gap` 刻就射出第二根，不等第一根飞到；交叉式下两根从身体左右两侧
  *       的真实发射口出发、朝释放时选定的点汇合，直刺式下同一线前后错开一点连出。
- *   中（sting / done）：每针各自结算 `dart` 物理伤害并各自掷一次毒；只有第二针命中**第一针实际打中的同一目标**，
- *       才加上 `woundBonus`。
+ *   中（sting / venom / done）：每针各自取伤害回执，真的扎出伤害才画刺伤（sting）；各自再掷一次毒，只有施毒回执
+ *       成立才播毒成（venom）。只有第二针命中**第一针实际打中的同一目标**，才加上 `woundBonus`。两针各自结束、等齐才收招。
  *
  * 与同族分开：毒针是一发一发的便宜细针、毒击是站定出臂的近身重刺、臂贝武器是重炮；只有双针是**一记两根、
  *   第二根吃第一根的伤口**，反制方式是在两针之间走位，或用墙/前排分别挡下两针。
@@ -110,19 +110,25 @@ namespace PokemonSkills {
                         const victim = hit.target();
                         const point = hit.position();
                         scenes.stop(inner, key);
-                        WorldFeedback.emit(innerWorld, twineedleScene, 1, point,
-                            { moment: "sting", target: victim === null ? "" : String(victim.ref()), needles: 2, index: index + 1,
-                                motes: motes, projectile: projectile, scale: scale, intensity: intensity }, 20);
                         if (victim === null || !innerWorld.valid(victim)) return;
+                        // 每针各自取伤害回执；真的扎出伤害才画这一针的刺伤。
                         const dealt = impact(inner, hit, "twineedle", power, { damage: damageSpec("twineedle", "dart") });
                         if (!dealt) return;
+                        WorldFeedback.emit(innerWorld, twineedleScene, 1, point,
+                            { moment: "sting", target: String(victim.ref()), needles: 2, index: index + 1,
+                                motes: motes, projectile: projectile, scale: scale, intensity: intensity }, 20);
                         if (index === 0) firstLandedRef = String(victim.ref());
                         // 只有第二针命中第一针实际打中的同一目标，才吃到伤口加成；打不同敌人没有奖励。
                         const bonus = index === 1 && firstLandedRef !== "" && String(victim.ref()) === firstLandedRef ? woundBonus : 0;
-                        if (innerWorld.valid(victim) && innerWorld.random() < Math.min(0.95, chance + bonus)) {
-                            CombatStatus.inflict(innerWorld, victim, "poison", venomTicks, 0, { secondary: true });
+                        // 施毒回执成立才播毒成与浮字；被免疫/拒绝时不报中毒。
+                        if (innerWorld.random() < Math.min(0.95, chance + bonus)
+                            && CombatStatus.inflict(innerWorld, victim, "poison", venomTicks, 0, { secondary: true })) {
                             const at = innerWorld.observe(victim);
-                            if (at !== null) WorldFeedback.text(innerWorld, at.position().plus(WorldCombat.point(0, 1.0, 0)), twineedleVenomText, [], 20);
+                            const wound = at !== null ? at.position() : point;
+                            WorldFeedback.emit(innerWorld, twineedleScene, 1, wound,
+                                { moment: "venom", target: String(victim.ref()), needles: 2, index: index + 1,
+                                    motes: motes, scale: scale, intensity: intensity }, 22);
+                            WorldFeedback.text(innerWorld, wound.plus(WorldCombat.point(0, 1.0, 0)), twineedleVenomText, [], 20);
                         }
                     },
                     function (inner: CombatAction) {

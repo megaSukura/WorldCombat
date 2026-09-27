@@ -7,7 +7,7 @@
  * 拍子：起（brace 站定蓄势）→ 击（seize 捞住、heave 甩出、slam 落地）→ 收（miss 扑空）。
  * 范围：seize 的爪影锚在目标身上、slam 的地面环按 `data.scale` 画出抓握圈的大小，玩家看得出这招够到哪。
  * 运动：尘从脚边向四周散去，目标被甩时沿 `data.direction` 拖出方向，落地时碎石向外炸开。
- * 数：`data.intensity`（摔击威力派生）抬高爪影与落地亮度，`data.committed`（对手是否在出手）决定捞住时是否多一圈强调，
+ *   数：`data.intensity`（摔击威力派生）抬高爪影与落地亮度，`data.closing`（对手是否正朝使用者压过来）决定捞住时是否多一圈强调，
  * `data.pinned`（压制时长派生）决定落地尘环的余韵长度，`data.scale`（抓握距离派生）缩放判定圈。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -43,7 +43,7 @@ const VitalthrowDefinition: ParticleDefinition = {
                 {
                     name: "grip", bind: "target", offset: [0, 0.6, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/grab",
-                    burst: { count: { data: "committed", fallback: 0 }, at: 0 },
+                    burst: { count: { data: "closing", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.42 },
                     direction: "inward", speed: [0.06, 0.22],
                     lifetime: [8, 16], size: [0.2, 0.05], sizeMode: "index",

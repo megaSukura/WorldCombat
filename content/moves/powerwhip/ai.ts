@@ -49,7 +49,7 @@ namespace PokemonSkills {
 
     addPreferences("powerwhip", {}, [
         field(pathOf("extend"), "长鞭式", "boolean", {
-            help: "开启：够得更远、把少数目标推得更开，但弧度窄、只扫身前一线。关闭（旋身式）：原地整圈甩开、一次罩住四面八方，但够得更近、单发略轻、收招与冷却更久。"
+            help: "开启：够得更远、把少数目标推得更开，但弧度窄、只扫身前一线。关闭（旋身式）：原地整圈甩开、一次罩住四面八方，单发更重、冷却更短，但够得更近、收招更久。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 3, max: 16, step: 1,

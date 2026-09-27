@@ -58,7 +58,9 @@ namespace PokemonSkills {
         defaults: { flap: false, ai: { maxChase: 6, boostFirst: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p(esperwingId, "reach", pokemon), geometry: "area", style: "psychic", color: 0xE8A8F0,
+            // 预告实际的两半扇合成正面扇区（张开 2×翼弧半角），不再画整圆。
+            return { radius: p(esperwingId, "reach", pokemon), geometry: "cone", orientation: "ground",
+                spread: 2 * p(esperwingId, "arc", pokemon), style: "psychic", color: 0xE8A8F0,
                 label: config && config.flap === true ? "振翅气场之翼" : "滑翔气场之翼" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -74,8 +76,15 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const motes = Math.max(12, Math.round(p(esperwingId, "motes", action)));
+            const reach = Math.max(1.4, p(esperwingId, "reach", action));
+            const half = p(esperwingId, "arc", action);
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
+            // 预告与实际判定共用同一组两半扇顶点：画出的是接下来真正会扫到的正面扇区，不是整圆。
+            const fan = esperwingArc(action.origin(), direction, reach, -half, half, 12);
             action.present("world_combat:move_esperwing:gather", esperwingScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", flap: config && config.flap === true, motes: motes, windup: prepare }));
+                JSON.stringify({ moment: "windup", flap: config && config.flap === true, motes: motes, windup: prepare,
+                    direction: [direction.x(), direction.y(), direction.z()], arc: half, path: esperwingPath(fan),
+                    scale: Math.max(0.6, Math.min(2.0, reach / esperwingReference)) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -145,23 +154,25 @@ namespace PokemonSkills {
             function boost(current: CombatAction): void {
                 const scope = current.world();
                 const root = currentRoot(current);
-                // 第二翼落定后才提速：本次伤害不吃自己这一击的速度加成。
-                NativeEffects.boost(scope, actor, "spe", gift);
+                // 第二翼落定后才提速：本次伤害不吃自己这一击的速度加成。只认实际写入的能力等级 delta。
+                const applied = NativeEffects.boost(scope, actor, "spe", gift);
                 const carrier = MobEffects.apply(scope, actor, esperwingAura, aura, 0);
                 if (carrier !== null && scope.effects(actor, esperwingAuraMark).length === 0)
                     scope.effect(esperwingAuraMark, actor, "{}", Math.max(1, Math.min(2400, aura)));
-                const full = esperwingArc(root, direction, reach, -half, half, 12);
                 if (hitCount === 0) {
-                    // 空振：两翼都没扫到人，仍按原规则提速，只留一记空扫反馈。
+                    // 空振：两翼都没扫到人，仍按原规则推进，只留一记空扫反馈。
                     WorldFeedback.emit(scope, esperwingScene, 1, root.plus(direction.scale(reach * 0.6)),
                         { moment: "miss", scale: scale, intensity: intensity }, 16);
                     WorldFeedback.text(scope, root.plus(WorldCombat.point(0, 1.0, 0)), esperwingMissText, [], 20);
                 }
+                // 第二翼结束收成贴身小羽痕：只报实际涨到的能力等级，速度已满就不喊假提升，也不再把整片双翼重展成第三伤。
+                const shown = applied > 0 ? applied : 0;
                 WorldFeedback.emit(scope, esperwingScene, 1, root,
-                    { moment: "aura", actor: String(actor.ref()), gift: gift, aura: aura, path: esperwingPath(full),
-                        direction: [direction.x(), direction.y(), direction.z()], motes: motes, scale: scale,
-                        intensity: Math.max(0.8, Math.min(2, gift / 2 + 0.5)) }, 26);
-                WorldFeedback.text(scope, root.plus(WorldCombat.point(0, 1.0, 0)), esperwingBoostText, [gift], 28);
+                    { moment: "aura", actor: String(actor.ref()), gift: shown, aura: aura,
+                        motes: motes, scale: scale,
+                        intensity: Math.max(0.8, Math.min(2, shown / 2 + 0.5)) }, 26);
+                if (applied > 0)
+                    WorldFeedback.text(scope, root.plus(WorldCombat.point(0, 1.0, 0)), esperwingBoostText, [applied], 28);
                 sound(action, "minecraft:entity.phantom.flap");
                 scenes.finish(current, done);
             }

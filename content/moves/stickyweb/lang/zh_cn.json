@@ -28,5 +28,6 @@
   "worldcombat.skill.stickyweb.preference.ai.lead.help": "对移动中的目标提前这么多刻落点；0 表示直接撒在目标当前位置，调大更适合拦冲过来的对手。",
   "world_combat.move.stickyweb.text.lay": "黏黏网摊开了",
   "world_combat.move.stickyweb.text.snare": "被黏黏网黏住（速度 -%1$s）",
+  "world_combat.move.stickyweb.text.snare.blocked": "被黏黏网黏住（速度无法再降）",
   "effect.world_combat.stickywebbed": "被黏黏网黏住"
 }

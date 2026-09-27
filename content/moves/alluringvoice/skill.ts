@@ -78,6 +78,9 @@ namespace PokemonSkills {
                 { moment: "wave", path: vertices, reach: reach, angle: angle, scale: scale, hits: hits,
                     stages: best, motes: motes, rise: 0.8 + Math.min(4, best * 0.35),
                     intensity: 1 + Math.min(1.6, best * 0.15 + hits * 0.2) }, 42);
+            // 首拍淡出后到尾音落下前，同一组顶点留一层低亮锥边，让危险区一直读得出来。
+            WorldFeedback.emit(world, alluringvoiceScene, 1, origin,
+                { moment: "hold", path: vertices, reach: reach, angle: angle, scale: scale, motes: motes }, tailDelay + 10);
             WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.35, 0)), alluringvoiceStrikeText, [hits], 30);
 
             // 第二拍：拖长的尾音。只对那一刻仍留在同一片声锥里、且满足强化／追击条件的目标施混乱，不再补伤害。
@@ -94,9 +97,10 @@ namespace PokemonSkills {
                     if (!CombatStatus.apply(live, victim, "confusion", alluringvoiceSong, ticks, fumblePct, { unique: true })) return;
                     dazed++;
                     if (boost > bestLate) bestLate = boost;
-                    WorldFeedback.keep(live, "alluringvoice:daze:" + String(victim.ref()), alluringvoiceScene, 1,
-                        facts.position(), { moment: "daze", target: String(victim.ref()), stages: boost,
-                            tick: Math.min(ticks, 220) }, Math.min(ticks, 200));
+                    // 只有载体真的挂上才报：一次清楚的首拍落鸟，之后由托管效果把飞鸟维持到载体结束。
+                    WorldFeedback.emit(live, alluringvoiceScene, 1, facts.position(),
+                        { moment: "daze", target: String(victim.ref()), stages: boost }, 28);
+                    alluringVoiceLingerEnsure(live, victim, ticks, boost);
                 });
                 WorldFeedback.emit(live, alluringvoiceScene, 1, origin,
                     { moment: "tail", path: vertices, reach: reach, angle: angle, scale: scale, dazed: dazed,
@@ -110,12 +114,53 @@ namespace PokemonSkills {
     });
 
 
-    // 反噬：被惑乱的目标打中非友方时，按自身攻击结算一道自伤。
+    /** 把错乱飞鸟绑在目标真实载体上的托管效果；载体到期、被清除或换人，飞鸟随 onEffect 一起收。 */
+    function alluringVoiceLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = alluringVoiceCarrier(world, target);
+        if (carrier === null) { effect.end(); return; }
+        const state = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "alluringvoice:linger", alluringvoiceScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()), stages: typeof state.stages === "number" ? state.stages : 0 });
+        effect.remaining(carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration())));
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(alluringvoiceLingerMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid alluring voice linger mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(alluringvoiceLingerMark, "start", alluringVoiceLingerWatch);
+    WorldCombat.effectHandler(alluringvoiceLingerMark, "watch", alluringVoiceLingerWatch);
+    WorldCombat.effectHandler(alluringvoiceLingerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 本单元自己的载体被牛奶／/effect clear 拿掉时，立刻撤掉托管飞鸟，不等下一次巡检。
+    WorldCombat.on("world_combat:move_alluringvoice/linger-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== alluringvoiceSong) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, alluringvoiceLingerMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
+
+    function alluringVoiceLingerEnsure(world: CombatWorld, target: CombatActor, ticks: number, stages: number): void {
+        const owner = world.valid(world.source()) ? String(world.source().key()) : "";
+        world.effects(target, alluringvoiceLingerMark).forEach(function (view) {
+            if (String(view.source().key()) === owner) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        world.effect(alluringvoiceLingerMark, target, JSON.stringify({ stages: stages }), Math.max(1, Math.min(2400, ticks)));
+    }
+
+    // 反噬：被惑乱的目标真正用直接攻击打中非友方时，按自身攻击结算一道自伤；毒等周期掉血不算。
     WorldCombat.on("world_combat:move_alluringvoice/recoil", "world_combat:damage_applied", "", function (event) {
         const world = event.world(), actor = event.actor(), victim = event.target();
         if (victim === null || String(actor.key()) === String(victim.key()) || world.friendly(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
+        // 本招自己的反噬带 world_combat:confusion 因由、且目标是自身，明确跳过，避免任何自反馈。
+        if (String(data.cause || "") === "world_combat:confusion") return;
+        if (!DamageSemantics.directOffense(data)) return;
         if (alluringVoiceCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body === null) return;
@@ -128,17 +173,5 @@ namespace PokemonSkills {
         WorldFeedback.emit(world, alluringvoiceScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), alluringvoiceRecoilText, [Math.round(loss * 10) / 10], 30);
         world.sound("minecraft:entity.player.hurt", body.position(), 14, "{}");
-    });
-
-    // 错乱存续期：飞鸟在头顶绕，低密度、每 20 刻续期，让出本体视线。
-    WorldCombat.on("world_combat:move_alluringvoice/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== alluringvoiceSong) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "alluringvoice:linger:" + String(actor.ref()), alluringvoiceScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 40);
     });
 }

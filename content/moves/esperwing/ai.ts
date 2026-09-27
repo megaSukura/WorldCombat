@@ -8,10 +8,16 @@
  * 放完之后：速度等级已写进公共能力阶梯，余韵期间不再重复振翅，把 PP 留给别的事。
  */
 namespace PokemonSkills {
-    /** 面前两侧的威胁分布：以目标方向为中轴，各统计 `reach` 内的可见敌人。 */
+    /** 面前两侧的威胁分布：以目标方向为中轴，只统计前向半角内、同一高度带里 `reach` 内的可见敌人。 */
     function esperwingSides(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): { left: number; right: number; both: boolean } {
         const self = CompanionBehavior.source(context);
         const reach = typeof capability.data.range === "number" ? capability.data.range : 3.2;
+        let half = 50;
+        try {
+            const value = PokemonSkills.p(esperwingId, "arc", CompanionBehavior.world(context));
+            if (isFinite(value)) half = Math.max(0, Math.min(90, value));
+        } catch (error) { }
+        const halfCos = Math.cos(half * Math.PI / 180);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         const hx = length < 0.01 ? 1 : dx / length, hz = length < 0.01 ? 0 : dz / length;
@@ -20,8 +26,12 @@ namespace PokemonSkills {
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || !(other.health > 0) || !other.visible) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-            if (Math.sqrt(ox * ox + oz * oz) > reach + 0.5) continue;
+            const ox = other.point[0] - self.point[0], oy = other.point[1] - self.point[1], oz = other.point[2] - self.point[2];
+            const distance = Math.sqrt(ox * ox + oz * oz);
+            if (distance > reach + 0.5) continue;
+            // 身后的、或明显不在同一高度带里的敌人不在两翼覆盖内，不算作「两侧威胁」。
+            if (distance > 0.01 && (ox * hx + oz * hz) / distance < halfCos) continue;
+            if (oy < -1.5 || oy > 3.0) continue;
             const side = ox * -hz + oz * hx;
             if (side < -0.4) left++;
             else if (side > 0.4) right++;
@@ -48,7 +58,9 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range + 0.8) return 0;
-            const boosting = CompanionBehavior.ai<boolean>(capability, "boostFirst", true);
+            // 速度已经满级时这一记只是普通近战，不再按「攻击 + 垫速」抬高；余韵消失与否不再当作垫速依据。
+            const capped = CompanionBehavior.stage(context, self, "spe") >= 6;
+            const boosting = !capped && CompanionBehavior.ai<boolean>(capability, "boostFirst", true);
             let score = boosting ? 88 : 26;
             if (esperwingSides(context, capability, target).both) score = Math.max(score, boosting ? 92 : 44);
             return score;

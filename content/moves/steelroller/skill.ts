@@ -15,13 +15,20 @@
  * 选取是 `aim`：可以朝任意方向空滚清场，实体沿路径受击，实墙阻断。
  */
 namespace PokemonSkills {
+    /** 钢轮本体的表现载荷：尺寸用实际判定半径、颜色用被吃场地主色，滚动角速度按每刻位移与半径换算。 */
+    function steelrollerWheel(at: CombatPoint, radius: number, colour: number, speed: number, direction: CombatPoint, active = true): any {
+        const spin = Math.max(40, Math.min(260, Math.round(speed / Math.max(0.2, radius) * 180 / Math.PI)));
+        return { moment: "wheel", at: [at.x(), at.y(), at.z()], radius: radius, colour: colour,
+            spin: spin, direction: [direction.x(), direction.y(), direction.z()], active: active ? 1 : 0 };
+    }
+
     define({
         freeMovement: true,
         id: steelrollerId,
         cooldownParameter: "recharge",
         name: "Steel Roller",
         description: "把脚下正在生效的场地整片压碎，颜色卷进轮身，自己卷成钢轮碾出去；滚过的地面留下短命钢屑，能碾过目标继续前滚（上限由压碎的场地数量决定，至少一、最多三）。脚下没有场地时整招失败，PP 照常消耗。",
-        uses: ["压碎脚下的场地并顺势碾过去", "把一片场地换成一次连续穿行", "在战场里开出一条能走的通路"],
+        uses: ["压碎脚下的场地并顺势碾过去", "把一片场地换成一次连续穿行", "用被吃掉的场地换来穿透多名的连续冲撞"],
         kind: "aim",
         range: 4,
         maxRange: 6.6,
@@ -48,38 +55,49 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const world = action.sense(), self = action.actor();
-            const charged = steelrollerCharged(world, self);
             const body = world.observe(self);
-            const color = body === null || !charged ? 0xB8BEC8 : steelrollerFieldColor(steelrollerAreas(world, body.position()));
+            const areas = steelrollerGroundedAreas(world, self);
+            const charged = areas.length > 0;
+            const color = charged ? steelrollerFieldColor(areas) : 0xB8BEC8;
             action.present("steelroller:spin", steelrollerScene, 1, action.origin(),
                 JSON.stringify({ moment: charged ? "spin" : "falter", windup: prepare,
                     grind: config && config.grind === true, scraper: Math.round(p(steelrollerId, "scraper", action)),
                     fieldColor: color }));
+            if (charged) {
+                const wheels = WorldFeedback.actionScenes(steelrollerWheelScene);
+                const at = body === null ? action.origin() : body.position();
+                wheels.show(action, "wheel", at, steelrollerWheel(at, p(steelrollerId, "collisionRadius", action), color, p(steelrollerId, "speed", action), action.direction()));
+            }
             return prepare;
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(steelrollerScene);
+            const wheels = WorldFeedback.actionScenes(steelrollerWheelScene);
             const world = action.world(), self = action.actor();
             const body = world.observe(self);
             const origin = body === null ? action.origin() : body.position();
-            const areas = body === null ? [] : steelrollerAreas(world, origin);
+            const areas = body === null ? [] : steelrollerGroundedAreas(world, self);
             const power = p(steelrollerId, "roll", action);
             const push = p(steelrollerId, "push", action);
             const count = Math.round(p(steelrollerId, "scraper", action));
             const radius = p(steelrollerId, "collisionRadius", action);
+            const speed = p(steelrollerId, "speed", action);
 
-            if (areas.length === 0) {
-                WorldFeedback.emit(world, steelrollerScene, 1, origin, { moment: "falter", scale: radius / 0.5 }, 22);
-                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), steelrollerFalterText, [], 24);
+            function falter(at: CombatPoint): void {
+                wheels.stop(action);
+                WorldFeedback.emit(world, steelrollerScene, 1, at, { moment: "falter", scale: radius / 0.5 }, 22);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), steelrollerFalterText, [], 24);
                 sound(action, "minecraft:block.anvil.step");
                 movementScenes.finish(action, done);
-                return;
             }
 
-            // 场地被整片压碎：先把被吃掉场地的颜色读出来，再逐条结束它们，成员身份随 leave 一起被收回。
+            if (areas.length === 0) { falter(origin); return; }
+
+            // 场地被整片压碎：先把被吃掉场地的颜色读出来，再逐条结束它们；驱散被原生拒绝（crushed=0）则整招失败，不滚。
             const fieldColor = steelrollerFieldColor(areas);
             var crushed = 0;
             for (var i = 0; i < areas.length; i++) if (world.operation(areas[i].id, "world_combat:dispel", "{}")) crushed++;
+            if (crushed === 0) { falter(origin); return; }
             WorldFeedback.emit(world, steelrollerScene, 1, origin,
                 { moment: "tear", scale: radius / 0.5, fields: crushed, scraper: count, fieldColor: fieldColor }, 26);
             WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), steelrollerTearText, [crushed], 24);
@@ -89,15 +107,15 @@ namespace PokemonSkills {
             let direction = WorldCombat.point(direction3.x(), 0, direction3.z());
             direction = direction.length() < 0.05 ? WorldCombat.point(1, 0, 0) : direction.unit();
             const length = p(steelrollerId, "distance", action);
-            const step = p(steelrollerId, "speed", action);
             // 命中上限由压碎的场地数量决定：至少一、最多三；同一目标只结算一次。
             const maxHits = Math.max(1, Math.min(3, crushed));
-            const travel = Math.ceil(length / Math.max(0.05, step)) + 4;
+            const travel = Math.ceil(length / Math.max(0.05, speed)) + 4;
             const hitRefs: { [ref: string]: boolean } = {};
             let travelled = 0, hits = 0;
 
             movementScenes.show(action, "roll", origin, { moment: "roll", scale: radius / 0.5, scraper: count,
                 fieldColor: fieldColor, travel: travel, direction: [direction.x(), direction.y(), direction.z()] });
+            wheels.show(action, "wheel", origin, steelrollerWheel(origin, radius, fieldColor, speed, direction));
             sound(action, "minecraft:entity.ravager.attack");
 
             // 真实滚过的地面才落钢屑：每段位置单独发射，不与预测路径绑定。
@@ -108,6 +126,8 @@ namespace PokemonSkills {
 
             function settle(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
+                wheels.show(current, "wheel", at, steelrollerWheel(at, radius, fieldColor, 0, direction, false));
+                wheels.stop(current);
                 WorldFeedback.emit(scope, steelrollerScene, 1, at,
                     { moment: "skid", scale: radius / 0.5, fieldColor: fieldColor }, 22);
                 scope.sound("minecraft:block.anvil.land", at, 14, "{}");
@@ -118,7 +138,7 @@ namespace PokemonSkills {
                 const scope = current.world(), here = current.origin();
                 const remaining = length - travelled;
                 if (remaining <= 0.02) { settle(current, here); return; }
-                const delta = direction.scale(Math.min(step, remaining));
+                const delta = direction.scale(Math.min(speed, remaining));
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
                 let progressed = swept.moved;
                 if (hit.hitEntity()) {
@@ -147,6 +167,7 @@ namespace PokemonSkills {
                     if (passed.length() > 0.001) progressed += scope.displace(current.actor(), passed);
                 }
                 travelled += progressed;
+                wheels.show(current, "wheel", current.origin(), steelrollerWheel(current.origin(), radius, fieldColor, speed, direction));
                 shards(current, current.origin());
                 if (hit.blocked() || progressed < p(steelrollerId, "minimumMove", current) || travelled >= length) {
                     settle(current, current.origin());

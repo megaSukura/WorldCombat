@@ -6,11 +6,12 @@
  *
  * 两幕 + 收（提交前只播预告）：
  *   起（windup）：光在身前聚成几股、明灭不定；**掷骰在准备期一次决定并存储**——醒来的股数当场可见，
- *       同一发不再重抽。
- *   射（beam → hit / unison / fizzle / wall）：提交后每股各做一次真实 `trace`：单股是一条窄线只咬首个目标；
- *       齐心是数股近线并行、覆盖更宽，每股都在自己的线上取首个接触——**方块逐股截断**。同一目标本次合计伤害
- *       封顶 `2 × beam`，不按股无限乘。齐射那一发的命中处才亮起 unison 的爆光。
- *   散：打空在尽头散成几缕光，撞墙在该股的真实方块格收束。
+ *       每个射口各亮一处、同一发不再重抽。
+ *   射（beam → hit / unison / fizzle / wall）：提交后每股各做一次真实 `trace`：每股从本体到自己的侧射口先核
+ *       一次遮挡（贴墙的侧射口退回真实墙面），再从该点沿方向取首个接触——**方块逐股截断**。单股是一条窄线只咬
+ *       首个目标；齐心是数股近线并行、覆盖更宽。同一目标本次合计伤害封顶为总基础威力的两倍，不按股无限乘；
+ *       齐射成功但只聚起一股时，这一股直接按两倍总预算结算，不凭空长第二股。齐射那一发命中处才亮起 unison 的爆光。
+ *   散：打空在尽头散成几缕光，撞墙在该股的真实墙面收束（不画到满射程背后）。
  *
  * 与同族分开：铁蹄光线重而短、叶绿爆震覆盖面、破灭之光粗重贯穿，三者都有自损；随机光是唯一
  * **细长、无代价、把一切押在一次翻倍**上的那一束。
@@ -20,16 +21,9 @@
 namespace PokemonSkills {
     const ficklebeamRollKey = "world_combat:move_ficklebeam/roll";
 
-    /** 一段走廊四角；每股的判定与表现共用这组顶点。 */
-    function ficklebeamLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): CombatPoint[] {
-        const flat = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(direction.scale(reach));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))];
-    }
-    function ficklebeamPath(vertices: CombatPoint[]): number[][] {
-        return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
+    /** 每股中心线的两个世界端点；判定与表现共用这组端点。 */
+    function ficklebeamPath(from: CombatPoint, to: CombatPoint): number[][] {
+        return [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]];
     }
 
     define({
@@ -73,10 +67,29 @@ namespace PokemonSkills {
             if (stored !== null) unison = JSON.parse(stored).unison === true;
             else { unison = action.sense().random() < chance; action.data(ficklebeamRollKey, JSON.stringify({ unison: unison, heads: heads })); }
             const strands = unison ? heads : 1;
+            const direction = aim(action);
+            const halfWidth = Math.max(0.05, p(ficklebeamId, "width", action));
+            const body = action.sense().observe(action.actor());
+            const muzzle = Math.max(halfWidth + 0.4, body !== null ? body.width() * 0.5 + 0.3 : 0.7);
+            const flat = WorldCombat.point(direction.x(), 0, direction.z());
+            const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
+            const side = WorldCombat.point(-heading.z(), 0, heading.x());
+            const spacing = halfWidth * 1.4;
+            const bundleHalf = spacing * (strands - 1) / 2;
+            const power = p(ficklebeamId, "beam", action);
+            const intensity = Math.max(0.6, Math.min(2.8, (power * (unison ? 2 : 1)) / 80));
             action.present("world_combat:move_ficklebeam:gather", ficklebeamScene, 1, action.origin(),
                 JSON.stringify({ moment: "gather", unison: unison ? 1 : 0, heads: heads, strands: strands,
                     wake: unison ? heads : 0,
                     chance: Math.round(chance * 100) }));
+            // 每个将射出的光股各自亮起一处射口：准备期的股数与位置就是提交后每股的真实起点。
+            for (let index = 0; index < strands; index++) {
+                const offset = strands === 1 ? 0 : -bundleHalf + (2 * bundleHalf) * (index / (strands - 1));
+                const port = action.origin().plus(side.scale(offset)).plus(direction.scale(muzzle));
+                action.present("world_combat:move_ficklebeam:port:" + index, ficklebeamScene, 1, port,
+                    JSON.stringify({ moment: "port", strand: index + 1, strands: strands, unison: unison ? 1 : 0,
+                        heads: heads, width: halfWidth, scale: halfWidth / 0.42, intensity: intensity }));
+            }
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -103,29 +116,34 @@ namespace PokemonSkills {
             const bundleHalf = spacing * (strands - 1) / 2;
             const totalNotes = Math.round(30 + power * (unison ? 1.4 : 0.6));
             const perStrandNotes = Math.max(10, Math.round(totalNotes / strands));
+            // 合计伤害封顶为总基础威力的两倍；齐射成功但只聚起一股时，这一股直接按两倍总预算结算。
             const cap = power * 2;
+            const strandPower = unison && strands === 1 ? cap : power;
             const dealt: { [ref: string]: number } = {};
             let hits = 0, walled = 0;
+            let fizzlePoint: CombatPoint | null = null;
 
             sound(action, "cobblemon:move.aurorabeam.actor_1");
 
             for (let index = 0; index < strands; index++) {
                 const offset = strands === 1 ? 0 : -bundleHalf + (2 * bundleHalf) * (index / (strands - 1));
                 const base = origin.plus(side.scale(offset));
-                const from = base.plus(direction.scale(muzzle));
+                let from = base.plus(direction.scale(muzzle));
+                // 侧射口从本体先核一次遮挡：贴墙的侧射口退回真实墙面，光股不从墙里起步。
+                const nearWall = WorldGeometry.blockHit(world, body === null ? origin : body.position(), from);
+                if (nearWall !== null) from = nearWall.position();
                 const to = base.plus(direction.scale(reach));
                 // 每股各自真实截断：首个活体或挡墙处收束，判定与画面读同一个落点。
                 const contact = action.trace(from, to, half, true);
                 const end = contact.position();
                 const victim = contact.hitEntity() ? contact.target() : null;
                 const blocked = contact.blocked();
-                if (blocked) walled++;
-                const delta = end.minus(base), span = delta.length();
-                const lane = ficklebeamLane(base, span > 0.01 ? delta.unit() : direction, Math.max(0.2, span), half);
-                WorldFeedback.emit(world, ficklebeamScene, 1, base,
-                    { moment: "beam", path: ficklebeamPath(lane), direction: [direction.x(), direction.y(), direction.z()],
+                if (blocked) { walled++; if (fizzlePoint === null) fizzlePoint = end; }
+                WorldFeedback.emit(world, ficklebeamScene, 1, from,
+                    { moment: "beam", path: ficklebeamPath(from, end), direction: [direction.x(), direction.y(), direction.z()],
                         unison: unison ? 1 : 0, heads: heads, strands: strands, strand: index + 1, motes: motes,
-                        notes: perStrandNotes, glow: Math.max(16, Math.round(perStrandNotes * 0.6)),
+                        notes: perStrandNotes, core: half,
+                        glow: Math.max(16, Math.round(perStrandNotes * 0.6)),
                         edge: Math.max(6, Math.round(perStrandNotes * 0.4)), blocked: blocked ? 1 : 0,
                         scale: scale, intensity: intensity }, 24,
                     "strand" + index);
@@ -134,7 +152,7 @@ namespace PokemonSkills {
                     const ref = String(victim.ref());
                     const remaining = cap - (dealt[ref] || 0);
                     if (remaining > 0.05) {
-                        const applied = Math.min(power, remaining);
+                        const applied = Math.min(strandPower, remaining);
                         if (hurt(action, victim, ficklebeamId, applied, { damage: damageSpec(ficklebeamId, "beam") })) {
                             dealt[ref] = (dealt[ref] || 0) + applied;
                             hits++;
@@ -151,7 +169,8 @@ namespace PokemonSkills {
             }
 
             if (hits === 0) {
-                const tip = origin.plus(direction.scale(reach));
+                // 打空余光停在真实的束末：撞墙就停在墙面，不画到满射程背后。
+                const tip = fizzlePoint !== null ? fizzlePoint : origin.plus(direction.scale(reach));
                 WorldFeedback.emit(world, ficklebeamScene, 1, tip,
                     { moment: "fizzle", motes: motes, scale: scale, blocked: walled > 0 ? 1 : 0 }, 20);
                 if (walled === 0) WorldFeedback.text(world, tip.plus(WorldCombat.point(0, 0.8, 0)), ficklebeamMissText, [], 22);

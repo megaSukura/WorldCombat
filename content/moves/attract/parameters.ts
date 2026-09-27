@@ -1,11 +1,11 @@
 /**
  * 迷人 / Attract — 参数与数值来源。
  *
- * 原生：Normal／Status／PP 15／命中 100；volatileStatus attract，只在异性之间生效，着迷时约一半回合无法行动。
- * 世界化：把一颗会跳动的心当飞吻掷向单个敌人。命中后才着迷：着迷期间每次试图提交出招都有几率心软收手；
- *         着迷只在双方视线畅通且目标仍在你身边时维持——躲到墙后或走远就解除。飞吻有飞行时间并被地形挡下，
- *         但会缓慢追踪目标（空放则直飞）；宝可梦要求异性，原版生物、其他模组生物与玩家没有性别概念，直接有效。
- *         它只是让对手变得不可靠，不是硬控，也不会把人拽走。
+ * 原生：Normal／Status／PP 15／命中 100；volatileStatus attract，着迷时约一半回合无法行动。
+ * 世界化：把一颗会跳动的心当飞吻掷向单个敌人。命中后先确认牵得住（在羁绊范围内、视线畅通）才着迷：
+ *         着迷期间每次试图提交出招都有几率心软收手；着迷只在双方视线畅通且目标仍在你身边时维持——躲到墙后或走远就解除。
+ *         飞吻有飞行时间并被地形挡下，但会缓慢追踪目标（空放则直飞）；任何能受心智干扰的活体都可参与，
+ *         原生抗控/无效由状态门照常拦截，不按生物性别硬拦。它只是让对手变得不可靠，不是硬控，也不会把人拽走。
  *
  * 数值来源（都来自个体，分散在不同参数上）：
  *   chance      基础 50%，特攻 spa 超出 60 的部分 ×0.15%/点，妩媚风情 -8%、甜言蜜语 +8%，限幅 20%~80%
@@ -23,6 +23,7 @@ namespace PokemonSkills {
     export const attractCharmText = "world_combat.move.attract.text.charm";
     export const attractHesitateText = "world_combat.move.attract.text.hesitate";
     export const attractSnapText = "world_combat.move.attract.text.snap";
+    export const attractFizzleText = "world_combat.move.attract.text.fizzle";
     function attractAlluring(detail: any): boolean { return !!(detail && detail.values && detail.values.allure); }
     function attractPreference(): Formula.Node { return F.pref("allure"); }
 

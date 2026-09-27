@@ -4,7 +4,7 @@
   "worldcombat.skill.sandattack.use.1": "Set up a melee or a retreat",
   "worldcombat.skill.sandattack.use.2": "Kick sand into a narrow doorway to blind the pursuers",
   "worldcombat.skill.sandattack.description.0": "Blinding lasts %2$s and reduces melee attack power by 16%. It also lowers accuracy by %1$s stages; those stage changes remain until encounter recovery or removal.",
-  "worldcombat.skill.sandattack.description.1": "Scatters sand %1$s blocks along the aim over a %2$s-degree fan, affecting up to four enemies. It can lock a foe or be kicked at empty air; with nobody caught the sand only reaches the fan's end. Walls and cover truncate the fan. The displayed area and duration include the selected grit.",
+  "worldcombat.skill.sandattack.description.1": "Scatters sand %1$s blocks along the aim over a %2$s-degree fan, affecting up to four enemies. It can lock a foe or be kicked at empty air; with nobody caught the sand only reaches the fan's end. Walls and cover truncate the fan by body height (an obstacle at ankle level does not stop the raised layer). The displayed area and duration include the selected grit.",
   "worldcombat.skill.sandattack.description.2": "Scraping the ground takes %1$s with a %2$s cooldown. The grit takes its colour from the block underfoot: sand yellow, gravel grey, mud brown. The fan is short and points one way only, so stepping aside or retreating behind cover avoids it.",
   "worldcombat.skill.sandattack.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.sandattack.value.blindStage": "Blind stages",

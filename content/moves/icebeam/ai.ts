@@ -12,13 +12,22 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.preferLines", "优先连线目标")
     ]);
 
-    /** 目标身后（沿施法者→目标方向更远处、夹角很小）还有几个敌人；按 8 刻后的位置把正在穿线的人也算进来。 */
-    function icebeamLineCount(context: WorldBehavior.Context, target: Entity): number {
+    /** 目标身后（沿施法者→目标方向更远处、光轴半宽以内、光束长度以内）还有几个敌人；按 8 刻后的位置把正在穿线的人也算进来。 */
+    function icebeamLineCount(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): number {
         const self = source(context);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.2) return 0;
         const ux = dx / length, uz = dz / length;
+        // 用本招真实光束半宽、长度与穿透上限来估值，而不是一份固定的 1.4 横阈、也不越过远端。
+        let halfWidth = 0.7, beamLength = 13, pierce = 3;
+        try {
+            const access = world(context);
+            const values = { world: access, actor: access.source(), detail: { values: item.data.config } };
+            halfWidth = Math.max(0.2, PokemonSkills.p("icebeam", "beamWidth", values));
+            beamLength = Math.max(4, PokemonSkills.p("icebeam", "beamLength", values));
+            pierce = Math.max(1, Math.round(PokemonSkills.p("icebeam", "pierce", values)));
+        } catch (error) { }
         const nearby = (context.facts.nearby as Entity[]) || [];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
@@ -27,11 +36,12 @@ namespace CompanionBehavior {
             let ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             if (other.velocity) { ox += other.velocity[0] * 8; oz += other.velocity[2] * 8; }
             const forward = ox * ux + oz * uz;
-            if (forward <= length + 0.5) continue;
+            if (forward <= length + 0.5 || forward > beamLength) continue;
             const lateral = Math.abs(ox * uz - oz * ux);
-            if (lateral <= 1.4) count++;
+            if (lateral <= halfWidth) count++;
         }
-        return count;
+        // 目标自己占一个穿透名额，身后最多再穿 pierce − 1 个。
+        return Math.min(count, Math.max(0, pierce - 1));
     }
 
     registerUse("icebeam", {
@@ -51,7 +61,7 @@ namespace CompanionBehavior {
             const self = source(context);
             const inRange = distance(self.point, target.point) <= capability.data.range;
             let score = inRange ? 24 : 0;
-            if (ai<boolean>(capability, "preferLines", true)) score += Math.min(20, icebeamLineCount(context, target) * 10);
+            if (ai<boolean>(capability, "preferLines", true)) score += Math.min(20, icebeamLineCount(context, capability, target) * 10);
             return score + Math.round(ratio(target) * 6);
         }
     });

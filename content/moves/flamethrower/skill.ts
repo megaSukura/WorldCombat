@@ -17,8 +17,19 @@ namespace PokemonSkills {
     const flamethrowerBurnText = "world_combat.move.flamethrower.text.burn";
     const flamethrowerHitText = "world_combat.move.flamethrower.text.hit";
     const flamethrowerPulses = 4;
+    /** 宽式火焰带的垂直半厚：与画面那张近水平的火面同源，不再按旧扇区上下各铺数格。 */
+    const flamethrowerWideThickness = 0.4;
 
     function flamethrowerVertex(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
+
+    /** 实际射程：喷窗内推进能到达的距离，取火舌长度与「推进速度 × 实际喷窗」的较小值。 */
+    function flamethrowerSpan(context: NumberContext): number {
+        const front = p("flamethrower", "front", context);
+        const reach = p("flamethrower", "reach", context);
+        const window = Math.max(flamethrowerPulses, Math.round(p("flamethrower", "spray", context)));
+        const interval = Math.max(1, Math.round(window / flamethrowerPulses));
+        return Math.min(reach, front * interval * flamethrowerPulses);
+    }
 
     /** 持续自由瞄准：优先读按住键时客户端逐刻送来的控制点，AI 或未声明输入时回退到动作方向。 */
     function flamethrowerAim(action: CombatAction): CombatPoint {
@@ -34,10 +45,10 @@ namespace PokemonSkills {
         return action.direction();
     }
 
-    /** 把一条火线裁到第一块实墙；未知方块接触保持原长。 */
+    /** 把一条火线裁到第一块实墙；只有真实 BLOCK 才截断，畅通或未知接触保持原长。 */
     function flamethrowerClip(world: CombatWorld, from: CombatPoint, to: CombatPoint): CombatPoint {
-        const hit = world.clipBlocks(from, to);
-        return hit === null ? from : hit.blocked() ? hit.position() : to;
+        const hit = WorldGeometry.blockHit(world, from, to);
+        return hit !== null ? hit.position() : to;
     }
 
     /**
@@ -67,10 +78,21 @@ namespace PokemonSkills {
         } else {
             const base = Math.atan2(flat.z(), flat.x()), half = degrees * Math.PI / 360;
             vertices.push(flamethrowerVertex(origin));
+            const ends: CombatPoint[] = [];
             for (let i = 0; i <= samples; i++) {
                 const angle = base - half + 2 * half * i / samples;
                 const ray = WorldCombat.point(Math.cos(angle), 0, Math.sin(angle));
-                vertices.push(flamethrowerVertex(flamethrowerClip(world, origin, origin.plus(ray.scale(length)))));
+                const clipped = flamethrowerClip(world, origin, origin.plus(ray.scale(length)));
+                // 压在喷口同一水平面上，保证与画面同一张薄火面，也让三角棱柱严格共面。
+                const end = WorldCombat.point(clipped.x(), origin.y(), clipped.z());
+                vertices.push(flamethrowerVertex(end));
+                ends.push(end);
+            }
+            for (let i = 0; i < ends.length - 1; i++) {
+                const a = ends[i].minus(origin), b = ends[i + 1].minus(origin);
+                const area = a.x() * b.z() - a.z() * b.x();
+                if (Math.abs(area) > 0.001)
+                    regions.push(WorldGeometry.bodyPrism([origin, ends[i], ends[i + 1]], normal, flamethrowerWideThickness));
             }
         }
         return { path: vertices, regions: regions };
@@ -94,7 +116,8 @@ namespace PokemonSkills {
         defaults: { wide: false, ai: { maxChase: 13, preferClusters: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("flamethrower", "reach", pokemon), geometry: "line", style: "flame",
+            const context: NumberContext = { pokemon: pokemon!, skill: skills["flamethrower"], detail: { values: config } };
+            return { radius: flamethrowerSpan(context), geometry: "line", style: "flame",
                 color: 0xFF7A2E, label: config && config.wide === true ? "扇面喷射火焰" : "集束喷射火焰" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -104,7 +127,8 @@ namespace PokemonSkills {
                 recover: Math.round(p("flamethrower", "aftercast", context)),
                 cooldown: Math.round(p("flamethrower", "recharge", context)),
                 active: 0,
-                range: p("flamethrower", "reach", context)
+                // 显示实际能在喷窗内推进到的射程，而不是够不到的名义火舌长度。
+                range: flamethrowerSpan(context)
             };
         },
         windup: function (action, config, prepare) {
@@ -147,39 +171,39 @@ namespace PokemonSkills {
                 scenes.finish(current, done);
             }
 
-            /** 一次接触脉冲：只有真实火锥内、墙没挡住的目标才吃一份，每个目标整次最多 flamethrowerPulses 份。 */
-            function pulse(current: CombatAction, origin: CombatPoint, direction: CombatPoint, length: number, band: { path: number[][]; regions: WorldGeometry.BodyRegion[] }): void {
+            /** 一次接触脉冲：只有真实火体（窄式为棱柱、宽式为薄扇面）里、墙没挡住的目标才吃一份，每个目标整次最多 flamethrowerPulses 份。 */
+            function pulse(current: CombatAction, origin: CombatPoint, direction: CombatPoint, length: number, band: { path: number[][]; regions: WorldGeometry.BodyRegion[] }, final: boolean): void {
                 const scope = current.world();
+                let landedThisPulse = 0;
                 const visit = function (enemy: CombatActor, facts: CombatObservation): void {
                     if (scope.friendly(enemy)) return;
                     const ref = String(enemy.ref());
                     if (ref === actorRef) return;
                     const known = Object.prototype.hasOwnProperty.call(counts, ref), count = known ? counts[ref] : 0;
                     if (count >= flamethrowerPulses) return;
+                    // 只有成功结算过的目标才占用整次额度；被原生拒绝的 hurt 不改写名额。
                     if (!known && distinct >= cap) return;
                     const contact = scope.closestPoint(enemy, origin);
                     if (contact === null) return;
                     const sight = scope.clipBlocks(origin, contact);
                     if (sight === null || sight.blocked()) return;
-                    if (!known) { counts[ref] = 0; distinct++; }
                     const already = CombatStatus.has(scope, enemy, "burn");
                     if (!hurt(current, enemy, "flamethrower", share,
                         { damage: damageSpec("flamethrower", "jet"), status: "burn", chance: perBurn })) return;
+                    if (!known) { counts[ref] = 0; distinct++; }
                     counts[ref] = count + 1;
                     landedThisPulse++;
                     WorldFeedback.emit(scope, flamethrowerScene, 1, facts.position(),
-                        { moment: "hit", target: ref, count: Math.max(8, Math.round(8 + power * 0.2)), intensity: intensity }, 22);
+                        { moment: "hit", target: ref, count: Math.max(8, Math.round(8 + power * 0.2)), intensity: intensity,
+                            finalCount: final ? Math.max(6, Math.round(6 + power * 0.1)) : 0 }, 22);
                     if (!already && CombatStatus.has(scope, enemy, "burn"))
                         WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.2, 0)), flamethrowerBurnText, [], 26);
                 };
-                let landedThisPulse = 0;
-                if (wide) WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, direction, length, angle, { below: 1.5, above: 2.5 }), visit);
-                else {
-                    const extent = WorldCombat.point(length + halfWidth, length + halfWidth, length + halfWidth);
-                    const region: WorldGeometry.BodyRegion = { boundsMin: () => origin.minus(extent), boundsMax: () => origin.plus(extent),
-                        intersects: (min, max) => band.regions.some(piece => piece.intersects(min, max)) };
-                    WorldGeometry.selectBodies(scope, region, visit);
-                }
+                // 判定与画面共用同一组棱柱/薄扇面：真实实体箱与火体相交才算进火里。
+                const extent = WorldCombat.point(length + halfWidth + 1, length + halfWidth + 1, length + halfWidth + 1);
+                const region: WorldGeometry.BodyRegion = { boundsMin: () => origin.minus(extent), boundsMax: () => origin.plus(extent),
+                    intersects: (min, max) => band.regions.some(piece => piece.intersects(min, max)) };
+                WorldGeometry.selectBodies(scope, region, visit);
                 if (landedThisPulse > 0) sound(current, "cobblemon:impact.fire");
             }
 
@@ -195,16 +219,21 @@ namespace PokemonSkills {
                 current.face(origin.plus(direction), 18, 18);
                 const band = elapsed > 0 ? flamethrowerBand(scope, origin, direction, length, wide, halfWidth, angle) : { path: [], regions: [] };
                 if (elapsed > 0) {
-                    const head = flamethrowerClip(scope, origin, origin.plus(direction.scale(length)));
+                    const headHit = scope.clipBlocks(origin, origin.plus(direction.scale(length)));
+                    const blockedWall = headHit !== null && headHit.blocked();
+                    const head = blockedWall ? headHit!.position() : origin.plus(direction.scale(length));
                     scenes.show(current, "jet", origin, {
                         moment: wide ? "jetwide" : "jet", length: length,
                         path: band.path,
                         point: flamethrowerVertex(head), head: flamethrowerVertex(head),
                         direction: [direction.x(), direction.y(), direction.z()],
+                        // 截墙末端独立成一簇回卷火；畅通时为 0，不画。
+                        splash: blockedWall ? Math.max(24, Math.round(density * 0.5)) : 0,
                         density: density, intensity: intensity
                     });
                 }
-                if (elapsed > 0 && elapsed % interval === 0) pulse(current, origin, direction, length, band);
+                if (elapsed > 0 && elapsed % interval === 0)
+                    pulse(current, origin, direction, length, band, elapsed >= interval * flamethrowerPulses);
                 if (elapsed >= interval * flamethrowerPulses) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next, elapsed + 1); });
             }

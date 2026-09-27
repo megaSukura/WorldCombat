@@ -1,12 +1,12 @@
 /**
  * 酸液炸弹 / acidspray —— 客户端表现。
  *
- * 一句话：酸滴从口边聚起 → 顺着身前一道短而宽的楔形喷出、扑在身前短短一截 → 被真正淋到（掉防）的目标身上溅开腐蚀光，
+ * 一句话：酸滴从口边聚起 → 从身体前部朝瞄准方向瞬间铺开一道短而宽的酸楔、向外扑出一截 → 被真正淋到（掉防）的目标身上溅开腐蚀光，
  * 余雾很快散掉，不在地面留下危险区。
  * 色相家族：酸蚀的黄绿（0x8FCB3A / 0xB7E05A），中性白只出现在喷口。
- * 拍子：起 windup（聚酸）→ 喷 spray（单次楔面）→ 击 hit（真实降防者溅开）。
- * 范围：喷淋面与残雾使用服务端按真实射程、整张角生成的同一份水平顶点（data.path）。
- * 运动：酸滴落在身前楔形内、短暂上浮后随退出 draining 迅速收干。
+ * 拍子：起 windup（聚酸）→ 喷 spray（从口边向外的一整片酸楔，瞬发同刻完成）→ 击 hit（真实降防者溅开）。
+ * 范围：喷淋面用服务端传来的真实射程、整张角（data.range / data.angle），以口边为顶点向外铺成 sector，与判定同一个楔形。
+ * 运动：酸滴在口边出生、沿楔形向外扩散；瞬发所以没有跨越多刻的假推进。
  * 数：喷出量绑定 `data.drops`（特攻与等级换算），强弱绑定 `data.intensity`（喷淋威力 / 38）。
  */
 const AcidSprayDefinition: ParticleDefinition = {
@@ -35,23 +35,26 @@ const AcidSprayDefinition: ParticleDefinition = {
             ]
         },
         spray: {
-            duration: 18,
+            duration: 16,
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "spray_sheet", bind: "path", fit: "none", offset: [0, 0.32, 0],
+                    name: "spray_sheet", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
                     burst: { count: { data: "drops", fallback: 14 }, interval: 1, repeats: 2 },
-                    shape: { kind: "polygon" },
-                    direction: "up", speed: [0.04, 0.1], spread: 12,
+                    shape: { kind: "sector", radius: { data: "range", fallback: 5 },
+                        angleDegrees: { data: "angle", fallback: 72 }, innerRadius: 0.15 },
+                    direction: "outward", speed: [0.06, 0.16], spread: 12,
                     lifetime: [7, 13], size: [0.16, 0.03],
                     color: 0x8FCB3A, alpha: [0.95, 0], gravity: 0.03, light: "full", bloom: 0.3, maxParticles: 120
                 },
                 {
-                    name: "spray_mist", bind: "path", fit: "none", offset: [0, 0.3, 0],
+                    name: "spray_mist", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: { data: "drops", fallback: 14 }, shape: { kind: "polygon" },
-                    direction: "up", speed: [0.02, 0.06],
+                    rate: { data: "drops", fallback: 14 },
+                    shape: { kind: "sector", radius: { data: "range", fallback: 5 },
+                        angleDegrees: { data: "angle", fallback: 72 }, innerRadius: 0.15 },
+                    direction: "outward", speed: [0.02, 0.08],
                     lifetime: [8, 14], size: [0.06, 0.01],
                     color: 0xB7E05A, alpha: [0.5, 0], light: "world", maxParticles: 90
                 }

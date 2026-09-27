@@ -20,8 +20,6 @@
   "worldcombat.skill.stringshot.preference.silk.help": "开启：丝在首碰表面铺出一块稍大的黏网，射程更远，但不再定身、起手与冷却更长；关闭：认准一个目标缠足，速度快、还带一段定身。两种形态都只在真实撞上表面时才留网。",
   "worldcombat.skill.stringshot.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.stringshot.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑吐丝；调小只在贴身时出手，调大愿意先手拴人。",
-  "worldcombat.skill.stringshot.preference.ai.minFoes": "结网最少人数",
-  "worldcombat.skill.stringshot.preference.ai.minFoes.help": "结网姿态下，威胁身边至少挤着这么多敌人才多铺一点；调 1 表示看得见就吐。",
   "worldcombat.skill.stringshot.preference.ai.runnersOnly": "只缠逃者",
   "worldcombat.skill.stringshot.preference.ai.runnersOnly.help": "缠足姿态下开启：只对正在逃跑的威胁吐丝，把它留住；关闭则对范围内任何威胁都愿意吐。",
   "worldcombat.skill.stringshot.preference.ai.leaveStation": "驻守时离位",

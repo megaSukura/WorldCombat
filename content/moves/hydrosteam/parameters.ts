@@ -116,7 +116,7 @@ namespace PokemonSkills {
             "冷却", "再烧一炉蒸汽前的等待；速度越快回得越快，闷蒸式更费。")
     });
 
-    defineDamage(hydrosteamId, "steam", { defenceCoefficient: 0.0048, rationale: "高温蒸汽绕过正面架势，对防御穿透略强，让日照与特攻的差别更可见。" }, {});
+    defineDamage(hydrosteamId, "steam", { defenceCoefficient: 0.0048, rationale: "高温蒸汽绕过正面架势，对防御穿透略强，让日照与特攻的差别更可见。" }, { weatherMultipliers: { sun: 1 } });
 
     stages(hydrosteamId, [
         { level: 40, values: { steam: 96 } },

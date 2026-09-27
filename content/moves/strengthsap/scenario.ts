@@ -40,7 +40,7 @@ Smoke.scenario("strengthsap", function (stage) {
                 stage.expect(stage.casts("strengthsap", caster) > 0, "吸取力量被放出来了");
                 stage.expect(stage.hadMobEffect(foe, "world_combat:status/strength_sapped"), "目标被抽得物攻下降");
                 stage.expect(caster.health() > baseline + 3, "施法者从这一抽里回复了生命");
-                stage.note("回血比例由目标物攻相对自身物攻的强弱与深吸配置决定；对手是只会跃起的卡比兽，伤害不了施法者，所以这里读到的是至少一次成功的抽取。",
+                stage.note("回血比例由目标物攻相对自身物攻的强弱与深吸配置决定；对手是只会跃起的卡比兽，伤害不了施法者，所以这里读到的是至少一次成功的抽取。物攻下降是本招挂在「被抽力」标记上的临时负贡献，标记到期或被清除时随载体一起收回，只撤本招这一份。",
                     { casts: stage.casts("strengthsap", caster), damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                       woundedHealth: Math.round(baseline * 10) / 10, casterHealth: Math.round(caster.health() * 10) / 10 });
                 stage.done();

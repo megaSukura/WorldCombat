@@ -7,8 +7,8 @@
  * 范围：splat 的泥印盘半径由 `data.scale`（碰撞箱比）铺开；`data.direction` 是原生方块面的外法线或命中来向，
  *       用 orient:"direction" 让泥印贴在真实那一面，而不是浮空画圈。
  * 运动：泥团沿弧线（服务端下发的 ballistic 方向）飞出，身后拖泥点；脸上泥点向下滴。
- * 数：gather/splat 的泥点数绑定 `data.splash`（体重与等级换算），splat 爆开强度绑定 `data.intensity`（威力 / 22）。
- * 长期视觉（face）按 `data.tick` 存续，淡出后不改变已结算的命中下降。
+ * 数：gather 的泥点数绑定 `data.density`（厚泥 14 / 稀泥 5 两档），splat 爆开强度绑定 `data.intensity`（威力 / 22）。
+ * 长期视觉（face）按 `data.tick` 存续，是泥迹反馈；它淡出并不代表命中等级恢复（那由 NativeEffects 的能力等级承担）。
  */
 const MudslapDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -20,7 +20,7 @@ const MudslapDefinition: ParticleDefinition = {
                 {
                     name: "clump", bind: "source", offset: [0, 0.35, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
-                    rate: { data: "thick", fallback: 0 },
+                    rate: { data: "density", fallback: 5 },
                     shape: { kind: "sphere", radius: 0.26 },
                     direction: "shape", speed: [0.0, 0.03],
                     lifetime: [8, 14], size: [0.24, 0.08], sizeMode: "sin",
@@ -85,7 +85,7 @@ const MudslapDefinition: ParticleDefinition = {
         },
         face: {
             duration: { data: "tick", fallback: 60 },
-            exit: { stop: 16, drain: 24 },
+            exit: { drain: 24 },
             emitters: [
                 {
                     name: "mask", bind: "target", offset: [0, 0.9, 0], height: 0.82,

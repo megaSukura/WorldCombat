@@ -6,17 +6,21 @@
  *
  * 三幕：
  *   起（windup，提交前）：施法者旋身、身侧卷起一环风向的预告。
- *   击（rise → vortex → strike）：提交后在选定点升起旋涡；此后每刻把圈内的敌人朝涡心牵引，
- *       每 `pulseTicks` 刻刮一记风刃（每目标每次施放只掷一次畏缩），并把还站在地上的人抬起来。
+ *   击（rise → vortex → strike）：提交后在选定点升起旋涡；此后每刻把圈内**实际可达**的敌人朝涡心牵引
+ *       （挡在实墙后的不拉、不刮），每 `pulseTicks` 刻刮一记风刃（每目标每次施放只掷一次畏缩），
+ *       并把还站在地上的人抬起来。旋涡本体是动作拥有的一个无限阶段，随施法动作持续、随其中断即止。
  *   收（fade）：旋涡到时不候，原地收束散去。
  *
  * 配置 `hold`（持续涡旋）由 resolve 改时长与冷却、由公式改牵引与单段威力：开启＝久而黏，关闭＝短而烈。
+ *
+ * 拉与抬都走 `hitDisplace`，保留原生击退事件、抗性与碰撞限制；每次施放最多卷住 `maxTargets` 个可达者。
  *
  * 畏缩：施加本单元声明的 MobEffect（共享身份 `world_combat:status/flinch`）并投递
  * `world_combat:interrupt`；全局起手门禁在窗口内拒绝新动作，伤害阶段不受影响。
  */
 namespace PokemonSkills {
     const twisterScene = "world_combat:move_twister";
+    const twisterOrbitScene = "world_combat:move_twister_orbit";
     const twisterFlinchEffect = "world_combat:twister_flinch";
     const twisterFlinchText = "world_combat.move.twister.text.flinch";
     const twisterStrikeText = "world_combat.move.twister.text.strike";
@@ -74,32 +78,52 @@ namespace PokemonSkills {
             const flinchTicks = Math.round(p("twister", "flinchTicks", action));
             const pulseTicks = Math.max(2, Math.round(p("twister", "pulseTicks", action)));
             const duration = Math.max(10, Math.round(p("twister", "vortexTicks", action)));
+            const maxTargets = Math.max(1, Math.round(p("twister", "maxTargets", action)));
+            const above = 6, height = above;
             const scale = radius / 2.4;
-            const region = WorldGeometry.ring(centre, 0, radius, { below: 1, above: 6 });
+            const intensity = Math.max(0.5, Math.min(2, power / 16));
+            const flow = Math.round(70 + radius * 26);
+            const region = WorldGeometry.ring(centre, 0, radius, { below: 1, above: above });
+            // 旋涡本体与绕轴流线都由这次施法动作拥有：中断或结束时立即收回。
+            const scenes = WorldFeedback.actionScenes(twisterScene);
+            const orbit = WorldFeedback.actionScenes(twisterOrbitScene);
             let elapsed = 0, settled = false, total = 0;
             const flinched: { [ref: string]: boolean } = {};
+
+            /** 风从轴心流到真正通视的受卷者；实墙后的人不被拉、也不吃风刃。 */
+            function reachable(scope: CombatWorld, facts: CombatObservation): boolean {
+                const y = Math.max(centre.y(), facts.position().y());
+                return scope.clear(WorldCombat.point(centre.x(), y, centre.z()), facts.position());
+            }
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                WorldFeedback.emit(current.world(), twisterScene, 1, centre, { moment: "fade", scale: scale, radius: radius }, 30);
-                if (total === 0) WorldFeedback.text(current.world(), centre.plus(WorldCombat.point(0, 1.0, 0)), twisterEmptyText, [], 22);
+                const scope = current.world();
+                scenes.stop(current);
+                orbit.stop(current);
+                WorldFeedback.emit(scope, twisterScene, 1, centre, { moment: "fade", scale: scale, radius: radius }, 30);
+                if (total === 0) WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.0, 0)), twisterEmptyText, [], 22);
                 done(current);
             }
 
             function tick(current: CombatAction): void {
                 const scope = current.world();
                 scope.stopMovement(current.actor());
-                // 每刻的向心牵引：把圈内敌人朝涡心拽，越靠边被拽得越明显。
+                // 每刻的向心牵引：最近的 maxTargets 个可达者朝涡心拽，走 hitDisplace 尊重抗推与碰撞。
+                let chosen = 0;
                 WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
+                    if (chosen >= maxTargets || !reachable(scope, facts)) return;
+                    chosen++;
                     const delta = centre.minus(facts.position());
                     const flat = WorldCombat.point(delta.x(), 0, delta.z());
-                    if (flat.length() > 0.3) scope.displace(enemy, flat.unit().scale(pull));
+                    if (flat.length() > 0.3) scope.hitDisplace(enemy, flat.unit().scale(pull));
                 });
-                // 每 pulseTicks 刻刮一记风刃，并把离地的人抬起来。
+                // 每 pulseTicks 刻刮一记风刃，并把还站在地上的人抬起来。
                 if (elapsed % pulseTicks === 0) {
                     let hits = 0;
                     WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
+                        if (hits >= maxTargets || !reachable(scope, facts)) return;
                         if (!hurt(current, enemy, "twister", power, { damage: damageSpec("twister", "gust") })) return;
                         hits++; total++;
                         const ref = String(enemy.ref());
@@ -108,16 +132,12 @@ namespace PokemonSkills {
                             WorldFeedback.emit(scope, twisterScene, 1, facts.position(), { moment: "flinch", target: ref }, 22);
                             WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.1, 0)), twisterFlinchText, [], 24);
                         }
-                        if (facts.grounded() && scope.valid(enemy)) scope.displace(enemy, WorldCombat.point(0, lift, 0));
+                        if (facts.grounded() && scope.valid(enemy)) scope.hitDisplace(enemy, WorldCombat.point(0, lift, 0));
                     });
                     WorldFeedback.emit(scope, twisterScene, 1, centre,
-                        { moment: "strike", scale: scale, radius: radius, hits: hits, marks: Math.max(4, hits * 6), intensity: Math.max(0.5, Math.min(2, power / 16)) }, 20);
+                        { moment: "strike", scale: scale, radius: radius, hits: hits, marks: Math.max(4, hits * 6), intensity: intensity }, 20);
                     if (hits > 0) sound(current, "minecraft:entity.phantom.flap");
                 }
-                // 旋涡本体用 keep 复用同一条消息，按半径和风刃威力决定密度。
-                if (elapsed % 4 === 0)
-                    WorldFeedback.keep(scope, "twister:vortex:" + String(current.actor().ref()), twisterScene, 1, centre,
-                        { moment: "vortex", scale: scale, radius: radius, flow: Math.round(70 + radius * 26), intensity: Math.max(0.5, Math.min(2, power / 16)) }, 12);
                 elapsed++;
                 if (elapsed >= duration) { finish(current); return; }
                 current.after(1, tick);
@@ -125,7 +145,11 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:entity.breeze.wind_burst");
             WorldFeedback.emit(world, twisterScene, 1, centre,
-                { moment: "rise", scale: scale, radius: radius, flow: Math.round(70 + radius * 26), intensity: Math.max(0.5, Math.min(2, power / 16)) }, 30);
+                { moment: "rise", scale: scale, radius: radius, height: height, flow: flow, intensity: intensity }, 30);
+            scenes.show(action, "vortex", centre,
+                { moment: "vortex", scale: scale, radius: radius, height: height, flow: flow, intensity: intensity });
+            orbit.show(action, "flow", centre,
+                { radius: radius, height: height, intensity: intensity, turns: 0.22 + Math.min(0.2, radius * 0.04) });
             tick(action);
         }
     });

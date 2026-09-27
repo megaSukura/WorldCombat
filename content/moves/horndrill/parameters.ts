@@ -1,25 +1,36 @@
-/** horndrill: one native execution attempt; native damage events and immunity determine its result. */
+/** horndrill: one bounded native strike; native immunity and damage events determine its result. */
 namespace PokemonSkills {
-    export const horndrillResisted = "world_combat:horndrill_resisted";
-    WorldCombat.effect(horndrillResisted, 1, 400, "actor", json => json, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(horndrillResisted, "start", function () { });
-
     export const horndrillId = "horndrill";
     export const horndrillScene = "world_combat:move_horndrill";
     export const horndrillKillText = "world_combat.move.horndrill.text.kill";
+    export const horndrillHitText = "world_combat.move.horndrill.text.hit";
     export const horndrillMissText = "world_combat.move.horndrill.text.miss";
     /** 表现里钻头的参考半径（格）；服务端传 scale = 实际判定半径 / 这个值。 */
     export const horndrillReference = 0.6;
 
-    /**
-     * 处决：钻尖贯穿，把目标剩下的生命一次结清。属性免疫（一般系打不到幽灵）返回 "immune"。
-     * 目标防御、护甲与韧性不参与——原生伤害事件决定本次是否生效。
-     */
-    export function horndrillExecute(action: CombatAction, target: CombatActor): "kill" | "immune" | "miss" | "resisted" {
+    const horndrillDeath = "world_combat:move_horndrill/death_receipt";
+    WorldCombat.effect(horndrillDeath, 1, 4, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(horndrillDeath, "start", () => {});
+    WorldCombat.effectHandler(horndrillDeath, "operation:world_combat:dispel", effect => effect.end());
+    WorldCombat.on("world_combat:horndrill/confirmed", "world_combat:actor_died", "", event => {
+        const death: CombatNativeDeathFacts = JSON.parse(event.data()), world = event.world(), source = event.actor();
+        if (death.sourceEntity !== String(source.ref()).split("/")[0] || death.damageType !== "world_combat_core:action_independent") return;
+        world.effects(source, horndrillDeath).forEach(view => {
+            const expected = JSON.parse(view.data());
+            if (death.victim !== expected.target || death.tick !== expected.tick) return;
+            world.operation(view.id(), "world_combat:dispel", "{}");
+            const at = WorldCombat.point(death.position[0], death.position[1], death.position[2]);
+            WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1, 0)), horndrillKillText, [], 28);
+            world.sound("minecraft:item.trident.hit", at, 14, "{}");
+        });
+    });
+
+    /** Fixed native HP receipt; a separate final native death fact confirms a kill. */
+    export function horndrillStrike(action: CombatAction, target: CombatActor): "hit" | "immune" | "resisted" | "source-left" {
         const world = action.world();
-        if (!world.valid(target) || world.friendly(target)) return "miss";
+        if (!world.valid(target) || world.friendly(target)) return "resisted";
         const body = world.observe(target);
-        if (body === null || body.health() <= 0) return "miss";
+        if (body === null || body.health() <= 0) return "resisted";
         const move = CobblemonCombat.moveTemplate(horndrillId), type = String(move.type());
         const facts = PokemonDamage.combatants.read(world, target);
         for (let index = 0; index < facts.types.length; index++)
@@ -27,20 +38,26 @@ namespace PokemonSkills {
                 PokemonDamage.immune(world, target, JSON.stringify({ kind: "move", move: horndrillId, type: type }));
                 return "immune";
             }
-        const metadata: any = { kind: "move", move: horndrillId, type: type, category: String(move.category()),
-            contact: true, knockback: false, bypassCooldown: true, targetScale: 1, critical: false, action: action.id() };
-        const armor = world.attributeValue(target, "minecraft:generic.armor");
-        if (armor !== null) metadata.armorExcluded = armor.value();
-        const toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
-        if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        const accepted = world.hurt(target, body.health() + body.maxHealth(), JSON.stringify(metadata));
-        const after = world.observe(target);
-        if (accepted && (after === null || after.health() <= 0)) return "kill";
-        world.effect(horndrillResisted, target, "{}", 400);
-        return "resisted";
+        const amount = Math.max(0, p(horndrillId, "damage", action));
+        const nativeSource = world.nativeEntity(action.actor());
+        const receipt = PokemonDamage.fixedReceipt(world, target, move, amount,
+            { contact: true, knockback: false, bypassCooldown: true, ignoreArmor: true }, "immunity", action);
+        if (!nativeSource || !nativeSource.isAlive() || nativeSource.isRemoved()) return "source-left";
+        if (!(receipt.actual > 0)) return "resisted";
+        if (receipt.after !== null && receipt.after <= 0)
+            world.effect(horndrillDeath, action.actor(), JSON.stringify({ target: String(target.ref()), tick: receipt.tick }), 4);
+        return "hit";
     }
 
     actionParameters.define(horndrillId, {
+        /** 贯穿伤害：24 + 0.5×物攻 + 0.3×等级 + 0.04×体重(夹 0..1000)；夹 24..180，世界生命点。 */
+        damage: formula(
+            F.base(24).plus(F.stat("attack").times(0.5)).plus(F.level().times(0.3))
+                .plus(F.body("weight").clamp(0, 1000).times(0.04)).clamp(24, 180).round(1),
+            "贯穿伤害", {
+                unit: "点",
+                description: "钻尖贯穿首个敌人时一次结算的真实生命伤害；由自己的物攻、等级与体重决定，目标还剩多少生命都不改变它，也不暴击。只有属性免疫与原生减伤会拦住它。"
+            }),
         /** 冲程：6.0 + 等级(≥20)偏移[0,1.6] + 速度偏移[−0.8,1.8]；扩钻 ×0.85；夹 4..10。 */
         span: formula(
             F.base(6.0).plus(F.level().minus(20).times(0.04).clamp(0, 1.6))
@@ -103,7 +120,7 @@ namespace PokemonSkills {
     ]);
 
     describe(horndrillId, [
-        { key: "description.0", values: ["span","girth"] },
+        { key: "description.0", values: ["damage","span","girth"] },
         { key: "description.1", values: ["mark"] },
         { key: "description.2", values: ["thrust"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },

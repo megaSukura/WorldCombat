@@ -5,9 +5,9 @@
  *   那一块里的敌人就各挨一记风刃。它是本族唯一「蓄力 + 扇形远程」的一击：蓄力期可被打断，是它的代价。
  *
  * 三幕：
- *   蓄（windup，提交前）：站定，一圈风之刃在身周拧出、越积越多越亮；只播预告，可被打断（打断不花 PP）。
- *   发（release，提交后）：整把扇子沿瞄准方向按距离拆三段依次释放（每段是环扇，判定与表现共用这组顶点）；
- *       提交后方向固定，空扇照常一段段推进。
+ *   蓄（windup，提交前）：站定，一圈风刃在身周拧出、越积越多越亮；只播预告，可被打断（打断不花 PP）。
+ *   发（release，提交后）：整把扇子沿瞄准方向按距离拆三段依次释放；每一段的风刃面从**身体边缘**起、
+ *       沿每条射线用真实墙面截短前缘，判定与表现共用这组截断顶点。提交后方向固定，空扇照常一段段推进。
  *   切（cut → miss）：扇面里距离最近的至多 `blades` 个非友方各挨一记 `blade` 风刃，按所在段在对应时刻结算、每人只一次；
  *       一个都没扫到就落空。
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器在命中点补一发亮白强调与浮字。
@@ -18,44 +18,32 @@
  * 配置 `spread` 由 resolve 改时序与射程，由公式改扇面／数量／威力，提交后才触碰世界。
  */
 namespace PokemonSkills {
-    /** 扇面顶点：origin 为扇心，向两侧各张 halfDeg 度、长 reach；判定与表现共用这一组顶点。 */
-    function razorwindFan(origin: CombatPoint, direction: CombatPoint, reach: number, halfDeg: number): CombatPoint[] {
-        const forward = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const half = halfDeg * Math.PI / 180, segments = 6, vertices: CombatPoint[] = [origin];
-        for (let i = 0; i <= segments; i++) {
-            const angle = -half + 2 * half * (i / segments);
-            const ray = heading.scale(Math.cos(angle)).plus(side.scale(Math.sin(angle)));
-            vertices.push(origin.plus(ray.scale(reach)));
+    /**
+     * 一段扇带：内弧贴身体边缘、外弧是沿每条射线被真实墙截到的前缘；返回同一组顶点给判定与表现。
+     * `edge` 是外弧（前缘），供表现短亮；`vertices` 是内弧加反向外弧围成的闭合扇带。
+     */
+    function razorwindBand(world: CombatWorld, origin: CombatPoint, base: number, half: number, inner: number, outer: number, samples: number): { vertices: CombatPoint[]; edge: CombatPoint[] } {
+        const innerRim: CombatPoint[] = [], outerRim: CombatPoint[] = [];
+        for (let i = 0; i <= samples; i++) {
+            const angle = -half + 2 * half * i / samples;
+            const heading = WorldCombat.point(Math.sin(base + angle), 0, Math.cos(base + angle));
+            const wall = WorldGeometry.blockHit(world, origin, origin.plus(heading.scale(outer)));
+            const limit = wall === null ? outer : Math.max(0, wall.position().minus(origin).length());
+            innerRim.push(origin.plus(heading.scale(Math.min(inner, limit))));
+            outerRim.push(origin.plus(heading.scale(limit)));
         }
-        return vertices;
+        return { vertices: innerRim.concat(outerRim.slice().reverse()), edge: outerRim };
     }
 
-    function razorwindPath(vertices: CombatPoint[]): number[][] {
-        return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
-    }
-
-    /** 一段环扇（第 band 段）的顶点：外弧从 −half 到 +half，再沿内弧回到起点；判定与表现共用这组顶点。 */
-    function razorwindBand(origin: CombatPoint, direction: CombatPoint, inner: number, outer: number, halfDeg: number): CombatPoint[] {
-        const forward = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const half = halfDeg * Math.PI / 180, segments = 6, vertices: CombatPoint[] = [];
-        function ray(angle: number, distance: number): CombatPoint {
-            return origin.plus(heading.scale(Math.cos(angle)).plus(side.scale(Math.sin(angle))).scale(distance));
-        }
-        for (let i = 0; i <= segments; i++) vertices.push(ray(-half + 2 * half * (i / segments), outer));
-        if (inner <= 0.05) vertices.push(origin);
-        else for (let i = segments; i >= 0; i--) vertices.push(ray(-half + 2 * half * (i / segments), inner));
-        return vertices;
+    function razorwindPath(points: CombatPoint[]): number[][] {
+        return points.map(function (point) { return [point.x(), point.y(), point.z()]; });
     }
 
     define({
         id: razorwindId,
         cooldownParameter: "recharge",
         name: "Razor Wind",
-        description: "站定把四周气流拧成一把把风之刃，蓄够后朝瞄准方向甩出一整片扇面：扇面按距离由近及远分三段依次推进，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
+        description: "站定把四周气流拧成一把把风之刃，蓄够后朝瞄准方向甩出一整片扇面：扇面按距离由近及远分三段依次推进，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；风刃面从身体边缘起、被实心墙按段截短，蓄风期间站定、可被打断，打断不消耗 PP。",
         uses: ["站定把气流拧成一把把风之刃", "蓄够了把正前方铺成一个扇面甩出去", "一次扫到成排的敌人，暴击率高一档"],
         kind: "aim",
         range: 8,
@@ -93,17 +81,23 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor();
-            const direction = aim(action);
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
             const origin = body.position();
+            const boundsMinY = body.boundsMin().y(), boundsMaxY = body.boundsMax().y();
+            const actorRef = String(actor.ref());
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
+            const base = Math.atan2(direction.x(), direction.z());
             const reach = Math.max(2, p(razorwindId, "reach", action));
-            const half = p(razorwindId, "fan", action);
+            const fanDegrees = p(razorwindId, "fan", action);
+            const half = fanDegrees * Math.PI / 180;
+            const samples = Math.max(4, Math.round(fanDegrees / 12));
             const cap = Math.max(1, Math.round(p(razorwindId, "blades", action)));
             const power = p(razorwindId, "blade", action);
             const motes = Math.max(10, Math.round(p(razorwindId, "motes", action)));
             const scale = Math.max(0.6, Math.min(2.2, cap / razorwindReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 80));
+            const bodyRadius = Math.max(0.35, body.width() / 2);
             const waves = 3, segment = reach / waves, gap = 5, bladeSpec = damageSpec(razorwindId, "blade");
 
             // Membership is sampled when each visible band reaches it; the cast shares one total cap.
@@ -129,15 +123,15 @@ namespace PokemonSkills {
                     scenes.finish(current, done);
                     return;
                 }
-                const inner = segment * step, outer = segment * (step + 1);
-                scenes.show(current, "wave" + step, origin,
-                    { moment: "release", path: razorwindPath(razorwindBand(origin, direction, inner, outer, half)),
-                        band: step, waves: waves, direction: [direction.x(), direction.y(), direction.z()],
-                        blades: cap, motes: motes, scale: scale, intensity: intensity });
+                const inner = Math.max(segment * step, bodyRadius), outer = segment * (step + 1);
+                // 身体边缘起的薄风面：逐条射线用真实墙截短，判定与表现共用这组端点。
+                const band = razorwindBand(scope, origin, base, half, inner, outer, samples);
                 const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-                WorldGeometry.selectEnemies(scope, WorldGeometry.polygon(razorwindBand(origin, direction, inner, outer, half), { below: 1.2, above: 2.6 }),
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodyPolygon(band.vertices, boundsMinY, boundsMaxY),
                     function (enemy, facts) {
-                        if (struck[String(enemy.ref())] || !scope.clear(origin, facts.position())) return;
+                        const ref = String(enemy.ref());
+                        if (struck[ref] || facts.friendly() || ref === actorRef) return;
+                        if (!scope.clear(origin, facts.position())) return;
                         candidates.push({ actor: enemy, at: facts.position() });
                     });
                 candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
@@ -149,6 +143,13 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, razorwindScene, 1, candidate.at,
                         { moment: "cut", target: ref, motes: motes, scale: scale, intensity: intensity }, 22);
                 }
+                scenes.show(current, "wave" + step, origin,
+                    { moment: "release", path: razorwindPath(band.vertices), band: step, waves: waves,
+                        direction: [direction.x(), direction.y(), direction.z()],
+                        blades: cap, motes: motes, scale: scale, intensity: intensity });
+                // 当拍真实前缘短亮：外弧顶点与判定同源，短促一次，不延后补伤。
+                WorldFeedback.emit(scope, razorwindEdgeScene, 1, origin,
+                    { moment: "edge", edge: razorwindPath(band.edge), band: step, blades: cap, scale: scale, intensity: intensity }, 8);
                 current.after(gap, function (next: CombatAction) { release(next, step + 1); });
             }
             release(action, 0);

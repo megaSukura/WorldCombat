@@ -1,13 +1,15 @@
 /**
  * 冷笑话 / chillyreception 的客户端表现。
  *
- * 一句话：施法者头顶先浮起几缕悬着的话音与问号 → 话音落下，一圈尴尬的冷场从脚下推开、身边被真正打断的
- * 敌人头上冒出问号、身上结起霜，雪花静静落下来 → 施法者在实际退场点化开、留下一撮白气。
+ * 一句话：施法者头顶先浮起几缕悬着的话音与问号，脚下预告一圈冷场和一条背向威胁的退路 → 话音落下，一圈
+ * 尴尬的冷场从脚下推开、身边被真正打断的敌人头上冒出问号、身上结起霜，雪花静静落下来 → 施法者在实际退到
+ * 的脚点化开、留下一撮白气。
  * 色相家族：冷灰蓝 0x9AA8B8 画「尴尬与安静」，冰白 0xEAF6FF／0xF2FAFF 画雪与霜；白是中性色，只算一个色相加上中性。
- * 起击收：起 windup 26t（先静止一拍、后化雪）／击 burst 44t ／持 field 绑在雪区效果上 ／击 silence 24t ／击 bow 26t。
+ * 起击收：起 windup 26t（先静止一拍、后化雪）／击 burst 44t ／持 field 绑在雪区效果上 ／成员入场 enter 20t ／击 silence 24t ／击 bow 26t。
  * 持续状态：field 是稀疏缓慢的落雪加一层贴地薄雾，密度低、让出视线；一圈冷灰环画出「站哪里会被冷场罩住」。
- * 机制驱动：冷场半径决定问号、冷场环与雾的大小（data.scale = 半径/7），雪花数量直接读本招算出的 snowDensity，
- *   burst 的强度读被真正打断的敌人数（data.hushed）。
+ * 机制驱动：冷场半径决定预告圈、冷场环与雾的大小（半径直接绑 data.radius，世界格，只放大一次），
+ *   雪花数量直接读本招算出的 snowDensity，burst 的强度读被真正打断的敌人数（data.hushed）。
+ *   整片雪场只挂在实际 field 上，成员入场只在自己身上点几片小雪花。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  * windup  悬停话音 thought_trail_small 静止一拍     0.06-0.01 14-22 0.5→0 ≤80
@@ -45,7 +47,20 @@ const ChillyReceptionDefinition: ParticleDefinition = {
                     burst: { count: 18, at: 16 }, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.03, 0.1], gravity: 0.004, drag: 0.96,
                     lifetime: [10, 18], size: [0.2, 0.06], sizeMode: "index",
-                    color: 0xF2FAFF, alpha: [0.5, 0], light: "world", maxParticles: 40 }
+                    color: 0xF2FAFF, alpha: [0.5, 0], light: "world", maxParticles: 40 },
+                { name: "preview_ring", bind: "source", offset: [0, -0.7, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/largering",
+                    burst: { count: 26, at: 1 }, shape: { kind: "ring", radius: { data: "radius", fallback: 7 } },
+                    direction: "up", speed: [0.002, 0.01],
+                    lifetime: [18, 32], size: [0.3, 0.6], sizeMode: "sin",
+                    color: 0x9AA8B8, alpha: [0.16, 0], alphaMode: "sin", light: "world", maxParticles: 30 },
+                { name: "preview_lane", bind: "source", offset: [0, -0.66, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 22, at: 1 },
+                    shape: { kind: "sector", radius: { data: "withdraw", fallback: 6 }, angleDegrees: 42 },
+                    orient: "heading", direction: "shape", speed: [0.01, 0.05],
+                    lifetime: [14, 26], size: [0.06, 0.02],
+                    color: 0xEAF6FF, alpha: [0.28, 0], light: "world", maxParticles: 40 }
             ]
         },
         burst: {
@@ -81,6 +96,18 @@ const ChillyReceptionDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.003, 0.01],
                     lifetime: [26, 44], size: [0.4, 0.8], sizeMode: "sin",
                     color: 0x9AA8B8, alpha: [0.22, 0], alphaMode: "sin", light: "world", maxParticles: 34 }
+            ]
+        },
+        enter: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                { name: "flake", bind: "target", height: 0.5, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
+                    burst: { count: 6 }, shape: { kind: "sphere_surface", radius: 0.35 },
+                    direction: "outward", speed: [0.02, 0.08], gravity: 0.01,
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0xF2FAFF, alpha: [0.5, 0], light: "world", maxParticles: 18 }
             ]
         },
         silence: {

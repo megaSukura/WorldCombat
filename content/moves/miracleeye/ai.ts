@@ -10,8 +10,8 @@
  * 放完之后：印记留在目标身上、超能接得上、自己命中被抬高；印记还在时不重复。
  * 配置：ai.maxChase 限制考虑距离；ai.leaveStation 决定驻守时是否离位。
  *
- * 说明：队友的招式属性不在共享观测里，所以「己方有超能输出」用当前可读到的属性作近似：自己或附近队友带超能属性
- *   即视为有兑现价值。真实的招式组合差异留给玩家试玩判断。
+ * 说明：己方是否值得兑现，按**真正装在身上、还有 PP 的超能招**判断（已装备、伤害或变化皆可）；
+ *   队友的招式在当前帧直接读个体，不用属性近似。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("miracleeye", { ai: { maxChase: 12, leaveStation: false } }, [
@@ -24,19 +24,27 @@ namespace CompanionBehavior {
         return !!facts && Array.isArray(facts.types) && facts.types.indexOf("dark") >= 0;
     }
 
-    function miracleeyeHasPsychic(context: WorldBehavior.Context, target: Entity): boolean {
-        const facts = pokemonFacts(context, target);
-        return !!facts && Array.isArray(facts.types) && facts.types.indexOf("psychic") >= 0;
+    /** 这个战斗者此刻是否带着真正能用的超能招（已装备、有 PP、非变化）；非宝可梦返回 false。 */
+    function miracleeyeCarriesPsychic(context: WorldBehavior.Context, target: Entity): boolean {
+        const scope = world(context), actor = scope.actor(target.ref);
+        if (!actor || !scope.valid(actor) || String(actor.domain()) !== "cobblemon") return false;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const move = pokemon.move(slot);
+            if (!move || String(move.category()) === "status") continue;
+            if (String(move.type()) === "psychic" && Number(move.pp()) > 0) return true;
+        }
+        return false;
     }
 
-    /** 己方（含自己）有超能属性，心眼兑现后能直接接上。 */
+    /** 己方（含自己）带着能用的超能招，心眼兑现后能直接接上。 */
     function miracleeyePartyPsychic(context: WorldBehavior.Context): boolean {
-        if (miracleeyeHasPsychic(context, source(context))) return true;
+        if (miracleeyeCarriesPsychic(context, source(context))) return true;
         const nearby = (context.facts.nearby || []) as Entity[];
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
             if (!other.friendly || other.ref === source(context).ref) continue;
-            if (miracleeyeHasPsychic(context, other)) return true;
+            if (miracleeyeCarriesPsychic(context, other)) return true;
         }
         return false;
     }
@@ -59,7 +67,7 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !miracleeyeWants(context, item, target)) return 0;
             if (miracleeyeTargetDark(context, target)) return 90;
-            if (fleeing(context, target)) return 74;
+            if (fleeing(context, target) || stage(context, target, "evasion") > 0) return 74;
             if (miracleeyePartyPsychic(context) || stage(context, source(context), "accuracy") < 0) return 66;
             return 44;
         }

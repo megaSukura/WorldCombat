@@ -6,7 +6,8 @@
  * `world_combat:committed` 记下）；同时目标可见、敌对、存活且在 `ai.maxChase`（默认 6）格内。够不到交给共享接近逻辑。
  *
  * priority：目标刚完成的这次真实攻击是接触（近身）时最高 62，投射物类 50——这是正面对拼里抢先的时机；
- * 只有脚本交手记录时 38。读不准则根本不进入候选；普通追着跑但没有真实攻击的敌人不再被当成「正在出招」。
+ * 只有脚本交手记录时 38。两者都按距窗口到期的远近递减，越近的一手越值得抢。读不准则根本不进入候选；
+ * 普通追着跑但没有真实攻击的敌人不再被当成「正在出招」，也不拿仇恨（attacking）替代出手事实。
  */
 namespace PokemonSkills {
     function suckerpunchWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -36,11 +37,16 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !suckerpunchWants(context, capability, target)) return 0;
             const world = CompanionBehavior.world(context);
-            const window = p(suckerpunchId, "window", world);
+            const window = Math.max(1, p(suckerpunchId, "window", world));
             const opponent = world.actor(target.ref);
             const recent = opponent === null ? null : DamageSemantics.recentAttack(world, opponent, window);
-            if (recent !== null) return recent.contact ? 62 : 50;
-            return 38;
+            // 越近的这次出手越值得抢：刚完成的那一下排前，窗口将尽的排在后面。
+            if (recent !== null)
+                return Math.max(28, (recent.contact ? 62 : 50) - Math.round((world.tick() - recent.tick) / Math.max(1, window) * 20));
+            const record = suckerpunchReads[target.ref];
+            if (record !== undefined)
+                return Math.max(22, 38 - Math.round((world.tick() - record.tick) / Math.max(1, window) * 14));
+            return 0;
         }
     });
 

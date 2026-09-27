@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import ts from 'typescript';
 
 const noop = () => {};
-const context = vm.createContext({ WorldCombat: { on: noop, effect: noop, effectHandler: noop, event: noop, phase: noop },
+const hooks = new Map();
+const context = vm.createContext({ WorldCombat: { on: (id, _event, _scope, callback) => hooks.set(id, callback), effect: noop, effectHandler: noop, event: noop, phase: noop },
   CobblemonCombat: { pokemon(actor) { assert(actor.pokemon, 'Ordinary bodies must never enter native Pokemon access'); return actor.pokemon; },
     loadout: noop,
     typeEffectiveness: (attack, defence) => attack === 'ghost' && defence === 'normal' ? 0 : attack === 'grass' && defence === 'water' ? 2 : 1,
@@ -34,11 +35,13 @@ function body(id, native = null, attack = 8, armor = 0) {
   return actor;
 }
 const source = body('source', { types: ['grass'] }), target = body('native-target', {}), ordinary = body('ordinary'), applied = [];
+let currentReceipt = '';
 const world = { source: () => source, random: () => 1, effects: () => [], tick: () => 0,
+  damageReceipt: () => currentReceipt,
   valid: () => true, observe: () => ({ health: () => 1e8, maxHealth: () => 1e8 }),
   attributeValue: (actor, id) => id === 'minecraft:generic.attack_damage' ? { base: () => actor.baseAttack, value: () => actor.attack }
     : id === 'minecraft:generic.armor' ? { base: () => actor.armor, value: () => actor.armor } : null,
-  hurt: (actor, amount, metadata) => { actor.hp -= amount; applied.push({ actor, amount, data: JSON.parse(metadata) }); return true; },
+  hurt: (actor, amount, metadata, relations) => { actor.hp -= amount; applied.push({ actor, amount, data: JSON.parse(metadata), relations }); return true; },
 };
 const move = { id: () => 'leaf', type: () => 'grass', category: () => 'physical', power: () => 40, accuracy: () => 100, priority: () => 0, critRatio: () => 1 };
 const resolve = (actor = target, options = {}, from = source) => context.PokemonDamage.resolve(world, from, actor, move, { critical: false, ...options });
@@ -222,6 +225,72 @@ check('explicit fixed HP damage preserves authored values and type policy across
   assert(D.fixed(world,target,ghost,7.5,{},'none'));close(applied.at(-1).amount,7.5);
   const size=applied.length;assert.equal(D.fixed(world,ordinary,move,0),false);assert.equal(applied.length,size);
   target.native.types=previous;
+});
+check('fixed relationship permission is a separate per-call value, never transferable damage metadata', () => {
+  const D=context.PokemonDamage, permitted={damageRelations:{self:true,friendly:true}};
+  assert(D.fixed(world,ordinary,move,3,permitted,'none'));
+  assert.deepEqual(JSON.parse(applied.at(-1).relations),{self:true,friendly:true});
+  assert.equal(applied.at(-1).data.damageRelations,undefined);
+  assert(D.fixed(world,ordinary,move,3,{},'none'));
+  assert.deepEqual(JSON.parse(applied.at(-1).relations),{});
+  assert.equal(JSON.parse(resolve(target,permitted).metadata).damageRelations,undefined);
+});
+check('fixed receipts retain their own native settlement across nested hits, zero HP damage and exceptions', () => {
+  const hurt = world.hurt, D = context.PokemonDamage;
+  const dispatch = (phase, data) => hooks.get('world_combat:fixed_receipts/' + phase)({
+    data: () => JSON.stringify(data), actor: () => source, target: () => ordinary, world: () => world });
+  let actual = 0, lastData;
+  try {
+    world.hurt = (_target, _amount, metadata) => {
+      const data = { ...JSON.parse(metadata), receiptId: 'parent' }; lastData = data;
+      currentReceipt = 'parent';
+      dispatch('prepare', data);
+      dispatch('prepare', { ...data, receiptId: 'nested' });
+      dispatch('settle', { ...data, receiptId: 'nested', actual: 99, after: 0, settled: true });
+      currentReceipt = '';
+      dispatch('settle', { ...data, actual, after: 17 - actual, settled: true });
+      return true;
+    };
+    const zero = D.fixedReceipt(world, ordinary, move, 7, {}, 'none');
+    assert.equal(zero.accepted, true); assert.equal(zero.actual, 0); assert.equal(zero.after, 17);
+    actual = 3;
+    const positive = D.fixedReceipt(world, ordinary, move, 7, {}, 'none');
+    assert.equal(positive.actual, 3); assert.equal(positive.receiptId, 'parent');
+    dispatch('settle', { ...lastData, actual: 88, settled: true });
+    assert.equal(positive.actual, 3, 'Returned results cannot be mutated after the call');
+    world.hurt = (_target, _amount, metadata) => {
+      lastData = { ...JSON.parse(metadata), receiptId: 'throwing' }; dispatch('prepare', lastData); throw Error('fixture');
+    };
+    assert.throws(() => D.fixedReceipt(world, ordinary, move, 7, {}, 'none'), /fixture/);
+    dispatch('settle', { ...lastData, actual: 99, settled: true });
+    world.hurt = () => false;
+    const rejected = D.fixedReceipt(world, ordinary, move, 7, {}, 'none');
+    assert.equal(rejected.accepted, false); assert.equal(rejected.actual, 0); assert.equal(rejected.receiptId, '');
+  } finally { world.hurt = hurt; currentReceipt = ''; }
+});
+check('fixed receipt identity survives an earlier prepare hook forwarding all metadata to nested hurt', () => {
+  const hurt = world.hurt, D = context.PokemonDamage;
+  const dispatch = (phase, data) => hooks.get('world_combat:fixed_receipts/' + phase)({
+    data: () => JSON.stringify(data), actor: () => source, target: () => ordinary, world: () => world });
+  currentReceipt = 'enclosing-original';
+  try {
+    world.hurt = (_target, _amount, metadata) => {
+      const data = JSON.parse(metadata);
+      currentReceipt = 'early-nested';
+      dispatch('prepare', { ...data, receiptId: 'early-nested' });
+      currentReceipt = 'actual-fixed';
+      dispatch('settle', { ...data, receiptId: 'early-nested', actual: 99, after: 0, settled: true });
+      dispatch('prepare', { ...data, receiptId: 'actual-fixed' });
+      currentReceipt = 'enclosing-original';
+      dispatch('settle', { ...data, receiptId: 'actual-fixed', actual: 3, after: 14, settled: true });
+      // A subsequent callback may cause a sibling sharing the enclosing receipt; the result is already locked.
+      dispatch('prepare', { ...data, receiptId: 'later-sibling' });
+      dispatch('settle', { ...data, receiptId: 'later-sibling', actual: 88, after: 0, settled: true });
+      return true;
+    };
+    const result = D.fixedReceipt(world, ordinary, move, 7, {}, 'none');
+    assert.equal(result.receiptId, 'actual-fixed'); assert.equal(result.actual, 3); assert.equal(result.after, 14);
+  } finally { world.hurt = hurt; currentReceipt = ''; }
 });
 check('ignored defense stages become per-hit additive exclusions for ordinary equipment wearers', () => {
   const effectsBefore = world.effects;

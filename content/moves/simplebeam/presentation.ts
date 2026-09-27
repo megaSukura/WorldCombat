@@ -1,17 +1,17 @@
 /**
  * 单纯光束 / simplebeam 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者面前聚起一束旋转的念头光，光束沿视线一路打到对象头上，命中处炸开两道环表示「后续变化 ×2」，
- *   之后身上一直悬着一圈单纯光环；只有真正有一次能力等级被放大落地时才闪一下。扩散档在目标处再荡开一圈扫到附近的人。
+ * 一句话：施法者面前聚起一束旋转的念头光，随即一道瞬时念波沿视线整条亮起、打到对象头上，命中处炸开两道环表示
+ *   「后续变化 ×2」，之后身上一直悬着一圈单纯光环；只有真正有一次能力等级被放大落地时才闪一下。扩散档在目标处再荡开一圈扫到附近的人。
  *
  * 色相家族：念波紫（0xB774E8 主体／0x8A5CFF 暗部）与近白（0xF4E6FF 光束核心）撑起全部层次。
- * 层次：聚（起手，念头内收）→ 发（光束沿视线、光环推进）→ 落（双环＋闪点）→ 环（贴身标记）→ 闪（实际等级变化）
+ * 层次：聚（起手，念头内收）→ 发（瞬时念波整条亮起）→ 落（双环＋闪点）→ 环（贴身标记）→ 闪（实际等级变化）
  *   → 扩散／清／空。
- * 起击收：charge（聚）→ beam（发）→ settle（落，内环）→ spread（落，外环反向）→ aura（环，绑定托管效果）
+ * 起击收：charge（聚）→ beam（发，瞬时）→ settle（落，内环）→ spread（落，外环反向）→ aura（环，绑定托管效果）
  *   → surge（实际变化闪光）→ scatter／clear。
- * 范围：beam 的光束长度直接绑 `data.length`（施法者到目标的实际距离），方向绑 `data.direction`；
- *   settle 的炸环半径绑 `data.beam`，spread 的扫描圈半径绑 `data.fan`（实际扩散半径）。
- * 运动：光束沿视线一条直线亮起，命中处双环一正一反炸开后收拢，光环周期轻转，散去时念波缓缓飘散。
+ * 范围：beam 的 line 长度直接绑 `data.length`（施法者到目标的实际距离），方向绑 `data.direction`，fit:"world" 让整条线
+ *   一次画到真实长度、不随 data.scale 二次缩放；settle 的炸环半径绑 `data.beam`，spread 的扫描圈半径绑 `data.fan`，同样 fit:"world"。
+ * 运动：念波整条同帧亮起（瞬时改写，不做沿线推进的假飞行），命中处双环一正一反炸开后收拢，光环周期轻转，散去时念波缓缓飘散。
  * 数：光环数读 `data.rings`（特攻派生）、实际变化强度读 `data.amount`、扩散摊薄由 `data.shared` 读出扫到几人，
  *   尺寸随 `data.scale`。
  */
@@ -41,11 +41,11 @@ const SimplebeamDefinition: ParticleDefinition = {
             ]
         },
         beam: {
-            duration: 34,
-            exit: { stop: 16, drain: 16 },
+            duration: 18,
+            exit: { stop: 9, drain: 16 },
             emitters: [
                 {
-                    name: "ray", bind: "point", offset: [0, 0.85, 0], fit: "none", orient: "direction",
+                    name: "ray", bind: "point", offset: [0, 0.85, 0], fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
                     rate: { data: "rings", fallback: 8 },
                     shape: { kind: "line", length: { data: "length", fallback: 9 } },
@@ -54,20 +54,13 @@ const SimplebeamDefinition: ParticleDefinition = {
                     color: 0xB774E8, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 80
                 },
                 {
-                    name: "rings", bind: "path", offset: [0, 0.85, 0],
+                    name: "muzzle", bind: "source", offset: [0, 0.2, 0.3], height: 0.7,
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    shape: { kind: "polyline" },
-                    rate: { data: "rings", fallback: 8 }, direction: "shape", speed: [0.05, 0.16], spread: 10,
-                    lifetime: [8, 14], size: [0.16, 0.03],
-                    color: 0x8A5CFF, alpha: [0.8, 0], light: "full", maxParticles: 70
-                },
-                {
-                    name: "sparks", bind: "path", offset: [0, 0.85, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polyline" },
-                    rate: { data: "rings", fallback: 8 }, direction: "shape", speed: [0.02, 0.1], spread: 24,
-                    lifetime: [6, 12], size: [0.05, 0.01],
-                    color: 0xF4E6FF, alpha: [0.8, 0], light: "full", maxParticles: 90
+                    burst: { count: { data: "rings", fallback: 6 } },
+                    shape: { kind: "sphere_surface", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [6, 12], size: [0.14, 0.03], sizeMode: "index",
+                    color: 0xF4E6FF, alpha: [0.85, 0], light: "full", maxParticles: 30
                 }
             ]
         },
@@ -76,7 +69,7 @@ const SimplebeamDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 16 },
             emitters: [
                 {
-                    name: "ring_inner", bind: "point", offset: [0, 0.75, 0], fit: "none",
+                    name: "ring_inner", bind: "point", offset: [0, 0.75, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "beam", fallback: 0.9 } },
@@ -85,7 +78,7 @@ const SimplebeamDefinition: ParticleDefinition = {
                     color: 0xB774E8, alpha: [0.75, 0], light: "full", maxParticles: 8
                 },
                 {
-                    name: "ring_outer", bind: "point", offset: [0, 0.78, 0], fit: "none",
+                    name: "ring_outer", bind: "point", offset: [0, 0.78, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
                     burst: { count: 1, at: 4 },
                     shape: { kind: "ring", radius: { data: "beam", fallback: 0.9 } },
@@ -94,7 +87,7 @@ const SimplebeamDefinition: ParticleDefinition = {
                     color: 0xF4E6FF, alpha: [0.7, 0], light: "full", maxParticles: 8
                 },
                 {
-                    name: "impact", bind: "point", offset: [0, 0.8, 0], height: 0.6,
+                    name: "impact", bind: "point", offset: [0, 0.8, 0], fit: "world", height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_psychic",
                     burst: { count: 3, interval: 2 },
                     shape: { kind: "sphere", radius: { data: "beam", fallback: 0.9 } },
@@ -103,7 +96,7 @@ const SimplebeamDefinition: ParticleDefinition = {
                     color: 0xF4E6FF, alpha: [1, 0], light: "full", bloom: 0.3, maxParticles: 10
                 },
                 {
-                    name: "motes", bind: "point", offset: [0, 0.8, 0],
+                    name: "motes", bind: "point", offset: [0, 0.8, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "rings", fallback: 8 } },
                     shape: { kind: "sphere", radius: { data: "beam", fallback: 0.9 } },
@@ -118,7 +111,7 @@ const SimplebeamDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 14 },
             emitters: [
                 {
-                    name: "wash", bind: "point", offset: [0, 0.7, 0], fit: "none",
+                    name: "wash", bind: "point", offset: [0, 0.7, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "fan", fallback: 0.34 } },
@@ -127,7 +120,7 @@ const SimplebeamDefinition: ParticleDefinition = {
                     color: 0x8A5CFF, alpha: [0.65, 0], light: "full", maxParticles: 8
                 },
                 {
-                    name: "glints", bind: "point", offset: [0, 0.7, 0],
+                    name: "glints", bind: "point", offset: [0, 0.7, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 14 },
                     shape: { kind: "sphere", radius: 0.3 },

@@ -3,6 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 8）格内；更远交给共享接近逻辑。
  * 对谁出手：`ai.deepenExisting`（默认开）打开时已中毒的目标排前，这一口能确保加深为剧毒；关闭则优先没中毒的。
+ *   已知毒免疫的目标（毒／钢属性）永远注不进毒，只按这一口咬击的价值排一个低调的分。
  *   毒在咬后压一小拍才渗开，届时目标要留在口边，所以能保持短暂近距的目标优先；
  *   高速绕身的目标很难留在射程内，降一档、不强行追针。
  * 够不到怎么办：牙很短，reach 之内才动手，不够先贴近。
@@ -14,6 +15,13 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
+    }
+
+    /** 已知毒免疫（毒／钢属性，见 NativeMinecraftStatus.inherent）：这一口注不进毒，只按咬击价值选择。 */
+    function poisonfangPoisonImmune(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const facts = CompanionBehavior.pokemonFacts(context, target);
+        if (!facts || !facts.types) return false;
+        return facts.types.indexOf("poison") >= 0 || facts.types.indexOf("steel") >= 0;
     }
 
     CompanionBehavior.registerUse("poisonfang", {
@@ -29,9 +37,15 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || !poisonfangWants(context, capability, target)) return 0;
-            const deepen = CompanionBehavior.ai<boolean>(capability, "deepenExisting", true);
-            const poisoned = CompanionBehavior.status(context, target, "poison");
-            let score = poisoned ? (deepen ? 34 : 18) : (deepen ? 20 : 30);
+            let score: number;
+            if (poisonfangPoisonImmune(context, target)) {
+                // 注不进毒：这一口只剩咬击价值，不上剧毒那档的分，也别为加深追它。
+                score = 14;
+            } else {
+                const deepen = CompanionBehavior.ai<boolean>(capability, "deepenExisting", true);
+                const poisoned = CompanionBehavior.status(context, target, "poison");
+                score = poisoned ? (deepen ? 34 : 18) : (deepen ? 20 : 30);
+            }
             // 注毒要目标留在口边一小拍：离得近、走得慢的目标排得更前。
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range) score += 4;
             const velocity = CompanionBehavior.velocity(context, target);

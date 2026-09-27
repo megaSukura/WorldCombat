@@ -58,6 +58,13 @@ namespace PokemonSkills {
             (<any>skill.resolve).shared = true;
         }
         var inspect = skill.inspect;
+        const indicator = skill.indicator;
+        if (indicator) skill.indicator = function (values, pokemon, inspection) {
+            if (!pokemon) return indicator(values, pokemon, inspection);
+            const context: NumberContext = { pokemon, skill, detail: { values }, world: inspection && inspection.world,
+                actor: inspection && inspection.actor, attributes: inspection && inspection.attributes, state: inspection && inspection.state };
+            return withParameterContext(context, () => indicator(values, pokemon, inspection));
+        };
         skill.inspect = function (pokemon, detail, context) {
             var output = inspect ? inspect(pokemon, detail, context) : detail;
             if (typeof output.authoredCooldown !== "number") output.authoredCooldown = output.cooldown;

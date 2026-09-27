@@ -30,7 +30,7 @@
   "worldcombat.skill.sandstorm.preference.ai.advance": "把沙幕压向对手",
   "worldcombat.skill.sandstorm.preference.ai.advance.help": "开启后把沙幕扬在自己与威胁之间、更靠威胁的一侧，让风向压进敌人走廊；关闭则扬在脚下先护住自己。",
   "worldcombat.skill.sandstorm.preference.ai.avoidAllies": "避开顺风的友军",
-  "worldcombat.skill.sandstorm.preference.ai.avoidAllies.help": "开启后，若沙幕顺风走廊里已有非岩石／地面／钢属性的友军就不在这里起风；关闭则也把沙幕盖到他们头上。",
+  "worldcombat.skill.sandstorm.preference.ai.avoidAllies.help": "开启后，若沙幕的真实圆场里、下风侧且上风没有掩体挡住的非岩石／地面／钢属性友军会挨磨，就不在这里起风；关闭则也把沙幕盖到他们头上。",
   "worldcombat.skill.sandstorm.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.sandstorm.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去扬沙。",
   "world_combat.move.sandstorm.text.scour": "被沙磨",

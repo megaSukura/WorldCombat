@@ -6,9 +6,10 @@
  *
  * 幕：
  *   起（windup，提交前）：可选的极短攒电预告（准备为 0 时不播，直接出手）。
- *   击（snap → jab / blocked / whiff）：提交后瞬发。`action.trace(..., true)` 沿直线做权威判定；线端取真实碰撞点，
- *       第一个实体（含同伴）决定结果：敌人被扎中，按实际命中者结算 `jab`（对已麻目标更狠并把麻痹补到 `linger`，
- *       未麻则按 `numbChance` 掷一次），同伴把电流引走，只有墙时打在墙面散掉、什么也不发生。
+ *   击（snap → jab / blocked / immune / whiff）：提交后瞬发。`action.trace(..., true)` 沿直线做权威判定，射线只到
+ *       本次真实 `reach`（手动点地/方向空放同样止于 reach）；线端取真实碰撞点。第一个实体（含同伴）决定结果：
+ *       敌人被扎中，按实际命中者结算 `jab`（对已麻目标更狠并把麻痹补到 `linger`，未麻则按 `numbChance` 掷一次），
+ *       `hurt` 被原生拒绝时走免疫反馈、不报电中与续麻；同伴把电流引走，只有墙时打在墙面散掉、什么也不发生。
  *
  * 反制：拉开到射程之外（本族最短），或切断视线；电属性对麻痹免疫（共享默认规则）。
  */
@@ -19,6 +20,7 @@ namespace PokemonSkills {
     const thundershockStimText = "world_combat.move.thundershock.text.stim";
     const thundershockBlockedText = "world_combat.move.thundershock.text.blocked";
     const thundershockWhiffText = "world_combat.move.thundershock.text.whiff";
+    const thundershockImmuneText = "world_combat.move.thundershock.text.immune";
 
     /** 沿短直线的折线顶点：两端落在双方身上，中间几下朝侧向抖开，画出的就是判定用的那条近直线。 */
     function thundershockArc(origin: CombatPoint, aim: CombatPoint, segments: number, bend: number): number[][] {
@@ -82,7 +84,8 @@ namespace PokemonSkills {
             const self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
-            const aimPoint = action.targetPosition();
+            const direction = aim(action);
+            const reach = action.range();
             const radius = p(thundershockId, "radius", action);
             const chance = p(thundershockId, "numbChance", action);
             const numbTicks = Math.max(20, Math.round(p(thundershockId, "numbTicks", action)));
@@ -91,8 +94,10 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.6, radius / 0.3));
             const bend = Math.max(0.05, Math.min(0.28, radius * 0.7));
 
-            // 权威判定先行：线的第一个实体（含同伴阻挡）决定结果，末端取真实碰撞点。
-            const hit = action.trace(origin, aimPoint, radius, true);
+            // 权威判定先行：射线只到本次真实 reach（手动点地/方向空放同样止于 reach），
+            // 第一个实体（含同伴阻挡）决定结果，末端取真实碰撞点。
+            const aimed = origin.plus(direction.scale(Math.max(0, reach)));
+            const hit = action.trace(origin, aimed, radius, true);
             const endpoint = hit.position();
             const lander = hit.hitEntity() ? hit.target() : null;
             const victim = lander !== null && !world.friendly(lander) && String(lander.key()) !== String(self.key()) ? lander : null;
@@ -110,17 +115,22 @@ namespace PokemonSkills {
                 const at = world.observe(victim);
                 const point = at === null ? endpoint : at.position();
                 const dealt = hurt(action, victim, thundershockId, power, { damage: damageSpec(thundershockId, "jab") });
-                let marked = false, topped = false;
                 if (dealt) {
+                    let marked = false, topped = false;
                     if (already) topped = CombatStatus.inflict(world, victim, "paralysis", linger);
                     else if (world.random() < chance) marked = CombatStatus.inflict(world, victim, "paralysis", numbTicks);
+                    WorldFeedback.emit(world, thundershockScene, 1, point,
+                        { moment: "jab", target: String(victim.ref()), sparks: Math.round((10 + power * 0.7) * (already ? 1.6 : 1)),
+                            arcs: arcs, scale: scale, intensity: already ? Math.min(2.2, intensity * 1.4) : intensity }, 24);
+                    // 续麻只在真正续上时播「刺激」，首次麻痹只在真正麻住时播，否则只报命中。
+                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)),
+                        already && topped ? thundershockStimText : marked ? thundershockNumbText : thundershockHitText, [], 24);
+                    if (marked || topped) world.sound("cobblemon:status.nonvolatile.paralysis.actor", point, 14, "{}");
+                } else {
+                    // 原生拒绝/免疫：不报电中，也不报续麻，只走免疫反馈。
+                    WorldFeedback.emit(world, thundershockScene, 1, point, { moment: "immune", target: String(victim.ref()), scale: scale }, 22);
+                    WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), thundershockImmuneText, [], 22);
                 }
-                WorldFeedback.emit(world, thundershockScene, 1, point,
-                    { moment: "jab", target: String(victim.ref()), sparks: Math.round((10 + power * 0.7) * (already ? 1.6 : 1)),
-                        arcs: arcs, scale: scale, intensity: already ? Math.min(2.2, intensity * 1.4) : intensity }, 24);
-                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)),
-                    already ? thundershockStimText : marked ? thundershockNumbText : thundershockHitText, [], 24);
-                if (marked || topped) world.sound("cobblemon:status.nonvolatile.paralysis.actor", point, 14, "{}");
             } else if (lander !== null) {
                 const at = world.observe(lander);
                 const point = at === null ? endpoint : at.position();

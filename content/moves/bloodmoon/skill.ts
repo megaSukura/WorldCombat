@@ -23,35 +23,46 @@ namespace PokemonSkills {
     const BLOODMOON_FORWARD = 1.6;
     /** 禁复标识的托管效果：跟着施法者，窗口结束或被换招提前平息时一起收走。 */
     const bloodmoonSpentMark = "world_combat:bloodmoon_spent";
+    /** 本招动作的通用身份：所有带真实提交的战斗者都用它认出「上一次成功动作是不是血月」。 */
+    const bloodmoonAction = "world_combat:" + bloodmoonId;
+    interface BloodmoonCast { content: string; tick: number; spent: number; }
+    /** 每个战斗者最近一次真正提交的动作身份与时刻，以及本招按本次参数记下的禁复时长。 */
+    const bloodmoonCasts: { [ref: string]: BloodmoonCast } = Object.create(null);
 
     WorldCombat.effect(bloodmoonSpentMark, 1, 400, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (typeof value.ticks !== "number" || !isFinite(value.ticks) || value.ticks <= 0) throw new Error("Invalid bloodmoon spent: ticks");
         return JSON.stringify({ ticks: Math.round(value.ticks) });
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(bloodmoonSpentMark, "start", function (effect) { effect.schedule("watch", "watch", 1, "{}"); });
-    WorldCombat.effectHandler(bloodmoonSpentMark, "watch", function (effect) {
-        const state = JSON.parse(effect.state()), world = effect.world(), actor = effect.target();
-        if (!world.valid(actor)) { effect.end(); return; }
-        const native = NativeEffects.read(world, actor);
-        const spent = String(native.used) === bloodmoonId && world.tick() - native.usedTick < state.ticks;
-        // 换成别的招式或窗口走完，气势已平息，标识随实际过程收走。
-        if (!spent) { effect.end(); return; }
-        effect.schedule("watch", "watch", 2, "{}");
-    });
+    WorldCombat.effectHandler(bloodmoonSpentMark, "start", function () { });
     WorldCombat.effectHandler(bloodmoonSpentMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 禁复门禁：最近一次提交的就是本招、且还在 `spent` 窗口内时，本招不可用（对所有带身份记录的战斗者一致）。
-     *  只作用于起手/提交；本次施放命中时的伤害阶段不再复查，否则刚提交的这一下会被自己顶回去。 */
+    // 所有活体（宝可梦、原版生物、其他模组生物）真正提交动作都会发布 MoveExecutions.committed：
+    // 记下最近一次提交的通用身份与时刻；只有别招真的 commit 才把本招的禁复标识一起收走，点击失败不算解禁。
+    MoveExecutions.committed.define({ id: "world_combat:move_bloodmoon/commit", apply: function (commitment) {
+        const world = commitment.world, actor = commitment.actor;
+        if (!world.valid(actor)) return;
+        const ref = String(actor.ref());
+        const content = commitment.action !== null && commitment.action !== undefined ? String(commitment.action.content()) : "";
+        const previous = bloodmoonCasts[ref];
+        if (content === bloodmoonAction) {
+            bloodmoonCasts[ref] = { content: content, tick: world.tick(),
+                spent: previous && previous.content === content ? previous.spent : 0 };
+            return;
+        }
+        bloodmoonCasts[ref] = { content: content, tick: world.tick(), spent: 0 };
+        // 换成别的招式真正提交，气势提前平息：立刻撤掉身上的禁复标识，不留残留。
+        world.effects(actor, bloodmoonSpentMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    } });
+
+    /** 禁复门禁：最近一次真正提交的是本招、且仍在本招本次参数记下的窗口内时，本招不可用（对所有战斗者一致）。
+     *  只作用于起手/提交；命中时的伤害阶段不再复查，否则刚提交的这一下会被自己顶回去。 */
     function bloodmoonSpent(context: CombatStatus.ActionPolicy): void {
         if (context.phase === "damage") return;
-        if (String(context.actor.domain()) !== "cobblemon" || !context.world.valid(context.actor)) return;
-        const state = NativeEffects.read(context.world, context.actor);
-        if (String(state.used) !== bloodmoonId) return;
-        const pokemon = CobblemonCombat.pokemon(context.actor);
-        const ticks = Math.max(1, Math.round(p(bloodmoonId, "spent", { pokemon: pokemon, skill: skills[bloodmoonId],
-            detail: { values: skills[bloodmoonId].defaults }, world: context.world, actor: context.actor })));
-        if (context.world.tick() - state.usedTick < ticks) context.blocked["move-restricted"] = true;
+        if (!context.world.valid(context.actor)) return;
+        const record = bloodmoonCasts[String(context.actor.ref())];
+        if (!record || record.content !== bloodmoonAction) return;
+        if (context.world.tick() - record.tick < Math.max(1, record.spent)) context.blocked["move-restricted"] = true;
     }
 
     define({
@@ -83,7 +94,7 @@ namespace PokemonSkills {
                 world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p(bloodmoonId, "charge", context)),
-                recover: Math.round(p(bloodmoonId, "recover", context)),
+                recover: Math.round(p(bloodmoonId, "aftercast", context)),
                 cooldown: Math.round(p(bloodmoonId, "recharge", context)),
                 active: 0,
                 range: p(bloodmoonId, "reach", context)
@@ -115,41 +126,42 @@ namespace PokemonSkills {
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const casterAt = self.position();
-            // 提交那刻锁死方向：对手横走出这条线就只看着月束从旁边过去。
-            const aimed = aim(action);
-            const flat = WorldCombat.point(aimed.x(), 0, aimed.z());
-            const direction = flat.length() < 0.001 ? WorldGeometry.flatUnit(action.direction()) : flat.unit();
+            // 提交那刻锁死三维方向：对手横走、站高或站低都按同一束方向裁，不再把仰俯视压平。
+            const forward = WorldGeometry.basis(aim(action)).forward;
             action.releaseTarget();
-            const beamStart = casterAt.plus(WorldCombat.point(0, 0.5, 0)).plus(direction.scale(0.5));
-            const moon = casterAt.plus(WorldCombat.point(0, BLOODMOON_HEIGHT, 0)).plus(direction.scale(BLOODMOON_FORWARD));
-            // 方块截束：粗直月束撞到墙就停在那里，不穿墙。
-            const endpoint = beamStart.plus(direction.scale(reach));
-            const clip = world.clipBlocks(beamStart, endpoint);
-            const wall = clip !== null && clip.blocked();
-            const beamEnd = wall ? clip!.position() : endpoint;
+            const beamStart = casterAt.plus(WorldCombat.point(0, 0.5, 0));
+            const endpoint = beamStart.plus(forward.scale(reach));
+            // 方块截束：粗直月束撞到第一块实心方块就停在那里，不穿墙；畅通时 blockHit 返回 null。
+            const wall = WorldGeometry.blockHit(world, beamStart, endpoint);
+            const beamEnd = wall !== null ? wall.position() : endpoint;
             const beamLength = Math.max(0.5, beamEnd.minus(beamStart).length());
             const scale = beamRadius / 0.5;
             const intensity = Math.max(0.6, Math.min(2.4, moonlight / 140));
 
-            // 沿同一条线取样：按到光束起点的投影排序，最靠前的首敌先结算，其余后排吃 spill。
+            // 同一体积束取样：真实实体箱 + 逐候选通视，取消固定 ±1.7 高箱；按沿束投影排序，首敌后是有限后排。
+            const region = WorldGeometry.bodySegment(beamStart, beamEnd, beamRadius);
             const candidates: { actor: CombatActor; along: number; point: CombatPoint }[] = [];
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(beamStart, direction, beamLength, beamRadius, { below: 1.7, above: 1.7 }),
-                function (victim, facts) {
-                    const at = facts.position();
-                    const along = (at.x() - beamStart.x()) * direction.x() + (at.z() - beamStart.z()) * direction.z();
-                    if (along < 0.3) return;
-                    candidates.push({ actor: victim, along: along, point: at });
-                });
+            WorldGeometry.selectBodies(world, region, function (victim, facts) {
+                if (world.friendly(victim) || String(victim.ref()) === String(actor.ref())) return;
+                const at = world.closestPoint(victim, beamStart);
+                if (at === null || !world.clear(beamStart, at)) return;
+                const along = (at.x() - beamStart.x()) * forward.x() + (at.y() - beamStart.y()) * forward.y()
+                    + (at.z() - beamStart.z()) * forward.z();
+                if (along < 0.3) return;
+                candidates.push({ actor: victim, along: along, point: at });
+            });
             candidates.sort(function (left, right) { return left.along - right.along; });
             const primary = candidates.length > 0 ? candidates[0] : null;
             const follow = candidates.slice(1, 1 + pierce);
 
             sound(action, "minecraft:block.beacon.activate");
-            WorldFeedback.emit(world, bloodmoonScene, 1, moon,
-                { moment: "moon", motes: motes, scale: scale, intensity: intensity, eclipse: eclipse ? 1 : 0 }, 40);
+            // 召月收束到真实发射点，再由同一点推出月束：月与束共用 beamStart，几何对得上眼前这记粗束。
+            WorldFeedback.emit(world, bloodmoonScene, 1, beamStart,
+                { moment: "moon", motes: motes, scale: scale, intensity: intensity, eclipse: eclipse ? 1 : 0 }, 24);
             WorldFeedback.emit(world, bloodmoonScene, 1, beamStart,
                 { moment: "beam", path: [[beamStart.x(), beamStart.y(), beamStart.z()], [beamEnd.x(), beamEnd.y(), beamEnd.z()]],
-                    motes: motes, radius: beamRadius, scale: scale, intensity: intensity, eclipse: eclipse ? 1 : 0, wall: wall ? 1 : 0 }, 34);
+                    direction: [forward.x(), forward.y(), forward.z()], length: beamLength,
+                    motes: motes, radius: beamRadius, scale: scale, intensity: intensity, eclipse: eclipse ? 1 : 0, wall: wall !== null ? 1 : 0 }, 12);
 
             let primaryHit = false, extras = 0;
             if (primary !== null && hurt(action, primary.actor, bloodmoonId, moonlight, { damage: damageSpec(bloodmoonId, "moonlight") })) {
@@ -167,15 +179,16 @@ namespace PokemonSkills {
                         motes: Math.round(motes * 0.6), radius: beamRadius, scale: scale, intensity: Math.max(0.5, intensity * 0.7) }, 28);
             }
             if (!primaryHit && extras === 0) {
-                const at = wall ? beamEnd : endpoint;
+                const at = wall !== null ? beamEnd : endpoint;
                 WorldFeedback.emit(world, bloodmoonScene, 1, at,
-                    { moment: "miss", point: [at.x(), at.y(), at.z()], motes: Math.round(motes * 0.6), radius: beamRadius, scale: scale, wall: wall ? 1 : 0 }, 22);
+                    { moment: "miss", point: [at.x(), at.y(), at.z()], motes: Math.round(motes * 0.6), radius: beamRadius, scale: scale, wall: wall !== null ? 1 : 0 }, 22);
             }
             WorldFeedback.text(world, casterAt.plus(WorldCombat.point(0, 1.3, 0)), bloodmoonFallText,
                 [Math.round(moonlight), extras], 30);
             world.sound("cobblemon:impact.normal", beamStart, 16, "{}");
 
-            // 禁复标识绑在实际窗口上：换招提前平息或窗口走完，标识一起收走。
+            // 本次真正提交：登记通用身份，并记下本次参数算出的禁复时长；标识随窗口结束或别招提交一起收走。
+            bloodmoonCasts[String(actor.ref())] = { content: bloodmoonAction, tick: world.tick(), spent: spentTicks };
             world.effects(actor, bloodmoonSpentMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
             const mark = world.effect(bloodmoonSpentMark, actor, JSON.stringify({ ticks: spentTicks }), spentTicks);
             if (mark > 0) {

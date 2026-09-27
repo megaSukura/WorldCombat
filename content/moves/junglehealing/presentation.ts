@@ -1,8 +1,10 @@
 /**
  * 丛林治疗：脚下自然地面抽芽、藤蔓包住获益者、补血与治病各自短闪。
  *
- * - erupt：ground_trace 沿 data.path（施放时实际采到的自然地面点）整条边抽芽，vine_ring/sprout_burst/soil 以
- *   实际半径（fit none + data.scale）从脚点炸开；没有自然地面时 path 为空，只剩基础爆发。
+ * - erupt：vine_ring/sprout_burst/soil 以实际半径（fit none + data.scale）从脚点炸开；没有自然地面时只剩基础爆发。
+ * - sprout：每个真实自然地面采样点各发一次，point 处冒一簇嫩芽（data.sprout）与碎叶（data.leaf），逐点发芽、互不连线。
+ * - vine：只发给真正拿到回血或清除状态的人；grow 沿 data.path（本人脚下→身体的一小段）长出短藤，
+ *   wrap_short 在目标身上轻缠，leaf 数量来自参数。这是「真实受益者短生长连接」。
  * - embrace 只发给真正拿到回血或清除状态的人：heal_flash 按 data.healSpark（实际回复量）闪，cure_gold 按
  *   data.cured（实际清除项数）闪，二者各自真实。
  * - 所有数量来自参数的 data.vines / data.motes，圆环半径来自 data.radius 与 data.scale。
@@ -36,15 +38,6 @@ const JungleHealingDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 9, drain: 16 },
             emitters: [
-                {
-                    name: "ground_trace", bind: "path", offset: [0, 0.04, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
-                    burst: { count: { data: "vines", fallback: 0 }, interval: 2 },
-                    shape: { kind: "polyline" },
-                    direction: "up", speed: [0.03, 0.13],
-                    lifetime: [14, 24], size: [0.24, 0.04], sizeMode: "index",
-                    color: 0xBCE87A, alpha: [0.85, 0], light: "full", maxParticles: 80
-                },
                 {
                     name: "vine_ring", bind: "point", offset: [0, 0.10, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
@@ -106,6 +99,53 @@ const JungleHealingDefinition: ParticleDefinition = {
                     burst: { count: 2 }, shape: { kind: "sphere", radius: 0.3 }, direction: "up", speed: [0.02, 0.07],
                     lifetime: [14, 24], size: [0.22, 0.05], sizeMode: "index",
                     color: 0xBCE87A, alpha: [0.8, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        sprout: {
+            duration: 24,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "point_sprout", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
+                    burst: { count: { data: "sprout", fallback: 3 }, interval: 2, repeats: 2 },
+                    shape: { kind: "circle", radius: 0.18 },
+                    direction: "up", speed: [0.02, 0.1],
+                    lifetime: [14, 24], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xBCE87A, alpha: [0.85, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "point_leaf", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    burst: { count: { data: "leaf", fallback: 2 } },
+                    shape: { kind: "circle", radius: 0.2 },
+                    direction: "up", speed: [0.01, 0.06], spin: 20,
+                    lifetime: [10, 18], size: [0.09, 0.01],
+                    color: 0x8FD05A, alpha: [0.7, 0], light: "world", maxParticles: 20
+                }
+            ]
+        },
+        vine: {
+            duration: 22,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "grow", bind: "path", height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
+                    burst: { count: { data: "leaf", fallback: 2 }, interval: 2, repeats: 3 },
+                    shape: { kind: "polyline", closed: false },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [12, 20], size: [0.2, 0.03], sizeMode: "index",
+                    color: 0xBCE87A, alpha: [0.8, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "wrap_short", bind: "target", offset: [0, 0.35, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/grass/leaf",
+                    burst: { count: { data: "leaf", fallback: 2 } }, shape: { kind: "sphere", radius: 0.5 },
+                    direction: "inward", speed: [0.04, 0.14], spin: 45, drag: 0.93,
+                    lifetime: [12, 22], size: [0.13, 0.02],
+                    color: 0x6FC24E, alpha: [0.85, 0], light: "full", maxParticles: 30
                 }
             ]
         },

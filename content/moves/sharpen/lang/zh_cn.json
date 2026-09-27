@@ -31,7 +31,9 @@
   "worldcombat.skill.sharpen.preference.ai.ranged.help": "开启：威胁最近一次攻击是射弹/法术、且还在近身之外时，伙计会压后棱角化，不在远程压制下白顶角；关闭：不分辨远程，照常按距离决定。",
   "world_combat.move.sharpen.text.jagged": "棱角化（物攻 +%1$s）",
   "world_combat.move.sharpen.text.capped": "棱角已到极限（物攻未再抬高）",
+  "world_combat.move.sharpen.text.rejected": "棱角没能顶出（物攻未变）",
   "world_combat.move.sharpen.text.cut": "被棱角划伤",
   "world_combat.move.sharpen.text.dull": "棱角钝去（物攻 −%1$s）",
+  "world_combat.move.sharpen.text.dullplain": "棱角钝去（物攻未变）",
   "effect.world_combat.sharpened": "棱角"
 }

@@ -40,12 +40,13 @@ const GrudgeDefinition: ParticleDefinition = {
             exit: { drain: 40 },
             emitters: [
                 {
+                    // 怨眼：亮度随 data.surge（剩余比例）起落，快散时随之变淡，不再始终一个常量。
                     name: "watch_eye", bind: "source", offset: [0, 0.04, 0], fit: "none", height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     rate: 3, burst: { count: 12, interval: 20 }, shape: { kind: "ring", radius: 0.4 },
                     direction: "up", speed: [0, 0.012],
                     lifetime: [22, 34], size: [0.3, 0.4], sizeMode: "sin",
-                    color: 0x4B2E83, alpha: [0.34, 0.08], alphaMode: "sin",
+                    color: 0x4B2E83, alpha: [{ data: "surge", fallback: 0.34 }, 0.08], alphaMode: "sin",
                     light: "full", maxParticles: 14
                 },
                 {
@@ -54,7 +55,7 @@ const GrudgeDefinition: ParticleDefinition = {
                     rate: 5, burst: { count: { data: "motes", fallback: 10 }, interval: 20 }, shape: { kind: "circle", radius: 0.4 },
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [16, 26], size: [0.07, 0.012], sizeMode: "sin",
-                    color: 0xE0A030, alpha: [0.45, 0], light: "full", maxParticles: 20
+                    color: 0xE0A030, alpha: [{ data: "surge", fallback: 0.45 }, 0], light: "full", maxParticles: 20
                 },
                 {
                     name: "watch_mist", bind: "source", offset: [0, 0.02, 0], height: 0,
@@ -62,7 +63,17 @@ const GrudgeDefinition: ParticleDefinition = {
                     rate: 3, shape: { kind: "ring", radius: 0.42 },
                     direction: "up", speed: [0.005, 0.02],
                     lifetime: [24, 40], size: [0.22, 0.34],
-                    color: 0x1A1226, alpha: [0.2, 0], light: "world", maxParticles: 16
+                    color: 0x1A1226, alpha: [{ data: "surge", fallback: 0.2 }, 0], light: "world", maxParticles: 16
+                },
+                {
+                    // 刻骨：脚下缚纹，只有 data.bind>0（刻骨形态）才发；普通怨念 rate=0 完全不出现。
+                    name: "watch_bind", bind: "source", offset: [0, 0.03, 0], fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/warblingring",
+                    rate: { data: "bind", fallback: 0 }, shape: { kind: "ring", radius: 0.5 },
+                    direction: "down", speed: [0.0, 0.01], spin: 4,
+                    lifetime: [20, 32], size: [0.18, 0.34], sizeMode: "sin",
+                    color: 0x4B2E83, alpha: [{ data: "surge", fallback: 0.4 }, 0.05], alphaMode: "sin",
+                    light: "world", maxParticles: 30
                 }
             ]
         },

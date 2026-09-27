@@ -5,24 +5,24 @@
  *   onTryHit 对同伴把 basePower 归零并回满一半最大生命——「对敌人使用是会爆炸的团子。对我方使用则是
  *   给予回复的团子」。
  *
- * 翻译：把「同一团花粉按对象给出两种结果」翻成**一团抛出去、落在谁身上就由谁决定结果的花粉球**——
- *   抛到敌人身边就炸开成刺人的花粉（Bug 特殊伤害），抛到同伴身边就散成能喝的花粉（按最大生命恢复）。
- *   因为要同时能点同伴与敌人，本招用「选一个落点」的输入：把团子扔到同伴脚边就是救助，扔到敌人身边
- *   就是行凶。团子是真实飞行物（低弧），撞到第一个活体或落点即散开。
+ * 翻译：一团抛出去、**撞到第一个活体就由它决定结果**的花粉球——第一具身体是敌人就炸成刺人的花粉
+ *   （Bug 特殊伤害），是未满血的同伴（含自己）就散成能喝的花粉（按最大生命恢复）。团子飞完或撞墙只散开，
+ *   不再顺带波及落点周围的人；要照顾谁、要打谁，靠把团子真正送到谁身上。
  *   与同族分开：
  *     毒粉（poisonpowder）—— 抛出的粉尘只毒敌人、不留回复；
  *     帮助（helpinghand）  —— 只能点同伴、只强化下一次命中；
- *     花粉团（本招）      —— 同一团花粉，同伴喝了回血、敌人炸伤，一次施放同时照顾圈内两类人。
+ *     泡影咏叹调（sparklingaria）—— 洗自己周围一圈的敌友；
+ *     花粉团（本招）      —— 一团会被第三体接走的粉球，精确送到一个敌人或同伴身上。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
  *   blast       爆炸威力 82 + 特攻偏移 + 等级偏移（花粉越浓炸得越重）；偏回复 ×0.8 / 偏伤害 ×1.25。
  *   mend        回复比例 0.46 + 亲密度偏移 + 特攻偏移（感情越好、花粉越滋养，回得越多）；偏回复 ×1.3 / 偏伤害 ×0.75。
- *   burstRadius 散开半径 1.9 格 + 身高偏移 + 等级偏移（身量大的个体甩出的团子散得开）；偏回复 ×1.05。
  *   reach       投掷射程 7 + 等级偏移 + 特攻偏移（等级与特攻越高扔得越远）。
  *   throwSpeed  飞行速度 0.8 + 速度偏移（腿快的个体扔得急）。
+ *   collisionRadius 粉团半径 0.24 × (身高 / 1.4)（夹 0.18..0.45），决定它多容易在半途被第三具身体接住。
  *   tempo／settle／recharge 起手／收招／冷却随速度；偏回复冷却略长。
  *
- * 配置 `nurture`（偏回复）：开启＝回复比例 ×1.3、散开半径 ×1.05，代价爆炸威力 ×0.8、冷却更长；
+ * 配置 `nurture`（偏回复）：开启＝回复比例 ×1.3，代价爆炸威力 ×0.8、冷却更长；
  *   关闭（偏伤害）＝爆炸威力 ×1.25，代价回复比例 ×0.75。
  * 配置 `helpFriends`（照看同伴）：开启时伙伴 AI 会把团子扔向受伤的同伴；关闭则只顾自己与敌人。
  *
@@ -39,7 +39,7 @@ namespace PokemonSkills {
                 .clamp(50, 220).round(1),
             "爆炸威力", {
                 unit: "威力",
-                description: "花粉团落在敌人身上时炸开的基础威力；特攻越高、等级越高越重，偏伤害取向更高。对手特防、相性与暴击在命中时另算。"
+                description: "粉团撞在敌人身上时炸开的基础威力；特攻越高、等级越高越重，偏伤害取向更高。对手特防、相性与暴击在命中时另算。"
             }),
         /** 回复比例：0.46 + 亲密度偏移[−0.06,0.12] + 特攻偏移[−0.05,0.1]；偏回复 ×1.3 / 偏伤害 ×0.75；夹 0.2..0.75。 */
         mend: percent(
@@ -48,18 +48,7 @@ namespace PokemonSkills {
                 .plus(F.stat("specialAttack").minus(70).times(0.0006).clamp(-0.05, 0.1))
                 .times(F.when(F.pref("nurture"), F.const(1.3), F.const(0.75)))
                 .clamp(0.2, 0.75).round(3),
-            "回复比例", "花粉团落在同伴（或自己）身上时，恢复其最大生命的这个比例；亲密度越高、特攻越强，花粉越滋养。满血的人不再受益。"),
-        /** 散开半径：1.9 + 身高偏移[−0.3,1.0] + 等级(≥30)偏移[0,0.6]；偏回复 ×1.05 / 偏伤害 ×1.0；夹 1.4..3.2。 */
-        burstRadius: formula(
-            F.base(1.9)
-                .plus(F.body("height").minus(1.4).times(0.5).clamp(-0.3, 1.0))
-                .plus(F.level().minus(30).times(0.02).clamp(0, 0.6))
-                .times(F.when(F.pref("nurture"), F.const(1.05), F.const(1.0)))
-                .clamp(1.4, 3.2).round(2),
-            "散开半径", {
-                unit: "格",
-                description: "团子落地散开多大一圈；圈内敌人挨炸、同伴回血。身形高、等级高的个体散得开，偏回复时略大。"
-            }),
+            "回复比例", "粉团撞在未满血的同伴（或自己）身上时，恢复其最大生命的这个比例；亲密度越高、特攻越强，花粉越滋养。满血的人不再受益。"),
         /** 投掷射程：7 + 等级(≥30)偏移[0,2.4] + 特攻偏移[−1,1.8]；夹 5..11。 */
         reach: formula(
             F.base(7).plus(F.level().minus(30).times(0.08).clamp(0, 2.4))
@@ -73,7 +62,14 @@ namespace PokemonSkills {
             F.base(0.8).plus(F.stat("speed").minus(60).times(0.003).clamp(-0.15, 0.35)).clamp(0.6, 1.4).round(2),
             "飞行速度", {
                 unit: "格/刻",
-                description: "团子飞行每刻走多远；腿快的个体扔得急，飞得平而快。"
+                description: "团子飞行每刻走多远；腿快的个体扔得急，飞得平而快，更不容易被半途的人接住。"
+            }),
+        /** 粉团半径：0.24 × (身高 / 1.4)；夹 0.18..0.45。 */
+        collisionRadius: formula(
+            F.base(0.24).times(F.body("height").div(1.4)).clamp(0.18, 0.45).round(2),
+            "粉团半径", {
+                unit: "格",
+                description: "团子自身的碰撞半径，决定它多容易在半途被第三具身体接住；身量大的个体团子也大。"
             }),
         /** 起手：8 刻 − 速度偏移[−2,4]；夹 5..12。 */
         tempo: seconds(
@@ -87,9 +83,7 @@ namespace PokemonSkills {
         recharge: seconds(
             F.base(24).minus(F.stat("speed").minus(60).times(0.1).clamp(-4, 6))
                 .plus(F.when(F.pref("nurture"), F.const(6), F.const(0))).clamp(16, 38).round(0),
-            "冷却", "两次花粉团之间的等待；速度快的个体回得更快，偏回复更费。"),
-        collisionRadius: hidden(0.24),
-        maxTargets: hidden(5)
+            "冷却", "两次花粉团之间的等待；速度快的个体回得更快，偏回复更费。")
     });
 
     defineDamage("pollenpuff", "blast", {});
@@ -100,7 +94,7 @@ namespace PokemonSkills {
 
     describe("pollenpuff", [
         { key: "description.0", values: ["blast","mend"] },
-        { key: "description.1", values: ["burstRadius","reach","maxTargets"] },
+        { key: "description.1", values: ["reach"] },
         { key: "description.2", values: ["throwSpeed","tempo"] },
         { key: "nurture.on", values: [], when: function (context) { return read(context.detail.values, ["nurture"]) === true; } },
         { key: "nurture.off", values: [], when: function (context) { return read(context.detail.values, ["nurture"]) !== true; } },

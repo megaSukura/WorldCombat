@@ -5,9 +5,9 @@
  * 这是全族里唯一按比例结算的招：对满血厚目标最狠，越到残血越无力，所以它的位置在开场与破盾。
  *
  * 两幕：
- *   起（windup，提交前）：门牙并拢，在施法者与目标之间牵起一条量线，量线的读数是目标当前生命。
- *   咬（pounce → bite / sever）：提交后沿直线扑出，咬中的一刻直接按目标当前生命结算半分伤害，
- *       命中处炸开骨白牙影与迸溅；咬住 holdTicks 后松口收势。目标残血时这一口自然也轻。
+ *   起（windup，提交前）：门牙并拢，在施法者与目标之间牵起一条量线，量线的读数与刻度就是目标当前生命。
+ *   咬（pounce → bite / sever）：提交后沿直线扑出，咬中的一刻直接按目标当前生命的一半结算，
+ *       命中处炸开骨白牙影与迸溅，浮字报的是这一口**实际削去**的生命；咬住 holdTicks 后松口收势。
  *
  * 与同族分开：咬碎研磨压塌护甲、必杀门牙钳住猛甩、贝壳刃横扫削甲；只有愤怒门牙削掉一半生命。
  */
@@ -39,11 +39,11 @@ namespace PokemonSkills {
         recover: 8,
         cooldown: 34,
         style: "bite",
-        defaults: { patient: false, ai: { maxChase: 7, halfAt: 0.35 } },
+        defaults: { ai: { maxChase: 7, halfAt: 0.35 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p("superfang", "grip", pokemon) : 0.4) * 1.5, geometry: "line", style: "bite",
-                color: 0xE8DCA0, label: config && config.patient === true ? "潜咬式" : "掠咬式" };
+                color: 0xE8DCA0, label: "愤怒门牙" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon: pokemon, skill: skills["superfang"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -61,10 +61,12 @@ namespace PokemonSkills {
             const target = action.target();
             if (target !== null) {
                 const body = action.sense().observe(target);
+                const health = body === null ? 0 : body.health();
+                const maximum = body === null || !(body.maxHealth() > 0) ? 1 : body.maxHealth();
                 action.present("world_combat:superfang:measure", superfangScene, 1, action.origin(),
                     JSON.stringify({ moment: "measure", target: String(target.ref()),
                         path: [String(action.actor().ref()), String(target.ref())],
-                        gap: body === null ? 0 : Math.round(body.health()) }));
+                        gap: Math.round(health), gauge: Math.max(3, Math.min(12, Math.round(health / maximum * 12))) }));
             }
             return prepare;
         },
@@ -96,17 +98,26 @@ namespace PokemonSkills {
                 movementScenes.stop(current);
                 const scope = current.world();
                 const victimRef = String(victim.ref());
+                const before = scope.observe(victim);
                 const amount = superfangDamage(current, config, victim);
                 const landed = superfangRawHit(current, victim, amount, true);
+                if (!landed) {
+                    // 原生拒绝（免疫／防护）：真实咬到但没有削血，只散一撮屑，不死冒牙闪、不报削血。
+                    WorldFeedback.emit(scope, superfangScene, 1, at, { moment: "miss", scale: scale }, 20);
+                    sound(current, "minecraft:entity.player.attack.sweep");
+                    finish(current); return;
+                }
+                // 浮字与崩屑读这一口实际削去的生命，而不是公式里的拟伤害。
+                const after = scope.valid(victim) ? scope.observe(victim) : null;
+                const severed = Math.max(0, Math.round(((before ? before.health() : 0) - (after ? after.health() : 0)) * 10) / 10);
                 WorldFeedback.emit(scope, superfangScene, 1, at,
-                    { moment: "bite", target: victimRef, morsels: Math.max(10, Math.min(90, Math.round(amount * 0.7))), scale: scale }, 24);
+                    { moment: "bite", morsels: Math.max(10, Math.min(90, Math.round(amount * 0.7))), scale: scale }, 24);
                 sound(current, "cobblemon:move.superfang.target");
-                if (!landed || !scope.valid(victim)) { finish(current); return; }
                 WorldFeedback.emit(scope, superfangScene, 1, at,
-                    { moment: "sever", target: victimRef, severed: Math.round(amount),
-                        shards: Math.max(12, Math.min(70, Math.round(amount * 0.6))), scale: scale,
-                        intensity: Math.max(0.5, Math.min(2.2, amount / 18)) }, 28);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), superfangSeverText, [Math.round(amount)], 28);
+                    { moment: "sever", severed: Math.round(severed),
+                        shards: Math.max(12, Math.min(70, Math.round(severed * 1.2))), scale: scale,
+                        intensity: Math.max(0.5, Math.min(2.2, severed / 18)) }, 28);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), superfangSeverText, [Math.round(severed)], 28);
                 sound(current, "cobblemon:impact.normal");
                 current.after(hold, function (next: CombatAction) { finish(next); });
             }
@@ -122,8 +133,10 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && scope.valid(target) && !scope.friendly(target)) { latch(current, target, hit.position()); return; }
+                    // 首体是友方或已离场：止步、不咬，也不盲目沿剩余向量继续推。
+                    whiff(current, hit.position()); return;
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
+                const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p("superfang", "minimumMove", current) || travelled >= length) { whiff(current, origin); return; }
                 current.after(1, advance);

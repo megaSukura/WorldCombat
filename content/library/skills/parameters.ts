@@ -69,6 +69,13 @@ namespace PokemonSkills {
         }));
     }
     export type ParameterSource = NumberContext | FactContext | CombatAction | CombatWorld | CombatEffect | CombatPokemon;
+    var invocationContexts: NumberContext[] = [];
+    /** A synchronous catalogue callback supplies the inspected individual's preferences to its legacy
+     * bare-individual parameter reads. Explicit fact scopes and other individuals remain independent. */
+    export function withParameterContext<T>(context: NumberContext, read: () => T): T {
+        invocationContexts.push(context);
+        try { return read(); } finally { invocationContexts.pop(); }
+    }
     export interface GrowthStage { level: number; values: { [key: string]: number }; }
     var growthStages: { [id: string]: GrowthStage[] } = Object.create(null);
     export function readState(context: FactContext, id: string): any {
@@ -77,13 +84,16 @@ namespace PokemonSkills {
     }
     /**
      * 原生招式目录的上下文：现场 actor 属于 Cobblemon；通用行为体公式使用 factsOf(source)。
-     * 动作／世界／效果提供现场与当前偏好；只传 CombatPokemon 时使用该招默认偏好，现场事实缺省。
+     * 动作／世界／效果提供现场与当前偏好；目录预览回调内只传当前个体时继承该次查看的配置，回调外使用默认偏好。
      * 部分 FactContext 按现场补齐原生个体、偏好与属性；显式提供的招式、配置与事实继续沿用。
      * resolve／indicator 已拿到配置时，可显式传 NumberContext（detail.values 放这份配置）；
      * world、actor 只在有现场时提供。配置与世界输入在每次求值时读取，公式只缓存结构。
      */
     export function parameterContext(id: string, source: ParameterSource): NumberContext {
-        const scope = factContext(source);
+        let scope = factContext(source);
+        const invocation = invocationContexts[invocationContexts.length - 1];
+        if (invocation && invocation.skill.id === id && typeof (<CombatPokemon>source).level === "function"
+            && String((<CombatPokemon>source).id()) === String(invocation.pokemon.id())) scope = invocation;
         requirePokemon(scope);
         const world = scope.world || null, actor = scope.actor || null;
         // Casting reads a handful of numbers per tick; the individual storage and the preference config are

@@ -38,7 +38,7 @@ Smoke.scenario("stealthrock", function (stage) {
                 var still = stage.damageTo(heavy);
                 stage.expect(stage.damageTo(flyer) > 0, "the floating ghast triggered a hovering rock and was struck");
                 stage.expect(still <= entry + 0.01, "standing still in the stone field takes no further rock");
-                stage.note("only the entrance shot lands on a stationary target; a real projectile must touch it, so misses, wall hits, rock matchup and crits are positional/random. The field holds six slots and refills one after stoneInterval.", {
+                stage.note("only the entrance shot lands on a stationary target; a real projectile must touch it, so misses, wall hits, rock matchup and crits are positional/random. The field holds six slots and refills one after stoneInterval; when the nearest stone is walled off it tries the next clear rail. Before forming, the site is backed off the contacted face and all six rails are checked clear, so a wall- or ceiling-jammed spot does not form.", {
                     casts: stage.casts("stealthrock", caster),
                     golemEntry: Math.round(entry * 10) / 10,
                     golemStill: Math.round(still * 10) / 10,

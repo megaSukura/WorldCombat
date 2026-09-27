@@ -7,6 +7,7 @@
  * 翻译：把「强大的念力」落成一记**抓住并操纵**的重手——先在目标身上收拢一团紫靛的念力、把它按在原地，
  * 在短暂的操纵窗口里持续瞄准把念力锚点拖到初始目标周围，目标就被朝锚点带；松手前狠狠一挤。
  * 它是本组最重、最慢、最贵的一发，身份是「握」：抓住、定住、拖到一边、压特防。
+ * 定身是一份由本招 carrier（`world_combat:psychic_grip`）托管的短租约，随动作结束/松手/取消收回，只撤本次来源。
  * 相对于念力（便宜快发的骚扰弹），精神强念是看得见的短控制重击。
  *
  * 数据分散（每项读不同的精灵数据）：
@@ -29,6 +30,8 @@
 namespace PokemonSkills {
     export const psychicId = "psychic";
     export const psychicScene = "world_combat:move_psychic";
+    /** 持续操纵轮廓的自定义客户端场景（锚点、剩余拖移预算、抗推张力）。 */
+    export const psychicGripScene = "world_combat:move_psychic_grip";
     export const psychicGripText = "world_combat.move.psychic.text.grip";
     export const psychicSunderText = "world_combat.move.psychic.text.sunder";
     export const psychicSqueezeText = "world_combat.move.psychic.text.squeeze";
@@ -71,7 +74,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(30).times(1.2).clamp(0, 40))
                 .times(F.when(F.pref("hold"), F.const(1.5), F.const(1)))
                 .clamp(40, 140).round(0),
-            "定身时长", "目标被念力按在原地的时长；等级越高按得越久，缠握式按得更久。挤压要在它还被困住时才落下。"),
+            "定身时长", "目标被念力按在原地的时长上限；本次定身由本招 carrier 托管，松手、断视线、被取消或驱散会提前收回，最长不超过这个数。等级越高按得越久，缠握式按得更久。挤压要在它还被困住时才落下。"),
         /** 拖拽距离：1.1 + 特攻偏移[−0.2,0.9]，缠握 ×1.2；夹 0.6..2.6。 */
         drag: formula(
             F.base(1.1)
@@ -80,7 +83,7 @@ namespace PokemonSkills {
                 .clamp(0.6, 2.6).round(2),
             "拖拽距离", {
                 unit: "格",
-                description: "抓住后念力锚点能移动到初始目标周围的范围，同时也是整场操纵里目标最多被推走的总距离；特攻越高拉得越远，缠握式更用力。体型越大的目标抵抗越强，运行时按它的身高折减。"
+                description: "抓住后念力锚点能移动到初始目标周围的范围，同时也是整场操纵里目标最多被推走的总距离；特攻越高拉得越远，缠握式更用力。没有手动瞄准时锚点朝向推离自己的一侧，把目标挪开而不是拉近。体型越大的目标抵抗越强，运行时按它的身高折减。"
             }),
         /** 特防下降概率：10% + 特攻偏移[−4%,12%] + 等级偏移[0,5%]，缠握 ×1.3；夹 8%..36%。 */
         sunderChance: percent(

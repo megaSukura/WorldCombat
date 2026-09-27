@@ -20,8 +20,6 @@
   "worldcombat.skill.stringshot.preference.silk.help": "On: the strand spreads a slightly larger sticky web on the surface it first strikes, with longer reach, but no pin and a slower windup and longer cooldown. Off: bind one target with a fast shot that also pins it briefly. Both postures only leave a web when the strand actually strikes a surface.",
   "worldcombat.skill.stringshot.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.stringshot.preference.ai.maxChase.help": "The companion only considers a strand while a threat is within this many blocks; smaller keeps it at point-blank, larger starts earlier.",
-  "worldcombat.skill.stringshot.preference.ai.minFoes": "Net minimum",
-  "worldcombat.skill.stringshot.preference.ai.minFoes.help": "In Net posture the companion only spins the larger patch with at least this many enemies around the target; 1 means lay it on sight.",
   "worldcombat.skill.stringshot.preference.ai.runnersOnly": "Runners only",
   "worldcombat.skill.stringshot.preference.ai.runnersOnly.help": "In Bind posture, when on, the companion only strands fleeing threats to hold them; off, it will strand any threat in range.",
   "worldcombat.skill.stringshot.preference.ai.leaveStation": "Leave station",

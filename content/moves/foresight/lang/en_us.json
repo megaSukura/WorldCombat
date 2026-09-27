@@ -26,6 +26,7 @@
   "world_combat.move.foresight.text.read": "Foreseen (%1$s s of a solid form)",
   "world_combat.move.foresight.text.fade": "Foresight fades",
   "world_combat.move.foresight.text.blocked": "Sight blocked, nothing seen through",
+  "world_combat.move.foresight.text.warded": "The mark will not take hold",
   "world_combat.move.foresight.text.empty": "No target to see through",
   "effect.world_combat.foresight_mark": "Foreseen",
   "worldcombat.skill.foresight.description.release": "When the window runs out or the mark is removed, the stripped evasion is returned as it was and the mark fades; a new casting returns the previous strip first, so the same evasion is never deducted and restored twice over."

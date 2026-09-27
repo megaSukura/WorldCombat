@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.jetpunch.summary": "Stand still and squeeze a torrent onto the fist: a nearly instant straight punch whose reach is extended by the water lance. A hit soaks the target, drives it back along the jet and puts out a burning target's flames. An explicitly selected burning ally is only doused, taking no damage. The hammer form bursts on contact and shoves the target further.",
+  "worldcombat.skill.jetpunch.summary": "Stand still and squeeze a torrent onto the fist: a nearly instant straight punch whose reach is extended by the water lance. A hit soaks the target, drives it back along the jet and puts out a burning target's flames (the burn status or plain fire). An explicitly selected burning ally is only doused, taking no damage. The hammer form bursts on contact and shoves the target further.",
   "worldcombat.skill.jetpunch.use.0": "An instant heavy first punch at point-blank range",
   "worldcombat.skill.jetpunch.use.1": "Soak a target and shove it off its spot",
-  "worldcombat.skill.jetpunch.use.2": "Put out a burning ally's flames (select the ally explicitly, no damage)",
+  "worldcombat.skill.jetpunch.use.2": "Put out a burning ally's flames (fire or burn; select the ally explicitly, no damage)",
   "worldcombat.skill.jetpunch.description.0": "The water-clad punch deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.jetpunch.description.1": "It reaches %1$s blocks (the torrent extends the fist) and shoves the target about %2$s blocks along the punch.",
-  "worldcombat.skill.jetpunch.description.2": "A hit soaks the target for %1$s, lowering its movement speed by 6%% while wet; if the target is carrying a burn, the punch cures it and puts out its flames.",
+  "worldcombat.skill.jetpunch.description.2": "A hit soaks the target for %1$s, lowering its movement speed by 6%% while wet; if the target is carrying fire (the burn status or plain flames), the punch cures the burn and puts out its flames.",
   "worldcombat.skill.jetpunch.hammer.on": "Hammer form: the torrent bursts on contact, shoving 1.7x further with a wider hit and pushing the target away; in exchange 0.9x power, 0.4 blocks less reach, a shorter soak and 6 ticks more cooldown.",
   "worldcombat.skill.jetpunch.hammer.off": "Lance form: longer, heavier and soaking longer, but it shoves less.",
   "worldcombat.skill.jetpunch.timing": "Cast within %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -36,5 +36,5 @@
   "worldcombat.skill.jetpunch.preference.ai.preserveBurn": "Preserve burn",
   "worldcombat.skill.jetpunch.preference.ai.preserveBurn.help": "On: lowers priority against burned enemies to preserve ongoing damage. Pushback and finishing attacks remain available. Off: ranks by ordinary attack value.",
   "worldcombat.skill.jetpunch.preference.ai.cureAllies": "Douse allies",
-  "worldcombat.skill.jetpunch.preference.ai.cureAllies.help": "On: when a burning ally is within reach, the AI walks over and douses the flames with a water punch (extinguish only, no damage); off: the punch is used only in the attack branch."
+  "worldcombat.skill.jetpunch.preference.ai.cureAllies.help": "On: any burning ally (plain flames or the burn status) makes the AI walk over and douse the flames with a water punch (extinguish only, no damage); off: the punch is used only in the attack branch."
 }

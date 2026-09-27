@@ -29,7 +29,7 @@ Smoke.scenario("fly", function (stage) {
             stage.expect(stage.damageTo(prey) > 0, "the overhead drop damaged the target");
             stage.expect(stage.travelled(flier) > 1, "fly carried the user up and over to the landing");
             stage.expect(stage.hadMobEffect(flier, "world_combat:fly_airborne"), "the user carried the airborne status while hovering");
-            stage.note("the drop is a contact hit from above; a target that walks out of the tracked spot before the dive, or ducks under a roof that blocks the descent line, makes it miss. Variables: damage roll and crit, whether the target survives, the height actually reached, and how many hovers it took to line up.", {
+            stage.note("the drop is a contact hit from above and its power follows the highest point the body actually reached; a pinned ring lands on the real ground under the spot, a target that walks out of the tracked spot before the dive misses, a target above the user is never chased upward, and a roof that clips the descent line blocks it. Variables: damage roll and crit, whether the target survives, the height actually reached, and how many hovers it took to line up.", {
                 casts: stage.casts("fly", flier),
                 damageToPrey: Math.round(stage.damageTo(prey) * 10) / 10,
                 flierTravelled: Math.round(stage.travelled(flier) * 10) / 10,

@@ -11,8 +11,8 @@
  *     并挂上共享身份 world_combat:status/cowed 的「气短」标记；表现用的锥形顶点与判定读同一份形状。
  *
  * 选取是 `kind: "aim"`：可以锁定锥内的一个敌人，也可以只朝一条通道/一个方向吼。方向、点、空放都成立，
- * 提交时不要求存在敌人；攻击权限与目标关系不影响这一吼，锥内谁是非友方就压谁。声音按既定策略穿墙，
- * 所以不需要视线，表现里也不加根束之类的控制——被吼到的人照常走动出手。
+ * 提交时不要求存在敌人；攻击权限与目标关系不影响这一吼，锥内谁是非友方就压谁。声压沿锥面推出，但需要
+ * 一条从喉咙到目标的可达声路：被墙挡住的目标听不到，也不会被标记。表现里不加根束之类的控制——被吼到的人照常走动出手。
  *
  * 与同族分开：本组里唯一作用于身前一片、且唯一的声波招；其余三招都只碰自己人。
  */
@@ -89,12 +89,17 @@ namespace PokemonSkills {
             const region = WorldGeometry.sector(origin, heading, reach, arc, { below: 2, above: 3 });
             let hits = 0;
             WorldGeometry.selectEnemies(world, region, function (target, facts) {
-                NativeEffects.boost(world, target, "atk", -cow);
-                NativeEffects.boost(world, target, "spa", -cow);
+                // 声压沿地面推出，但被墙挡住的目标听不到：从喉咙到目标要有一条可达的声路。
+                const point = facts.position();
+                if (!world.clear(origin, point)) return;
+                // 真正压低双攻才算吼到；被免疫或已触底的候选不算成功，也不沉降标记。
+                const attack = NativeEffects.boost(world, target, "atk", -cow);
+                const special = NativeEffects.boost(world, target, "spa", -cow);
+                if (attack === 0 && special === 0) return;
                 MobEffects.apply(world, target, nobleroarCowed, falter, 0);
                 hits++;
-                WorldFeedback.emit(world, nobleroarScene, 1, facts.position(),
-                    { moment: "cowed", target: String(target.ref()), cow: cow, intensity: Math.min(2, cow) }, 26);
+                WorldFeedback.emit(world, nobleroarScene, 1, point,
+                    { moment: "cowed", target: String(target.ref()), cow: cow, attack: attack, special: special, intensity: Math.min(2, cow) }, 26);
             });
             WorldFeedback.emit(world, nobleroarScene, 1, origin,
                 { moment: "roar", path: path, reach: reach, arc: arc, halfArc: arc / 2, volume: volume,

@@ -20,8 +20,10 @@ public final class NativeScrollerChecks {
         public static boolean groupDisplayed(String label){
             int epoch=++styleEpoch;
             opened.selfAndAllChildren().forEach(element->element.getStyleBag().compute(epoch));
-            return opened.selfAndAllChildren().filter(element->element instanceof com.lowdragmc.lowdraglib2.gui.ui.elements.Label text&&text.getText().getString().equals(label))
-                .findFirst().orElseThrow().getParent().isDisplayed();
+            var found=opened.selfAndAllChildren().filter(element->element instanceof com.lowdragmc.lowdraglib2.gui.ui.elements.Label text&&text.getText().getString().equals(label))
+                .findFirst().orElseThrow();
+            for(var current=found;current!=null;current=current.getParent())if(!current.isDisplayed())return false;
+            return true;
         }
         public static void click(String text)throws Exception {
             var queue=new ArrayDeque<UIElement>();queue.add(opened);
@@ -46,7 +48,7 @@ public final class NativeScrollerChecks {
         System.out.println("PASS locked LDLib ScrollerView: reproduced ambiguous field/method access; native consumer exposes usable UIElement");
         for(var type:List.of(NativeEditorHost.class,Button.class,com.lowdragmc.lowdraglib2.gui.ui.elements.Label.class,
                 com.lowdragmc.lowdraglib2.gui.ui.data.ScrollerMode.class,com.lowdragmc.lowdraglib2.gui.ui.data.TextWrap.class,
-                com.lowdragmc.lowdraglib2.gui.ui.data.Tooltips.class,com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture.class,ArrayList.class,
+                com.lowdragmc.lowdraglib2.gui.ui.data.Tooltips.class,com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.class,com.lowdragmc.lowdraglib2.gui.texture.SDFRectTexture.class,ArrayList.class,
                 dev.worldcombat.core.client.ClientCallbacks.class,dev.worldcombat.core.client.UiText.class,
                 dev.worldcombat.core.client.UiPreferences.class,dev.worldcombat.core.client.RichTextLabel.class))context.addToScope(scope,type.getSimpleName(),type);
         context.evaluateString(scope,Files.readString(Path.of(script)),"production-native-editor",1,null);

@@ -25,7 +25,8 @@ namespace PokemonSkills {
             const grudge = retaliateGrudge(self.ref);
             if (!grudge) return proposed;
             const killer = CompanionBehavior.entity(context, grudge);
-            if (killer === null || killer.health <= 0) return proposed;
+            // 只追当前真的活着、看得见的凶手；记不到就照原目标走，靠快照不再查询死者。
+            if (killer === null || killer.health <= 0 || killer.visible !== true) return proposed;
             if (CompanionBehavior.distance(self.point, killer.point) > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return proposed;
             if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(killer.point))) return proposed;
             return killer;

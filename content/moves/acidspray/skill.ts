@@ -6,8 +6,9 @@
  *
  * 三幕：
  *   起（windup，提交前）：喉间与口边聚起酸滴（`action.present` 预告，不碰世界）。
- *   喷（execute）：以施法者为顶点的楔形里每个敌人各结算一次 `core` 伤害，并在真的被淋到时
- *       `NativeEffects.boost(..., "spd", -2)`；判定与画面共用同一组楔角、射程顶点。
+ *   喷（execute）：从身体前部（口边）朝瞄准方向瞬间铺开一块短而宽的楔形；每个真正淋到、
+ *       且与口边之间没有被墙挡住的敌人各结算一次 `core` 伤害并 `NativeEffects.boost(..., "spd", -2)`。
+ *       判定用 `WorldGeometry.sector`，画面用同一组射程／张角，从身体前部向外喷；瞬发所以同刻完成。
  *   散：喷完即止，余雾很快散掉——不驻留、不重复伤害、也不继续掉防。
  *
  * 选取 `kind: "aim"`：自由方向近喷，也能直接点实体；空喷照喷（`target` 为 null 时沿提交朝向），
@@ -18,17 +19,6 @@
 namespace PokemonSkills {
     const acidsprayScene = "world_combat:move_acidspray";
     const acidspraySunderText = "world_combat.move.acidspray.text.sunder";
-
-    /** 把判定的水平扇区采样为世界顶点，喷淋面与轮廓共用。 */
-    function acidsprayPath(origin: CombatPoint, direction: CombatPoint, range: number, angle: number): number[][] {
-        const path = [[origin.x(), origin.y(), origin.z()]], steps = Math.max(3, Math.ceil(angle / 5));
-        for (let i = 0; i <= steps; i++) {
-            const turn = (i / steps - 0.5) * angle * Math.PI / 180, cos = Math.cos(turn), sin = Math.sin(turn);
-            path.push([origin.x() + (direction.x() * cos - direction.z() * sin) * range, origin.y(),
-                origin.z() + (direction.x() * sin + direction.z() * cos) * range]);
-        }
-        return path;
-    }
 
     define({
         id: "acidspray",
@@ -46,8 +36,9 @@ namespace PokemonSkills {
         defaults: { focus: false, ai: { maxChase: 8, crowd: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("acidspray", "sprayRange", pokemon), geometry: "area", style: "corrosive",
-                color: 0x8FCB3A, label: config && config.focus === true ? "聚焦喷口酸液炸弹" : "宽喷酸液炸弹" };
+            return { radius: p("acidspray", "sprayRange", pokemon), geometry: "cone", orientation: "ground",
+                spread: p("acidspray", "sprayAngle", pokemon), style: "corrosive", color: 0x8FCB3A,
+                label: config && config.focus === true ? "聚焦喷口酸液炸弹" : "宽喷酸液炸弹" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["acidspray"], detail: { values: config },
@@ -79,26 +70,30 @@ namespace PokemonSkills {
             const scale = Math.max(0.5, Math.min(2.4, range / 5.0));
             const intensity = Math.max(0.5, Math.min(2.2, power / 38));
             const direction = [aim.x(), aim.y(), aim.z()];
-            // 雾面贴地画在施法者脚下，与判定的水平楔形使用同一组顶点。
-            const ground = WorldGeometry.ground(world, origin);
-            const path = acidsprayPath(WorldCombat.point(origin.x(), ground.y(), origin.z()), aim, range, angle);
+            // 口边：身体前部、胸口高度；喷淋表现与遮挡判定都从这里出发。
+            const width = body === null ? 0.9 : body.width();
+            const muzzle = origin.plus(aim.scale(Math.max(0.3, width * 0.5))).plus(WorldCombat.point(0, 0.35, 0));
             let hits = 0;
 
             sound(action, "cobblemon:move.acidspray.actor");
             const region = WorldGeometry.sector(origin, aim, range, angle, { below: 2, above: 3 });
             WorldGeometry.selectEnemies(world, region, function (enemy, facts) {
+                // 酸雾不是声波：口边到目标之间真的有墙就淋不到，不算命中。
+                if (WorldGeometry.blockHit(world, muzzle, world.closestPoint(enemy, muzzle))) return;
                 // 只有真的被这一口淋到（伤害许可通过）才掉防、才冒腐蚀光。
                 if (!hurt(action, enemy, "acidspray", power, { damage: damageSpec("acidspray", "core") })) return;
                 hits++;
-                NativeEffects.boost(world, enemy, "spd", -stages);
+                const delta = NativeEffects.boost(world, enemy, "spd", -stages);
                 WorldFeedback.emit(world, acidsprayScene, 1, facts.position(),
                     { moment: "hit", target: String(enemy.ref()), drops: drops, scale: scale, intensity: intensity }, 22);
-                WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), acidspraySunderText, [stages], 30);
+                // 实际被削掉多少才报多少；原生拒绝或已到顶时不发成功提示。
+                if (delta !== 0)
+                    WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), acidspraySunderText, [Math.abs(delta)], 30);
             });
-            // 单次楔面：无论有没有淋到人，这一喷都照画，空喷也有视觉回执。
-            WorldFeedback.emit(world, acidsprayScene, 1, origin,
-                { moment: "spray", path: path, direction: direction, range: range, angle: angle, drops: drops,
-                    intensity: intensity, hits: hits }, 20);
+            // 单次楔面：从口边向外喷，无论有没有淋到人这一喷都照画，空喷也有视觉回执。
+            WorldFeedback.emit(world, acidsprayScene, 1, muzzle,
+                { moment: "spray", point: [muzzle.x(), muzzle.y(), muzzle.z()], direction: direction,
+                    range: range, angle: angle, drops: drops, intensity: intensity, hits: hits }, 20);
             if (hits > 0) sound(action, "cobblemon:move.acidspray.target");
             done(action);
         }

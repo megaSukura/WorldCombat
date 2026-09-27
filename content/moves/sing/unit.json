@@ -20,6 +20,6 @@
     "startup.ts"
   ],
   "mobEffectIcons": {
-    "world_combat:sing_drowsy": "minecraft:mob_effect/slowness"
+    "world_combat:sing_drowsy": "cobblemon:gui/party/status_slp"
   }
 }

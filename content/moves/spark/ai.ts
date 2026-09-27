@@ -1,7 +1,7 @@
 /**
  * 电光 / spark 的伙伴 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 7）格内。射程很短，够不到先贴近。
+ * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 4，即一个够得到的短冲）格内。射程很短，够不到先贴近。
  * 对谁出手：它没有反伤、循环最短，是缠斗里最省的一手——`ai.finish`（默认开）时，生命低于三成五的目标
  * 排最前（这一下有收尾加成），其次是还没麻痹的目标（把麻痹铺开）。
  * 放完之后：接着按共享交战计划追击或换目标，高频重复。
@@ -19,14 +19,14 @@ namespace PokemonSkills {
             if (!target) return true;
             if (!sparkValid(target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 7);
+                <= CompanionBehavior.ai<number>(capability, "maxChase", 4);
         },
         accepts: function (context, capability, target) { return sparkValid(target); },
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point)
-                > CompanionBehavior.ai<number>(capability, "maxChase", 7)) return 0;
+                > CompanionBehavior.ai<number>(capability, "maxChase", 4)) return 0;
             let score = 20;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.35) score += 22;
             if (!CompanionBehavior.status(context, target, "paralysis")) score += 12;

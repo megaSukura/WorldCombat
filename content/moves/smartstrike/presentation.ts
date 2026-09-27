@@ -54,7 +54,7 @@ const SmartstrikeDefinition: ParticleDefinition = {
                     orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
                     shape: { kind: "line", length: 1.4 },
-                    rate: 40, direction: "up", speed: [0.02, 0.1],
+                    rate: 40, direction: "shape", speed: [0.02, 0.1],
                     lifetime: [4, 9], size: [0.24, 0.03], sizeMode: "index",
                     color: 0xEAF1F6, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 130
                 },

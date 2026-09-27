@@ -69,7 +69,6 @@ namespace PokemonSkills {
             const cap = Math.max(1, Math.round(p(nightdazeId, "maxTargets", action)));
             const motes = Math.max(10, Math.round(p(nightdazeId, "motes", action)));
             const eclipse = !!(config && config.eclipse);
-            const scale = Math.max(0.5, Math.min(2.2, radius / 4.2));
             const intensity = Math.max(0.5, Math.min(2.2, power / 85));
             const struck: { [ref: string]: boolean } = {};
             let step = 0, hits = 0, settled = false;
@@ -80,7 +79,7 @@ namespace PokemonSkills {
                 const scope = current.world();
                 WorldFeedback.emit(scope, nightdazeScene, 1, centre,
                     { moment: hits > 0 ? "settle" : "miss", radius: radius, crest: crest, motes: motes,
-                        scale: scale, hits: hits, intensity: intensity }, 30);
+                        hits: hits, intensity: intensity }, 30);
                 if (hits === 0)
                     WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.1, 0)), nightdazeMissText, [], 24);
                 done(current);
@@ -93,27 +92,35 @@ namespace PokemonSkills {
                     function (enemy, facts) {
                         const ref = String(enemy.ref());
                         if (ref === String(current.actor().ref()) || struck[ref] || hits >= cap) return;
+                        // 暗波被实墙截住：当前波前到不了墙后的人；暗色视觉不赋予穿墙新优势。
+                        if (!scope.clear(centre, facts.position())) return;
                         struck[ref] = true;
                         if (!hurt(current, enemy, nightdazeId, power, { damage: damageSpec(nightdazeId, "surge") })) return;
                         hits++;
-                        let shrouded = false;
+                        // 只有实际降了命中或载体真的挂上才报「罩住」，被免疫/封顶时不假装成功。
+                        let carried = false, lost = 0;
                         if (scope.valid(enemy) && scope.random() < chance) {
-                            shrouded = true;
-                            NativeEffects.boost(scope, enemy, "accuracy", -stages);
-                            MobEffects.apply(scope, enemy, nightdazeEffect, shroud, 0);
+                            const dropped = NativeEffects.boost(scope, enemy, "accuracy", -stages);
+                            if (dropped < 0) lost = -dropped;
+                            carried = MobEffects.apply(scope, enemy, nightdazeEffect, shroud, 0) !== null;
+                            if (carried && scope.effects(enemy, nightdazeLinger).length === 0)
+                                scope.effect(nightdazeLinger, enemy, "{}", Math.max(1, Math.min(2400, shroud)));
                         }
                         const away = facts.position().minus(centre);
                         if (scope.valid(enemy) && away.length() > 0.2)
-                            scope.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                            scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                         WorldFeedback.emit(scope, nightdazeScene, 1, facts.position(),
-                            { moment: "hit", target: ref, stages: stages, shrouded: shrouded ? 1 : 0,
-                                motes: motes, intensity: intensity, scale: scale }, 26);
-                        if (shrouded)
-                            WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), nightdazeShroudText, [stages], 32);
+                            { moment: "hit", target: ref, stages: lost, shrouded: carried ? 1 : 0,
+                                motes: motes, intensity: intensity }, 26);
+                        if (carried)
+                            WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), nightdazeShroudText, [lost > 0 ? lost : stages], 32);
+                        else if (lost > 0)
+                            WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), nightdazeAimText, [lost], 32);
                     });
+                // 只在当前波前显示暗波：radius 就是本层真实世界半径，不再叠 scale；keep 续到末步后由反馈实例收尾。
                 WorldFeedback.keep(scope, "nightdaze:wave:" + String(current.actor().ref()), nightdazeScene, 1, centre,
-                    { moment: "wave", radius: outer, crest: crest, motes: motes, scale: scale,
-                        progress: (step + 1) / steps, eclipse: eclipse ? 1 : 0 }, 12);
+                    { moment: "wave", radius: outer, crest: crest, motes: motes,
+                        progress: (step + 1) / steps, eclipse: eclipse ? 1 : 0 }, 16);
                 step++;
                 if (step >= steps) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
@@ -121,32 +128,44 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:entity.warden.sonic_boom");
             WorldFeedback.emit(world, nightdazeScene, 1, centre,
-                { moment: "burst", radius: radius, crest: crest, motes: motes, scale: scale, intensity: intensity }, 30);
+                { moment: "burst", crest: crest, motes: motes, intensity: intensity }, 30);
             advance(action);
         }
     });
 
-    // 黑暗散去（或被外力清掉）：在目标身上补一记「见光」，让笼罩有明确的结束。
+    // 笼罩存续的托管窗口：每次巡检读当前 carrier（刷新自然拿到最新 revision），头顶暗尘绑在窗口自己身上；
+    // 窗口随载体到期、被牛奶／`/effect clear`清掉或载体被替换时结束，不留失效锚或驱散后的残留。
+    function nightdazeLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, nightdazeEffect);
+        if (carrier === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "linger", nightdazeScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()), motes: 10 });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 12, "{}");
+    }
+    WorldCombat.effect(nightdazeLinger, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid night daze linger mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(nightdazeLinger, "start", nightdazeLingerWatch);
+    WorldCombat.effectHandler(nightdazeLinger, "watch", nightdazeLingerWatch);
+    WorldCombat.effectHandler(nightdazeLinger, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    // 黑暗散去（或被外力清掉）：立即撤掉托管窗口，再在目标身上补一记「见光」，让笼罩有明确的结束。
     WorldCombat.on("world_combat:move_nightdaze/clear", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== nightdazeEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        world.effects(actor, nightdazeLinger).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, nightdazeScene, 1, body.position(),
             { moment: "clear", target: String(actor.ref()), cause: String(data.cause || "") }, 18);
-    });
-
-    // 笼罩期间，目标头顶维持一圈缓慢翻涌、慢慢散开的暗尘：少而稳，让出本体视线。
-    WorldCombat.on("world_combat:move_nightdaze/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== nightdazeEffect || event.world().tick() % 12 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "nightdaze:shroud:" + String(actor.ref()), nightdazeScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()), motes: 10 }, 40);
     });
 }

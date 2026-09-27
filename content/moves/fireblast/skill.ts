@@ -1,7 +1,7 @@
 /**
  * 大字爆炎 / fireblast 的出手方式。
  *
- * 核心念头：在空中烧出一个「大」字——先写一横，再顺两撇、两捺把字补全，三笔依次点亮；字成形的一瞬，
+ * 核心念头：在空中烧出一个「大」字——先写一横，再自横上方落下两斜笔（一撇、一捺）把字补全，三笔依次点亮；字成形的一瞬，
  * 每一笔自己爆亮。原生的 85 命中在这里是「这一笔写得正不正」：字心相对瞄准点会在字的平面里偏一点，偏远了
  * 就只擦到边。危险处是**三笔本身**，笔画之间的空隙可以站人；刻印式让同一字形投到地上继续按笔画闷烧。
  *
@@ -35,18 +35,18 @@ namespace PokemonSkills {
         return (r << 16) | (g << 8) | b;
     }
 
-    /** 一个「大」字的三笔：上横、左撇、右捺；轴可选空中的竖直（up）或地上的前进方向。 */
-    function fireblastGlyph(centre: CombatPoint, side: CombatPoint, axis: CombatPoint, size: number): { bar: CombatPoint[]; left: CombatPoint[]; right: CombatPoint[] } {
+    /** 一个「大」字的三笔：上横、左撇、右捺。两斜笔的顶点在横之上，撇捺穿过横再向两侧落下。 */
+    export function fireblastGlyph(centre: CombatPoint, side: CombatPoint, axis: CombatPoint, size: number): { bar: CombatPoint[]; left: CombatPoint[]; right: CombatPoint[] } {
         const s = size * 0.7;
         function at(sx: number, ay: number): CombatPoint { return centre.plus(side.scale(sx * s)).plus(axis.scale(ay * s)); }
         return {
             bar: [at(-0.9, 0.55), at(0.9, 0.55)],
-            left: [at(0, 0.55), at(-0.75, -0.75)],
-            right: [at(0, 0.55), at(0.75, -0.75)]
+            left: [at(0, 0.95), at(-0.75, -0.75)],
+            right: [at(0, 0.95), at(0.75, -0.75)]
         };
     }
 
-    /** 沿一条地面的字笔采样：每个采样点落到真实地表，笔画跨墙时截短。 */
+    /** 沿一条地面的字笔采样：每个采样点落到真实地表，笔画跨墙时在首个墙面处截断，墙后不再接续。 */
     function fireblastGroundPath(world: CombatWorld, from: CombatPoint, to: CombatPoint): number[][] {
         const samples = WorldGeometry.along(from, to, 0.5);
         const points: number[][] = [];
@@ -55,8 +55,8 @@ namespace PokemonSkills {
             let at = WorldGeometry.ground(world, samples[i], 6);
             if (last !== null) {
                 const lift = Math.max(last.y(), at.y()) + 0.2;
-                const clip = world.clipBlocks(WorldCombat.point(last.x(), lift, last.z()), WorldCombat.point(at.x(), lift, at.z()));
-                if (clip !== null && clip.blocked()) at = WorldCombat.point(clip.position().x(), at.y(), clip.position().z());
+                const clip = WorldGeometry.blockHit(world, WorldCombat.point(last.x(), lift, last.z()), WorldCombat.point(at.x(), lift, at.z()));
+                if (clip !== null) { points.push([clip.position().x(), at.y(), clip.position().z()]); break; }
             }
             points.push(fireblastVertex(at));
             last = at;
@@ -97,8 +97,6 @@ namespace PokemonSkills {
             for (let i = 0; i < paths.length; i++) if (paths[i].length >= 2)
                 WorldFeedback.onEffect(world, field.id, "fireblast:mark:" + i, fireblastScene, 1, fireblastPoint(paths[i][0]),
                     { moment: "mark", path: paths[i], thickness: field.data.thickness, color: color, fade: fade, intensity: field.data.markIntensity });
-            if (paths.length) WorldFeedback.onEffect(world, field.id, "fireblast:markground", fireblastScene, 1, fireblastPoint(paths[0][0]),
-                { moment: "markground", markRadius: field.data.cover, markTicks: total, color: color, intensity: field.data.markIntensity });
         }
     }, { identity: WorldEffects.hazard("fireblast"), tags: [WorldEffects.categories.hazard], lineOfSight: false });
 
@@ -160,12 +158,6 @@ namespace PokemonSkills {
             const origin = action.origin();
             // 字心起手锁定：只读一次瞄准点，之后不追目标脚位。
             let centre = action.targetPosition();
-            const toCentre = centre.minus(origin);
-            if (toCentre.length() > 0.01) {
-                // 墙遮断来源到字心：到达点被实墙挡住时，字就写在墙的这一侧。
-                const arrival = world.clipBlocks(origin.plus(WorldCombat.point(0, 0.4, 0)), centre);
-                if (arrival !== null && arrival.blocked()) centre = arrival.position().minus(toCentre.unit().scale(0.35));
-            }
             const flat = WorldCombat.point(centre.x() - origin.x(), 0, centre.z() - origin.z());
             const heading = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
             const side = WorldCombat.point(-heading.z(), 0, heading.x());
@@ -173,9 +165,17 @@ namespace PokemonSkills {
             // 写偏在字所在的平面里发生：字心仍在瞄准的竖直平面上，偏远了只会落进笔画空隙或擦到边。
             const angle = world.random() * Math.PI * 2, offset = world.random() * scatter;
             centre = centre.plus(side.scale(Math.cos(angle) * offset)).plus(up.scale(Math.sin(angle) * offset));
+            // 先偏心、再检来源净空：来源到（已偏心的）字心被实墙挡住时，整个字写在墙的这一侧。
+            const toCentre = centre.minus(origin);
+            if (toCentre.length() > 0.01) {
+                const arrival = WorldGeometry.blockHit(world, origin.plus(WorldCombat.point(0, 0.4, 0)), centre);
+                if (arrival !== null) centre = arrival.position().minus(toCentre.unit().scale(0.35));
+            }
             const air = fireblastGlyph(centre, side, up, glyph);
             const strokes = [air.bar, air.left, air.right];
             const moments = ["bar", "left", "right"];
+            // 同一组真实裁墙后的折线供绘制与判定共用；每笔遇墙停止，其后不再接续。
+            const finalStrokes: CombatPoint[][] = [];
             let index = 0, total = 0, settled = false;
 
             function finish(current: CombatAction): void {
@@ -190,14 +190,15 @@ namespace PokemonSkills {
 
             /** 真实方块把一条笔截短；未知接触保持原笔。 */
             function clipStroke(scope: CombatWorld, segment: CombatPoint[]): CombatPoint[] {
-                const hit = scope.clipBlocks(segment[0], segment[1]);
-                return hit !== null && hit.blocked() ? [segment[0], hit.position()] : segment;
+                const hit = WorldGeometry.blockHit(scope, segment[0], segment[1]);
+                return hit !== null ? [segment[0], hit.position()] : segment;
             }
 
             function paint(current: CombatAction): void {
                 if (index >= strokes.length) { erupt(current); return; }
                 const scope = current.world();
                 const stroke = clipStroke(scope, strokes[index]);
+                finalStrokes[index] = stroke;
                 scenes.show(current, moments[index], stroke[0],
                     { moment: moments[index], path: [fireblastVertex(stroke[0]), fireblastVertex(stroke[1])],
                         direction: [heading.x(), heading.y(), heading.z()], glyph: glyph, thickness: thickness, intensity: intensity });
@@ -208,8 +209,8 @@ namespace PokemonSkills {
 
             function erupt(current: CombatAction): void {
                 const scope = current.world();
-                // 合字：每一笔沿真实笔迹爆亮（与伤害带同厚），另在字心起一撮火星与烟，不铺整圆。
-                const segments = strokes.map(function (stroke: CombatPoint[]) { return clipStroke(scope, stroke); });
+                // 合字：判定与绘制读同一组已经裁墙的笔画，每敌一次；字心只留余烟，不铺整圆。
+                const segments = strokes.map(function (stroke: CombatPoint[], i: number) { return finalStrokes[i] || clipStroke(scope, stroke); });
                 segments.forEach(function (segment: CombatPoint[]) {
                     WorldFeedback.emit(scope, fireblastScene, 1, segment[0],
                         { moment: "flare", path: [fireblastVertex(segment[0]), fireblastVertex(segment[1])],

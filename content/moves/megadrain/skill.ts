@@ -33,14 +33,21 @@ namespace PokemonSkills {
         WorldBodies.spawn(world,at,{appearance:{sprite:"cobblemon:generic/grass/seed",tint:0xA8EA72,glow:true,scale:.5},size:[.22,.22],health:1,gravity:false,pushable:false,invulnerable:true,knockbackResistance:1,silent:true,fireImmune:true},megaDrainReturn,{owner:String(receipt.actor.ref()),amount:amount,age:0,consumed:false,stopped:false},100);
     },{move:"megadrain"});
     WorldCombat.effect(megaDrainAttached,1,160,"actor",json=>json,EffectProtocols.unchanged);
-    WorldCombat.effectHandler(megaDrainAttached,"start",function(effect){const state=JSON.parse(effect.state());effect.schedule("pulse","pulse",state.interval,"{}");});
+    WorldCombat.effectHandler(megaDrainAttached,"start",function(effect){
+        const state=JSON.parse(effect.state());effect.schedule("pulse","pulse",state.interval,"{}");
+        // One owned pod follows the carrier for as long as the effect lives; the latest revision carries the remaining beats.
+        const body=effect.world().observe(effect.target());
+        if(body)WorldFeedback.onEffect(effect.world(),effect.id(),"pod",megaDrainScene,1,body.position(),{moment:"attached",target:String(effect.target().ref()),remaining:state.remaining,beats:state.remaining*4});
+    });
     WorldCombat.effectHandler(megaDrainAttached,"pulse",function(effect){
         const world=effect.world(),data=JSON.parse(effect.state()),owner=world.actor(data.owner),target=effect.target();
         if(!owner||!world.valid(owner)||!world.valid(target)){effect.end();return;}
         const body=world.observe(target);if(!body){effect.end();return;}
         hurt(world,target,"megadrain",data.power,{damage:damageSpec("megadrain","pod"),drain:0,megadrainReturn:data.share} as any);
         WorldFeedback.emit(world,megaDrainScene,1,body.position(),{moment:"pod_pulse",target:String(target.ref()),motes:12},12);
-        if(--data.remaining<=0){effect.end();return;}effect.state(JSON.stringify(data));effect.schedule("pulse","pulse",data.interval,"{}");
+        if(--data.remaining<=0){effect.end();return;}effect.state(JSON.stringify(data));
+        WorldFeedback.onEffect(world,effect.id(),"pod",megaDrainScene,1,body.position(),{moment:"attached",target:String(target.ref()),remaining:data.remaining,beats:data.remaining*4});
+        effect.schedule("pulse","pulse",data.interval,"{}");
     });
     WorldCombat.effectHandler(megaDrainAttached,"operation:world_combat:dispel",effect=>effect.end());
     define({
@@ -81,18 +88,25 @@ namespace PokemonSkills {
         execute:function(action,move,config,done){
             const power=p("megadrain","pod",action),share=p("megadrain","sap",action),speed=p("megadrain","seed",action),latch=p("megadrain","latch",action);
             const waves=Math.max(1,Math.min(3,Math.round(p("megadrain","pulses",action)))),interval=Math.max(4,Math.round(p("megadrain","interval",action)));
-            const scenes=WorldFeedback.actionScenes(megaDrainScene);let settled=false;
-            function finish(current:CombatAction):void{if(settled)return;settled=true;scenes.finish(current,done);}
+            const scenes=WorldFeedback.actionScenes(megaDrainScene);let settled=false,resolved=false;
+            // A natural range-out has no impact callback; read the real removed-projectile point instead of faking a range end.
+            function finish(current:CombatAction):void{
+                if(settled)return;settled=true;
+                if(!resolved){const at=current.world().projectilePosition(flight);if(at)WorldFeedback.emit(current.world(),megaDrainScene,1,at,{moment:"miss",scale:latch/.5,motes:10},16);}
+                scenes.finish(current,done);
+            }
             action.releaseTarget();sound(action,"cobblemon:move.megadrain.actor");
-            const flight=LivingActions.projectile(action,{speed:speed,range:action.range(),radius:.28,
+            // The burst pod's real contact radius is the authored latch; it is not a separate root net.
+            const flight=LivingActions.projectile(action,{speed:speed,range:action.range(),radius:latch,
                 appearance:{sprite:"cobblemon:generic/grass/seed",tint:0x9BD24B,glow:true,scale:1},
                 impact:function(current,hit){
-                    const world=current.world(),target=hit.target(),at=hit.position();scenes.stop(current,"flight");
+                    const world=current.world(),target=hit.target(),at=hit.position();scenes.stop(current,"flight");resolved=true;
                     if(!target||!world.valid(target)||world.friendly(target)){WorldFeedback.emit(world,megaDrainScene,1,at,{moment:"fizzle",scale:latch/.5,motes:16},16);finish(current);return;}
                     const features:any={damage:damageSpec("megadrain","pod"),drain:0,megadrainReturn:share};
                     const landed=impact(current,hit,"megadrain",power,features);
+                    if(!landed){WorldFeedback.emit(world,megaDrainScene,1,at,{moment:"fizzle",scale:latch/.5,motes:16},16);finish(current);return;}
                     WorldFeedback.emit(world,megaDrainScene,1,at,{moment:"burst",target:String(target.ref()),scale:latch/.5,motes:16,waves:waves,wave:1},16);
-                    if(landed && waves>1 && world.valid(target))world.effect(megaDrainAttached,target,JSON.stringify({remaining:waves-1,interval:interval,power:power,share:share,owner:String(current.actor().ref())}),interval*(waves-1)+4);
+                    if(waves>1 && world.valid(target))world.effect(megaDrainAttached,target,JSON.stringify({remaining:waves-1,interval:interval,power:power,share:share,owner:String(current.actor().ref())}),interval*(waves-1)+4);
                     finish(current);
                 }},finish);
             scenes.show(action,"flight",action.origin(),{moment:"fly",projectile:flight,scale:latch/.5,motes:16});

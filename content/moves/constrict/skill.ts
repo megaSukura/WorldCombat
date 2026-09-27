@@ -10,8 +10,11 @@
  *   缠（grow → wrap / wall / miss，提交后）：从当刻身体中心沿释放方向逐段伸出，每段 `action.trace` 判定；
  *       首个有效敌体即结算一次 `squeeze` 接触伤害、挂 trapped 身份的束缚效果、按 speedStages 压速度、
  *       短定身 holdTicks；gripChance 概率再紧一道。墙截停、空放收藤，两者都不结算伤害。
- *   牵（bond，攀缠式）：束缚期间由托管效果维持两端真实连接，跟随双方身体；距离超过 reach+0.9 或中间有实墙
- *       就立即断藤，并只收回本实例自己挂上的束缚、定身与藤（不触碰其他施法者的效果）。
+ *   牵（bond，攀缠式）：束缚期间由托管效果维持两端真实连接，跟随双方身体；两具碰撞箱的最近表面距离超过 reach+0.9
+ *       或中间有实墙就立即断藤，并只收回本实例自己挂上的束缚、定身与藤（不触碰其他施法者的效果）。
+ *
+ * 载体、目标定身、自身定身、连接是一组：载体或任一端定身被拒绝就先精确撤回本次已生贡献，不留下永久降速兜底；
+ * 连接建不起来则只清掉本次自定身。触手穿过友方后，同段后方的实墙仍然截停。
  *
  * 与同族分开：强力鞭打远而宽、藤鞭短而快、百万吨重踢直线踢飞；缠绕是唯一的控制招，命中后留下一段持续连接。
  * 提交后才触碰世界。选取：`kind: "aim"` 接受任意阵营实体或世界点——可自由上下瞄准，线没对准就抽空；
@@ -51,7 +54,7 @@ namespace PokemonSkills {
         const held = world.observe(victim), holder = world.observe(caster);
         if (held === null || holder === null) { data.reason = "snapped"; effect.state(JSON.stringify(data)); effect.end(); return; }
         const limit = data.reach + 0.9;
-        const gap = held.position().minus(holder.position()).length();
+        const gap = constrictSurfaceGap(held, holder);
         if (gap > limit || !world.clear(holder.position(), held.position())) {
             data.reason = "snapped"; effect.state(JSON.stringify(data));
             WorldFeedback.emit(world, constrictScene, 1, held.position(),
@@ -81,6 +84,15 @@ namespace PokemonSkills {
             world.operation(data.selfRoot, "world_combat:dispel", "{}");
     });
     WorldCombat.effectHandler(constrictBond, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    /** 两具真实碰撞箱之间的最近表面距离；跟随时按身体表面算，大型目标合法接触不会被中心距离误判拉断。 */
+    function constrictSurfaceGap(a: CombatObservation, b: CombatObservation): number {
+        const minA = a.boundsMin(), maxA = a.boundsMax(), minB = b.boundsMin(), maxB = b.boundsMax();
+        const dx = Math.max(0, Math.max(minB.x() - maxA.x(), minA.x() - maxB.x()));
+        const dy = Math.max(0, Math.max(minB.y() - maxA.y(), minA.y() - maxB.y()));
+        const dz = Math.max(0, Math.max(minB.z() - maxA.z(), minA.z() - maxB.z()));
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
 
     define({
         freeMovement: function (config) { return !!config.latch; },
@@ -160,7 +172,7 @@ namespace PokemonSkills {
                 complete(current);
             }
 
-            /** 触手够到第一个有效敌体：一次弱伤，然后挂上束缚、降速与定身。伤害被拒绝就不当缠上。 */
+            /** 触手够到第一个有效敌体：一次弱伤，然后挂上束缚、降速与定身。任一必需效果被拒绝就精确撤回本次已生贡献，绝不退化成永久速度下降兜底。 */
             function wrap(current: CombatAction, target: CombatActor, at: CombatPoint): void {
                 const scope = current.world();
                 const body = scope.observe(target);
@@ -172,27 +184,59 @@ namespace PokemonSkills {
                 const bindTicks = Math.max(30, Math.round(p("constrict", "bindTicks", context)));
                 const holdTicks = Math.max(8, Math.round(p("constrict", "holdTicks", context)));
                 const grip = Math.max(0, Math.min(1, p("constrict", "gripChance", context)));
+                const atHead = at.plus(WorldCombat.point(0, 1.2, 0));
                 grow.stop(current, "tendril");
                 const landed = hurt(current, target, "constrict", power, { damage: damageSpec("constrict", "squeeze"), contact: true });
                 if (!landed || !scope.valid(target)) {
                     WorldFeedback.emit(scope, constrictScene, 1, at, { moment: "miss", target: String(target.ref()), notes: Math.round(notes * 0.7), scale: scale }, 18);
-                    if (scope.valid(target)) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), constrictMissText, [], 18);
+                    if (scope.valid(target)) WorldFeedback.text(scope, atHead, constrictMissText, [], 18);
                     sound(current, "minecraft:block.vine.break");
                     complete(current); return;
                 }
                 const extra = scope.random() < grip ? 1 : 0;
+                // 载体是本实例存在的前提；被拒绝就什么都不留（原来退化成永久 boost 是错的）。
                 const carrier = MobEffects.apply(scope, target, constrictBind, bindTicks, 0);
-                if (carrier !== null) NativeEffects.boostWindow(scope, target, { spe: -(stages + extra) }, bindTicks, "world_combat:move/constrict", carrier);
-                else NativeEffects.boost(scope, target, "spe", -(stages + extra));
-                const root = scope.effect("world_combat:rooted", target, "{}", holdTicks);
-                let selfRoot = 0;
-                if (latch && scope.valid(actor)) selfRoot = scope.effect("world_combat:rooted", actor, "{}", selfHold);
-                if (latch && carrier !== null) {
+                if (carrier === null) {
+                    WorldFeedback.emit(scope, constrictScene, 1, at, { moment: "miss", target: String(target.ref()), notes: Math.round(notes * 0.7), scale: scale }, 18);
+                    WorldFeedback.text(scope, atHead, constrictMissText, [], 18);
+                    sound(current, "minecraft:block.vine.break");
+                    complete(current); return;
+                }
+                let window = 0, root = 0, selfRoot = 0, bond = 0;
+                const bound: CombatMobEffect = carrier;
+                /** 只撤本实例已经挂上的东西：窗口、自己的载体、目标身上的根。 */
+                function retractTarget(): void {
+                    if (window > 0) NativeEffects.windowClose(scope, window);
+                    if (root > 0 && scope.valid(target)) scope.operation(root, "world_combat:dispel", "{}");
+                    if (MobEffects.matches(scope, target, MobEffects.anchor(bound))) scope.removeMobEffect(target, constrictBind, bound.key());
+                }
+                /** 一次失败的缠绕：收藤、报空、把已经挂上的部分全部撤回。 */
+                function refuse(): void {
+                    retractTarget();
+                    WorldFeedback.emit(scope, constrictScene, 1, at, { moment: "miss", target: String(target.ref()), notes: Math.round(notes * 0.7), scale: scale }, 18);
+                    WorldFeedback.text(scope, atHead, constrictMissText, [], 18);
+                    sound(current, "minecraft:block.vine.break");
+                    complete(current);
+                }
+                window = NativeEffects.boostWindow(scope, target, { spe: -(stages + extra) }, bindTicks, "world_combat:move/constrict", carrier);
+                root = WorldEffects.apply(scope, target, "rooted", {}, holdTicks);
+                if (!(root > 0 && scope.effects(target, "world_combat:rooted").some(function (view) { return view.id() === root; }))) { refuse(); return; }
+                if (latch && scope.valid(actor)) {
+                    selfRoot = WorldEffects.apply(scope, actor, "rooted", {}, selfHold);
+                    const held = selfRoot > 0 && scope.effects(actor, "world_combat:rooted").some(function (view) { return view.id() === selfRoot; });
+                    if (!held) { if (selfRoot > 0) scope.operation(selfRoot, "world_combat:dispel", "{}"); refuse(); return; }
+                }
+                if (latch) {
                     const existing = scope.effects(target, constrictBond);
                     for (let i = 0; i < existing.length; i++) scope.operation(existing[i].id(), "world_combat:dispel", "{}");
-                    scope.effect(constrictBond, target, JSON.stringify({ caster: String(actor.ref()), reach: reach, selfHold: selfHold,
+                    bond = scope.effect(constrictBond, target, JSON.stringify({ caster: String(actor.ref()), reach: reach, selfHold: selfHold,
                         scale: scale, notes: notes, carrier: MobEffects.anchor(carrier), root: root, selfRoot: selfRoot, reason: "" }), bindTicks + 40);
+                    // 连接建不起来就别把施法者按在原地等一根不存在的藤（只清本次自持，不动已挂的束缚）。
+                    if (!(bond > 0 && scope.effects(target, constrictBond).some(function (view) { return view.id() === bond; }))
+                        && selfRoot > 0 && scope.valid(actor)) scope.operation(selfRoot, "world_combat:dispel", "{}");
                 }
+                WorldFeedback.emit(scope, constrictScene, 1, body.position(),
+                    { moment: "root", target: String(target.ref()), scale: scale, hold: holdTicks, notes: Math.round(notes * 0.5) }, 18);
                 WorldFeedback.emit(scope, constrictScene, 1, body.position(),
                     { moment: "bind", path: [[start.x(), start.y(), start.z()], [body.position().x(), body.position().y(), body.position().z()]],
                         target: String(target.ref()), notes: notes, scale: scale }, 18);
@@ -214,7 +258,9 @@ namespace PokemonSkills {
                 if (impact.hitEntity()) {
                     const target = impact.target();
                     if (target !== null && scope.valid(target) && !scope.friendly(target)) { wrap(current, target, impact.position()); return; }
-                    // 友方与非生物只是穿过去，继续找第一个有效敌体。
+                    // 友方与非生物只是穿过去；同段后方若还有实墙，仍要按真实墙面截停。
+                    const wall = WorldGeometry.blockHit(scope, impact.position(), to);
+                    if (wall !== null) { retract(current, "wall", wall); return; }
                 }
                 if (impact.blocked()) { retract(current, "wall", impact); return; }
                 travelled += span;
@@ -229,16 +275,16 @@ namespace PokemonSkills {
         }
     });
 
-    // 束缚期间维持低密度的藤环围绕目标：少而稳，缠在身侧，让玩家看得清目标本身。
+    // 束缚期间维持低密度的藤环围绕目标：随真实载体续期，载体一结束就随之停发。
     WorldCombat.on("world_combat:move_constrict/held", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== constrictBind || event.world().tick() % 10 !== 0) return;
+        if (String(data.id) !== constrictBind || event.world().tick() % 6 !== 0) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.keep(world, "world_combat:move_constrict/hold/" + String(actor.ref()), constrictScene, 1,
-            body.position(), { moment: "hold", target: String(actor.ref()) }, 30);
+            body.position(), { moment: "hold", target: String(actor.ref()) }, 10);
     });
 
     // 束缚走完自己的时间或被外力解除：藤环散开、叶片落下。

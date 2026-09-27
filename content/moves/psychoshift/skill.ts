@@ -17,6 +17,18 @@ namespace PokemonSkills {
             default: return "world_combat.move.psychoshift.text.other";
         }
     }
+    /** 每种主异常的画面色：落下的病核与封印符号按实际种下的异常取色，不共用一种纹理。 */
+    function psychoshiftStatusColor(name: string): number {
+        switch (name) {
+            case "burn": return 0xE0662B;
+            case "poison": return 0x9BBF3A;
+            case "toxic": return 0x8A4FD0;
+            case "paralysis": return 0xE8C24A;
+            case "sleep": return 0x7A86D8;
+            case "frozen": return 0x74C6E0;
+            default: return 0xB8D14A;
+        }
+    }
     function psychoshiftAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.2, 0)); }
 
     define({
@@ -65,7 +77,7 @@ namespace PokemonSkills {
             const actor = action.actor(), target = action.target();
             const name = CombatStatus.major(action.sense(), actor);
             action.present("world_combat:psychoshift:draw", psychoshiftScene, 1, action.origin(), JSON.stringify({
-                moment: "draw", target: target === null ? "" : String(target.ref()), status: name,
+                moment: "draw", target: target === null ? "" : String(target.ref()), status: name, color: psychoshiftStatusColor(name),
                 path: target === null ? [String(actor.ref())] : [String(actor.ref()), String(target.ref())],
                 motes: p("psychoshift", "motes", action)
             }));
@@ -107,16 +119,16 @@ namespace PokemonSkills {
                 return;
             }
             const motes = Math.max(6, Math.round(p("psychoshift", "motes", action)));
-            const path = [String(actor.ref()), String(target.ref())];
+            const path = [String(actor.ref()), String(target.ref())], color = psychoshiftStatusColor(defName);
             WorldFeedback.emit(world, psychoshiftScene, 1, body.position(),
-                { moment: "push", target: String(target.ref()), status: name, path: path, motes: motes }, 34);
+                { moment: "push", target: String(target.ref()), status: defName, color: color, path: path, motes: motes }, 34);
             const targetBody = world.observe(target);
             if (targetBody !== null)
                 WorldFeedback.emit(world, psychoshiftScene, 1, targetBody.position(),
-                    { moment: "plant", target: String(target.ref()), status: name, path: path, motes: motes,
+                    { moment: "plant", target: String(target.ref()), status: defName, color: color, path: path, motes: motes,
                         intensity: Math.max(0.7, Math.min(2.4, potency)) }, 36);
             WorldFeedback.text(world, psychoshiftAbove(body.position()), psychoshiftPushText,
-                [{ key: psychoshiftStatusKey(name), fallback: name }], 34);
+                [{ key: psychoshiftStatusKey(defName), fallback: defName }], 34);
             sound(action, "minecraft:entity.illusioner.cast_spell");
             world.sound(psychoshiftStatusSound(name), body.position(), 14, "{}");
             done(action);

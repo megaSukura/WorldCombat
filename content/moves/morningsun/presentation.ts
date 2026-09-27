@@ -1,12 +1,14 @@
 /**
  * 晨光 / Morning Sun 的粒子语言。
  *
- * 一句话：抬头一迎，一轮暖日在头顶升起、绽出光芒，暖光落回身上；真的接住晨光后，脚边留下一段双脚都能看到的短光步。
+ * 一句话：抬头一迎，一轮暖日在头顶升起、绽出光芒，暖光落回身上；白天晴空是从天顶照到身上的亮束，
+ *   夜里或阴雨只剩贴身的零散暗光；真的接住晨光后，脚边沿身体朝向留下一段短光步。
  * 色相家族：日出橙 0xFFB25A 作主体，日光金 0xFFE08A 作高光，暖白 0xFFF6E0 只落在光核。
- * 拍子：起（windup）／日（dawn，仅真实回复）／敛（hush，没回进生命时的弱光）／振（vigor，仅提速真的生效）。
- * 范围：作用于自己，绑 source（fit body）：日轮在头顶、光落回身体，玩家看得出是自我强化。
- * 机制驱动：dawn 的爆发数绑定 data.bursts（白天晴空＋回复量算出）、光芒条数绑定 data.rays（晴空 16、夜里 6），
- *   整体尺寸随 data.scale（晴空 1.5、夜里 0.85）放大或收缩——夜里放这招画面明显暗弱。
+ * 拍子：起（windup）／日（dawn 强光回复）／微（glimmer 弱光回复）／敛（hush，没回进生命时的弱光）／振（vigor，仅提速真的生效）。
+ * 范围：作用于自己，绑 source（fit body）。
+ * 朝向：vigor 的脚边光步用 orient:"heading" 读 data.direction，落在身体左右两侧，随本次朝向而不是固定世界 X 两侧。
+ * 机制驱动：dawn 的爆发数绑定 data.bursts、光芒条数绑定 data.rays、亮束密度绑定 data.beamRate、整体尺寸随 data.scale；
+ *   弱光走 glimmer，没有亮束、条数与尺寸都小，夜里放这招画面明显暗弱。
  */
 const MorningsunDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -46,6 +48,15 @@ const MorningsunDefinition: ParticleDefinition = {
                     color: 0xFFF6E0, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 6
                 },
                 {
+                    name: "sky_beam", bind: "source", offset: [0, 0, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: { data: "beamRate", fallback: 22 },
+                    shape: { kind: "cylinder", radius: 0.28, length: 3.4, thickness: 0.35 },
+                    direction: "down", speed: [0.04, 0.14],
+                    lifetime: [10, 20], size: [0.1, 0.02],
+                    color: 0xFFE08A, alpha: [0.5, 0], light: "full", bloom: 0.15, maxParticles: 60
+                },
+                {
                     name: "sun_rays", bind: "source", offset: [0, 1.0, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     burst: { count: { data: "rays", fallback: 12 } }, shape: { kind: "sphere_surface", radius: 0.35 },
@@ -68,6 +79,28 @@ const MorningsunDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.16], drag: 0.9,
                     lifetime: [12, 22], size: [0.07, 0.01],
                     color: 0xFFF6E0, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 70
+                }
+            ]
+        },
+        glimmer: {
+            duration: 28,
+            exit: { stop: 10, drain: 16 },
+            emitters: [
+                {
+                    name: "dim_drift", bind: "source", offset: [0, 0.75, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: { data: "rays", fallback: 6 }, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.02, 0.08], drag: 0.92,
+                    lifetime: [10, 18], size: [0.06, 0.015],
+                    color: 0xFFB25A, alpha: [0.55, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "dim_floor", bind: "source", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 6, interval: 3, repeats: 2 }, shape: { kind: "ring", radius: 0.55 },
+                    direction: "inward", speed: [0.01, 0.04],
+                    lifetime: [8, 14], size: [0.05, 0.01],
+                    color: 0xFFB25A, alpha: [0.4, 0], light: "world", maxParticles: 18
                 }
             ]
         },
@@ -106,20 +139,13 @@ const MorningsunDefinition: ParticleDefinition = {
                     color: 0xFFE08A, alpha: [0.6, 0], light: "full", maxParticles: 12
                 },
                 {
-                    name: "light_step_a", bind: "source", offset: [0.3, 0.06, 0], height: 0,
+                    name: "light_step", bind: "source", offset: [0, 0.06, 0], height: 0, orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
-                    burst: { count: 6, interval: 4, repeats: 2 }, shape: { kind: "line", length: 0.4 },
-                    direction: "up", speed: [0.02, 0.07],
+                    burst: { count: 8, interval: 4, repeats: 2 },
+                    shape: { kind: "box", size: [0.6, 0.04, 0.04] },
+                    direction: "up", speed: [0.02, 0.07], spread: 20,
                     lifetime: [10, 18], size: [0.08, 0.01],
-                    color: 0xFFE08A, alpha: [0.85, 0], light: "full", maxParticles: 16
-                },
-                {
-                    name: "light_step_b", bind: "source", offset: [-0.3, 0.06, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
-                    burst: { count: 6, interval: 4, repeats: 2 }, shape: { kind: "line", length: 0.4 },
-                    direction: "up", speed: [0.02, 0.07],
-                    lifetime: [10, 18], size: [0.08, 0.01],
-                    color: 0xFFE08A, alpha: [0.85, 0], light: "full", maxParticles: 16
+                    color: 0xFFE08A, alpha: [0.85, 0], light: "full", maxParticles: 24
                 }
             ]
         }

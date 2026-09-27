@@ -29,6 +29,8 @@
 namespace PokemonSkills {
     export const crushgripId = "crushgrip";
     export const crushgripScene = "world_combat:move_crushgrip";
+    /** 两片巨掌的轮廓由这个客户端场景显式绘制，中心与朝向按接触点和瞄准方向传入。 */
+    export const crushgripPalmsScene = "world_combat:move_crushgrip/palms";
     /** 表现里的参考半径（格）：服务端传 scale = 实际掌口半径 / 这个值。 */
     export const crushgripReference = 0.7;
 

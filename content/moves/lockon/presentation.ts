@@ -11,6 +11,8 @@
  * 范围：单体锁定，准星环画的正是被锁住的那个人；锁定距离由 reach 决定，画面沿视线铺开。
  * 运动：准星线从施法者沿视线飞向目标（bind path polyline），两圈准星环由外向内收；兑现时火花向外炸开。
  * 数：准星线与火花的密度读 data.motes（物攻派生），是否钉死读 data.held（钉死时加一层更亮的青环）。
+ * 常驻准星：world_combat:move_lockon_reticle 自定义场景按目标真实碰撞箱逐帧勾出四角托架与上下框环＋中心十字，
+ *   绑在锁定托管效果上，控制还在就一直框住目标，控制一结束随效果消失；只画线，不生成粒子或实体。
  */
 const LockonDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -154,3 +156,30 @@ const LockonDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_lockon", 1, LockonDefinition);
+
+// 目标身上常驻的准星：四角托架 + 上下框环 + 中心十字，按真实碰撞箱逐帧勾出。钉死式换成更亮的青蓝。
+// 只复用既有图集线条/圆环绘制，不生成粒子与实体；随锁定的托管效果一起结束。
+WorldCombatClient.scene("world_combat:move_lockon_reticle", 1, function (frame) {
+    const entry: CombatSceneEntry<{ target?: string; width?: number; height?: number; held?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    if (!data.target) return;
+    const anchor = JSON.parse(frame.anchor(data.target));
+    if (!anchor) return;
+    const width = typeof data.width === "number" && data.width > 0 ? data.width : 0.9;
+    const height = typeof data.height === "number" && data.height > 0 ? data.height : 1.4;
+    const hw = width / 2 + 0.16, base = anchor.y + 0.05, top = anchor.y + height;
+    const colour = data.held ? 0xFF3FB0E8 : 0xFF6FD8FF;
+    frame.ring(anchor.x, top, anchor.z, hw, colour);
+    frame.ring(anchor.x, base, anchor.z, hw, colour);
+    const arm = Math.min(hw, height) * 0.55;
+    for (let i = 0; i < 4; i++) {
+        const sx = i % 2 === 0 ? -1 : 1, sz = i < 2 ? -1 : 1;
+        const x = anchor.x + sx * hw, z = anchor.z + sz * hw;
+        frame.line(x, base, z, x, base + arm, z, colour);
+        frame.line(x, top - arm, z, x, top, z, colour);
+    }
+    const cy = anchor.y + height * 0.5;
+    frame.line(anchor.x - 0.12, cy, anchor.z, anchor.x + 0.12, cy, anchor.z, colour);
+    frame.line(anchor.x, cy - 0.12, anchor.z, anchor.x, cy + 0.12, anchor.z, colour);
+});

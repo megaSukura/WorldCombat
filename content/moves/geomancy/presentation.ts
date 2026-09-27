@@ -10,8 +10,9 @@
  * 范围：地纹环绑脚点、fit none，半径按 `data.scale`（实际阵心半径 / 2.4）推出——画面里的环就是阵真正罩到的范围。
  * 进度：channel 的 moment 时长绑 `data.absorb`；rate 曲线随 moment 进度由疏到密、颜色由暗绿经地脉绿到能量金，
  *   所以画面越亮、光点越多，就代表吸取越接近满。
- * 运动：plant 地纹向外张、尘土上腾；channel 光点沿地纹向上升（速度按 `data.rise`）；release 金环向外一推、
- *   三股能量沿柱向身体收束；collapse 光点四散坠落变暗；residue 余光原地明灭退去。
+ * 运动：plant 地纹向外张、尘土上腾；channel 光点沿地纹向上升（速度按 `data.rise`），并有一圈从地纹向身体
+ *   收束的余点，补出「地面→身体」的完整流；release 金环向外一推、三股能量沿柱向身体收束；collapse 光点四散
+ *   坠落变暗；residue 余光原地明灭退去。
  * 数：光点数量绑 `data.runes`（特攻与等级派生），威力强弱绑 `data.intensity`。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
@@ -87,6 +88,16 @@ const GeomancyDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.03, { data: "rise", fallback: 0.06 }],
                     lifetime: [14, 24], size: [0.1, 0.02], sizeMode: "index",
                     color: 0x8FD46A, alpha: [0.75, 0], light: "full", bloom: 0.2, maxParticles: 110
+                },
+                {
+                    // 地脉从整圈地纹向身上收束：身体四周的光点按真实阵心半径向内聚拢，补齐「地面→身体」的完整流。
+                    name: "converge", bind: "source", fit: "none", offset: [0, 0.4, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: { curve: [[0, 2], [0.5, 9], [1, 18]] },
+                    shape: { kind: "sphere_surface", radius: 2.4 },
+                    direction: "inward", speed: [0.08, 0.2], spread: 6,
+                    lifetime: [10, 18], size: [0.1, 0.02], sizeMode: "index",
+                    color: { gradient: [[0, 0x8FD46A], [1, 0xFFE9A0]] }, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 100
                 },
                 {
                     name: "glow_dust", bind: "point", fit: "none", offset: [0, 0.04, 0],

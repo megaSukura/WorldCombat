@@ -1,11 +1,11 @@
 /**
  * 泥巴炸弹 / mudbomb 的客户端表现。
  *
- * 一句话：一颗硬泥弹在身前压实后直线飞出，砸中目标炸开成泥雾，泥块向四周泼溅、主目标与撞击面留下泥印。
+ * 一句话：一颗硬泥弹在身前压实后直线飞出，砸中目标炸开成泥雾，泥块从碰撞点径向短抛、主目标与撞击面溅上泥滴。
  * 色相家族：干泥的深棕（0x5C4A34）与浅褐（0x8E6E4A），碎屑收在灰白。
- * 拍子：起 gather（压实收紧）→ 击 burst（炸开，按 data.direction 在真实表面铺泥印）与 spray（泼溅到旁人）→ 收 face（中招者脸上的泥雾）。
- * 范围：burst 的 ring 半径由 `data.blast`（机制爆开半径）铺开，泥印盘由 `data.mark` 铺开；玩家一眼看出波及到哪。
- * 运动：泥弹沿直线飞行（服务端速度），炸开后泥块受重力向外抛。
+ * 拍子：起 gather（压实收紧）→ 击 burst（炸开，泥块向外短抛、在真实 blast 半径上勾出一圈泥点）与 spray（泼溅到旁人）→ 收 face（真正降了命中才贴脸）。
+ * 范围：burst 的 blast_edge 沿 `data.blast`（机制爆开半径）铺一圈，surface_mark 的泥滴盘由 `data.mark` 铺开；玩家一眼看出波及到哪。
+ * 运动：泥弹沿直线飞行（服务端速度），炸开后泥块受重力向外抛、距离很短，读作一次爆散而非持久贴墙印。
  * 数：burst/spray 的泥块数绑定 `data.shards`（特攻与等级换算）与 `data.motes`（旁人较小泥粒），强度绑定 `data.intensity`（威力 / 65）。
  */
 const MudbombDefinition: ParticleDefinition = {
@@ -59,7 +59,7 @@ const MudbombDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 20 },
             emitters: [
                 {
-                    name: "surface_mark", bind: "point", fit: "none", offset: [0, 0.02, 0],
+                    name: "surface_mark", bind: "point", fit: "world", offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/mud/mudsplash", spriteFrom: "random",
                     burst: { count: { data: "shards", fallback: 14 } },
                     shape: { kind: "circle", radius: { data: "mark", fallback: 0.8 } },
@@ -69,16 +69,16 @@ const MudbombDefinition: ParticleDefinition = {
                     color: 0x5C4A34, alpha: [0.9, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "blast_ring", bind: "point", fit: "none", offset: [0, 0.25, 0],
+                    name: "blast_edge", bind: "point", fit: "world", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1 },
+                    burst: { count: 14 },
                     shape: { kind: "ring", radius: { data: "blast", fallback: 2 } },
-                    direction: "outward", speed: [0.06, 0.18],
-                    lifetime: [12, 20], size: [0.4, 0.9],
-                    color: 0x5C4A34, alpha: [0.55, 0], light: "world"
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 16], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0x5C4A34, alpha: [0.6, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "clods", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "clods", bind: "point", fit: "world", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
                     burst: { count: { data: "shards", fallback: 16 } },
                     shape: { kind: "sphere_surface", radius: 0.3 },
@@ -88,7 +88,7 @@ const MudbombDefinition: ParticleDefinition = {
                     color: 0x5C4A34, alpha: [0.95, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "dust_cloud", bind: "point", fit: "none", offset: [0, 0.3, 0],
+                    name: "dust_cloud", bind: "point", fit: "world", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "shards", fallback: 16 } },
                     shape: { kind: "sphere", radius: 0.4 },

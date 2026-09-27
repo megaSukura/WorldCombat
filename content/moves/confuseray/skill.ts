@@ -10,9 +10,12 @@
  * 命中：提交后 `action.trace(origin, aim, radius, true)` 沿直线做权威判定；落在非友方活体身上才挂共享身份
  *       world_combat:status/confusion 的 world_combat:confuseray_mist（物品栏可见、/effect 可用）。宝可梦不再
  *       额外写原生异常，混乱由本单元的行为承担；控制免疫的目标按共享 gate 正常失败，不产生状态。
- * 持续：混乱存续期由该 MobEffect 承担，周期性 keep 播放头顶飞鸟。
+ * 光路：表现与判定共用同一段——从 trace 原点画到 `hit.position()`（真正的接触点），不用方块格坐标。
+ * 持续：混乱的头顶飞鸟绑在本单元自己创建的托管载体上（WorldFeedback.onEffect），随混乱自然到期、
+ *       被牛奶／/effect clear 清除或换上新载体而同时收场。
  * 随机分支：目标每次试图出手（world_combat:before_commit）按载体振幅掷骰；中则本次出手作废。
- * 反噬：目标每次打中非友方（world_combat:damage_applied）按自身攻击结算自伤，且不超过这一击真正造成的伤害。
+ * 反噬：目标每次打中非友方（world_combat:damage_applied，且是该次真正发生的主动攻击）按自身攻击结算自伤，
+ *       且不超过这一击真正造成的伤害。
  * 反制：光束是直线、有距离上限；掩体、走位和贴脸都能让它落空。已有混乱的目标只被刷新，不叠加。
  */
 namespace PokemonSkills {
@@ -23,6 +26,40 @@ namespace PokemonSkills {
         const effect = CombatStatus.representative(world, actor, "confusion");
         return effect !== null && String(effect.id()) === confuserayEffect ? effect : null;
     }
+
+    // 混乱存续的托管载体：头顶飞鸟绑在真实混乱效果的剩余时间与当前 key 上。
+    // 自然到期、牛奶／/effect clear、换上新载体（key 变化）都随它一起停，不靠自己的计时，也不留残影。
+    const confuserayLinger = "world_combat:move_confuseray/linger";
+    WorldCombat.effect(confuserayLinger, 1, 600, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.key !== "string" || !value.key) throw new Error("Invalid confuseray linger carrier key");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    function confuserayLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        const value = JSON.parse(effect.state());
+        const carrier = CombatStatus.representative(world, target, "confusion");
+        if (body === null || carrier === null || String(carrier.id()) !== confuserayEffect || String(carrier.key()) !== value.key) {
+            effect.end(); return;
+        }
+        WorldFeedback.onEffect(world, effect.id(), "linger", confuserayScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()) });
+        const remaining = carrier.duration() < 0 ? 600 : Math.max(1, Math.min(600, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effectHandler(confuserayLinger, "start", confuserayLingerWatch);
+    WorldCombat.effectHandler(confuserayLinger, "watch", confuserayLingerWatch);
+    WorldCombat.effectHandler(confuserayLinger, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 状态被牛奶／/effect clear 提前拿掉时，立即撤掉托管表现，不等下一次巡检。
+    WorldCombat.on("world_combat:move_confuseray/linger-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== confuserayEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, confuserayLinger).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
 
     define({
         id: confuserayId,
@@ -82,20 +119,27 @@ namespace PokemonSkills {
             const direction = span < 0.01 ? action.direction() : delta.unit();
             const reach = Math.max(0.5, span);
             sound(action, "minecraft:entity.illusioner.cast_spell");
+            // 光路就是判定走过的同一段：从 trace 原点画到它真正停下的 position()，判定与表现共用端点。
             WorldFeedback.emit(world, confuserayScene, 1, origin,
-                { moment: "beam", reach: reach, motes: motes, radius: radius,
+                { moment: "beam", path: [[origin.x(), origin.y(), origin.z()], [endpoint.x(), endpoint.y(), endpoint.z()]],
+                    reach: reach, motes: motes, radius: radius,
                     direction: [direction.x(), direction.y(), direction.z()],
                     target: action.target() === null ? "" : String(action.target()!.ref()) }, 26);
             const landed = hit.hitEntity() ? hit.target() : null;
             if (landed !== null && String(landed.key()) !== String(self.key()) && !world.friendly(landed)) {
                 const at = world.observe(landed);
                 const point = at === null ? endpoint : at.position();
-                // 混乱成功只留一枚晕符；被共享 gate 挡下时照常失败，不写状态。
+                // 混乱成功只留一枚晕符；被共享 gate 挡下时照常失败，不写状态与持续表现。
                 if (CombatStatus.apply(world, landed, "confusion", confuserayEffect, ticks, Math.round(chance * 100), { unique: true })) {
                     WorldFeedback.emit(world, confuserayScene, 1, point,
                         { moment: "main", target: String(landed.ref()), scale: Math.max(0.6, Math.min(2, ticks / 180)) }, 42);
                     WorldFeedback.text(world, confuserayAbove(point), "world_combat.move.confuseray.text.confused", [Math.round(ticks / 20)], 44);
                     sound(action, "cobblemon:status.volatile.confusion.actor");
+                    // 持续飞鸟绑在本次刚挂上的真实载体 key 上；旧载体（本招或别人）随 unique 撤掉后由 watcher 自行结束。
+                    const carrier = CombatStatus.representative(world, landed, "confusion");
+                    const carrierKey = carrier === null ? "" : String(carrier.key());
+                    world.effects(landed, confuserayLinger).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+                    if (carrierKey) world.effect(confuserayLinger, landed, JSON.stringify({ key: carrierKey }), ticks);
                 } else {
                     WorldFeedback.emit(world, confuserayScene, 1, point, { moment: "ward", target: String(landed.ref()) }, 24);
                 }
@@ -104,8 +148,8 @@ namespace PokemonSkills {
                 const point = at === null ? endpoint : at.position();
                 WorldFeedback.emit(world, confuserayScene, 1, point, { moment: "blocked", target: String(landed.ref()) }, 18);
             } else if (hit.blocked()) {
-                const blockPoint = hit.blockPosition();
-                WorldFeedback.emit(world, confuserayScene, 1, blockPoint === null ? endpoint : blockPoint,
+                // position() 是真正的接触点；blockPosition() 是方块格坐标，只用于读写格子。
+                WorldFeedback.emit(world, confuserayScene, 1, endpoint,
                     { moment: "splinter", face: hit.blockFace() }, 20);
             } else {
                 WorldFeedback.emit(world, confuserayScene, 1, endpoint, { moment: "dissipate", radius: radius }, 16);
@@ -121,6 +165,8 @@ namespace PokemonSkills {
         if (victim === null || String(actor.key()) === String(victim.key()) || world.friendly(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
+        // 只计真正发生的主动攻击：反噬/环境/被动伤害不触发这一次回击。
+        if (!DamageSemantics.directOffense(data)) return;
         if (confuserayCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body === null) return;
@@ -136,17 +182,5 @@ namespace PokemonSkills {
         WorldFeedback.emit(world, confuserayScene, 1, body.position(), { moment: "fumble", target: String(actor.ref()), power: power }, 22);
         WorldFeedback.text(world, above, "world_combat.move.confuseray.text.recoil", [Math.round(loss * 10) / 10], 30);
         world.sound("minecraft:entity.player.hurt", body.position(), 14, "{}");
-    });
-
-    // 混乱存续期：飞鸟在目标头顶绕，低密度、每 20 刻续期，让出本体视线。
-    WorldCombat.on("world_combat:move_confuseray/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== confuserayEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "confuseray:" + String(actor.ref()), confuserayScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 40);
     });
 }

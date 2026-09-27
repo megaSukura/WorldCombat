@@ -39,6 +39,7 @@ namespace PokemonSkills {
     export const stickywebStrands = "world_combat:stickyweb_strands";
     export const stickywebLayText = "world_combat.move.stickyweb.text.lay";
     export const stickywebSnareText = "world_combat.move.stickyweb.text.snare";
+    export const stickywebSnareBlockedText = "world_combat.move.stickyweb.text.snare.blocked";
 
     actionParameters.define(stickywebId, {
         dropStages: formula(

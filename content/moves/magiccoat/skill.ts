@@ -3,6 +3,7 @@ namespace PokemonSkills {
     export const magiccoatId = "magiccoat";
     export const magiccoatScene = "world_combat:move_magiccoat";
     export const magiccoatReflectText = "world_combat.move.magiccoat.text.reflect";
+    export const magiccoatBlockText = "world_combat.move.magiccoat.text.block";
     interface CoatWindow {
         instance: number; until: number; reach: number;
         move: (id: string, source: CombatActor) => boolean;
@@ -33,7 +34,7 @@ namespace PokemonSkills {
         if (!skill || !attacker || !world.valid(attacker)) return null;
         const body = world.observe(attacker); if (!body) return null;
         const point = body.position(), direction = point.minus(action.origin());
-        return { eligibility: "caller", cooldown: p(magiccoatId, "recharge", action),
+        return { eligibility: "caller", commitment: "call", cooldown: p(magiccoatId, "recharge", action),
             input: { target: skill.kind === "enemy" || skill.kind === "friend" || skill.kind === "aim" ? attacker : null,
                 point: point, direction: direction.length() < .01 ? action.direction() : direction } };
     }
@@ -113,9 +114,10 @@ namespace PokemonSkills {
                         if (!choice) return false;
                         delete magiccoatWindows[casterRef]; scenes.stop(current);
                         current.data("world_combat:magiccoat/returning", JSON.stringify({ from: String(attacker.ref()), move: id, facets: facets }));
+                        let paid = false; choice.options.onPaid = () => { paid = true; };
                         try { NativeLoadout.call(current, id, choice.options); }
-                        catch (error) { try { current.cancel(); } catch (ended) {} return false; }
-                        return true;
+                        catch (error) { try { current.cancel(); } catch (ended) {} return paid; }
+                        return paid;
                     },
                     native: (data, attacker) => {
                         delete magiccoatWindows[casterRef]; scenes.stop(current);
@@ -127,12 +129,15 @@ namespace PokemonSkills {
                         let applied: CombatMobEffect | null = null;
                         magiccoatReturning[key] = true;
                         try { applied = MobEffects.apply(scope, attacker, data.id, data.duration, data.amplifier); }
+                        catch (error) { applied = null; }
                         finally { delete magiccoatReturning[key]; }
                         const changed = applied !== null && (!before || String(applied.key()) !== String(before.key()));
-                        WorldFeedback.emit(scope, magiccoatScene, 1, current.origin(), { moment: "reflect", target: String(attacker.ref()),
-                            path: [casterRef, String(attacker.ref())], facets: facets, accepted: changed ? 1 : 0, span: 0 }, 30);
+                        const text = changed ? magiccoatReflectText : magiccoatBlockText;
+                        WorldFeedback.emit(scope, magiccoatScene, 1, current.origin(), changed
+                            ? { moment: "reflect", target: String(attacker.ref()), facets: facets, accepted: 1, span: 0 }
+                            : { moment: "collapse", target: String(attacker.ref()), facets: facets, accepted: 0, span: 0 }, changed ? 30 : 24);
                         WorldFeedback.text(scope, current.origin().plus(WorldCombat.point(0, 1.25, 0)),
-                            changed ? magiccoatReflectText : "world_combat.move.magiccoat.text.block", [{ key: "effect." + data.id.replace(":", ".") }], 30);
+                            text, [{ key: "effect." + data.id.replace(":", ".") }], 30);
                         scope.sound("minecraft:entity.illusioner.mirror_move", current.origin(), 12, "{}");
                         current.finish(); return true;
                     }
@@ -141,8 +146,15 @@ namespace PokemonSkills {
                 function step(handle: CombatAction): void {
                     if (magiccoatWindows[casterRef] !== film) return;
                     const left = film.until - handle.sense().tick();
-                    if (left <= 0) { delete magiccoatWindows[casterRef]; scenes.stop(handle); handle.reject("no-reflect"); return; }
-                    scenes.show(handle, "film", handle.origin(), { moment: "film", facets: facets, remaining: left, span: window });
+                    if (left <= 0) {
+                        delete magiccoatWindows[casterRef]; scenes.stop(handle);
+                        WorldFeedback.emit(handle.sense(), magiccoatScene, 1, handle.origin(), { moment: "collapse", facets: facets, accepted: 0 }, 24);
+                        handle.reject("no-reflect"); return;
+                    }
+                    const fade = Math.max(0, Math.min(1, left / window));
+                    scenes.show(handle, "film", handle.origin(), { moment: "film", facets: facets, remaining: left, span: window,
+                        fade: fade, filmRate: Math.max(1, Math.round(1 + 4 * fade)),
+                        filmAlpha: 0.04 + 0.1 * fade, filmSpark: Math.max(1, Math.round(facets * fade)) });
                     handle.after(1, step);
                 }
                 step(current);
@@ -155,7 +167,7 @@ namespace PokemonSkills {
         const data = JSON.parse(raw), world = event.world(), body = world.observe(event.actor()); if (!body) return;
         world.originData("world_combat:magiccoat/returning", "{}");
         WorldFeedback.emit(world, magiccoatScene, 1, body.position(), { moment: "reflect", target: data.from,
-            path: [String(event.actor().ref()), data.from], facets: data.facets, span: 0 }, 30);
+            path: [String(event.actor().ref()), data.from], facets: data.facets, accepted: 1, span: 0 }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), magiccoatReflectText,
             [{ key: "cobblemon.move." + data.move, fallback: data.move }], 36);
         world.sound("minecraft:entity.illusioner.mirror_move", body.position(), 12, "{}");

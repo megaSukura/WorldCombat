@@ -5,9 +5,11 @@
  *   目标可见、敌对、存活、在 `ai.maxChase`（默认 9）以内才考虑；更远交给共享接近逻辑，因为射程只到脸上。
  * 对谁出手：`ai.seekUnparalysed`（默认开）打开时，已经麻住的目标直接不算候选——蹭上去的必麻会被浪费；
  *   `ai.preferFast`（默认开）打开时，正在快速移动的目标优先级更高，追上去蹭住跑得快的那个。
+ * 已知对麻痹免疫的目标（与施加时同一道原生门禁：电属性、或免疫异常的特性）不再按控制价值拿高分，
+ *   只按低分保留，作为别无选择时的兜底。普通 MC 生物没有这层门禁，一视同仁。
  * 够不到怎么办：射程交给 `reach`（本族最短），共享任务负责把身位送进接触距离；这段接近就是它的风险。
  * 放完之后：目标必定带上麻痹身份，伙伴交回共享顺序；没蹭到只留一下扑空，冷却很短，可以再扑一次。
- * 优先级：基础 30（未麻的近身目标）；快速移动 +14。
+ * 优先级：基础 30（未麻的近身目标）；快速移动 +14；已知免疫目标降到 12、不再加快速分。
  */
 namespace PokemonSkills {
     /** 目标是否正在快速移动：追上去蹭住它最值。 */
@@ -15,6 +17,15 @@ namespace PokemonSkills {
         const velocity = target.velocity;
         if (!velocity) return false;
         return Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.08;
+    }
+
+    /** 与施加麻痹时同门禁的免疫读取：电属性与 statusImmune 特性都会被判为免疫；忽略目标已有的异常状态。 */
+    function nuzzleImmune(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const opponent = world.actor(target.ref);
+        if (opponent === null || String(opponent.domain()) !== "cobblemon" || !world.valid(opponent)) return false;
+        try { return !NativeEffects.statusAllowed(world, opponent, "paralysis", false, true); }
+        catch (error) { return false; }
     }
 
     CompanionBehavior.registerUse(nuzzleId, {
@@ -35,6 +46,8 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return 0;
+            // 已知免疫（电属性）的目标不按控制价值拿高分；仍保留低分，作为别无选择时的兜底。
+            if (nuzzleImmune(context, target)) return 12;
             return 30 + (CompanionBehavior.ai<boolean>(capability, "preferFast", true) && nuzzleFast(target) ? 14 : 0);
         }
     });

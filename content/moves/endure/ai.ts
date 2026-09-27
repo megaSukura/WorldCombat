@@ -1,9 +1,10 @@
 /**
  * 挺住 / endure 的 AI 用途。
  *
- * 什么局面下出手：有威胁、自己生命比例跌到 `ai.threshold` 以下、身上还没有挺住窗口时咬牙；
+ * 什么局面下出手：有可观察威胁、自己生命比例跌到 `ai.threshold` 以下、身上还没有挺住窗口时咬牙；
  * 血量更低、威胁已贴身或正把矛头指向自己时抬到 120，一定抢在共享顺序前——这是保命招。满血时不会空放。
- * 窗口不再定身，挺住后仍可走位，交给已有的撤退／生存策略继续。
+ * 威胁还在远处、只是一个仇恨目标时只给低分（近一些 70、很远 30），不拿一整窗去换一次无谓的提前保命。
+ * 窗口内是否定身按取向：屹立整窗定身、耗尽后再力竭，挣扎仍可走位，交给已有的撤退／生存策略继续。
  * 只剩本招时：血量掉到阈值就会被提出，落回共享游走直到受伤。
  */
 namespace PokemonSkills {
@@ -22,7 +23,9 @@ namespace PokemonSkills {
             if (!threat) return 0;
             const distance = CompanionBehavior.distance(self.point, threat.point);
             const pressed = threat.attacking === self.ref || distance <= 2.5;
-            return CompanionBehavior.ratio(self) < 0.2 || pressed ? 120 : 70;
+            if (CompanionBehavior.ratio(self) < 0.2 || pressed) return 120;
+            // 威胁不近、也没把矛头指向自己时，远处只是一个仇恨目标，不足以立刻耗掉整窗，按距离给低分。
+            return distance <= 8 ? 70 : 30;
         }
     });
 

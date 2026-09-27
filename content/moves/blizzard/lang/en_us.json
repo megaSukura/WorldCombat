@@ -3,7 +3,7 @@
   "worldcombat.skill.blizzard.use.0": "Lock down a patch of ground and force enemies off it",
   "worldcombat.skill.blizzard.use.1": "Cover a whole cluster of enemies at once",
   "worldcombat.skill.blizzard.use.2": "Push radius and freeze chance higher in the rain",
-  "worldcombat.skill.blizzard.description.0": "Each rake deals one hit to every enemy in the storm, about %1$s special damage on the first rake, for %2$s rakes; each later rake on the same target is about 85%% of the previous one, never below half.",
+  "worldcombat.skill.blizzard.description.0": "Each rake deals one hit to every enemy in the storm, about %1$s special damage on the first rake, for %2$s rakes. The wind only reaches foes the storm's axis can blow straight to: anyone fully hidden behind a solid wall inside the circle takes nothing. Only repeated hits on the same target decay: each later rake on it is about 85%% of the previous one, never below half, while a target that steps in late still takes a full first-rake hit.",
   "worldcombat.skill.blizzard.description.1": "Storm radius %1$s blocks, rake interval %2$s, cast distance %3$s blocks.",
   "worldcombat.skill.blizzard.description.2": "Each rake pushes enemies in the storm %1$s blocks outward and has a %2$s chance to freeze them; a frozen target cannot move or use moves for up to about 8 seconds, and fire damage breaks the freeze.",
   "worldcombat.skill.blizzard.description.4": "Windup %1$s, recovery %2$s, cooldown %3$s.",
@@ -28,9 +28,7 @@
   "worldcombat.skill.blizzard.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.blizzard.preference.ai.maxChase.help": "The companion only considers Blizzard while a target is within this many blocks; smaller keeps it close, larger locks down from further away.",
   "worldcombat.skill.blizzard.preference.ai.cluster": "Prefer clustered targets",
-  "worldcombat.skill.blizzard.preference.ai.cluster.help": "When on, the companion prefers targets with allies packed around them (the storm covers them all at once); off ranks only by range and target health.",
-  "worldcombat.skill.blizzard.preference.ai.clusterRadius": "Cluster radius",
-  "worldcombat.skill.blizzard.preference.ai.clusterRadius.help": "How many other enemies within this radius count as a cluster; larger values reward wide-area use, smaller ones only true packs.",
+  "worldcombat.skill.blizzard.preference.ai.cluster.help": "When on, the companion prefers targets the storm's real radius can cover best (counting only foes not walled off from the storm's axis); off ranks only by range and target health.",
   "world_combat.move.blizzard.text.hit": "Blizzard covered %1$s enemies",
   "world_combat.move.blizzard.text.miss": "Blizzard missed"
 }

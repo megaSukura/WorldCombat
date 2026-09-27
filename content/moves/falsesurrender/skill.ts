@@ -82,6 +82,7 @@ namespace PokemonSkills {
                 const at = base.plus(direction.scale(Math.max(0, length)));
                 lash.show(current, "lash", base, { moment: "lash",
                     path: [[base.x(), base.y(), base.z()], [at.x(), at.y(), at.z()]],
+                    point: [at.x(), at.y(), at.z()],
                     direction: [direction.x(), direction.y(), direction.z()],
                     intensity: intensity, scale: scale });
             }
@@ -112,9 +113,8 @@ namespace PokemonSkills {
                 const body = scope.observe(actor);
                 const at = body === null ? base : body.position();
                 if (wall !== null && wall.blocked()) {
-                    const cell = wall.blockPosition();
-                    const wallAt = cell === null ? wall.position() : cell;
-                    WorldFeedback.emit(scope, falsesurrenderScene, 1, wallAt, { moment: "wall", face: wall.blockFace(), scale: scale }, 20);
+                    // 撞墙回执就落在真实接触面，不用方块格中心代替接触点。
+                    WorldFeedback.emit(scope, falsesurrenderScene, 1, wall.position(), { moment: "wall", face: wall.blockFace(), scale: scale }, 20);
                 } else {
                     WorldFeedback.emit(scope, falsesurrenderScene, 1, at, { moment: "miss", scale: scale }, 20);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), falsesurrenderMissText, [], 22);
@@ -140,10 +140,10 @@ namespace PokemonSkills {
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)),
                     ambush ? falsesurrenderAmbushText : falsesurrenderHitText, [Math.round(power)], 26);
                 scope.sound("cobblemon:impact.dark", at, 14, "{}");
-                // 只有真实推动了才播撞顿；免位移目标照常吃伤，不被画面搬动。
+                // 被推用 hitDisplace，保留原生抗击退与事件；只有真实推动了才播撞顿，免位移目标照常吃伤、不被画面搬动。
                 if (scope.valid(victim)) {
                     const before = scope.observe(victim);
-                    const moved = before === null ? 0 : scope.displace(victim, direction.scale(push));
+                    const moved = before === null ? 0 : scope.hitDisplace(victim, direction.scale(push));
                     if (moved > 0.01) {
                         const after = scope.observe(victim);
                         if (after !== null) WorldFeedback.emit(scope, falsesurrenderScene, 1, after.position(),

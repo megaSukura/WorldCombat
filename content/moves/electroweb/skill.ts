@@ -37,9 +37,29 @@ namespace PokemonSkills {
         const feet = electrowebFeet(body);
         return feet.y() >= field.position[1] - 1.5 && feet.y() <= field.position[1] + 2.0;
     }
+    /** 网面落点下方是否仍有真实碰撞顶面支撑；被挖空就退场，不留悬空网。 */
+    function electrowebSupport(world: CombatWorld, point: CombatPoint): boolean {
+        const hit = world.clipBlocks(point.plus(WorldCombat.point(0, 0.25, 0)), point.minus(WorldCombat.point(0, 3, 0)));
+        return hit !== null && hit.blocked() && hit.blockFace() === "up";
+    }
+    /** 离网后挂在被缠者身上的短余丝：已有就续到最新 hold，与刷新后的 carrier 同命；否则新建。 */
+    function electrowebThreadsKeep(world: CombatWorld, actor: CombatActor, stages: number, hold: number): void {
+        const existing = world.effects(actor, electrowebThreads);
+        if (existing.length > 0) {
+            for (let i = 0; i < existing.length; i++)
+                world.operation(existing[i].id(), "world_combat:refresh", JSON.stringify({ ticks: hold }));
+            return;
+        }
+        world.effect(electrowebThreads, actor, JSON.stringify({ ref: String(actor.ref()), stages: stages, hold: hold }), hold);
+    }
 
     /** 电网场地：踏进来触电并缠足，留在网里持续被余电咬；离开后缠身自然消退。 */
     WorldEffects.fieldRule("world_combat:electroweb_net", {
+        // 每次场扫描确认网面仍有真实支撑；失去支撑就整张退场（余丝按被缠者自己的时限收）。
+        scan: function (effect, world, field) {
+            const at = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
+            if (!electrowebSupport(world, at)) effect.end();
+        },
         enter: function (world, actor, field) {
             if (world.friendly(actor)) return;
             const body = world.observe(actor);
@@ -54,7 +74,7 @@ namespace PokemonSkills {
             const hold = Math.max(20, Math.round(field.data.hold || 26));
             MobEffects.apply(world, actor, electrowebEffect, hold, 0);
             // 离网后的短余丝挂在独立托管效果上，和地网分开，随它一起收。
-            world.effect(electrowebThreads, actor, JSON.stringify({ ref: String(actor.ref()), stages: stages, hold: hold }), hold);
+            electrowebThreadsKeep(world, actor, stages, hold);
             const next = field.data.next || (field.data.next = {});
             next[String(actor.ref())] = world.tick() + Math.max(6, Math.round(field.data.pulse || 16));
             const feet = electrowebFeet(body);
@@ -69,6 +89,8 @@ namespace PokemonSkills {
             if (body === null || !electrowebOnNet(field, body)) return;
             const hold = Math.max(20, Math.round(field.data.hold || 26));
             MobEffects.apply(world, actor, electrowebEffect, hold, 0);
+            // 还站在网里就跟着被刷新的缠身一起延长余丝，离开后它才按自己的时限消退。
+            electrowebThreadsKeep(world, actor, Math.max(1, Math.round(field.data.stages || 1)), hold);
             const next = field.data.next || (field.data.next = {}), ref = String(actor.ref());
             if (world.tick() < (next[ref] || 0)) return;
             next[ref] = world.tick() + Math.max(6, Math.round(field.data.pulse || 16));
@@ -88,6 +110,12 @@ namespace PokemonSkills {
         const state = JSON.parse(effect.state());
         WorldFeedback.onEffect(world, effect.id(), "electroweb:threads:" + String(effect.target().ref()), electrowebScene, 1, body.position(),
             { moment: "residual", target: String(effect.target().ref()), stages: state.stages || 1, hold: effect.remaining() });
+    });
+    WorldCombat.effectHandler(electrowebThreads, "operation:world_combat:refresh", function (effect) {
+        if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("effect-not-owned"); return; }
+        const ticks = JSON.parse(effect.input()).ticks;
+        if (typeof ticks !== "number" || !isFinite(ticks) || ticks < 1) { effect.reject("invalid-duration"); return; }
+        effect.remaining(Math.max(1, Math.round(ticks)));
     });
     WorldCombat.on("world_combat:move_electroweb/clear", "world_combat:mob_effect_removed", "", function (event) {
         if (String(JSON.parse(String(event.data())).id) !== electrowebEffect) return;
@@ -110,15 +138,16 @@ namespace PokemonSkills {
         return null;
     }
 
-    /** 贴地网格顶点：按实际落点与半径画成一条蛇形折线，线就是会通电的网格，而不是一个圆圈。 */
+    /** 贴地网格顶点：按实际落点与半径画蛇形折线，每条横线裁到圆域内，网线就是会通电的那块圆面。 */
     function electrowebGrid(point: CombatPoint, radius: number): number[][] {
         const lines = Math.max(3, Math.min(8, Math.round(radius * 1.6)));
         const step = (radius * 2) / (lines - 1), path: number[][] = [];
         for (let i = 0; i < lines; i++) {
-            const z = point.z() - radius + i * step;
-            const left = point.x() - radius, right = point.x() + radius;
-            if (i % 2 === 0) path.push([left, point.y() + 0.06, z], [right, point.y() + 0.06, z]);
-            else path.push([right, point.y() + 0.06, z], [left, point.y() + 0.06, z]);
+            const dz = point.z() - radius + i * step, half = Math.sqrt(Math.max(0, radius * radius - (dz - point.z()) * (dz - point.z())));
+            if (half < 0.05) continue;
+            const left = point.x() - half, right = point.x() + half;
+            if (i % 2 === 0) path.push([left, point.y() + 0.06, dz], [right, point.y() + 0.06, dz]);
+            else path.push([right, point.y() + 0.06, dz], [left, point.y() + 0.06, dz]);
         }
         return path;
     }
@@ -159,7 +188,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const speed = Math.max(0.6, p("electroweb", "throwSpeed", action));
             const radius = Math.max(1.2, p("electroweb", "netRadius", action));
             const netTicks = Math.max(60, Math.round(p("electroweb", "netTicks", action)));
@@ -170,11 +198,13 @@ namespace PokemonSkills {
             const pulse = Math.max(6, Math.round(p("electroweb", "pulseTicks", action)));
             const hold = Math.max(16, Math.round(p("electroweb", "holdTicks", action)));
             const scale = radius / 2.2;
+            const scenes = WorldFeedback.actionScenes(electrowebScene);
             let opened = false;
 
             function open(current: CombatAction, raw: CombatPoint): void {
                 if (opened) { return; }
                 opened = true;
+                scenes.stop(current, "toss");
                 const scope = current.world();
                 const point = electrowebGround(scope, raw);
                 if (point === null) {
@@ -197,13 +227,19 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.thundershock.actor");
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: Math.max(0.25, radius * 0.32), gravity: 0.03, lifetime: 120,
                 appearance: { sprite: "cobblemon:generic/orb/energyorb", glow: true, tint: 0xBFE9FF, scale: 0.9 },
                 impact: function (current: CombatAction, hit: CombatImpact) { open(current, hit.position()); }
-            }, function (current: CombatAction) { open(current, current.targetPosition()); });
-            WorldFeedback.emit(world, electrowebScene, 1, action.origin(),
-                { moment: "toss", projectile: flight, radius: radius, scale: scale }, 30);
+            }, function (current: CombatAction) {
+                // 自然结束：按弹体真实末点找地面铺网；读不到真实末点就不铺，也不假造终点。
+                const end = current.world().projectilePosition(flight);
+                if (end === null) { if (!opened) { opened = true; scenes.finish(current, done); } return; }
+                open(current, end);
+            });
+            scenes.show(action, "toss", action.origin(),
+                { moment: "toss", projectile: flight, radius: radius, scale: scale });
         }
     });
 }

@@ -24,7 +24,7 @@ namespace PokemonSkills {
         id: grasswhistleId,
         cooldownParameter: "recharge",
         name: "草笛",
-        description: "含一片草叶吹出一声笔直的哨音，沿选定方向穿过第一个目标、继续扎进它背后的敌人：整条音线里的人一起被这一声带走入睡。它要有没被墙挡住的直线，实心墙会把音线截断在墙面，但同伴的身体挡不住声音；可以朝任意方向或世界点吹、也可以空吹。一声要么响要么裂，响不响由双方特攻与等级对抗决定。",
+        description: "含一片草叶吹出一声笔直的哨音，沿选定方向穿过第一个目标、继续扎进它背后的敌人：整条音线里的人一起被这一声带走入睡。实心墙会把音线截断在墙面，每个目标也各自需要一条没被墙挡住的直线；但同伴的身体挡不住声音。可以朝任意方向或世界点吹、也可以空吹，空吹时按固定的基准成功率；有明确目标时，响不响由双方特攻与等级对抗决定。",
         uses: ["隔着同伴把成一条线的一串敌人一起放倒", "从远处压住一个正在拉开距离的威胁", "配合队友站位，让敌人排成一条线"],
         kind: "aim",
         range: 10,
@@ -118,6 +118,8 @@ namespace PokemonSkills {
                 if (landed >= voices) break;
                 const entry = listeners[i];
                 if (!world.valid(entry.actor)) continue;
+                // 每个身体各自需要一条不被墙挡住的直线；中轴通畅只保证音束本身，侧墙仍能替某个人挡下这一声。
+                if (WorldGeometry.blockHit(world, origin, entry.point) !== null) continue;
                 if (CombatStatus.has(world, entry.actor, "sleep")) continue;
                 if (!CombatStatus.inflict(world, entry.actor, "sleep", sleepTicks)) {
                     WorldFeedback.emit(world, grasswhistleScene, 1, entry.point, { moment: "immune", target: String(entry.actor.ref()) }, 20);

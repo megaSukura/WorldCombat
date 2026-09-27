@@ -4,11 +4,12 @@
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、对方还没被羽绒覆住。
  * 对谁出手：当前威胁；正在攻击自己或主人、或刚打过自己的那个优先——先把最凶的物攻手压住。
  *   物理威胁（atk ≥ spa）额外提价，正对得上「削弱靠物攻输出的对手」。
- * 预判撒羽：移动中的目标，用它的当前速度乘上「羽绒飞到它所在处所需的刻数」（距离 ÷ flightSpeed，
- *   时间夹 0..12 刻、位移再夹 2.5 格），把云撒在它下一刻要经过的位置。预测点先过两关才采用：
- *   clipBlocks 确认施法者到预测点之间没有被地形截下，地表探针确认预测点下方确有可落的地面；
+ * 预判撒羽：移动中的目标，用它的当前速度乘上「羽绒飞到它所在处所需的刻数」（距离 ÷ 本次公式 flightSpeed，
+ *   时间夹 0..12 刻、位移再夹本次公式撒羽距离以内的 2.5 格），把云撒在它下一刻要经过的位置。预测点先过两关才采用：
+ *   clipBlocks 确认施法者到预测点之间没有被地形截下，真实方块碰撞确认预测点下方确有可落的面；
  *   任一不过就退回目标当前位置，不硬赌。这是 target 钩子里的只读计算，不新增机制、不改本招强度。
  * 够不到怎么办：reach 就是撒羽距离，超出的先走近；羽绒会被掩体挡下，视线不好时交回共享接近逻辑。
+ *   驻守只约束「离位」：原地够得到就照撒，由共享的 approach/站位规则决定要不要动。
  * 放完之后：目标大幅掉攻击，落点留下一片绒雾；伙伴随即交回共享顺序，把对手往绒雾里带或直接追击。
  */
 namespace CompanionBehavior {
@@ -20,36 +21,33 @@ namespace CompanionBehavior {
     function featherdanceWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
         return !status(context, threat, "downy");
     }
 
-    /** 预测点下方是否有可落羽的地面：向下探几格，遇到空气继续，遇到液体视为不可落，找不到支撑面则不采用。 */
+    /** 预测点下方是否有真实支撑：向下投射一次真实方块碰撞，命中才算可落羽。 */
     function featherdanceLanding(world: CombatWorld, at: number[]): boolean {
-        const baseY = Math.floor(at[1]);
-        for (let probe = baseY + 1; probe >= baseY - 4; probe--) {
-            const block = world.block(WorldCombat.point(at[0], probe, at[2]));
-            if (block === null) return false;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            return id !== "minecraft:water" && id !== "minecraft:lava";
-        }
-        return false;
+        const atPoint = point(at);
+        return WorldGeometry.blockHit(world, atPoint.plus(WorldCombat.point(0, 1.0, 0)), atPoint.minus(WorldCombat.point(0, 4.0, 0))) !== null;
     }
 
-    /** 预判落点：当前速度 × 有界飞行时间，再夹位移；clipBlocks 与地表探针任一不过就退回目标当前位置。 */
+    /** 预判落点：本次公式速度 × 有界飞行时间（位移再受实际撒羽距离限制）；clipBlocks 与地表探针任一不过就退回目标当前位置。 */
     function featherdancePredicted(context: WorldBehavior.Context, item: WorldBehavior.Capability, selected: Entity): Entity {
         const velocity = selected.velocity;
         if (!velocity || velocity.length < 3) return selected;
         const self = source(context), world = CompanionBehavior.world(context);
-        let speed = 1.0;
-        try { speed = Math.max(0.5, PokemonSkills.p("featherdance", "flightSpeed", world)); }
-        catch (error) { speed = 1.0; }
-        const lead = Math.max(0, Math.min(12, distance(self.point, selected.point) / speed));
+        let speed = 1.0, reach = item.data.range;
+        try {
+            speed = Math.max(0.5, PokemonSkills.p("featherdance", "flightSpeed",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills["featherdance"], detail: { values: item.data.config } }));
+            reach = Math.max(0.5, PokemonSkills.p("featherdance", "reach",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills["featherdance"], detail: { values: item.data.config } }));
+        } catch (error) { speed = 1.0; }
+        const distance = CompanionBehavior.distance(self.point, selected.point);
+        const lead = Math.max(0, Math.min(12, distance / speed));
         if (lead <= 0) return selected;
         let dx = velocity[0] * lead, dz = velocity[2] * lead;
-        const length = Math.sqrt(dx * dx + dz * dz), cap = 2.5;
+        const length = Math.sqrt(dx * dx + dz * dz), cap = Math.max(0.5, Math.min(2.5, reach));
         if (length > cap) { dx *= cap / length; dz *= cap / length; }
         if (Math.abs(dx) + Math.abs(dz) < 0.05) return selected;
         const predicted = [selected.point[0] + dx, selected.point[1], selected.point[2] + dz];

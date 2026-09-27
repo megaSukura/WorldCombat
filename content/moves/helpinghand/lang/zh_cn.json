@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.helpinghand.summary": "伸手托伙伴一把：把一小束光送进他身体，让他下一次命中更重；用掉即散，不用则自行褪去。只能帮助离自己够近的伙伴。",
+  "worldcombat.skill.helpinghand.summary": "伸手托伙伴一把：把一小束光送进他身体，让他下一次造成直接伤害的命中更重；用掉即散，不用则自行褪去。只能帮助离自己够近的伙伴。",
   "worldcombat.skill.helpinghand.use.0": "让伙伴的下一发大招更重",
   "worldcombat.skill.helpinghand.use.1": "在队友连招前先托一把",
   "worldcombat.skill.helpinghand.use.2": "把一次命中机会放大成一次击倒",
-  "worldcombat.skill.helpinghand.description.0": "伙伴的下一次命中额外造成 %1$s%% 的伤害；这份光能留 %2$s 秒。",
+  "worldcombat.skill.helpinghand.description.0": "伙伴的下一次直接命中额外造成 %1$s%% 的伤害；这份光能留 %2$s 秒。",
   "worldcombat.skill.helpinghand.description.1": "对伙伴施放，施放距离约 %1$s 格；不能对自己使用。",
   "worldcombat.skill.helpinghand.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.helpinghand.stance.rally": "同心协力：加成 ×1.15，但光只留 65% 的时长、冷却 +8 刻——把一次命中堆到最重。",
@@ -26,5 +26,5 @@
   "world_combat.move.helpinghand.text.strike": "借力命中！",
   "world_combat.move.helpinghand.text.fade": "这股力散了",
   "effect.world_combat.helping_hand": "被帮助",
-  "worldcombat.skill.helpinghand.description.effect": "这份光只兑现在伙伴接下来造成伤害的下一次命中上，用完即散；如果一直没造成伤害，会在到期时自行褪去。重复托举只刷新，不会叠加。"
+  "worldcombat.skill.helpinghand.description.effect": "这份光只兑现在伙伴下一次造成直接伤害的命中上：宝可梦招式、原版生物近战和玩家挥击都算，用掉即散。持续伤害、被护盾或免疫挡下、以及零伤害都不消耗它，光会留到下一次机会；一直没兑现就在到期时自行褪去。重复托举只刷新，不会叠加。"
 }

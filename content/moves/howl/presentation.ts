@@ -17,7 +17,7 @@ const HowlDefinition: ParticleDefinition = {
     moments: {
         draw: {
             duration: 14,
-            exit: { stop: 5, drain: 12 },
+            exit: { stop: 14, drain: 12 },
             emitters: [
                 {
                     name: "draw_breath", bind: "source", fit: "body", height: 0.7,

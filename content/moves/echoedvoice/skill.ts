@@ -6,9 +6,11 @@
  *
  * 两幕：
  *   起（inhale，提交前）：吸一口气、声点在喉头聚成环，只播预告。
- *   唱（release → impact／miss）：提交后声波沿瞄准方向掠向目标；命中就按当前层数结算一次声音伤害，
- *       在目标身上炸开 `layer` 圈声环；没命中就在尽头散掉。这一唱同时把回声留在自己身上（共享身份
- *       world_combat:status/echoed_voice，振幅 = 层数−1），供下一个人接着叠。
+ *   唱（release → impact／miss）：提交后声音**瞬时**落向目标，没有需要时间穿行的声速；命中就按当前层数
+ *       结算一次声音伤害，在目标身上炸开 `layer` 圈声环；没命中就在尽头散掉。这一唱同时把回声留在自己身上
+ *       （共享身份 world_combat:status/echoed_voice，振幅 = 层数−1），供下一个人接着叠。
+ * 层数：能接上的层数由附近回声**发声者自身**的传播距决定（parameter 的 audible），界面、AI 与接唱同源。
+ * 余韵：真实回声载体上挂一条托管标记，用稀疏的定数图形显示还剩几层、临近结束淡出；标记随回声身份一起消失。
  *
  * 与同族分开：
  *   轮唱（round）是把一句歌的余韵传给**同伴**、只在接住时翻一次倍；
@@ -16,6 +18,34 @@
  *   一个像传球，一个像叠浪。
  */
 namespace PokemonSkills {
+    /** 回声载体上的层数余韵：一条托管标记，随回声身份同寿；图形由 custom scene 逐帧画固定数量。 */
+    const echoMark = "world_combat:move_echoedvoice/layers";
+    const echoMarkKey = "world_combat:move_echoedvoice/layers";
+    const echoLayerScene = "world_combat:move_echoedvoice_layers";
+    WorldCombat.effect(echoMark, 1, 1200, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        ["layer", "start", "duration"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid echo layer state");
+        });
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(echoMark, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        const state = JSON.parse(effect.state());
+        WorldFeedback.onEffect(world, effect.id(), echoMarkKey, echoLayerScene, 1, body.position(),
+            { moment: "layers", actor: String(target.ref()), layer: state.layer, total: 5, duration: state.duration, start: state.start });
+    });
+    WorldCombat.effectHandler(echoMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 回声身份被牛奶/驱散提前拿掉时，立刻撤掉余韵，不留下失效锚。
+    WorldCombat.on("world_combat:move_echoedvoice/release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== echoEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, echoMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
+
     define({
         id: echoId,
         cooldownParameter: "recharge",
@@ -64,7 +94,6 @@ namespace PokemonSkills {
             const layer = echoedvoiceLayer(world, actor);
             const power = p(echoId, "verse", action);
             const reach = p(echoId, "reach", action);
-            const speed = p(echoId, "waveSpeed", action);
             const motes = Math.max(4, Math.round(p(echoId, "motes", action)));
             const ringRadius = p(echoId, "ringRadius", action);
             const ticks = Math.max(60, Math.round(p(echoId, "echoTicks", action)));
@@ -76,7 +105,7 @@ namespace PokemonSkills {
             sound(action, layer > 1 ? "minecraft:block.note_block.chime" : "minecraft:block.note_block.pling");
             WorldFeedback.emit(world, echoScene, 1, centre,
                 { moment: "release", path: [[centre.x(), centre.y() + 0.7, centre.z()], [end.x(), end.y() + 0.7, end.z()]],
-                    layer: layer, motes: motes, speed: speed, scale: scale }, 28);
+                    layer: layer, motes: motes, scale: scale }, 28);
 
             if (target !== null && world.valid(target) && !world.friendly(target) && end.minus(centre).length() <= reach + 0.6) {
                 landed = hurt(action, target, echoId, power, { damage: damageSpec(echoId, "verse"), sound: true });
@@ -92,7 +121,12 @@ namespace PokemonSkills {
                 }
             }
             // 这一唱把回声留在自己身上：谁接上就从这一层继续叠。先算完威力再留，避免读到自己这一层。
-            CombatStatus.apply(world, actor, echoStatus, echoEffect, ticks, layer - 1, { unique: true });
+            const marked = CombatStatus.apply(world, actor, echoStatus, echoEffect, ticks, layer - 1, { unique: true });
+            if (marked) {
+                // 给真实回声载体挂上可数的层数余韵；重唱替换旧标记，随回声身份同寿。
+                world.effects(actor, echoMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+                world.effect(echoMark, actor, JSON.stringify({ layer: layer, start: world.tick(), duration: ticks }), ticks);
+            }
             if (!landed) {
                 WorldFeedback.emit(world, echoScene, 1, end, { moment: "miss", layer: layer, motes: motes, scale: scale }, 20);
                 WorldFeedback.text(world, end.plus(WorldCombat.point(0, 1.0, 0)), echoMissText, [], 26);

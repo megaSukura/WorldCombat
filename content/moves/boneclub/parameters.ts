@@ -40,12 +40,12 @@ namespace PokemonSkills {
                 description: "骨头抡中时这一下的基础威力；物攻给出挥击的力、体重把全身压进棍里。横扫式每人更轻。对手防御、相性与暴击在命中时另算。"
             }),
         /** 够到长度：基础 3.0 格，身高每比 1.4 高 1 格加 0.28（上限 +1.0），速度每比 55 快 1 加 0.008（上限 +0.5）；
-         *  横扫 ×1.05 / 直刺 ×0.95；夹在 2.2..4.6。 */
+         *  横扫 ×1.05 / 直刺 ×0.95；夹在 2.2..4.1，加上 resolve 的 0.3 接受余量正好对齐 maxRange 4.4。 */
         reach: formula(
             F.base(3.0).plus(F.body("height").minus(1.4).times(0.28).clamp(-0.4, 1.0))
                 .plus(F.stat("speed").minus(55).times(0.008).clamp(-0.2, 0.5))
                 .times(F.when(F.pref("sweep", text("worldcombat.skill.boneclub.preference.sweep")), F.const(1.05), F.const(0.95)))
-                .clamp(2.2, 4.6).round(2),
+                .clamp(2.2, 4.1).round(2),
             "够到长度", {
                 unit: "格",
                 description: "骨头加上前伸的身体能够到的长度，也是本招的实际射程来源；个子越高、手臂越长够得越远。"

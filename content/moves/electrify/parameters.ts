@@ -9,10 +9,9 @@
  *
  * 数值来源（都来自个体，分散在不同参数上）：
  *   surgeDuration  基础 160 刻 + 等级×4 刻，再乘导法系数，限幅 100~420
- *   arcCount       基础 6 + 特攻/18，限幅 4~14：输电瞬间电弧的条数
- *   dischargeRadius 基础 0.7 格 + 体重每 250 单位 +1 格（最多 +0.8）：电荷爆开的范围
- *   sparkSpeed     基础 0.14 格/刻 + 速度/900（最多 +0.2）：电弧爬向目标的快慢
- * 配置项 allMoves 在“全导（把任何招式都变成电，更强但更短更贵）”和“滤波（只把一般属性招式变电，更久更便宜）”之间取舍。
+ *   arcCount       基础 6 + 特攻/18，限幅 4~14：输电瞬间沿导线撒出的电弧点数
+ * 配置项 allMoves 在“全导（把任何已知非电招式都变成电，更强但更短更贵）”和“滤波（只把已知一般属性招式变电，更久更便宜）”之间取舍。
+ * 未分类的原生攻击保持未知，不被猜成一般属性，也不改写。
  */
 namespace PokemonSkills {
     export const electrifyScene = "world_combat:move_electrify";
@@ -28,16 +27,10 @@ namespace PokemonSkills {
             .times(F.when(F.pref("allMoves"), F.const(0.75), F.const(1.25)).as("导法"))
             .clamp(100, 420),
             "通电持续", "目标下一次出招前，电荷能挂多久；全导 -25%、滤波 +25%，并随等级延长。"),
-        arcCount: formula(F.base(6, "电弧条数")
+        arcCount: formula(F.base(6, "电弧点数")
             .plus(F.stat("specialAttack").div(18).as("特攻"))
             .clamp(4, 14).round(),
-            "电弧条数", { unit: " 条", description: "输电瞬间爬向目标的电弧条数；特攻越高电弧越密。" }),
-        dischargeRadius: formula(F.base(0.7, "爆开半径")
-            .plus(F.body("weight").div(10).max(0).div(250).min(0.8).as("体重")),
-            "爆开半径", { unit: " 格", description: "输掉的电在目标出招命中时爆开的半径；体重越大炸得越开。" }),
-        sparkSpeed: formula(F.base(0.14, "电弧速度")
-            .plus(F.stat("speed").div(900).min(0.2).as("速度")),
-            "电弧速度", { unit: " 格/刻", description: "电弧爬向目标的快慢；速度越高爬得越快。" })
+            "电弧点数", { unit: " 点", description: "输电瞬间沿施放者到目标的导线撒出的电弧点数；特攻越高越密。" })
     });
 
     stages("electrify", [{ level: 30, values: { cooldown: 52 } }, { level: 50, values: { cooldown: 44 } }]);

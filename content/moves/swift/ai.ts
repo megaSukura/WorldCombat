@@ -3,8 +3,8 @@
  *
  * 什么局面下出手：考虑距离内有可见的敌对目标时列入候选；够不到交给共享接近逻辑。
  * 遮挡会明显降低收益：目标被墙挡住时权重下调，因为星会撞墙熄灭。
- * `ai.spread`（默认开）让它数一数目标身边还有几个看得见的敌人：有第二个时抬高 priority，因为散星能同时咬住两个。
- * 关掉后只按普通远程攻击使用（聚星收单）。
+ * 只在散星配置开启、且 `ai.spread` 允许时，数一数目标身边还有几个看得见的敌人：有第二个时抬高 priority，
+ * 因为散星能同时咬住两个；聚星（scatter 关闭）只按普通远程攻击使用，不再为群体加分。
  */
 namespace PokemonSkills {
     /** 目标与自身之间是否有一条能让星飞过去的空路；同一决策帧内缓存。 */
@@ -13,6 +13,12 @@ namespace PokemonSkills {
             const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
             return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
         });
+    }
+
+    /** 本个体是否开启了散星配置；只有散星才会把星分给多个对手。 */
+    function swiftScatter(capability: WorldBehavior.Capability): boolean {
+        const config = capability.data.config;
+        return !!(config && config.scatter === true);
     }
 
     CompanionBehavior.registerUse("swift", {
@@ -32,7 +38,7 @@ namespace PokemonSkills {
             var gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             var base = gap <= capability.data.range ? 22 : 0;
             if (!swiftClear(context, target)) base = Math.max(0, base - 12);
-            if (!CompanionBehavior.ai<boolean>(capability, "spread", true)) return base;
+            if (!swiftScatter(capability) || !CompanionBehavior.ai<boolean>(capability, "spread", true)) return base;
             var nearby = context.facts.nearby as CompanionBehavior.Entity[];
             for (var i = 0; i < nearby.length; i++) {
                 var other = nearby[i];

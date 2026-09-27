@@ -6,8 +6,9 @@
  *
  * 两幕：
  *   起（windup 播「鼓气」，提交前只观察与预告，可被打断，打断不花代价）。
- *   叫（提交后）：以自身为圆心张开 soundRadius 的一圈，凡圈内非友方都会被叫到——不看视线，
- *     逐个挂共享的 world_combat:growl_hush（身份 world_combat:status/charmed）并下降攻击。
+ *   叫（提交后）：以自身为圆心张开 soundRadius 的一圈，凡圈内非友方都会听见——不看视线。真的被压低攻击的
+ *     才挂共享的 world_combat:growl_hush（身份 world_combat:status/charmed，仅作「刚被叫软」的反馈身份）；
+ *     攻击不到底或被能力拒绝时不占回执，也不留标记。标记会自行消退，真正的代价是永久的攻击等级下降。
  * 反制：拉开到 hearing 半径之外；它不造成伤害，也挡不住对方绕到圈外再进来。
  */
 namespace PokemonSkills {
@@ -46,9 +47,13 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", howl: config && config.howl ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) {
+        indicator: function (config, pokemon, inspection) {
             const howl = !!(config && config.howl);
-            return { radius: howl ? 5.5 : 3.5, geometry: "circle", style: "call", color: 0xE8B84A,
+            const values = config || {};
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[growlId], detail: { values: values },
+                world: inspection && inspection.world, actor: inspection && inspection.actor, attributes: inspection && inspection.attributes };
+            const radius = pokemon ? Math.max(2.5, Math.min(7, p(growlId, "soundRadius", context))) : (howl ? 5.5 : 3.5);
+            return { radius: radius, geometry: "circle", style: "call", color: 0xE8B84A,
                 label: howl ? "叫声·拖长音" : "叫声" };
         },
         execute: function (action, move, config, done) {
@@ -60,22 +65,25 @@ namespace PokemonSkills {
             const hush = Math.max(60, Math.round(p(growlId, "hushTicks", action)));
             const notes = Math.max(12, Math.round(p(growlId, "notes", action)));
             sound(action, "minecraft:entity.wolf.growl");
-            let hits = 0;
-            // 声音不看视线：掩体挡不住这一声叫。
+            let hits = 0, softened = 0;
+            // 声音不看视线：掩体挡不住这一声叫。只有真的压低攻击才算被叫软；抗性的目标不占回执、也不留标记。
             WorldGeometry.select(world, WorldGeometry.ring(origin, 0, radius, { below: 2, above: 3 }), function (actor, facts) {
                 if (facts.friendly()) return;
+                const applied = NativeEffects.boost(world, actor, "atk", -drop);
+                if (applied === 0) return;
                 MobEffects.apply(world, actor, growlEffect, hush, 0);
-                NativeEffects.boost(world, actor, "atk", -drop);
                 hits++;
+                softened += Math.abs(applied);
                 WorldFeedback.emit(world, growlScene, 1, facts.position(),
-                    { moment: "hush", target: String(actor.ref()), drop: drop, notes: notes }, 26);
+                    { moment: "hush", target: String(actor.ref()), drop: Math.abs(applied), notes: notes }, 26);
             });
+            const perDrop = hits > 0 ? Math.round(softened / hits) : drop;
             WorldFeedback.emit(world, growlScene, 1, origin,
                 { moment: "call", radius: radius, hits: hits, notes: notes, scale: radius / 3.5 }, 34);
             if (hits === 0)
                 WorldFeedback.emit(world, growlScene, 1, origin, { moment: "fizzle", scale: radius / 3.5 }, 16);
             WorldFeedback.text(world, growlAbove(origin), hits > 0 ? "world_combat.move.growl.text.call" : "world_combat.move.growl.text.empty",
-                hits > 0 ? [hits, drop] : [], 32);
+                hits > 0 ? [hits, perDrop] : [], 32);
             done(action);
         }
     });

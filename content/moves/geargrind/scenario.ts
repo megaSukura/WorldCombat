@@ -22,7 +22,7 @@ Smoke.scenario("geargrind", function (stage) {
         stage.after(100, function () {
             stage.expect(stage.casts("geargrind", caster) >= 1, "the caster committed geargrind");
             stage.expect(stage.damageTo(foe) > 0, "geargrind dealt damage to the foe");
-            stage.note("each gear rolls its own deviation (the 85 accuracy translation) and may bounce off terrain instead of hitting", {
+            stage.note("each gear launches from its own side origin, rolls its own deviation (the 85 accuracy translation) and may bounce off terrain instead of hitting; a spent gear only grounds where it has real support", {
                 casts: stage.casts("geargrind", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

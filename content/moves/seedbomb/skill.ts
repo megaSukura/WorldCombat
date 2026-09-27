@@ -43,10 +43,14 @@ namespace PokemonSkills {
             const world=action.world(),origin=action.origin(),point=action.targetPosition(),delta=point.minus(origin),gravity=.05;
             const power=p("seedbomb","volley",action),spread=p("seedbomb","spread",action),radius=p("seedbomb","seedRadius",action),speed=p("seedbomb","arcSpeed",action),drop=p("seedbomb","dropHeight",action);
             const seeds=p("seedbomb","seeds",action),chaff=p("seedbomb","chaff",action),heavy=!!(config&&config.heavy),scenes=WorldFeedback.actionScenes(seedbombScene);
+            const fuseMax=heavy?3:6;
             // A finite high-arc time; reconstruct the native move/0.99 drag/gravity velocity for that endpoint.
             const duration=Math.ceil(Math.max(Math.sqrt(delta.x()*delta.x()+delta.z()*delta.z())/speed,2*Math.sqrt(2*drop/gravity)));
             const factor=(1-Math.pow(.99,duration))/.01,fall=gravity/.01*(duration-factor);
             const velocity=WorldCombat.point(delta.x()/factor,(delta.y()+fall)/factor,delta.z()/factor);
+            // Range follows the real predicted arc; the short rebound still fits inside the same budget.
+            const predicted=LivingActions.ballisticPath(origin,velocity,gravity,duration);
+            let travel=0;for(let i=1;i<predicted.length;i++)travel+=predicted[i].minus(predicted[i-1]).length();
             let settled=false,bounced=false,burst=false,flight="",last=origin;
             function finish(current:CombatAction):void{if(settled)return;settled=true;scenes.finish(current,done);}
             function crack(current:CombatAction,at:CombatPoint):void{
@@ -59,15 +63,18 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope,seedbombScene,1,at,{moment:hits?"burst":"miss",seeds:seeds,chaff:chaff,hits:hits,scale:spread/1.5,intensity:power/80},22);
                 scope.sound("cobblemon:impact.grass",at,16,"{}");scope.cancelProjectile(flight);finish(current);
             }
+            // Fuse reads the one real projectile the caster owns, and the completion callback keeps its last
+            // real point, so neither the source origin nor the full-aim point can stand in for the pod.
             function fuse(current:CombatAction,age:number):void{
-                if(burst)return;const scope=current.world(),shots:CombatProjectileFacts[]=JSON.parse(scope.projectiles(current.origin(),32));
-                const shot=shots.filter(value=>value.id===flight)[0];if(!shot){finish(current);return;}
-                last=WorldCombat.point(shot.position[0],shot.position[1],shot.position[2]);
-                scenes.show(current,"shell",last,{moment:"rolling",projectile:flight,crack:age/(heavy?3:6),seeds:seeds,scale:radius*2});
-                if(age >= (heavy?3:6)){crack(current,last);return;}current.after(1,next=>fuse(next,age+1));
+                if(burst)return;const scope=current.world(),at=scope.projectilePosition(flight);
+                if(at===null){crack(current,last);return;}
+                last=at;const progress=Math.min(1,age/fuseMax);
+                scenes.show(current,"shell",last,{moment:"rolling",projectile:flight,crack:progress,
+                    crackRate:8+Math.round(progress*18),crackSize:0.05+progress*0.1,seeds:seeds,scale:radius*2});
+                if(age>=fuseMax){crack(current,last);return;}current.after(1,next=>fuse(next,age+1));
             }
             action.releaseTarget();sound(action,"cobblemon:move.seedbomb.actor");
-            flight=LivingActions.projectile(action,{speed:velocity.length(),direction:velocity.unit(),range:delta.length()+2*drop+8,radius:radius,gravity:gravity,lifetime:duration+30,
+            flight=LivingActions.projectile(action,{speed:velocity.length(),direction:velocity.unit(),range:Math.max(delta.length()+4,travel+4),radius:radius,gravity:gravity,lifetime:duration+30,
                 appearance:{item:"minecraft:pumpkin_seeds",scale:Math.max(.7,radius*2.4),bounce:1,restitution:heavy?.12:.35},
                 impact:function(current,hit){
                     last=hit.position();
@@ -75,7 +82,10 @@ namespace PokemonSkills {
                         bounced=true;scenes.stop(current,"flight");current.after(1,next=>fuse(next,1));return;
                     }
                     crack(current,last);
-                }},function(current){if(!burst&&!bounced)WorldFeedback.emit(current.world(),seedbombScene,1,last,{moment:"miss",seeds:seeds,scale:radius},14);finish(current);});
+                }},function(current){
+                    if(settled)return;const at=current.world().projectilePosition(flight);if(at!==null)last=at;
+                    crack(current,last);
+                });
             scenes.show(action,"flight",origin,{moment:"toss",projectile:flight,seeds:seeds,scale:spread/1.5});
         }
     });

@@ -30,6 +30,13 @@ const BurnupDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
                     rate: 90, shape: { kind: "polyline" }, direction: "up", speed: [0.01, 0.04],
                     lifetime: [5, 9], size: [0.28, 0.04], color: 0xFFF1D6, alpha: [0.9, 0], light: "full" },
+                // 稀疏内焰填实锥体：沿真实前进方向、用当前前缘半径与推进距离撑起这一小段，避免只看到一圈边线。
+                { name: "inner_flame", bind: "source", fit: "world", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: 44, shape: { kind: "cone_volume", radius: { data: "front", fallback: 1 },
+                        length: { data: "travel", fallback: 2 }, angleDegrees: { data: "half", fallback: 31 } },
+                    direction: "shape", speed: [0.02, 0.07], spread: 12,
+                    lifetime: [6, 12], size: [0.16, 0.03], color: 0xFFD9A0, alpha: [0.45, 0], light: "full", maxParticles: 90 },
                 { name: "spent_edge", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember", rate: { data: "ember", fallback: 24 },
                     shape: { kind: "polyline" }, direction: "up", speed: 0.02,
@@ -84,13 +91,13 @@ const BurnupDefinition: ParticleDefinition = {
             ]
         },
         spent: {
-            duration: 30,
-            exit: { stop: 12, drain: 20 },
+            // 与载体同寿命：不写 duration，效果还在就持续挂一枚小标识，覆盖整段 180–620 刻的燃尽。
+            exit: { drain: 24 },
             emitters: [
                 {
                     name: "dying_embers", bind: "source", offset: [0, 0.35, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: 12, shape: { kind: "ring", radius: 0.4 },
+                    rate: 12, burst: { count: 14, at: 0 }, shape: { kind: "ring", radius: 0.4 },
                     direction: "up", speed: [0.01, 0.07],
                     lifetime: [12, 22], size: [0.08, 0.01],
                     color: 0xD9611E, alpha: [0.7, 0], light: "full", maxParticles: 60

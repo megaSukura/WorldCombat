@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.destinybond.summary": "Openly ties a thread of fate to yourself: for a short while, whoever personally brings you down is dragged down with you. It does not shield you - it only puts the cost of the killing blow on the table. Using it while a bond is already armed fails.",
+  "worldcombat.skill.destinybond.summary": "Openly ties a thread of fate to yourself: for a short while, whoever brings you down with a real attack is struck back at their own current-health scale - usually dragged down too, but a shield, invulnerability or native protection may stop it. It does not shield you; it only puts the cost of the killing blow on the table. Using it while a bond is already armed fails.",
   "worldcombat.skill.destinybond.use.0": "Turn the finishing blow into the foe's own price while low",
-  "worldcombat.skill.destinybond.use.1": "Force a foe to hold back and buy a breath or a retreat",
+  "worldcombat.skill.destinybond.use.1": "Make a foe hesitate before the finishing blow and buy a breath or a retreat",
   "worldcombat.skill.destinybond.use.2": "Take the enemy's main threat down with you",
-  "worldcombat.skill.destinybond.description.0": "The armed bond stays on you for %1$s; during that time any non-ally blow that truly brings you down is dragged down too.",
+  "worldcombat.skill.destinybond.description.0": "The armed bond stays on you for %1$s; during that time a real non-ally attack that truly brings you down strikes the killer back at their own current-health scale and usually drags them down - though a shield, invulnerability or native protection may only take part of it.",
   "worldcombat.skill.destinybond.description.1": "Tying it takes %1$s, with a %2$s cooldown. It neither reduces damage nor shields you; it only puts the cost on the table.",
   "worldcombat.skill.destinybond.tight.0": "Tight knot: a longer bond, but you are rooted on the spot the whole time and the cooldown is longer.",
   "worldcombat.skill.destinybond.tight.1": "Loose knot: a shorter bond, but you keep your footing and the cooldown is shorter - and it loosens sooner.",
@@ -28,5 +28,5 @@
   "world_combat.move.destinybond.text.resist": "Destiny Bond: the killer withstood the pull",
   "world_combat.move.destinybond.text.lift": "The thread loosens",
   "effect.world_combat.destiny_bond": "Destiny Bond",
-  "worldcombat.skill.destinybond.description.2": "Casting it again while a bond is already armed fails; the thread loosens when its time runs out or it is cleared, and as long as you have not been brought down no one is dragged with you."
+  "worldcombat.skill.destinybond.description.2": "Indirect residual damage (poison, burn, chains, reflections) and environmental finishes do not trigger the thread; casting it again while a bond is already armed fails; the thread loosens when its time runs out or it is cleared, and as long as you have not been brought down no one is dragged with you."
 }

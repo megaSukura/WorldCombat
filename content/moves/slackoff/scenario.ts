@@ -8,7 +8,8 @@
  *   施术者开局被一次性压到自身最大生命约 45%。
  *
  * 必然事实：施术者提交过偷懒；提交后生命立即高于压血后的最低值，并且身上出现过共享身份
- *   world_combat:status/loafing（这是它区别于同族的代价）。倦怠时长、尘土与气泡取决于体型与体重，写进 note。
+ *   world_combat:status/loafing（这是它区别于同族的代价）。先挂上倦怠、确认真实生效后才成交治疗，
+ *   回复被原生封锁时不留下倦怠。倦怠时长、尘土与倦意图形取决于体型与体重，写进 note。
  */
 Smoke.scenario("slackoff", function (stage) {
     stage.weather("clear");
@@ -33,7 +34,7 @@ Smoke.scenario("slackoff", function (stage) {
         stage.after(60, function () {
             stage.expect(caster.health() > woundedAt + 5, "the nap paid a lump of health back above the wound floor");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/loafing"), "the nap left the caster loafing (slowed)");
-            stage.note("偷懒是同族里起手最快的一口：提交即结算，随后挂上 world_combat:loafing（带原生 movement_speed 负修饰）。倦怠时长随体重增长、酣睡档 ×1.4；尘土与气泡数也随体重增长。起身一幕由效果到期移除事件补播。回复比例、倦怠时长与画面密度留给完整装配的人工试玩核对。", {
+            stage.note("偷懒是同族里起手最快的一口：先挂上 world_combat:loafing（带原生 movement_speed 负修饰）并确认真实生效，才结算这一口回复；若回复被原生封锁，就当场收回倦怠并反馈封锁。倦怠时长随体重增长、深歇档 ×1.4；尘土与倦意图形数也随体重增长，倦怠图形由真实载体拥有、净化即停。起身一幕由效果到期移除事件补播。回复比例、倦怠时长与画面密度留给完整装配的人工试玩核对。", {
                 casterCasts: stage.casts("slackoff", caster),
                 woundedHealth: Math.round(woundedAt * 10) / 10,
                 casterHealthNow: Math.round(caster.health() * 10) / 10,

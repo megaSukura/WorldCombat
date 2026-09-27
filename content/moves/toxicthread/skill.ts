@@ -48,9 +48,9 @@ namespace PokemonSkills {
                     target: action.target() === null ? "" : String(action.target()!.ref()) }));
             return prepare;
         },
-        indicator: function (config) {
+        indicator: function (config, pokemon) {
             const reel = !!(config && config.reel);
-            return { radius: 5, geometry: "line", style: "venom", color: 0x8E44AD, label: reel ? "毒丝·收丝" : "毒丝·钉住" };
+            return { radius: pokemon ? p(toxicthreadId, "reach", pokemon) : 5, geometry: "line", style: "venom", color: 0x8E44AD, label: reel ? "毒丝·收丝" : "毒丝·钉住" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
@@ -65,10 +65,6 @@ namespace PokemonSkills {
             const radius = Math.max(0.12, p(toxicthreadId, "strandRadius", action));
             const threads = Math.max(8, Math.round(p(toxicthreadId, "threads", action)));
             // 提交时锁定发射点与方向；命中按实际碰撞，落空按毒丝自己飞到的位置垂下。
-            const launch = action.origin();
-            const offset = action.targetPosition().minus(launch);
-            const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
-            const landing = launch.plus(direction.scale(action.range()));
             sound(action, "cobblemon:move.stringshot.actor");
             let resolved = false;
             function resolve(current: CombatAction, point: CombatPoint, entity: CombatActor | null): void {
@@ -82,17 +78,19 @@ namespace PokemonSkills {
                 }
                 const at = scope.observe(entity);
                 if (at === null) return;
-                // 毒与慢先各自按回执落地。
+                // 丝先缠上（laced 身份只表示丝还残留），毒与慢各自按真实回执落地。
                 MobEffects.apply(scope, entity, toxicthreadEffect, venom, 0);
+                const hadVenom = CombatStatus.has(scope, entity, "poison") || CombatStatus.has(scope, entity, "toxic");
+                const outcome = CombatStatus.impose(scope, entity, "poison", venom);
+                const poisoned = outcome.applied;
                 const dropped = -NativeEffects.boost(scope, entity, "spe", -drop);
-                const poisoned = CombatStatus.inflict(scope, entity, "poison", venom);
-                // 再按实际位移决定收丝或钉住；拉不动就收成松丝，不再假装牵引。
+                // 再按实际位移决定收丝或钉住；hitDisplace 让原生抗击退真实生效，拉不动就收成松丝。
                 const selfAt = scope.observe(current.actor());
                 let moved = 0, pinned = false;
                 if (selfAt !== null) {
                     if (reel) {
                         const line = selfAt.position().minus(at.position());
-                        if (line.length() > 0.05) moved = scope.displace(entity, line.unit().scale(pull));
+                        if (line.length() > 0.05) moved = scope.hitDisplace(entity, line.unit().scale(pull));
                     } else if (anchor > 0) {
                         pinned = WorldEffects.apply(scope, entity, "rooted", {}, anchor) > 0;
                     }
@@ -118,7 +116,10 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, toxicthreadAbove(endpoint), "world_combat.move.toxicthread.text.noslow", [], 30);
                 if (!poisoned)
                     WorldFeedback.text(scope, toxicthreadAbove(endpoint), "world_combat.move.toxicthread.text.immune", [], 30);
+                else if (hadVenom)
+                    WorldFeedback.text(scope, toxicthreadAbove(endpoint), "world_combat.move.toxicthread.text.refresh", [], 30);
             }
+            let strandId = "";
             const strand = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, lifetime: 50,
                 appearance: { sprite: "cobblemon:generic/wrap", scale: 0.9, tint: 0x9C6BB5 },
@@ -127,9 +128,12 @@ namespace PokemonSkills {
                     resolve(current, hit.position(), target !== null && !current.world().friendly(target) ? target : null);
                 }
             }, function (current) {
-                resolve(current, landing, null);
+                // 飞尽用弹体的真实末点，不拿满射程点或旧瞄准点假造落点。
+                const end = current.world().projectilePosition(strandId);
+                if (end !== null && !resolved) resolve(current, end, null);
                 done(current);
             });
+            strandId = strand;
             WorldFeedback.emit(world, toxicthreadScene, 1, origin,
                 { moment: "spit", projectile: strand, threads: threads,
                     target: action.target() === null ? "" : String(action.target()!.ref()) }, 60);
@@ -144,7 +148,8 @@ namespace PokemonSkills {
         if (!world.valid(actor) || world.tick() % 6 !== 0) return;
         const body = world.observe(actor);
         if (body === null) return;
+        const venom = CombatStatus.has(world, actor, "poison") || CombatStatus.has(world, actor, "toxic");
         WorldFeedback.keep(world, "toxicthread:" + String(actor.ref()), toxicthreadScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 20);
+            { moment: "linger", target: String(actor.ref()), poisonTufts: venom ? 4 : 0 }, 20);
     });
 }

@@ -59,13 +59,19 @@ namespace PokemonSkills {
             if (exposure[ref] > doseCap) exposure[ref] = doseCap;
             const body = world.observe(actor);
             if (body === null) return;
+            const slept = data.slept || (data.slept = {});
             if (CombatStatus.has(world, actor, "sleep")) {
-                WorldFeedback.emit(world, sleeppowderScene, 1, body.position(),
-                    { moment: "sleep", target: ref, motes: data.motes || 18 }, 30);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)),
-                    "world_combat.move.sleeppowder.text.sleep", [Math.round(Math.max(40, Math.round(data.sleepTicks || 240)) / 20)], 30);
+                // 入睡只在清醒→睡下的那一刻提示一次；之后睡眠由真实状态效果承担，不再逐扫重播。
+                if (!slept[ref]) {
+                    slept[ref] = true;
+                    WorldFeedback.emit(world, sleeppowderScene, 1, body.position(),
+                        { moment: "sleep", target: ref, motes: data.motes || 18 }, 30);
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)),
+                        "world_combat.move.sleeppowder.text.sleep", [Math.round(Math.max(40, Math.round(data.sleepTicks || 240)) / 20)], 30);
+                }
                 return;
             }
+            delete slept[ref];
             const after = exposure[ref] || 0;
             if (after > before) {
                 WorldFeedback.emit(world, sleeppowderScene, 1, body.position(),
@@ -148,7 +154,7 @@ namespace PokemonSkills {
                 ? (action.direction().length() < 0.05 ? WorldCombat.point(0, 0, 1) : action.direction())
                 : offset.unit();
             const limit = Math.max(0.5, Math.min(action.range(), offset.length() < 0.05 ? action.range() : offset.length()));
-            const fall = origin.plus(direction.scale(limit));
+            let flight = "";
             let settled = false;
 
             function burst(current: CombatAction, point: CombatPoint): void {
@@ -165,11 +171,16 @@ namespace PokemonSkills {
             }
 
             sound(action, "minecraft:block.sand.break");
-            const flight = LivingActions.projectile(action, {
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: limit, radius: 0.26, lifetime: 100, direction: direction,
                 appearance: { sprite: "cobblemon:particle/generic/powder", scale: 0.95, tint: 0xB08CFF },
                 impact: function (current, hit) { burst(current, hit.position()); }
-            }, function (current) { burst(current, fall); });
+            }, function (current) {
+                // 飞尽散粉：用真实弹体结束时的高精度位置，不用满射程点或旧瞄准点假造终点。
+                const end = current.world().projectilePosition(flight);
+                if (end === null) { done(current); return; }
+                burst(current, end);
+            });
             WorldFeedback.emit(world, sleeppowderScene, 1, origin,
                 { moment: "throw", projectile: flight, target: action.target() === null ? "" : String(action.target()!.ref()),
                   scale: scale, motes: motes }, 30);

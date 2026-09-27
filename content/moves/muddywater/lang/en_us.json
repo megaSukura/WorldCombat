@@ -5,7 +5,7 @@
   "worldcombat.skill.muddywater.use.2": "Push along the ground to reach the rank lined up beyond cover",
   "worldcombat.skill.muddywater.description.0": "The wave strikes a target for about %1$s special damage; each enemy is struck only once, and has a %2$s chance to lose %3$s accuracy stage(s).",
   "worldcombat.skill.muddywater.description.1": "The wave spreads over a %1$s degree arc ahead, reaches %2$s blocks, and pushes forward from your feet in %3$s steps.",
-  "worldcombat.skill.muddywater.description.2": "A target fouled by the water has its attacks weakened (attack damage reduced by 15%%), and its accuracy stages drop with it - a stat change that stays for the rest of the encounter until it is cleared or the encounter ends. The mud itself lasts %1$s, ending when it expires or is cleared.",
+  "worldcombat.skill.muddywater.description.2": "A target fouled by the water loses accuracy stages, recovering only when they are cleared or the encounter ends. The mud itself lasts %1$s, ending when it expires or is cleared.",
   "worldcombat.skill.muddywater.description.3": "Once the wave settles, the ground it swept keeps a short mud film (blocks are not replaced); one wave can foul at most %1$s foes.",
   "worldcombat.skill.muddywater.silted.on": "Silting: arc x1.35, murk chance +12%, up to 2 stages, longer murk and mud film; costs power x0.85, range -1.5 blocks, slower advance, wind-up +3 ticks and cooldown +6 ticks.",
   "worldcombat.skill.muddywater.silted.off": "Rapid torrent: power x1.12, range +1.5 blocks and a faster advance; costs murk chance -6% and shorter murk and mud film (mud film x0.75).",

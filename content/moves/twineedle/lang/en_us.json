@@ -32,6 +32,6 @@
   "worldcombat.skill.twineedle.preference.ai.finishLow.help": "When on, low-health targets rank higher so the reliable two hits finish them; when off, all targets rank the same.",
   "worldcombat.skill.twineedle.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.twineedle.preference.ai.leaveStation.help": "When on, the companion may leave its post to fire its needles; when off, it only casts at what it can reach from where it stands.",
-  "world_combat.move.twineedle.text.venom": "Second needle in, poisoned",
+  "world_combat.move.twineedle.text.venom": "Venom seeps into the wound",
   "worldcombat.skill.twineedle.description.homing": "After launch each needle steers toward the target it locked onto inside its range, so a moving foe cannot easily shake it off."
 }

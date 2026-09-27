@@ -35,30 +35,26 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    /** 目标脚下最近的地面顶面高度（找不到就取目标自身高度）。 */
-    function anchorshotSurface(world: CombatWorld, at: CombatPoint, x: number, z: number): number {
-        const base = Math.floor(at.y());
-        for (let probe = base + 1; probe >= base - 4; probe--) {
-            const block = world.block(WorldCombat.point(x, probe, z));
-            if (block === null) break;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava") break;
-            return probe + 1;
-        }
-        return base;
+    /** 目标脚底（真实碰撞箱下沿）那一列向下找第一块真实碰撞面，返回其上方的空格 y；花草、液体这类无碰撞面不算。 */
+    function anchorshotSurface(world: CombatWorld, feet: CombatPoint, x: number, z: number): number | null {
+        const hit = WorldGeometry.blockHit(world,
+            WorldCombat.point(x + 0.5, feet.y() + 1.0, z + 0.5),
+            WorldCombat.point(x + 0.5, feet.y() - 4.0, z + 0.5));
+        return hit === null ? null : Math.floor(hit.position().y());
     }
 
     /**
-     * 把锚钉在目标脚边的原生地面：从目标所在格向四邻依次找一个自己已是空气、且下方有实心支撑的格子
-     * （目标自己站的那格放不下实体链子），以 `replace:false, ground:true` 租借 `minecraft:chain` 作为
-     * 世界里的可见锚记；不替换任何承重块。返回真实锚点与租约 id，放不下时返回 null。
+     * 把锚钉在目标脚边一格真实地面顶面上：从目标脚底所在列向四邻依次找一个自己已是空气、且下方有真实碰撞
+     * 支撑的格子（目标自己站的那格放不下实体链子），以 `replace:false, ground:true` 租借 `minecraft:chain`
+     * 作为世界里的可见锚记；不替换任何承重块。返回真实锚点与租约 id，放不下时返回 null。
      */
-    function anchorshotPlace(world: CombatWorld, at: CombatPoint, ticks: number): { anchor: CombatPoint; terrainId: number } | null {
+    function anchorshotPlace(world: CombatWorld, body: CombatObservation, ticks: number): { anchor: CombatPoint; terrainId: number } | null {
+        const feet = body.boundsMin();
         const offsets = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]];
-        const cx = Math.floor(at.x()), cz = Math.floor(at.z());
+        const cx = Math.floor(feet.x()), cz = Math.floor(feet.z());
         for (let index = 0; index < offsets.length; index++) {
-            const x = cx + offsets[index][0], z = cz + offsets[index][1], y = anchorshotSurface(world, at, x, z);
+            const x = cx + offsets[index][0], z = cz + offsets[index][1], y = anchorshotSurface(world, feet, x, z);
+            if (y === null) continue;
             const cell = world.block(WorldCombat.point(x, y, z));
             if (cell === null) continue;
             const id = String(cell.id());
@@ -69,6 +65,16 @@ namespace PokemonSkills {
             } catch (error) { }
         }
         return null;
+    }
+
+    /** 目标脚边是否存在可钉锚的真实地面（只读）；AI 据此只在能兑现控制时给控制加价。 */
+    export function anchorshotFooting(world: CombatWorld, feet: CombatPoint): boolean {
+        const offsets = [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1]];
+        const cx = Math.floor(feet.x()), cz = Math.floor(feet.z());
+        for (let index = 0; index < offsets.length; index++) {
+            if (anchorshotSurface(world, feet, cx + offsets[index][0], cz + offsets[index][1]) !== null) return true;
+        }
+        return false;
     }
 
     /** 锚点租约是否仍在世界里；租约失效、被破坏或被别的施工接手都视为锚已不在。 */
@@ -135,11 +141,20 @@ namespace PokemonSkills {
         const body = world.observe(victim);
         if (body === null) return;
         const snapped = data.reason === "snapped";
-        WorldFeedback.emit(world, anchorshotScene, 1, body.position(),
-            { moment: snapped ? "snap" : "release", target: String(victim.ref()) }, 24);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)),
-            snapped ? anchorshotSnapText : anchorshotReleaseText, [], 24);
-        world.sound(snapped ? "minecraft:block.chain.break" : "minecraft:block.chain.place", body.position(), 14, "{}");
+        if (snapped) {
+            WorldFeedback.emit(world, anchorshotScene, 1, body.position(),
+                { moment: "snap", target: String(victim.ref()), links: data.links, scale: data.scale, intensity: data.intensity }, 24);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), anchorshotSnapText, [], 24);
+            world.sound("minecraft:block.chain.break", body.position(), 14, "{}");
+        } else {
+            // 收链：把旧的锚点与目标连成一条路径，链节从目标一端沿这条路径收回锚点。
+            WorldFeedback.emit(world, anchorshotScene, 1,
+                WorldCombat.point(data.anchor[0], data.anchor[1], data.anchor[2]),
+                { moment: "release", target: String(victim.ref()), point: data.anchor,
+                    path: [data.anchor, String(victim.ref())], links: data.links, scale: data.scale, intensity: data.intensity }, 24);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), anchorshotReleaseText, [], 24);
+            world.sound("minecraft:block.chain.place", body.position(), 14, "{}");
+        }
     });
 
     WorldCombat.on("world_combat:move_anchorshot/clear", "world_combat:mob_effect_removed", "", function (event) {
@@ -167,7 +182,7 @@ namespace PokemonSkills {
         if (body === null) return null;
         const ticks = Math.max(40, Math.round(p(anchorshotId, "chainTicks", action)));
         // 世界锚记比链稍长一点，链自然收回时再一起归还，避免同刻到期被误判成锚被破坏。
-        const placed = anchorshotPlace(world, body.position(), ticks + 40);
+        const placed = anchorshotPlace(world, body, ticks + 40);
         if (placed === null) return null;
         const existing = world.effects(victim, anchorshotEffect);
         for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
@@ -225,7 +240,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const power = p(anchorshotId, "shot", action);
             const speed = Math.max(0.8, p(anchorshotId, "flight", action));
             const radius = Math.max(0.18, p(anchorshotId, "linkRadius", action));
@@ -235,11 +249,15 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.2, power / 80));
             const chain = Math.max(40, Math.round(p(anchorshotId, "chainTicks", action)));
             const direction = aim(action);
+            const scenes = WorldFeedback.actionScenes(anchorshotScene);
             let struck = false, settled = false;
 
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
+
             sound(action, "minecraft:item.trident.throw");
-            const flight = LivingActions.projectile(action, {
-                speed: speed, range: reach + 2, radius: radius, gravity: 0.03, lifetime: 140, direction: direction,
+            let flight = "";
+            flight = LivingActions.projectile(action, {
+                speed: speed, range: reach, radius: radius, gravity: 0.03, lifetime: 140, direction: direction,
                 appearance: { item: "minecraft:anvil", scale: Math.max(0.8, Math.min(1.8, radius / 0.28)), glow: false },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), victim = hit.target(), at = hit.position();
@@ -249,28 +267,29 @@ namespace PokemonSkills {
                         { damage: damageSpec(anchorshotId, "shot"), contact: true })) return;
                     struck = true;
                     const bound = anchorshotBind(scope, current, victim);
-                    // 落锚成功时，钢花在真实锚点炸开；钉不进去就只保留主击，不做假链。
+                    // 伤害命中与钉锚成功/失败分别反馈：钉住时钢花在真实锚点炸开，钉不进去只在接触点留一记滑锚。
                     const clankAt = bound !== null ? bound.anchor : at;
                     WorldFeedback.emit(scope, anchorshotScene, 1, clankAt,
-                        { moment: "clank", target: String(victim.ref()), links: links, scale: scale, intensity: intensity }, 24);
+                        { moment: bound !== null ? "clank" : "slip", target: String(victim.ref()), links: links, scale: scale, intensity: intensity }, 24);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)),
                         bound !== null ? anchorshotBoundText : anchorshotSlipText,
                         bound !== null ? [Math.round(chain / 20)] : [], 24);
-                    sound(current, "minecraft:block.chain.place");
+                    if (bound !== null) sound(current, "minecraft:block.chain.place");
                     sound(current, "cobblemon:impact.steel");
                 }
             }, function (current: CombatAction) {
-                if (settled) return;
-                settled = true;
-                const scope = current.world();
+                // 空放：按弹体的真实末点反馈；读不到真实末点就不假造终点。
                 if (!struck) {
-                    WorldFeedback.emit(scope, anchorshotScene, 1, current.targetPosition(), { moment: "miss", scale: scale }, 18);
-                    WorldFeedback.text(scope, current.targetPosition(), anchorshotMissText, [], 20);
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null) {
+                        WorldFeedback.emit(current.world(), anchorshotScene, 1, end, { moment: "miss", scale: scale }, 18);
+                        WorldFeedback.text(current.world(), end, anchorshotMissText, [], 20);
+                    }
                 }
-                done(current);
+                finish(current);
             });
-            WorldFeedback.keep(world, "anchorshot:fly:" + action.id(), anchorshotScene, 1, action.origin(),
-                { moment: "flight", projectile: flight, links: links, scale: scale, intensity: intensity }, 90);
+            scenes.show(action, "flight", action.origin(),
+                { moment: "flight", projectile: flight, links: links, scale: scale, intensity: intensity });
         }
     });
 }

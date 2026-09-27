@@ -2,17 +2,18 @@
  * 薄雾场地 / mistyterrain 的出手方式。
  *
  * 念头的形状：施法者把雾从身下压向地面（windup：脚边腾起雾絮）→ 落点炸开一圈雾环、薄雾贴着地皮漫满一片
- * （surge）→ 站上去的活体被雾裹住：异常状态落不下来、龙属性来招被削掉一半（field / ward）→
- * 开到净化时，雾在活体首次进入本次雾时把已经中的异常洗掉一次（cleanse）→ 雾散（field 到期）。
+ * （surge）→ 雾里贴地的活体被雾裹住：新的有害状态落不下来（有益效果照常通过）、龙属性来招被削掉一半（field / ward）→
+ * 开到净化时，雾在活体首次进入本次雾时把已经中的有害异常洗掉一次（cleanse）→ 雾散（field 到期）。
  * 三幕：起手 → 漫雾 → 挡异常与削龙；净化的清除每块雾每个活体只发生一次。
  *
+ * 落点先探到真实地表再铺，薄雾与地面同层；挡异常与削龙不看标记余寿，按 `WorldEffects.covers` 实时确认在场且贴地。
  * 提交前只播预告；薄雾在提交后漫。它是租借效果（`WorldEffects.field`），到期自己结束。
  */
 namespace PokemonSkills {
     define({
         id: mistyterrainId,
         name: "薄雾场地",
-        description: "在选定的地面铺开薄雾：站在场上的活体不会陷入异常状态，受到的龙属性招式伤害减半。开启净化时，首次进入本次雾的活体还会被洗掉已经中的异常一次。对双方一视同仁。",
+        description: "在选定的地面铺开薄雾：雾里贴地的活体不会陷入新的有害状态（有益效果照常通过），受到的龙属性招式伤害减半；离开薄雾或离地护体即失效。开启净化时，首次进入本次雾的活体还会被洗掉已经中的有害异常一次。对双方一视同仁。",
         uses: ["护住队伍不被上异常", "削掉对手的龙属性爆发", "净化已经中毒、灼伤、麻痹的队友"],
         kind: "point",
         range: 15,
@@ -45,15 +46,16 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), point = action.targetPosition();
+            const world = action.world();
+            // 薄雾铺在真实地面上：与场地同层/贴地的资格才成立，脚点高度由共享 groundedContact 读取。
+            const point = WorldGeometry.ground(world, action.targetPosition(), 4);
             const radius = Math.max(2.2, p(mistyterrainId, "fieldRadius", action));
             const ticks = Math.max(120, Math.round(p(mistyterrainId, "fieldTicks", action)));
-            const mark = Math.round(p(mistyterrainId, "markTicks", action));
             const dragon = Math.max(0.2, Math.min(1, p(mistyterrainId, "dragonFactor", action)));
             const density = Math.round(p(mistyterrainId, "density", action));
             const surge = Math.round(p(mistyterrainId, "surge", action));
             WorldEffects.field(world, mistyterrainField, point, radius,
-                { mark: mark, density: density, dragon: dragon, purify: config && config.purify ? 1 : 0, surge: surge }, ticks);
+                { element: "fairy", colour: 0xEE99AC, density: density, dragon: dragon, purify: config && config.purify ? 1 : 0, surge: surge }, ticks);
             world.sound("minecraft:block.conduit.activate", point, 22, "{}");
             WorldFeedback.emit(world, mistyterrainScene, 1, point,
                 { moment: "surge", scale: radius / 3.2, density: density }, 46);

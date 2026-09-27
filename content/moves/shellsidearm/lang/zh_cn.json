@@ -35,7 +35,7 @@
   "worldcombat.skill.shellsidearm.preference.ai.finishLow": "优先收残血",
   "worldcombat.skill.shellsidearm.preference.ai.finishLow.help": "开启：残血目标排得更前，用这一发重炮收尾；关闭则所有目标同等对待。",
   "worldcombat.skill.shellsidearm.preference.ai.longShot": "偏好远射",
-  "worldcombat.skill.shellsidearm.preference.ai.longShot.help": "开启：站在射程六成以外的目标优先级更高，隔开距离把重炮打出去；关闭则无论远近一视同仁，更愿意贴上去打。",
+  "worldcombat.skill.shellsidearm.preference.ai.longShot.help": "开启：站在射程六成以外的目标优先级更高，隔开距离把重炮打出去；关闭则无论远近一视同仁，更愿意贴上去打。固定钝击形态够不到远处，没有这一档。",
   "worldcombat.skill.shellsidearm.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.shellsidearm.preference.ai.leaveStation.help": "开启后，驻守命令下也会为找到炮击位置离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.shellsidearm.text.venom": "毒壳炸开，中毒了",

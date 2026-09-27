@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.rockclimb.summary": "短冲到真实壁面后向上攀，脚底越过墙沿且身体通得过才翻顶。顶棚或预算会停攀；平地作一次低扑，只在身体接触敌人时重击并可能混乱。",
   "worldcombat.skill.rockclimb.use.0": "贴身的一次重扑",
-  "worldcombat.skill.rockclimb.use.1": "越过一小段距离砸进敌群",
-  "worldcombat.skill.rockclimb.use.2": "沿真实短崖攀到高处",
+  "worldcombat.skill.rockclimb.use.1": "沿真实短崖攀到高处",
+  "worldcombat.skill.rockclimb.use.2": "翻过墙沿落到高台追击",
   "worldcombat.skill.rockclimb.description.0": "冲行至多 %2$s 格，首次撞上敌人时造成约 %1$s 点伤害，只打击 %3$s 个接触目标。",
   "worldcombat.skill.rockclimb.description.1": "被打实后有 %1$s 概率陷入混乱 %2$s；混乱期间它每次想出手有 %3$s 概率被打散，那一次动作直接作废。",
   "worldcombat.skill.rockclimb.description.2": "原命中偏角每点 %1$s 度，墙面最多攀升 %2$s 格；真实碰撞限制可达位置。",

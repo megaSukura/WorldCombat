@@ -24,7 +24,8 @@
   "worldcombat.skill.sweetscent.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.sweetscent.preference.ai.leaveStation.help": "When on, the companion may leave its post to spray under a Hold order.",
   "world_combat.move.sweetscent.text.cloud": "Sweet aroma spreads",
+  "world_combat.move.sweetscent.text.noground": "No ground for the cloud",
   "world_combat.move.sweetscent.text.scented": "Scented (rank %1$s)",
   "effect.world_combat.sweet_scent": "Scented",
-  "worldcombat.skill.sweetscent.description.additional": "Only enemies reachable by line of sight are scented. Short position traces follow actual movement. This window releases only its own glowing lease; external glowing retains its original owner."
+  "worldcombat.skill.sweetscent.description.additional": "The cloud stops at a real wall and only settles on standable ground, so it never appears behind one, and it stays until the field ends. Only enemies reachable by line of sight are scented. Each target's evasion loss and glowing are owned by its own trace, other casters' traces no longer clear it, and nothing lingers when the window ends or is cleansed."
 }

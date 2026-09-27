@@ -3,7 +3,7 @@
   "worldcombat.skill.upperhand.use.0": "Interrupt the foe's priority move",
   "worldcombat.skill.upperhand.use.1": "Catch a close melee rush and hit back",
   "worldcombat.skill.upperhand.use.2": "Pin the foe back where it stood when it tried to go first",
-  "worldcombat.skill.upperhand.description.0": "When the foe has committed a priority attack, step in and land a palm for about %1$s physical damage; it only connects and pins that move when the target committed a priority attack within the last %2$s - otherwise it whiffs and its PP is still spent.",
+  "worldcombat.skill.upperhand.description.0": "When the foe has committed a priority attack, step in and land a palm for about %1$s physical damage; it only connects and pins that move while the target's priority action is still running within the last %2$s. Once that action ends the palm only whiffs and its PP is still spent.",
   "worldcombat.skill.upperhand.description.1": "With no priority read, raise a frontal palm instead: for %1$s, centred on your aim and covering %2$s, catch the enemy's first close contact, cut %3$s of that hit and answer with a palm at once; attacks from behind or at range do not count, and the window closes empty as a clasp.",
   "worldcombat.skill.upperhand.description.2": "The palm pins the target for %1$s: it first interrupts whatever interruptible action the target is performing, after which the target cannot start new moves or ordinary attacks for that time; a target immune to flinching still takes the palm normally.",
   "worldcombat.skill.upperhand.description.3": "Palm reach %1$s blocks, %2$s blocks/tick, hit radius %3$s blocks; the target is shoved back %4$s blocks.",

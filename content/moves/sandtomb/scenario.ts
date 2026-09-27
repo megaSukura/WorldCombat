@@ -26,6 +26,7 @@ Smoke.scenario("sandtomb", function (stage) {
             stage.expect(stage.damageTo(heavy) > 0, "the quicksand ground the target at least once");
             stage.expect(stage.hadMobEffect(heavy, "world_combat:status/partiallytrapped"), "the shared partiallytrapped identity landed on the target");
             stage.expect(stage.attribute(heavy, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the quicksand dragged the iron golem's movement speed down");
+            stage.expect(stage.changedBlocks().length === 0, "the quicksand is flat churning sand and rewrites no ground blocks");
             stage.note("the pit is placed on the real support face, so the stone floor is not rewritten; the grind roll and crit are positional while the target stands there", {
                 casts: stage.casts("sandtomb", caster),
                 damage: Math.round(stage.damageTo(heavy) * 10) / 10,

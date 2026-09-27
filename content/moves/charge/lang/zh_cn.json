@@ -26,7 +26,7 @@
   "worldcombat.skill.charge.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.charge.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去充能。",
   "effect.world_combat.charge_up": "充能",
-  "world_combat.move.charge.text.ready": "充电完毕",
+  "world_combat.move.charge.text.ready": "充电完毕（特防 +%1$s）",
   "world_combat.move.charge.text.spent": "放电",
   "world_combat.move.charge.text.fade": "电散了"
 }

@@ -41,14 +41,14 @@ namespace PokemonSkills {
             F.base(0.28).plus(F.stat("attack").minus(60).times(0.001))
                 .times(F.when(F.pref("bait"), F.const(1.3), F.const(1)))
                 .clamp(0.12, 0.55),
-            "借力加成", "对手正处在出手动作中（扑进来）时，这一摔额外增加的威力幅度。"),
+            "借力加成", "抓到的对手此刻正朝使用者压过来（来势朝向使用者）时，这一摔额外增加的威力幅度。"),
         /** 追加投速：基础 1.8 格/刻，对手体重每比 60 多 1 加 0.02，施法者物攻每比 60 多 1 加 0.002，夹在 1.0..3.8。 */
         fling: formula(
             F.base(1.8).plus(F.target("body.weight").minus(60).times(0.02)).plus(F.stat("attack").minus(60).times(0.002))
                 .clamp(1.0, 3.8).round(2),
             "追加投速", {
                 unit: "格/刻",
-                description: "沿目标冲势追加的水平速度；对手体重与自身物攻影响投掷力度，实际位移由抗击退与地形决定。非宝可梦没有体重数据时按基础值计算。"
+                description: "沿目标冲势追加的水平速度；按实际抓到的目标体重与自身物攻结算，实际位移由抗击退与地形决定。非宝可梦没有体重数据时按基础值计算。"
             }),
         /** 压制时长：基础 24 刻，等级每比 30 高 1 加 0.3，夹在 16..52。 */
         pinTicks: seconds(

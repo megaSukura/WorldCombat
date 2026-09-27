@@ -15,7 +15,7 @@
   "worldcombat.skill.tickle.value.tempo": "Windup",
   "worldcombat.skill.tickle.value.recharge": "Cooldown",
   "worldcombat.skill.tickle.preference.firm": "Rough tickle",
-  "worldcombat.skill.tickle.preference.firm.help": "Off is a light tickle: fast, short cooldown, base Attack and Defence drops, a little less laughter; on pins the foe down and drops one more stage of each with longer laughter, but the windup and cooldown are clearly longer.",
+  "worldcombat.skill.tickle.preference.firm.help": "A light tickle has a faster windup and shorter cooldown. A rough tickle lowers Attack and Defence by one additional stage and leaves the mark longer, with a longer windup and cooldown.",
   "worldcombat.skill.tickle.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.tickle.preference.ai.maxChase.help": "The companion only considers closing in while a threat is within this many blocks; smaller keeps it in a grapple, larger starts the chase sooner.",
   "worldcombat.skill.tickle.preference.ai.opening": "Timing",

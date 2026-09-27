@@ -2,6 +2,7 @@
 namespace PokemonSkills {
     export const worryseedScene = "world_combat:move_worryseed";
     export const worryseedMark = "world_combat:worryseed";
+    export const worryseedAura = "world_combat:worryseed_sprout";
     export const worryseedPlantText = "world_combat.move.worryseed.text.planted";
     export const worryseedWokeText = "world_combat.move.worryseed.text.woken";
 
@@ -21,11 +22,70 @@ namespace PokemonSkills {
             && !NativeAbilities.flag(ability, "cantsuppress") && !NativeAbilities.flag(ability, "statusImmune");
     }
 
+    // 敌方特性值不值得顶替：负面特性顶掉反而帮了对手，必须先排除；再优先拆掉真正难缠的强特性。
+    var worryseedLiabilities = ["truant", "slowstart", "defeatist", "klutz", "cacophony", "normalize", "stall"];
+    var worryseedTrouble = ["wonderguard", "multiscale", "magicguard", "intimidate", "levitate", "flashfire", "waterabsorb",
+        "voltabsorb", "sapsipper", "sturdy", "disguise", "thickfat", "filter", "regenerator", "immunity", "hydration", "overcoat"];
+    export function worryseedLiability(ability: string): boolean { return worryseedLiabilities.indexOf(ability) >= 0; }
+    export function worryseedWorthReplacing(ability: string): boolean { return worryseedTrouble.indexOf(ability) >= 0; }
+
+    // 烦恼顶芽：锚到真实的 worryseed 载体上，只要标记还在就维持；标记被清除/替换/到期时自己收掉。
+    WorldCombat.effect(worryseedAura, 1, 1400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.target !== "string") throw new Error("Invalid worry seed sprout: target");
+        if (typeof value.carrier !== "string" || !value.carrier) throw new Error("Invalid worry seed sprout: carrier");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    function worryseedSproutShow(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(target)) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, worryseedMark);
+        if (carrier === null || String(carrier.key()) !== String(data.carrier)) { effect.end(); return; }
+        const body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "sprout", worryseedScene, 1, body.position(),
+            { moment: "sprout", target: String(target.ref()), leaves: Math.max(4, Math.round(Number(data.leaves) || 6)),
+                sprout: Math.max(0.12, Number(data.sprout) || 0.18), deep: data.deep || 0 });
+    }
+    WorldCombat.effectHandler(worryseedAura, "start", function (effect) {
+        worryseedSproutShow(effect);
+        effect.schedule("watch", "watch", 1, "{}");
+        effect.schedule("sprout", "sprout", 20, "{}");
+    });
+    // 短频率巡检：本次载体被替换/清除或目标离场，立即结束（表现随 key 一同收掉）。
+    WorldCombat.effectHandler(worryseedAura, "watch", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(target)) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, worryseedMark);
+        if (carrier === null || String(carrier.key()) !== String(data.carrier)) { effect.end(); return; }
+        effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(worryseedAura, "sprout", function (effect) {
+        worryseedSproutShow(effect);
+        effect.schedule("sprout", "sprout", 20, "{}");
+    });
+    WorldCombat.effectHandler(worryseedAura, "end", function (effect) {
+        const world = effect.world(), target = effect.target();
+        if (!world.valid(target)) return;
+        const data = JSON.parse(effect.state());
+        // 只有标记真的不在了才报脱落；被同一招刷新替换时不报，新芽接上。
+        if (MobEffects.read(world, target, worryseedMark) !== null) return;
+        const body = world.observe(target);
+        if (body === null) return;
+        WorldFeedback.emit(world, worryseedScene, 1, body.position(), { moment: "shed", target: String(target.ref()) }, 22);
+    });
+    WorldCombat.effectHandler(worryseedAura, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    function worryseedClearSprout(world: CombatWorld, target: CombatActor): void {
+        const views = world.effects(target, worryseedAura);
+        for (let index = 0; index < views.length; index++) world.operation(views[index].id(), "world_combat:dispel", "{}");
+    }
+
     define({
         id: "worryseed",
         cooldownParameter: "recharge",
         name: "Worry Seed",
-        description: "投出一颗烦恼种子：命中敌人时把它的特性暂时换成不眠、并叫醒它；命中睡着的友方会把它叫醒，种子存续期间两者都抵抗再次催眠。可以空投，落到地面就散开。",
+        description: "投出一颗烦恼种子：命中敌人时把它的特性暂时换成不眠、并叫醒它；命中睡着的友方会把它叫醒，种子存续期间两者都抵抗再次催眠。友方不改变特性。可以空投，落到地面就散开。",
         uses: ["顶掉对手的强力特性换成一枚不眠", "把睡着的伙伴叫醒，并替它挡住之后的催眠", "让对手睡不下去，封掉催眠类打法"],
         kind: "aim",
         range: 7,
@@ -54,15 +114,19 @@ namespace PokemonSkills {
         },
         ready: function (action) {
             const world = action.sense(), target = action.target(), origin = action.origin();
+            const self = world.observe(action.actor());
+            // 种子从真实出手点（身体上方）出发，射程与视线都与 execute 的 muzzle 一致。
+            const from = self === null ? origin : self.position().plus(WorldCombat.point(0, self.height() * 0.55, 0));
             // 空投：只朝一个世界点运种，能落到射程内就允许；没有实体也不额外找敌人。
-            if (target === null) return action.targetPosition().minus(origin).length() > action.range() ? "out-of-range" : "";
+            if (target === null) return action.targetPosition().minus(from).length() > action.range() ? "out-of-range" : "";
             if (!world.valid(target)) return "target-left";
             const body = world.observe(target);
             if (body === null) return "target-left";
-            if (body.position().minus(origin).length() > action.range()) return "out-of-range";
-            if (!world.clear(origin, body.position())) return "no-line";
+            if (body.position().minus(from).length() > action.range()) return "out-of-range";
+            if (!world.clear(from, body.position())) return "no-line";
             if (CombatStatus.has(world, target, "worryseed")) return "already-planted";
-            if (String(target.domain()) === "cobblemon") {
+            // 友方只唤醒与保护，不改写特性，因此不读特性；只有敌人要换特性才做可压制预检。
+            if (!world.friendly(target) && String(target.domain()) === "cobblemon") {
                 const ability = worryseedAbility(world, target);
                 if (ability === "insomnia") return "already-wakeful";
                 if (!NativeModifiers.abilitySuppressible(world, target)) return "no-effect";
@@ -88,8 +152,7 @@ namespace PokemonSkills {
             const seeds = Math.max(10, Math.round(p("worryseed", "seeds", action)));
             const worries = Math.max(4, Math.round(p("worryseed", "worries", action)));
             const roots = Math.max(6, Math.round(p("worryseed", "roots", action)));
-            const worrySize = Math.round(0.2 * (deep ? 1.35 : 1) * 100) / 100;
-            const worryLife = deep ? 22 : 16, worryLifeMax = deep ? 34 : 28;
+            const sprout = Math.max(0.12, Math.round(0.18 * (deep ? 1.35 : 1) * 100) / 100);
             const chosen = target !== null && world.valid(target) ? String(target.ref()) : "";
             const chosenFriend = chosen !== "" && world.friendly(target!);
             const from = body.position().plus(WorldCombat.point(0, body.height() * 0.55, 0));
@@ -109,26 +172,43 @@ namespace PokemonSkills {
                 const intended = valid && chosen !== "" && String(hit!.ref()) === chosen;
                 const strayEnemy = valid && chosen === "" && !scope.friendly(hit!);
                 if (valid && (intended || strayEnemy)) {
-                    if (String(hit!.domain()) === "cobblemon") {
-                        const ability = worryseedAbility(scope, hit!);
-                        if (ability === "insomnia" || !NativeModifiers.abilitySuppressible(scope, hit!)) {
-                            WorldFeedback.emit(scope, worryseedScene, 1, at, { moment: "miss", seeds: seeds, scale: scale }, 22);
-                            finish(current);
-                            return;
-                        }
-                        NativeModifiers.apply(scope, hit!, { ability: "insomnia" }, hold);
+                    const enemy = !scope.friendly(hit!);
+                    // 只有真正的敌人要换特性；友方保留原特性，只唤醒并保护。
+                    if (enemy && String(hit!.domain()) === "cobblemon" && !worryseedPlantable(worryseedAbility(scope, hit!))) {
+                        WorldFeedback.emit(scope, worryseedScene, 1, at, { moment: "miss", seeds: seeds, scale: scale }, 22);
+                        finish(current);
+                        return;
                     }
-                    MobEffects.apply(scope, hit!, worryseedMark, hold, deep ? 1 : 0);
+                    // 先落真实载体；被原生拒绝时不报告种下。
+                    const carrier = MobEffects.set(scope, hit!, worryseedMark, hold, deep ? 1 : 0);
+                    if (carrier === null) {
+                        WorldFeedback.emit(scope, worryseedScene, 1, at, { moment: "miss", seeds: seeds, scale: scale }, 22);
+                        finish(current);
+                        return;
+                    }
+                    const anchor = MobEffects.anchor(carrier);
+                    if (enemy && String(hit!.domain()) === "cobblemon") {
+                        const layer = NativeModifiers.apply(scope, hit!, { ability: "insomnia", carrier: anchor, source: "world_combat:worryseed" }, hold);
+                        if (!layer || worryseedAbility(scope, hit!) !== "insomnia") {
+                            scope.removeMobEffect(hit!, worryseedMark, anchor.key);
+                            WorldFeedback.emit(scope, worryseedScene, 1, at, { moment: "miss", seeds: seeds, scale: scale }, 22);
+                            finish(current); return;
+                        }
+                    }
+                    // 先收掉旧的同源顶芽，再挂本次的；新芽认住新 key，旧清理不会误删新芽。
+                    worryseedClearSprout(scope, hit!);
+                    scope.effect(worryseedAura, hit!, JSON.stringify({ target: String(hit!.ref()), carrier: anchor.key,
+                        leaves: worries, sprout: sprout, deep: deep ? 1 : 0 }), hold);
                     const woke = CombatStatus.has(scope, hit!, "sleep") ? CombatStatus.cure(scope, hit!, "sleep") : false;
                     const spot = scope.observe(hit!);
-                    const anchor = spot === null ? at : spot.position();
-                    WorldFeedback.emit(scope, worryseedScene, 1, anchor,
-                        { moment: "plant", target: String(hit!.ref()), seeds: seeds, worries: worries, roots: roots,
-                            deep: deep ? 1 : 0, worrySize: worrySize, worryLife: worryLife, worryLifeMax: worryLifeMax, scale: scale }, 40);
+                    const anchorPoint = spot === null ? at : spot.position();
+                    WorldFeedback.emit(scope, worryseedScene, 1, anchorPoint,
+                        { moment: "plant", target: String(hit!.ref()), seeds: seeds, roots: roots,
+                            deep: deep ? 1 : 0, worrySize: sprout, scale: scale }, 40);
                     if (woke)
-                        WorldFeedback.emit(scope, worryseedScene, 1, anchor.plus(WorldCombat.point(0, spot === null ? 1.0 : spot.height() * 0.7, 0)),
+                        WorldFeedback.emit(scope, worryseedScene, 1, anchorPoint.plus(WorldCombat.point(0, spot === null ? 1.0 : spot.height() * 0.7, 0)),
                             { moment: "wake", target: String(hit!.ref()), glints: Math.max(8, Math.round(worries * 1.5)), scale: scale }, 30);
-                    WorldFeedback.text(scope, anchor.plus(WorldCombat.point(0, 1.35, 0)), woke ? worryseedWokeText : worryseedPlantText, [], 40);
+                    WorldFeedback.text(scope, anchorPoint.plus(WorldCombat.point(0, 1.35, 0)), woke ? worryseedWokeText : worryseedPlantText, [], 40);
                     sound(current, "minecraft:block.grass.place");
                 } else {
                     const wall = impact.blocked() ? impact.blockPosition() : null;
@@ -142,7 +222,7 @@ namespace PokemonSkills {
             if (chosen !== "") appearance.homing = { target: chosen, turn: 5, delay: 1, range: action.range() };
             const flight = LivingActions.projectile(action, {
                 speed: velocity, range: action.range(), radius: radius, lifetime: 140,
-                direction: direction, appearance: appearance, impact: plant
+                origin: from, direction: direction, appearance: appearance, impact: plant
             }, finish);
             WorldFeedback.emit(world, worryseedScene, 1, from,
                 { moment: "toss", projectile: flight, seeds: seeds, scale: scale }, 40);

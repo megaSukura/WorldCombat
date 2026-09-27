@@ -6,7 +6,8 @@
  * 色相家族：冷白与青灰（sonicboom / giantring_white / swirlingwind / tinydust / orb），近白只给声锥核心与边缘。
  * 拍子：起（charge 收气拢尘）→ 吼（wave 声锥整片扫出）→ 击（hit 逐处轰中）→ 收（miss 落空 / 余波散去）。
  * 范围：wave 用与判定同一个 `data.direction` 的 3D 朝向、`data.reach` 长度、`data.half` 半角撑起单个厚声锥
- *   （cone_volume），可上下瞄；没有单独铺在地上的伪范围，玩家看到的锥面就是会被轰到的范围。
+ *   （cone_volume，`data.half` = 本次实际整角 arc 的一半），可上下瞄；同刻整片爆发，没有沿路径推进的逐层阶段，
+ *   也没有单独铺在地上的伪范围——玩家看到的锥面就是会被轰到的范围，瞄准预览同用这个 arc。
  * 运动：charge 尘点向内收；wave 声锥沿 `data.direction` 从身上整片向外推；hit 在目标身上向外甩出。
  * 数：`data.flow`（张角与射程派生）决定锥体密度，`data.marks`（威力派生）决定核心高光量，
  *   `data.count`（本次威力×衰减派生）决定命中量，`data.strength` 决定命中强弱。

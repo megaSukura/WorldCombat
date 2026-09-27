@@ -17,6 +17,29 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
     }
 
+    /** 真实可攀高台：前方确有可攀短壁（墙顶在攀升高度内），且墙沿之后站得下这具身体。 */
+    function rockclimbLedge(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const from = CompanionBehavior.point(self.point);
+        const heading = WorldGeometry.flatUnit(CompanionBehavior.point(target.point).minus(from));
+        const wall = WorldGeometry.blockHit(world, from, from.plus(heading.scale(Math.min(3, capability.data.range))));
+        if (wall === null) return false;
+        let arc = 0.9;
+        try {
+            const values = { world: world, actor: world.source(), skill: PokemonSkills.skills[rockclimbId],
+                detail: { values: capability.data.config || {} } };
+            arc = PokemonSkills.p(rockclimbId, "arc", values);
+        } catch (error) { }
+        const face = wall.position();
+        const above = WorldGeometry.blockHit(world, face, face.plus(WorldCombat.point(0, arc + 1.2, 0)));
+        const top = above !== null ? above.position().y() : face.y() + arc + 1.2;
+        if (top - face.y() > arc + 0.05) return false;
+        const body = world.observe(world.source());
+        if (body === null) return true;
+        const ledge = face.plus(heading.scale(0.8));
+        return world.freeSpace(WorldCombat.point(ledge.x(), top, ledge.z()), Math.max(0.3, body.width()), Math.max(0.5, body.height()));
+    }
+
     function rockclimbCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
         const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
         let crowd = 0;
@@ -46,7 +69,11 @@ namespace PokemonSkills {
             let score = 24;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 10);
             const high=target.point[1]-self.point[1]>1;
-            if(high){const world=CompanionBehavior.world(context),from=CompanionBehavior.point(self.point),heading=WorldGeometry.flatUnit(CompanionBehavior.point(target.point).minus(from)),wall=world.clipBlocks(from,from.plus(heading.scale(Math.min(3,capability.data.range))));if(!wall||!wall.blocked())return 0;score+=CompanionBehavior.ai<boolean>(capability,"crowd",false)?14:6;}
+            if(high){
+                // 只对真实可攀、且墙沿后站得下的高台加分；墙比攀升预算高或顶上没落点时不当越障用。
+                if(!rockclimbLedge(context,capability,target))return 0;
+                score+=CompanionBehavior.ai<boolean>(capability,"crowd",false)?14:6;
+            }
             if (target.grounded === true) score += 3;
             if (CompanionBehavior.status(context, target, "confusion")) score -= 6;
             return score;

@@ -29,7 +29,7 @@
   "worldcombat.skill.pinmissile.preference.barbed.help": "On: per-quill power x1.25, stick duration x1.5 and spread x0.7 for pinning a target down; costs quills capped at 3, quill speed x0.92, interval +1 tick, wind-up +2 ticks and cooldown +4 ticks. Off (rapid quills): up to 5 quills, a tighter interval and a faster quill speed, at the cost of per-quill power x0.9, a shorter stick and spread x1.15.",
   "worldcombat.skill.pinmissile.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.pinmissile.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger prefers opening from farther away.",
-  "worldcombat.skill.pinmissile.preference.ai.stick": "Prefer unpinned targets",
-  "worldcombat.skill.pinmissile.preference.ai.stick.help": "On: targets already carrying quills rank lower so the quills go to foes not yet slowed; off: all targets score the same.",
+  "worldcombat.skill.pinmissile.preference.ai.stick": "Value by quill count",
+  "worldcombat.skill.pinmissile.preference.ai.stick.help": "On: it values each volley by the target's real quill count and remaining duration - unpinned targets rank first, fewer than 3 quills still adds value, and once saturated it only scores a little for a refresh or extra damage; off: it ranks by ordinary attack value.",
   "effect.world_combat.pinmissile_quills": "Quills"
 }

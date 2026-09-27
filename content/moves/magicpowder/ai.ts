@@ -21,12 +21,18 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("magicpowder", { sift: false, ai: { maxChase: 11, leaveStation: false } },
         [magicpowderSift, magicpowderChase, magicpowderStation]);
 
-    /** 有属性可换、不是纯超能力、也不是草属性的宝可梦才撒得上去；事实缺失（非宝可梦）一律跳过。 */
+    /** 读实时属性（含临时层与 mod 提供的事实），和浸水同一契约，不再只看原生基础类型。 */
+    function magicpowderTypes(context: WorldBehavior.Context, target: Entity): string[] {
+        const facts = CompanionBehavior.combatStats(context, target);
+        return facts && Array.isArray(facts.types) ? facts.types : [];
+    }
+
+    /** 有属性可换、不是纯超能力、也不是草属性的目标才撒得上去；读不到属性的一律跳过。 */
     function magicpowderEligible(context: WorldBehavior.Context, target: Entity): boolean {
-        const facts = pokemonFacts(context, target);
-        if (!facts || !Array.isArray(facts.types) || facts.types.length === 0) return false;
-        if (facts.types.indexOf("grass") >= 0) return false;
-        return facts.types.join(",") !== "psychic";
+        const types = magicpowderTypes(context, target);
+        if (types.length === 0) return false;
+        if (types.indexOf("grass") >= 0) return false;
+        return types.join(",") !== "psychic";
     }
 
     /** 身边有没有带这些属性的队友：新增的虫／幽灵／恶弱点得有人来吃才值得改写。 */
@@ -36,8 +42,7 @@ namespace CompanionBehavior {
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
             if (!other.friendly || other.ref === self.ref || other.health <= 0) continue;
-            const facts = pokemonFacts(context, other);
-            if (facts && Array.isArray(facts.types) && facts.types.some(type => wanted.indexOf(type) >= 0)) return true;
+            if (magicpowderTypes(context, other).some(type => wanted.indexOf(type) >= 0)) return true;
         }
         return false;
     }
@@ -60,11 +65,13 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !magicpowderWants(context, item, target)) return 0;
-            const facts = pokemonFacts(context, target);
-            if (!facts || !Array.isArray(facts.types)) return 0;
+            const types = magicpowderTypes(context, target);
+            if (!types.length) return 0;
             // 己方有虫／幽灵／恶才能吃到超能的弱点；己方是超能时改写也只多一个同行，按基础意愿。
-            let score = facts.types.indexOf("fighting") >= 0 || facts.types.indexOf("poison") >= 0 ? 72 : 56;
+            let score = types.indexOf("fighting") >= 0 || types.indexOf("poison") >= 0 ? 72 : 56;
             if (magicpowderAllyHasType(context, ["bug", "ghost", "dark"])) score += 10;
+            // 我方实际是超能力本系时，改写后超能招直接吃对手新的超能属性收益，愿意更主动。
+            if (magicpowderTypes(context, source(context)).indexOf("psychic") >= 0) score += 8;
             return Math.max(1, score);
         }
     });

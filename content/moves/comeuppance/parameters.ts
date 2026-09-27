@@ -27,8 +27,8 @@ namespace PokemonSkills {
     export interface ComeuppanceRecord { amount: number; tick: number; source: string; }
     export var comeuppanceLedger: { [ref: string]: ComeuppanceRecord } = Object.create(null);
 
-    export function comeuppanceRemember(world: CombatWorld, victim: CombatActor, source: CombatActor, amount: number): void {
-        comeuppanceLedger[String(victim.ref())] = { amount: amount, tick: world.tick(), source: String(source.ref()) };
+    export function comeuppanceRemember(world: CombatWorld, victim: CombatActor, source: CombatActor | null, amount: number): void {
+        comeuppanceLedger[String(victim.ref())] = { amount: amount, tick: world.tick(), source: source === null ? "" : String(source.ref()) };
         var refs = Object.keys(comeuppanceLedger);
         if (refs.length > 512) {
             var now = world.tick();
@@ -40,19 +40,25 @@ namespace PokemonSkills {
         if (!world || !actor || !world.valid(actor)) return null;
         var record = comeuppanceLedger[String(actor.ref())];
         if (!record || !(record.amount > 0)) return null;
-        var window = p(comeuppanceId, "window", String(actor.domain()) === "cobblemon" ? world : undefined);
+        // 只有当前作用域主体就是账主时才读它的等级与配置；非宝可梦没有等级事实，退回公式默认窗口。
+        var self = String(world.source().key()) === String(actor.key()) && String(actor.domain()) === "cobblemon";
+        var window = p(comeuppanceId, "window", self ? world : undefined);
         return world.tick() - record.tick <= window ? record : null;
     }
+
+    /** 本次追讨实际落下的伤害，按动作实例缓存一次，供命中回执读取真实扣血。 */
+    var comeuppanceSettled: { [action: string]: number } = Object.create(null);
+
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
-    export function comeuppanceRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
+    export function comeuppanceRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): number {
         var world = action.world();
-        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return false;
+        if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return 0;
         var move = CobblemonCombat.moveTemplate(comeuppanceId), type = String(move.type());
         var facts = PokemonDamage.combatants.read(world, target);
         for (var index = 0; index < facts.types.length; index++)
             if (CobblemonCombat.typeEffectiveness(type, facts.types[index]) === 0) {
                 PokemonDamage.immune(world, target, JSON.stringify({ kind: "move", move: comeuppanceId, type: type }));
-                return false;
+                return 0;
             }
         var armor = world.attributeValue(target, "minecraft:generic.armor");
         var toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
@@ -60,7 +66,10 @@ namespace PokemonSkills {
             knockback: false, bypassCooldown: true, targetScale: 1, critical: false, action: action.id() };
         if (armor !== null) metadata.armorExcluded = armor.value();
         if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        return world.hurt(target, amount, JSON.stringify(metadata));
+        var applied = world.hurt(target, amount, JSON.stringify(metadata));
+        var actual = applied ? comeuppanceSettled[String(action.id())] || 0 : 0;
+        delete comeuppanceSettled[String(action.id())];
+        return actual;
     }
 
     WorldCombat.on("world_combat:move_comeuppance/ledger", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
@@ -73,6 +82,14 @@ namespace PokemonSkills {
         var source = event.actor();
         if (source !== null && String(source.key()) === String(victim.key())) return;
         comeuppanceRemember(world, victim, source, data.actual);
+    });
+
+    // 追讨暗影命中时，把这一击真实落下的伤害按动作实例记下，供命中回执读取。
+    WorldCombat.on("world_combat:move_comeuppance/settled", "world_combat:damage_applied", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data()));
+        if (String(data.move || "") !== comeuppanceId || typeof data.action !== "number") return;
+        if (!(Number(data.actual) > 0)) return;
+        comeuppanceSettled[String(data.action)] = Number(data.actual);
     });
 
     defineFacts(comeuppanceId, function (context: FactContext): Formula.Facts {
@@ -110,7 +127,7 @@ namespace PokemonSkills {
             F.base(60).plus(F.level().minus(30).times(0.4).clamp(-6, 16))
                 .plus(F.when(F.pref("grudge", text("worldcombat.skill.comeuppance.preference.grudge")), F.const(40), F.const(0)))
                 .clamp(48, 140).round(0),
-            "记账窗口", "最近这段时间内挨的伤害会被记成一笔仇；等级越高、开记仇式时记得越久。"),
+            "记账窗口", "最近这段时间内挨的伤害会被记成一笔仇；等级越高、开记仇式时记得越久。非宝可梦没有等级事实，按公式的默认窗口计。"),
         /** 暗影速度：0.85 格/刻 + 速度偏移[−0.12,0.4]；夹 0.7..1.35。 */
         shadowSpeed: formula(
             F.base(0.85).plus(F.stat("speed").minus(55).times(0.005).clamp(-0.12, 0.4)).clamp(0.7, 1.35).round(2),
@@ -133,7 +150,7 @@ namespace PokemonSkills {
             F.base(10).plus(F.level().minus(30).times(0.2).clamp(-2, 6))
                 .plus(F.when(F.pref("grudge", text("worldcombat.skill.comeuppance.preference.grudge")), F.const(10), F.const(0)))
                 .clamp(8, 28).round(0),
-            "追讨延迟", "暗记压上之后隔多久暗影才离手；这段时间里账主还能跑，延迟越长越难逃，记仇式更沉得住气。"),
+            "追讨延迟", "暗记压上之后隔多久暗影才离手；这段时间里账主还能走位或躲开，延迟越长反而给对方更多反应时间，记仇式更沉得住气、也更晚兑现。"),
         /** 收招：8 刻。 */
         settle: seconds(F.base(8).clamp(5, 13).round(0), "收招", "暗影脱手后收住的时间。"),
         /** 冷却：33 刻 − 速度偏移[−4,6] + 记仇 8 刻；夹 22..48。 */

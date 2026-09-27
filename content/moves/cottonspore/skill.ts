@@ -5,18 +5,26 @@
  *   所以想让它成立，必须自己走进人群——贴上去才是这招的代价，走开则是它的反制。
  *
  * 出手：短起手（windup 在身周鼓起棉絮）后提交，以自身为圆心炸开。
- * 命中：WorldGeometry.selectEnemies 取半径内的非友方，逐个挂共享的 world_combat:cotton_clung
- *       （身份 world_combat:status/cottoned），并 NativeEffects.boost 大幅下降速度；按 maxTargets 上限。
- * 反制：只作用于贴近的人，远远看到就散开即可；不造成伤害，也不阻止对方离场。
+ * 命中：WorldGeometry.selectEnemies 取半径内的非友方，逐个先查墙面遮挡与草属性粉末免疫，再实际下降速度；
+ *       只有真的掉了速度才挂共享的 world_combat:cotton_clung（身份 world_combat:status/cottoned），按 maxTargets 上限。
+ * 反制：只作用于贴近、看得见且还能被减速的人，远远看到就散开即可；不造成伤害，也不阻止对方离场。
  */
 namespace PokemonSkills {
     function cottonsporeAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
+
+    /** 草属性对粉末免疫：它直接穿过这团棉絮。 */
+    function cottonsporePowderImmune(world: CombatWorld, actor: CombatActor): boolean {
+        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return false;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        for (let i = 0; i < pokemon.typeCount(); i++) if (String(pokemon.type(i)) === "grass") return true;
+        return false;
+    }
 
     define({
         id: cottonsporeId,
         cooldownParameter: "recharge",
         name: "棉孢子",
-        description: "当场鼓开一团棉絮，黏住附近敌人并大幅降低它们的速度；这份减速不会自行恢复。只作用于贴近的敌人，因此要自己走进人群。",
+        description: "当场鼓开一团棉絮，黏住附近敌人并大幅降低它们的速度；这份减速不会自行恢复。只作用于贴近、看得见且还能被减速的敌人，因此要自己走进人群。",
         uses: ["一次拖住围上来的一群近战", "在被围住时开出一条退路", "打断对方的贴身追击"],
         kind: "self",
         range: 0,
@@ -46,8 +54,11 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", spread: config && config.spread ? 1 : 0 }));
             return prepare;
         },
-        indicator: function () { return { radius: 3.0, geometry: "circle", style: "cotton", label: "棉孢子" }; },
-        execute: function (action, move, config, done) {
+        indicator: function (_config, pokemon) {
+            // 指示圈用实际半径，与当场炸开、实际结算的那一圈同径。
+            return { radius: pokemon ? p(cottonsporeId, "burstRadius", pokemon) : 3.0, geometry: "circle", style: "cotton", label: "棉孢子" };
+        },
+        execute: function (action, _move, config, done) {
             const world = action.world(), self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
@@ -58,16 +69,20 @@ namespace PokemonSkills {
             const spores = Math.max(6, Math.round(p(cottonsporeId, "spores", action)));
             sound(action, "cobblemon:move.powder.actor");
             let caught = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(origin, 0, radius), function (actor) {
+            WorldGeometry.selectEnemies(world, WorldGeometry.ring(origin, 0, radius), function (actor, facts) {
                 if (caught >= cap) return;
-                MobEffects.apply(world, actor, cottonsporeEffect, cling, 0);
-                NativeEffects.boost(world, actor, "spe", -drop);
+                // 墙挡住或草属性免疫粉末：孢子到不了、不生效。
+                if (cottonsporePowderImmune(world, actor)) return;
+                if (!world.clear(origin, facts.position())) return;
+                // 只有真的掉了一级速度才黏住：封底、免疫或拒绝时不留下假的棉絮标记，也不报成功。
+                const applied = -NativeEffects.boost(world, actor, "spe", -drop);
+                if (applied <= 0) return;
+                const mark = MobEffects.apply(world, actor, cottonsporeEffect, cling, 0);
                 caught++;
-                const at = world.observe(actor);
-                if (at === null) return;
-                WorldFeedback.emit(world, cottonsporeScene, 1, at.position(),
-                    { moment: "clung", target: String(actor.ref()), drop: drop, tufts: 6 + drop * 6 }, 26);
-                WorldFeedback.text(world, cottonsporeAbove(at.position()), "world_combat.move.cottonspore.text.clung", [drop], 34);
+                if (mark === null) return;
+                WorldFeedback.emit(world, cottonsporeScene, 1, facts.position(),
+                    { moment: "clung", target: String(actor.ref()), drop: applied, tufts: 6 + applied * 6 }, 26);
+                WorldFeedback.text(world, cottonsporeAbove(facts.position()), "world_combat.move.cottonspore.text.clung", [applied], 34);
             });
             WorldFeedback.emit(world, cottonsporeScene, 1, origin,
                 { moment: "burst", radius: radius, caught: caught, drop: drop, spores: spores, scale: radius / 3.0 }, 34);

@@ -7,7 +7,8 @@
  *
  * 翻译：把「旋转攻击、摆脱束缚、提高速度」做成**原地旋成一圈风**——重心一沉、身体贴着地面高速自转，把缠在
  *   身上的东西（共享身份 partiallytrapped／trapped／leechseed 与 rooted）甩脱，同时以自身为心扫开身边的人，
- *   借转速提一口气（速度 +1 级）。它是本组最快的脱身手段，也是唯一让自己变快的一招。
+ *   真的扫中敌人或真的甩掉束缚时，才借这一转提一口气（速度 +1 级）。它是本组最快的脱身手段，也是唯一让自己
+ *   变快的一招；空转不给免费加速。
  *
  * 与同族分开：晶光转转同样脱缚，但它是**把毒甩到周围**、给自己不加速度；高速旋转是**把风甩开、给自己提速**。
  *   两者都能从缠斗里脱身，玩家凭「脱身之后更快 vs 周围的人中毒」分开。
@@ -19,7 +20,7 @@
  *   push       顶开距离：物攻，广旋 ×1.15。
  *   haste      自身提速级：原生固定 1 级，是这招的身份。
  *   wind       风屑数量：速度与物攻派生，直接驱动画面发射量。
- *   tempo/recover/recharge：速度与等级定时序；广旋更慢更费。
+ *   tempo/aftercast/recharge：速度与等级定时序；广旋更慢更费。
  *
  * 配置 `wide`（广旋，默认关）双向取舍：开＝半径 ×1.3、风屑更密、顶开 ×1.15，扫得更开，代价是威力 ×0.9、
  *   起手 +2 刻、冷却 +8 刻；关（紧旋）＝威力 ×1.1、出手快、冷却短，但只扫到贴身的人。两向各有适用局面
@@ -92,7 +93,7 @@ namespace PokemonSkills {
                 .clamp(4, 12).round(0),
             "起手", "重心一沉、把转速提起来的时间；速度越快越短，广旋式多压一拍。"),
         /** 收招：基础 6 − 速度每比 60 快 1 减 0.03（夹 −1.5..2.5）；夹 3..10。 */
-        recover: seconds(
+        aftercast: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.03).clamp(-1.5, 2.5)).clamp(3, 10).round(0),
             "收招", "旋完把风收住、重新站稳的时间；速度越快收得越利落。"),
         /** 冷却：基础 26 − 等级每比 20 高 1 减 0.2（夹 −3..6）；广旋 +8；夹 16..46。 */
@@ -116,7 +117,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["push","haste"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },
         { key: "wide.off", values: [], when: function (context) { return read(context.detail.values, ["wide"]) !== true; } },
-        { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
+        { key: "timing", values: ["range", "tempo", "aftercast", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.spin", "tier.0.radius"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.spin"] }
     ]);

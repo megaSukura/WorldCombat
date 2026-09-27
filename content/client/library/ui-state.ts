@@ -55,8 +55,18 @@ namespace UiState {
         constructor(public items: MenuItem[] = []) {}
         children(parent: string): MenuItem[] { return this.items.filter(item => (item.parent || "") === parent); }
         current(): MenuItem[] { return this.children(this.path.length ? this.path[this.path.length - 1] : ""); }
-        open(reset = true): void { if (reset) { this.path = []; this.latched = false; } }
-        enter(item: MenuItem): boolean { if (!this.children(item.id).length) return false; this.path.push(item.id); return true; }
+        /** Contributions may remove or reparent a branch while its menu is open. Keep only a live ancestor chain. */
+        reconcile(): void {
+            let parent = "", length = 0;
+            for (; length < this.path.length; length++) {
+                const id = this.path[length];
+                if (!this.items.some(item => item.id === id && (item.parent || "") === parent) || !this.children(id).length) break;
+                parent = id;
+            }
+            this.path = this.path.slice(0, length);
+        }
+        open(reset = true): void { if (reset) { this.path = []; this.latched = false; } else this.reconcile(); }
+        enter(item: MenuItem): boolean { if (!this.current().some(value => value.id === item.id) || !this.children(item.id).length) return false; this.path.push(item.id); return true; }
         back(): boolean { if (!this.path.length) return false; this.path.pop(); return true; }
     }
     export class Selection<T, Value> {

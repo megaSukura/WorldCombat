@@ -25,7 +25,7 @@
   "worldcombat.skill.iceball.value.frostTicks": "Ice patch duration",
   "worldcombat.skill.iceball.value.shards": "Ice shard count",
   "worldcombat.skill.iceball.value.tempo": "Preparation",
-  "worldcombat.skill.iceball.value.recover": "Recovery",
+  "worldcombat.skill.iceball.value.rest": "Recovery",
   "worldcombat.skill.iceball.value.recharge": "Cooldown",
   "worldcombat.skill.iceball.preference.thick": "Thick shell form",
   "worldcombat.skill.iceball.preference.thick.help": "On (thick): each landed ball multiplies by 2.3, the cap gains 15%, each layer adds 1.2x and the size cap rises 1.2x, and the ice patch is larger and longer, at 0.85x ball speed, +2 ticks between balls, +2 ticks recovery, +6 ticks cooldown and 0.9x base power per ball. Off (thin, the native form): 2x per ball, a faster ball and shorter interval and cooldown, at a lower cap, no growth and a smaller, shorter patch.",
@@ -33,5 +33,5 @@
   "worldcombat.skill.iceball.preference.ai.maxChase.help": "Beyond this distance it closes in instead of throwing. Larger values open from further out.",
   "world_combat.move.iceball.text.cap": "Ice Ball landed %1$s passes and shattered",
   "world_combat.move.iceball.text.hit": "Ice Ball impact %1$s",
-  "worldcombat.skill.iceball.description.stance": "While the ball is in flight the caster is held in place, unable to move or act otherwise. The direction is locked at release, so a target that falls or leaves does not recall a ball already sent; a miss, a frame hit or a refused hit shatters it on the spot, and it also ends once it has landed its full number of balls."
+  "worldcombat.skill.iceball.description.stance": "While the ball is in flight the caster is held in place, unable to move or act otherwise. Holding the skill key aims each ball at the current point; the AI, or a cast with no sustained input, follows the direction locked at release. A target that falls or leaves does not recall a ball already sent; a miss, a frame hit or a refused hit shatters it on the spot, and it also ends once it has landed its full number of balls. A miss resolves at the projectile's real end point and never freezes at the previous ball's contact."
 }

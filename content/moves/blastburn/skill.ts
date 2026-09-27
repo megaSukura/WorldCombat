@@ -22,6 +22,17 @@ namespace PokemonSkills {
     const blastburnExhaustText = "world_combat.move.blastburn.text.exhaust";
     const blastburnImmuneText = "world_combat.move.blastburn.text.immune";
 
+    /** 块面爆点从表面外一点起算，避免爆心正好落在方块表面上时射线先穿过该方块造成假阻断。 */
+    function blastburnOutside(point: CombatPoint, face: string, distance: number): CombatPoint {
+        if (face === "down") return point.plus(WorldCombat.point(0, -distance, 0));
+        if (face === "up") return point.plus(WorldCombat.point(0, distance, 0));
+        if (face === "north") return point.plus(WorldCombat.point(0, 0, -distance));
+        if (face === "south") return point.plus(WorldCombat.point(0, 0, distance));
+        if (face === "west") return point.plus(WorldCombat.point(-distance, 0, 0));
+        if (face === "east") return point.plus(WorldCombat.point(distance, 0, 0));
+        return point;
+    }
+
     define({
         freeMovement: true,
         id: "blastburn",
@@ -100,21 +111,24 @@ namespace PokemonSkills {
                 impact: function (current, hit, age) {
                     const scope = current.world();
                     const at = hit.position();
-                    const blocked = !hit.hitEntity();
-                    const cell = blocked ? hit.blockPosition() : null;
+                    const wall = !hit.hitEntity() && hit.blocked();
+                    const cell = wall ? hit.blockPosition() : null;
+                    const face = wall ? hit.blockFace() : "";
+                    // 爆心仍是真实首碰点；可达性从表面外一点起算，撞墙时不因射线贴着表面穿过该方块而误判。
+                    const burstFrom = wall ? blastburnOutside(at, face, 0.45) : at;
                     const column = Math.max(1.6, radius);
+                    const columnRadius = Math.max(0.5, Math.min(1.4, radius * 0.35));
                     const count = Math.round(60 + intensity * 120);
-                    // 爆心就是真实首碰点；撞墙时带上原生方块格与表面，让落点表现贴着那面墙。
                     WorldFeedback.emit(scope, blastburnScene, 1, at, { moment: "blast", scale: spread,
-                        intensity: intensity, count: count, radius: radius, column: column,
+                        intensity: intensity, count: count, radius: radius, column: column, columnRadius: columnRadius,
                         smoke: Math.round(16 + radius * 6),
-                        face: blocked ? hit.blockFace() : "",
+                        face: face,
                         block: cell !== null ? [cell.x(), cell.y(), cell.z()] : undefined }, 38);
                     sound(current, "minecraft:entity.generic.explode");
                     let touched = 0;
                     WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, radius, { below: 2, above: 3 }), function (enemy: CombatActor, facts) {
                         // 遮挡限制爆圈：被墙挡住的对手不吃这一爆，火不会穿墙。
-                        if (!scope.clear(at, facts.position())) return;
+                        if (!scope.clear(burstFrom, facts.position())) return;
                         // 只有真正吃下这一爆的人才可能被点燃；免伤的对手不显示灼伤。
                         if (!hurt(current, enemy, "blastburn", blast, { damage: damageSpec("blastburn", "blast") })) return;
                         touched++;

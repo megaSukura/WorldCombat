@@ -8,9 +8,10 @@
  *
  * 两幕：
  *   蜷（windup，提交前）：身体缩成一团、火包住轮缘，只播预告。
- *   滚（roll → wake → impact）：提交后逐刻沿瞄准方向滚动，身周火轮旋转、身后留一条余焰；trace 每次撞到
- *       活体即按 wheel 结算接触伤害、按 burnChance 蹭上灼伤（共享状态）、把目标挤开 shove 格，然后**继续滚**，
- *       命中只花掉本步剩余的位移预算，撞墙或被挡下立刻停；后续目标按 through 打折，最多碾过 pierceCount 个人。
+ *   滚（roll → wake → impact）：提交后逐刻沿瞄准方向滚动，身周火轮立着旋转、身后只沿真正滚过的路段留短余焰；
+ *       在本刻预算内用原生 moveSweep（带已接触 refs）连续扫过，撞到的活体即按 wheel 结算接触伤害、按 burnChance
+ *       蹭上灼伤（共享状态）、把目标挤开 shove 格，然后**继续滚**够到后面的身体；实墙立刻停，后续目标按 through
+ *       打折，最多碾过 pierceCount 个人。空滚只解冻、不打地场。
  *
  * 与同族分开：闪焰冲锋是一条拖长的火线并自伤、电光是贴身短促的一点电、伏特攻击是蓄电爆冲并放电波及旁人；
  * 火焰轮独有的是一路碾过去的滚动与滚完化掉自己身上的冰。配置 fierce（烈焰轮）由 resolve 改时序、由公式
@@ -53,9 +54,14 @@ namespace PokemonSkills {
                 range: p("flamewheel", "roll", context) + 0.5
             };
         },
+        // 滚动起步按原生 defrost 允许在被冻时起手：本招只解除自身冰冻这一项限制，别的来源的无关控制不受影响。
+        eligibility: function (context) {
+            if (context.phase === "damage") return;
+            CombatStatus.selfCure(context, ["frozen"]);
+        },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_flamewheel:curl", flamewheelScene, 1, action.origin(),
-                JSON.stringify({ moment: "curl", fierce: !!(config && config.fierce) }));
+                JSON.stringify({ moment: "curl", fierce: !!(config && config.fierce), windup: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -84,9 +90,67 @@ namespace PokemonSkills {
             const scale = radius / 0.5;
             const intensity = Math.max(0.6, Math.min(2.4, power / 62));
             const start = action.origin();
-            const end = start.plus(direction.scale(length));
+            // 轮缘立在行进平面：形状轴取水平的侧向，orient:direction 把环面转向与该轴垂直，火轮因此立着滚。
+            const axis = WorldGeometry.basis(direction).right;
+            const axisData = [axis.x(), axis.y(), axis.z()];
             const struck: { [ref: string]: boolean } = {};
+            const struckList: string[] = [];
             let travelled = 0, hits = 0, settled = false;
+
+            // 只画真正滚过的那一段：每次把起点到当前实际落点的两个顶点交给 track，未到/墙后不再预先整线撒火。
+            function showRoll(current: CombatAction, from: CombatPoint, to: CombatPoint): void {
+                movementScenes.show(current, "roll", to, { moment: "roll", direction: axisData,
+                    path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]],
+                    flames: flames, scale: scale, intensity: intensity });
+            }
+
+            /** 一次接触的结算：伤害真的落地才占「碾过」预算、才顶开与报数；接触本身先记一次，避免逐刻重复。 */
+            function resolveContact(current: CombatAction, scope: CombatWorld, victim: CombatActor, hit: CombatImpact): void {
+                const ref = String(victim.ref());
+                struck[ref] = true; struckList.push(ref);
+                const point = hit.position();
+                const amount = hits === 0 ? power : power * through;
+                const already = CombatStatus.has(scope, victim, "burn");
+                const landed = impact(current, hit, "flamewheel", amount,
+                    { damage: damageSpec("flamewheel", "wheel"), contact: true,
+                        status: already ? "" : "burn", chance: already ? 0 : chance, statusTicks: burnTicks });
+                WorldFeedback.emit(scope, flamewheelScene, 1, point,
+                    { moment: "impact", target: ref, flames: flames, scale: scale,
+                        intensity: Math.max(0.6, Math.min(2.4, amount / 60)) }, 28);
+                sound(current, "cobblemon:move.flamewheel.target");
+                sound(current, "cobblemon:impact.fire");
+                if (landed) {
+                    if (scope.valid(victim)) {
+                        scope.hitDisplace(victim, direction.scale(shove));
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), flamewheelHitText, [hits + 1], 26);
+                    }
+                    hits++;
+                }
+            }
+
+            /**
+             * 在本刻预算内逐体推进：原生 moveSweep 带已接触 refs，撞到的第一个身体只结算一次就被排除，
+             * 同一刻可以继续够到后面的身体，密排的两个人不会因为一次裸 displace 冲过余段而漏掉第二个。
+             * 返回实际移动量与是否撞墙；到碾过上限或无法推进即停。
+             */
+            function spend(current: CombatAction, scope: CombatWorld, budget: number): { moved: number; blocked: boolean } {
+                let remaining = budget, moved = 0, guard = 0;
+                while (remaining > 0.001 && guard++ < 16) {
+                    if (hits >= pierceCount) break;
+                    const before = current.origin();
+                    const hit = current.moveSweep(direction.scale(remaining), radius, JSON.stringify(struckList));
+                    const advanced = current.origin().minus(before).length();
+                    moved += advanced; remaining -= advanced;
+                    if (hit.hitEntity()) {
+                        const victim = hit.target();
+                        if (victim !== null && !struck[String(victim.ref())]) resolveContact(current, scope, victim, hit);
+                        continue;
+                    }
+                    if (hit.blocked()) return { moved: moved, blocked: true };
+                    if (advanced < minimumMove) return { moved: moved, blocked: false };
+                }
+                return { moved: moved, blocked: false };
+            }
 
             sound(action, "cobblemon:move.flamewheel.actor");
             // 火轮滚起来时顺带把施法者身上的冰化掉（原生 defrost）；只有真的解冻了才播化冰一幕。
@@ -97,9 +161,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.2, 0)), flamewheelThawText, [], 24);
                 }
             }
-            movementScenes.show(action, "roll", start, { moment: "roll", direction: [direction.x(), direction.y(), direction.z()],
-                    path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    flames: flames, scale: scale, intensity: intensity });
+            showRoll(action, start, start);
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -115,40 +177,16 @@ namespace PokemonSkills {
             }
 
             function advance(current: CombatAction): void {
-                const scope = current.world(), origin = current.origin();
+                const scope = current.world();
                 const step = Math.min(pace, Math.max(0, length - travelled));
                 if (step <= 0.001 || hits >= pierceCount) { finish(current); return; }
-                const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.hitEntity()) {
-                    const target = hit.target(), point = hit.position();
-                    if (target !== null && !struck[String(target.ref())]) {
-                        struck[String(target.ref())] = true;
-                        const amount = hits === 0 ? power : power * through;
-                        const already = CombatStatus.has(scope, target, "burn");
-                        const landed = impact(current, hit, "flamewheel", amount,
-                            { damage: damageSpec("flamewheel", "wheel"), contact: true,
-                                status: already ? "" : "burn", chance: already ? 0 : chance, statusTicks: burnTicks });
-                        WorldFeedback.emit(scope, flamewheelScene, 1, point,
-                            { moment: "impact", target: String(target.ref()), flames: flames, scale: scale,
-                                intensity: Math.max(0.6, Math.min(2.4, amount / 60)) }, 28);
-                        sound(current, "cobblemon:move.flamewheel.target");
-                        sound(current, "cobblemon:impact.fire");
-                        // 伤害被拒时不占「碾过」预算、不顶开、不声称命中；接触本身仍按一次踩过标记，避免逐刻重复。
-                        if (landed) {
-                            if (scope.valid(target)) {
-                                scope.hitDisplace(target, direction.scale(shove));
-                                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)),
-                                    flamewheelHitText, [hits + 1], 26);
-                            }
-                            hits++;
-                        }
-                    }
-                }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= length) { finish(current); return; }
-                movementScenes.show(current, "wake", origin, { moment: "wake", flames: flames, scale: scale });
+                const before = current.origin();
+                const result = spend(current, scope, step);
+                travelled += result.moved;
+                const after = current.origin();
+                if (after.minus(before).length() > 0.001) showRoll(current, before, after);
+                if (result.blocked || result.moved < minimumMove || travelled >= length || hits >= pierceCount) { finish(current); return; }
+                movementScenes.show(current, "wake", after, { moment: "wake", flames: flames, scale: scale });
                 current.after(1, advance);
             }
 

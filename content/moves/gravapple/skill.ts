@@ -28,17 +28,19 @@ namespace PokemonSkills {
     const gravappleMissText = "world_combat.move.gravapple.text.miss";
 
     /**
-     * 目标头顶真正放得下苹果的最高格数：从期望高度往下找第一个「苹果碰撞箱放得下、且与目标点之间没有方块」
-     * 的位置；顶棚越低、落程越短，保证出生的苹果在可见空间里而不是穿进天花板。返回实际高度（格）。
+     * 目标上方真正放得下整颗苹果的出生点：从期望高度往下找第一个「苹果的碰撞体放得下、且与目标点之间没有方块」的位置。
+     * 原生弹体的位置是它包围盒的基点，判定半径把包围盒向外撑开，所以探针从出生点下移一个判定半径再量宽高；
+     * 顶棚越低、落程越短，保证出生的苹果在可见空间里而不是穿进天花板。没有任何合法位置时返回 null。
      */
-    function gravapplePlacement(world: CombatWorld, point: CombatPoint, desired: number, radius: number): number {
+    export function gravapplePlacement(world: CombatWorld, point: CombatPoint, desired: number, radius: number): CombatPoint | null {
         var size = Math.max(0.5, radius * 2);
         var top = Math.max(1, Math.floor(desired));
         for (var h = top; h >= 1; h--) {
             var birth = WorldCombat.point(point.x(), point.y() + h, point.z());
-            if (world.freeSpace(birth, size, size) && world.clear(point, birth)) return h;
+            var probe = WorldCombat.point(birth.x(), birth.y() - radius, birth.z());
+            if (world.freeSpace(probe, size, size + 0.25) && world.clear(point, birth)) return birth;
         }
-        return 1;
+        return null;
     }
 
     define({
@@ -76,6 +78,13 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", heavy: config && config.heavy === true }));
             return prepare;
         },
+        // 提交前先确认目标上方真的放得下整颗苹果；没有任何合法出生点就整招失败，不硬生进顶棚、也不花 PP。
+        ready: function (action, config) {
+            const world = action.sense();
+            const radius = p("gravapple", "collisionRadius", action);
+            const desired = p("gravapple", "dropHeight", action);
+            return gravapplePlacement(world, action.targetPosition(), desired, radius) === null ? "no-space" : "";
+        },
         execute: function (action, move, config, done) {
             action.releaseTarget();
             const scenes = WorldFeedback.actionScenes(gravappleScene);
@@ -92,11 +101,15 @@ namespace PokemonSkills {
             const crushTicks = Math.max(40, Math.round(p("gravapple", "crushTicks", action)));
             const slam = p("gravapple", "slam", action);
             const speedScale = Math.max(0.5, Math.min(2, fallSpeed / 0.42));
+            const shaftRate = Math.max(4, Math.round(14 * speedScale));
+            const glowRate = Math.max(6, Math.round(30 * speedScale));
+            const leafRate = Math.max(6, Math.round(26 * speedScale));
             let settled = false;
 
-            // 出生高度按目标头顶真实顶棚空间收缩；苹果与落点之间保持无方块。
-            const height = gravapplePlacement(world, targetPoint, dropHeight, appleRadius);
-            const birth = WorldCombat.point(targetPoint.x(), targetPoint.y() + height, targetPoint.z());
+            // 出生点按目标头顶真实顶棚空间收缩；苹果与落点之间保持无方块。ready 已校验过，这里是兜底。
+            const birth = gravapplePlacement(world, targetPoint, dropHeight, appleRadius);
+            if (birth === null) { done(action); return; }
+            const height = Math.max(1, birth.y() - targetPoint.y());
             const appearance: any = { item: "minecraft:apple", glow: true, scale: Math.max(1.4, appleRadius * 2.8) };
             if (selected !== null) appearance.homing = { target: String(selected.ref()), turn: pull, range: reach + 6 };
 
@@ -109,27 +122,31 @@ namespace PokemonSkills {
                 const point = hit.position(), victim = hit.target();
                 scenes.stop(current);
                 if (victim !== null && !scope.friendly(victim)) {
-                    const power = p("gravapple", "impact", current);
+                    // 倍率按真正的受击者求值：拦截者与原选目标的地面状态不同，不能套错。
+                    const power = p("gravapple", "impact", withTarget(factContext(current), victim));
                     const facts = scope.observe(victim);
                     const airborne = facts !== null && !facts.grounded();
                     const intensity = Math.max(0.5, Math.min(2.4, power / 78));
                     const landed = impact(current, hit, "gravapple", power,
                         { damage: damageSpec("gravapple", "impact"), contact: false });
+                    if (!landed) { finish(current); return; }
+                    // 降防回执：真正被压了几级就报几级；被免疫则不留破防缺口。
+                    const crushed = NativeEffects.boost(scope, victim, "def", -stages);
                     WorldFeedback.emit(scope, gravappleScene, 1, point,
                         { moment: "impact", target: String(victim.ref()), power: power, intensity: intensity,
-                            crush: stages, airborne: airborne ? 1 : 0 }, 30);
+                            crush: Math.abs(crushed), airborne: airborne ? 1 : 0 }, 30);
                     sound(current, "cobblemon:impact.grass");
-                    if (!landed) { finish(current); return; }
-                    NativeEffects.boost(scope, victim, "def", -stages);
-                    MobEffects.apply(scope, victim, gravappleCrush, crushTicks, 0);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), gravappleCrushText, [stages], 28);
+                    if (crushed !== 0) {
+                        MobEffects.apply(scope, victim, gravappleCrush, crushTicks, 0);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), gravappleCrushText, [Math.abs(crushed)], 28);
+                    }
                     if (airborne) {
                         // 下坠是原生受击冲量：抗击退/移动规则、无敌、权限、骑乘由通用入口处理。
                         // 只有真的推动了才播被砸回地面的表现，抗推目标不谎报成功。
                         const slammed = scope.valid(victim) && scope.hitImpulse(victim, WorldCombat.point(0, -slam, 0));
                         if (slammed) {
                             WorldFeedback.emit(scope, gravappleScene, 1, point,
-                                { moment: "slam", target: String(victim.ref()), crush: stages, slam: slam, intensity: intensity }, 26);
+                                { moment: "slam", target: String(victim.ref()), crush: Math.abs(crushed), slam: slam, intensity: intensity }, 26);
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), gravappleSlamText, [], 26);
                             scope.sound("minecraft:block.anvil.land", point, 14, "{}");
                         }
@@ -152,17 +169,17 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, gravappleScene, 1, birth,
                 { moment: "release", height: height, radius: appleRadius, projectile: flight }, 24);
             // 落点标圈：点选时钉在所选落点的地面投影；实体目标时绑定实体，标圈跟它的真实投影移动。
-            const markData = { height: height, radius: appleRadius, projectile: flight, speed: speedScale,
+            const markData = { height: height, radius: appleRadius, projectile: flight, speed: speedScale, shaft: shaftRate,
                 intensity: Math.max(0.5, Math.min(1.6, height / 8)) };
             if (selected !== null) {
                 scenes.show(action, "mark", targetPoint, { moment: "mark_target", target: String(selected.ref()), height: markData.height,
-                    radius: markData.radius, speed: markData.speed, intensity: markData.intensity });
+                    radius: markData.radius, speed: markData.speed, shaft: markData.shaft, intensity: markData.intensity });
             } else {
                 scenes.show(action, "mark", targetPoint, { moment: "mark", height: markData.height,
-                    radius: markData.radius, speed: markData.speed, intensity: markData.intensity });
+                    radius: markData.radius, speed: markData.speed, shaft: markData.shaft, intensity: markData.intensity });
             }
             scenes.show(action, "fall", birth, { moment: "fall", projectile: flight, height: height,
-                radius: appleRadius, speed: speedScale, intensity: Math.max(0.6, Math.min(1.8, height / 6)) });
+                radius: appleRadius, speed: speedScale, glow: glowRate, leaf: leafRate, intensity: Math.max(0.6, Math.min(1.8, height / 6)) });
             sound(action, "minecraft:entity.wind_charge.throw");
         }
     });

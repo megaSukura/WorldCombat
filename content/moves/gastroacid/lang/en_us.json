@@ -1,9 +1,10 @@
 {
-  "worldcombat.skill.gastroacid.summary": "The acid projectile leaves a coating that temporarily suppresses Pokémon Abilities. Ordinary creatures and players lose armor protection and take small acid pulses.",
+  "worldcombat.skill.gastroacid.summary": "The acid glob leaves a coating: every living target loses armor and takes small acid pulses, and a Pokémon's suppressible Ability is suppressed while coated.",
   "worldcombat.skill.gastroacid.use.0": "Strip one key Ability off a target",
-  "worldcombat.skill.gastroacid.use.1": "Suppress persistent Abilities like Intimidate or Levitate",
+  "worldcombat.skill.gastroacid.use.1": "Suppress persistent Abilities like Levitate or Thick Fat",
   "worldcombat.skill.gastroacid.description.0": "Spits an acid glob up to %1$s blocks away; %2$s s wind-up, about %3$s blocks/tick.",
-  "worldcombat.skill.gastroacid.description.1": "The coating lasts %1$s and suppresses Pokémon Abilities. It reduces armor by 25%, or 50% with Thick Acid; ordinary creatures and players also take about one acid damage every two seconds. Removing the effect ends these effects.",
+  "worldcombat.skill.gastroacid.description.1": "The coating lasts %1$s: armor drops by 25% (50% with thick acid), every living target takes about one acid damage every two seconds, and a Pokémon with a suppressible Ability has it suppressed. Removing the effect ends these effects.",
+  "worldcombat.skill.gastroacid.description.limit": "The coating only suppresses an Ability while it is active; a one-shot entry effect like Intimidate that already fired is not undone by coating afterwards.",
   "worldcombat.skill.gastroacid.thick.0": "Thick acid: suppression x1.6 and cooldown +22 ticks, for taking out a key Ability in one spit.",
   "worldcombat.skill.gastroacid.thick.1": "Thin acid: suppression x0.55 and cooldown -12 ticks, for frequent harassment.",
   "worldcombat.skill.gastroacid.timing": "Range %1$s blocks, %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

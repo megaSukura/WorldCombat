@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.burningjealousy.summary": "朝一个方向喷出扇形火焰。强化中的目标烧得更重并被留下灼伤，普通目标只吃基础火伤。可以对着空地空喷，方块不会留下火圈。",
+  "worldcombat.skill.burningjealousy.summary": "朝一个方向喷出扇形火焰。强化中的目标烧得更重并被留下灼伤，普通目标只吃基础火伤。实心墙会挡住火舌，墙后的目标不会越过墙受热。可以对着空地空喷，方块不会留下火圈。",
   "worldcombat.skill.burningjealousy.use.0": "惩罚刚强化过的对手",
   "worldcombat.skill.burningjealousy.use.1": "一次扫过身前挤成一排的敌人",
   "worldcombat.skill.burningjealousy.use.2": "用灼伤压制正在铺垫的强化手",

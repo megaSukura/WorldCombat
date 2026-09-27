@@ -4,20 +4,15 @@
  * 机制与数值来源：
  * - 原生（Cobblemon 1.8 / Showdown）：威力 50、虫、物理、接触、命中 100、PP 25；若以此招击倒对手，
  *   自身攻击提高 3 级。
- * - 即时战斗里「击倒」就是命中结算后目标生命归零：命中后立刻观测目标生命，归零则按等级阶梯提升攻击，
- *   并浮字与升级特效。攻击提升复用公共能力等级（NativeEffects.boost），对宝可梦与别的战斗者同一条路。
+ * - 即时战斗里「击倒」就是这一击真的把目标打死：命中前抓住目标原生实体，命中后读 `isAlive()`，只有确认本次
+ *   死亡（而非目标被卸载/离场）才按等级阶梯提升攻击，并浮字与升级特效。提升读 NativeEffects.boost 的实际
+ *   回执，到顶或免疫时不谎报级数；对宝可梦与别的战斗者同一条路。
  * - 参数分散到精灵数据：威力取物攻、速度与等级，突刺距离与速度取速度，碰撞半径取体型高度，
  *   击倒后的提升级数随等级阶梯。
  */
 namespace PokemonSkills {
     export const fellstingerId = "fellstinger";
     export const fellstingerScene = "world_combat:move_fellstinger";
-
-    /** 命中后目标是否已被这一击放倒。 */
-    export function fellstingerDefeated(world: CombatWorld, target: CombatActor): boolean {
-        const body = world.observe(target);
-        return !body || body.health() <= 0;
-    }
 
     actionParameters.define(fellstingerId, {
         /** 威力取物攻、速度与等级：这是伤害段随个体变化的那部分。 */

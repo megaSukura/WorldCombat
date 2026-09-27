@@ -4,7 +4,7 @@
   "worldcombat.skill.icebeam.use.1": "Pick off a distant high-value target",
   "worldcombat.skill.icebeam.use.2": "Catch enemies that walk into a fixed beam path",
   "worldcombat.skill.icebeam.description.0": "Pierces instantly along the aim direction: each enemy hit takes about %1$s damage. The beam lingers %2$s, and while pierce slots remain it sweeps the same lane again during that time to catch enemies entering its path.",
-  "worldcombat.skill.icebeam.description.1": "Beam length %1$s blocks and half width %2$s blocks; it pierces up to %3$s enemies from nearest outward, each only once, and a wall truncates it so nothing behind the wall is hit.",
+  "worldcombat.skill.icebeam.description.1": "Beam length %1$s blocks and half width %2$s blocks; it pierces up to %3$s enemies from nearest outward, each only once. The beam aims in full 3D (it can point up or down at airborne or lower targets), and a wall truncates it so nothing behind the wall is hit.",
   "worldcombat.skill.icebeam.description.2": "Each target hit has a %1$s chance to be frozen; while frozen it cannot start new moves or ordinary attacks and cannot move, Ice types are immune, and Fire damage thaws it.",
   "worldcombat.skill.icebeam.description.3": "Windup %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.icebeam.focus.on": "Focus mode now: a narrower, shorter beam with higher single-target power and freeze chance, but it pierces only two targets and takes longer to wind up and recharge.",

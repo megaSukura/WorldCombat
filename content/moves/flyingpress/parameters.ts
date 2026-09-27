@@ -9,12 +9,11 @@
  *   原生受击冲量把它按向地面；走地的目标挨一记重压并被原生位移撞开。跃起高度从自身当前中心算，
  *   受顶板真实截断；到顶后只允许一次重新定向，随后锁死俯冲终点，可被侧移躲开。
  *
- * 双属性是这招的身份，用两个自定义事实把它接进共享结算：
- *   type.flyingFactor —— 目标对飞行属性的相性乘积（可能 0.25/0.5/1/2/4）；共享结算再乘一次格斗相性，
- *     两者相乘即原生的「格斗×飞行」。
- *   type.flyingStab   —— 使用者是飞行属性且不是格斗属性时给 1.5；是格斗属性时共享结算已经给了本系，
- *     这里返回 1，避免双本系叠成 2.25。
- *   没有目标（详情页悬浮）时两者都按中性 1 处理，只影响命中时的实际结算。
+ * 双属性是这招的身份，分两半接进共享结算：
+ *   格斗相性由共享结算按 data.type 处理；飞行相性作为真实受体的伤害阶段贡献（effectiveness），
+ *   按实际命中目标的属性乘算——拦截者按自己的属性结算，不再锁死原选目标，也不受基础威力夹限影响。
+ *   type.flyingStab —— 使用者是飞行属性且不是格斗属性时给 1.5；是格斗属性时共享结算已经给了本系，
+ *     这里返回 1，避免双本系叠成 2.25。详情页没有目标时按中性 1 处理，只影响命中时的实际结算。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
  *   press       重压威力 100 + 物攻偏移 + **自身体重**偏移；高空配置再乘一档，命中时若目标离地 ×1.2。
@@ -31,24 +30,29 @@
  * 伤害段 `press` 与参数同名，走共享换算（原生类别 Physical、属性 Fighting、contact）。
  */
 namespace PokemonSkills {
+    /**
+     * 飞行相性在真实受体的伤害阶段乘算：格斗相性由共享结算按 data.type 处理，两者相乘即原生「格斗×飞行」。
+     * 读取实际命中目标的属性，所以半路被别的敌人拦截时按拦截者的属性结算。
+     */
+    PokemonDamage.effectiveness.define({
+        id: "world_combat:move_flyingpress/flying-matchup",
+        applies: function (context) {
+            return String(context.data.move) === "flyingpress" && context.data.segment === "press";
+        },
+        apply: function (context) {
+            let factor = 1;
+            for (let i = 0; i < context.targetTypes.length; i++)
+                factor *= CobblemonCombat.typeEffectiveness("flying", String(context.targetTypes[i]));
+            if (isFinite(factor) && factor >= 0) context.effectiveness *= factor;
+        }
+    });
+
     defineFacts("flyingpress", function (context) {
         function typeList(world: CombatWorld | null | undefined, actor: CombatActor | null | undefined): string[] | null {
             if (!world || !actor) return null;
             try { return PokemonDamage.combatants.read(world, actor).types; } catch (error) { return null; }
         }
-        function targetActor(): CombatActor | null {
-            if (context.target) return context.target.actor || null;
-            if (context.action) return context.action.target();
-            return null;
-        }
         return { read: function (id: string): Formula.Fact {
-            if (id === "type.flyingFactor") {
-                const list = typeList(context.world, targetActor());
-                if (list === null || !list.length) return 1;
-                let factor = 1;
-                for (let i = 0; i < list.length; i++) factor *= CobblemonCombat.typeEffectiveness("flying", String(list[i]));
-                return isFinite(factor) && factor > 0 ? factor : 1;
-            }
             if (id === "type.flyingStab") {
                 const own = typeList(context.world, context.actor);
                 if (own === null) return 1;
@@ -66,7 +70,6 @@ namespace PokemonSkills {
                 .plus(F.body("weight").minus(300).times(0.06).clamp(-6, 32))
                 .times(F.when(F.pref("highDive"), F.const(1.12), F.const(0.92)))
                 .times(F.when(F.target("actor.grounded", { key: "worldcombat.skill.flyingpress.value.airborne", fallback: "空中目标" }), F.const(1), F.const(1.2)))
-                .times(F.var("type.flyingFactor", { key: "worldcombat.skill.flyingpress.value.flyingFactor", fallback: "飞行相性" }))
                 .times(F.var("type.flyingStab", { key: "worldcombat.skill.flyingpress.value.flyingStab", fallback: "飞行本系" }))
                 .clamp(70, 190).round(1),
             "重压威力", { base: 100,

@@ -3,7 +3,8 @@
  *
  * 什么局面下出手：挂在共享的 control 位上；带毒瓦斯的伙伴在没有攻击可用时用它。对可见、敌对、还活着的目标出手，
  * 够不到就先交给共享接近逻辑走近。以目标位置为落点施放，所以挤在一起的目标越多越值得用。
- * 目标周围 4 格内还有别的敌人时 priority 抬到 55（一次罩住一群），孤立目标只给 30。
+ * 目标周围 4 格内还有别的、且与落点之间没有墙隔开的敌人时 priority 抬到 55（一次罩住一群），孤立或墙隔的目标只给 30。
+ * 目标已经站在一片毒云（含火云）里就不再重复铺云。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("poisongas", {
@@ -27,10 +28,13 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
+            var world = CompanionBehavior.world(context);
             var nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
             var clustered = nearby.filter(function (other) {
                 return other.ref !== target.ref && !other.friendly && other.health > 0
-                    && CompanionBehavior.distance(other.point, target.point) <= 4;
+                    && CompanionBehavior.distance(other.point, target.point) <= 4
+                    // 墙隔开的近邻被云罩不到，不算进「一次罩一群」。
+                    && world.clear(CompanionBehavior.point(target.point), CompanionBehavior.point(other.point));
             }).length;
             return clustered >= 1 ? 55 : 30;
         }

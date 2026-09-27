@@ -1,16 +1,17 @@
 /**
  * 魔法反射 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者身前升起一叠半透膜面 → 膜撑开、把朝自己来的东西弯住 → 接到状态招的一刻膜面一亮、
- *   一道折返光沿两人直线打回那个施放者；没接到东西时膜面合拢、散成细尘。
+ * 一句话：施法者周身升起一层闭合薄膜 → 薄膜撑开、把朝自己来的东西弯住 → 接到状态招的一刻薄膜一亮、
+ *   一道光沿朝向来源的方向打回那个施放者；来源免疫时薄膜只合拢表明挡下，没接到东西时同样合拢散尘。
  *
  * 色相家族：青白 0x8FE8FF 为主体，紫罗兰 0xB388FF 做超能强调，近白 0xF2FBFF 只做折返高光，深蓝 0x2A2350 做烟。
- * 层次：膜面（主体，`generic/screen` 帧条与 psyring）／折返（强调，沿路径的光点与 impact_psychic）／尘（余韵）。
- * 拍子：raise（起膜 0–16t）→ film（撑膜，持续）→ reflect（折返 0–28t）／collapse（收膜 0–18t）。
- * 范围：膜面绑 `source` 随体型缩放；膜面铺开的宽度与折返光路沿 `data.path`（施法者 ↔ 对手）画出，
- *   就是这层膜实际罩住的方向与反射距离 `data.span`，站哪会被弹一眼可读。
- * 运动：膜面缓缓环绕；reflect 时细光点沿 `data.path` 从施法者一侧冲向对手并炸开。
- * 数：膜面与折返光点数量绑 `data.facets`（特攻派生），窗口剩余比例由 `data.remaining` / `data.span` 写出节奏。
+ * 层次：膜面（主体，`generic/screen` 帧条与 psyring）／折返（强调，朝来源的光点与 impact_psychic）／尘（余韵）。
+ * 拍子：raise（起膜 0–16t）→ film（撑膜，持续）→ reflect（折返 0–28t）／collapse（挡下或空膜合拢 0–18t）。
+ * 范围：膜面绑 `source` 随体型缩放，是围住身体的一层闭合曲面；折返光沿 `data.target`（来源）方向飞出，
+ *   机制与服务端判定都用同一段施法者→来源的真实距离，站哪会被弹一眼可读。
+ * 运动：膜面缓缓外扩；reflect 时细光点从施法者一侧冲向来源并炸开——这是真正朝来源的一束，而非沿线随机散布。
+ * 数：膜面与折返光点数量绑 `data.facets`（特攻派生），窗口剩余比例由 `data.filmRate` / `data.filmAlpha` / `data.filmSpark`
+ *   （服务端按剩余寿命算出）渐薄，挡下或空膜时走 collapse 表示收膜。
  */
 const MagicCoatDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -22,7 +23,7 @@ const MagicCoatDefinition: ParticleDefinition = {
                 {
                     name: "panels", bind: "source", offset: [0, 0.6, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/screen",
-                    rate: 16, shape: { kind: "arc", radius: 0.55, arcDegrees: 180, rotation: [0, 0, 90] },
+                    rate: 16, shape: { kind: "sphere", radius: 0.52, thickness: 1 },
                     direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.4, 0.14], sizeMode: "index",
                     color: 0x8FE8FF, alpha: [0.6, 0], light: "full", maxParticles: 40
@@ -43,15 +44,16 @@ const MagicCoatDefinition: ParticleDefinition = {
                 {
                     name: "membrane", bind: "source", offset: [0, 0.62, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/screen_color",
-                    rate: 5, shape: { kind: "arc", radius: 0.6, arcDegrees: 180, rotation: [0, 0, 90] },
+                    rate: { data: "filmRate", fallback: 5 }, shape: { kind: "sphere", radius: 0.6, thickness: 1 },
                     direction: "outward", speed: [0.01, 0.03],
                     lifetime: [16, 26], size: [0.42, 0.42],
-                    color: 0x8FE8FF, alpha: [0.14, 0.14], render: "translucent", light: "world", maxParticles: 14
+                    color: 0x8FE8FF, alpha: [{ data: "filmAlpha", fallback: 0.14 }, { data: "filmAlpha", fallback: 0.14 }],
+                    render: "translucent", light: "world", maxParticles: 22
                 },
                 {
                     name: "glimmer", bind: "source", offset: [0, 0.7, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: { data: "facets", fallback: 8 }, interval: 10, repeats: 60 },
+                    burst: { count: { data: "filmSpark", fallback: 8 }, interval: 10, repeats: 60 },
                     shape: { kind: "circle", radius: 0.6 }, direction: "up", speed: [0.01, 0.04],
                     lifetime: [10, 18], size: [0.07, 0.01], sizeMode: "sin",
                     color: 0xB388FF, alpha: [0.4, 0], light: "full", maxParticles: 26
@@ -71,16 +73,16 @@ const MagicCoatDefinition: ParticleDefinition = {
                     color: 0xF2FBFF, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 90
                 },
                 {
-                    name: "bounce", bind: "path", fit: "none", shape: { kind: "polyline" },
+                    name: "bounce", bind: "source", offset: [0, 0.62, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    burst: { count: { data: "facets", fallback: 10 } }, direction: "shape", speed: [0.3, 0.7],
+                    burst: { count: { data: "facets", fallback: 10 } }, direction: "toward", speed: [0.3, 0.7],
                     lifetime: [8, 15], size: [0.12, 0.01], sizeMode: "index",
                     color: 0x8FE8FF, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 80
                 },
                 {
-                    name: "sheen", bind: "path", fit: "none", shape: { kind: "polyline" },
+                    name: "sheen", bind: "source", offset: [0, 0.62, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    rate: 24, direction: "shape", speed: [0.04, 0.12],
+                    rate: 24, direction: "toward", speed: [0.04, 0.12],
                     lifetime: [8, 14], size: [0.2, 0.02], sizeMode: "index",
                     color: 0xB388FF, alpha: [0.55, 0], light: "full", maxParticles: 50
                 }

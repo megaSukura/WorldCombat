@@ -58,7 +58,7 @@ namespace PokemonSkills {
                 world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p(geargrindId, "tempo", context)),
-                recover: Math.round(p(geargrindId, "recover", context)),
+                recover: Math.round(p(geargrindId, "aftercast", context)),
                 cooldown: Math.round(p(geargrindId, "recharge", context)),
                 active: 0,
                 range: p(geargrindId, "reach", context)
@@ -102,13 +102,24 @@ namespace PokemonSkills {
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
             function completeOne(current: CombatAction): void { remaining--; if (remaining <= 0) finish(current); }
 
-            /** 停成残屑的齿轮：只转一小会儿就散开，不再画成会持续伤人的长齿轮。 */
-            function grounded(scope: CombatWorld, point: CombatPoint, intensity: number, linger: number): void {
+            /** 停下的齿轮脚下是否有真实支撑；只有支撑才立起转盘，空中只散碎屑。 */
+            function resting(scope: CombatWorld, point: CombatPoint): boolean {
+                const beneath = scope.block(point.plus(WorldCombat.point(0, -0.2, 0)));
+                if (beneath === null) return false;
+                const id = String(beneath.id());
+                return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
+                    && id !== "minecraft:water" && id !== "minecraft:lava";
+            }
+
+            /** 停成残屑的齿轮：只转一小会儿就散开；`supported` 为假时只散碎屑、不留落地装饰。 */
+            function grounded(scope: CombatWorld, point: CombatPoint, intensity: number, linger: number, supported: boolean): void {
                 const life = Math.max(8, Math.round(linger));
-                try { scope.helper(point, 1, JSON.stringify({ item: "minecraft:iron_ingot", spin: true, glow: true, scale: Math.max(0.5, scale * 0.8) }), life); }
-                catch (error) { }
+                if (supported) {
+                    try { scope.helper(point, 1, JSON.stringify({ item: "cobblemon:iron_ball", spin: true, glow: true, scale: Math.max(0.5, scale * 0.8) }), life); }
+                    catch (error) { }
+                }
                 WorldFeedback.emit(scope, geargrindScene, 1, point,
-                    { moment: "grounded", shards: Math.round(shards * 0.5), scale: scale, intensity: intensity, linger: life }, life + 4);
+                    { moment: "grounded", disc: supported ? 6 : 0, shards: Math.round(shards * 0.5), scale: scale, intensity: intensity, linger: life }, life + 4);
             }
 
             /** 本枚齿轮当前要去的点：有实体就取它的身体位置（并激活追踪），否则用锁定的汇聚点。 */
@@ -135,25 +146,27 @@ namespace PokemonSkills {
                 const forward = flat.length() < 0.001 ? WorldCombat.point(0, 0, 1) : flat.unit();
                 const side = WorldCombat.point(-forward.z(), 0, forward.x());
                 const flank = offset * (index === 0 ? 1 : -1);
-                const origin = base.plus(side.scale(flank));
+                // 真实侧向起点：从身体到该点若被墙挡住，就退回身体，避免齿轮生在墙外。
+                let origin = base.plus(side.scale(flank));
+                if (WorldGeometry.blockHit(scope, base, origin) !== null) origin = base;
                 const power = index === 0 ? tooth : sprocket;
                 const segment = index === 0 ? "tooth" : "sprocket";
                 const intensity = Math.max(0.5, Math.min(2.2, power / 60));
                 let direction = point.minus(origin);
                 if (direction.length() < 0.05) direction = forward;
                 direction = geargrindScatter(direction.unit(), (scope.random() * 2 - 1) * spread * Math.PI / 180);
-                const distance = point.minus(origin).length();
                 const homing = targetRef !== "" && turn > 0 ? { target: targetRef, turn: turn, delay: 1, range: reach + 8 } : undefined;
-                let lastPoint = point, struck = false;
+                let lastPoint = point, struck = false, flight = "";
                 WorldFeedback.emit(scope, geargrindScene, 1, origin,
                     { moment: "throw", index: index + 1, shards: shards, scale: scale, intensity: intensity, side: index === 0 ? 1 : -1,
                         direction: [direction.x(), direction.y(), direction.z()], cross: cross ? 1 : 0 }, 20);
                 sound(current, "minecraft:entity.arrow.shoot");
-                LivingActions.projectile(current, {
-                    speed: speed, range: distance + 4, radius: radius, direction: direction, gravity: 0,
-                    lifetime: Math.max(30, Math.round((distance + 6) / speed) + 20),
+                flight = LivingActions.projectile(current, {
+                    // range 固定为 reach，不随实际追远扩大；交错式的侧偏移由同侧的追踪合拢补上。
+                    speed: speed, range: reach, radius: radius, direction: direction, gravity: 0, origin: origin,
+                    lifetime: Math.max(30, Math.round((reach + 6) / speed) + 20),
                     appearance: {
-                        item: "minecraft:iron_ingot", spin: true, glow: true, scale: Math.max(0.5, scale),
+                        item: "cobblemon:iron_ball", spin: true, glow: true, scale: Math.max(0.5, scale),
                         bounce: 1, restitution: 0.45,
                         homing: homing
                     } as any,
@@ -168,7 +181,6 @@ namespace PokemonSkills {
                             WorldFeedback.emit(scope2, geargrindScene, 1, at,
                                 { moment: "hit", point: [at.x(), at.y(), at.z()], target: String(victimActor.ref()), index: index + 1, shards: shards, scale: scale, intensity: intensity }, 24);
                             sound(inner, "cobblemon:impact.steel");
-                            grounded(scope2, at, intensity, 22);
                             return;
                         }
                         // 撞到方块或非敌对目标：按命中面算反弹方向，画一段真实的弹开轨迹。
@@ -181,7 +193,12 @@ namespace PokemonSkills {
                         sound(inner, "minecraft:block.anvil.hit");
                     }
                 }, function (inner: CombatAction) {
-                    if (!struck) grounded(inner.world(), lastPoint, Math.max(0.4, intensity * 0.7), 12);
+                    if (!struck) {
+                        // 停下的真实位置由原生弹体给出；只有脚下有支撑才落地装饰，空中只散碎屑。
+                        const stop = inner.world().projectilePosition(flight);
+                        const end = stop === null ? lastPoint : stop;
+                        grounded(inner.world(), end, Math.max(0.4, intensity * 0.7), 12, resting(inner.world(), end));
+                    }
                     completeOne(inner);
                 });
             }

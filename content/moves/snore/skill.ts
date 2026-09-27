@@ -7,8 +7,9 @@
  * 两幕（回响开启时是同一幕连演两次）：
  *   起（windup，提交前）：翻身、口鼻边聚起一圈睡泡的预告。
  *   鼾（blast → hit/miss）：提交后从口鼻朝选定的方向喷出一道声波；判定止于实际接触的第一具身体或墙面，
- *       声线也只画到那里。命中一震并掷一次畏缩，落空就散在接触点空气中。回响开启时，隔 `gap` 刻再喷一声；
- *       这期间若施法者已经醒来，第二声不再凭空响起，首声的结算保留。
+ *       声线也只画到那里。命中一震并掷一次畏缩，落空就散在接触点空气中。回响开启时，隔 `gap` 刻再喷一声。
+ *       每一响都在实际释放时复核 `CombatStatus.behaves(..., "sleep")`：起手前就醒了便整招作废，中途醒来则
+ *       第二声不再凭空响起，首声的结算保留。
  *
  * 与同族的区分：吵闹是以醒着的自己为圆心、连喊数圈、阻止周围人入睡的持续声浪；
  * 打鼾是睡着时朝一个方向喷出的当场鼾声，只有一响或两响，直接把对手震懵。
@@ -88,8 +89,9 @@ namespace PokemonSkills {
 
             function burst(current: CombatAction, index: number): void {
                 const scope = current.world();
-                // 回响的第二声要以仍在睡眠为前提：中途被伤害唤醒就到此为止，首声的结算保留。
-                if (index > 0 && (!scope.valid(current.actor()) || !CombatStatus.behaves(scope, current.actor(), "sleep"))) { finish(current); return; }
+                // 每一响都在实际释放时复核睡眠（看真实 behaves，不是只查身份）：第一响前醒了就整招作废，
+                // 中途被伤害唤醒则第二声不再凭空响起，首声的结算保留。
+                if (!scope.valid(current.actor()) || !CombatStatus.behaves(scope, current.actor(), "sleep")) { finish(current); return; }
                 const body = scope.observe(current.actor());
                 const mouth = (body === null ? current.origin() : body.position()).plus(WorldCombat.point(0, 0.4, 0));
                 let direction = aim(current);
@@ -110,7 +112,7 @@ namespace PokemonSkills {
                         direction: [direction.x(), direction.y(), direction.z()], rings: rings, count: count, scale: scale, intensity: intensity, echo: index }, 18);
                 if (hit.hitEntity()) {
                     const victim = hit.target();
-                    const landed = impact(current, hit, "snore", power, { damage: damageSpec("snore", "blast"), sound: true });
+                    const landed = impact(current, hit, "snore", power, { damage: damageSpec("snore", "blast"), sound: true }, "snore-" + index);
                     if (landed && victim !== null && scope.valid(victim)) {
                         hits++;
                         WorldFeedback.emit(scope, snoreScene, 1, hit.position(),

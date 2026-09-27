@@ -6,6 +6,7 @@
  *   抽（execute，提交后）：先对生命较高的一方申请一次不致死的原生减量（`world.health` 负值走原生 hurt，第四参传最低生命），
  *     读回实际失血；再按这份实际失血给生命较低的一方原生治疗，最多补到本次平均值、且不超过其最大生命。
  *   所以只有真抽到血，后面才有回填：目标免疫/护盾/伤害上限挡下抽血时，谁都不会白得治疗，也不第二次补杀。
+ *   已结算的流量由自定义表现从付款端逐刻送到收款端，读的是两端真实位置；被拒时没有回流，不假造成功提示。
  *
  * 选取：`kind: "aim"`——接受任意阵营实体或世界点，允许空放；submit 前提交时不再强制存在敌人。
  *   明确选中友方时，按「自己生命更高就自损、把伙伴补起来」，但友方伤害仍走原生友伤权限（抽不动友方就是抽不动），
@@ -16,6 +17,7 @@
  */
 namespace PokemonSkills {
     const painsplitScene = "world_combat:move_painsplit";
+    const painsplitThreadScene = "world_combat:move_painsplit_thread";
     const painsplitGainText = "world_combat.move.painsplit.text.gain";
     const painsplitLossText = "world_combat.move.painsplit.text.loss";
     const painsplitFlatText = "world_combat.move.painsplit.text.flat";
@@ -150,6 +152,10 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, painsplitScene, 1, from, { moment: "drain",
                     point: [from.x(), from.y(), from.z()], direction: [unit.x(), unit.y(), unit.z()],
                     path: path, span: span, flow: flow, scale: scale }, 30);
+                // 已结算流量从付款端实际走向收款端：自定义场景读两端当前真实位置，按 span 定出的短程时长逐刻送光。
+                var travel = Math.max(5, Math.min(12, Math.round(span * 1.2)));
+                WorldFeedback.emit(world, painsplitThreadScene, 1, from,
+                    { payer: String(payer.ref()), receiver: String(receiver.ref()), start: world.tick(), travel: travel, flow: flow, scale: scale }, 30);
                 sound(action, "minecraft:entity.player.hurt");
                 if (result.heal > 0.001) {
                     var arrive = Math.max(2, Math.min(60, Math.round(motes * (0.3 + (result.heal / reference) * 1.8))));

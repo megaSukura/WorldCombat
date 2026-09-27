@@ -2,14 +2,14 @@
  * 变小 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者蜷成一团，冷蓝的尘与光被吸进身体、地环一圈圈收拢，身体显得很小；
- *   缩着时只留几点贴身的微光；被打空时一道白线闪过，被大体型踩中时地面炸起一圈沉尘，回形时冷光重新铺开。
+ *   缩着时只留几点贴身的微光；被打空时一道白线闪过，落地被大体型踩中时地面炸起一圈沉尘，空中受击则炸开碎光，回形时冷光重新铺开。
  *
  * 色相家族：冷蓝灰（0x9FB8D8）为主体，近白（0xE8F2FF）做缩身与闪避的线，深蓝灰（0x5A6E8C）做尘与余韵；没有第二个色相。
  * 层次：收身（起）／吸拢的光、收缩的地环与尘（击）／贴身的微光（收）／回形与踩踏（末／事件）。
- * 起击收：curl（蜷缩）→ tiny（缩小）→ hold（维持）→ dodge／trample（事件）→ fade（回形）。
+ * 起击收：curl（蜷缩）→ tiny（缩小）→ hold（维持）→ dodge／trample／trample_air（事件）→ fade（回形）。
  * 范围：地环绑脚点、fit none，半径按 `data.scale`（实际收缩尺度 / 0.6）收拢，画出来的圈就是身体缩到的范围。
- * 运动：光与尘由外向内被吸进身体；地环向内收；维持时微光极慢上浮；闪避是一道向外掠过的白线，踩踏是向下的沉尘。
- * 数：尘量绑 `data.motes`（速度派生），收缩拍数绑 `data.pulses`（等级派生），尺寸与范围绑 `data.scale`（体型派生）。
+ * 运动：光与尘由外向内被吸进身体；地环向内收；维持时微光极慢上浮；闪避是一道向外掠过的白线，落地踩踏是向下的沉尘，空中受击是碎光。
+ * 数：尘量绑 `data.motes`（速度派生），收缩波纹圈数绑 `data.pulses`（等级派生），尺寸与范围绑 `data.scale`（体型派生）。
  * 持续状态：维持期低密度、贴身，玩家仍看得清目标。
  */
 const MinimizeDefinition: ParticleDefinition = {
@@ -119,6 +119,21 @@ const MinimizeDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2], gravity: 0.02, drag: 0.88,
                     lifetime: [12, 22], size: [0.35, 0.7], sizeMode: "index",
                     color: 0x5A6E8C, alpha: [0.7, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        // 空中受大体接触：只在受击点炸开碎光，不起地尘。
+        trample_air: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "trample_spark", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/hit_yellow",
+                    burst: { count: 16 }, shape: { kind: "sphere_surface", radius: 0.35 },
+                    direction: "outward", speed: [0.06, 0.2], drag: 0.86,
+                    lifetime: [8, 16], size: [0.28, 0.05], sizeMode: "index",
+                    color: 0xE8F2FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 36
                 }
             ]
         },

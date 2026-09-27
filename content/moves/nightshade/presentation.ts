@@ -5,7 +5,7 @@
  * 在原地盘踞一小会儿——幻影不碰身体，只在心里留下一片阴冷。
  * 色相家族：幽紫到近黑（smokeorb / impact_ghost / scaryface），强调层用亮紫白光。
  * 拍子：起（charge 凝影）→ 行（flight 追人）→ 击（haunt 钻心）／散（splash 炸影）→ 收（fizzle 落空）。
- * 范围：splash 的地面暗环画的就是炸影半径（data.scale = 实际半径 / 1.7）；haunt 绑命中点。
+ * 范围：splash 的地面暗环画的就是炸影半径（data.scale = 实际半径 / 1.7）；haunt 绑命中点，盘踞时长由 data.shroud（等级换算）决定。
  * 运动：flight 的幽光钉在幻影本体上，沿它的飞行轨迹拖尾；命中后阴影从命中点向外爆、再缓缓上浮。
  * 数：haunt 与 splash 的幽影数量由服务端按实际伤害与真实波及人数算好传入（data.count）；
  * 被免疫/上限完全挡下时改播 blocked（暗环折返、无钻心爆点），与命中的幽紫钻心分开。
@@ -58,8 +58,8 @@ const NightShadeDefinition: ParticleDefinition = {
             ]
         },
         haunt: {
-            duration: 28,
-            exit: { stop: 12, drain: 20 },
+            duration: { data: "shroud", fallback: 24 },
+            exit: { drain: 20 },
             emitters: [
                 {
                     name: "mind_break", bind: "target", height: 0.55,

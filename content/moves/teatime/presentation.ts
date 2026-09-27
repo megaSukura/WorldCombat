@@ -93,24 +93,24 @@ const TeatimeDefinition: ParticleDefinition = {
             ]
         },
         steep: {
-            duration: 60,
-            exit: { stop: 20, drain: 30 },
+            duration: 40,
+            exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "keep_warm", bind: "point", offset: [0, 0.1, 0],
+                    name: "afterglow", bind: "point", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 6, shape: { kind: "circle", radius: 4.0, thickness: 0.5 },
-                    direction: "up", speed: [0.01, 0.05], drag: 0.96, spin: 2,
-                    lifetime: [24, 44], size: [0.3, 0.14],
-                    color: 0xF0DDBF, alpha: [0.18, 0], light: "world", maxParticles: 90
+                    rate: 3, shape: { kind: "circle", radius: 1.4, thickness: 0.5 },
+                    direction: "up", speed: [0.01, 0.04], drag: 0.96, spin: 2,
+                    lifetime: [20, 36], size: [0.24, 0.10],
+                    color: 0xF0DDBF, alpha: [0.14, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "ember", bind: "point", offset: [0, 0.2, 0],
+                    name: "ember", bind: "point", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 5, shape: { kind: "circle", radius: 1.0 },
-                    direction: "up", speed: [0.01, 0.04], drag: 0.95,
-                    lifetime: [16, 28], size: [0.06, 0.01],
-                    color: 0xE8B45A, alpha: [0.3, 0], light: "full", maxParticles: 30
+                    rate: 2, shape: { kind: "circle", radius: 0.6 },
+                    direction: "up", speed: [0.01, 0.03], drag: 0.95,
+                    lifetime: [14, 24], size: [0.06, 0.01],
+                    color: 0xE8B45A, alpha: [0.22, 0], light: "full", maxParticles: 20
                 }
             ]
         },
@@ -132,3 +132,28 @@ const TeatimeDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_teatime", 1, TeatimeDefinition);
+
+/**
+ * 结算入席：服务端给出每个真实吃下树果者与它那颗树果的可辨贴图；
+ * 每帧按 `serverTick` 把树果从本人上方收回到身上，与各自的 sip 同拍。
+ * 固定数量、无粒子生灭与额外实体；没有可辨贴图的树果只走 sip 粒子。
+ */
+WorldCombatClient.scene("world_combat:move_teatime_sip", 1, function (frame) {
+    const entry: CombatSceneEntry<{ holders?: { at?: number[]; sprite?: string }[]; start?: number; duration?: number; scale?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    const holders = Array.isArray(data.holders) ? data.holders : [];
+    if (!holders.length) return;
+    const start = typeof data.start === "number" ? data.start : frame.serverTick();
+    const duration = typeof data.duration === "number" && data.duration > 0 ? data.duration : 22;
+    const progress = Math.max(0, Math.min(1, (frame.serverTick() - start) / duration));
+    if (progress >= 1) return;
+    const scale = typeof data.scale === "number" ? Math.max(0.7, Math.min(1.8, data.scale)) : 1;
+    for (let i = 0; i < holders.length; i++) {
+        const holder = holders[i];
+        if (!holder || !Array.isArray(holder.at) || holder.at.length !== 3) continue;
+        if (typeof holder.sprite !== "string" || !holder.sprite) continue;
+        const rise = 0.75 * (1 - progress);
+        frame.sprite(holder.sprite, holder.at[0], holder.at[1] + rise, holder.at[2], 0.30 * scale, 0, 0xFFFFFFFF | 0, 0, true);
+    }
+});

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.makeitrain.summary": "把整座金库抖上头顶，一束束真金币向身周抛起再沿真实弧线落下；真的落到敌人身上的那一下才结算特殊伤害，每名敌人整次最多挨一次，屋檐与低顶会挡住金雨。散尽后自己的特攻下降，少数真硬币留在金币实际落地的终点。倾库式更多更重、自损更深、回气更久。",
+  "worldcombat.skill.makeitrain.summary": "把整座金库抖上头顶，一束束真金币向身周抛起再沿真实拖曳弧线落下；真的碰到敌人身上（上抛与下落都算）才结算特殊伤害，每名敌人整次最多挨一次，屋檐与低顶会挡住金雨。散尽后自己的特攻下降，但这一场已按掏空前的手感打出；少数真硬币留在金币实际接触的地方。倾库式更多更重、自损更深、回气更久。",
   "worldcombat.skill.makeitrain.use.0": "被围住时一次倾泻整片大范围",
   "worldcombat.skill.makeitrain.use.1": "在开阔近距对扎堆的敌人抛一场真雨",
   "worldcombat.skill.makeitrain.use.2": "用真实弹道与屋顶判断落点，站进遮挡就能躲",
-  "worldcombat.skill.makeitrain.description.0": "以自身为中心把金币抛向 %2$s 格内，共 %3$s 束、每隔 %4$s 抛出下一束；每束沿真实弧线落下，整次施放里每名敌人最多被砸中一次，受到约 %1$s 点特殊伤害。",
+  "worldcombat.skill.makeitrain.description.0": "以自身为中心把金币抛向 %2$s 格内，共 %3$s 束、每隔 %4$s 抛出下一束；每束按真实拖曳弧线飞起再落下，上抛与下落碰到敌人都会结算，整次施放里每名敌人最多被砸中一次，受到约 %1$s 点特殊伤害。",
   "worldcombat.skill.makeitrain.description.1": "整场金雨按固定总预算在各束的真实落点散出约 %1$s 枚能捡起的真币，束数不增加总量。",
   "worldcombat.skill.makeitrain.description.2": "释放后自己的特攻下降 %1$s 级。",
   "worldcombat.skill.makeitrain.hoard.on": "当前是倾库式：单束、范围与束数都更高，但自损 2 级特攻、起手与冷却更长，掉落总量不变。",
@@ -27,6 +27,8 @@
   "worldcombat.skill.makeitrain.preference.ai.minFoes.help": "身周至少站着几个敌人才用这一发；越大越只在真正扎堆时才倾库，避免为一两个目标掏空自己。面对单体 Boss 可以调到 1。",
   "worldcombat.skill.makeitrain.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.makeitrain.preference.ai.maxChase.help": "超过这个距离就不主动靠近，先在覆盖圈外待命；越大越愿意先走近再倾泻。",
+  "worldcombat.skill.makeitrain.preference.ai.regain": "耗后收敛",
+  "worldcombat.skill.makeitrain.preference.ai.regain.help": "开启：自身特攻已被掏空时（例如刚倾过一次库）明显降低再倾的优先级，避免不断为同一批目标反复自损；关闭则不顾当前特攻等级，只按圈里人数排序。",
   "world_combat.move.makeitrain.text.hit": "金币命中 %1$s 个目标",
   "world_combat.move.makeitrain.text.miss": "金雨落空",
   "world_combat.move.makeitrain.text.cost": "特攻 -%1$s"

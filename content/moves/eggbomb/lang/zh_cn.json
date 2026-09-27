@@ -29,6 +29,8 @@
   "worldcombat.skill.eggbomb.preference.ai.maxChase.help": "超过这个距离就不抡蛋，先走近。越大越愿意从更远处先手。",
   "worldcombat.skill.eggbomb.preference.ai.opportunist": "挑站定的人",
   "worldcombat.skill.eggbomb.preference.ai.opportunist.help": "开启：站着不动、没在跑的对手排得更前，离地的目标降到最后（原生 75 命中，打移动目标容易抡偏）；关闭则所有目标同价。",
+  "worldcombat.skill.eggbomb.preference.ai.lead": "移动目标提前量",
+  "worldcombat.skill.eggbomb.preference.ai.lead.help": "对移动中的地面目标，往它去路前方预判这么多刻再落蛋；默认已算上蛋的飞行与落地后的短滚。越大越往远处拦，越小越贴着当前身位丢。",
   "world_combat.move.eggbomb.text.hit": "大蛋砸实了",
   "world_combat.move.eggbomb.text.miss": "蛋摔在你脚边"
 }

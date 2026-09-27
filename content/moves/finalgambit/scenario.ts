@@ -4,8 +4,8 @@
  * 场面：一只生命远高于对手的斗系精灵（猴怪，30 级）面对一只低生命、学不会有效反击的对手（向日种子，5 级），
  * 相距 2 格。双方都只带这一招；猴怪的当前生命不低于对手，AI 的「只打必杀」条件成立，会把全部生命押上去；
  * 向日种子这一侧生命低于猴怪，条件不成立，不会出手。
- * 必然事实：本招被提交过；对手受到过伤害（且通常被一记打空）。
- * 用户是否随之倒下、伤害具体数值写进 note 供读轨迹判断——「命中即自我牺牲」正是这一招的设计事实。
+ * 必然事实：本招被提交过；对手受到过伤害（且通常被一记打空）；全力式命中后施法者自己倒下——生命经原生自付
+ * 入口结清。伤害具体数值写进 note 供读轨迹判断。
  */
 Smoke.scenario("finalgambit", function (stage) {
     stage.time("night");
@@ -18,7 +18,8 @@ Smoke.scenario("finalgambit", function (stage) {
         stage.after(20, function () {
             stage.expect(stage.casts("finalgambit", gambler) > 0, "mankey committed final gambit");
             stage.expect(stage.damageTo(prey) > 0, "final gambit dealt damage equal to the user's HP");
-            stage.note("final gambit spends the user's remaining HP as damage and the user faints (unless the spare form is configured). The AI only commits when its own HP is not below the target's, so this blow is meant to empty the target. Variable: exact damage, crit is disabled by design, and whether the target was already hurt.", {
+            stage.expect(!gambler.alive(), "the full-commit gambit pays its life and faints the user");
+            stage.note("final gambit deals the user's remaining HP as damage, then pays that life through the native self-payment and faints (unless the spare form is configured). The AI commits when this move's real damage empties the target, so this blow is meant to empty it. Variable: exact damage (crit is disabled by design) and whether the target was already hurt.", {
                 casts: stage.casts("finalgambit", gambler),
                 damageToPrey: Math.round(stage.damageTo(prey) * 10) / 10,
                 preyAlive: prey.alive(), preyHealth: Math.round(prey.health() * 10) / 10,

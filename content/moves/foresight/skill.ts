@@ -6,13 +6,14 @@
  *
  * 三幕：
  *   凝目（windup，提交前只观察与预告，可被打断，不花代价）。
- *   看穿（提交后）：给目标挂世界效果 world_combat:foresight_mark（共享身份 world_combat:status/foresight
- *     与 world_combat:status/identified），一次剥掉它当前的正闪避，并把它照亮；记录层
- *     world_combat:foresight_record 记下剥掉几级、目光量与窗口，并绑定持识表现（随记录层一起结束）。
+ *   看穿（提交后）：先验证目标真的挂上世界效果 world_combat:foresight_mark（共享身份
+ *     world_combat:status/foresight 与 world_combat:status/identified，被拒就不报完整 read），再用
+ *     NativeEffects.boostWindow 绑在这份印记载体上临时剥掉它当前的正闪避并把它照亮；记录层
+ *     world_combat:foresight_record 记下实际剥掉几级、目光量与窗口，并绑定持识表现（随记录层一起结束）。
  *   兑现（任何一般／格斗伤害落在这个目标身上）：PokemonDamage.metadata 在结算前读这层身份，把目标属性里的
- *     ghost 摘掉，这一击因此接得上；同时在目标身上炸出一次「实影闪」，让队友看见虚体被看实的这一拍。
- *     结算仍走共享的本系、相性、暴击与特性。
- *   自散：窗口走完或被牛奶一类效果解掉时，剥掉的闪避原样还回，印记褪去。
+ *     ghost 摘掉，这一击因此接得上；真正造成伤害（damage_applied 的 actual > 0）时在目标身上炸出一次
+ *     「实影闪」，让队友看见虚体被看实的这一拍。结算仍走共享的本系、相性、暴击与特性。
+ *   自散：窗口走完或被牛奶一类效果解掉时，boostWindow 随印记载体只收回本招这一份闪避，印记褪去。
  *
  * 与同族分开：奇迹之眼破的是恶对超能的免疫、且把命中留在自己身上；识破只做「看穿幽灵 + 拔一次闪避」，
  *   并让队伍里的一般／格斗招接得上。两者各自到期，只在同一份闪避上不重复扣还与放大。
@@ -46,18 +47,16 @@ namespace PokemonSkills {
         const views = world.effects(target, foresightRecordEffect);
         for (let index = 0; index < views.length; index++) world.operation(views[index].id(), "world_combat:dispel", "{}");
     }
-    /** 结算一条已存在的记录：把它剥掉的闪避原样还回再释放，避免第二次看穿在同一份闪避上反复扣还放大。 */
-    function foresightSettleRecord(world: CombatWorld, target: CombatActor): void {
-        const record = foresightRecordOf(world, target);
-        if (record !== null && Number(record.taken) > 0) NativeEffects.boost(world, target, "evasion", Math.round(Number(record.taken)));
-        foresightReleaseRecord(world, target);
-    }
-    /** 拔掉目标当前的正闪避，最多 request 级；返回实际拔掉的级数。其他战斗者没有闪避阶梯，返回 0。 */
-    function foresightStrip(world: CombatWorld, target: CombatActor, request: number): number {
-        const current = Math.max(0, NativeEffects.stage(NativeEffects.read(world, target), "evasion"));
-        const amount = Math.min(current, Math.max(0, Math.round(request)));
-        if (amount > 0) NativeEffects.boost(world, target, "evasion", -amount);
-        return amount;
+    /** 拔掉目标当前的正闪避，最多 request 级，并把这次下降交给绑在本招印记载体上的 boostWindow 拥有：
+     * 印记到期、被牛奶一类效果解掉或换新时，窗口只收回自己这一份，别的能力变化原样保留，不会凭空返级。
+     * 返回实际拔掉的级数（按有效等级前后差），不采信请求值。 */
+    function foresightStrip(world: CombatWorld, target: CombatActor, request: number, ticks: number,
+        carrier: CombatMobEffect, previous: CombatMobEffect | null): number {
+        const before = NativeEffects.effectiveStage(world, target, "evasion");
+        const amount = Math.min(Math.max(0, before), Math.max(0, Math.round(request)));
+        if (amount > 0) NativeEffects.boostWindow(world, target, { evasion: -amount }, ticks,
+            "world_combat:move/foresight", carrier, previous);
+        return Math.max(0, before - NativeEffects.effectiveStage(world, target, "evasion"));
     }
 
     // 兑现点：任何一般／格斗招式打在带识破身份的目标上时，结算前把 targetFacts 里的 ghost 摘掉，并在目标
@@ -74,20 +73,30 @@ namespace PokemonSkills {
             if (!context.world || !context.target || !context.targetFacts) return;
             if (!CombatStatus.has(context.world, context.target, foresightStatus)) return;
             context.targetFacts.types = context.targetFacts.types.filter(function (type) { return type !== "ghost"; });
-            const body = context.world.observe(context.target);
-            if (body !== null) WorldFeedback.emit(context.world, foresightScene, 1, body.position(),
-                { moment: "solidify", target: String(context.target.ref()) }, 18);
+            // 只把「这一击真的把虚体看实」标在本次结算上；实影闪等真正落在 damage_applied（actual > 0）时才播。
+            if (context.metadata.flags) context.metadata.flags.foresightSolid = true;
         }
     });
 
-    // 窗口走完或被清除：把剥掉的闪避原样还回、清掉记录；自然到期额外播一次褪去。
+    // 实影闪的兑现点：只有本次结算真的成功造成伤害（damage_applied 的 actual > 0）才炸，而不是伤害接受前。
+    WorldCombat.on("world_combat:move_foresight/solid", "world_combat:damage_applied", "", function (event) {
+        const target = event.target();
+        if (target === null) return;
+        const world = event.world(), data = JSON.parse(String(event.data()));
+        if (!(data.actual > 0) || !data.flags || data.flags.foresightSolid !== true) return;
+        const body = world.observe(target);
+        if (body === null) return;
+        WorldFeedback.emit(world, foresightScene, 1, body.position(),
+            { moment: "solidify", target: String(target.ref()) }, 18);
+    });
+
+    // 印记走完或被清除：boostWindow 随载体自行收回闪避这一份，这里清掉本单元的记录/表现；自然到期额外播一次褪去。
     WorldCombat.on("world_combat:move_foresight/end", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== foresightMarkEffect) return;
         const world = event.world(), target = event.actor();
         if (!world.valid(target)) return;
-        const record = foresightRecordOf(world, target);
-        if (record !== null && Number(record.taken) > 0) NativeEffects.boost(world, target, "evasion", Math.round(Number(record.taken)));
+        // 闪避窗口由 boostWindow 随印记载体自行收回；这里只撤本单元自己的表现层，别的能力变化保留。
         foresightReleaseRecord(world, target);
         if (String(data.cause) !== "expired") return;
         const body = world.observe(target);
@@ -167,10 +176,17 @@ namespace PokemonSkills {
             const reveal = Math.max(40, Math.round(p(foresightId, "reveal", action)));
             const motes = Math.max(8, Math.round(p(foresightId, "motes", action)));
             const strips = Math.max(0, Math.round(p(foresightId, "strips", action)));
-            // 先结算可能残留的旧记录（把上一份闪避还回），再拔这一次，避免同一份闪避反复扣还。
-            foresightSettleRecord(world, target);
-            const taken = foresightStrip(world, target, strips);
-            MobEffects.apply(world, target, foresightMarkEffect, window, 0);
+            // 先读旧载体供窗口刷新，再验证这一次印记真的施加成功；被拒就不报完整 read。
+            const previous = MobEffects.read(world, target, foresightMarkEffect);
+            const mark = MobEffects.apply(world, target, foresightMarkEffect, window, 0);
+            if (mark === null) {
+                WorldFeedback.emit(world, foresightScene, 1, point, { moment: "blocked", target: String(target.ref()) }, 20);
+                WorldFeedback.text(world, foresightAbove(point), foresightWardedText, [], 26);
+                done(action);
+                return;
+            }
+            foresightReleaseRecord(world, target);
+            const taken = foresightStrip(world, target, strips, window, mark, previous);
             MobEffects.apply(world, target, "minecraft:glowing", reveal, 0);
             world.effect(foresightRecordEffect, target,
                 JSON.stringify({ taken: taken, motes: motes, window: window, reveal: reveal }), window);
@@ -178,8 +194,8 @@ namespace PokemonSkills {
             if (at !== null) {
                 WorldFeedback.emit(world, foresightScene, 1, at.position(),
                     { moment: "read", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                        motes: motes, window: window, reveal: reveal, taken: taken, strips: strips,
-                        scale: Math.max(0.6, Math.min(2, window / 200)), intensity: Math.max(0.7, Math.min(2, 0.7 + strips / 6)) }, 30);
+                        motes: motes, window: window, reveal: reveal, taken: taken, strips: taken,
+                        scale: Math.max(0.6, Math.min(2, window / 200)), intensity: Math.max(0.7, Math.min(2, 0.7 + taken / 6)) }, 30);
                 WorldFeedback.text(world, foresightAbove(at.position()), foresightSceneText, [Math.round(window / 20)], 30);
                 world.sound("minecraft:entity.warden.listening", at.position(), 12, "{}");
             }

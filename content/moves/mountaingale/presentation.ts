@@ -68,26 +68,40 @@ const MountaingaleDefinition: ParticleDefinition = {
                     gravity: 0.03, drag: 0.94,
                     lifetime: [10, 18], size: [0.1, 0.02],
                     color: 0xB8DEEA, alpha: [0.45, 0], light: "world", maxParticles: 120
-                },
+                }
+            ]
+        },
+        warning: {
+            duration: 0,
+            exit: { stop: 0, drain: 4 },
+            emitters: [
                 {
-                    // 落点上摊开的下落影：按实际碎裂半径铺开，随飞行一直提示巨冰要落在哪里。
-                    name: "shadow", bind: "point", fit: "none", offset: [0, 0.04, 0],
+                    // 空气弹道当前可确认的地面接触；世界半径只缩放一次。
+                    name: "shadow", bind: "point", fit: "world", offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1, interval: 8, repeats: 24 },
-                    shape: { kind: "ring", radius: 2.2 },
-                    direction: "outward", speed: [0.0, 0.02],
-                    lifetime: [16, 26], size: [0.55, 0.95], sizeMode: "sin",
-                    color: 0x5E9FB8, alpha: [0.3, 0], light: "world", maxParticles: 6
+                    rate: 30,
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
+                    direction: "outward", speed: 0,
+                    lifetime: [3, 4], size: [0.10, 0.02],
+                    color: 0x5E9FB8, alpha: [0.65, 0], light: "world", maxParticles: 12
                 },
                 {
-                    name: "shadow_fill", bind: "point", fit: "none", offset: [0, 0.03, 0],
+                    name: "shadow_fill", bind: "point", fit: "world", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    rate: 10, shape: { kind: "circle", radius: 2.0, thickness: 1 },
+                    rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 }, thickness: 1 },
                     direction: "down", speed: [0.0, 0.01],
-                    lifetime: [18, 28], size: [0.08, 0.02],
+                    lifetime: [3, 4], size: [0.08, 0.02],
                     color: 0x6FA8C0, alpha: [0.22, 0], light: "world", maxParticles: 60
                 }
             ]
+        },
+        contact: {
+            duration: 0,
+            exit: { stop: 0, drain: 4 },
+            emitters: [{ name: "blocked_contact", bind: "point", fit: "world",
+                particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                rate: 16, shape: { kind: "sphere", radius: .18 }, direction: "outward", speed: 0,
+                lifetime: [3, 4], size: [.09, .02], color: 0x9FD8E8, alpha: [.8, 0], maxParticles: 10 }]
         },
         shatter: {
             duration: 32,

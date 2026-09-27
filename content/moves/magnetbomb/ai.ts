@@ -7,6 +7,15 @@
  * 配置 cluster（集火／分投）在「单体更痛」与「覆盖一圈」之间取舍。
  */
 namespace CompanionBehavior {
+    /** 本个体这一次真正的爆炸半径，与出招走同一棵公式；读不到原生个体时退回定义参考半径。 */
+    function magnetbombRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const access = world(context);
+        try {
+            return Math.max(0.9, PokemonSkills.p("magnetbomb", "radius", { world: access, actor: access.source(),
+                skill: PokemonSkills.skills["magnetbomb"], detail: { values: item.data.config || {} } }));
+        } catch (error) { return 1.2; }
+    }
+
     registerUse("magnetbomb", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -28,11 +37,13 @@ namespace CompanionBehavior {
             if (CompanionBehavior.status(context, target, "magnetbomb")) return base - 30;
             if (CompanionBehavior.ai<boolean>(capability, "focused", true)) {
                 const nearby = context.facts.nearby || [];
+                const radius = magnetbombRadius(context, capability);
                 let crowd = 0;
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
-                    if (other.ref === self.ref || other.ref === target.ref || other.friendly) continue;
-                    if (CompanionBehavior.distance(other.point, target.point) <= 4) crowd++;
+                    // 只数真正会被这一次爆炸波及的可见活敌。
+                    if (other.ref === self.ref || other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+                    if (CompanionBehavior.distance(other.point, target.point) <= radius) crowd++;
                 }
                 base += Math.min(3, crowd) * 5;
             }

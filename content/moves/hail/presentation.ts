@@ -8,9 +8,10 @@
  * 起击收：起 windup 22t ／击 burst 48t ／持 field 绑在雹区效果上 ／击 pelt 20t ／击 cover 20t ／击 coat 22t ／击 shatter 30t。
  * 持续状态：field 是从高空落下的成片冰雹加一层贴地霜雾；雹粒带真实方块碰撞，砸到屋顶就当场消失，不再穿顶棚；
  * 地面一圈冰环画出「云罩住哪里」。
- * 机制驱动：雹区半径决定冰雹与冰环的大小（data.scale = 半径/9），冰雹数量直接读本招算出的 stoneDensity，
- * 每趟砸击的碎冰数量由这一趟实际伤害派生（data.stones）；屋顶/露天由服务端的原始碰撞射线分列，
- * 受击列从上方垂落（data.drop），被顶棚挡住的则在 data.cover 高度碎掉。
+ * 机制驱动：雹区半径决定冰雹与冰环的大小（data.scale = 半径/9；柱域与冰环都用参考半径 9，只缩放一次），
+ * 冰雹数量直接读本招算出的 stoneDensity；每趟砸击的碎冰数量由这一趟实际伤害派生（data.stones），
+ * 并且只在真实命中回执上播放：雹子先自 data.drop 高处垂落到实际接触点，随后才炸开；
+ * 屋顶/露天由服务端的真实方块射线分列，被顶棚挡住的在 data.cover 高度（目标正上方）碎掉。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  * windup  凝霜  icy_snow        球面向内       0.12-0.03 10-18 0.6→0  ≤80
@@ -56,14 +57,14 @@ const HailDefinition: ParticleDefinition = {
                 { name: "fall", bind: "point", offset: [0, 7.0, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
                     burst: { count: { data: "density", fallback: 30 }, interval: 2, repeats: 18 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: 5 },
+                    shape: { kind: "cylinder", radius: 9, length: 5 },
                     direction: "down", speed: [0.6, 1.1], gravity: 0.03, spin: 50,
                     collision: { bounces: 1, disappearAt: 1 },
                     lifetime: [12, 22], size: [0.24, 0.06],
                     color: 0xBFE9FF, alpha: [0.85, 0], light: "world", maxParticles: 360 },
                 { name: "frost", bind: "point", offset: [0, 3.0, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    rate: 60, shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: 6 },
+                    rate: 60, shape: { kind: "cylinder", radius: 9, length: 6 },
                     direction: "down", speed: [0.2, 0.5], gravity: 0.01, drag: 0.96,
                     lifetime: [14, 26], size: [0.3, 0.08], sizeMode: "index",
                     color: 0xF2FAFF, alpha: [0.5, 0], light: "world", maxParticles: 320 }
@@ -74,20 +75,20 @@ const HailDefinition: ParticleDefinition = {
             emitters: [
                 { name: "fall", bind: "point", offset: [0, 6.5, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
-                    rate: { data: "density", fallback: 30 }, shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: 5 },
+                    rate: { data: "density", fallback: 30 }, shape: { kind: "cylinder", radius: 9, length: 5 },
                     direction: "down", speed: [0.6, 1.1], gravity: 0.03, spin: 45,
                     collision: { bounces: 1, disappearAt: 1 },
                     lifetime: [12, 22], size: [0.24, 0.06],
                     color: 0xBFE9FF, alpha: [0.8, 0], light: "world", maxParticles: 560 },
                 { name: "powder", bind: "point", offset: [0, 2.6, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    rate: { data: "density", fallback: 30 }, shape: { kind: "cylinder", radius: { data: "radius", fallback: 9 }, length: 4 },
+                    rate: { data: "density", fallback: 30 }, shape: { kind: "cylinder", radius: 9, length: 4 },
                     direction: "down", speed: [0.1, 0.3], gravity: 0.006, drag: 0.97,
                     lifetime: [16, 30], size: [0.3, 0.08], sizeMode: "index",
                     color: 0xF2FAFF, alpha: [0.4, 0], light: "world", maxParticles: 380 },
                 { name: "edge", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    rate: 6, shape: { kind: "ring", radius: { data: "radius", fallback: 9 } },
+                    rate: 6, shape: { kind: "ring", radius: 9 },
                     direction: "up", speed: [0.004, 0.012],
                     lifetime: [24, 40], size: [0.5, 0.9], sizeMode: "sin",
                     color: 0x8FD0EC, alpha: [0.28, 0], alphaMode: "sin", light: "world", maxParticles: 40 }
@@ -106,7 +107,7 @@ const HailDefinition: ParticleDefinition = {
                     color: 0xBFE9FF, alpha: [0.85, 0], light: "world", maxParticles: 10 },
                 { name: "smash", bind: "target", height: 0.5, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_ice",
-                    burst: { count: { data: "stones", fallback: 14 }, at: 1 }, shape: { kind: "sphere_surface", radius: 0.42 },
+                    burst: { count: { data: "stones", fallback: 14 }, at: 5 }, shape: { kind: "sphere_surface", radius: 0.42 },
                     direction: "outward", speed: [0.08, 0.24], gravity: 0.02, spin: 60,
                     lifetime: [8, 16], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xEAF6FF, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 40 },
@@ -122,7 +123,7 @@ const HailDefinition: ParticleDefinition = {
             duration: 20,
             exit: { stop: 6, drain: 12 },
             emitters: [
-                { name: "rooffall", bind: "target", offset: [0, { data: "cover", fallback: 3 }, 2.0], height: 0, fit: "world",
+                { name: "rooffall", bind: "target", offset: [0, { data: "cover", fallback: 3 }, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
                     burst: { count: 4, interval: 2, repeats: 5 }, shape: { kind: "point" },
                     direction: "down", speed: [0.4, 0.7], gravity: 0.02, spin: 60,

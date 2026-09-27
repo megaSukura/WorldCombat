@@ -2,8 +2,9 @@
  * 替身 / substitute 的 AI 用途。
  *
  * 什么局面下出手：附近有威胁、自己还没有替身、并且付得起这一笔生命时，先立起替身再应战。
- * 落点由共享 cover 目标给出大致方向（挡在威胁方向或靠近主人），本招再把它收回到施法者自己站得住的位置：
- * 替身跟本体挨在一起，才能保持联系、也才不会落到敌人的脚下。已有替身时不重放。
+ * 落点由共享 cover 目标按 `ai.placement` 给出：towardThreat 挡在本体与威胁之间，nearOwner 靠近主人；
+ * 本体不必走到落点上，落点本来就在施放范围内，驻守时也不会因此被迫离位。
+ * 优先级与 `ready` 读同一笔生命投入：支付后留得住保底就动手，威胁越近、余量越紧越先立；不再要求残血才给分。
  * `ai.useBelow` 决定「伤到多少才立」——默认满血也立（更早得到保护，也更早付出生命）；
  * `ai.reserveHealth` 是付完之后给自己留的保底比例，越低越敢拼。
  */
@@ -16,30 +17,27 @@ namespace PokemonSkills {
             var self = CompanionBehavior.source(context);
             if (!context.senses["world_combat:threat"]) return false;
             if (CompanionBehavior.status(context, self, "substitute")) return false;
-            if (CompanionBehavior.ratio(self) > CompanionBehavior.ai<number>(capability, "useBelow", 1.0)) return false;
+            var ratio = CompanionBehavior.ratio(self);
+            if (ratio > CompanionBehavior.ai<number>(capability, "useBelow", 1.0)) return false;
             var reserve = CompanionBehavior.ai<number>(capability, "reserveHealth", 0.35);
-            var cost = 0.25 * (capability.data.config && capability.data.config.build ? Number(capability.data.config.build) : 1);
-            return CompanionBehavior.ratio(self) > cost + reserve;
+            return ratio > substituteCostShare(capability.data.config) + reserve;
         },
         accepts: function (context, capability, target) {
             var self = CompanionBehavior.source(context);
             return target.ref === self.ref || (!target.friendly && target.health > 0);
         },
-        /** Keep the double by the user's own feet: that spot is walkable by definition and stays linked. */
-        target: function (context, capability, target) {
-            var self = CompanionBehavior.source(context);
-            var copy: any = JSON.parse(JSON.stringify(target));
-            var dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-            var length = Math.sqrt(dx * dx + dz * dz);
-            var reach = Math.min(0.7, length);
-            if (length > 0.01) copy.point = [self.point[0] + dx / length * reach, self.point[1], self.point[2] + dz / length * reach];
-            else copy.point = self.point.slice();
-            return copy;
-        },
+        /** 本体不必站到落点上；落点由共享 cover 目标按 ai.placement（towardThreat／nearOwner）给出。 */
+        approachTarget: function (context) { return CompanionBehavior.source(context); },
         priority: function (context, capability, target) {
-            var self = CompanionBehavior.source(context);
-            // 快被压死时抢在攻击前先立替身。
-            return CompanionBehavior.ratio(self) < 0.5 ? 60 : 0;
+            var self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
+            if (!threat) return 0;
+            var ratio = CompanionBehavior.ratio(self);
+            var reserve = CompanionBehavior.ai<number>(capability, "reserveHealth", 0.35);
+            var afterPayment = ratio - substituteCostShare(capability.data.config);
+            if (afterPayment <= reserve) return 0;
+            // 支付后留给自己的生命越紧张、威胁越近，越该抢在挨打前先立起替身。
+            var value = 40 + Math.round((1 - Math.max(0, Math.min(1, afterPayment))) * 30);
+            return CompanionBehavior.distance(self.point, threat.point) <= 6 ? value + 10 : value;
         }
     });
 

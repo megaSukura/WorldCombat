@@ -17,6 +17,7 @@
  *   splash   传授半径：基础 2.6 格 + 身高×0.6 + 特攻×0.004；夹 2.2..4.5。声音与气势越大，旁边听清的人越多。
  *   reach    指导距离：基础 4.5 格 + 速度/120；夹 4..7。越快的个体越能赶上伙伴。
  *   motes    叮嘱标记数：基础 14 + 特攻/12；夹 12..30。画面里的标记数量。
+ *   students 旁听人数：基础 2 + (等级 − 30)/40；夹 1..4。受教者周围最多再带上几个人，给出明确的总额度。
  *   tempo    起手：基础 9 刻 − 速度×0.02 + 精讲/速令修正；夹 4..14。
  *   aftercast 收招：基础 6 刻 + 体重(kg)/10×0.02；夹 5..10。
  *   wait     冷却：基础 120 刻 − 等级×0.4，精讲 ×1.15、速令 ×0.85；夹 55..150。PP 10 的代价。
@@ -68,6 +69,13 @@ namespace PokemonSkills {
                 unit: " 个",
                 description: "浮在受教者身边的叮嘱标记数量；特攻越高越多，粒子按它发射。"
             }),
+        /** 旁听人数：受教者周围最多再带上几人，给出明确的总额度。 */
+        students: formula(
+            F.base(2).plus(F.level().minus(30).max(0).div(40)).clamp(1, 4).round(0),
+            "旁听人数", {
+                unit: " 人",
+                description: "受教者周围最多还能有几个人一起领会；等级越高越多，但始终有限。"
+            }),
         /** 起手：教法决定快慢。 */
         tempo: seconds(
             F.base(9).minus(F.stat("speed").times(0.02))
@@ -88,7 +96,7 @@ namespace PokemonSkills {
 
     describe("coaching", [
         { key: "description.0", values: ["giftAtk", "giftDef", "window"] },
-        { key: "description.1", values: ["splash","reach"] },
+        { key: "description.1", values: ["splash","reach","students"] },
         { key: "description.reclaim", values: [] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
         { key: "drill.intense", values: [], when: function (context) { return read(context.detail.values, ["drill"]) === 1; } },

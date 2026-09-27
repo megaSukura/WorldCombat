@@ -30,9 +30,9 @@ namespace PokemonSkills {
     WorldEnvironment.defineWeather("snow", { sunlight: 0.4 });
 
     actionParameters.define("snowscape", {
-        gather: seconds(F.base(12).plus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(8, 20),
+        gather: seconds(F.base(12).minus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(8, 20),
             "起手", "让雪落下来需要多少时间；速度越快，雪落得越早。"),
-        settle: seconds(F.base(9).plus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
+        settle: seconds(F.base(9).minus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
             "收招", "雪落下后的收势时间；速度越快越利落。"),
         reach: formula(F.base(14).plus(F.level().minus(20).max(0).times(0.08)).clamp(10, 18).round(1),
             "施放距离", { unit: " 格", description: "能在多远的地面叫来这场雪；等级越高够得越远。" }),

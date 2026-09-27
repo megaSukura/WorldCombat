@@ -21,7 +21,7 @@ Smoke.scenario("highhorsepower", function (stage) {
         stage.expect(stage.casts("highhorsepower", caster) >= 1, "caster committed high horsepower");
         stage.expect(stage.damageTo(foe) > 0, "the body slam dealt damage");
         stage.expect(stage.travelled(caster) > 1, "the charge carried the caster forward");
-        stage.note("the horsepower readout and dust count come from weight/speed/attack; shove and the press form are preference/positional and the golem is a NoAI stone target, so they are read from the trace only", {
+        stage.note("the might readout is a for-fun figure from weight/speed/attack and does not drive damage; dust and shove are separate formulas, and the press form is positional; the golem is a NoAI stone target, so those are read from the trace only", {
             casts: stage.casts("highhorsepower", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             travelled: Math.round(stage.travelled(caster) * 10) / 10,

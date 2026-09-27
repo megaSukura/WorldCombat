@@ -4,10 +4,10 @@
  * 原生事实：Ghost、物理、威力 90、命中 100、PP 10、接触；第 1 回合消失在某处（期间免疫大多数招式），
  * 第 2 回合攻击，且无视守护（breaksProtect）（Cobblemon 1.8）。
  *
- * 世界化：即时战斗里没有回合，本实现把「两回合」翻成两拍——从原地撕开一道影子裂隙滑进去、短暂从世界上
- * 消失（看不出也打不着，但仍受时间与距离限制），再从目标身后的裂隙里现身，一刀劈下。它真正的身份是
+ * 世界化：即时战斗里没有回合，本实现把「两回合」翻成两拍——从原地撕开一道影子裂隙滑进去、短暂隐去身形
+ * （并有一层只挡敌对来袭攻击的影罩，但仍受时间与距离限制），再从目标身后的裂隙里现身，一刀劈下。它真正的身份是
  * 「无视守护」：现身那一刻会把目标身上的所有守护（GuardEffects 的池子——守住、看破、广域防守、硬化……
- * 都是同一套机制）一并震碎，所以它专治撑罩拖延的对手。裂隙带不走人：落点仍是目标本人，目标走开就扑空。
+ * 都是同一套机制）一并震碎，所以它专治撑罩拖延的对手。目标位置在消失时锁定：走开就扑空。
  *
  * 数值来源（每个参数读不同的精灵数据，公式即悬浮说明里展开的那一棵）：
  *   rift         = 基础 90 + (物攻 − 70) × 0.28（夹 −16..40）；深潜式 ×0.85；等级台阶抬档。
@@ -19,13 +19,15 @@
  *   settle       = 基础 8 刻；深潜式 +3。
  *   recharge     = 基础 34 − (速度 − 55) × 0.12 刻；深潜式 +8。
  * 消失期间挂上真实的 `world_combat:phantomforce_veil`（共享身份 world_combat:status/phantomforce）与一层
- * 整段吸收的守护：看不出、也打不着；现身那一刻把目标身上的守护全部掀掉再结算这一刀。
+ * 只挡敌对来袭攻击的吸收影罩；现身那一刻把目标身上的守护全部掀掉再结算这一刀。
  * 伤害段名 rift。
  */
 namespace PokemonSkills {
     export const phantomforceId = "phantomforce";
     export const phantomforceScene = "world_combat:move_phantomforce";
     export const phantomforceVeil = "world_combat:phantomforce_veil";
+    /** 相位期的托管载体：固定住消失点，把影罩表现挂在一条真实拥有的效果上，随相位一起收。 */
+    export const phantomforcePhase = "world_combat:phantomforce_phase";
     /** 消失期间那一层「穿过攻击」的守护规则名；现身时被震碎的也是这一类守护。 */
     export const phantomforceRule = "world_combat:phantomforce";
     export const phantomforceStrikeText = "world_combat.move.phantomforce.text.strike";

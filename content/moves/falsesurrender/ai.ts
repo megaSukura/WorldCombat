@@ -7,11 +7,14 @@
  * 风险：伏低期间自己不能动，正盯着自己且血量吃紧时降低推荐；墙挡在中间则够不到，不列入候选。
  */
 namespace PokemonSkills {
-    /** 施法者与目标之间是否无遮挡；墙挡着就够不到。同一决策帧内缓存。 */
+    /** 施法者的低位发根到目标低位判点的实际发路是否被墙挡住；发路本身够不到就够不到。同一决策帧内缓存。 */
     function falsesurrenderClear(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
         return CompanionBehavior.observedFlag(context, "falsesurrender:clear:" + target.ref, function () {
             const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
-            return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+            const selfPoint = CompanionBehavior.point(self.point), targetPoint = CompanionBehavior.point(target.point);
+            const base = selfPoint.plus(WorldCombat.point(0, -Math.max(0.15, (self.height || 1.4) * 0.22), 0));
+            const half = Math.max(0.15, (target.height || 1.4) * 0.22);
+            return WorldGeometry.blockHit(world, base, targetPoint.plus(WorldCombat.point(0, -half, 0))) === null;
         });
     }
 

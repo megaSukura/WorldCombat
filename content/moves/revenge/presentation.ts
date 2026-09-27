@@ -2,10 +2,10 @@
  * 报复 / revenge 的客户端表现。
  *
  * 一句话：施法者屈膝站定、肩头朝侧面稳住，把一圈斗气从脚下收到肘上（身上伤得越重收得越多）；
- *   随后朝瞄准方向侧步让开、做一记短弧横肘；正中最近打过自己的那个人时，伤口红光沿肘一路传回，并把对方顶开。
- * 色相家族：斗气橙（impact_fighting、fist、glowingsparkle_yellow）为主，怒火红（anger_red）只在「正中本人」时进入。
+ *   随后朝瞄准方向侧步让开、沿实际侧步→肩外→碰点的折线做一记短横肘；正中最近打过自己的那个人时，伤口红光沿肘一路传回，并把对方顶开。
+ * 色相家族：斗气橙（impact_fighting、fist、glowingsparkle_yellow）为主，怒火红（anger_red）只在真正命中（impact／retort）时进入。
  * 拍子：起 brace 0–30t ／ 肘 elbow 0–22t ／ 击 impact（未记仇）0–28t ／ 击 retort（记仇）0–28t ／ 挡 block ／ 空 miss。
- * 范围：impact／retort 的肘爆与地环绑命中点，尺寸由 `data.scale`（判定半径派生）决定；elbow 的拳风沿 `data.direction` 前射。
+ * 范围：impact／retort 的肘爆与地环绑命中点，尺寸由 `data.scale`（判定半径派生）决定；elbow 沿 `data.path`（侧步→肩外→碰点）出拳。
  * 运动：brace 的斗气由外向内收、沿身体上移；elbow 短弧外顶；命中由内向外炸开；retort 再沿 `data.path` 从对方把红光传回施法者。
  * 数：`data.smash`（物攻与等级派生的拳风数）驱动各段发射量；`data.bruise`（缺失生命比例）决定 brace 的斗气量；
  *   `data.intensity`（最终威力派生）抬高命中爆发的亮度与尺寸。
@@ -40,14 +40,6 @@ const RevengeDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.03, 0.1],
                     lifetime: [10, 16], size: [0.4, 0.14],
                     color: 0xD9A24A, alpha: [0.5, 0], light: "world", maxParticles: 24
-                },
-                {
-                    name: "anger", bind: "source", offset: [0, 1.0, 0], height: 0.2,
-                    particle: "world_combat_core:cobblemon/mood/anger_red",
-                    rate: 8, shape: { kind: "sphere", radius: 0.22 },
-                    direction: "up", speed: [0.02, 0.1],
-                    lifetime: [8, 16], size: [0.10, 0.02],
-                    color: 0xE24B4B, alpha: [0.7, 0], light: "full", maxParticles: 30
                 }
             ]
         },
@@ -56,18 +48,18 @@ const RevengeDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "knuckles", bind: "source", offset: [0, 0.55, 0], height: 0.3,
+                    // 沿实际侧步→肩外→碰点的折线出肘，而不是在身体处撒一条固定直线。
+                    name: "elbow", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fist",
-                    rate: { data: "smash", fallback: 14 }, shape: { kind: "line", length: 0.5 }, orient: "direction",
+                    shape: { kind: "polyline" }, burst: { count: { data: "smash", fallback: 14 } },
                     direction: "shape", speed: [0.08, 0.24], spread: 16,
                     lifetime: [5, 11], size: [0.16, 0.03], sizeMode: "index",
                     color: 0xF0A24A, alpha: [0.85, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "streak", bind: "source", offset: [0, 0.3, 0], height: 0.1,
+                    name: "streak", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
-                    burst: { count: { data: "smash", fallback: 10 }, interval: 2, repeats: 4 },
-                    shape: { kind: "line", length: 0.45 }, orient: "direction",
+                    shape: { kind: "polyline" }, burst: { count: { data: "smash", fallback: 10 }, interval: 2, repeats: 4 },
                     direction: "shape", speed: [0.1, 0.26], spread: 8,
                     lifetime: [5, 10], size: [0.10, 0.02],
                     color: 0xE2A85A, alpha: [0.7, 0], light: "full", maxParticles: 70

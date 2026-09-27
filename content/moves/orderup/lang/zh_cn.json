@@ -5,7 +5,7 @@
   "worldcombat.skill.orderup.use.2": "用同一份上菜同时打开攻击与增益",
   "worldcombat.skill.orderup.description.0": "菜势平抛出去，首个碰到的身体受到约 %1$s 点非接触伤害，菜势半宽 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.orderup.description.1": "射出距离 %1$s 格、每刻 %2$s 格；没碰到人时菜势在落点散掉，不留下伤害。",
-  "worldcombat.skill.orderup.description.2": "身边 %1$s 格内有比自身明显小的友方时，会按它的样子提升自身 %2$s 级能力（独享式再补一级）：伙伴为 Droopy 时提防御、Stretchy 时提速度、其余提攻击；分餐式下还能把同样的增益分给 %3$s 格内最多四名队友。",
+  "worldcombat.skill.orderup.description.2": "身边 %1$s 格内有与自身通视、且比自身明显小的友方时，会按它的样子提升自身 %2$s 级能力（独享式再补一级）：伙伴为 Droopy 时提防御、Stretchy 时提速度、其余提攻击；分餐式下还能把同样的增益分给 %3$s 格内最多四名队友。该能力已满时不再补，也不会因此多停留。",
   "worldcombat.skill.orderup.share.on": "分餐式：自身与身旁最多四名队友各得 %1$s 级增益；代价是单发威力 ×0.94、冷却 +8 刻。",
   "worldcombat.skill.orderup.share.off": "独享式：自身增益多一级、单发威力 ×1.06、冷却更短；增益只加自己。",
   "worldcombat.skill.orderup.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

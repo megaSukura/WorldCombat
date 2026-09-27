@@ -2,9 +2,9 @@
  * 角钻 / horndrill 的伙伴 AI 用途。
  *
  * 什么局面下出手：一次近身直线钻穿。`available` 要求目标可见、敌对、存活、不受一般系免疫，
- *   且在自己 `ai.maxChase`（默认 8）格内；焦点目标不受距离限制。`priority` 在目标生命比例高于
- *   `ai.executionAbove`（默认 0.2）时抬一档——把一击必杀留给还满血的对手，别浪费在残血身上。
- * 对谁出手：当前威胁；幽灵属性（一般系打不动）不接受。够不到交给共享接近逻辑，射程就是冲程。
+ *   且在自己 `ai.maxChase`（默认 8）格内；焦点目标不受距离限制。
+ * 对谁出手：优先慢移或被定住、留在这条直线上的目标；冲完会陷进敌人堆里的局面降权。幽灵属性（一般系打不动）不接受。
+ *   够不到交给共享接近逻辑，射程就是冲程。
  * 放完之后：长冷却期间改用别的招；落空时钻头停在原地，AI 会重新走位再找机会。
  */
 namespace CompanionBehavior {
@@ -16,8 +16,6 @@ namespace CompanionBehavior {
     }
 
     function horndrillWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
-        const access = CompanionBehavior.world(context), observed = access.actor(String(target.ref));
-        if (observed && access.effects(observed, PokemonSkills.horndrillResisted).length) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return !horndrillImmune(target);
     }
@@ -38,9 +36,20 @@ namespace CompanionBehavior {
         priority: function (context, capability, target) {
             if (!target || !capability || !horndrillWants(context, capability, target)) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
-            const ratio = target.maximum > 0 ? target.health / target.maximum : 1;
-            if (ratio < CompanionBehavior.ai<number>(capability, "executionAbove", 0.2)) return 4;
-            return ratio >= 0.6 ? 30 : 24;
+            // 角钻会把整个身体送进这条线：目标越慢、越被定住，越钻得中；冲完落在敌人堆里则更险。
+            const motion = CompanionBehavior.velocity(context, target);
+            const speed = motion ? Math.sqrt(motion[0] * motion[0] + motion[1] * motion[1] + motion[2] * motion[2]) : 0;
+            let score = 22;
+            score += Math.max(0, 10 - speed * 24);
+            if (CompanionBehavior.bound(context, target)) score += 10;
+            const nearby = (context.facts.nearby as CompanionBehavior.Entity[]) || [];
+            let guard = 0;
+            for (let index = 0; index < nearby.length; index++) {
+                const other = nearby[index];
+                if (other.friendly || other.health <= 0) continue;
+                if (CompanionBehavior.distance(other.point, target.point) <= 3) guard++;
+            }
+            return Math.max(0, score - Math.min(12, guard * 3));
         }
     });
 
@@ -51,10 +60,6 @@ namespace CompanionBehavior {
         PokemonSkills.field(PokemonSkills.pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 14, step: 1,
             help: "伙伴只在威胁离自己这么远以内时才考虑角钻；调小只在近处起钻，调大愿意先追进冲程里。"
-        }),
-        PokemonSkills.field(PokemonSkills.pathOf("ai.executionAbove"), "残血留手阈值", "number", {
-            min: 0, max: 0.8, step: 0.05,
-            help: "目标生命比例低于这个值时，不再把一击必杀浪费在它身上；调大只在目标还很健康时出手。"
         })
     ]);
 }

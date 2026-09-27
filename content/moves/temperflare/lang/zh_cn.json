@@ -34,5 +34,5 @@
   "world_combat.move.temperflare.text.rage": "自暴自弃！%1$s 人",
   "world_combat.move.temperflare.text.miss": "撞空了",
   "effect.world_combat.temperflare_frustration": "豁出去·憋劲",
-  "worldcombat.skill.temperflare.description.additional": "上一记针对敌人的招式没有造成伤害、且约 0.3–7.5 秒内再次出手时，会带上一股豁出去；带着它使出本招，撞上威力翻倍、命中把敌人点着。此后任何命中并造成伤害的招式都会立刻消掉这股劲，约 5.5 秒后也会自行消退。"
+  "worldcombat.skill.temperflare.description.additional": "上一记针对敌人的招式真正打空、且约 5.5 秒内再次出手时，会带上一股豁出去；带着它使出本招，撞上威力翻倍、命中把敌人点着。此后任何命中并造成伤害的招式都会立刻消掉这股劲，约 5.5 秒后也会自行消退。仍在飞行、尚未判定命中的弹体不算打空。"
 }

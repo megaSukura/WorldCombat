@@ -1,12 +1,13 @@
 /**
  * 怒牛 / ragingbull 的客户端表现。
  *
- * 一句话：低头压角、身周聚起一圈随形态变色的角气后沿直线冲出去，蹄下拖出一道尘迹与速度线；角尖撞上
- * 谁，谁就被整套冲势撞开，屏障随之炸成碎片。
- * 色相家族：蹄尘与近白（冲撞本身）为底，角气用随形态变化的单色 tint（普通灰白／格斗赤红／火橘／水蓝），
- * 屏障碎片用一处冷蓝高光。
- * 拍子：起（windup 聚气）→ 冲（charge 尘迹与速度线）→ 撞（ram 角气爆发）→ 碎（break 真实穿越处的碎片）→ 收（settle 刹停扬尘）。
- * 范围：这是一条直线冲撞，运动本身画出作用范围；ram 绑命中点，break 的碎片出现在身体真实扫过的屏障处，终点 settle 收势。
+ * 一句话：低头压角、身周聚起一圈随形态变色的角气后沿直线冲出去，前缘拖着一道朝前的角形气与蹄下尘迹；
+ * 角尖撞上谁，谁就被整套冲势撞开，身体真实穿过的敌方屏障随之炸成碎片。
+ * 色相家族：蹄尘为底，角气、速度线与冲撞爆发都用随形态变化的单色 tint（普通灰白／格斗赤红／火橘／水蓝）——
+ * `data.tint` 全程消费；屏障碎片保留一处冷蓝高光。
+ * 拍子：起（windup 聚气）→ 冲（charge 烟迹、速度线与朝前角形）→ 撞（ram 角气爆发）→ 碎（break 真实穿越处的碎片）→ 收（settle 刹停扬尘）。
+ * 范围：这是一条直线冲撞，运动本身画出作用范围；角形按 `data.direction` 朝真实冲程，ram 绑命中点，
+ * break 的碎片只从身体真实交会到的屏障处冒出，终点 settle 收势。
  * 运动：角气向内收再顺着冲势向外甩，蹄尘贴地拖尾，命中是短促外爆，碎片带重力四散。
  * 数：`data.scale`（牛身半径 / 0.5）放大尘迹与爆发，`data.power`（冲撞威力）绑定角气火花的发射量，
  * `data.wards`（实际撞碎的屏障层数）绑定碎片波数。
@@ -25,7 +26,7 @@ const RagingbullDefinition: ParticleDefinition = {
                     rate: 18, shape: { kind: "sphere", radius: 0.5 },
                     direction: "inward", speed: [0.03, 0.12],
                     lifetime: [10, 18], size: [0.24, 0.08], sizeMode: "sin",
-                    color: 0xFFFFFF, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 40
+                    color: { data: "tint", fallback: 0xC8C8C0 }, alpha: [0.6, 0], light: "full", bloom: 0.2, maxParticles: 40
                 },
                 {
                     name: "hoof", bind: "source", offset: [0, 0.05, 0], height: 0,
@@ -48,7 +49,15 @@ const RagingbullDefinition: ParticleDefinition = {
                     rate: 28, shape: { kind: "circle", radius: 0.4 },
                     direction: "away", speed: [0.08, 0.24], orient: "velocity",
                     lifetime: [5, 10], size: [0.22, 0.06], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [0.6, 0], light: "full", bloom: 0.15, maxParticles: 120
+                    color: { data: "tint", fallback: 0xC8C8C0 }, alpha: [0.6, 0], light: "full", bloom: 0.15, maxParticles: 120
+                },
+                {
+                    name: "horns", bind: "source", offset: [0, 0.55, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/orb/scalingshaded",
+                    rate: 22, shape: { kind: "cone", radius: 0.32, angleDegrees: 26 },
+                    orient: "direction", direction: "shape", speed: [0.05, 0.16],
+                    lifetime: [4, 8], size: [0.2, 0.04], sizeMode: "index",
+                    color: { data: "tint", fallback: 0xC8C8C0 }, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 70
                 },
                 {
                     name: "dust", bind: "source", offset: [0, 0.06, 0], height: 0,
@@ -72,7 +81,7 @@ const RagingbullDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
                     direction: "outward", speed: [0.08, 0.28], spread: 22,
                     lifetime: [7, 14], size: [0.3, 0.05], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
+                    color: { data: "tint", fallback: 0xC8C8C0 }, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
                 },
                 {
                     name: "gust", bind: "point", offset: [0, 0.45, 0],
@@ -81,7 +90,7 @@ const RagingbullDefinition: ParticleDefinition = {
                     shape: { kind: "ring", radius: { data: "scale", fallback: 0.5 } },
                     direction: "outward", speed: [0.12, 0.3],
                     lifetime: [8, 14], size: [0.6, 0.2], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [0.5, 0], light: "full", bloom: 0.25, maxParticles: 40
+                    color: { data: "tint", fallback: 0xC8C8C0 }, alpha: [0.5, 0], light: "full", bloom: 0.25, maxParticles: 40
                 },
                 {
                     name: "dust", bind: "point", offset: [0, 0.15, 0],

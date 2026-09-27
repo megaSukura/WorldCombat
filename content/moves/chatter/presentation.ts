@@ -5,8 +5,8 @@
  *   被叫到的人头顶炸开一团晕眩鸟与问号，之后一直有鸟在头顶打转。
  * 色相家族：飞行系的淡蓝（0xA9C7E8）打底，混乱的紫（0x8A7CE8 / 0xEDE9FF）只出现在击点与乱拍——
  *   一个效果两家色：蓝是声音本身，紫是脑子乱掉的结果。
- * 拍子：起 gather（聚颤音）→ 叫 screech（每一声一张扇面，多声叠出密度）→ 击 scramble（叫到的那一下就炸开一次）→
- *   乱拍 fumble（真的打中别人被反噬时再画一次，不全程挂鸟）。
+ * 拍子：起 gather（聚颤音）→ 叫 screech（每一声一张扇面、短促主峰，多声分得清）→ 击 scramble（载体真的挂上时炸开一次）→
+ *   持 linger（乱鸟与问号由托管效果维持到载体结束）→ 乱拍 fumble（真的用直接攻击打中别人被反噬时再画一次）。
  * 范围：screech 用与判定同一组 `data.path` 顶点填出扇面，玩家一眼看出站在哪块扇形里会被叫到。
  * 运动：声纹从施法者口边沿 `data.direction` 向扇面外冲；喂进去的音符与风纹朝同方向散开。
  * 数：每一声的发射量绑定 `data.screech`（音数，特攻与等级换算），`data.index`／`data.bursts` 让玩家数得出第几声，
@@ -38,25 +38,25 @@ const ChatterDefinition: ParticleDefinition = {
             ]
         },
         screech: {
-            duration: 20,
-            exit: { stop: 12, drain: 12 },
+            duration: 8,
+            exit: { stop: 4, drain: 8 },
             emitters: [
                 {
                     name: "screech_face", bind: "path", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     shape: { kind: "polygon" },
-                    rate: 70, direction: "up", speed: [0.06, 0.2], spread: 26,
-                    lifetime: [6, 12], size: [0.16, 0.04],
-                    color: 0xA9C7E8, alpha: [0.4, 0], light: "world", maxParticles: 160
+                    rate: 60, direction: "up", speed: [0.06, 0.2], spread: 26,
+                    lifetime: [5, 9], size: [0.16, 0.04],
+                    color: 0xA9C7E8, alpha: [0.28, 0], light: "world", maxParticles: 110
                 },
                 {
                     name: "screech_notes", bind: "path", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/note",
                     shape: { kind: "polygon" },
                     burst: { count: { data: "screech", fallback: 8 }, at: 0 },
-                    rate: 12, direction: "outward", speed: [0.1, 0.3], spread: 34,
-                    lifetime: [8, 14], size: [0.13, 0.03],
-                    color: 0xEDE9FF, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 60
+                    direction: "outward", speed: [0.1, 0.3], spread: 34,
+                    lifetime: [6, 10], size: [0.13, 0.03],
+                    color: 0xEDE9FF, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 60
                 },
                 {
                     name: "screech_lines", bind: "path", fit: "none", offset: [0, 0.4, 0],
@@ -64,8 +64,8 @@ const ChatterDefinition: ParticleDefinition = {
                     shape: { kind: "polygon" },
                     burst: { count: 14, at: 0 },
                     direction: "outward", speed: [0.16, 0.44], spread: 30,
-                    lifetime: [5, 10], size: [0.24, 0.05], sizeMode: "index",
-                    color: 0xC9DCF2, alpha: [0.7, 0], light: "full", maxParticles: 60
+                    lifetime: [4, 8], size: [0.24, 0.05], sizeMode: "index",
+                    color: 0xC9DCF2, alpha: [0.6, 0], light: "full", maxParticles: 50
                 },
                 {
                     name: "screech_ring", bind: "point", fit: "none", offset: [0, 0.5, 0], orient: "direction",
@@ -73,7 +73,7 @@ const ChatterDefinition: ParticleDefinition = {
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: 0.3 },
                     direction: "outward", speed: [0.05, 0.16], spin: { data: "spin", fallback: 8 },
-                    lifetime: [8, 14], size: [0.24, 0.6],
+                    lifetime: [6, 10], size: [0.24, 0.6],
                     color: 0x8A7CE8, alpha: [0.5, 0], light: "full", maxParticles: 6
                 }
             ]
@@ -123,6 +123,28 @@ const ChatterDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0x8A7CE8, alpha: [0.9, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        // 持（混乱）：乱鸟在头顶绕、问号偶发，由绑定在载体上的托管效果维持到载体结束。
+        linger: {
+            exit: { stop: 4, drain: 12 },
+            emitters: [
+                {
+                    name: "linger_bird", bind: "target", offset: [0, 0.35, 0], height: 0.85,
+                    particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
+                    rate: 5, shape: { kind: "ring", radius: 0.42 },
+                    direction: "up", speed: [0.02, 0.08], spin: 6,
+                    lifetime: [14, 24], size: [0.12, 0.03],
+                    color: 0x8A7CE8, alpha: [0.7, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "linger_marks", bind: "target", offset: [0, 0.3, 0], height: 0.9,
+                    particle: "world_combat_core:cobblemon/generic/question",
+                    rate: 2, shape: { kind: "sphere_surface", radius: 0.35 },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [14, 22], size: [0.12, 0.02],
+                    color: 0xEDE9FF, alpha: [0.5, 0], light: "full", maxParticles: 10
                 }
             ]
         }

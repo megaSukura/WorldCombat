@@ -52,13 +52,13 @@ const AfterYouDefinition: ParticleDefinition = {
             ]
         },
         ready: {
-            duration: 34,
-            exit: { stop: 12, drain: 26 },
+            duration: 0,
+            exit: { drain: 26 },
             emitters: [
                 {
                     name: "ready_ring", bind: "target", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: { data: "motes", fallback: 10 } }, shape: { kind: "ring", radius: 0.55 },
+                    rate: { data: "motes", fallback: 10 }, shape: { kind: "ring", radius: 0.55 },
                     direction: "inward", speed: [0.05, 0.14],
                     lifetime: [12, 18], size: [0.22, 0.05],
                     color: 0x8FE06A, alpha: [0.7, 0], light: "full", maxParticles: 40

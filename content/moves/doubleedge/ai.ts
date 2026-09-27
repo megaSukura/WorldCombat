@@ -4,7 +4,8 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这是一记有反震但不算极端的正面猛撞，
  * 所以门槛比木槌、双刃头锤低：自身生命高于 `ai.minHealth`，或对手已经残到值得一收时就排到前面；
  * 残血目标在射程内时最优先（撞飞的那一下往往就是终结）。`ai.minHealth` 越高越珍惜自己、越少抢收残血。
- * 放完之后：目标被顶飞了，继续朝它压上去，把撞开的身位变成下一次出手的距离；贴住压身的破绽由玩家/对手抓。
+ * 低于 `ai.minHealth` 仍要收残时，先核实反伤：只有自己剩余生命还多于对手，才值得用一记命中后的反震去换。
+ * 放完之后：目标被顶飞了，继续朝它压上去，把撞开的身位变成下一次出手的距离；承震停顿留下的破绽由玩家/对手抓。
  */
 namespace PokemonSkills {
     function doubleedgeValid(target: CompanionBehavior.Entity): boolean {
@@ -31,9 +32,11 @@ namespace PokemonSkills {
             if (!doubleedgeValid(target)) return false;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return false;
+            const self = CompanionBehavior.source(context);
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.3);
-            return CompanionBehavior.ratio(CompanionBehavior.source(context)) >= minHealth
-                || CompanionBehavior.ratio(target) <= 0.35;
+            if (CompanionBehavior.ratio(self) >= minHealth) return true;
+            // 低血收残：只有自己剩余生命仍多于对手，才扛得住命中后的定桩与反伤。
+            return CompanionBehavior.ratio(target) <= 0.35 && self.health > target.health;
         },
         accepts: function (context, capability, target) { return doubleedgeValid(target); },
         priority: function (context, capability, target) {

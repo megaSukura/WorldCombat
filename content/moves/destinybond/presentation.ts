@@ -7,8 +7,8 @@
  *
  * 色相家族：深玫红（0xC2354B）为主体，近黑（0x2A0A10）做底与烟，浅粉（0xF2A9B8）只做高光小点；
  *   两端共用的心形贴图（fadeheart_white）是这条命线的记号。
- * 层次：缠线（起手，源侧）／守约（持续，源侧）／绷断（命中，两端同时）／松开（收）。
- * 起击收：bind（缠线）→ promise（守约）→ drag（绷断）→ lift（松开）。
+ * 层次：聚线（起手，源侧）／缠线（提交，源侧）／守约（持续，源侧）／绷断（命中，两端同时）／松开（收）。
+ * 起击收：gather（聚线）→ bind（缠线）→ promise（守约）→ drag（绷断）→ lift（松开）。
  * 数：线头量绑 data.threads（特攻派生），绳结圈半径绑 data.scale（实际半径 / 0.4），
  *   持续亮度随 data.surge（剩余比例）变化；绷断时用 data.path（倒下点 ↔ 凶手）画一条 polyline，
  *   谁把线绷紧、线牵到谁身上，一眼可见。
@@ -16,6 +16,28 @@
 const DestinyBondDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
+        gather: {
+            duration: 12,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "gather_threads", bind: "source", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    rate: 10, shape: { kind: "sphere_surface", radius: 0.55 },
+                    direction: "inward", speed: [0.02, 0.07], spin: 8,
+                    lifetime: [8, 14], size: [0.1, 0.02],
+                    color: 0xC2354B, alpha: [0.5, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "gather_hearts", bind: "source", height: 0.66,
+                    particle: "world_combat_core:cobblemon/generic/fadeheart_white",
+                    rate: 4, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "inward", speed: [0.01, 0.04],
+                    lifetime: [8, 14], size: [0.12, 0.03],
+                    color: 0xF2A9B8, alpha: [0.6, 0], light: "full", maxParticles: 10
+                }
+            ]
+        },
         bind: {
             duration: 20,
             exit: { stop: 8, drain: 16 },
@@ -77,7 +99,7 @@ const DestinyBondDefinition: ParticleDefinition = {
                     name: "drag_line", bind: "path", offset: [0, 0.7, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
                     shape: { kind: "polyline" },
-                    rate: 90, direction: "shape", speed: [0.03, 0.12], trail: { minDistance: 0.08 },
+                    rate: 90, direction: "shape", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.16, 0.04],
                     color: 0xC2354B, alpha: [0.9, 0], light: "full", maxParticles: 160
                 },
@@ -123,7 +145,7 @@ const DestinyBondDefinition: ParticleDefinition = {
                     name: "graze_line", bind: "path", offset: [0, 0.7, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
                     shape: { kind: "polyline" },
-                    rate: 40, direction: "shape", speed: [0.02, 0.08], trail: { minDistance: 0.12 },
+                    rate: 40, direction: "shape", speed: [0.02, 0.08],
                     lifetime: [6, 12], size: [0.13, 0.03],
                     color: 0xC2354B, alpha: [0.7, 0], light: "full", maxParticles: 70
                 },
@@ -145,7 +167,7 @@ const DestinyBondDefinition: ParticleDefinition = {
                     name: "resist_snap", bind: "path", offset: [0, 0.7, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
                     shape: { kind: "polyline" },
-                    rate: 24, direction: "shape", speed: [0.01, 0.05], trail: { minDistance: 0.16 },
+                    rate: 24, direction: "shape", speed: [0.01, 0.05],
                     lifetime: [6, 12], size: [0.12, 0.03],
                     color: 0x2A0A10, alpha: [0.5, 0], light: "world", maxParticles: 40
                 },

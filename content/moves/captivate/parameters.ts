@@ -1,60 +1,53 @@
 /**
  * 诱惑 / Captivate 的参数与数值来源。
  *
- * 原生：Normal／Status／威力 —／命中 100／PP 20／目标 allAdjacentFoes（原作同时作用相邻敌人）／
- *       onTryImmunity 要求双方为异性／boosts={spa:-2}（大幅降低特攻）。
- * 世界化：这不是隔空扣等级，而是**当场抬眸**——目光沿直线看向一个看得见的对手，让它心神一荡。
- *   `kind: "aim"`：回眸选一个看得见的敌人；献舞不需要目标，对着空地也能以自己为圆心旋开。
- *   凝视不需要飞行的东西，因此不会被掩体之外的走位躲开；代价是只认一个目标、且要求异性（宝可梦之间）。
- *   原版生物、其他模组生物与玩家没有性别，直接有效。真正被削低特攻时才挂共享身份 world_combat:status/captivated
- *   的真实 MobEffect，并调用 NativeEffects.boost：宝可梦损失原生特攻等级，其他生物落到攻击属性软阶梯。
- * 「回眸」只盯住选中的敌人，起手短；「献舞」在原地旋开一圈，把看得见这份舞姿的敌人一起迷住，
- *   但起手更慢、冷却更长，且必须让自己身陷人群。性别与视线都是对手可利用的地方：同性、躲到墙后、拉开距离。
- *   这招只降低能力等级，不抓、不拉、不定身。
+ * 原生：Normal／Status／威力 —／命中 100／PP 20／目标 allAdjacentFoes／boosts={spa:-2}／onTryImmunity 异性。
+ * 世界化：一次抬眸锁住**一个看得见的对手**，把目光当作钩子。被真正看住的目标特攻下降，但这份下降只在
+ *   注视维持期间存在：一条由动作与视线共同维持的窗口，断线、换招、被打断或被驱散都会立刻收回。
+ *   原版生物、其他模组生物与玩家没有性别概念，直接生效；宝可梦之间的异性只作为风味，不再硬性拦截。
+ *   这招不抓、不拉、不定身、不造成伤害，也从不把敌意强加给目标。
  *
  * 数值来源（每个参数读不同的个体数据）：
- *   drop          施法者特攻 ≥ 110 时从 2 级升到 3 级；心神越强，夺走对手的特攻越多。
- *   duration      160 刻 + 亲密度 × 1.2，夹 160..380；越亲近的施法者越能把对方的目光留住。
- *   gazeRange     身高 × 2 + 3 格，夹 4..9；身量越高，视线拉得越远。
- *   ringRadius    宽度 × 1.6 + 1.2 格，夹 1.5..3.5；体型越宽，献舞时覆盖越大。
- *   maxOnlookers  2 + (等级 − 30) ÷ 20，夹 2..4 人；经验越足越能同时迷住更多人。
- *   tempo         速度 ÷ 8 + 4 刻，夹 6..14；速度越快越早抬眸。
- *   recharge      180 + (等级 − 30) × 1.5 刻，夹 160..260；等级越高越熟练，冷却略短。
+ *   drop        默认 2 级；`专注注视` 档改 3 级，降得更深，但要付出更长的起手与冷却。
+ *   hold        窗口时长 100 + 亲密度 × 0.5 刻，夹 70..160；越亲近越能把这道目光多留住一会儿。
+ *   gazeRange   身高 × 2 + 3 格，夹 4..9；身量越高，能在越远处开始注视。
+ *   tempo       速度 ÷ 8 + 4 刻，夹 6..14；速度越快越早抬眸；专注注视多 5 刻。
+ *   recharge    180 + (等级 − 30) × 1.5 刻，夹 160..260；等级越高越熟练；专注注视 ×1.3。
  */
 namespace PokemonSkills {
     export const captivateId = "captivate";
     export const captivateEffect = "world_combat:captivate_gaze";
     export const captivateScene = "world_combat:move_captivate";
     export const captivateSpot = "world_combat:status/captivated";
+    /** 本招本源的窗口来源；重施时用它刷新而不是叠加另一份。 */
+    export const captivateContribution = "world_combat:move/captivate";
+    /** 随动作存亡的注视锁：载体、窗口与持续表现都挂在它上面。 */
+    export const captivateLock = "world_combat:captivate_lock";
 
     actionParameters.define(captivateId, {
-        drop: formula(F.when(F.stat("specialAttack").gte(110), F.const(3), F.const(2)), "特攻下降", {
-            unit: " 级",
-            description: "被迷住者损失的特攻等级；施法者特攻达到 110 时从 2 级升到 3 级。"
-        }),
-        duration: seconds(F.base(160, "基础").plus(F.individual("friendship").times(1.2).as("亲密度")).clamp(160, 380),
-            "失神时长", "迷醉持续多久；施法者越亲近，越能把对方的目光留住。"),
+        drop: formula(
+            F.when(F.pref("focus", text("worldcombat.skill.captivate.preference.focus")), F.const(3), F.const(2))
+                .clamp(2, 3),
+            "特攻下降", {
+                unit: " 级",
+                description: "注视期间被看住者损失的特攻等级；专注注视从 2 级升到 3 级，代价是更长的起手与冷却。"
+            }),
+        hold: seconds(
+            F.base(100).plus(F.individual("friendship").times(0.5)).clamp(70, 160).round(0),
+            "注视时长", "目光最多维持多久；施法者越亲近，越能把这道视线留住，断线即提前收回。"),
         gazeRange: formula(F.body("height").times(2).plus(3).clamp(4, 9), "凝视距离", {
             unit: " 格",
-            description: "目光能拉住对手的距离；施法者身形越高，看得越远。"
-        }),
-        ringRadius: formula(F.body("width").times(1.6).plus(1.2).clamp(1.5, 3.5), "旋舞半径", {
-            unit: " 格",
-            description: "献舞时所有看得见这份舞姿的非友方都落在这个半径内；体型越宽覆盖越大。"
-        }),
-        maxOnlookers: formula(F.base(2).plus(F.level().minus(30).max(0).div(20)).clamp(2, 4).round(0), "旋舞人数", {
-            unit: " 人",
-            description: "献舞时最多同时迷住几人；等级越高涵盖越多。"
+            description: "能从多远开始注视；施法者身形越高，看得越远。目标跑出这个距离就断线。"
         }),
         tempo: seconds(F.stat("speed").div(8).plus(4).clamp(6, 14), "起手",
-            "摆好姿态需要多久；速度越快，越早抬眸。"),
+            "把目光聚起来需要多久；速度越快，越早抬眸。专注注视再多 5 刻。"),
         recharge: seconds(F.base(180).plus(F.level().minus(30).max(0).times(1.5)).clamp(160, 260), "冷却",
-            "两次诱惑之间的等待；等级越高越熟练。")
+            "两次注视之间的等待；等级越高越熟练。专注注视的冷却为普通的 1.3 倍。")
     });
     describe(captivateId, [
-        { key: "description.0", values: ["drop","duration"] },
-        { key: "description.1", values: ["gazeRange","ringRadius","maxOnlookers"] },
-        { key: "description.2", values: ["tempo","recharge"] },
+        { key: "description.0", values: ["drop", "hold"] },
+        { key: "description.1", values: ["gazeRange"] },
+        { key: "description.2", values: ["tempo", "recharge"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

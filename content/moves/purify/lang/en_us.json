@@ -23,6 +23,8 @@
   "worldcombat.skill.purify.preference.ai.selfBelow.help": "Below this ratio the companion allows Purify on a foe to trade its affliction for life; lower stays restrained, higher trades at the first loss of health.",
   "worldcombat.skill.purify.preference.ai.enemyStatus": "Exchangeable ailments",
   "worldcombat.skill.purify.preference.ai.enemyStatus.help": "A foe is only worth drawing from while it carries no more than this many harmful statuses; lower touches only lightly afflicted foes, higher cures foes that are worse off.",
+  "worldcombat.skill.purify.preference.ai.worthGap": "Worthwhile health gap",
+  "worldcombat.skill.purify.preference.ai.worthGap.help": "Below this fraction of the target's maximum health as your own missing health, trading a foe's ailment for your life is not worth it (the heal scales with the target's maximum health); higher is pickier, lower trades more readily.",
   "world_combat.move.purify.text.draw": "Purify draw x%1$s",
   "world_combat.move.purify.text.absorb": "Life +%1$s",
   "world_combat.move.purify.text.none": "Nothing afflicted nearby",

@@ -1,8 +1,9 @@
 /**
  * 火焰球 / pyroball 的客户端表现。
  *
- * 一句话：脚边固定着一颗小石球，火苗先舔上石面，随后这颗「烧红的石」从脚下短滚到踢点、被一脚抽出去，
- * 拖着一道焰尾沿低弧飞出，命中炸开成一团火与碎石，地上留下一圈很快淡去的焦痕。
+ * 一句话：脚边固定着一颗小石球（贴真实脚底，不是身体中心），火苗先舔上石面，随后这颗「烧红的石」从
+ * 脚下短滚到踢点、被一脚抽出去，拖着一道焰尾沿真实低弧飞出，命中炸开成一团火与碎石；落在可达地面才留
+ * 一圈很快淡去的焦痕，空中结束不留地贴。
  * 色相家族：橙（0xFF8A3C）与余烬黄（0xFFD06A），石体收在暖褐（0x7A6553），烟收在深褐（0x3A2A22）。
  * 拍子：起 gather（脚边小石被点着）→ 滚 roll（短滚到踢点）→ 飞 flight（焰尾）→ 击 burst（炸开）→
  *   收 scorch（焦痕）与 burn（引燃目标）——小石→点燃→离脚抽飞三个时点从画面直接读出。
@@ -19,7 +20,7 @@ const PyroballDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "stone", bind: "source", offset: [0, -0.45, 0], height: 0,
+                    name: "stone", bind: "source", offset: [0, 0.08, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     rate: 7, shape: { kind: "sphere", radius: 0.13 },
                     direction: "inward", speed: [0.0, 0.03],
@@ -27,7 +28,7 @@ const PyroballDefinition: ParticleDefinition = {
                     color: 0x7A6553, alpha: [0.9, 0.35], light: "world", maxParticles: 10
                 },
                 {
-                    name: "kindle", bind: "source", offset: [0, -0.4, 0], height: 0,
+                    name: "kindle", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/burning_rock",
                     rate: 10, shape: { kind: "sphere", radius: 0.16 },
                     direction: "inward", speed: [0.04, 0.16],
@@ -35,7 +36,7 @@ const PyroballDefinition: ParticleDefinition = {
                     color: 0xFF8A3C, alpha: [0.9, 0], light: "full", maxParticles: 26
                 },
                 {
-                    name: "flame", bind: "source", offset: [0, -0.35, 0], height: 0,
+                    name: "flame", bind: "source", offset: [0, 0.12, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
                     rate: 14, shape: { kind: "sphere", radius: 0.24 },
                     direction: "up", speed: [0.04, 0.14],

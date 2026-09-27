@@ -25,7 +25,7 @@ Smoke.scenario("icespinner", function (stage) {
             stage.expect(stage.casts("icespinner", caster) >= 1, "mamoswine committed ice spinner");
             stage.expect(stage.damageTo(foe) > 0, "the spinning slam dealt damage");
             stage.expect(changed.length > 0, "the spin left ice on the ground");
-            stage.note("the spin sweeps any real terrain out of its path and leases a short-lived ice trail on the ground. With no terrain-source unit in this batch there were no fields to dispel, so which fields would be removed is not exercised here; the sweep runs the same code path with an empty result.", {
+            stage.note("the spin clears only the terrain it actually crosses (same-floor foot contact, same surfaceTouches rule as Terrain Pulse) and leases one short-lived ice cell per real supported cell it stands on; ground it never reaches is untouched. With no terrain-source unit in this batch there were no fields to dispel, so which fields would be removed is not exercised here; the sweep runs the same code path with an empty result.", {
                 casts: stage.casts("icespinner", caster),
                 dealt: Math.round(stage.damageBy(caster) * 10) / 10,
                 foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,

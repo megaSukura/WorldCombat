@@ -6,10 +6,10 @@
  *
  * 三幕：
  *   起（windup，提交前）：拳上按拳印数聚起怒气光，只播预告。
- *   拳（punch × `fists`）：提交后贴身，按 `gap` 刻连甩 `fists` 记鬼拳；每一记独立结算 `smash`（接触·拳），
- *       命中者被轻轻顶开 `push`。拳数就是场上真正结算的次数。
- *   攒（随时，由世界事件驱动）：缠斗中每挨一记外来伤害就在身上加一记拳印（封顶 `cap`），并续上 `stance` 的存续；
- *       加印时拳上爆一簇怒气光。拳印散尽时放一簇余怒。
+ *   拳（punch × `fists`）：提交后贴身，按 `gap` 刻连甩 `fists` 记鬼拳；每一记都带自己的 strike 身份、独立结算 `smash`
+ *       （接触·拳），命中者被轻轻顶开 `push`。拳数就是场上真正结算的次数；拒伤的那一拳只播被挡，不先爆一记假受击。
+ *   攒（随时，由世界事件驱动）：缠斗中每挨一记**新发生的直接进攻**就在身上加一记拳印（封顶 `cap`），并续上 `stance`
+ *       的存续；残留场、间接伤害与 DOT 不攒拳。加印时拳上爆一簇怒气光（载体接受后才播）。拳印散尽时放一簇余怒。
  *
  * 与同族分开：愤怒之拳记的是**挨打次数**、把挨打变成拳数；愤怒记的是挨打、把挨打转成攻击等级且熄于出手；
  *   连斩靠连续命中翻倍；扫墓记的是伙伴倒下。只有愤怒之拳把「被打」直接变成出拳数。
@@ -49,9 +49,11 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const world = action.sense(), actor = action.actor();
             const stored = world.valid(actor) ? ragefistStored(world, actor) : 0;
+            // 预告与实际结算同一份拳数：1 + 拳印，狂暴只改上限与节奏，不再让预告翻倍。
+            const fists = Math.min(9, 1 + stored);
             action.present("ragefist:coil", ragefistScene, 1, action.origin(),
-                JSON.stringify({ moment: "coil", stored: stored, fists: 1 + stored * (config && config.fury === true ? 2 : 1),
-                    plumes: Math.max(6, 8 + stored * 4), fury: config && config.fury === true }));
+                JSON.stringify({ moment: "coil", stored: stored, fists: fists,
+                    plumes: Math.max(8, Math.min(40, Math.round(8 + stored * 4))), fury: config && config.fury === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -125,13 +127,15 @@ namespace PokemonSkills {
                 const victim = contact.hitEntity() ? contact.target() : null;
                 if (victim !== null && scope.valid(victim) && !scope.friendly(victim) && String(victim.ref()) !== String(self.ref())) {
                     const at = contact.position();
-                    WorldFeedback.emit(scope, ragefistScene, 1, at,
-                        { moment: "punch", target: String(victim.ref()), index: index + 1, fists: fists, stored: stored,
-                            plumes: plumes, scale: scale, intensity: intensity,
-                            direction: [forward.x(), forward.y(), forward.z()],
-                            path: [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]] }, 16);
-                    if (impact(current, contact, ragefistId, power, { damage: damageSpec(ragefistId, "smash"), contact: true, punch: true })) {
+                    // 先真实结算，再按结果播报：拒伤只播被挡，绝不先爆一记假受击。
+                    if (impact(current, contact, ragefistId, power, { damage: damageSpec(ragefistId, "smash"), contact: true, punch: true },
+                        "fist:" + (index + 1))) {
                         landed++;
+                        WorldFeedback.emit(scope, ragefistScene, 1, at,
+                            { moment: "punch", target: String(victim.ref()), index: index + 1, fists: fists, stored: stored,
+                                plumes: plumes, scale: scale, intensity: intensity,
+                                direction: [forward.x(), forward.y(), forward.z()],
+                                path: [[from.x(), from.y(), from.z()], [at.x(), at.y(), at.z()]] }, 16);
                         if (scope.valid(victim)) {
                             const away = at.minus(from);
                             if (away.length() > 0.01) scope.hitDisplace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
@@ -164,17 +168,17 @@ namespace PokemonSkills {
         if (!world.valid(victim) || world.allied(source, victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
-        const facts = DamageSemantics.read(data);
-        if (!facts.attack && String(data.kind) !== "move") return;
+        // 只认新发生的直接进攻正伤害：残留场、间接伤害与纯状态 DOT 都不攒拳。
+        if (!DamageSemantics.directOffense(data)) return;
         if (typeof data.after === "number" && data.after <= 0) return;
         if (!ragefistQualified(world, victim)) return;
         const held = MobEffects.read(world, victim, ragefistCharge);
         const cap = ragefistCap(ragefistConfig(world, victim));
         const before = held === null ? 0 : held.amplifier();
         const next = Math.min(cap, before + 1);
-        // 到顶也重挂一次，让存续跟着最近一次受击续期；只有真的加了一记才播加印。
-        MobEffects.apply(world, victim, ragefistCharge, ragefistStance(world, victim), next);
-        if (next <= before) return;
+        // 到顶也重挂一次，让存续跟着最近一次受击续期；只有载体真的接受、且确实加了一记才播加印。
+        const applied = MobEffects.apply(world, victim, ragefistCharge, ragefistStance(world, victim), next);
+        if (applied === null || next <= before) return;
         const body = world.observe(victim);
         if (body === null) return;
         WorldFeedback.emit(world, ragefistScene, 1, body.position(),

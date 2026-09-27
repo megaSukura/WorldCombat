@@ -1,16 +1,18 @@
 /**
  * 写生 / sketch —— 参数与机制数值来源。
  *
- * 核心念头：写生是一次性的永久描摹——把对手刚用过的那一手当场描进写生自己占的招式格，
+ * 核心念头：写生是一次性的永久描摹——把目标最近用过的那一手当场描进写生自己占的招式格，
  * 描完写生就从招式表里消失（PP 只有 1）。
  *
  * 原生事实：Normal／变化／威力 0／必中／PP 1／noPPBoosts／noSketch／单体；`onHit` 取 `target.lastMove`，
  * 写进 `source.moveSlots` 里 Sketch 所在的那一格（连同 `baseMoveSlots`，是永久学会），
- * 已有该招或招式带 noSketch 标记（写生自己）时失败。即时化保留这两件事：占自己的格、永久写进原生招式表。
+ * 已有该招或招式带 `noSketch` 标记（写生自己）时失败。即时化保留这三件事：占自己的格、永久写进原生招式表、
+ * 失败不改槽。
  *
  * 每个参数依赖不同的精灵数据（分散到不同参数）：
  *   reach      描摹距离：体型（碰撞箱高度）决定能靠近到多远看清那一手。
  *   study      描摹起手：速度决定落笔前观察得多快。
+ *   window     记忆窗口：特攻与等级决定能记住多久以前的出手，太老的最后记录描不到。
  *   afterglow  收笔：等级决定收势。
  *   recharge   冷却：等级与速度决定重新起笔（虽然只有一次机会）。
  *   strokes    笔触数：特攻决定表现里落笔的笔触数量。
@@ -26,6 +28,12 @@ namespace PokemonSkills {
         study: seconds(
             F.base(12).minus(F.stat("speed").minus(40).times(0.06).clamp(-3, 7)).clamp(6, 18).round(0),
             "描摹起手", "落笔前观察目标那一手的时间；速度越快看得越利落。"),
+        window: seconds(
+            F.base(1200)
+                .plus(F.stat("specialAttack").minus(50).times(4).clamp(0, 600).as("特攻"))
+                .plus(F.level().minus(20).times(10).clamp(0, 600).as("等级"))
+                .clamp(600, 2400).round(0),
+            "记忆窗口", "能描摹目标多久以前用过的那一手；特攻越高、等级越高记得越久，太老的最后记录描不到。"),
         afterglow: seconds(
             F.base(8).plus(F.level().minus(30).times(0.15).clamp(0, 5)).clamp(7, 14).round(0),
             "收笔", "描完之后的收势。"),
@@ -41,7 +49,7 @@ namespace PokemonSkills {
     });
 
     describe("sketch", [
-        { key: "world", values: [] },
+        { key: "world", values: ["window"] },
         { key: "description.0", values: ["reach", "study"] },
         { key: "description.1", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

@@ -1,13 +1,13 @@
 /**
  * 毒尾 / poisontail 的客户端表现。
  *
- * 一句话：施法者低身、尾巴盘到身后聚起一串毒滴（起），随后贴地抡过半圈——一条低矮的毒绿弧面从身后扫到身前，
+ * 一句话：施法者低身、毒在真实的背后聚成一串（起），随后一条贴地的尾段从身后扫过——低矮的毒绿弧面逐刻铺开，
  *   扫到的人身上炸开一撮毒液、被顺带扫开，尾梢抹上毒的人身上再慢慢渗出一圈绿痕（毒）。
  * 色相家族：毒绿（0x9BE86B 主体、0xD7F5A8 高光）＋深紫（0x6B4E8A 尾梢与余韵）；没有第二个色相。
- * 拍子：起 coil（聚毒）→ 扫 sweep（低位弧面铺过）→ 中 sting（逐目标毒击）→ 毒 venom（渗毒）／空 miss。
- * 范围：sweep 的弧面用服务端算出的同一组 `data.path` 顶点（原点＋圆弧采样）以 polygon 填满、polyline 勾外缘，
- *   画出来的低弧就是判定覆盖的那半圈；站在弧面外或更远处就扫不到。
- * 运动：是一条**贴着地面**扫过的弧线，高度压在脚踝附近；毒滴沿弧线下坠，一眼与向前推进的水流尾/龙尾区分开。
+ * 拍子：起 coil（聚毒）→ 扫 sweep（贴地尾段逐刻扫过）→ 中 sting（逐目标毒击）→ 毒 venom（渗毒）／空 miss。
+ * 范围：sweep 每个条目由服务端发送**当前这一小段**低弧的三个顶点（轴心 + 被墙截短后的前后外缘端点）；
+ *   服务端用同一组顶点判定 `WorldGeometry.bodyPolygon`，画面用同一组顶点铺面，所以画到哪就打到哪，墙后不画。
+ * 运动：聚毒沿 `data.direction`（真实背后）摆放；扫击是贴着地面、脚踝高度的尾段逐刻推进，与向前推进的水流尾／龙尾区分开。
  * 数：`data.drops`（物攻派生）绑定扫过时甩出的毒滴数量，`data.intensity`（威力换算）驱动弧面密度，与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -19,18 +19,19 @@ const PoisonTailDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    name: "gather", bind: "source", offset: [0, 0.3, -0.35], height: 0.15,
+                    // 毒聚在施法者真实的背后（data.direction）：沿这条短线生成、再向内收拢到尾部。
+                    name: "gather", bind: "source", offset: [0, 0.3, 0], height: 0.15,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: { data: "drops", fallback: 12 }, interval: 3, repeats: 3 },
-                    shape: { kind: "sphere_surface", radius: 0.24 },
+                    shape: { kind: "line", length: 0.4 }, orient: "direction",
                     direction: "inward", speed: [0.02, 0.1],
                     lifetime: [5, 11], size: [0.09, 0.02],
                     color: 0x9BE86B, alpha: [0.85, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "sheen", bind: "source", offset: [0, 0.3, -0.35], height: 0.15,
+                    name: "sheen", bind: "source", offset: [0, 0.3, 0], height: 0.15,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: 8, shape: { kind: "sphere", radius: 0.2 },
+                    rate: 8, shape: { kind: "line", length: 0.4 }, orient: "direction",
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [4, 9], size: [0.06, 0.01],
                     color: 0xD7F5A8, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 20
@@ -38,27 +39,28 @@ const PoisonTailDefinition: ParticleDefinition = {
             ]
         },
         sweep: {
-            duration: 22,
-            exit: { stop: 9, drain: 14 },
+            duration: 24,
+            exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "band", bind: "path", fit: "none", offset: [0, 0, 0], height: 0,
+                    // 当前这一小段低弧的铺面：服务端每刻换上的同一组顶点，逐刻推进而非整扇同时铺开。
+                    name: "slice", bind: "path", fit: "none", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
-                    burst: { count: { data: "drops", fallback: 12 }, interval: 3, repeats: 2 },
+                    rate: { data: "drops", fallback: 12 },
                     shape: { kind: "polygon" },
-                    direction: "shape", speed: [0.04, 0.18], spread: 18, gravity: 0.02,
-                    lifetime: [6, 13], size: [0.16, 0.03], sizeMode: "index",
+                    direction: "shape", speed: [0.03, 0.14], spread: 14, gravity: 0.02,
+                    lifetime: [5, 11], size: [0.16, 0.03], sizeMode: "index",
                     color: 0x6B4E8A, alpha: [0.85, 0], light: "world", maxParticles: 120
                 },
                 {
-                    // 沿弧线 index 递增到尾梢：size 由小到大、越靠尾梢越亮，尾尖才是抹毒的那一段。
-                    name: "edge", bind: "path", fit: "none", offset: [0, 0.02, 0], height: 0,
+                    // 尾段本身的绿色外缘；sizeMode index 让越靠尾梢越亮，尾尖才是抹毒的那一段。
+                    name: "tail", bind: "path", fit: "none", offset: [0, 0.02, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    burst: { count: { data: "drops", fallback: 12 } },
+                    rate: { data: "drops", fallback: 12 },
                     shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.05, 0.2],
-                    lifetime: [7, 14], size: [0.07, 0.2], sizeMode: "index",
-                    color: 0x9BE86B, alpha: [0.9, 0], light: "full", bloom: 0.22, maxParticles: 90
+                    direction: "shape", speed: [0.04, 0.18],
+                    lifetime: [6, 13], size: [0.06, 0.2], sizeMode: "index",
+                    color: 0x9BE86B, alpha: [0.9, 0], light: "full", bloom: 0.22, maxParticles: 100
                 }
             ]
         },

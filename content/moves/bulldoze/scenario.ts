@@ -7,8 +7,8 @@
  * 正好落在地裂半径内；隆隆石血厚不会被吓退，于是这一发必然扫到它。它同时用来核对「移动速度属性被压下去」
  * 这条跨对象的效果。
  *
- * 断言只取必然事实：这招被放过、站在地上的铁傀儡挨到伤害、它的移动速度属性被压下去（重踏必降速度）、
- * 地面方块没有被长期替换。暴击、具体有几个人落在环里写进 note 供读轨迹判断。
+ * 断言只取必然事实：这招被放过、站在地上的铁傀儡挨到伤害、它的移动速度属性被压下去（实中即降）、
+ * 地面方块没有被长期替换。暴击、具体有几个人落在环里、波前逐圈推进的时序写进 note 供读轨迹判断。
  */
 Smoke.scenario("bulldoze", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -27,7 +27,7 @@ Smoke.scenario("bulldoze", function (stage) {
             stage.expect(stage.damageTo(heavy) > 0, "the ground wave dealt damage to a grounded foe");
             stage.expect(stage.attribute(heavy, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the stomp lowered the iron golem's movement speed");
             stage.expect(stage.changedBlocks().length === 0, "the fissure left the ground blocks untouched");
-            stage.note("how many stood inside the ring and the crit roll are positional/random", {
+            stage.note("how many stood inside the ring and the crit roll are positional/random; the wave advances from the caster's real feet along the connected surface (about one-block steps pass, gaps/other floors do not) and slows each hit as it lands", {
                 casts: stage.casts("bulldoze", caster),
                 heavyDamage: Math.round(stage.damageTo(heavy) * 10) / 10,
                 speed: [baseSpeed, stage.attribute(heavy, "minecraft:generic.movement_speed")],

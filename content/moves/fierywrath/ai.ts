@@ -4,6 +4,7 @@
  * 什么局面下出手：一圈以施法者自身为中心的气场，必须先站进人堆里。`available` 要求可见、敌对、存活且在
  * `ai.maxChase`（默认 9）格内有目标；`approachTarget` 明确让它走向那个目标，走到气场半径以内就原地炸开。
  * `ai.cluster` 打开时，自己身周（不是候选目标身边）挤着两个以上敌人就抬高一档——那正是这招最值得放的局面。
+ * 自己血量偏低时再抬一档：爆发威力随已损失生命上升，残血时贴脸炸开收益更高。
  * 计数与距离衰减都以施法者圆心为准。够不到交给共享接近逻辑；放完交回共享交战计划。
  */
 namespace PokemonSkills {
@@ -40,8 +41,12 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !fierywrathWants(context, capability, target)) return 0;
             const count = fierywrathCount(context, capability);
-            if (!CompanionBehavior.ai<boolean>(capability, "cluster", true)) return 20 + Math.min(8, count * 2);
-            return count >= 2 ? 38 + Math.min(12, (count - 2) * 4) : 20;
+            let score: number;
+            if (!CompanionBehavior.ai<boolean>(capability, "cluster", true)) score = 20 + Math.min(8, count * 2);
+            else score = count >= 2 ? 38 + Math.min(12, (count - 2) * 4) : 20;
+            // 越残血这记爆发越重：自己血量偏低时更愿意贴脸炸开。
+            if (CompanionBehavior.ratio(CompanionBehavior.source(context)) < 0.5) score += 6;
+            return score;
         }
     });
 

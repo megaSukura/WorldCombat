@@ -19,6 +19,16 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("wideguard", { brace: 1, ai: { trigger: 8, cover: true } },
         [wideguardTrigger, wideguardCover]);
 
+    /** 本招这一圈的真实遮蔽半径：直接读 radius 公式，与判定、指示圈同源，不再用固定 5 格估。 */
+    function wideguardRadius(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        try {
+            return Math.max(1.6, PokemonSkills.p("wideguard", "radius", {
+                world: CompanionBehavior.world(context), actor: CompanionBehavior.world(context).source(),
+                skill: PokemonSkills.skills["wideguard"], detail: { values: capability.data.config }
+            }));
+        } catch (error) { return 3.6; }
+    }
+
     function wideguardAllyNear(context: WorldBehavior.Context, radius: number): boolean {
         const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
         for (let i = 0; i < nearby.length; i++) {
@@ -64,7 +74,7 @@ namespace CompanionBehavior {
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             if (CompanionBehavior.distance(self.point, threat.point) > CompanionBehavior.ai<number>(capability, "trigger", 8)) return false;
             if (!wideguardRangedThreat(context, threat)) return false;
-            if (CompanionBehavior.ai<boolean>(capability, "cover", true) && !wideguardAllyNear(context, 5)) return false;
+            if (CompanionBehavior.ai<boolean>(capability, "cover", true) && !wideguardAllyNear(context, wideguardRadius(context, capability))) return false;
             return true;
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
@@ -72,8 +82,11 @@ namespace CompanionBehavior {
         priority: function (context, capability, _target) {
             const threat = context.senses["world_combat:threat"], self = CompanionBehavior.source(context);
             if (!threat) return 0;
+            const radius = wideguardRadius(context, capability);
             const distance = CompanionBehavior.distance(self.point, threat.point);
-            return self.hurtAgo < 60 || distance <= 4 ? 100 : 60;
+            // 实际覆盖半径越大越值得立；威胁正打自己、刚伤到自己，或已经贴进覆盖圈，更像「马上要挨的可挡攻击」。
+            const imminent = self.hurtAgo < 60 || threat.attacking === self.ref || distance <= Math.max(2, radius);
+            return Math.max(1, Math.min(120, Math.round(45 + radius * 6 + (imminent ? 25 : 0))));
         }
     });
 }

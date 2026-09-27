@@ -1,103 +1,76 @@
-/**
- * 磨砺 / laserfocus 的出手方式。
- *
- * 核心念头：把精神收束成一道细光压在自己身上——**下一次出手必中要害**，出手即散，不用则自行褪去。
- *
- * 三幕：
- *   收束（windup，提交前只观察与预告，可被打断，不花代价）。
- *   落点（提交后）：给自己挂 world_combat:laserfocus_edge（身份 world_combat:status/laserfocus）与本次锐意实例
- *     world_combat:laserfocus_mark（唯一 token、光点、长度、迸发量）；锐光沿身体收成一条细线。
- *   兑现（这一击由本招把非暴击改成暴击且真的扣了血）：appliedRules 只认本实例 token，用掉锐意、放出迸发与浮字。
- *   自散：一直不出手时，窗口走到时间尽头安静褪去；被外力提前清除也清掉本实例，不遗留旧锐光。
- *
- * 与同族分开：心之眼把施法者自己的准星拉满、锁定把目标钉住；磨砺只关心**自己这一击要害**。共享结算里的
- * 防暴击特性、幸运咒语与守卫仍按各自规则参与，这层锐意不绕过它们。
- */
+/** One carrier owns one successful critical hit, including an already-natural critical. */
 namespace PokemonSkills {
     function laserfocusAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.2, 0)); }
-
-    /** 本次锐意实例的唯一标识，只消费确实由它把非暴击改成暴击且实际扣血的那一下。 */
-    let laserfocusSerial = 0;
-
-    WorldCombat.effect(laserfocusMark, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.token !== "number" || !isFinite(value.token) || value.token <= 0) throw new Error("Invalid laserfocus mark: token");
-        ["motes", "edge", "spark"].forEach(function (key) {
-            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] <= 0) throw new Error("Invalid laserfocus mark: " + key);
+    WorldCombat.effect(laserfocusMark, 2, 1200, "actor", json => {
+        const value = JSON.parse(json);
+        if (!MobEffects.validAnchor(value.anchor) || value.anchor.id !== laserfocusEffect
+            || !(value.budget > 0) || Math.floor(value.budget) !== value.budget) throw new Error("Invalid focus budget");
+        ["motes", "edge", "spark"].forEach(key => {
+            if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] <= 0) throw new Error("Invalid focus visual");
         });
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-
     function laserfocusMarkOf(world: CombatWorld, actor: CombatActor): any {
         const views = world.effects(actor, laserfocusMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+        return views.length ? JSON.parse(views[0].data()) : null;
     }
     function laserfocusReleaseMark(world: CombatWorld, actor: CombatActor): void {
-        const views = world.effects(actor, laserfocusMark);
-        if (views.length) world.operation(views[0].id(), "world_combat:dispel", "{}");
+        world.effects(actor, laserfocusMark).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
     }
-    /** 锐光就近跟着施法者；绑在本实例的 mark 载体上，自然到期或提前清除都随它一起收。 */
     function laserfocusWatch(effect: CombatEffect): void {
-        const world = effect.world(), actor = effect.target();
-        const body = world.valid(actor) ? world.observe(actor) : null;
-        if (body === null) { effect.end(); return; }
-        const mark = JSON.parse(String(effect.state()));
-        // 本载体就是本 source 创建的托管效果，presentOn 随它一起清理。
+        const world = effect.world(), actor = effect.target(), mark = JSON.parse(effect.state());
+        if (!world.valid(actor) || !MobEffects.matches(world, actor, mark.anchor)
+            || !DamageBudgets.read(world, { actor, id: mark.budget })) { effect.end(); return; }
+        const body = world.observe(actor); if (!body) { effect.end(); return; }
         WorldFeedback.onEffect(world, effect.id(), "world_combat:move_laserfocus/aura", laserfocusScene, 1, body.position(),
             { moment: "aura", target: String(actor.ref()), motes: mark.motes, edge: mark.edge, spark: mark.spark });
-        effect.schedule("watch", "watch", 20, "{}");
+        effect.schedule("watch", "watch", 4, "{}");
     }
-    WorldCombat.effectHandler(laserfocusMark, "start", laserfocusWatch);
-    WorldCombat.effectHandler(laserfocusMark, "watch", laserfocusWatch);
-    WorldCombat.effectHandler(laserfocusMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    // 兑现点：带锐意者的下一次伤害结算被抬成必定要害。真正用掉放在 applied（伤害确实落下之后），
-    // 预览（伤害说明页与 AI）只看不改；已有暴击或被目标防暴击特性压成 0 时不覆盖，也不占用本次锐意。
-    PokemonDamage.metadata.define({
-        id: "world_combat:move_laserfocus/edge",
-        applies: function (context) { return !context.preview && !!context.world && !!context.actor; },
-        apply: function (context) {
-            const data: any = context.metadata, world = context.world!, actor = context.actor!;
-            if (data.category !== "physical" && data.category !== "special") return;
-            if (data.critical === true || data.criticalChance === 0) return;
-            // 记下本招这一次的实例标识：其他来源的必暴不会被误算成磨砺的兑现。
-            const mark = laserfocusMarkOf(world, actor);
-            if (mark === null) return;
-            data.critical = true; data.criticalChance = 1; data.laserfocusEdge = mark.token;
-        }
+    WorldCombat.effectHandler(laserfocusMark, "start", effect => {
+        const world = effect.world(), actor = effect.target(), mark = JSON.parse(effect.state());
+        if (!MobEffects.matches(world, actor, mark.anchor)) { effect.end(); return; }
+        MobEffects.bind(world, actor, laserfocusEffect);
+        laserfocusWatch(effect);
     });
-
-    NativeEffects.appliedRules.define({ id: "world_combat:move_laserfocus/spend", apply: function (hit) {
-        const data = hit.data;
-        if (!data || typeof data.laserfocusEdge !== "number" || data.critical !== true || !(data.actual > 0)) return;
-        const world = hit.world, source = hit.source, target = hit.target;
-        if (!world.valid(source)) return;
+    WorldCombat.effectHandler(laserfocusMark, "watch", laserfocusWatch);
+    WorldCombat.effectHandler(laserfocusMark, "operation:world_combat:dispel", effect => effect.end());
+    WorldCombat.effectHandler(laserfocusMark, "end", effect => {
+        const mark = JSON.parse(effect.state()), world = effect.world(), actor = effect.target();
+        if (world.valid(actor) && world.effects(actor, DamageBudgets.definition).some(view => view.id() === mark.budget))
+            world.operation(mark.budget, "world_combat:dispel", "{}");
+    });
+    PokemonDamage.criticalOffers.define({ id: "world_combat:move_laserfocus/offer", apply: hit => {
+        const mark = laserfocusMarkOf(hit.world, hit.source);
+        if (!mark || !MobEffects.matches(hit.world, hit.source, mark.anchor)) return;
+        const budget = DamageBudgets.read(hit.world, { actor: hit.source, id: mark.budget });
+        if (budget && budget.available > 0) hit.offers.push({ actor: String(hit.source.ref()), id: mark.budget });
+    } });
+    WorldCombat.on("world_combat:move_laserfocus/spend", "world_combat:damage_settled", DamageBudgets.settledHook, event => {
+        const data = JSON.parse(event.data()), world = event.world(), source = event.actor();
+        const receipt = DamageBudgets.results(data).filter(value => value.committed && value.active
+            && value.actor === String(source.ref()) && value.payload && value.payload.kind === laserfocusId)[0];
+        if (!receipt || !world.valid(source)) return;
         const mark = laserfocusMarkOf(world, source);
-        if (mark === null || mark.token !== data.laserfocusEdge) return;
-        if (!MobEffects.consume(world, source, laserfocusEffect)) return;
+        if (!mark || mark.budget !== receipt.id || !MobEffects.matches(world, source, mark.anchor)) return;
+        const body = world.observe(source), target = event.target(), victim = target && world.valid(target) ? world.observe(target) : null;
+        const ratio = victim ? Math.max(0, Math.min(1, data.actual / Math.max(1, victim.maxHealth()))) : 0;
+        world.removeMobEffect(source, laserfocusEffect, mark.anchor.key);
         laserfocusReleaseMark(world, source);
-        const body = world.observe(source);
-        const victim = world.observe(target);
-        const ratio = victim === null ? 0 : Math.max(0, Math.min(1, data.actual / Math.max(1, victim.maxHealth())));
-        const spark = Math.max(10, Math.round((mark.spark || 24) * (0.5 + ratio)));
-        if (body === null) return;
-        WorldFeedback.emit(world, laserfocusScene, 1, body.position(),
-            { moment: "crit", target: String(source.ref()), spark: spark, edge: mark.edge,
-                intensity: Math.max(0.6, Math.min(2.4, 0.7 + ratio)) }, 28);
+        if (!body) return;
+        WorldFeedback.emit(world, laserfocusScene, 1, body.position(), { moment: "crit", target: String(source.ref()),
+            spark: Math.max(10, Math.round(mark.spark * (.5 + ratio))), edge: mark.edge,
+            intensity: Math.max(.6, Math.min(2.4, .7 + ratio)) }, 28);
         WorldFeedback.text(world, laserfocusAbove(body.position()), laserfocusCritText, [Math.round(data.actual * 10) / 10], 30);
         world.sound("minecraft:entity.player.attack.crit", body.position(), 16, "{}");
-    } });
-
-    // 锐意离场：自然褪去时播安静散光；被外力提前清除（如牛奶）只清掉本实例，不遗留旧表现。
-    WorldCombat.on("world_combat:move_laserfocus/fade", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== laserfocusEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
+    });
+    WorldCombat.on("world_combat:move_laserfocus/fade", "world_combat:mob_effect_removed", "", event => {
+        const data = JSON.parse(event.data()); if (String(data.id) !== laserfocusEffect) return;
+        const world = event.world(), actor = event.actor(); if (!world.valid(actor)) return;
+        const mark = laserfocusMarkOf(world, actor);
+        if (!mark || MobEffects.matches(world, actor, mark.anchor)) return;
         laserfocusReleaseMark(world, actor);
         if (String(data.cause) !== "expired") return;
-        const body = world.observe(actor);
-        if (body === null) return;
+        const body = world.observe(actor); if (!body) return;
         WorldFeedback.emit(world, laserfocusScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 22);
         WorldFeedback.text(world, laserfocusAbove(body.position()), laserfocusFadeText, [], 22);
     });
@@ -145,11 +118,18 @@ namespace PokemonSkills {
             const edge = Math.max(1, p(laserfocusId, "edge", action));
             const spark = Math.max(12, Math.round(p(laserfocusId, "spark", action)));
             // 载体应用失败就不播 focus 成功，也不留下无主的锐意实例。
-            const carrier = MobEffects.apply(world, actor, laserfocusEffect, ticks, 0);
+            const carrier = MobEffects.set(world, actor, laserfocusEffect, ticks, 0);
             if (carrier === null) { done(action); return; }
             laserfocusReleaseMark(world, actor);
-            laserfocusSerial += 1;
-            world.effect(laserfocusMark, actor, JSON.stringify({ token: laserfocusSerial, motes: motes, edge: edge, spark: spark }), ticks);
+            const anchor = MobEffects.anchor(carrier);
+            const budget = DamageBudgets.open(world, actor, ticks, { uses: 1, anchor: anchor, payload: { kind: laserfocusId } });
+            if (!budget) { world.removeMobEffect(actor, laserfocusEffect, carrier.key()); done(action); return; }
+            const marker = world.effect(laserfocusMark, actor, JSON.stringify({ budget: budget.id, anchor: anchor,
+                motes: motes, edge: edge, spark: spark }), ticks);
+            if (!(marker > 0)) {
+                world.operation(budget.id, "world_combat:dispel", "{}");
+                world.removeMobEffect(actor, laserfocusEffect, carrier.key()); done(action); return;
+            }
             sound(action, "minecraft:block.beacon.activate");
             if (body !== null) {
                 WorldFeedback.emit(world, laserfocusScene, 1, body.position(),

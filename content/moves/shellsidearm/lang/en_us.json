@@ -35,7 +35,7 @@
   "worldcombat.skill.shellsidearm.preference.ai.finishLow": "Prefer finishing low targets",
   "worldcombat.skill.shellsidearm.preference.ai.finishLow.help": "When on, low-health targets rank higher so the heavy shell finishes them; when off, all targets rank the same.",
   "worldcombat.skill.shellsidearm.preference.ai.longShot": "Prefer long shots",
-  "worldcombat.skill.shellsidearm.preference.ai.longShot.help": "When on, targets beyond sixty percent of the range rank higher so the shell is fired from a safer distance; when off, distance does not matter and it is happy to close in.",
+  "worldcombat.skill.shellsidearm.preference.ai.longShot.help": "When on, targets beyond sixty percent of the range rank higher so the shell is fired from a safer distance; when off, distance does not matter and it is happy to close in. A fixed ram cannot reach far, so it never gets this bonus.",
   "worldcombat.skill.shellsidearm.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.shellsidearm.preference.ai.leaveStation.help": "When on, the companion may leave its post to find a firing position; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.shellsidearm.text.venom": "Shell burst, poisoned",

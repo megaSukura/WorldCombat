@@ -6,7 +6,7 @@
  * 并排的目标才一起吃到。重拍式把这一下做得更沉更宽、能拍开一步，但多出起手与更长的冷却。
  *
  * 两幕：
- *   起（windup，仅重拍式，提交前）：抬掌蓄势的预告；快拍式没有这一幕，开始即提交。
+ *   起（windup，仅重拍式，提交前）：身体前方短抬一下掌，作为重拍的预告；快拍式没有这一幕，开始即提交。
  *   拍（swat）：提交后以瞄准方向为中心，在身前铺开 `arc` 度的扇形、探出 `reach` 格；扇面里的非友方
  *       各结算一记 swat 接触伤害，并被沿拍向推开 `nudge` 格。拍到几个、碎屑多少都从这一拍算出。
  *   果：一个人都没拍到只留一掌破风。
@@ -19,6 +19,10 @@
  */
 namespace PokemonSkills {
     const poundScene = "world_combat:move_pound";
+    /** 重拍起手的抬掌由自定义场景绘制真实身前动作，与拍击粒子分开。 */
+    const poundRaiseScene = "world_combat:move_pound_raise";
+    /** 瞄准/选点的接受范围比实际拍面多出的容差；命中仍以 `reach` 扇面为准。 */
+    const poundAimTolerance = 0.3;
     const poundHitText = "world_combat.move.pound.text.hit";
     const poundMissText = "world_combat.move.pound.text.miss";
 
@@ -70,13 +74,16 @@ namespace PokemonSkills {
                 recover: Math.round(p("pound", "aftercast", context)),
                 cooldown: Math.round(p("pound", "recharge", context)),
                 active: skills["pound"].active,
-                range: p("pound", "reach", context) + 0.3
+                range: p("pound", "reach", context) + poundAimTolerance
             };
         },
         windup: function (action, config, prepare) {
             if (prepare <= 0) return 0;
-            action.present("world_combat:move_pound:raise", poundScene, 1, action.origin(),
-                JSON.stringify({ moment: "raise", heavy: 1, windup: prepare }));
+            // 起手只在身体前方短抬一下掌：方向来自真实瞄准，起止时刻随实际起手长度交给表现。
+            const forward = WorldGeometry.basis(aim(action), action.direction()).forward;
+            action.present("world_combat:move_pound:raise", poundRaiseScene, 1, action.origin(),
+                JSON.stringify({ moment: "raise", heavy: 1, windup: prepare, start: action.sense().tick(),
+                    direction: [forward.x(), forward.y(), forward.z()] }));
             return prepare;
         },
         execute: function (action, move, config, done) {

@@ -20,7 +20,7 @@
   "worldcombat.skill.finalgambit.preference.spare": "Spare form",
   "worldcombat.skill.finalgambit.preference.spare.help": "On: damage drops to 55%% of your current HP and a landed hit leaves you at 1 HP without fainting, at the cost of a longer cooldown. Off: damage equals your full current HP and a landed hit faints you.",
   "worldcombat.skill.finalgambit.preference.ai.lethal": "Only go for the kill",
-  "worldcombat.skill.finalgambit.preference.ai.lethal.help": "On: only commit when your current HP is not below the target's, guaranteeing the trade empties it. Off: also willing to drag the target down when badly hurt.",
+  "worldcombat.skill.finalgambit.preference.ai.lethal.help": "On: only commit when this move's real damage would empty the target's current HP (the spare form is counted at 55%%, and type-immune targets are never chosen), guaranteeing the trade empties it. Off: also willing to drag the target down when badly hurt.",
   "worldcombat.skill.finalgambit.preference.ai.cornered": "Cornered threshold",
   "worldcombat.skill.finalgambit.preference.ai.cornered.help": "With 'only go for the kill' off, commit only when your HP falls below this share; higher makes it gamble sooner.",
   "worldcombat.skill.finalgambit.preference.ai.maxChase": "Chase distance",
@@ -33,5 +33,6 @@
   "world_combat.move.finalgambit.text.faint": "Collapsed",
   "world_combat.move.finalgambit.text.spent": "Left at a breath",
   "world_combat.move.finalgambit.text.miss": "Lunged wide",
+  "world_combat.move.finalgambit.text.unpaid": "Could not stake its life",
   "worldcombat.skill.finalgambit.outcome": "The lunge detonates on the first foe it reaches; if it touches no one, is stopped by terrain, or is turned away by type immunity, it comes up empty - no HP is spent and you do not fall."
 }

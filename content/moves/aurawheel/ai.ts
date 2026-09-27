@@ -1,8 +1,8 @@
 /**
  * 气场轮的 AI：一段较长的贴地滚动重击，附带自身提速，也可用来拉近或拉开身位。
  *
- * 局面：有可见、敌对的存活目标就列入候选；reach 取本招的选择射程（12 格），从较远处就能滚过去，
- *   够不到交给共享接近逻辑。放完后自身更快，继续常规交战。
+ * 局面：有可见、敌对的存活目标就列入候选；reach 取本个体真实的滚动距离（随速度 6–12 格），
+ *   从较远处就能滚过去，够不到交给共享接近逻辑。放完后自身更快，继续常规交战。
  * 对谁出手：能直接滚撞到目标（距离在本个体滚动距离 `distance` 内）时收益最大；只能用位移拉近时按普通排序。
  * 速度满阶时提速没有收益——那时它只被当作攻击或位移使用，不再为提速而多给分。
  */
@@ -19,9 +19,12 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const gap = CompanionBehavior.distance(self.point, target.point);
             const strike = p(aurawheelId, "distance", CompanionBehavior.world(context));
+            // 速度到顶后提速没有收益：只按真实的接触/位移价值计分。能滚到目标仍有实伤价值（只加小分）；
+            // 只能靠它推进身位时降权。未到顶时保留原来的追击与空滚换位收益。
+            const capped = CompanionBehavior.stage(context, self, "spe") >= 6;
             let score = CompanionBehavior.ratio(target) > 0.3 ? 10 : 4;
-            if (gap <= strike) score += 8;
-            else if (CompanionBehavior.stage(context, self, "spe") >= 6) score -= 6;
+            if (gap <= strike) score += capped ? 5 : 8;
+            else if (capped) score -= 6;
             return score;
         }
     });

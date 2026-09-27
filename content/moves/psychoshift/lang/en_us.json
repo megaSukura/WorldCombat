@@ -3,7 +3,7 @@
   "worldcombat.skill.psychoshift.use.0": "Hand your burn/poison/paralysis to the opponent",
   "worldcombat.skill.psychoshift.use.1": "Clear your own burden after a status move",
   "worldcombat.skill.psychoshift.use.2": "Throw a damage-over-time status back in a war of attrition",
-  "worldcombat.skill.psychoshift.description.0": "Cast on one opponent within %1$s blocks that has no major status and is in sight; it cannot be used while you carry no major status. One of your major statuses is planted on it, and you are cured only if it lands. If the target is immune to that status nothing is transferred and you keep it.",
+  "worldcombat.skill.psychoshift.description.0": "While you can act, cast on one opponent within %1$s blocks that has no major status and is in sight: one default major carrier of yours is planted on it, and you are cured only if it lands. If the target is immune to that status nothing is transferred and you keep it. A status that stops you acting (sleep, freeze) cannot be passed on this way.",
   "worldcombat.skill.psychoshift.description.1": "Transfer strength %1$s: the status lasts this multiple of its remaining time on the target.",
   "worldcombat.skill.psychoshift.description.2": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown.",
   "worldcombat.skill.psychoshift.deep.on": "Deep seed: the planted status lasts longer, and poison deepens to toxic; costs +3 wind-up and x1.35 cooldown.",

@@ -5,7 +5,8 @@
  *   炸开一圈酸绿甲壳与碎屑，把目标压得矮下去（攻击下降）。
  * 色相家族：虫系的酸绿与甲壳黄（0x9ACD32 主体、0xD8E86A 亮面），击点用近白核心，余韵用中性尘灰。
  * 拍子：蓄 coil 0–8t ／ 扑 leap ／ 撞 crash ／ 压 pin ／ 空 miss。
- * 范围：crash／pin 绑目标点，半径按 `data.scale`（判定半径 / 0.5）缩放；leap 是一条沿 `data.direction` 的风痕。
+ * 范围：crash／pin 绑目标点，半径按 `data.scale`（判定半径 / 0.5）缩放；leap 是一条沿 `data.direction` 的风痕，
+ *   由服务端逐刻续期、收势时停，覆盖从起步到撞停的整段水平推进。
  * 运动：coil 的碎屑向身下收；leap 的风痕沿扑进方向拖尾；crash 的甲壳从目标表面向外炸、碎屑受重力下落。
  * 数：`data.chitin`（物攻与速度派生的甲壳数）驱动 coil／leap／crash 发射量，`data.stages`（掉攻级数）决定
  *   pin 的压环重放，`data.intensity`（威力 / 70）抬高命中密度。
@@ -36,8 +37,9 @@ const LungeSceneDefinition: ParticleDefinition = {
             ]
         },
         leap: {
-            duration: 14,
-            exit: { stop: 6, drain: 10 },
+            // 推进是持续过程：由 execute 每刻续期、finish 时停；完整行程一路都有尾迹，不再 6 刻后断粒。
+            duration: 0,
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "dashline", bind: "source", offset: [0, 0.4, 0], height: 0.35, orient: "direction",

@@ -148,7 +148,7 @@ const EncoreDefinition: ParticleDefinition = {
                     name: "reject_slash", bind: "path", offset: [0, 0, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     shape: { kind: "polyline" },
-                    rate: 70, direction: "shape", speed: [0.02, 0.08], trail: { minDistance: 0.06 },
+                    rate: 70, direction: "shape", speed: [0.02, 0.08],
                     lifetime: [6, 12], size: [0.14, 0.03],
                     color: 0xD85A5A, alpha: [0.9, 0], light: "full", maxParticles: 80
                 },

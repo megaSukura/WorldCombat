@@ -1,4 +1,4 @@
-/** 破壳的裂纹、碎片飞散与收势表现；数量和大小由个体参数决定。 */
+/** 破壳的裂纹、壳片飞散与收势表现；数量和大小由个体参数决定，壳片从体表飞出、按 spread 的行程落地。 */
 const ShellSmashDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -17,14 +17,13 @@ const ShellSmashDefinition: ParticleDefinition = {
             ]
         },
         crack: {
-            duration: 26,
-            exit: { stop: 10, drain: 16 },
+            duration: 0,
             emitters: [
                 {
-                    name: "burst", bind: "source", offset: [0, 0.6, 0], height: 0.45,
+                    name: "burst", bind: "source", offset: [0, 0, 0], height: 0.35, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
                     burst: { count: { data: "shards", fallback: 18 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 0.5 },
+                    shape: { kind: "sphere_surface", radius: { data: "bodyR", fallback: 0.45 } },
                     direction: "outward", speed: [0.08, 0.24],
                     lifetime: [8, 16], size: [0.24, 0.04], sizeMode: "index",
                     color: 0xFFF6E0, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 120
@@ -33,7 +32,7 @@ const ShellSmashDefinition: ParticleDefinition = {
                     name: "shock_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 8, at: 1 },
-                    shape: { kind: "ring", radius: 0.7 },
+                    shape: { kind: "ring", radius: 0.8 },
                     direction: "outward", speed: [0.1, 0.24],
                     lifetime: [10, 18], size: [0.4, 0.9], sizeMode: "index",
                     color: 0xE8E2D0, alpha: [0.7, 0], light: "full", maxParticles: 24
@@ -41,25 +40,26 @@ const ShellSmashDefinition: ParticleDefinition = {
             ]
         },
         shed: {
-            duration: 34,
-            exit: { stop: 14, drain: 20 },
+            duration: 0,
             emitters: [
                 {
-                    name: "plates", bind: "source", offset: [0, 0.2, 0], height: 0.1,
+                    name: "plates", bind: "source", offset: [0, 0, 0], height: 0.25, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "shards", fallback: 18 }, at: 1 },
-                    shape: { kind: "ring", radius: { data: "spread", fallback: 1.8 } },
-                    direction: "outward", speed: [0.06, { data: "shatter", fallback: 0.15 }],
-                    gravity: 0.05, lifetime: [18, 30], size: [{ data: "shardSize", fallback: 0.1 }, 0.02], sizeMode: "index",
+                    shape: { kind: "sphere_surface", radius: { data: "bodyR", fallback: 0.45 } },
+                    direction: "outward", speed: [{ data: "shatter", fallback: 0.15 }, { data: "shatter", fallback: 0.15 }],
+                    gravity: 0.05, lifetime: [{ data: "flight", fallback: 22 }, { data: "flight", fallback: 22 }],
+                    size: [{ data: "shardSize", fallback: 0.1 }, 0.02], sizeMode: "index",
                     color: 0xE8E2D0, alpha: [0.9, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "grit", bind: "source", offset: [0, 0.1, 0], height: 0.05,
+                    name: "grit", bind: "source", offset: [0, 0, 0], height: 0.15, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "shards", fallback: 18 } },
-                    shape: { kind: "ring", radius: { data: "spread", fallback: 1.8 } },
-                    direction: "outward", speed: [0.04, 0.16],
-                    gravity: 0.04, lifetime: [14, 24], size: [0.06, 0.01],
+                    shape: { kind: "sphere_surface", radius: { data: "bodyR", fallback: 0.45 } },
+                    direction: "outward", speed: [0.04, { data: "shatter", fallback: 0.15 }],
+                    gravity: 0.04, lifetime: [{ data: "flight", fallback: 22 }, { data: "flight", fallback: 22 }],
+                    size: [0.06, 0.01],
                     color: 0x8A8374, alpha: [0.6, 0], light: "world", maxParticles: 80
                 },
                 {
@@ -74,13 +74,12 @@ const ShellSmashDefinition: ParticleDefinition = {
             ]
         },
         settle: {
-            duration: 24,
-            exit: { stop: 8, drain: 14 },
+            duration: 0,
             emitters: [
                 {
                     name: "dust", bind: "point", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "shards", fallback: 18 } },
+                    burst: { count: { data: "shards", fallback: 18 }, at: { data: "flight", fallback: 22 } },
                     shape: { kind: "ring", radius: { data: "spread", fallback: 1.8 } },
                     direction: "up", speed: [0.01, 0.05],
                     gravity: 0.03, lifetime: [14, 24], size: [0.12, 0.03],

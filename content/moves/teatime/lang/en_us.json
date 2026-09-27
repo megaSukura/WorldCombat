@@ -13,7 +13,7 @@
   "worldcombat.skill.teatime.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
   "worldcombat.skill.teatime.value.radius": "Tea radius",
   "worldcombat.skill.teatime.value.reach": "Placement range",
-  "worldcombat.skill.teatime.value.teaTicks": "Steam duration",
+  "worldcombat.skill.teatime.value.teaTicks": "Afterglow",
   "worldcombat.skill.teatime.value.brew": "Brew strength",
   "worldcombat.skill.teatime.value.motes": "Tea motes",
   "worldcombat.skill.teatime.value.cups": "Cup and plate count",
@@ -26,10 +26,10 @@
   "worldcombat.skill.teatime.preference.ai.minHolders.help": "At least this many Berry holders must be inside the tea before it is worth serving; 1 serves for a single Berry, higher waits for more to eat together.",
   "worldcombat.skill.teatime.preference.ai.maxChase": "Pitching distance",
   "worldcombat.skill.teatime.preference.ai.maxChase.help": "The tea is considered only when a threat is within this distance; lower pitches only up close, higher closes a gap first.",
-  "worldcombat.skill.teatime.preference.ai.stripFoes": "Only for Berry-holding foes",
-  "worldcombat.skill.teatime.preference.ai.stripFoes.help": "On: the tea is served only when at least one foe inside holds a Berry, purely to strip them. Off: also served when enough Berry holders are around, to set allies' Berries off.",
+  "worldcombat.skill.teatime.preference.ai.stripFoes": "Only strip full-health foes",
+  "worldcombat.skill.teatime.preference.ai.stripFoes.help": "On: only serve when a full-health foe inside holds a Berry - wasting its heal or reactive Berry is worth most there. Off: also served when enough Berry holders are around, to set allies' Berries off.",
   "world_combat.move.teatime.text.served": "Tea is served; %1$s eat their held Berry",
   "world_combat.move.teatime.text.sip": "Drinks down the %1$s",
   "world_combat.move.teatime.text.empty": "No one held a Berry; the tea is wasted",
-  "worldcombat.skill.teatime.description.3": "The tea can only be served when the user holds a Berry, or at least one combatant inside the landing radius does; with no Berry holder at all the move cannot be cast."
+  "worldcombat.skill.teatime.description.3": "The tea only serves when at least one Berry holder - the user included, standing inside - is inside the aroma and reachable without a wall in the way; with no Berry holder at all the move cannot be cast."
 }

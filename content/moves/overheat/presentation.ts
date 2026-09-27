@@ -2,12 +2,12 @@
  * 过热 / overheat 的客户端表现。
  *
  * 一句话：喉间与胸口聚起白热的光、热气往身前压 → 一整张扇形热浪沿固定准线推出去，白热核心牵着一片翻卷的火与火星 →
- *   前沿扫到的地方炸开火团（靠内的更亮更密）→ 排空后施法者身上腾起余烟，落点只留一圈短热尘。
+ *   前沿里的地方炸开火团（靠内的更亮更密）→ 排空后施法者身上腾起余烟，落点只留一圈短热尘。
  * 色相家族：白热黄（0xFFE8A0）作核心，火橙（0xFF7A2A）作主体，深褐烟（0x3A2E2A）衬托；无第二色相。
- * 拍子：起 gather（聚热）→ 推 wave（扇形热浪）→ 击 blast（命中）与 scorch（短热尘）→ 收 slump（余烟）。
- * 范围：wave 的扇面沿 `data.direction` 指向、张角 `data.cone`、长度 `data.reach`，画面就是会被烧到的扇面，
- *   `data.inner` 标出吃满威力的内层距离。
- * 运动：热浪沿准线向外推、火星随热流翻卷上升；短热尘贴地上升后自然散去。
+ * 拍子：起 gather（聚热）→ 爆 wave（一瞬扇形热浪）→ 击 blast（命中）与 scorch（短热尘）→ 收 slump（余烟）。
+ * 范围：wave 是一瞬压出的水平扇面，`orient:"heading"` 让扇面沿 `data.direction` 的水平分量张开，与判定的
+ *   `WorldGeometry.sector` 同源：半径 `data.reach`、`data.inner` 是吃满威力的内层距离、整张角 `data.cone`。
+ * 运动：扇面里的火团随 `data.gust`（爆开速度）向外/向上铺开一瞬，火星随热流上升；短热尘贴地上升后自然散去。
  * 数：火星数与火团密度绑定 `data.embers`（特攻派生），强度绑定 `data.intensity`（威力 / 120；内层满额、外层打折），
  *   热尘半径绑定 `data.scorch`（机制余热半径）。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -42,31 +42,31 @@ const OverheatDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "fan", bind: "source", fit: "none", offset: [0, 0.55, 0], height: 0.55,
+                    name: "fan", bind: "source", fit: "world", orient: "heading", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
                     burst: { count: { data: "embers", fallback: 22 } },
-                    shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 8 }, angleDegrees: { data: "cone", fallback: 22 } },
-                    orient: "direction", direction: "shape", speed: [0.6, 1.7], spread: 6,
-                    gravity: -0.01, drag: 0.97,
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 8 }, angleDegrees: { data: "cone", fallback: 44 } },
+                    direction: "shape", speed: [0.2, { data: "gust", fallback: 1.25 }], spread: 10,
+                    gravity: -0.01, drag: 0.96,
                     lifetime: [8, 16], size: [0.5, 0.08], sizeMode: "index",
                     color: 0xFFE8A0, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 150
                 },
                 {
-                    name: "sparks", bind: "source", fit: "none", offset: [0, 0.5, 0], height: 0.5,
+                    name: "sparks", bind: "source", fit: "world", orient: "heading", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "embers", fallback: 22 } },
-                    shape: { kind: "cone_volume", radius: 0.4, length: { data: "reach", fallback: 8 }, angleDegrees: { data: "cone", fallback: 22 } },
-                    orient: "direction", direction: "shape", speed: [0.8, 2.0], spread: 8,
-                    gravity: 0.01, drag: 0.96,
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 8 }, angleDegrees: { data: "cone", fallback: 44 } },
+                    direction: "shape", speed: [0.3, { data: "gust", fallback: 1.25 }], spread: 12,
+                    gravity: 0.01, drag: 0.95,
                     lifetime: [8, 18], size: [0.16, 0.02],
                     color: 0xFF7A2A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 160
                 },
                 {
-                    name: "core", bind: "source", fit: "none", offset: [0, 0.5, 0], height: 0.5,
+                    name: "core", bind: "source", fit: "world", orient: "heading", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
                     burst: { count: { data: "embers", fallback: 22 } },
-                    shape: { kind: "cone_volume", radius: 0.35, length: { data: "inner", fallback: 4 }, angleDegrees: { data: "cone", fallback: 22 } },
-                    orient: "direction", direction: "shape", speed: [0.3, 0.9], spread: 5,
+                    shape: { kind: "sector", radius: { data: "inner", fallback: 4 }, angleDegrees: { data: "cone", fallback: 44 } },
+                    direction: "shape", speed: [0.1, 0.6], spread: 6,
                     lifetime: [6, 12], size: [0.34, 0.06],
                     color: 0xFFF6D0, alpha: [0.9, 0], light: "full", bloom: 0.6, maxParticles: 70
                 }

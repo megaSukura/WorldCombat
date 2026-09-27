@@ -105,9 +105,19 @@ namespace PokemonSkills {
             "元素光晕", { unit: " 格", description: "命中处元素扩散的直径；特攻越高越大。" })
     });
 
+    /** 发射时把收进的那口天色按动作快照登记；贯穿的每一次接触都读它，不在接触时重取天气。 */
+    export const weatherballSnapshotKey = "world_combat:move/weatherball/element";
     defineDamage("weatherball", "orb", { defenceCoefficient: 0.0048, rationale: "天气能量穿透略强，让天色与特攻的差别更可见。" }, {
         resolve: function (damage: PokemonDamage.FeatureContext): PokemonDamage.Metadata | undefined {
             if (!damage.world) return undefined;
+            if (damage.action) {
+                var stored = damage.action.data(weatherballSnapshotKey);
+                if (stored !== null) {
+                    try { var snapshot = JSON.parse(stored); if (snapshot && typeof snapshot.type === "string") return { type: snapshot.type }; }
+                    catch (error) { }
+                }
+            }
+            // 离线详情没有动作快照：显示此刻天色。
             var body = damage.actor ? damage.world.observe(damage.actor) : null;
             return { type: weatherballElementOf(weatherballSkyAt(damage.world, body ? body.position() : null)).type };
         }

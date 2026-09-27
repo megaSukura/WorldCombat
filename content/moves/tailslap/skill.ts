@@ -11,9 +11,11 @@
  *
  * 幕：
  *   起（coil，提交前）：压低重心、把尾巴绷直，脚边扬起一圈预备的尘；`action.present`，可打断、不花 PP。
- *   转（lap，提交后）：`laps` 圈。每一圈以施法者为心、`radius` 为半径扫一整圈（砸尾式收成前向 `arc` 一段），
- *       圈内所有非友方各吃一记 `lash` 接触伤害，随后被沿背离方向推开 `push` 格、挑起 `lift` 格；
- *       每圈独立掷 `accuracy`，没拍实的圈不伤人但继续转。
+ *   转（lap，提交后）：`laps` 圈。**每一圈在圈首锁定一个起始朝向**，四段各转 90° 拼成同一整圈；新的一圈开始
+ *       时才朝目标方位做有限转向（`tailslapSteer`），所以移动目标也不会把四段扯散。圈内所有非友方各吃一记
+ *       `lash` 接触伤害（先认真实墙面与身体边缘，`WorldGeometry.bodySector` + `blockHit`），随后被沿背离方向
+ *       `hitDisplace` 推开、`hitDisplace` 挑起；每圈独立掷 `accuracy`，没拍实的圈不伤人但继续转。
+ *       每一段只把**当前扫过的那段尾弧**交给表现（同一个 key，旧圈结束即 `stop`），最后一圈留两刻再收。
  *   收（settle）：转停、落回站姿，余尘落定。
  *
  * 与同族分开：乱抓会绕圈换位、乱击是站定定点突刺、骨棒乱打是掷骨夯地；只有扫尾以自身为轴，一次照顾四周，
@@ -36,11 +38,29 @@ namespace PokemonSkills {
         return WorldCombat.point(heading.x() * cosine - heading.z() * sine, 0, heading.x() * sine + heading.z() * cosine);
     }
 
+    /**
+     * 新一圈的起始朝向：只朝 `desired` 有限转向 `limitDegrees`。这样整圈始终是同一个轴上的完整 360°，
+     * 移动目标只让下一圈慢慢跟，不会把同一圈的四段扯成四个方向。
+     */
+    function tailslapSteer(heading: CombatPoint, desired: CombatPoint, limitDegrees: number): CombatPoint {
+        const from = WorldCombat.point(heading.x(), 0, heading.z());
+        const want = WorldCombat.point(desired.x(), 0, desired.z());
+        if (from.length() < 1e-6) return want.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : want.unit();
+        if (want.length() < 0.05) return from.unit();
+        const start = Math.atan2(from.z(), from.x()), goal = Math.atan2(want.z(), want.x());
+        let delta = goal - start;
+        while (delta > Math.PI) delta -= Math.PI * 2;
+        while (delta < -Math.PI) delta += Math.PI * 2;
+        const limit = Math.max(0, limitDegrees) * Math.PI / 180;
+        if (delta > limit) delta = limit; else if (delta < -limit) delta = -limit;
+        return WorldCombat.point(Math.cos(start + delta), 0, Math.sin(start + delta));
+    }
+
     define({
         id: tailslapId,
         cooldownParameter: "recharge",
         name: "Tail Slap",
-        description: "原地旋身，坚硬的尾巴一圈圈扫过身体周围：整圈分四段依次转过，每个敌人每圈各吃一下，并被沿背离方向推开。可以点敌人，也可以只给一个方向或干脆原地转整圈。旋扫式是整圈 360°、一次照顾四周；砸尾式收成前向一段、单圈更重并把人挑起。",
+        description: "原地旋身，坚硬的尾巴一圈圈扫过身体周围：每圈先锁定一个起始朝向、再整圈分四段依次转过，每个敌人每圈各吃一下，并被沿背离方向推开。可以点敌人，也可以只给一个方向或干脆原地转整圈。旋扫式是整圈 360°、一次照顾四周；砸尾式收成前向一段、单圈更重并把人挑起。",
         uses: ["原地旋转，尾巴一圈圈扫过四周所有人", "被围住时一次照顾一整片", "砸尾式只扫前向一面，把伤害集中并挑起来", "不点目标也能以自身为心转完整圈"],
         kind: "aim",
         range: 3.0,
@@ -96,8 +116,11 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.8, radius / 3.0));
             const intensity = Math.max(0.5, Math.min(2.2, power / 30));
             // 旋转是一段持续过程：用 actionScenes 保持到收势；整圈拆成四段依次扫过，不是一次圆爆。
+            // 只用一个 key 承载「当前扫过的那段尾弧」，每段更新它；旧圈结束即 stop，不再把旧象限留在场上。
             const scenes = WorldFeedback.actionScenes(tailslapScene);
             const segmentTicks = 1;
+            // 本圈锁定的起始朝向：提交时取瞄准方向，新圈才做有限转向。
+            let lapHeading = WorldGeometry.flatUnit(aim(action), action.direction());
             let run = 0, landed = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
@@ -126,41 +149,44 @@ namespace PokemonSkills {
                 const self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
                 const origin = self.position();
-                const heading = tailslapHeading(origin, lastSeen(), current.direction());
                 const index = run + 1;
-                // 整圈：四段各转 90°；砸尾式只扫前向一段（arc），不分段。
-                const segmentDir = smash ? heading : tailslapTurn(heading, segment * 90);
+                // 整圈：本圈锁定的朝向 + 段序号×90°；砸尾式只扫前向一段（arc），不分段。
+                const segmentDir = smash ? lapHeading : tailslapTurn(lapHeading, segment * 90);
                 const width = smash ? arc : 90;
                 if (segment === 0) {
                     accurate = scope.random() <= accuracy;
                     sound(current, "minecraft:entity.player.attack.sweep");
                 }
-                scenes.show(current, "lap" + index, origin,
+                scenes.show(current, "sweep", origin,
                     { moment: smash ? "smash" : "lap", index: index, laps: laps, radius: radius, arc: width, dust: dust,
                         direction: [segmentDir.x(), segmentDir.y(), segmentDir.z()],
                         smash: smash ? 1 : 0, intensity: intensity });
                 if (accurate) {
-                    WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, segmentDir, radius, width, band), function (other, facts) {
+                    // 真实扇面 + 真实身体箱相交；墙后与身体边缘外的人扫不到。
+                    WorldGeometry.selectBodies(scope, WorldGeometry.bodySector(origin, segmentDir, radius, width, band), function (other, facts) {
                         const ref = String(other.ref());
-                        if (hits[ref]) return;
+                        if (ref === String(actor.ref()) || hits[ref]) return;
+                        if (facts.friendly()) return;
+                        const contact = scope.closestPoint(other, origin);
+                        if (contact === null || WorldGeometry.blockHit(scope, origin, contact) !== null) return;
                         if (!hurt(current, other, tailslapId, power, { damage: damageSpec(tailslapId, "lash"), contact: true })) return;
                         hits[ref] = true;
                         landed++;
                         const at = facts.position();
-                        let outward = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
-                        outward = outward.length() < 0.05 ? segmentDir : outward.unit();
-                        // 实际位移才算数：控免 Boss 顶不动就只有伤害、不假装挑起。
-                        let lifted = false;
+                        const away = at.minus(origin);
+                        const flat = WorldCombat.point(away.x(), 0, away.z());
+                        // 实际位移才算数：推挑都走原生受击位移，控免 Boss 顶不动就只有伤害、不假装挑起。
+                        let pushed = 0, lifted = 0;
                         if (scope.valid(other)) {
-                            scope.displace(other, outward.scale(push));
-                            if (lift > 0.02) lifted = scope.displace(other, WorldCombat.point(0, lift, 0)) > 0.02;
+                            if (flat.length() > 0.05) pushed = scope.hitDisplace(other, flat.unit().scale(push));
+                            if (lift > 0.02) lifted = scope.hitDisplace(other, WorldCombat.point(0, lift, 0));
                         }
                         WorldFeedback.emit(scope, tailslapScene, 1, at,
                             { moment: "hit", target: ref, index: index, laps: laps, dust: dust,
-                                push: Math.round(push * 100) / 100, scale: scale, intensity: intensity }, 20);
-                        if (lifted)
+                                push: Math.round(pushed * 100) / 100, scale: scale, intensity: intensity }, 20);
+                        if (lifted > 0.02)
                             WorldFeedback.emit(scope, tailslapScene, 1, at,
-                                { moment: "launch", target: ref, index: index, lift: Math.round(lift * 100) / 100, scale: scale }, 20);
+                                { moment: "launch", target: ref, index: index, lift: Math.round(lifted * 100) / 100, scale: scale }, 20);
                         scope.sound("cobblemon:impact.normal", at, 14, "{}");
                     });
                 }
@@ -170,7 +196,14 @@ namespace PokemonSkills {
                     return;
                 }
                 run = index;
-                if (run >= laps) { settle(current); return; }
+                if (run >= laps) {
+                    // 最后一圈的画面留两刻再收，不在同一回调里被 finish 抹掉。
+                    current.after(2, function (next: CombatAction) { settle(next); });
+                    return;
+                }
+                // 旧圈结束：及时停掉本圈尾弧；下一圈按目标方位有限转向后重新起整圈。
+                scenes.stop(current, "sweep");
+                lapHeading = tailslapSteer(lapHeading, lastSeen() || current.direction(), 45);
                 current.after(gap, function (next: CombatAction) { lap(next, 0, {}, false); });
             }
 

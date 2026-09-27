@@ -19,7 +19,7 @@ const JawlockMoveDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "gape", bind: "source", offset: [0, 0.35, 0.3], height: 0.2,
+                    name: "gape", bind: "source", offset: [{ data: "mawX", fallback: 0 }, 0.35, { data: "mawZ", fallback: 0.32 }], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/fang",
                     burst: { count: 2, interval: 3, repeats: 2 },
                     shape: { kind: "box", size: [0.34, 0.14, 0.14] },
@@ -28,7 +28,7 @@ const JawlockMoveDefinition: ParticleDefinition = {
                     color: 0xF2EAD8, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: { data: "maw", fallback: 18 }
                 },
                 {
-                    name: "threat", bind: "source", offset: [0, 0.3, 0.32], height: 0.2,
+                    name: "threat", bind: "source", offset: [{ data: "mawX", fallback: 0 }, 0.3, { data: "mawZ", fallback: 0.32 }], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
                     rate: 8, shape: { kind: "sphere", radius: 0.16 },
                     direction: "inward", speed: [0.01, 0.06],
@@ -101,26 +101,17 @@ const JawlockMoveDefinition: ParticleDefinition = {
                     name: "chain", bind: "path", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     shape: { kind: "polyline" },
-                    rate: { data: "maw", fallback: 12 }, direction: "away", speed: [0.01, 0.05], spread: 12,
+                    rate: { data: "maw", fallback: 12 }, direction: "away", speed: [0.008, 0.03], spread: 8,
                     lifetime: [8, 14], size: [0.06, 0.02], sizeMode: "sin",
-                    color: 0x9A7BFF, alpha: [0.5, 0], light: "world", maxParticles: 70
+                    color: 0x9A7BFF, alpha: [0.45, 0], light: "world", maxParticles: 70
                 },
                 {
-                    name: "gnaw", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
-                    rate: { data: "maw", fallback: 12 }, shape: { kind: "sphere", radius: 0.18 },
-                    direction: "outward", speed: [0.02, 0.1],
-                    lifetime: [6, 12], size: [0.14, 0.03],
-                    color: 0x6E4A8C, alpha: [0.6, 0], light: "world", maxParticles: 50
-                },
-                {
-                    name: "strain", bind: "target", height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 1, interval: 12, repeats: { data: "beats", fallback: 2 } },
-                    shape: { kind: "ring", radius: 0.34 },
-                    direction: "inward", speed: [0.03, 0.08],
-                    lifetime: [8, 14], size: [0.18, 0.06],
-                    color: 0x9A7BFF, alpha: [0.5, 0], light: "full", maxParticles: 24
+                    name: "clamp", bind: "target", fit: "body", height: 0.42,
+                    particle: "world_combat_core:cobblemon/generic/fang",
+                    rate: 2, shape: { kind: "point" },
+                    direction: "up", speed: [0.004, 0.016],
+                    lifetime: [10, 16], size: [0.12, 0.03],
+                    color: 0xF2EAD8, alpha: [0.6, 0], light: "world", maxParticles: 14
                 }
             ]
         },

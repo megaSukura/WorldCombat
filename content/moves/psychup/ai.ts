@@ -41,12 +41,14 @@ namespace CompanionBehavior {
         if (target.health <= 0 || !target.visible) return null;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return null;
         const self = source(context);
-        if (status(context, self, "psychup")) return null;
         if (context.facts.focus !== target.ref && distance(self.point, target.point) > ai<number>(item, "maxChase", 14)) return null;
         if (!world(context).clear(point(self.point), point(target.point))) return null;
         const assessment = psychupAssess(context, item, target);
         // Enemies and companions both qualify; the choice is the real net gain, not merely being different.
-        return assessment && assessment.changed > 0 && assessment.net > 0 ? assessment : null;
+        if (!assessment || assessment.changed <= 0 || assessment.net <= 0) return null;
+        // The "already linked" marker only defers low-value repeats; a clearly better buff still justifies a re-copy.
+        if (status(context, self, "psychup") && assessment.net < 2) return null;
+        return assessment;
     }
 
     registerUse("psychup", {
@@ -70,7 +72,12 @@ namespace CompanionBehavior {
     const psychupStation = PokemonSkills.flag("ai.leaveStation", "驻守时允许离位");
     psychupStation.help = "开启后，驻守中的伙伴也会离位去读对手的架势；关闭则只在原地够得到时出手。";
 
-    PokemonSkills.addPreferences("psychup", { ai: { maxChase: 14, leaveStation: false } }, [psychupChase, psychupStation]);
+    PokemonSkills.addPreferences("psychup", { selective: false, ai: { maxChase: 14, leaveStation: false } }, [
+        PokemonSkills.field(PokemonSkills.pathOf("selective"), "只取增益", "boolean", {
+            help: "开启＝只取增益：只抄对自己有利的项，忽略负面；代价是冷却 +20 刻、标记减半。关闭＝照单全收：对手的每一项都照抄（含负面），冷却更短、标记更长。"
+        }),
+        psychupChase, psychupStation
+    ]);
 
     function psychupCapability(context: WorldBehavior.Context): WorldBehavior.Capability | null {
         const items = ready(context, "world_combat:control");

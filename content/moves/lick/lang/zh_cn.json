@@ -2,7 +2,7 @@
   "worldcombat.skill.lick.summary": "用一条远超普通近战的长舌朝目标snap 出去舔一下：伤害很轻，但出手非常快，目标很可能被这一下麻住；缠绕式还能把它朝身前拽一段。",
   "worldcombat.skill.lick.description.0": "舔中造成约 %1$s 点接触伤害。",
   "worldcombat.skill.lick.description.1": "舌头从嘴前沿选定方向伸出够到 %1$s 格远，前端判定约 %3$s 格粗；被舔中的目标有 %2$s%% 的概率陷入麻痹。可以朝空地空甩，中间隔着墙、掩体或前排的同伴/敌人都会先挡住舌头。",
-  "worldcombat.skill.lick.description.2": "从伸舌到舔中有 %1$s 秒的间隙；缠绕式把目标朝身前拽最多 %2$s 格（被地形挡住时更短）。",
+  "worldcombat.skill.lick.description.2": "从伸舌到舔中有 %1$s 秒的间隙；舌头逐刻探出、碰到第一个身体或墙就停在接触点；缠绕式用原生抗击退把目标朝身前拽最多 %2$s 格（被抗性、地形挡住时更短）。",
   "worldcombat.skill.lick.use.0": "从近战够不到的距离舔一个目标",
   "worldcombat.skill.lick.use.1": "给还没发麻的对手补一下麻痹",
   "worldcombat.skill.lick.use.2": "把舔中的目标朝身前拽一段",

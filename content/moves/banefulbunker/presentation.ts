@@ -1,17 +1,14 @@
 /**
  * 碉堡的客户端表现。
  *
- * 一句话：一座毒壁从脚边鼓起、合拢、钉在释法的那一小块地；壁面渗着毒液；来击在壁面接触点溅开毒浆，
- * 接触者被倒钩从实际接触点滴着毒液灌进身体、身周浮起紫色泡沫；变化招式被毒壁封住，离开原位或量尽时碉堡塌成一滩。
+ * 一句话：一座毒壁从脚边鼓起、合拢，围着自己立成一圈短壁；壁底画着「站住的位置」这一小圈；
+ * 来击在壁缘真实接触侧溅开毒浆，接触者被倒钩从壁缘滴着毒液灌进身体；变化招式被毒壁封住，离开原位或量尽时碉堡塌成一滩。
  * 色相家族：毒紫为主体（ooze／impact_poison／poisonbubble），暗绿与灰烟为中性陪衬。
- * 拍子：起（raise 0–18t，毒浆自下而上鼓成壁）→ 击（block 每次拦截、punish 每次灌毒）→ 收（fall 塌成一滩）。
- * 范围：hold 的毒环按 `data.scale`（碉堡半径／1.6）铺开——画面就是被判定的那一圈。
- * 钉位：raise／hold／block／fall 全部读 `data.point`（raise 与 hold 是原位锚点，block 是实际来袭接触点，
- *      fall 是毒壁原本的位置）并用 `bind:"point"`，所以角色走开时画面不会跟着飘。
- * 运动：起手毒浆上涌并合拢；持壁缓慢起伏；灌毒沿 `data.path`（接触点→攻击者）涌出一条真实毒线，再在攻击者身上炸开。
- * 数：`data.venous`（灌毒时长／40）就是 punish 毒泡的数量，`data.worsen` 决定是否更密更亮，
- *      `data.intensity` 决定持壁亮度，`data.scale` 放大毒环。
- * 参照节：视觉语言第二、三、四、六、七、九节。
+ * 拍子：起（raise 0–18t）→ 守（hold，毒壁＋脚下锚圈）→ 击（block 每次拦截、punish 每次灌毒）→ 收（fall 塌成一滩）。
+ * 几何：hold／raise 的毒壁与锚圈按 `data.radius`（本次碉堡实际半径，世界格）与 `data.anchor`（离位容差）铺开，
+ *      用 `fit:"world"` 保持世界单位，不再把半径当比例二次缩放；`data.scale` 只负责粒子尺寸。
+ * 钉位：raise／hold／block／fall 全部读 `data.point`（原位锚点或实际接触点）并用点绑定，角色走开时画面不跟着飘。
+ * 数：`data.venous` 是 punish 毒泡数量，`data.worsen` 决定是否更密更亮，`data.intensity` 决定持壁亮度。
  */
 const BanefulBunkerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -21,26 +18,35 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "wall", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
+                    // 围自身合拢的短毒壁：世界半径来自本次机制值。
+                    name: "wall", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
-                    rate: 30, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 34, shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.6 }, length: 0.9, thickness: 1 },
                     direction: "up", speed: [0.05, 0.16],
                     lifetime: [12, 22], size: [0.3, 0.06], sizeMode: "index",
                     color: 0x7D4B9E, alpha: [0.9, 0], gravity: 0.05, drag: 0.92,
-                    light: "world", maxParticles: 110
+                    light: "world", maxParticles: 130
                 },
                 {
-                    name: "bubbles", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    name: "bubbles", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: 20, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 20, shape: { kind: "ring", radius: { data: "radius", fallback: 1.6 } },
                     direction: "up", speed: [0.03, 0.12],
                     lifetime: [14, 26], size: [0.16, 0.02],
                     color: 0xA46FC4, alpha: [0.8, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "fumes", bind: "source", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    name: "footing", bind: "source", offset: [0, 0.015, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 8, shape: { kind: "ring", radius: { data: "anchor", fallback: 0.9 } },
+                    direction: "outward", speed: [0.01, 0.04],
+                    lifetime: [10, 18], size: [0.28, 0.05],
+                    color: 0x8E5CB0, alpha: [0.45, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "fumes", bind: "source", offset: [0, 0.04, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    rate: 14, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 14, shape: { kind: "ring", radius: { data: "radius", fallback: 1.6 } },
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [16, 30], size: [0.3, 0.08],
                     color: 0x6B5A78, alpha: [0.35, 0], light: "world", maxParticles: 60
@@ -48,25 +54,35 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             ]
         },
         hold: {
-            // 持续状态：低密度毒环与缓慢上浮的毒泡，钉在锚点（data.point）上，随毒壁托管效果存续。
+            // 持续状态：闭合毒壁＋贴地锚圈，钉在锚点（data.point）上，随毒壁托管效果存续。
             emitters: [
                 {
-                    name: "ooze_ring", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "none",
+                    name: "wall_band", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
-                    rate: 6, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.0, 0.01],
+                    rate: 8, shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.6 }, length: 0.85, thickness: 1 },
+                    direction: "up", speed: [0.0, 0.01],
                     lifetime: [26, 44], size: [0.24, 0.24], sizeMode: "sin",
-                    color: 0x6E4A8C, alpha: [0.35, 0.1], alphaMode: "sin",
-                    light: "world", maxParticles: 22
+                    color: 0x6E4A8C, alpha: [0.4, 0.12], alphaMode: "sin",
+                    light: "world", maxParticles: 30
                 },
                 {
-                    name: "seep", bind: "point", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    name: "seep", bind: "point", offset: [0, 0.03, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
-                    rate: 5, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 5, shape: { kind: "ring", radius: { data: "radius", fallback: 1.6 } },
                     direction: "up", speed: [0.0, 0.02],
                     lifetime: [24, 40], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0xA46FC4, alpha: [0.5, 0.12], alphaMode: "sin",
                     light: "world", maxParticles: 16
+                },
+                {
+                    // 离位阈值：脚下这一小圈就是「站住」的范围，走出即塌。
+                    name: "footing", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 4, shape: { kind: "ring", radius: { data: "anchor", fallback: 0.9 } },
+                    direction: "outward", speed: [0.0, 0.01],
+                    lifetime: [22, 34], size: [0.3, 0.06], sizeMode: "sin",
+                    color: 0x8E5CB0, alpha: [0.3, 0.06], alphaMode: "sin",
+                    light: "world", maxParticles: 14
                 }
             ]
         },
@@ -107,7 +123,7 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    // 毒线沿 data.path（壁面实际接触点 → 攻击者）滴过去，端点是活体引用，随它移动。
+                    // 毒线沿 data.path（壁缘实际接触点 → 攻击者）滴过去，端点是活体引用，随它移动。
                     name: "venom_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: { data: "venous", fallback: 8 } }, shape: { kind: "polyline" },
@@ -148,10 +164,10 @@ const BanefulBunkerDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "seal", bind: "target", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    name: "seal", bind: "target", offset: [0, 0.03, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
                     burst: { count: 24 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.6 } },
                     direction: "outward", speed: [0.08, 0.22],
                     lifetime: [10, 18], size: [0.5, 0.1],
                     color: 0x8E5CB0, alpha: [0.55, 0], light: "world"

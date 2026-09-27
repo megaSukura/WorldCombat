@@ -1,11 +1,11 @@
 /**
  * 龙锤 / dragonhammer 的客户端表现。
  *
- * 一句话：施法者弓身扬起、龙气沿身体向上收拢，随后从身体前上端落下一道宽大的龙纹锤影，沿真实垂直弧砸到接触点，
- *   命中一声闷响、目标被撞开，只留一小片短尘；没砸中就只有一点落空尘。
+ * 一句话：施法者弓身扬起、龙气沿身体向上收拢，随后从身体可达的举锤起点沿真实垂直弧抡下，弧头是一枚连续可见的龙气锤头、
+ *   身后拖出一道锤影，砸到接触点即止；命中一声闷响、目标被撞开，只留一小片短尘；没砸中就只有一点落空尘。
  * 色相家族：龙紫（0x7078C8 / 0x9A7BE0 / 0xC9B4F2）为主体，近白只做砸中一刻的核心。
- * 拍子：起（rear 弓身聚龙气）→ 砸（swing 锤影沿真实弧逐刻扫过、与判定同一条路径）→ 落（impact 接触点闷响／whiff 落空短尘）。
- * 范围：swing 的锤影绑 `data.path`（本刻真正扫过的那一段弧），命中绑真实接触点，不做全身乱球或圆爆。
+ * 拍子：起（rear 弓身聚龙气）→ 砸（swing 锤头绑本刻实际到达点、streak 沿本刻实际扫过的弧段）→ 落（impact 接触点闷响／whiff 落空短尘）。
+ * 范围：swing 的锤影绑 `data.path`（本刻真正扫过的那一段弧），锤头绑条目位置（判定不过、展示剩余段），命中绑真实接触点，不做全身乱球或圆爆。
  * 运动：龙气起手时向上收拢；swing 的锤影沿弧逐刻向下；碎屑带重力短促散落。
  * 数：`data.dust`（体重与物攻派生）决定接触碎屑量，`data.scale`（体型派生）控制尺寸，
  *   `data.intensity`（本击威力派生）抬高命中亮度。
@@ -40,12 +40,20 @@ const DragonhammerDefinition: ParticleDefinition = {
             exit: { drain: 8 },
             emitters: [
                 {
-                    name: "shadow", bind: "path", fit: "none", offset: [0, 0, 0],
+                    name: "head", bind: "point", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/orb/energyorb",
+                    rate: 12, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.02, 0.08], spread: 12,
+                    lifetime: [4, 8], size: [0.6, 0.14], sizeMode: "index",
+                    color: 0x9A7BE0, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 60
+                },
+                {
+                    name: "streak", bind: "path", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
                     shape: { kind: "polyline" },
-                    rate: 60, direction: "outward", speed: [0.02, 0.1], spread: 10,
-                    lifetime: [5, 10], size: [0.52, 0.1], sizeMode: "index",
-                    color: 0x9A7BE0, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 120
+                    rate: 40, direction: "outward", speed: [0.02, 0.1], spread: 10,
+                    lifetime: [5, 10], size: [0.4, 0.08], sizeMode: "index",
+                    color: 0x7078C8, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
                     name: "edge", bind: "path", fit: "none", offset: [0, 0, 0],

@@ -13,8 +13,12 @@
  *       预震期间离开地面就能躲开接下来的结算（原地、不改方块）。
  *   震（shake → hit）：预震约 6 刻后，按这一次掷出的震级单次结算，圈里每个站在地上的非友方
  *       各挨 `quake × 震级系数`，被上颠 `jolt`、沿离中心方向踉跄 `stagger` 格。
- *   断（stagger）：震级 ≥ `fracture` 时，被震到的人正在进行的动作被中断（world_combat:interrupt）。
+ *   断（stagger）：震级 ≥ `fracture` 时，向被震到的人派送一次普通、尊重 interruptible 的中断请求；
+ *       只在拿回“确实结束了动作”的回执时才计数并亮出断招表现，普通怪没有本作动作就只吃伤害与位移、不假报断招。
  *   收（miss）：圈里没人站在地上就只收势扬尘，不扬强尘。
+ *
+ * 地面资格与地震同一条有界同层连续实地：从施法者脚面到受体脚面分段检查原生地表支撑，允许约一格高差/台阶，
+ * 遇无支撑间隙、悬台或另一楼层即不震；起点与表现都在真实脚面支撑上。
  *
  * 震级掷定（原生 100 面骰的比例，深源式整体 +1）：
  *   4 → 5% / 5 → 10% / 6 → 20% / 7 → 30% / 8 → 20% / 9 → 10% / 10 → 5%；
@@ -28,6 +32,22 @@ namespace PokemonSkills {
     const magnitudeTellText = "world_combat.move.magnitude.text.tell";
     /** 掷出震级到实际落震之间的预震时长（刻）：短到可躲，也足够读出强弱。 */
     const magnitudePresageTicks = 6;
+
+    /**
+     * 有界同层连续实地：与地震同一套判定。从 `from` 真实支撑面沿水平方向走到 `to`，分段检查原生地表支撑，
+     * 允许每步约一格高差与台阶，遇无支撑间隙或高差超限即 false；不认 ground 的兜底点、不跨悬台或另一楼层。
+     */
+    export function magnitudeGroundLink(world: CombatWorld, from: CombatPoint, to: CombatPoint): boolean {
+        const start = SurfacePaths.support(world, from, 0.6, 2);
+        const end = SurfacePaths.support(world, to, 0.6, 2);
+        if (start === null || end === null) return false;
+        const dx = end.x() - start.x(), dz = end.z() - start.z();
+        const distance = Math.sqrt(dx * dx + dz * dz);
+        if (distance < 0.75) return Math.abs(end.y() - start.y()) <= 1.05;
+        const walked = SurfacePaths.advance(world, start, WorldCombat.point(dx, 0, dz), distance,
+            { up: 1, down: 1, spacing: 0.5, samples: Math.ceil(distance / 0.5) + 2 });
+        return !walked.ended && Math.abs(walked.point.y() - end.y()) <= 1.05;
+    }
 
     /** 原生 `onModifyMove` 的 100 面骰；深源式整体 +1（下限抬高、期望更高）。 */
     function magnitudeRoll(world: CombatWorld, fault: boolean): number {
@@ -81,15 +101,27 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            action.present("magnitude:brace", magnitudeScene, 1, action.origin(),
-                JSON.stringify({ moment: "brace", fault: config && config.fault === true }));
+            // 预告落在真实脚面支撑上，并带上这一次的真实震幅与一次性缩放，不再固定在 3.8。
+            const radius = Math.max(2.6, p("magnitude", "shudder", action));
+            const world = action.sense();
+            const body = world.observe(action.actor());
+            const feet = body !== null
+                ? WorldCombat.point(body.position().x(), body.boundsMin().y(), body.position().z())
+                : action.origin();
+            const centre = SurfacePaths.support(world, feet, 0.6, 3) || feet;
+            action.present("magnitude:brace", magnitudeScene, 1, centre,
+                JSON.stringify({ moment: "brace", radius: radius, scale: radius / 3.8, fault: config && config.fault === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const scene = WorldFeedback.actionScenes(magnitudeScene, 1);
             const world = action.world();
             const body = world.observe(action.actor());
-            const centre = body !== null ? body.position() : action.origin();
+            // 起点用真实脚面支撑，震幅圈与扬尘都贴在地面上。
+            const feet = body !== null
+                ? WorldCombat.point(body.position().x(), body.boundsMin().y(), body.position().z())
+                : action.origin();
+            const centre = SurfacePaths.support(world, feet, 0.6, 3) || feet;
             const radius = Math.max(2.2, p("magnitude", "shudder", action));
             const base = p("magnitude", "quake", action);
             const jolt = p("magnitude", "jolt", action);
@@ -118,21 +150,29 @@ namespace PokemonSkills {
                 settled = true;
                 scene.stop(current, "presage");
                 const scope = current.world();
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 2, above: 1.5 }),
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 1.5, above: 2 }),
                     function (enemy, facts) {
                         if (hits >= cap) return;
                         if (!facts.grounded()) return;
+                        // 与起点同层连续实地才震；隔断、悬台或另一楼层不震。
+                        const targetFeet = WorldCombat.point(facts.position().x(), facts.boundsMin().y(), facts.position().z());
+                        if (!magnitudeGroundLink(scope, centre, targetFeet)) return;
                         if (!hurt(current, enemy, "magnitude", power, { damage: damageSpec("magnitude", "quake") })) return;
                         hits++;
+                        // 纯上/下目标只免掉水平踉跄；先量水平长度再 unit，绝不对零向量求单位。
                         const away = facts.position().minus(centre);
+                        const flat = WorldCombat.point(away.x(), 0, away.z());
                         if (scope.valid(enemy)) {
-                            if (away.length() > 0.2) scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(stagger));
+                            if (flat.length() > 0.2) scope.hitDisplace(enemy, flat.unit().scale(stagger));
                             if (jolt > 0) scope.hitImpulse(enemy, WorldCombat.point(0, jolt, 0));
                             if (magnitude >= fracture) {
-                                scope.deliver(enemy, "world_combat:interrupt");
-                                broken++;
-                                WorldFeedback.emit(scope, magnitudeScene, 1, facts.position(),
-                                    { moment: "stagger", target: String(enemy.ref()), magnitude: magnitude, scale: scale }, 24);
+                                // 只在拿回真实动作结束回执时计打断；普通怪没有本作动作就返回 0，不假报断招。
+                                const ended = LivingActions.requestInterrupt(scope, enemy);
+                                if (ended > 0) {
+                                    broken += ended;
+                                    WorldFeedback.emit(scope, magnitudeScene, 1, facts.position(),
+                                        { moment: "stagger", target: String(enemy.ref()), magnitude: magnitude, scale: scale }, 24);
+                                }
                             }
                         }
                         WorldFeedback.emit(scope, magnitudeScene, 1, facts.position(),

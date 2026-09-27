@@ -1,17 +1,17 @@
 /**
  * 假哭 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者眼角憋出一线水光 → 一串假泪沿视线甩到对手脸上、在它眼前炸开一圈昏暗的涟漪 →
- *   对手护住特防的那层劲松开，眼角还挂着没干的假泪。
+ * 一句话：施法者眼角憋出一线水光 → 眼泪就在原地扑簌而落，对手看见这出戏、愣了一下、松开特防 →
+ *   目标眼角还挂着没干的假泪。
  *
  * 色相家族：淡天蓝（0x8FB8E8／0x6F9BD0）与近白（0xEAF3FC）为主体，被松防的那一记掺入低饱和的暗紫灰
  *   （0x5A5570，来自骗术的 Dark 属性）；没有别的色相。
- * 层次：眼角水光（起手）→ 沿视线的泪线＋近身泪珠（击）→ 对手身上的暗爆与松开的涟漪（结果）→
+ * 层次：眼角水光（起手）→ 原地涌出的假泪（击）→ 目标身上的暗爆与松开的涟漪（迟疑回执）→
  *   眼角余泪（持续）→ 被挡住时的散点（反制读法）。
- * 起击收：windup（憋泪）→ feign（泪线飞过去）→ fluster（对手特防松开、短收势）→ linger（余泪慢慢离场）。
- * 范围：泪线用 `data.path` 的两端（施法者与目标）画出，就是这一次视线真正连起的那条线。
- * 运动：假泪沿视线从施法者甩到目标；松开特防的涟漪从目标身上向外散，不画任何脚边锁圈。
- * 数：泪线密度与近身泪珠绑 `data.tears`（体型与亲近度派生），暗爆数量绑 `data.hearts`（掉级派生）。
+ * 起击收：windup（憋泪）→ feign（站在原地挤泪）→ fluster（目标看见后迟疑、特防松开）→ linger（余泪慢慢离场）。
+ * 范围：全部绑在施法者与目标各自的真实身体上，不画一条假装泪水飞过去的整段连线。
+ * 运动：眼泪留在施法者脸上向下跌；松防的涟漪从目标身上向外散，不画任何脚边锁圈。
+ * 数：近身泪珠绑 `data.tears`（体型与亲近度派生），暗爆数量绑 `data.hearts`（掉级派生）。
  */
 const FakeTearsDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -42,14 +42,6 @@ const FakeTearsDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 10, drain: 18 },
             emitters: [
-                {
-                    name: "tear_arc", bind: "path", height: 0.8,
-                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
-                    shape: { kind: "polyline" },
-                    rate: { data: "tears", fallback: 16 }, direction: "shape", speed: [0.04, 0.14], spread: 8,
-                    lifetime: [8, 16], size: [0.13, 0.03], sizeMode: "index",
-                    color: 0x8FB8E8, alpha: [0.8, 0], light: "full", maxParticles: 90
-                },
                 {
                     name: "tear_well", bind: "source", offset: [0, 0.4, 0], height: 0.86,
                     particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",

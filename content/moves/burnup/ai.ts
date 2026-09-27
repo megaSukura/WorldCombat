@@ -24,7 +24,9 @@ namespace PokemonSkills {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
         ready: function (context, capability) {
-            return !CompanionBehavior.status(context, CompanionBehavior.source(context), "burned_out");
+            const world = CompanionBehavior.world(context);
+            const actor = world.actor(String(CompanionBehavior.source(context).ref));
+            return actor !== null && burnupHasFireNow(world, actor);
         },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;

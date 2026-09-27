@@ -1,8 +1,8 @@
 /**
  * 打鼾 / snore 的客户端表现。
  *
- * 一句话：睡着的身体在口鼻边冒出一圈睡泡，随后一道苍白的声波束朝对手喷出、沿途铺开一圈圈气环与 Z 字，
- * 命中处炸开一圈声浪；被震懵的人头上晃星。
+ * 一句话：睡着的身体在口鼻边冒出一圈睡泡（Z 字只留在源体上，标明它还在睡），随后一道苍白的声波束瞬时朝对手
+ * 喷出、沿整段铺开一圈圈气环，命中处炸开一圈声浪；被震懵的人头上晃星（那是真实畏缩，不是给目标上睡眠）。
  * 色相家族：睡梦的苍蓝与近白（sleep_bubble / sleep_zzz / sonicboom / mediumring），灰蓝只做余韵。
  * 拍子：起（windup 聚睡泡）→ 鼾（blast 声波束、miss 散掉）→ 击（hit 炸开声浪）→ 懵（flinch 晃星）。
  * 范围：blast 沿机制给的 path 画出声波走过的整段线（同一组顶点来自服务端 trace 的嘴到实际接触点，
@@ -59,13 +59,13 @@ const SnoreDefinition: ParticleDefinition = {
                     color: 0xE8F4FF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 70
                 },
                 {
-                    name: "zeds", bind: "path", fit: "none",
+                    name: "zeds", bind: "source", offset: [0, 0.45, 0], height: 0.5, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/status/sleep_zzz", spriteFrom: "random",
-                    burst: { count: 6, interval: 2, repeats: 2 },
-                    shape: { kind: "polyline" },
-                    direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.14, 0.03],
-                    color: 0xCFE6FF, alpha: [0.85, 0], light: "world", maxParticles: 24
+                    burst: { count: 4, interval: 3, repeats: 2 },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "up", speed: [0.02, 0.07],
+                    lifetime: [12, 20], size: [0.13, 0.03],
+                    color: 0xCFE6FF, alpha: [0.85, 0], light: "world", maxParticles: 20
                 }
             ]
         },
@@ -90,15 +90,6 @@ const SnoreDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.22],
                     lifetime: [10, 16], size: [0.3, 0.8],
                     color: 0xBFD4E6, alpha: [0.7, 0], light: "full", maxParticles: 4
-                },
-                {
-                    name: "hit_zeds", bind: "point", fit: "none", offset: [0, 0.42, 0],
-                    particle: "world_combat_core:cobblemon/generic/status/sleep_zzz", spriteFrom: "random",
-                    burst: { count: 5, interval: 3, repeats: 2 },
-                    shape: { kind: "sphere", radius: 0.25 },
-                    direction: "up", speed: [0.02, 0.06],
-                    lifetime: [12, 20], size: [0.12, 0.03],
-                    color: 0xCFE6FF, alpha: [0.8, 0], light: "world", maxParticles: 14
                 }
             ]
         },

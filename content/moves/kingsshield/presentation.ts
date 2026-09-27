@@ -1,4 +1,5 @@
-/** A fixed front-facing plate with native-contact sparks and one punishment flash per attacker. */
+/** A fixed front-facing plate: a filled, outlined shield face whose brightness tracks the remaining pool,
+ *  with sparks landing on the shield's real contact point and one punishment flash per attacker. */
 const KingShieldDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -33,17 +34,29 @@ const KingShieldDefinition: ParticleDefinition = {
             ]
         },
         hold: {
-            emitters: [{ name: "sheet_outline", bind: "path", fit: "none",
-                particle: "world_combat_core:cobblemon/generic/screen_color", rate: 24,
-                shape: { kind: "polyline" }, direction: "up", speed: [0, .002],
-                lifetime: [8, 12], size: [.16, .12], color: 0x8FA0B4, alpha: [.55, .15], light: "world", maxParticles: 36 }]
+            emitters: [
+                {
+                    name: "sheet_fill", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/screen_color", rate: 20,
+                    shape: { kind: "polygon" }, direction: "up", speed: [0, .002],
+                    lifetime: [8, 12], size: [.3, .26], color: 0x8FA0B4,
+                    alpha: [{ data: "intensity", fallback: .4 }, 0], light: "world", maxParticles: 48
+                },
+                {
+                    name: "sheet_outline", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/screen_color", rate: 28,
+                    shape: { kind: "polyline" }, direction: "up", speed: [0, .002],
+                    lifetime: [8, 12], size: [.16, .12], color: 0xAEBBCB,
+                    alpha: [{ data: "intensity", fallback: .55 }, .15], light: "world", maxParticles: 48
+                }
+            ]
         },
         block: {
             duration: 22,
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "clang", bind: "target", height: 0.55, fit: "none", orient: "direction",
+                    name: "clang", bind: "point", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: 14, at: 1 }, shape: { kind: "arc", radius: 0.6, arcDegrees: 120 },
                     direction: "outward", speed: [0.07, 0.22],
@@ -51,7 +64,7 @@ const KingShieldDefinition: ParticleDefinition = {
                     alpha: [1, 0], light: "full", bloom: 0.35
                 },
                 {
-                    name: "sparks", bind: "target", height: 0.55, fit: "none", orient: "direction",
+                    name: "sparks", bind: "point", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: 26 },
                     shape: { kind: "arc", radius: 0.6, arcDegrees: 150 },
@@ -60,7 +73,7 @@ const KingShieldDefinition: ParticleDefinition = {
                     color: 0xFFE9A8, alpha: [0.9, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "recoil", bind: "target", height: 0.55, fit: "none",
+                    name: "recoil", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/hit_yellow",
                     burst: { count: 6, at: 1 }, shape: { kind: "sphere_surface", radius: 0.35 },
                     direction: "outward", speed: [0.05, 0.16],

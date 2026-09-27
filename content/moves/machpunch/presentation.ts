@@ -1,13 +1,15 @@
 /**
  * 音速拳 / machpunch 的客户端表现。
  *
- * 一句话：拳锋在身前收拢成一记拳影，随后拳尖细闪先到、真实接触点只亮一小点；成功命中后极短一拍，
- *   在同一接触点炸开一道向前推开的压缩空气小环与一记直拳的光影，环与拳影都向外一翻就散；
+ * 一句话：拳锋在身前收拢成一记拳影，随后从体侧到真实接触点即时画出一条短拳迹、拳尖细闪先到；成功命中后极短一拍，
+ *   在同一接触点炸开一道沿拳向展开的压缩空气小环与一记直拳的光影，环与拳影都向外一翻就散；
  *   伤害被拒时同一接触点只收拢一圈黯淡的格挡微光，不报伤害；挥空时拳程终点只有一道没打中人的空环迅速消散。
  * 色相家族：暖琥珀（0xFFF0D0 / 0xF2A65A）做拳影，近白的冷蓝白（0xEAF2FF）只做音爆环，格挡用中性灰（0xC6CED9），没有第二组饱和色。
- * 拍子：起 chamber（收拳聚力）→ 触 contact（拳尖细闪）→ 爆 boom（延后 1–2 刻的小冲环 + 拳影）／挡 blocked（格挡微光）→ 收 whiff（空环消散）。
- * 范围：boom／blocked／contact 都绑真实接触点（`data.point`），目标倒下或移开也停在打中的位置；whiff 绑射线真实终点（墙则停在墙面）。
- * 运动：起手是向内收拢的拳影，命中是横向推开的一圈短音爆与被拳风带飞的小碎点，挥空是一圈向内塌掉的空气。
+ * 拍子：起 chamber（收拳聚力）→ 触 contact（拳迹 + 拳尖细闪）→ 爆 boom（延后 1–2 刻的小冲环 + 拳影）／挡 blocked（格挡微光）→ 收 whiff（空环消散）。
+ * 范围：contact 的拳迹用 `data.path`（体侧到真实接触点），boom／blocked／contact 的环都绑真实接触点（`data.point`），
+ *   目标倒下或移开也停在打中的位置；whiff 绑射线真实终点（墙则停在墙面）。
+ * 运动：起手是向内收拢的拳影，命中是沿 `data.direction` 展开的一圈短音爆与被拳风带飞的小碎点，挥空是一圈向内塌掉的空气。
+ * 音爆环的形状尺度保持世界格：`data.boom` 只缩放一次，不再叠乘 `data.scale`。
  * 数：boom 的碎点数量绑定 `data.count`（拳威力换算），音爆环碎点与 blocked 的格挡光点绑定 `data.ring`（速度换算），
  *   环的尺度绑定 `data.boom`（速度换算），亮度绑定 `data.intensity`（拳威力 / 60）。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -42,6 +44,14 @@ const MachpunchDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 8 },
             emitters: [
                 {
+                    name: "trace", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    shape: { kind: "polyline" },
+                    rate: 34, direction: "shape", speed: [0.04, 0.16], spread: 6,
+                    lifetime: [3, 7], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xFFF0D0, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 44
+                },
+                {
                     name: "tip", bind: "point", fit: "none", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: 4, at: 0 },
@@ -57,7 +67,7 @@ const MachpunchDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "shock", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "shock", bind: "point", fit: "world", orient: "direction", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: { data: "boom", fallback: 0.7 } },
@@ -75,7 +85,7 @@ const MachpunchDefinition: ParticleDefinition = {
                     color: 0xFFF0D0, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 4
                 },
                 {
-                    name: "driven", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "driven", bind: "point", fit: "world", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "count", fallback: 16 }, at: 0 },
                     shape: { kind: "sphere_surface", radius: { data: "boom", fallback: 0.7 } },
@@ -90,7 +100,7 @@ const MachpunchDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {
-                    name: "guard", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "guard", bind: "point", fit: "world", orient: "direction", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: { data: "boom", fallback: 0.7 } },
@@ -114,7 +124,15 @@ const MachpunchDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    name: "empty", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "trace", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    shape: { kind: "polyline" },
+                    rate: 22, direction: "shape", speed: [0.03, 0.12], spread: 8,
+                    lifetime: [3, 6], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0xEAF2FF, alpha: [0.5, 0], light: "full", bloom: 0.2, maxParticles: 30
+                },
+                {
+                    name: "empty", bind: "point", fit: "world", orient: "direction", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: { data: "boom", fallback: 0.7 } },

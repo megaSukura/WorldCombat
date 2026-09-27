@@ -7,8 +7,8 @@
  *   轻身窗口内重力属性被下调——身体真的变轻了。
  *   随后用命令清除这次状态（与牛奶、/effect clear 同一条原生移除路径）：mark 锚定 carrier，
  *   状态一没，重力立即归还，且共享身份确实消失。
- * 外壳现在是短寿命、不可拾取的 WorldBodies，不产生原版资源；具体片数、外观与提速等级取体重与随机数，
- *   写进 note 供读轨迹判断，不作为断言。
+ * 外壳现在是短寿命、不可拾取、targetable:false 的装饰性 WorldBodies（不参与战斗碰撞），不产生原版资源；
+ *   具体抛出的片数、外观与随机速度写进 note 供读轨迹判断，不作为断言。速度等级按实际 boost 回执写入公共阶梯。
  */
 Smoke.scenario("autotomize", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -27,6 +27,7 @@ Smoke.scenario("autotomize", function (stage) {
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/lightened"), "the light window carried the shared identity");
         stage.expect(stage.attribute(caster, "minecraft:generic.gravity") < baseGravity - 0.0001,
             "the light window reduced the caster's gravity");
+        stage.expect((stage.stages(caster)["spe"] || 0) >= 2, "the caster's Speed ladder actually rose");
         var lightGravity = stage.attribute(caster, "minecraft:generic.gravity");
         // Clearing the carrier the way milk does must return gravity at once: the mark is anchored to this MobEffect.
         stage.command("effect clear @e[type=cobblemon:pokemon,limit=1,sort=nearest,distance=..12]");

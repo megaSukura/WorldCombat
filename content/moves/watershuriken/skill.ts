@@ -107,7 +107,8 @@ namespace PokemonSkills {
                 pending++;
                 sound(current, "cobblemon:move.watergun.actor");
                 WorldFeedback.emit(scope, watershurikenScene, 1, origin,
-                    { moment: "volley", index: index, stars: stars, sparks: sparks, scale: scale, intensity: intensity, focused: focused ? 1 : 0 }, 16);
+                    { moment: "volley", index: index, stars: stars, sparks: sparks, scale: scale, intensity: intensity, focused: focused ? 1 : 0,
+                        direction: [direction.x(), direction.y(), direction.z()], muzzleX: direction.x() * 0.35, muzzleZ: direction.z() * 0.35 }, 16);
                 const flight = current.projectile(origin, direction.scale(velocity), 0, radius, reach, lifetime,
                     function (inner: CombatAction, hit: CombatImpact): void {
                         const scope2 = inner.world(), at = hit.position(), struck = hit.target();
@@ -118,14 +119,15 @@ namespace PokemonSkills {
                             { moment: "hit", target: String(struck.ref()), index: index, stars: stars, sparks: sparks, scale: scale, intensity: intensity }, 22);
                         scope2.sound("cobblemon:impact.water", at, 12, "{}");
                         if (scope2.valid(struck))
-                            CombatStatus.apply(scope2, struck, "soaked", watershurikenSoakedEffect, drench, 0, { unique: true });
+                            // 只刷新本单元的湿身载体，不用 unique 清掉 chillingwater 等更重生产者的额外减速；身份 soaked 仍可统一读。
+                            CombatStatus.apply(scope2, struck, "soaked", watershurikenSoakedEffect, drench, 0);
                     },
                     function (inner: CombatAction): void {
                         pending--;
                         scenes.stop(inner, "fly:" + index);
                         maybeFinish(inner);
                     },
-                    JSON.stringify({ sprite: "cobblemon:generic/star", tint: 0x6FC7EF, glow: true,
+                    JSON.stringify({ sprite: "cobblemon:generic/star", tint: 0x6FC7EF, glow: true, spin: 36,
                         scale: Math.max(0.5, Math.min(1.2, radius / 0.35)) }));
                 scenes.show(current, "fly:" + index, origin,
                     { moment: "fly", projectile: flight, sparks: sparks, scale: scale, intensity: intensity });

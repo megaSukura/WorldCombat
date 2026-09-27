@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.acid.summary": "Lob a glob of harsh acid: on a hit it finds the nearest legal support and spreads, splashing every enemy around the landing spot and leaving a corrosive pool that keeps biting anyone who stays. It can also be aimed at an empty point with no enemy selected, and it only scatters when no support is found. On hit it may lower the target's Sp. Def by 1 stage.",
+  "worldcombat.skill.acid.summary": "Lobs a glob of harsh acid whose arc is solved to the aim point: a living target it strikes takes one hit at once. If the impact reaches a real collidable surface, the acid spreads over the landing point, splashes every reachable enemy around it and leaves a corrosive pool that keeps biting anyone who stays. It can also be aimed at an empty point with no enemy selected; a landing that is airborne or only flowers/liquid scatters without leaving a pool. On hit it may lower the target's Sp. Def by 1 stage.",
   "worldcombat.skill.acid.use.0": "Splash everyone around a landing spot at close range",
   "worldcombat.skill.acid.use.1": "Leave a lingering pool to lock down a patch of ground",
   "worldcombat.skill.acid.use.2": "Wear down Sp. Def with the cheapest cast",
-  "worldcombat.skill.acid.description.0": "The glob bursts and deals about %1$s special damage to every enemy around the landing spot, once each.",
-  "worldcombat.skill.acid.description.1": "The acid spreads over %1$s blocks around the landing spot; acid that hits a wall drips to the nearest legal support, and with no support it only scatters without leaving a pool.",
+  "worldcombat.skill.acid.description.0": "The living target the glob strikes directly takes one hit for about %1$s special damage (an airborne hit counts too); once it lands on a real support, every reachable enemy around the landing spot takes the same hit as well.",
+  "worldcombat.skill.acid.description.1": "The acid spreads over %1$s blocks around the landing spot and does not reach through walls; support is the nearest collidable surface below the impact, side hits step along the outward normal to the wall foot, and non-colliding surfaces like flowers and liquid do not count. With no support (airborne) it only scatters without leaving a pool.",
   "worldcombat.skill.acid.description.2": "The pool left on the ground deals %1$s damage to every enemy inside it, lasting %2$s and biting once every %3$s.",
   "worldcombat.skill.acid.description.3": "Each enemy splashed has a %1$s chance to have its Sp. Def lowered by %2$s stage(s), so it takes more special damage afterwards.",
   "worldcombat.skill.acid.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -22,11 +22,11 @@
   "worldcombat.skill.acid.value.drops": "Acid drops",
   "worldcombat.skill.acid.value.tempo": "Wind-up",
   "worldcombat.skill.acid.preference.corrode": "Corrode",
-  "worldcombat.skill.acid.preference.corrode.help": "On: pool radius ×1.25, duration +30 ticks, each tick ×1.4, +1 tick wind-up and +6 ticks cooldown, but the burst ×0.85 — good for locking ground down. Off: a harder burst and a smaller pool for hurting a group.",
+  "worldcombat.skill.acid.preference.corrode.help": "On: pool radius ×1.25, duration +30 ticks, +1 tick wind-up and +6 ticks cooldown, but the burst ×0.85 — good for locking ground down. Off: a harder burst and a smaller pool for hurting a group.",
   "worldcombat.skill.acid.preference.ai.maxChase": "Splash distance",
   "worldcombat.skill.acid.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it open with acid from further away.",
   "worldcombat.skill.acid.preference.ai.crowd": "Aim at crowds",
-  "worldcombat.skill.acid.preference.ai.crowd.help": "On: when other enemies stand within 3 blocks of the target it prefers acid, so the splash and pool bite more. Off: it sorts like an ordinary close-range attack.",
+  "worldcombat.skill.acid.preference.ai.crowd.help": "On: when the target stands on reachable ground, is not already covered by a pool, and other enemies stand within the real splash radius, it prefers acid; airborne targets stay selectable but score only the direct hit. Off: it sorts like an ordinary close-range attack.",
   "world_combat.move.acid.text.sunder": "Sp. Def -%1$s",
-  "worldcombat.skill.acid.corrode.note": "With corrode on, the pool spreads wider, lasts longer and bites harder each tick, but the burst is lighter; with it off the burst hits harder and the pool is smaller."
+  "worldcombat.skill.acid.corrode.note": "With corrode on, the pool spreads wider and lasts longer, but the burst is lighter; with it off the burst hits harder and the pool is smaller."
 }

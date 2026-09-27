@@ -76,7 +76,7 @@ Smoke.scenario("waterpledge", function (stage) {
                 stage.expect(waterpledgeAiLead, "an actual grass seal makes water prefer a supported wetland point across the native short route");
             stage.expect(stage.damageTo(foe) > 0, "the water pillar dealt damage");
             stage.expect(stage.travelled(foe) > 0, "the surge pushed the target");
-            stage.note("水柱命中与推开是必然；命中几个、暴击、推开多远、誓约印停留与共鸣由局面决定。单水不施加拖慢（拖慢只在共鸣湿地）、也不替换地表方块；共鸣需要另一元素（火／草）的誓约印在落点附近，单招场景里无法合法制造，故不在此断言", {
+            stage.note("水柱命中与推开是必然；命中几个、暴击、推开多远、誓约印停留与共鸣由局面决定。水柱贴落点下方的真实地面涌起、撞到上方方块就停在接触面，柱内敌人沿离柱心方向被推开（站在柱心正上方时退回施法朝向）。单水不施加拖慢（拖慢只在共鸣湿地）、也不替换地表方块；共鸣需要另一元素（火／草）同阵营、尚未组合且通路无阻的誓约印在落点附近，并会当场消费那枚印，单招场景里无法合法制造，故不在此断言；湿地只对真正触地的敌人尝试陷住，跳起或控制被拒绝时只留拖慢", {
                 casts: stage.casts("waterpledge", caster),
                 foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,
                 travelled: Math.round(stage.travelled(foe) * 10) / 10

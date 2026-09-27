@@ -29,8 +29,10 @@
   "worldcombat.skill.swallow.preference.ai.minLayers.help": "How many layers to bank before swallowing; three heals completely, and the default of two matches Stockpile's own default hoard.",
   "worldcombat.skill.swallow.preference.ai.emergency": "Gulp when critical",
   "worldcombat.skill.swallow.preference.ai.emergency.help": "On: below the cash-out ratio, swallow even a single layer to survive. Off: do not swallow under the minimum layers and keep banking.",
-  "world_combat.move.swallow.text.gulp": "Swallow (%1$s layers -> restore %2$s%%)",
-  "world_combat.move.swallow.text.sip": "Sipping (%1$s layers -> restore %2$s%% total)",
+  "world_combat.move.swallow.text.gulp": "Swallow (%1$s layers, %2$s restored)",
+  "world_combat.move.swallow.text.sip": "Sipping (%1$s layers, %2$s total)",
+  "world_combat.move.swallow.text.full": "Swallow (%1$s layers, already full)",
+  "world_combat.move.swallow.text.denied": "Swallow blocked (%1$s layers lost)",
   "effect.world_combat.swallowed": "Swallowed",
   "worldcombat.skill.swallow.description.layers": "The heal depends on the layers actually held when swallowed: each layer restores 18%%-32%% of max HP based on Special Defence and weight, and a full three layers adds another step, up to a full heal; it never exceeds the health you are missing. Swallowing also takes back the Defence and Special Defence the charge granted."
 }

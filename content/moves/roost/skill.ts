@@ -4,10 +4,12 @@
  * 核心念头：收拢双翼落回地面，贴着地把回复一口一口歇回来；歇着的时候它飞不起来，也就是最容易被抓住的一段。
  *
  * 出手：共享节奏。windup（提交前）只播预告——脚边气流先向下压，告诉对手「它要落地了」；准备可被打断，不花代价。
- * 落地（land，提交后）：扬尘与羽尘一圈铺开，给自己挂共享身份 world_combat:status/roosting（本单元效果
- *   world_combat:roosting），并在栖息窗口里失去飞行属性（NativeModifiers，对宝可梦生效）。
- * 栖息（rest）：把 heal 分成 chunks 段，每段间隔交付；每段前确认身份还在——身份被牛奶／`/effect clear` 提前清掉，
- *   或施法者离场，就按已交付的比例收尾（broken）。
+ * 下落（descend，提交后）：若还悬在空中，先选脚下这一点、用受碰撞限制的小段原生位移向下落；只有真的踩到实地才继续。
+ * 落地（land）：扬尘与羽尘一圈铺开，给自己挂共享身份 world_combat:status/roosting（本单元效果
+ *   world_combat:roosting），并用共享临时类型层去掉飞行属性（纯飞行得到空类型，对宝可梦生效）；两者都绑在这一个载体上，
+ *   载体被清除或取消时一起收回。
+ * 栖息（perch）：把 heal 分成 chunks 段，每段间隔交付；每段前确认身份还在——身份被牛奶／`/effect clear` 提前清掉，
+ *   或施法者离场，就按已交付的比例收尾（broken）。栖息画面由载体拥有的托管效果承载，随载体一起收。
  * 起身（rise）：整段交付完，收势起身。
  *
  * 反制：栖息窗口就是余地——对手可以趁着它失去飞行、贴在地面时集火，或直接清掉身份打断剩下的回复。
@@ -16,9 +18,13 @@
 namespace PokemonSkills {
     const roostScene = "world_combat:move_roost";
     const roostMark = "world_combat:roosting";
+    const roostPerch = "world_combat:roost_perch";
     const roostTextLand = "world_combat.move.roost.text.land";
     const roostTextRise = "world_combat.move.roost.text.rise";
     const roostTextBroken = "world_combat.move.roost.text.broken";
+    /** 每刻下落格数与最长下落刻数：受碰撞限制的小段位移，不瞬移穿地。 */
+    const roostFallStep = 0.5;
+    const roostFallBudget = 60;
 
     function roostAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 0.9, 0)); }
 
@@ -42,23 +48,38 @@ namespace PokemonSkills {
         return healed;
     }
 
-    /** 落地收翼：栖息期间失去飞行属性（地面招式与青草场地重新算得到它）；纯飞行或没有飞行的对象不动。 */
-    function roostFold(world: CombatWorld, self: CombatActor, ticks: number): void {
-        if (String(self.domain()) !== "cobblemon" || !world.valid(self)) return;
-        var pokemon = CobblemonCombat.pokemon(self);
-        var types = NativeEffects.types(pokemon, NativeEffects.read(world, self));
-        var kept: string[] = [];
-        for (var i = 0; i < types.length; i++) if (types[i] !== "flying") kept.push(types[i]);
-        if (kept.length === types.length || kept.length < 1) return;
-        NativeModifiers.apply(world, self, { types: kept }, ticks);
-    }
+    // 栖息画面：绑在真实载体上，载体被清除、取消或重施时随之一并收走，不留残影。
+    WorldCombat.effect(roostPerch, 1, 12000, "actor", function (json) {
+        const value = JSON.parse(json);
+        if (!MobEffects.validAnchor(value.anchor)) throw new Error("Invalid roost perch");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(roostPerch, "start", function (effect) {
+        const world = effect.world(), actor = effect.target(), state = JSON.parse(effect.state());
+        if (!world.valid(actor) || !MobEffects.matches(world, actor, state.anchor)) { effect.end(); return; }
+        const body = world.observe(actor); if (body === null) return;
+        WorldFeedback.onEffect(world, effect.id(), "roost:perch:" + String(actor.ref()), roostScene, 1, body.position(),
+            { moment: "perch", actor: String(actor.ref()), scale: state.scale, restRate: state.restRate });
+    });
+    WorldCombat.effectHandler(roostPerch, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    // 载体被清除：栖落画面立即收；若是被重施替换则交给新载体。
+    WorldCombat.on("world_combat:move_roost/perch-fade", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== roostMark) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        if (MobEffects.read(world, actor, roostMark) !== null) return;
+        world.effects(actor, roostPerch).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
 
     define({
-        requiresGround: true,
+        freeMovement: true,
         id: roostId, name: "羽栖",
         description: "收拢双翼落回地面，贴地栖息一段：回复分成几段交付，总量约最大生命的一半；栖息期间失去飞行属性、暴露在地面招式与青草场地之下，栖落状态被清除会打断剩下的回复。",
         uses: ["在受击间隙里分段补回生命", "用落地窗口换一口更稳的回复", "让飞禽暂时贴地、吃地形影响"],
         kind: "self", range: 0, prepare: 12, active: 0, recover: 10, cooldown: 220, style: "roost", maximumTicks: 260,
+        stationary: true,
         defaults: { deep: false },
         fields: [flag("deep", "深栖")],
         indicator: function (config) { return { radius: config && config.deep === true ? 2 : 1, style: "roost", label: config && config.deep === true ? "深栖" : "浅栖" }; },
@@ -85,52 +106,83 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, _move, config, done) {
-            var world = action.world(), self = action.actor(), body = world.observe(self);
+            const world = action.world(), self = action.actor();
+            const body = world.observe(self);
             if (!body) { done(action); return; }
-            var deep = config && config.deep === true;
-            var total = Math.max(0.05, Math.min(0.9, p(roostId, "heal", action)));
-            var rest = Math.max(20, Math.round(p(roostId, "restTicks", action)));
-            var chunks = Math.max(2, Math.round(p(roostId, "chunks", action)));
-            var feathers = Math.max(8, Math.round(p(roostId, "feathers", action)));
-            var width = Math.max(0.6, p(roostId, "foldWidth", action));
-            var interval = Math.max(4, Math.round(rest / chunks));
-            var scale = Math.max(0.7, Math.min(1.8, width));
-            var restRate = Math.max(6, Math.min(28, Math.round(feathers / 2)));
+            const deep = config && config.deep === true;
+            const total = Math.max(0.05, Math.min(0.9, p(roostId, "heal", action)));
+            const rest = Math.max(20, Math.round(p(roostId, "restTicks", action)));
+            const chunks = Math.max(2, Math.round(p(roostId, "chunks", action)));
+            const feathers = Math.max(8, Math.round(p(roostId, "feathers", action)));
+            const width = Math.max(0.6, p(roostId, "foldWidth", action));
+            const downdraft = Math.max(4, Math.round(p(roostId, "downdraft", action)));
+            const interval = Math.max(4, Math.round(rest / chunks));
+            const scale = Math.max(0.7, Math.min(1.8, width));
+            const restRate = Math.max(6, Math.min(28, Math.round(feathers / 2)));
+            const fallScale = Math.max(0.6, Math.min(1.6, feathers / 24));
 
-            MobEffects.apply(world, self, roostMark, rest + 20, 0);
-            roostFold(world, self, rest + 20);
-
-            sound(action, "minecraft:entity.parrot.fly");
-            WorldFeedback.emit(world, roostScene, 1, body.position(),
-                { moment: "land", target: String(self.ref()), burst: feathers, radius: width, scale: scale }, 30);
-            WorldFeedback.text(world, roostAbove(body.position()), roostTextLand, [], 30);
-
-            var left = chunks;
-            function step(current: CombatAction): void {
-                var access = current.world();
-                if (!access.valid(self)) { done(current); return; }
-                var now = access.observe(self);
+            /** 真实落地后才付治疗、去飞行；没落到实地就只收势，不假造回复。 */
+            function perch(current: CombatAction): void {
+                const access = current.world(), now = access.observe(self);
                 if (!now) { done(current); return; }
-                if (MobEffects.read(access, self, roostMark) === null) {
-                    WorldFeedback.emit(access, roostScene, 1, now.position(), { moment: "broken", target: String(self.ref()) }, 24);
-                    WorldFeedback.text(access, roostAbove(now.position()), roostTextBroken, [], 24);
-                    done(current);
-                    return;
-                }
-                roostHeal(access, self, total / chunks, "roost");
-                left = left - 1;
+                const carrier = MobEffects.apply(access, self, roostMark, rest, 0);
+                if (carrier === null) { done(current); return; }
+                // 载体归这次动作所有：取消、离场或脚本失败时随动作一起撤；净化走原生移除。
+                MobEffects.bind(access, self, roostMark, carrier);
+                CombatTypes.apply(access, self, { operation: "remove", types: ["flying"] }, carrier);
+                access.effect(roostPerch, self,
+                    JSON.stringify({ anchor: MobEffects.anchor(carrier), scale: scale, restRate: restRate }), rest);
+                sound(current, "minecraft:entity.parrot.fly");
                 WorldFeedback.emit(access, roostScene, 1, now.position(),
-                    { moment: "rest", target: String(self.ref()), left: left, total: chunks, scale: scale, restRate: restRate, deep: deep ? 1 : 0 }, 24);
-                if (left <= 0) {
-                    sound(current, "minecraft:entity.parrot.fly");
-                    WorldFeedback.emit(access, roostScene, 1, now.position(), { moment: "rise", target: String(self.ref()), scale: scale }, 24);
-                    WorldFeedback.text(access, roostAbove(now.position()), roostTextRise, [], 24);
-                    done(current);
-                    return;
+                    { moment: "land", target: String(self.ref()), burst: feathers, radius: width, scale: scale }, 30);
+                WorldFeedback.text(access, roostAbove(now.position()), roostTextLand, [], 30);
+
+                var left = chunks;
+                function step(inner: CombatAction): void {
+                    const scope = inner.world();
+                    if (!scope.valid(self)) { done(inner); return; }
+                    const body = scope.observe(self);
+                    if (!body) { done(inner); return; }
+                    if (MobEffects.read(scope, self, roostMark) === null) {
+                        WorldFeedback.emit(scope, roostScene, 1, body.position(), { moment: "broken", target: String(self.ref()) }, 24);
+                        WorldFeedback.text(scope, roostAbove(body.position()), roostTextBroken, [], 24);
+                        done(inner);
+                        return;
+                    }
+                    const healed = roostHeal(scope, self, total / chunks, "roost");
+                    left = left - 1;
+                    WorldFeedback.emit(scope, roostScene, 1, body.position(),
+                        { moment: "heal", target: String(self.ref()), left: left, total: chunks, healed: Math.round(healed * 10) / 10,
+                            scale: scale, restRate: restRate, deep: deep ? 1 : 0 }, 24);
+                    if (left <= 0) {
+                        sound(inner, "minecraft:entity.parrot.fly");
+                        WorldFeedback.emit(scope, roostScene, 1, body.position(), { moment: "rise", target: String(self.ref()), scale: scale }, 24);
+                        WorldFeedback.text(scope, roostAbove(body.position()), roostTextRise, [], 24);
+                        done(inner);
+                        return;
+                    }
+                    inner.after(interval, step);
                 }
                 current.after(interval, step);
             }
-            action.after(interval, step);
+
+            /** 空中：先选脚下一点向下落，落地才继续；撞住或超预算只收势。 */
+            function descend(current: CombatAction, elapsed: number): void {
+                const scope = current.world(), now = scope.observe(self);
+                if (!now) { done(current); return; }
+                if (now.grounded()) { perch(current); return; }
+                if (elapsed >= roostFallBudget) { done(current); return; }
+                const feet = now.position().minus(WorldCombat.point(0, now.height() / 2, 0));
+                const moved = scope.displace(self, WorldCombat.point(0, -roostFallStep, 0));
+                const after = scope.observe(self), at = after === null ? now.position() : after.position();
+                WorldFeedback.emit(scope, roostScene, 1, at,
+                    { moment: "descend", target: String(self.ref()), downdraft: downdraft, scale: fallScale,
+                        path: [[feet.x(), feet.y(), feet.z()], [feet.x(), feet.y() - Math.max(0.1, moved), feet.z()]] }, 14);
+                if (moved <= 0 && after !== null && !after.grounded()) { done(current); return; }
+                current.after(1, function (next: CombatAction) { descend(next, elapsed + 1); });
+            }
+
+            if (body.grounded()) perch(action); else descend(action, 0);
         }
     });
 }

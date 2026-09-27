@@ -14,8 +14,9 @@
  *   danceRadius 基础 2.5 格 + 碰撞箱高×0.5 + 等级×0.02，顾友 ×0.8，夹 2.5..6；身板越大、经验越多，舞圈越广。
  *   dazeTicks   基础 120 刻 + 等级×1.5 + 特攻×0.2，顾友 ×0.8，夹 90..320；这一晃在别人身上留多久。
  *   sway        基础 0.05 + 速度/2000 + 特攻/4000，夹 0.05..0.16；每 12 刻**尝试**把人带偏多少格，实际位移受
- *               碰撞与抵抗限制。它同时决定失手概率（约 sway 的 0.9 倍，5%..25%）。速度越快、特攻越高，舞步越难站稳。
- *   beats       基础 3 拍 + 等级/40，夹 3..5；舞摇几拍，表现按它一拍一拍铺开。
+ *               原生抗击退与碰撞限制。它同时是失手概率（共享门禁按载体振幅 sway 掷骰）。速度越快、特攻越高，舞步越难站稳。
+ *   beats       基础 3 拍 + 等级/40，夹 3..5；舞先摇几拍，末拍才把节奏推出去。
+ *   beatTicks   基础 6 刻 − 速度超出 40 的每点 0.01 刻，夹 4..8；两拍之间隔多久，决定这场舞的节奏快慢。
  *   motes       基础 20 点 + 特攻×0.1，夹 16..56；音符与光点数量，粒子按它发射。
  *   tempo       基础 12 刻 − 速度×0.05，顾友 +2，夹 6..16；起手。
  *   aftercast   基础 8 刻 + 碰撞箱高×1.2，夹 6..12；收招。
@@ -31,9 +32,8 @@ namespace PokemonSkills {
     export const teeterdanceSteadyText = "world_combat.move.teeterdance.text.steady";
     /** 共享身份：这一舞带给别人的恍惚。 */
     export const teeterdanceStatus = "confusion";
-    /** 摇晃间隔（刻）与由此派生的失手系数；skill.ts 的行为与说明同源。 */
+    /** 摇晃走位的间隔（刻）；skill.ts 的行为与说明同源。失手概率由共享门禁按载体振幅掷骰。 */
     export const teeterdanceInterval = 12;
-    export const teeterdanceFumbleFactor = 0.9;
 
     actionParameters.define(teeterdanceId, {
         danceRadius: formula(
@@ -54,14 +54,17 @@ namespace PokemonSkills {
                 .clamp(0.05, 0.16).round(3),
             "摇晃强度", {
                 unit: " 格",
-                description: "每 12 刻尝试把被带进节奏的人带偏多少格，实际位移受碰撞与抵抗限制；只有真正移动了才画轨迹。它同时决定失手概率（约 sway×0.9）。"
+                description: "每 12 刻尝试把被带进节奏的人带偏多少格，实际位移受原生抗击退与碰撞限制；只有真正移动了才画轨迹。它同时是失手概率。"
             }),
         beats: formula(
             F.base(3).plus(F.level().div(40).as("等级")).clamp(3, 5).round(0),
             "舞步拍数", {
                 unit: " 拍",
-                description: "这场舞摇几拍；等级越高越多，画面按它一拍一拍地铺开。"
+                description: "这场舞先摇几拍、末拍才把节奏推出去；等级越高越多，画面按它一拍一拍地铺开。"
             }),
+        beatTicks: seconds(
+            F.base(6).minus(F.stat("speed").minus(40).times(0.01).clamp(0, 2)).clamp(4, 8).round(0),
+            "每拍间隔", "两拍之间隔多久；速度越快节奏越紧凑。"),
         motes: formula(
             F.base(20).plus(F.stat("specialAttack").times(0.1).as("特攻")).clamp(16, 56).round(0),
             "音符数量", {
@@ -86,7 +89,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["danceRadius","dazeTicks"] },
         { key: "careful.on", values: [], when: function (context) { return read(context.detail.values, ["careful"]) === true; } },
         { key: "careful.off", values: [], when: function (context) { return read(context.detail.values, ["careful"]) !== true; } },
-        { key: "description.1", values: ["sway"] },
+        { key: "description.1", values: ["sway", "beatTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "description.3", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }

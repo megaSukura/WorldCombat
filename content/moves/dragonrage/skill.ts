@@ -6,9 +6,9 @@
  *
  * 两幕 + 收：
  *   起（windup，提交前）：怒火从身上窜起、在胸前收成一颗将成未成的赤弹，只播预告、可被打断。
- *   砸（execute → impact / wall / fade）：提交后龙息弹沿自由瞄准方向直飞（`LivingActions.projectile`），撞上
- *       第一个非友方时按固定伤害结算（`dragonrageRawHit`，绕过攻防）并把人顶开；撞到方块时散一团怒火，
- *       没人可撞就飞到头自行散去。
+ *   砸（execute → impact / wall / fade）：提交后龙息弹从胸前实际发射口沿瞄准方向直飞（`LivingActions.projectile`），
+ *       撞上第一个非友方时按固定伤害结算（`PokemonDamage.fixed`，护甲排除、属性免疫仍挡）并以原生受击位移把人顶开；
+ *       撞到方块时散一团怒火，没人可撞就飞到真实末点自行散去（`projectilePosition`）。
  *
  * 固定伤害是这招的承诺：`damage` 不由攻防、相性或暴击改变；变化只落在射程、弹速、判定与撞退这些按精灵
  * 数据取值的部分上。配置 `swift`（急袭式）把弹速提上去、射程压下来，是唯一的方向性取舍。
@@ -21,24 +21,12 @@ namespace PokemonSkills {
     const dragonrageWallText = "world_combat.move.dragonrage.text.wall";
     const dragonrageMissText = "world_combat.move.dragonrage.text.miss";
 
-    /** 固定伤害的直接结算入口（与地球上投／黑夜魔影同一套做法）：只被属性免疫挡住，防御不参与。 */
-    export function dragonrageRawHit(action: CombatAction, target: CombatActor, amount: number): boolean {
+    /** 固定伤害交给共享入口（与音爆／地球上投同一套）：护甲排除，属性免疫与原生伤害裁定仍生效。 */
+    export function dragonrageFixedHit(action: CombatAction, target: CombatActor, amount: number): boolean {
         const world = action.world();
         if (!world.valid(target) || world.friendly(target) || !(amount > 0)) return false;
-        const move = CobblemonCombat.moveTemplate("dragonrage"), type = String(move.type());
-        const facts = PokemonDamage.combatants.read(world, target);
-        for (let index = 0; index < facts.types.length; index++)
-            if (CobblemonCombat.typeEffectiveness(type, facts.types[index]) === 0) {
-                PokemonDamage.immune(world, target, JSON.stringify({ kind: "move", move: "dragonrage", type: type }));
-                return false;
-            }
-        const armor = world.attributeValue(target, "minecraft:generic.armor");
-        const toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
-        const metadata: any = { kind: "move", move: "dragonrage", type: type, category: String(move.category()),
-            contact: false, knockback: false, bypassCooldown: true, targetScale: 1, critical: false, action: action.id() };
-        if (armor !== null) metadata.armorExcluded = armor.value();
-        if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        return world.hurt(target, amount, JSON.stringify(metadata));
+        return PokemonDamage.fixed(world, target, CobblemonCombat.moveTemplate("dragonrage"), amount,
+            { contact: false, knockback: false, bypassCooldown: true, ignoreArmor: true }, "immunity", action);
     }
 
     define({
@@ -85,8 +73,10 @@ namespace PokemonSkills {
             const radius = p("dragonrage", "radius", action);
             const push = p("dragonrage", "push", action);
             const motes = Math.max(8, Math.round(p("dragonrage", "motes", action)));
-            const direction = aim(action);
+            // 胸前就是实际发射口：预告、弹体起点与瞄准方向共用同一点。
             const chest = origin.plus(WorldCombat.point(0, 0.45, 0));
+            const offset = action.targetPosition().minus(chest);
+            const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
             const scale = radius / 0.4;
             // 固定伤害的反馈不随体型夸大：强度只由怒焰量轻度抬高，并有上限。
             const intensity = Math.max(0.7, Math.min(1.6, motes / 30));
@@ -97,10 +87,11 @@ namespace PokemonSkills {
                 settled = true;
                 done(current);
             }
-            /** 把目标沿给定的方向顶开 `push` 格。 */
+            /** 撞退走原生受击位移：抗击退、事件与权限照常参与；目标已失效就不动。 */
             function shove(current: CombatAction, target: CombatActor, vector: CombatPoint): void {
-                if (vector.length() < 0.05) return;
-                current.world().displace(target, vector.unit().scale(push));
+                const scope = current.world();
+                if (!scope.valid(target) || vector.length() < 0.05) return;
+                scope.hitDisplace(target, vector.unit().scale(push));
             }
 
             sound(action, "minecraft:entity.ender_dragon.growl");
@@ -112,8 +103,9 @@ namespace PokemonSkills {
                 sprite: "cobblemon:generic/orb/energyorb", tint: 0xE0563A, glow: true,
                 scale: Math.max(0.8, Math.min(1.6, scale))
             };
-            LivingActions.projectile(action, {
-                speed: velocity, range: reach, gravity: 0, radius: radius, direction: direction,
+            let flight = "";
+            flight = LivingActions.projectile(action, {
+                speed: velocity, range: reach, gravity: 0, radius: radius, direction: direction, origin: chest,
                 lifetime: Math.max(28, Math.round(reach / Math.max(0.2, velocity) + 28)),
                 appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
@@ -130,7 +122,7 @@ namespace PokemonSkills {
                         return;
                     }
                     if (!scope.valid(victim) || scope.friendly(victim)) return;
-                    if (!dragonrageRawHit(current, victim, damage)) { finish(current); return; }
+                    if (!dragonrageFixedHit(current, victim, damage)) { finish(current); return; }
                     landed = true;
                     shove(current, victim, direction);
                     WorldFeedback.emit(scope, dragonrageScene, 1, hit.position(),
@@ -140,10 +132,12 @@ namespace PokemonSkills {
                     finish(current);
                 }
             }, function (current: CombatAction) {
-                const scope = current.world(), body = scope.observe(current.actor());
-                if (!landed && !walled && body !== null) {
-                    WorldFeedback.emit(scope, dragonrageScene, 1, current.targetPosition(), { moment: "fade", scale: scale, motes: motes }, 20);
-                    WorldFeedback.text(scope, current.targetPosition().plus(WorldCombat.point(0, 1.2, 0)), dragonrageMissText, [], 22);
+                if (!landed && !walled) {
+                    // 飞尽无碰：读弹体真实的最后接触/结束点，不用原方向与满射程推算一个假终点。
+                    const end = current.world().projectilePosition(flight);
+                    const at = end === null ? chest : end;
+                    WorldFeedback.emit(current.world(), dragonrageScene, 1, at, { moment: "fade", scale: scale, motes: motes }, 20);
+                    WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.2, 0)), dragonrageMissText, [], 22);
                 }
                 finish(current);
             });

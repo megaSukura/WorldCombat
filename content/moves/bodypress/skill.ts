@@ -1,146 +1,195 @@
 /**
  * 扑击 / bodypress 的出手方式。
  *
- * 念头的形状：压低重心、架住肩甲站定（windup，提交前只播预告）→ 沿瞄准方向把整副身板推出去（drive）→
- * 顶上活体的一刻结算接触伤害（impact）→ 不滑开，顶着对方沿同一方向一路碾过去（grind），推完站定（settle）。
- * 碾推式把撞击摊成一段持续顶推；硬停式几乎一下推完。命中 100 落成“不瞄偏”，顶不上则推完距离收势（miss）。
- * 选取 aim：可点方向或实体、也可空放；方向短进受真实碰撞限制，不凭预定推距继续表现目标移动。
- * 顶住不动（目标免位移或被挡）时立即转“压实”收势，不再多帧研磨，主伤已在接触时按防御结算。
- * 两幕：drive → impact + grind。提交后才触碰世界。配置 grind 通过 resolve 改变时序与公式取值。
+ * 核心念头：压低重心、架住肩甲站定，朝正前方**短踏**一步；身体前方那道**宽肩横边**随这一步真实扫过，
+ * 把挡在身前的活体一起压退。它不再顶住某一个人连续研磨：一趟里最多压到 3 个实际触体，主伤与总推距在
+ * 这些触体之间均分——压到的人越多，每人分到的越少。这是全组唯一的「正面宽面压缩」。
+ *
+ * 两幕：
+ *   起（windup，提交前）：压低重心、肩甲前置，只播预告。
+ *   压（press，提交后）：逐步把身板推出去，每一步只判当前那一段真实的肩面横边（判定与画面共用同一组端点），
+ *     把被这道面扫到的非友方收进触体表；身板撞墙或被挡就立即收势。收势时按触体表（最近 3 个）均分 `drive` 伤害与
+ *     `shove` 推距：每个触体各挨一记接触伤害，位移走原生 `hitDisplace`——抗击退的目标照样受伤但不一定被推开。
+ *
+ * 与同族分开：角撞保留「锁住单体一路顶走」；扑击改成短踏宽面压缩，用来在队友近旁的狭口把挤上来的敌人压退。
+ *
+ * 选取 aim：可点方向或实体，也可空放；瞄准方向被压平成水平朝向。正面判定会被第一道墙裁短，侧后方不在面内。
+ * 提交后才触碰世界；配置 wide 由 resolve／execute 读取，改变覆盖而不改变总输出。
  */
 namespace PokemonSkills {
     const bodypressScene = "world_combat:move_bodypress";
     const bodypressHitText = "world_combat.move.bodypress.text.hit";
-    const bodypressGrindText = "world_combat.move.bodypress.text.grind";
     const bodypressMissText = "world_combat.move.bodypress.text.miss";
+    /** 一趟最多压到几个实际触体；总预算不随人数加总，只在触体间均分。 */
+    const bodypressMaxTargets = 3;
+
+    /** 面角点：以中点为基准，沿右向偏移 side、沿前向偏移 fore。 */
+    function bodypressCorner(centre: CombatPoint, right: CombatPoint, forward: CombatPoint, side: number, fore: number): CombatPoint {
+        return centre.plus(right.scale(side)).plus(forward.scale(fore));
+    }
+    function bodypressCoords(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
+    /** 沿推进方向的投影距离，用来把触体按远近排序。 */
+    function bodypressOrder(point: CombatPoint, start: CombatPoint, forward: CombatPoint): number {
+        return point.minus(start).x() * forward.x() + point.minus(start).y() * forward.y() + point.minus(start).z() * forward.z();
+    }
 
     define({
         freeMovement: true,
         id: "bodypress",
         name: "Body Press",
-        description: "压低重心架住肩甲，朝选定方向把整副身板连同护甲一起推出去；撞上就顶住不放，把对手一路推走，顶不动就立即压实收势。可以只选方向朝空处推。防御越高，这一下越重、顶得越远。",
-        uses: ["用护甲与体重顶开挡路的对手", "把目标一路推出掩体或推下高台", "在守势里反推一波"],
+        description: "压低重心架住肩甲，朝正前方短踏一步，用身体前方的宽肩横边把挡路者一起压退：一趟最多压到 3 个实际触体，伤害与推距在这些触体之间均分。可以只选方向朝空处压。防御越高，这一下越重、压得越远；抗击退的目标照样受伤但不一定被推开。",
+        uses: ["在狭窄处把挤上来的多个对手一起压退", "用护甲与体重守住一段正面", "在守势里反推一波"],
         kind: "aim",
-        range: 3,
-        maxRange: 6,
+        range: 1.6,
+        maxRange: 2.2,
         prepare: 10,
-        active: 34,
+        active: 24,
         recover: 10,
         cooldown: 46,
         style: "contact",
-        defaults: { grind: true, ai: { maxChase: 8, minHealth: 0.35 } },
+        defaults: { wide: true, ai: { maxChase: 8, minHealth: 0.35 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: (pokemon ? p("bodypress", "lunge", pokemon) : 3.0) + 0.6, geometry: "line", style: "contact", color: 0xE9B071, label: "扑击" };
+            const context: NumberContext | null = pokemon ? { pokemon: pokemon, skill: skills["bodypress"], detail: { values: config } } : null;
+            const lunge = context ? p("bodypress", "lunge", context) : 3.0;
+            const face = context ? p("bodypress", "collisionRadius", context) : 0.5;
+            return { radius: Math.min(1.2, lunge / 3) + face + 0.3, geometry: "line", style: "contact", color: 0xE9B071,
+                label: config && config.wide === false ? "扑击·窄面" : "扑击·宽面" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            const context: NumberContext = { pokemon: pokemon, skill: skills["bodypress"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
-            const grind = !(config && config.grind === false);
+            const context: NumberContext = { pokemon: pokemon, skill: skills["bodypress"], detail: { values: config }, world: world || null, actor: actor || null, attributes: attributes };
+            const lunge = p("bodypress", "lunge", context), face = p("bodypress", "collisionRadius", context);
+            // 接受距离略小于肩面实际够得到的距离，AI 会先贴身再压。
             return {
                 prepare: Math.max(1, Math.round(p("bodypress", "brace", context))),
-                recover: p("bodypress", "recover", context) + (grind ? 2 : 0),
-                cooldown: p("bodypress", "cooldown", context) + (grind ? 6 : 0),
-                range: p("bodypress", "lunge", context) + 0.5
+                recover: p("bodypress", "recover", context),
+                cooldown: p("bodypress", "cooldown", context),
+                active: skills["bodypress"].active,
+                range: Math.max(1.1, Math.min(1.2, lunge / 3) + face - 0.3)
             };
         },
         windup: function (action, config, prepare) {
+            const wide = !(config && config.wide === false);
             action.present("world_combat:move_bodypress:windup", bodypressScene, 1, action.origin(),
-                JSON.stringify({ moment: "brace", grind: !(config && config.grind === false) }));
+                JSON.stringify({ moment: "brace", wide: wide }));
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const movementScenes = WorldFeedback.actionScenes(bodypressScene);
+            const scenes = WorldFeedback.actionScenes(bodypressScene);
             const world = action.world();
-            const grind = !(config && config.grind === false);
-            const length = p("bodypress", "lunge", action);
-            const speed = p("bodypress", "advanceSpeed", action);
-            const radius = p("bodypress", "collisionRadius", action);
+            const actor = action.actor();
+            const self = world.observe(actor);
+            if (self === null) { done(action); return; }
+            const wide = !(config && config.wide === false);
+            const forward = WorldGeometry.flatUnit(aim(action), action.direction());
+            const right = WorldGeometry.basis(forward).right;
+            const lunge = p("bodypress", "lunge", action);
+            const speed = Math.max(0.05, p("bodypress", "advanceSpeed", action));
+            const depth = Math.max(0.2, p("bodypress", "collisionRadius", action));
+            const facePad = Math.max(0, p("bodypress", "facePad", action));
             const power = p("bodypress", "drive", action);
-            const shove = p("bodypress", "shove", action);
-            const grindTicks = Math.max(2, Math.round(p("bodypress", "grindTicks", action)));
-            const direction = aim(action);
-            const scale = radius / 0.5;
+            const shove = Math.max(0, p("bodypress", "shove", action));
+            const minimum = Math.max(0.001, p("bodypress", "minimumMove", action));
+            const halfWidth = self.width() / 2 + (wide ? facePad : 0);
+            const lowY = self.boundsMin().y() - 0.1, highY = self.boundsMax().y() + 0.1;
+            const start = self.position();
+            const budget = Math.min(1.2, lunge / 3);
+            const scale = Math.max(0.6, Math.min(1.8, halfWidth / 0.5));
             const intensity = Math.max(0.5, Math.min(2.2, power / 100));
             const clods = Math.max(6, Math.round(shove * 8));
-            let travelled = 0, settled = false;
+            const found: { ref: string; victim: CombatActor; at: CombatPoint; order: number }[] = [];
+            const seen: { [ref: string]: boolean } = {};
+            let step = budget, settled = false;
 
-            movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity, clods: clods });
-            sound(action, "minecraft:entity.ravager.step");
+            /** 宽面首墙裁切：在面宽两端与中心各打一条真实方块射线，取最近墙把整段推进裁短。 */
+            function clippedStep(scope: CombatWorld, origin: CombatPoint): number {
+                let reach = budget;
+                for (let i = -1; i <= 1; i++) {
+                    const probe = origin.plus(right.scale(halfWidth * i)), to = probe.plus(forward.scale(budget));
+                    const wall = WorldGeometry.blockHit(scope, probe, to);
+                    if (wall !== null) {
+                        const distance = wall.position().minus(probe).length();
+                        if (distance < reach) reach = Math.max(0, distance);
+                    }
+                }
+                return reach;
+            }
 
-            function settle(current: CombatAction, landed: boolean): void {
+            /** 收集这一段真实肩面扫到的非友方；判定用与画面同一组端点张成的矩形棱柱（真实实体箱求交）。 */
+            function collect(scope: CombatWorld, from: CombatPoint, to: CombatPoint): void {
+                const span = to.minus(from).length();
+                const region = WorldGeometry.bodyLane(from.minus(forward.scale(depth)), forward, span + depth * 2, halfWidth,
+                    { below: Math.max(0.2, from.y() - lowY), above: Math.max(0.2, highY - from.y()) });
+                WorldGeometry.selectBodies(scope, region, function (victim, facts) {
+                    const ref = String(victim.ref());
+                    if (ref === String(actor.ref()) || scope.friendly(victim) || seen[ref]) return;
+                    // 墙挡住的面盖不到墙后的人。
+                    if (WorldGeometry.blockHit(scope, from, scope.closestPoint(victim, from)) !== null) return;
+                    seen[ref] = true;
+                    found.push({ ref: ref, victim: victim, at: facts.position(), order: bodypressOrder(facts.position(), start, forward) });
+                });
+            }
+
+            function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const body = scope.observe(current.actor());
+                found.sort(function (a, b) { return a.order - b.order; });
+                const hits = Math.min(bodypressMaxTargets, found.length);
+                const per = hits > 0 ? power / hits : 0, perShove = hits > 0 ? shove / hits : 0;
+                let landed = 0;
+                for (let i = 0; i < hits; i++) {
+                    const entry = found[i];
+                    if (!scope.valid(entry.victim)) continue;
+                    if (!hurt(current, entry.victim, "bodypress", per, { damage: damageSpec("bodypress", "drive"), contact: true })) continue;
+                    landed++;
+                    const moved = scope.hitDisplace(entry.victim, forward.scale(perShove));
+                    const body = scope.observe(entry.victim);
+                    WorldFeedback.emit(scope, bodypressScene, 1, body === null ? entry.at : body.position(),
+                        { moment: "impact", target: entry.ref, hits: hits, moved: Math.round(moved * 100) / 100,
+                            clods: Math.max(4, Math.round(clods / hits)), scale: scale, intensity: intensity }, 24);
+                }
+                const body = scope.observe(actor);
                 if (body !== null) {
                     WorldFeedback.emit(scope, bodypressScene, 1, body.position(),
-                        { moment: landed ? "settle" : "miss", scale: scale, intensity: intensity, clods: clods }, 26);
+                        { moment: landed > 0 ? "settle" : "miss", hits: hits, clods: clods, scale: scale, intensity: intensity }, 24);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)),
-                        landed ? bodypressHitText : bodypressMissText, [], 24);
+                        landed > 0 ? bodypressHitText : bodypressMissText, [], 22);
                 }
-                sound(current, landed ? "cobblemon:impact.fighting" : "minecraft:entity.ravager.attack");
-                movementScenes.finish(current, done);
+                sound(current, landed > 0 ? "cobblemon:impact.fighting" : "minecraft:entity.ravager.attack");
+                scenes.finish(current, done);
             }
 
-            /** 碾推幕：目标与施法者一起沿推进方向移动，把对方一路顶走；顶不动就地压实收势。 */
-            function grindOver(current: CombatAction, ref: string, remaining: number, left: number): void {
+            function press(current: CombatAction, remaining: number): void {
                 if (settled) return;
                 const scope = current.world();
-                const victim = scope.actor(ref);
-                const body = scope.observe(current.actor());
-                if (victim === null || !scope.valid(victim) || body === null || remaining <= 0.02 || left <= 0) { settle(current, true); return; }
-                const step = Math.min(remaining / Math.max(1, left), 0.4);
-                // 位移回执决定这一段是否真的推进：免位移或被挡（moved≈0）时不再多帧研磨。
-                const moved = scope.displace(victim, direction.scale(step));
-                if (moved < p("bodypress", "minimumMove", current)) {
-                    const at = scope.observe(victim);
-                    if (at !== null) WorldFeedback.emit(scope, bodypressScene, 1, at.position(),
-                        { moment: "compress", target: ref, scale: scale, intensity: intensity, clods: clods }, 24);
-                    settle(current, true);
-                    return;
+                const body = scope.observe(actor);
+                if (body === null || remaining <= 0.02) { finish(current); return; }
+                const leg = Math.min(speed, remaining);
+                const from = body.position();
+                const moved = scope.displace(actor, forward.scale(leg));
+                const after = scope.observe(actor);
+                const to = after === null ? from : after.position();
+                if (moved >= minimum) {
+                    collect(scope, from, to);
+                    scenes.show(current, "press", to, { moment: "press",
+                        path: [bodypressCoords(bodypressCorner(from, right, forward, -halfWidth, 0)),
+                            bodypressCoords(bodypressCorner(from, right, forward, halfWidth, 0)),
+                            bodypressCoords(bodypressCorner(to, right, forward, halfWidth, 0)),
+                            bodypressCoords(bodypressCorner(to, right, forward, -halfWidth, 0))],
+                        direction: [forward.x(), forward.y(), forward.z()], hits: found.length,
+                        clods: clods, scale: scale, intensity: intensity });
                 }
-                scope.displace(current.actor(), direction.scale(moved));
-                const victimBody = scope.observe(victim);
-                // 碾推条带只按实际目标位移延伸（remaining 只减去真实的 moved）。
-                if (victimBody !== null) WorldFeedback.keep(scope, "bodypress:grind:" + String(current.actor().ref()), bodypressScene, 1,
-                    victimBody.position(), { moment: "grind", target: ref, scale: scale, intensity: intensity,
-                        ratio: 1 - remaining / Math.max(0.001, shove), travel: Math.round((shove - remaining) * 10) / 10 }, 6);
-                current.after(1, function (next: CombatAction) { grindOver(next, ref, remaining - moved, left - 1); });
+                if (moved < minimum || remaining - leg <= 0.02) { finish(current); return; }
+                current.after(1, function (next: CombatAction) { press(next, remaining - leg); });
             }
 
-            function advance(current: CombatAction): void {
-                const scope = current.world();
-                const origin = current.origin();
-                const step = Math.min(speed, Math.max(0, length - travelled));
-                if (step <= 0.001) { settle(current, false); return; }
-                const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.hitEntity()) {
-                    const target = hit.target();
-                    const point = hit.position();
-                    const landed = impact(current, hit, "bodypress", power);
-                    WorldFeedback.emit(scope, bodypressScene, 1, point,
-                        { moment: "impact", target: target !== null ? String(target.ref()) : "", scale: scale, intensity: intensity }, 28);
-                    if (landed && target !== null && scope.valid(target)) {
-                        if (grind) {
-                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), bodypressGrindText, [shove], 28);
-                            grindOver(current, String(target.ref()), shove, grindTicks);
-                        } else {
-                            scope.hitDisplace(target, direction.scale(shove));
-                            settle(current, true);
-                        }
-                        return;
-                    }
-                    settle(current, false);
-                    return;
-                }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < p("bodypress", "minimumMove", current) || travelled >= length) { settle(current, false); return; }
-                current.after(1, advance);
-            }
-
-            advance(action);
+            step = clippedStep(world, start);
+            sound(action, "minecraft:entity.ravager.step");
+            if (step <= minimum) { finish(action); return; }
+            // 起手先判贴上身前的一小段，再逐步推进。
+            collect(world, start, start.plus(forward.scale(Math.min(step, depth))));
+            press(action, step);
         }
     });
 }

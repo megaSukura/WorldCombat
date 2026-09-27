@@ -13,13 +13,12 @@
  * 没有伤害段：这是变化招式，交换持有物本身就是结算；命中目标、相性与暴击都不参与。
  */
 namespace PokemonSkills {
-    export interface TrickHeld { id: string; key: string; serialized: string | null; count: number; pokemon: CombatPokemon | null; }
+    /** 真实持有物快照：物品 id、数量、耐久与是否为浆果等事实都保留，供交换与 AI 估值共读。 */
+    export type TrickHeld = NativeItems.Held;
 
     /** 一名战斗者当前的「持有物」：宝可梦取携带物，原版生物/玩家取主手/副手，走同一原生装备读取路径。 */
     export function trickHeldOf(world: CombatWorld, actor: CombatActor): TrickHeld | null {
-        var held = NativeItems.heldOf(world, actor);
-        return held === null ? null : { id: held.id, key: held.pokemon ? String(held.pokemon.heldKey()) : "",
-            serialized: held.stack, count: held.count, pokemon: held.pokemon };
+        return NativeItems.heldOf(world, actor);
     }
 
     /** 目标是否在能力上拒绝持有物交换（例如黏着），或被查封（embargo）封住了道具通道。 */
@@ -30,10 +29,12 @@ namespace PokemonSkills {
         return NativeAbilities.flag(NativeEffects.ability(CobblemonCombat.pokemon(target), state), "heldExchangeImmune");
     }
 
-    /** 双方持有物对调；走统一的原子原生装备事务，宝可梦携带物与原版生物/玩家的主副手同一契约。 */
-    export function trickExchange(world: CombatWorld, actor: CombatActor, target: CombatActor): boolean {
-        if (trickBlocked(world, target) || NativeItems.sealed(world, actor)) return false;
-        return NativeItems.exchangeHeld(world, actor, target).ok;
+    /** 双方持有物对调；走统一的原子原生装备事务，宝可梦携带物与原版生物/玩家的主副手同一契约。
+     *  返回真实 receipt（含 ok 与 reason），失败原因由调用方按事实反馈，不再一律当成空手。 */
+    export function trickExchange(world: CombatWorld, actor: CombatActor, target: CombatActor): NativeItems.Receipt {
+        if (trickBlocked(world, target) || NativeItems.sealed(world, actor))
+            return { ok: false, reason: "sealed", item: "", count: 0, drop: "" };
+        return NativeItems.exchangeHeld(world, actor, target);
     }
 
     actionParameters.define("trick", {
@@ -54,12 +55,12 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "从自己到目标拉直心线的距离；特攻与等级越高的个体够得越远，瞬时抓取把这条线缩到近身。"
             }),
-        /** 收手：基础 6 刻，速度每比 60 快 1 少 0.02 刻，夹在 3..9 刻。 */
-        recover: seconds(
+        /** 收手：基础 6 刻，速度每比 60 快 1 少 0.02 刻，夹在 3..9 刻。非保留键，resolve 真正读它。 */
+        aftercast: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.02).clamp(-1.5, 1.5)).clamp(3, 9).round(0),
             "收手时间", "交换完成后把手收回来的时间；手快的个体收得更利落。"),
-        /** 冷却：基础 40 刻 + 等级 ×0.3，瞬时抓取再 −6；夹在 28..64 刻。 */
-        cooldown: seconds(
+        /** 冷却：基础 40 刻 + 等级 ×0.3，瞬时抓取再 −6；夹在 28..64 刻。非保留键，兑现等级成长与 snap 代价。 */
+        recharge: seconds(
             F.base(40).plus(F.level().times(0.3)).plus(F.when(F.pref("snap"), F.const(-6), F.const(6)))
                 .clamp(28, 64).round(0),
             "冷却", "再次拉线前的等待；等级越高冷却略长，瞬时抓取更短。"),
@@ -81,14 +82,14 @@ namespace PokemonSkills {
     });
 
     stages("trick", [
-        { level: 26, values: { reach: 7.4, cooldown: 36 } },
+        { level: 26, values: { reach: 7.4, recharge: 36 } },
         { level: 46, values: { reach: 8.2, feint: 6, motes: 22 } }
     ]);
 
     describe("trick", [
         { key: "description.0", values: ["reach"] },
         { key: "description.conditions", values: [] },
-        { key: "description.1", values: ["feint","recover","cooldown"] },
+        { key: "description.1", values: ["feint","aftercast","recharge"] },
         { key: "snap.on", values: [], when: function (context) { return read(context.detail.values, ["snap"]) === true; } },
         { key: "snap.off", values: [], when: function (context) { return read(context.detail.values, ["snap"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

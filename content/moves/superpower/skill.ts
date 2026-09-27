@@ -1,21 +1,20 @@
 /**
  * 蛮力 / superpower 的出手方式。
  *
- * 核心念头：**沉肩突进**——沉肩扎马后沿自由瞄准锁定的 3D 方向贴地短冲，真实撞到第一个身体才砸实一记；
+ * 核心念头：**沉肩突进**——沉肩扎马后沿瞄准方向的水平分量贴地短冲，真实撞到第一个身体才砸实一记；
  *   撞中后重心散了，自身攻击与防御各降一级。墙前与空处只会冲出一蓬灰，不结算也不付代价。
+ *   地面身体不向空中目标飞冲：方向取平，够不到的高处就只是从下方冲过。
  *
  * 三幕（提交前只播预告）：
  *   起（charge）：沉肩扎马，脚边尘土被吸拢、拳边聚起暖光，只播预告，此时代价未结清。
  *   冲（rush → impact / wall）：提交后沿锁定方向逐刻用原生 `sweepStep`/`moveSweep` 短冲，最远 `reach`；
  *       首个接触的真实敌人结算一次 `ram` 接触伤害（原参数按该命中者求值），沿接触方向撞开 `jolt`（目标体重扣减）；
  *       墙或空处只在真实接触点扬一次尘收势，不换方块、不自降攻防。
- *       震荡式（配置 aftershock）额外在真实接触点对通视的邻近敌人以 `share` 保留荡一圈 `crush` 余震，不重复伤主目标。
- *   沉（slump）：命中后重心散掉，自身攻击 −`attackLoss`、防御 −`guardLoss`，肩膀落下两缕灰气并浮字提示。
+ *   沉（slump）：命中后重心散掉，自身攻击 −`attackLoss`、防御 −`guardLoss`，身体落下疲劳灰气并浮字提示。
  *
  * 与同族分开：鳞射是远距多段、火焰鞭是长鞭剥对手甲、鳞片噪音是环身声爆；
  *   蛮力是近身单体最重的一记，唯一让自身攻防一起下降，并坚持到真实首碰才结算。
  *
- * 配置 `aftershock` 由公式改威力／半径／时序，由本文件改余震结算；提交后才触碰世界。
  * 选取 `kind:"aim"`：方向、世界点或任意阵营实体都能放，可向空处短冲；攻击许可仍由命中层裁定。
  */
 namespace PokemonSkills {
@@ -51,8 +50,8 @@ namespace PokemonSkills {
         id: "superpower",
         cooldownParameter: "recharge",
         name: "Superpower",
-        description: "沉肩扎马，沿瞄准方向贴地短冲，真实撞到第一个身体才砸出一记单体物理重击并把目标撞开；命中后自身攻击与防御各下降。撞墙或冲空只扬一蓬灰、不付代价。震荡式在真实接触点多荡一圈余震，代价是单发更轻、防御再降一级、出手更慢。",
-        uses: ["贴身用一记最重的单发把对手打残", "把对手从阵地里撞开", "震荡式一次震开挤在接触点周围的一群人"],
+        description: "沉肩扎马，沿瞄准方向的水平分量贴地短冲，真实撞到第一个身体才砸出一记单体物理重击并把目标撞开；命中后自身攻击与防御各下降。撞墙或冲空只扬一蓬灰、不付代价；地面身体不会对空飞冲。",
+        uses: ["贴身用一记最重的单发把对手打残", "把对手从阵地里撞开", "在地面近身逼出一次高输出的交换"],
         kind: "aim",
         range: 3.2,
         maxRange: 5.4,
@@ -62,11 +61,11 @@ namespace PokemonSkills {
         cooldown: 40,
         maximumTicks: 220,
         style: "impact",
-        defaults: { aftershock: false, ai: { maxChase: 7, finish: true, minHealth: 0 } },
+        defaults: { ai: { maxChase: 7, finish: true, minHealth: 0 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p("superpower", "reach", pokemon) : 3.2, geometry: "line", style: "impact",
-                color: 0xC46A3A, label: config && config.aftershock === true ? "蛮力·震荡式" : "蛮力·贯穿式" };
+                color: 0xC46A3A, label: "蛮力" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["superpower"], detail: { values: config },
@@ -81,8 +80,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_superpower:charge", superpowerScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", aftershock: config && config.aftershock === true ? 1 : 0,
-                    power: Math.round(p("superpower", "ram", action)) }));
+                JSON.stringify({ moment: "charge", power: Math.round(p("superpower", "ram", action)) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -90,14 +88,11 @@ namespace PokemonSkills {
             const actor = action.actor();
             const self = world.observe(actor);
             const start = self !== null ? self.position() : action.origin();
-            const raw = aim(action);
-            const direction = raw.length() < 1e-6 ? action.direction() : raw.unit();
+            // 地面身体只走平：取瞄准方向的水平分量，竖直部分不参与，因此不会对空飞冲。
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
             const reach = p("superpower", "reach", action);
             const rush = Math.max(0.25, p("superpower", "rush", action));
             const girth = Math.max(0.3, Math.min(1.0, p("superpower", "girth", action)));
-            const aftershock = !!(config && config.aftershock);
-            const crush = p("superpower", "crush", action);
-            const share = p("superpower", "share", action);
             const attackLoss = Math.max(0, Math.round(p("superpower", "attackLoss", action)));
             const guardLoss = Math.max(0, Math.round(p("superpower", "guardLoss", action)));
             const chargePower = p("superpower", "ram", action);
@@ -137,35 +132,20 @@ namespace PokemonSkills {
                 const landed = impact(current, contact, "superpower", ram,
                     { damage: damageSpec("superpower", "ram"), contact: true });
                 const tint = superpowerContactTint(scope, contact);
-                let extra = 0;
                 if (landed) {
                     // 撞飞服从原生受击位移返回，不为沉重目标追加穿透位移。
                     if (scope.valid(victim)) {
                         const away = WorldCombat.point(at.x() - start.x(), 0, at.z() - start.z());
                         if (away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(jolt));
                     }
-                    // 震荡式：从真实接触点对通视的邻近敌人保留结算，不重复伤原主目标。
-                    if (aftershock && crush > 0) {
-                        WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, crush, { below: 2.0, above: 3.0 }),
-                            function (other, facts) {
-                                if (String(other.ref()) === victimRef) return;
-                                if (!scope.clear(at, facts.position())) return;
-                                if (!hurt(current, other, "superpower", ram * share, { damage: damageSpec("superpower", "ram") })) return;
-                                extra++;
-                                const awayOther = WorldCombat.point(facts.position().x() - at.x(), 0, facts.position().z() - at.z());
-                                if (scope.valid(other) && awayOther.length() > 0.05)
-                                    scope.hitDisplace(other, awayOther.unit().scale(jolt * 0.8));
-                            });
-                    }
                     NativeEffects.boost(scope, actor, "atk", -attackLoss);
                     NativeEffects.boost(scope, actor, "def", -guardLoss);
                 }
                 scenes.stop(current, "rush");
                 WorldFeedback.emit(scope, superpowerScene, 1, at,
-                    { moment: "impact", target: victimRef, landed: landed ? 1 : 0, extra: extra, aftershock: aftershock ? 1 : 0,
-                        materialTint: tint, face: contact.blockFace(), intensity: intensity,
-                        power: Math.round(ram), shock: aftershock ? Math.round(8 + crush * 4) : 0,
-                        dust: Math.round(16 + ram * 0.18 + extra * 10) }, 28);
+                    { moment: "impact", target: victimRef, landed: landed ? 1 : 0, materialTint: tint,
+                        face: contact.blockFace(), intensity: intensity, power: Math.round(ram),
+                        direction: heading, dust: Math.round(16 + ram * 0.18) }, 28);
                 if (landed) {
                     const after = scope.observe(actor);
                     const above = (after !== null ? after.position() : at).plus(WorldCombat.point(0, 1.3, 0));

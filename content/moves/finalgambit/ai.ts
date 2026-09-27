@@ -1,12 +1,35 @@
 /**
  * 搏命 / finalgambit 的 AI 用途。
  *
- * 什么局面下出手：这是一张一换一的牌，不能随便花。默认 `ai.lethal`（开）要求自己当前生命不低于对手当前生命——
- * 这样这一记足以把对手打空，才值得把自己搭进去；关闭后放宽为「自己已经不到 `ai.cornered`（默认两成半）
- * 的残血，也要拖对手一起下水」。目标须可见、敌对、活着，且在 `ai.maxChase` 之内。
- * 满足条件时 priority 抬到 120，越过共享顺序抢在别的输出前出手；条件不满足则完全不参与候选。
+ * 什么局面下出手：这是一张一换一的牌，不能随便花。默认 `ai.lethal`（开）要求**本招实际会打出的伤害**
+ * 足以清空对手当前生命——伤害经与出手同一条公式求出，留手式只有 55%%，因此不再把「自己血量不低于对手」
+ * 当成必杀保证；目标属性免疫这一击时完全不参与候选。关闭后放宽为「自己已经不到 `ai.cornered`（默认两成半）
+ * 的残血，也要拖对手一起下水」，这是一条明确的被允许的牺牲策略。
+ * 目标须可见、敌对、活着，且在 `ai.maxChase` 之内。满足条件时 priority 抬到 120，越过共享顺序抢在别的输出
+ * 前出手；条件不满足则完全不参与候选。
  */
 namespace PokemonSkills {
+    /** 与出手同一条链求本招实际伤害：读当前生命、留手 55%% 与偏好配置。非宝可梦或不求值失败时回退 0。 */
+    function finalgambitDamage(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            return p("finalgambit", "damage", { world: world, actor: world.source(), skill: skills["finalgambit"],
+                detail: { values: capability.data.config } });
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    /** 格斗系属性免疫（幽灵）时这一击必然打不动，不把自毁浪费在免疫目标上。 */
+    function finalgambitImmune(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const facts = CompanionBehavior.pokemonFacts(context, target);
+        const types = facts && facts.types;
+        if (!types) return false;
+        for (let index = 0; index < types.length; index++)
+            if (CobblemonCombat.typeEffectiveness("fighting", types[index]) === 0) return true;
+        return false;
+    }
+
     CompanionBehavior.registerUse("finalgambit", {
         protocols: ["world_combat:attack", "world_combat:contact"],
         reach: function (context, capability) { return capability.data.range; },
@@ -15,7 +38,8 @@ namespace PokemonSkills {
             if (!target) return true;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 6)) return false;
-            if (CompanionBehavior.ai<boolean>(capability, "lethal", true)) return self.health >= target.health;
+            if (finalgambitImmune(context, target)) return false;
+            if (CompanionBehavior.ai<boolean>(capability, "lethal", true)) return finalgambitDamage(context, capability) >= target.health;
             return CompanionBehavior.ratio(self) <= CompanionBehavior.ai<number>(capability, "cornered", 0.25);
         },
         accepts: function (context, capability, target) {
@@ -25,7 +49,9 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            if (CompanionBehavior.ai<boolean>(capability, "lethal", true)) return self.health >= target.health ? 120 : 0;
+            if (finalgambitImmune(context, target)) return 0;
+            if (CompanionBehavior.ai<boolean>(capability, "lethal", true))
+                return finalgambitDamage(context, capability) >= target.health ? 120 : 0;
             return CompanionBehavior.ratio(self) <= CompanionBehavior.ai<number>(capability, "cornered", 0.25) ? 120 : 0;
         }
     });
@@ -35,7 +61,7 @@ namespace PokemonSkills {
             help: "开启：只押上当前生命的一半，打完留下 1 点生命、不倒下，代价是伤害也随之减半、冷却更久；关闭：押上全部生命，伤害足额，打完自己陷入濒死。"
         }),
         field(pathOf("ai.lethal"), "只打必杀", "boolean", {
-            help: "开启：只有自己当前生命不低于对手时才出手，保证这一换能把对手打空；关闭：放宽为残血（低于聚死阈值）时也愿意拖对手下水。"
+            help: "开启：只有本招实际会打出的伤害足以清空对手当前生命时才出手（留手式按 55%% 计算，属性免疫的对手不会成为目标），保证这一换能把对手打空；关闭：放宽为残血（低于聚死阈值）时也愿意拖对手下水。"
         }),
         field(pathOf("ai.cornered"), "残血阈值", "number", {
             min: 0, max: 0.8, step: 0.05,

@@ -6,10 +6,11 @@
  * 色相家族：电光的黄与白（electricity_yellow／electricity_white／glowingsparkle_cyan 原色＋近白高光）＋一处格斗暖橙（impact_fighting）。
  * 拍子：起（windup 聚电）→ 击（blink 残影、kick 踢实）→ 收（guard 缺口 / miss 踢空）。
  * 范围：`kick` 绑命中点，用 `data.path`（出脚真实起点→真实接触点）拉出一条 polyline 电光条，长度就是这一脚真正的接触区；
- *   `blink` 的残影只在服务端真正走动的每一步发一次，沿 `data.direction`（这一步真实位移方向）拉出电光条，玩家看得见绕步绕向哪一侧。
- * 运动：电光从脚边窜起、残影沿位移方向拖尾、踢实整片电火外爆、护架缺口从接触点向上崩开。
- * 数：残影的条数就是真实的成功绕步（服务端每成功一步发一次，不按计划次数），`data.stages`（实际踢开级数）绑定缺口火花量，
- *   `data.blind` 让分神时的那一脚更亮，`data.intensity`（威力 / 90）放大整幕。
+ *   `blink` 的残影只在服务端真正走动的每一步发一次，`data.point` 是这一步真实走过的旧点（留残影），`data.path` 是旧点→新点的
+ *   真实短段，沿它连出电光条，玩家看得见绕步绕向哪一侧；两条都不跟当前 source。
+ * 运动：电光从脚边窜起、残影留在旧点并连出走过的短段、踢实（`data.landed`）才炸开命中电火、护架缺口从接触点向上崩开。
+ * 数：残影的条数就是真实的成功绕步（服务端每成功一步发一次，不按计划次数），`data.stages`（实际降级数）绑定缺口火花量，
+ *   `data.impact`（命中才非零）绑定命中火花数，`data.distracted` 让分神时的那一脚更亮，`data.intensity`（威力 / 90）放大整幕。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const ThunderouskickDefinition: ParticleDefinition = {
@@ -42,16 +43,15 @@ const ThunderouskickDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "dashline", bind: "source", offset: [0, 0.5, 0], orient: "direction",
+                    name: "walked_line", bind: "path", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    burst: { count: 3, at: 0 },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "shape", speed: [0.0, 0.02],
-                    lifetime: [6, 10], size: [0.34, 0.1],
-                    color: 0xF8F0A0, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 20
+                    rate: 42, shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [5, 9], size: [0.3, 0.08],
+                    color: 0xF8F0A0, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 24
                 },
                 {
-                    name: "afterimage", bind: "source", offset: [0, 0.6, 0], height: 0.5,
+                    name: "old_afterimage", bind: "point", offset: [0, 0.6, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "sphere", radius: 0.32 },
@@ -76,7 +76,7 @@ const ThunderouskickDefinition: ParticleDefinition = {
                 {
                     name: "kick_core", bind: "point", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
-                    burst: { count: 1, at: 0 },
+                    burst: { count: { data: "landed", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.46 },
                     direction: "outward", speed: [0.06, 0.24], spread: 24,
                     lifetime: [6, 12], size: [0.46, 0.12], sizeMode: "index",
@@ -85,7 +85,7 @@ const ThunderouskickDefinition: ParticleDefinition = {
                 {
                     name: "kick_fist", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
-                    burst: { count: 1, at: 0 },
+                    burst: { count: { data: "landed", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.42 },
                     direction: "outward", speed: [0.05, 0.2], spread: 22,
                     lifetime: [7, 13], size: [0.4, 0.1], sizeMode: "index",
@@ -94,7 +94,7 @@ const ThunderouskickDefinition: ParticleDefinition = {
                 {
                     name: "kick_spark", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    burst: { count: 16, at: 0 },
+                    burst: { count: { data: "impact", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.06, 0.22], spread: 26,
                     gravity: 0.06, drag: 0.9,

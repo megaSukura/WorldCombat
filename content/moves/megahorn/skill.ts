@@ -7,8 +7,11 @@
  *
  * 三幕：
  *   起（windup，提交前）：低头、后腿刨地、角尖压低，只播预告；这段时间可被打断，也是对手的闪避窗口。
- *   刺（thrust）：提交后朝前趟出 `rush` 格，沿身前 `reach` 格长、`horn` 半宽的窄线取第一个目标结算 `gore` 接触伤害。
- *   收（pin 或 toss）：深植式给目标挂 `minecraft:slowness` 钉住 `pinTicks`；甩角式延迟第二拍补 `rip` 并挑飞目标。
+ *   刺（thrust）：提交后朝前趟出 `rush` 格——身体用真实扫掠前移，撞到目标身体或障碍就停在接触处；再沿瞄准方向
+ *       的**真实三维**角线走出 `reach` 格长、`horn` 半宽，先由 `blockHit` 在真实墙面截断，再取首个接触的目标
+ *       结算 `gore` 接触伤害。角尖在真实接触点停，墙上硬碰另有回执。
+ *   收（pin 或 toss）：深植式给目标挂 `minecraft:slowness`，并把「留刺」表现绑在这次减速 carrier 的托管 mark 上，
+ *       减速被净化、替换或到期时留刺随之收起；甩角式延迟第二拍，只在 `hurt` 真正成功后补 `rip` 并挑飞目标。
  *      第二拍只对那个首个命中者、且它仍在近距并保持通视时结算；目标走开或被墙挡住就收角（whiff），刺伤已结清。
  *      挑飞只在实际被推动的人身上显示：免疫击退的目标保留刺伤、不加抛飞，也不谎报把人挑上天。
  *
@@ -19,26 +22,38 @@
  */
 namespace PokemonSkills {
     const megahornScene = "world_combat:move_megahorn";
+    const megahornHornScene = "world_combat:move_megahorn_horn";
+    const megahornPin = "world_combat:megahorn_pin";
     const megahornHitText = "world_combat.move.megahorn.text.hit";
     const megahornPinText = "world_combat.move.megahorn.text.pin";
     const megahornTossText = "world_combat.move.megahorn.text.toss";
     const megahornMissText = "world_combat.move.megahorn.text.miss";
+    const megahornWallText = "world_combat.move.megahorn.text.wall";
 
-    /** 把瞄准方向压平成一个水平单位向量。 */
-    function megahornHeading(direction: CombatPoint): CombatPoint {
-        const flat = WorldCombat.point(direction.x(), 0, direction.z());
-        return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-    }
-
-    /** 角线判定与画面共用的四个顶点：从身体高度沿方向铺 `reach` 格、半宽 `half` 的窄带。 */
-    function megahornLane(origin: CombatPoint, heading: CombatPoint, reach: number, half: number): number[][] {
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const near = origin.plus(WorldCombat.point(0, -0.1, 0));
-        const far = near.plus(heading.scale(reach));
-        const a = near.plus(side.scale(half)), b = near.minus(side.scale(half));
-        const c = far.minus(side.scale(half)), d = far.plus(side.scale(half));
-        return [[a.x(), a.y(), a.z()], [b.x(), b.y(), b.z()], [c.x(), c.y(), c.z()], [d.x(), d.y(), d.z()]];
-    }
+    // 深植的「留刺」只活在这一次减速 carrier 还在的时候：净化/替换/到期随 carrier 一起收，不留失效锚。
+    WorldCombat.effect(megahornPin, 1, 12000, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (!MobEffects.validAnchor(value.anchor)) throw new Error("Invalid megahorn pin: anchor");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(megahornPin, "start", function (effect) {
+        const world = effect.world(), target = effect.target(), state = JSON.parse(effect.state());
+        if (!world.valid(target) || !MobEffects.matches(world, target, state.anchor)) effect.end();
+    });
+    WorldCombat.effectHandler(megahornPin, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 减速一被清除或替换（牛奶、/effect clear、自然到期、别的来源刷新），这次留刺就地收起。
+    WorldCombat.on("world_combat:move_megahorn/pin-fade", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== "minecraft:slowness") return;
+        const world = event.world(), target = event.actor();
+        if (!world.valid(target)) return;
+        const current = MobEffects.read(world, target, "minecraft:slowness");
+        world.effects(target, megahornPin).forEach(function (view) {
+            const state = JSON.parse(String(view.data()));
+            if (current !== null && MobEffects.matches(world, target, state.anchor)) return;
+            world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+    });
 
     define({
         freeMovement: true,
@@ -83,7 +98,8 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const rip = config && config.rip === true;
-            const heading = megahornHeading(aim(action));
+            // 真实三维角线：可上下瞄准，角尖沿实际方向送出。
+            const heading = WorldGeometry.basis(aim(action), action.direction()).forward;
             const reach = Math.max(2.4, p("megahorn", "reach", action));
             const horn = Math.max(0.24, p("megahorn", "horn", action));
             const rush = Math.max(0, p("megahorn", "rush", action));
@@ -91,8 +107,9 @@ namespace PokemonSkills {
             const shards = Math.max(8, Math.round(p("megahorn", "shards", action)));
             const scale = Math.max(0.7, Math.min(1.9, reach / 3.4));
             const intensity = Math.max(0.7, Math.min(2.4, power / 120));
+            const vector = [heading.x(), heading.y(), heading.z()];
 
-            // 中性 aim：有实体目标就逼近到角尖边缘；只有方向/世界点时朝瞄准方向趟出整步，空刺也完整走完。
+            // 中性 aim：有实体目标就逼近到角尖边缘，身体用真实扫掠前移，撞到目标或障碍停在接触处；只有方向/世界点时朝瞄准方向趟出整步。
             const self = world.observe(actor);
             if (self !== null && rush > 0.05) {
                 const target = action.target();
@@ -105,24 +122,44 @@ namespace PokemonSkills {
                 } else {
                     advance = rush;
                 }
-                if (advance > 0.02) world.displace(actor, heading.scale(advance));
+                const flatAim = WorldCombat.point(heading.x(), 0, heading.z());
+                if (advance > 0.02 && flatAim.length() > 1e-6) {
+                    action.moveSweep(flatAim.unit().scale(advance), Math.max(0.3, self.width() / 2));
+                }
             }
             const moved = world.observe(actor);
             const origin = moved === null ? action.origin() : moved.position();
-            const path = megahornLane(origin, heading, reach, horn);
 
             sound(action, "minecraft:item.trident.throw");
-            WorldFeedback.emit(world, megahornScene, 1, origin,
-                { moment: "thrust", path: path, reach: reach, horn: horn, shards: shards,
-                    scale: scale, intensity: intensity, direction: [heading.x(), heading.y(), heading.z()] }, 18);
 
-            const impact = action.trace(origin, origin.plus(heading.scale(reach)), horn);
+            // 角线先由真实墙面截断，判定与画面读同一条线；墙后的人不再被算入。
+            const idealEnd = origin.plus(heading.scale(reach));
+            const clip = WorldGeometry.blockHit(world, origin, idealEnd);
+            const hornEnd = clip === null ? idealEnd : clip.position();
+            const impact = action.trace(origin, hornEnd, horn);
             const target = impact.hitEntity() ? impact.target() : null;
+            // 角尖停在真实接触点：命中取接触点，否则取墙面/全长尽头。
+            const visualEnd = target !== null ? impact.position() : hornEnd;
+            WorldFeedback.emit(world, megahornHornScene, 1, origin,
+                { moment: "thrust", path: [[origin.x(), origin.y(), origin.z()], [visualEnd.x(), visualEnd.y(), visualEnd.z()]],
+                    direction: vector, reach: reach, horn: horn, scale: scale, intensity: intensity }, 18);
+            WorldFeedback.emit(world, megahornScene, 1, origin,
+                { moment: "thrust", reach: reach, shards: shards, scale: scale, intensity: intensity, direction: vector }, 18);
+
             if (target === null || !hurt(action, target, "megahorn", power,
                 { damage: damageSpec("megahorn", "gore"), contact: true })) {
-                WorldFeedback.emit(world, megahornScene, 1, origin,
-                    { moment: "whiff", reach: reach, scale: scale, intensity: intensity }, 18);
-                WorldFeedback.text(world, origin.plus(heading.scale(reach)).plus(WorldCombat.point(0, 1.1, 0)), megahornMissText, [], 22);
+                if (target === null && clip !== null) {
+                    // 墙上硬碰：在真实方块格与表面迸屑，不把角画穿墙体。
+                    const cell = clip.blockPosition();
+                    WorldFeedback.emit(world, megahornScene, 1, clip.position(),
+                        { moment: "wall", shards: shards, scale: scale, intensity: intensity, face: clip.blockFace(),
+                            block: cell !== null ? [cell.x(), cell.y(), cell.z()] : undefined }, 20);
+                    WorldFeedback.text(world, clip.position().plus(WorldCombat.point(0, 0.9, 0)), megahornWallText, [], 22);
+                } else {
+                    WorldFeedback.emit(world, megahornScene, 1, visualEnd,
+                        { moment: "whiff", reach: reach, scale: scale, intensity: intensity }, 18);
+                    WorldFeedback.text(world, visualEnd.plus(WorldCombat.point(0, 1.1, 0)), megahornMissText, [], 22);
+                }
                 sound(action, "minecraft:entity.player.attack.strong");
                 done(action);
                 return;
@@ -137,11 +174,15 @@ namespace PokemonSkills {
             if (!rip) {
                 const pinTicks = Math.max(10, Math.round(p("megahorn", "pinTicks", action)));
                 const pinLevel = Math.max(0, Math.round(p("megahorn", "pinLevel", action)));
-                world.marker(target, "minecraft:slowness", pinTicks, pinLevel);
-                WorldFeedback.emit(world, megahornScene, 1, at,
-                    { moment: "pin", target: String(target.ref()), pinTicks: pinTicks, pinLevel: pinLevel,
-                        scale: scale, intensity: intensity }, Math.min(40, pinTicks));
-                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), megahornPinText, [pinLevel], 26);
+                // 目标已被这一刺打死就只结算伤害，不再挂减速，也不留刺。
+                if (!world.valid(target) || world.observe(target) === null) { done(action); return; }
+                const carrier = MobEffects.apply(world, target, "minecraft:slowness", pinTicks, pinLevel);
+                if (carrier !== null) {
+                    const mark = world.effect(megahornPin, target, JSON.stringify({ anchor: MobEffects.anchor(carrier) }), pinTicks);
+                    if (mark > 0) WorldFeedback.onEffect(world, mark, "megahorn:pin:" + String(target.ref()), megahornScene, 1, at,
+                        { moment: "pin", target: String(target.ref()), pinTicks: pinTicks, pinLevel: pinLevel, scale: scale, intensity: intensity });
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), megahornPinText, [pinLevel], 26);
+                }
                 done(action);
                 return;
             }
@@ -167,12 +208,14 @@ namespace PokemonSkills {
                 const fling = Math.max(0.2, p("megahorn", "fling", next));
                 const flingUp = Math.max(0.1, p("megahorn", "flingUp", next));
                 const where = body.position();
-                hurt(next, target, "megahorn", ripPower,
+                const landedRip = hurt(next, target, "megahorn", ripPower,
                     { damage: damageSpec("megahorn", "gore"), contact: true });
-                // 挑飞只作为可位移目标的附属效果：免疫击退者位移为 0、加不上速度，保留刺伤但不播抛飞。
-                const moved = scope.valid(target) ? scope.hitDisplace(target, heading.scale(fling)) : 0;
+                // 伤害被原生拒绝就不施位移、不播抛飞；只有真正命中后才甩角。
+                if (!landedRip) { done(next); return; }
+                const flingHeading = WorldGeometry.flatUnit(heading, next.direction());
+                const movedDistance = scope.valid(target) ? scope.hitDisplace(target, flingHeading.scale(fling)) : 0;
                 const lifted = scope.valid(target) ? scope.hitImpulse(target, WorldCombat.point(0, flingUp, 0)) : false;
-                if (moved > 0.001 || lifted) {
+                if (movedDistance > 0.001 || lifted) {
                     WorldFeedback.emit(scope, megahornScene, 1, where,
                         { moment: "toss", target: String(target.ref()), fling: fling, flingUp: flingUp,
                             shards: shards, scale: scale, intensity: intensity }, 22);

@@ -13,8 +13,8 @@ const SpiritshackleDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         windup: {
-            duration: 12,
-            exit: { stop: 5, drain: 12 },
+            duration: { data: "prepare", fallback: 12 },
+            exit: { stop: { data: "prepare", fallback: 12 }, drain: 12 },
             emitters: [
                 {
                     name: "draw_shadow", bind: "source", offset: [0, 0.9, 0.15], height: 0.6,

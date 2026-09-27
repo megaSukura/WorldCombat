@@ -4,8 +4,8 @@
  * 什么局面下出手：目标可见、敌对、活着，且在 `ai.maxChase` 之内；它是一记远距离投掷，够得到就掷。
  * 这是唯一能读到自己资源余量的 AI：`capability.data.pp / maxPp` 就是这叠牌的余量。执行时这一张会被付掉，
  * 威力看的是付掉之后的档位，所以 AI 也读同一时刻（`pp − 1`）——余牌不多于 `ai.ace`（默认 1）时抬到 95
- * 当决胜牌抢在别的输出前掷出；用掉一半时作 42 的普通选项。开启 `ai.hold`（留牌）后，牌还没变重就只按最低
- * 优先级参与，把重击留在后面。这样 AI 的取档与画面、结算一致。
+ * 当决胜牌抢在别的输出前掷出；否则开启 `ai.hold`（留牌）时只按最低优先级参与，把重击留到后面；
+ * 未留牌时用掉一半以下作 42 的普通选项。这样 AI 的取档与画面、结算一致。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("trumpcard", {
@@ -32,16 +32,16 @@ namespace PokemonSkills {
             const hold = CompanionBehavior.ai<boolean>(capability, "hold", false);
             let value = 26;
             if (remaining <= ace) value = 95;
-            else if (remaining <= Math.max(0, Math.round(maxPp / 2) - 1)) value = 42;
             else if (hold) value = 0;
+            else if (remaining <= Math.max(0, Math.round(maxPp / 2) - 1)) value = 42;
             if (CompanionBehavior.ai<boolean>(capability, "finish", false) && CompanionBehavior.ratio(target) <= 0.4) value += 12;
             return value;
         }
     });
 
     addPreferences("trumpcard", {}, [
-        field(pathOf("sure"), "必中式", "boolean", {
-            help: "开启：牌自己拐弯追人、几乎不会落空，代价是飞行更慢、威力按 0.9 结算、起手与冷却略久；关闭：直球更快、威力足额，但可能被走位躲开。"
+        field(pathOf("sure"), "追踪式", "boolean", {
+            help: "开启：选中敌人时牌会拐弯追人（每刻最多转一个角度），能追上横移但目标跑出追踪距离、撞墙或急转向仍会落空；代价是飞行更慢、威力按 0.9 结算、起手与冷却略久。关闭：直球更快、威力足额，但可能被走位躲开。"
         }),
         field(pathOf("ai.maxChase"), "投掷距离", "number", {
             min: 2, max: 20, step: 1,
@@ -52,7 +52,7 @@ namespace PokemonSkills {
             help: "这一掷用掉后剩余牌数不多于这个数时，把它当成决胜牌抢在别的输出前掷出（此时它的威力已接近上限）；调高会让更多次投掷被当作决胜牌。"
         }),
         field(pathOf("ai.hold"), "留牌", "boolean", {
-            help: "开启：这一掷用掉后余牌还多于决胜阈值时只按最低优先级参与，把重击留到后面；关闭：任何时候都按当前余牌正常竞争。"
+            help: "开启：除决胜阈值内的最后几张外，其余投掷只按最低优先级参与，把重击留到后面；关闭：任何时候都按当前余牌正常竞争，用掉一半以下作普通选项。"
         }),
         field(pathOf("ai.finish"), "优先收残", "boolean", {
             help: "开启：目标生命低于四成时再抬一档优先级；关闭：只按当前余牌的档位排序。"

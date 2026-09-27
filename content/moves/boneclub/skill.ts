@@ -8,8 +8,9 @@
  * 三幕：
  *   起（raise，提交前）：举棍、转腰，棍影在身侧扫开的预告。
  *   挥（thrust / club+arc → hit / wall / miss）：提交后沿命中偏角修正过的方向踏近一小步；
- *       直刺一次从握点到棒头 trace 一条窄长线；横扫每刻从握点到当刻棒头 trace，累计每个敌人只结算一次（最多 maxTargets 人），
- *       按 staggerChance 掷畏缩。真实墙面在碰到它的当刻截断骨棒，伤害不越墙。
+ *       直刺一次从握点到棒头 trace 一条窄长线；横扫每刻在相邻两帧棒姿之间补采样，用连续扫过的体积兜住窄小身体，
+ *       每个敌人只结算一次（最多 maxTargets 人），按 staggerChance 掷畏缩。每根棒姿先按真实墙面裁长再决定绘图，
+ *       伤害与棒长都不越墙；握点高度按身体尺度落位。
  *   果（hit / wall / miss）：命中浮字并闪碎骨屑；撞墙在真实方块接触位置闪碎屑；什么都没碰到只在棒端散一小撮尘。
  *
  * 与同族分开：暗影之骨把骨头掷出去、碎岩/铁尾是贴身打击；只有骨棒把骨头握在手里、够得更远。
@@ -27,10 +28,9 @@ namespace PokemonSkills {
     const boneclubWallText = "world_combat.move.boneclub.text.wall";
     const boneclubMissText = "world_combat.move.boneclub.text.miss";
 
-    function boneclubFlinch(world: CombatWorld, target: CombatActor, ticks: number): boolean {
-        if (MobEffects.apply(world, target, boneclubFlinchEffect, ticks, 0) === null) return false;
-        world.deliver(target, "world_combat:interrupt");
-        return true;
+    function boneclubFlinch(world: CombatWorld, target: CombatActor, ticks: number): { applied: boolean; interrupted: boolean } {
+        if (MobEffects.apply(world, target, boneclubFlinchEffect, ticks, 0) === null) return { applied: false, interrupted: false };
+        return { applied: true, interrupted: world.deliver(target, "world_combat:interrupt") };
     }
 
     /** 骨棒当刻端点：握点朝方向转 `angle` 弧度、伸出 `reach`。 */
@@ -113,26 +113,32 @@ namespace PokemonSkills {
             if (step > 0.05) LivingActions.step(world, actor, heading.scale(step));
             const moved = world.observe(actor);
             const base = moved !== null ? moved.position() : action.origin();
-            const grip = base.plus(WorldCombat.point(0, 0.55, 0));
+            // 握点按身体尺度落在棒身应有的高度，而不是所有体型都固定在中心上方 0.55。
+            const grip = base.plus(WorldCombat.point(0, Math.max(0.3, (moved !== null ? moved.height() : 1.4) * 0.4), 0));
 
-            /** 从握点到当刻棒头做一次真实判定；先碰墙就截断，同一目标每次挥击只结算一次。 */
-            function swingTick(current: CombatAction, head: CombatPoint): void {
+            /** 从握点到给定棒头做一次真实判定；返回本刻真正能画出的棒端（先按实墙裁剪，再决定表现）。 */
+            function resolveSwing(current: CombatAction, head: CombatPoint, announceWall: boolean): CombatPoint {
                 const scope = current.world();
                 const contact = current.trace(grip, head, gauge, true);
                 const at = contact.position();
                 if (contact.blocked() && !contact.hitEntity()) {
-                    const wall = contact.blockPosition() || at;
-                    WorldFeedback.emit(scope, boneclubScene, 1, wall,
-                        { moment: "wall", face: contact.blockFace(), scale: scale, clubs: clubs }, 20);
-                    sound(current, "minecraft:block.bone_block.break");
-                    if (!walled) { walled = true; WorldFeedback.text(scope, wall.plus(WorldCombat.point(0, 0.9, 0)), boneclubWallText, [], 20); }
-                    return;
+                    if (announceWall) {
+                        const wall = contact.blockPosition() || at;
+                        WorldFeedback.emit(scope, boneclubScene, 1, wall,
+                            { moment: "wall", face: contact.blockFace(), scale: scale, clubs: clubs }, 20);
+                        sound(current, "minecraft:block.bone_block.break");
+                        if (!walled) { walled = true; WorldFeedback.text(scope, wall.plus(WorldCombat.point(0, 0.9, 0)), boneclubWallText, [], 20); }
+                    }
+                    return at;
                 }
+                // 首碰是实体或空放时，另按真实方块再裁一次，绝不把棒画到墙外。
+                const wall = WorldGeometry.blockHit(scope, grip, head);
+                const clip = wall === null ? head : wall.position();
                 const target = contact.hitEntity() ? contact.target() : null;
-                if (target === null || String(target.ref()) === selfRef || scope.friendly(target)) return;
+                if (target === null || String(target.ref()) === selfRef || scope.friendly(target)) return clip;
                 const ref = String(target.ref());
-                if (hitRefs[ref] || hits >= cap) return;
-                if (!hurt(current, target, "boneclub", power, { damage: damageSpec("boneclub", "club") })) return;
+                if (hitRefs[ref] || hits >= cap) return clip;
+                if (!hurt(current, target, "boneclub", power, { damage: damageSpec("boneclub", "club") })) return clip;
                 hitRefs[ref] = true;
                 hits++;
                 const body = scope.observe(target);
@@ -141,10 +147,16 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, boneclubScene, 1, point,
                     { moment: "hit", target: ref, scale: scale, clubs: clubs }, 22);
                 sound(current, "cobblemon:impact.ground");
-                if (scope.valid(target) && scope.random() < chance && boneclubFlinch(scope, target, flinchTicks)) {
-                    WorldFeedback.emit(scope, boneclubScene, 1, point, { moment: "flinch", target: ref }, 22);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), boneclubFlinchText, [], 22);
+                if (scope.valid(target) && scope.random() < chance) {
+                    const flinch = boneclubFlinch(scope, target, flinchTicks);
+                    if (flinch.applied) {
+                        WorldFeedback.emit(scope, boneclubScene, 1, point, { moment: "flinch", target: ref }, 22);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), boneclubFlinchText, [], 22);
+                        // 畏缩被真正挂上与当前动作被实际打断分成两种反馈。
+                        if (flinch.interrupted) WorldFeedback.emit(scope, boneclubScene, 1, point, { moment: "interrupt", target: ref }, 18);
+                    }
                 }
+                return clip;
             }
 
             function finish(current: CombatAction): void {
@@ -162,31 +174,40 @@ namespace PokemonSkills {
             }
 
             if (!sweep) {
-                // 直刺：一次窄长的真实武器线，随释放方向锁定，墙会截断。
+                // 直刺：一次窄长的真实武器线，随释放方向锁定，先裁到实际墙面再生成表现。
                 const end = grip.plus(heading.scale(reach));
+                const clip = resolveSwing(action, end, true);
                 WorldFeedback.emit(world, boneclubScene, 1, grip,
-                    { moment: "thrust", path: boneclubPath(grip, end), direction: [heading.x(), 0, heading.z()],
-                        reach: Math.round(reach * 10) / 10, gauge: Math.round(gauge * 100) / 100, scale: scale, clubs: clubs }, 22);
+                    { moment: "thrust", path: boneclubPath(grip, clip), direction: [heading.x(), 0, heading.z()],
+                        reach: Math.round(clip.minus(grip).length() * 10) / 10, gauge: Math.round(gauge * 100) / 100, scale: scale, clubs: clubs }, 22);
                 sound(action, "minecraft:entity.player.attack.sweep");
-                swingTick(action, end);
                 finish(action);
                 return;
             }
 
-            // 横扫：sweepTicks 刻里由左至右划过一道真实的骨棒弧，每刻从握点到当刻棒头判定。
+            // 横扫：sweepTicks 刻里由左至右划过一道真实的骨棒弧。每刻在相邻两帧棒姿之间补采样，
+            // 用连续扫过的体积兜住窄小身体；每根采样先按实墙裁长，画出的弧只含真正可达的部分。
             const half = arcDegrees * Math.PI / 360;
             const arc: CombatPoint[] = [];
+            const samples = 4;
             let tick = 0;
             function swing(current: CombatAction): void {
                 const progress = sweepTicks <= 1 ? 1 : tick / (sweepTicks - 1);
-                const head = boneclubHead(grip, heading, -half + 2 * half * progress, reach);
-                arc.push(head);
+                const previous = sweepTicks <= 1 ? 0 : Math.max(0, (tick - 1) / (sweepTicks - 1));
+                const angle = -half + 2 * half * progress;
+                const prevAngle = -half + 2 * half * previous;
+                let clip = boneclubHead(grip, heading, angle, reach);
+                for (let sample = 1; sample <= samples; sample++) {
+                    const sub = boneclubHead(grip, heading, prevAngle + (angle - prevAngle) * sample / samples, reach);
+                    const point = resolveSwing(current, sub, sample === samples);
+                    if (sample === samples) clip = point;
+                }
+                arc.push(clip);
                 scene.show(current, "club", grip,
-                    { moment: "club", path: boneclubPath(grip, head), direction: [heading.x(), 0, heading.z()], scale: scale, clubs: clubs });
+                    { moment: "club", path: boneclubPath(grip, clip), direction: [heading.x(), 0, heading.z()], scale: scale, clubs: clubs });
                 scene.show(current, "arc", grip,
                     { moment: "arc", path: boneclubPoints(arc), scale: scale, clubs: clubs });
                 if (tick === 0) sound(current, "minecraft:entity.player.attack.sweep");
-                swingTick(current, head);
                 tick++;
                 if (tick >= sweepTicks) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { swing(next); });

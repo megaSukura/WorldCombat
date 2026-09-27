@@ -10,11 +10,12 @@
  *
  * 三幕（execute 自管节奏）：
  *   起（windup，提交前）：低头蓄势、龙气向内收拢，只播预告。
- *   撞（execute，提交后）：`strikes` 次。每一撞先在当刻锁定目标／当刻 aim 方向，再用 `sweepStep` 让身体真推出去
- *       `reach` 以内的一整段，停在首个身体或墙上；撞到的目标吃一记 `claw` 接触伤害并被顶开 `push` 格，最后一撞另乘
- *       `finisher`。空撞照样耗掉本次次数。两撞之间隔 `gap` 刻。
+ *   撞（execute，提交后）：`strikes` 次。每一撞先在当刻锁定目标／当刻 aim 方向，并把身体快转向该方向，再用
+ *       `sweepStep` 让身体真推出去 `reach` 以内的一整段，停在首个身体或墙上；撞到的目标吃一记 `claw` 接触伤害
+ *       并被顶开 `push` 格，最后一撞另乘 `finisher` 并在命中处补一圈只有终结才有的环。撞到的是墙就用它真实的
+ *       接触点收尾、撞到的是同伴就在那里明确停住，都不再向墙内延伸；空撞照样耗掉本次次数。两撞之间隔 `gap` 刻。
  *   晕（结束）：撞完给自己挂共享身份 world_combat:status/confusion（载体本单元自己的 effect，时长按首次写入的
- *       `dazeTicks`，反噬不再续时）。
+ *       `dazeTicks`，反噬不再续时）；只有真正挂上才播代价，持续眩晕画面绑在这份载体上随它清理。
  *
  * 对宝可梦、原版生物、其他模组生物和玩家，伤害、状态、位移都走同一条路。
  */
@@ -45,17 +46,56 @@ namespace PokemonSkills {
 
     interface OutrageState { ref: string | null; left: number; strikes: number; index: number; }
 
-    /** 撞完的恍惚：只这一次写入有限 `dazeTicks`，之后反噬不再续时。 */
+    // 恍惚存续的托管载体：头顶眩晕气流绑在真实恍惚效果的剩余时间与当前 key 上。
+    // 自然到期、牛奶／/effect clear、换上新载体（key 变化）都随它一起停，不靠自己的计时，也不留残影。
+    const outrageDazeMark = "world_combat:move_outrage/daze_mark";
+    WorldCombat.effect(outrageDazeMark, 1, 600, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.key !== "string" || !value.key) throw new Error("Invalid outrage daze carrier key");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    function outrageDazeWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        const value = JSON.parse(effect.state());
+        const carrier = CombatStatus.representative(world, target, "confusion");
+        if (body === null || carrier === null || String(carrier.id()) !== outrageDaze || String(carrier.key()) !== value.key) {
+            effect.end(); return;
+        }
+        WorldFeedback.onEffect(world, effect.id(), "dizzy", outrageScene, 1, body.position(),
+            { moment: "dizzy", target: String(target.ref()), fumble: carrier.amplifier() });
+        const remaining = carrier.duration() < 0 ? 600 : Math.max(1, Math.min(600, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effectHandler(outrageDazeMark, "start", outrageDazeWatch);
+    WorldCombat.effectHandler(outrageDazeMark, "watch", outrageDazeWatch);
+    WorldCombat.effectHandler(outrageDazeMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 恍惚被牛奶／/effect clear 提前拿掉时，立即撤掉托管表现，不等下一次巡检。
+    WorldCombat.on("world_combat:move_outrage/daze-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== outrageDaze) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, outrageDazeMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
+
+    /** 撞完的恍惚：只有这次写入真的挂上才播代价与持续画面；反噬不再续时。 */
     function outrageSpent(current: CombatAction, state: OutrageState): void {
         const world = current.world(), actor = current.actor(), body = world.observe(actor);
         const ticks = Math.max(80, Math.round(p(outrageId, "dazeTicks", current)));
         const fumble = Math.round(Math.max(0.05, Math.min(0.9, p(outrageId, "fumble", current))) * 100);
         if (body !== null) {
-            CombatStatus.apply(world, actor, "confusion", outrageDaze, ticks, fumble, { unique: true });
+            const applied = CombatStatus.apply(world, actor, "confusion", outrageDaze, ticks, fumble, { unique: true });
+            if (!applied) return;
             WorldFeedback.emit(world, outrageScene, 1, body.position(),
                 { moment: "spent", target: String(actor.ref()), strikes: state.strikes, fumble: fumble, ticks: ticks, intensity: 1 }, 30);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), outrageDazeText, [], 30);
             world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
+            const carrier = CombatStatus.representative(world, actor, "confusion");
+            const carrierKey = carrier === null ? "" : String(carrier.key());
+            world.effects(actor, outrageDazeMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+            if (carrierKey) world.effect(outrageDazeMark, actor, JSON.stringify({ key: carrierKey }), ticks);
         }
     }
 
@@ -88,7 +128,8 @@ namespace PokemonSkills {
         if (direction === null) direction = outrageAim(self.position(), self.position().plus(current.direction()));
         if (direction === null) direction = WorldCombat.point(0, 0, 1);
         state.ref = victim !== null ? String(victim.ref()) : null;
-        current.face(self.position().plus(direction), 15, 15);
+        // 转身与位移协同：先把身体快转向这一撞的方向，再沿同一方向推出去，避免目标绕后时身体未转就反向冲。
+        current.face(self.position().plus(direction), 60, 60);
 
         // 真实冲距：目标在，就一路推到首个身体前；没目标就垫进 `lunge`。不再用小步加无形走廊。
         let charge = lunge;
@@ -101,29 +142,34 @@ namespace PokemonSkills {
 
         const before = self.position();
         // 真实推进到首个身体或墙：分段调用 moveSweep（单次上限 4 格），撞到就停，最多一次 contact。
-        let hit: CombatImpact | null = null, blocked = false, travelled = 0;
+        // 墙的 BLOCK Impact 单独保存，用它的真实接触点收尾，不再从停止点向前延伸。
+        let contact: CombatImpact | null = null, wall: CombatImpact | null = null, stopped = false, travelled = 0;
         for (let guard = 0; guard < 8 && travelled < charge - 1e-6; guard++) {
             const leg = Math.min(3.5, charge - travelled);
             const swept = sweepStep(current, direction.scale(leg), radius);
             travelled += swept.moved;
-            if (swept.hit.hitEntity()) { hit = swept.hit; break; }
-            if (swept.hit.blocked() || swept.moved < leg - 1e-6) { blocked = true; break; }
+            if (swept.hit.hitEntity()) { contact = swept.hit; break; }
+            if (swept.hit.blocked()) { wall = swept.hit; break; }
+            if (swept.moved < leg - 1e-6) { stopped = true; break; }
         }
         const after = current.origin();
         const path: number[][] = [[before.x(), before.y() + 0.4, before.z()], [after.x(), after.y() + 0.4, after.z()]];
 
         sound(current, "cobblemon:move.dragonclaw.actor");
 
-        let struck = false;
+        let struck = false, allyBlocked = false;
         let hitPoint: CombatPoint = after;
         let hitRef = "";
-        if (hit !== null) {
-            const target = hit.target();
-            if (target !== null && world.valid(target) && !world.friendly(target)) {
+        if (contact !== null) {
+            const target = contact.target();
+            if (target !== null && world.valid(target) && String(target.key()) !== String(actor.key()) && !world.friendly(target)) {
                 if (hurt(current, target, outrageId, power, { damage: damageSpec(outrageId, "claw"), contact: true })) {
-                    struck = true; hitPoint = hit.position(); hitRef = String(target.ref());
+                    struck = true; hitPoint = contact.position(); hitRef = String(target.ref());
                     if (world.valid(target)) world.hitDisplace(target, direction.scale(push));
                 }
+            } else if (target !== null) {
+                // 首个身体是同伴：这一撞被它截下，明确停在这里，不再穿过去。
+                allyBlocked = true; hitPoint = contact.position(); hitRef = String(target.ref());
             }
         }
 
@@ -136,15 +182,27 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, outrageScene, 1, hitPoint,
                 { moment: "claw", target: hitRef, final: final ? 1 : 0,
                     grains: grains, scale: scale, intensity: intensity }, 26);
+            // 终结额外环只在最后一撞触发，和普通撞击一眼分得开。
+            if (final) WorldFeedback.emit(world, outrageScene, 1, hitPoint,
+                { moment: "finisher", target: hitRef, grains: grains, scale: scale, intensity: intensity }, 30);
             WorldFeedback.text(world, hitPoint.plus(WorldCombat.point(0, 1.4, 0)),
                 final ? outrageFinisherText : outrageHitText, [Math.round(power)], 28);
             sound(current, "cobblemon:impact.dragon");
             sound(current, "minecraft:entity.player.attack.strong");
+        } else if (allyBlocked) {
+            WorldFeedback.emit(world, outrageScene, 1, hitPoint,
+                { moment: "blocked", ally: 1, target: hitRef, grains: grains, scale: scale, intensity: intensity * 0.7,
+                    moved: Math.round(travelled * 100) / 100 }, 20);
+            WorldFeedback.text(world, before.plus(WorldCombat.point(0, 1.3, 0)), outrageChargeText, [], 22);
+        } else if (wall !== null) {
+            WorldFeedback.emit(world, outrageScene, 1, wall.position(),
+                { moment: "blocked", ally: 0, face: wall.blockFace(), grains: grains, scale: scale, intensity: intensity * 0.7,
+                    moved: Math.round(travelled * 100) / 100 }, 20);
+            WorldFeedback.text(world, before.plus(WorldCombat.point(0, 1.3, 0)), outrageChargeText, [], 22);
         } else {
-            const end = after.plus(direction.scale(radius + 0.4));
-            WorldFeedback.emit(world, outrageScene, 1, end,
+            WorldFeedback.emit(world, outrageScene, 1, after,
                 { moment: "whiff", index: state.index, grains: grains, scale: scale, intensity: intensity * 0.7,
-                    blocked: blocked ? 1 : 0, face: hit !== null ? hit.blockFace() : "", moved: Math.round(travelled * 100) / 100 }, 20);
+                    blocked: stopped ? 1 : 0, moved: Math.round(travelled * 100) / 100 }, 20);
             WorldFeedback.text(world, before.plus(WorldCombat.point(0, 1.3, 0)), outrageChargeText, [], 22);
         }
 
@@ -231,18 +289,6 @@ namespace PokemonSkills {
             }
         }
     } });
-
-    // 恍惚存续期：低密度的眩晕气流每 20 刻续期，随效果自然结束而停；不写回时长。
-    WorldCombat.on(outrageId + ":linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== outrageDaze) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, outrageId + ":dizzy:" + String(actor.ref()), outrageScene, 1, body.position(),
-            { moment: "dizzy", target: String(actor.ref()), fumble: data.amplifier }, 40);
-    });
 
     // 提交后按住技能键可在撞间重新瞄准；松手结束这次投入。
     WorldCombat.preview("world_combat:" + outrageId, JSON.stringify({ input: { version: 1, steps: ["point"], sustained: true } }));

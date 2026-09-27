@@ -33,26 +33,31 @@ namespace PokemonSkills {
         });
     }
 
+    /** 怨念式且不愿吞异常时，带异常的目标是硬排除：把异常留给队友的条件收益，不把它当成备用目标。 */
+    function bittermaliceAvoids(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const grudge = !!(capability.data.config && capability.data.config.grudge === true);
+        return grudge && !CompanionBehavior.ai<boolean>(capability, "devour", true) && bittermaliceStatused(context, target);
+    }
+
     CompanionBehavior.registerUse("bittermalice", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return bittermaliceWants(context, capability, target);
+            return bittermaliceWants(context, capability, target) && !bittermaliceAvoids(context, capability, target);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return !target.friendly && target.health > 0 && target.visible && !bittermaliceAvoids(context, capability, target);
         },
         priority: function (context, capability, target) {
             if (!target || !bittermaliceWants(context, capability, target)) return 0;
+            if (bittermaliceAvoids(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
             let score = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 22 : 0;
-            const grudge = !!(capability.data.config && capability.data.config.grudge === true);
             if (bittermaliceStatused(context, target)) {
-                // 怨念式会吞掉异常：愿意吞就优先，想把异常留给队友就避开；纠缠式永远优先带异常者（当场加倍）。
-                if (grudge && !CompanionBehavior.ai<boolean>(capability, "devour", true)) score -= 6;
-                else if (CompanionBehavior.ai<boolean>(capability, "afflicted", true)) score += 12;
+                // 纠缠式优先带异常者（这一记当场提高到 ×1.6）；怨念式不愿吞异常的目标已在 accepts 排除。
+                if (CompanionBehavior.ai<boolean>(capability, "afflicted", true)) score += 12;
             }
             if (CompanionBehavior.ai<boolean>(capability, "wounded", true) && CompanionBehavior.ratio(self) < 0.5) score += 8;
             if (!bittermaliceLane(context, target)) score -= 12;

@@ -7,9 +7,11 @@
  * 两幕：
  *   起（windup 播「搓装饰」，提交前只观察与预告，可被打断，打断不花代价）。
  *   送（提交后）：一束装饰作为真实投射物从施法者飞向目标（表现绑同一个 projectile）；它有遮挡——
- *     被墙、被别的身体挡下，或队友中途离场，就落空散掉；只有**真正到达**目标才在它身上炸开并挂上，
- *     同时 NativeEffects.boost 把物攻与特攻各抬起 `gift` 级，并挂上共享身份 world_combat:status/decorated
- *     的「已装扮」标记；装饰物在身上持续闪到标记结束。
+ *     被墙、被别的身体挡下，或队友中途离场，就在实际接触/落点散掉；只有**真正命中原目标**才结账，
+ *     其他身体挡下不越过遮挡。
+ *   挂（命中原目标）：先挂上共享身份 world_combat:status/decorated 的「已装扮」载体，再让这份载体拥有
+ *     物攻与特攻各 `gift` 级的临时窗口（NativeEffects.boostWindow 绑 carrier）。佩戴的短缎带、闪光与
+ *     增益因此同生共死：载体到期、被驱散或被重新覆盖时一起收，厚涂才真正亮得更久。
  *
  * 只送给别人：`ready` 拒绝以自己为目标——这件作品要有一个佩戴者。
  * 与同族分开：其余三招都只碰自己或只做减法；装饰把力量**送到另一个战斗者身上**，且送达本身就是可被打断的一段路。
@@ -26,7 +28,7 @@ namespace PokemonSkills {
         id: "decorate",
         cooldownParameter: "wait",
         name: "Decorate",
-        description: "搓出一束奶油与缎带，飞送给另一个友方；缎带真正落到对方身上时才给它的攻击与特攻大幅提高，装饰物在身上亮一阵子。中途被墙或别的身体挡下、或对方离场，就落空散掉。这件作品要有一个佩戴者。",
+        description: "搓出一束奶油与缎带，飞送给另一个友方；只有真正命中原目标时，对方的攻击与特攻才大幅提高，装饰物在身上亮一阵子。提升与装饰同寿，装饰到期或被驱散时一并收回。中途被墙或别的身体挡下、或对方离场，就在实际接触点散掉。这件作品要有一个佩戴者。",
         uses: ["开战前把身边的队友打扮成主力", "在队友冲上去之前先给他加满双攻", "把自己以外的伙伴变成一把更利的刀"],
         kind: "friend",
         range: 5,
@@ -85,18 +87,33 @@ namespace PokemonSkills {
             const velocity = delta.unit().scale(distance / travel);
             let resolved = false;
 
-            function adorn(scope: CombatWorld, point: CombatPoint): void {
-                NativeEffects.boost(scope, mark, "atk", gift);
-                NativeEffects.boost(scope, mark, "spa", gift);
-                MobEffects.apply(scope, mark, decorateMark, veneer, 0);
+            /** 只有真正落到原目标身上才结账：双攻窗口与「已装扮」标记由同一份 carrier 拥有、同寿回收。 */
+            function adorn(scope: CombatWorld, point: CombatPoint): boolean {
+                const before = NativeEffects.effectiveStages(scope, mark);
+                const previous = MobEffects.read(scope, mark, decorateMark);
+                const carrier = MobEffects.apply(scope, mark, decorateMark, veneer, 0);
+                if (carrier === null) return false;
+                const owned = NativeEffects.boostWindow(scope, mark, { atk: gift, spa: gift }, carrier.duration(),
+                    "world_combat:move/decorate", carrier, previous);
+                const raised = NativeEffects.effectiveStages(scope, mark);
+                const atkGain = Math.max(0, (raised.atk || 0) - (before.atk || 0));
+                const spaGain = Math.max(0, (raised.spa || 0) - (before.spa || 0));
+                // 顶到上限、没有真实提升时不留下空装饰、也不播「已装扮」。
+                if (!owned || (atkGain <= 0 && spaGain <= 0)) {
+                    if (owned) NativeEffects.windowClose(scope, owned);
+                    MobEffects.consume(scope, mark, decorateMark);
+                    return false;
+                }
                 const bearer = scope.observe(mark);
-                if (bearer === null) return;
+                if (bearer === null) return false;
                 WorldFeedback.emit(scope, decorateScene, 1, point,
                     { moment: "adorn", target: ref, trinkets: trinkets, gift: gift, scale: scale }, 30);
-                WorldFeedback.keep(scope, "decorate:glint:" + ref, decorateScene, 1, bearer.position(),
-                    { moment: "glint", target: ref, trinkets: trinkets }, Math.min(veneer, 160));
-                WorldFeedback.text(scope, bearer.position().plus(WorldCombat.point(0, 1.4, 0)), decorateText, [gift], 34);
+                // 佩戴的短缎带与闪光都绑在真正的双攻窗口上：窗口到期、被驱散或重施替换时一起收，不留残影。
+                WorldFeedback.onEffect(scope, owned, "decorate:glint:" + ref, decorateScene, 1, bearer.position(),
+                    { moment: "glint", target: ref, trinkets: trinkets });
+                WorldFeedback.text(scope, bearer.position().plus(WorldCombat.point(0, 1.4, 0)), decorateText, [atkGain, spaGain], 34);
                 scope.sound("minecraft:block.amethyst_block.chime", bearer.position(), 16, "{}");
+                return true;
             }
             function spill(scope: CombatWorld, point: CombatPoint, blocked: boolean): void {
                 WorldFeedback.emit(scope, decorateScene, 1, point,
@@ -111,16 +128,15 @@ namespace PokemonSkills {
                     if (resolved) return;
                     const scope = current.world();
                     const victim = impact.hitEntity() ? impact.target() : null;
-                    if (victim !== null && scope.valid(victim) && scope.friendly(victim)
-                        && String(victim.ref()) !== String(actor.ref())) {
+                    // 只有真正命中原目标才结账；别的身体或墙面都按实际接触点散落，不越过遮挡隔空给原目标发收益。
+                    if (victim !== null && scope.valid(victim) && String(victim.ref()) === ref) {
                         resolved = true;
-                        adorn(scope, impact.position());
+                        if (!adorn(scope, impact.position())) spill(scope, impact.position(), false);
                         return;
                     }
                     if (impact.blocked() || victim !== null) {
                         resolved = true;
-                        const block = impact.blockPosition();
-                        spill(scope, block === null ? impact.position() : block, true);
+                        spill(scope, impact.position(), true);
                     }
                 },
                 function (current: CombatAction) {

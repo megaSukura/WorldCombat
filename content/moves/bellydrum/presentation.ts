@@ -1,46 +1,37 @@
 /**
  * 腹鼓 / Belly Drum 的粒子语言。
  *
- * 一句话：肚皮上一记记鼓点砸下去，地面跟着震；付血的一刻一记重鼓，鼓出的等级化作贴身的几道橙色鼓纹，
+ * 一句话：准备期一记记腹前敲击把鼓点砸在肚皮正面，末拍之后一记重鼓付血；鼓出的等级化作贴身的几道橙色鼓纹，
  *   窗口里余纹随剩余时间一圈圈变淡，到期只撤自己的那份。
- * 色相家族：鼓皮棕 0x8A5A44 作地面与余韵，力量橙 0xFF6A2A 作主体，炽白 0xFFE0A0 只落在小的强调粒子。
- * 拍子：起（windup 鼓点）／击（surge 一记重鼓与贴身纹路）／续（hold 窗口余纹）／收（fade 力量退去）。
- * 数目：windup 的鼓点次数绑定 data.beats；surge 的纹路数与爆发数绑定 data.beats/data.burst；
- *   hold 的密度绑定 data.glow（服务端按实际贡献与剩余时间算好），强度按 data.paidRatio 缩放。
+ * 色相家族：鼓皮棕 0x8A5A44 作敲击与余韵，力量橙 0xFF6A2A 作主体，炽白 0xFFE0A0 只落在小的强调粒子。
+ * 拍子：敲（tap 逐拍腹前短闪，服务端按真实准备时钟分别发出）／击（surge 一记重鼓与贴身纹路）／
+ *   续（hold 窗口余纹）／收（fade 力量退去）。
+ * 数目：tap 由服务端按准备时长分 3–5 次发出，每记带真实朝向与体型 scale，短闪而非全场圈；
+ *   surge 的纹路数与爆发数绑定 data.beats/data.burst；hold 的密度绑定 data.glow，强度按 data.paidRatio 缩放。
  */
 const BellyDrumDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        windup: {
-            duration: 14,
-            exit: { stop: 6, drain: 12 },
+        tap: {
+            sound: { id: "minecraft:block.note_block.bass", volume: 0.6, pitch: 0.8 },
+            duration: 10,
+            exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    name: "beat_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    name: "tap_press", bind: "point", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 16, interval: 4, repeats: { data: "beats", fallback: 6 } },
-                    shape: { kind: "circle", radius: 0.7 },
-                    direction: "outward", speed: [0.04, 0.12],
-                    lifetime: [10, 18], size: [0.4, 0.8],
-                    color: 0x8A5A44, alpha: [0.55, 0], light: "world", maxParticles: 60
+                    burst: { count: 10 }, shape: { kind: "ring", radius: 0.18 },
+                    direction: "inward", speed: [0.03, 0.08], drag: 0.84,
+                    lifetime: [5, 9], size: [0.16, 0.04],
+                    color: 0x8A5A44, alpha: [0.6, 0], light: "world", maxParticles: 20
                 },
                 {
-                    name: "beat_dust", bind: "source", offset: [0, 0.03, 0], height: 0,
+                    name: "tap_dust", bind: "point", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 18, interval: 4, repeats: { data: "beats", fallback: 6 } },
-                    shape: { kind: "circle", radius: 0.6 },
-                    direction: "up", speed: [0.02, 0.07], gravity: 0.03,
-                    lifetime: [10, 20], size: [0.07, 0.01],
-                    color: 0xB08868, alpha: [0.6, 0], light: "world", maxParticles: 80
-                },
-                {
-                    name: "beat_smoke", bind: "source", offset: [0, 0.2, 0], height: 0.1,
-                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    burst: { count: 4, interval: 4, repeats: { data: "beats", fallback: 6 } },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.02, 0.06],
-                    lifetime: [12, 22], size: [0.16, 0.03],
-                    color: 0x8A5A44, alpha: [0.35, 0], light: "world", maxParticles: 40
+                    burst: { count: 6 }, shape: { kind: "line", length: 0.16 },
+                    direction: "shape", speed: [0.02, 0.08], drag: 0.9,
+                    lifetime: [5, 10], size: [0.05, 0.01],
+                    color: 0xFFE0A0, alpha: [0.55, 0], light: "world", maxParticles: 12
                 }
             ]
         },

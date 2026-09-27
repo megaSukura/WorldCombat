@@ -8,7 +8,8 @@
  * 飞行：提交后从口边放出一团无伤烟团（LivingActions.projectile），飞行时长由 smokeSpeed 真实决定；
  *       烟团穿过生物，撞到方块就在撞点开云，走到落点就在落点开云——它不会穿墙瞬开，目标在烟到达前不会被呛。
  * 云：WorldEffects.field 的烟云（规则 world_combat:field/smokescreen 定义在本单元）每 5 刻扫一次，
- *     罩住范围内的非友方，按节流挂共享身份 world_combat:status/smoked，进入时下降原生命中等级；
+ *     罩住范围内的非友方，按节流挂共享身份 world_combat:status/smoked，进入时按本招推算的级数下降命中，
+ *     这份下降以 boostWindow 绑在呛眼载体上——载体结束、被驱散或被牛奶解除时一并复原，不留永久降阶；
  *     云的画面用 WorldFeedback.onEffect 绑在这片场地效果上，驱散或到期立刻停，不残留。
  * 反制：烟团要飞、云有存在时长且不会移动；走出云外余味会自然走完；铺云要选好落点，铺空了就白费一次冷却。
  */
@@ -43,13 +44,19 @@ namespace PokemonSkills {
                 if (now < (next[ref] || 0)) continue;
                 next[ref] = now + Math.max(10, Math.round(field.data.refresh || 20));
                 const fresh = !CombatStatus.has(world, actor, smokescreenSpot);
-                if (MobEffects.apply(world, actor, smokescreenEffect, linger, 0) === null) continue;
+                // 命中下降绑在这份呛眼载体上：载体在就在，载体结束、驱散或被牛奶解除时一起复原，不再留永久降阶。
+                const previous = MobEffects.read(world, actor, smokescreenEffect);
+                const carrier = MobEffects.apply(world, actor, smokescreenEffect, linger, 0);
+                if (carrier === null) continue;
+                const before = NativeEffects.effectiveStage(world, actor, "accuracy");
+                NativeEffects.boostWindow(world, actor, { accuracy: -stage }, linger,
+                    "smokescreen:" + String(field.id || field.rule), carrier, previous);
+                const dropped = Math.max(0, before - NativeEffects.effectiveStage(world, actor, "accuracy"));
                 if (fresh) {
-                    NativeEffects.boost(world, actor, "accuracy", -stage);
                     WorldFeedback.emit(world, smokescreenScene, 1, body.position(),
                         { moment: "choked", target: ref }, 28);
                     WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.05, 0)),
-                        "world_combat.move.smokescreen.text.choke", [stage], 34);
+                        "world_combat.move.smokescreen.text.choke", [dropped > 0 ? dropped : stage], 34);
                 }
             }
         }
@@ -134,16 +141,20 @@ namespace PokemonSkills {
                 sprite: "cobblemon:particle/generic/orb/smokeorb", tint: 0x6E6E78, glow: true,
                 scale: Math.max(0.8, Math.min(1.6, radius / 2.1)), pierce: 16
             };
+            // 烟团真的从口边（真实发射口）出发；方向、射程、表现锚点与载体位置都用同一个起点。
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: distance + 0.6, gravity: 0, radius: 0.3, direction: direction,
+                speed: speed, range: distance + 0.6, gravity: 0, radius: 0.3, direction: direction, origin: head,
                 lifetime: Math.min(200, travel + 2), appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
-                    // 烟无伤，穿过生物继续飞；只有撞到方块才在撞点开云。
+                    // 烟无伤，穿过生物继续飞；只有撞到方块才在墙面外侧的实际撞击点开云。
                     if (!hit.blocked()) return;
-                    const at = hit.blockPosition();
-                    bloom(current, at === null ? hit.position() : at);
+                    bloom(current, hit.position());
                 }
-            }, function (current: CombatAction) { bloom(current, centre); });
+            }, function (current: CombatAction) {
+                // 自然飞完（射程或寿命耗尽）时读烟弹真实保留的最后位置，而不是把云落回最初选中的旧点。
+                const at = current.world().projectilePosition(flight);
+                bloom(current, at === null ? centre : at);
+            });
             scenes.show(action, "travel", head, { moment: "travel", projectile: flight, density: density });
         }
     });

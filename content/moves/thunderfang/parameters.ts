@@ -48,10 +48,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "从起步到咬到的总位移，也是本招的实际射程来源；它是本族扑得最远的一口，腿快的个体更远。"
             }),
-        /** 扑咬速度：0.82 + 速度偏移[−0.12,0.34]；过载 ×1.04 / 点穴 ×1.06；夹 0.55..1.15。 */
+        /** 扑咬速度：0.82 + 速度偏移[−0.12,0.34]；过载 ×1.08 / 点穴 ×1.06；夹 0.55..1.15。 */
         lunge: formula(
             F.base(0.82).plus(F.stat("speed").minus(55).times(0.006).clamp(-0.12, 0.34))
-                .times(F.when(F.pref("overload", text("worldcombat.skill.thunderfang.preference.overload")), F.const(1.04), F.const(1.06)))
+                .times(F.when(F.pref("overload", text("worldcombat.skill.thunderfang.preference.overload")), F.const(1.08), F.const(1.06)))
                 .clamp(0.55, 1.15).round(2),
             "扑咬速度", {
                 unit: "格/刻",
@@ -103,7 +103,7 @@ namespace PokemonSkills {
         /** 收招：5 − 速度偏移[−2,1.5]；夹 3..9。 */
         aftercast: seconds(
             F.base(5).minus(F.stat("speed").minus(55).times(0.015).clamp(-2, 1.5)).clamp(3, 9).round(0),
-            "收招", "咬完松口、退开半步的收势；速度越快越短。"),
+            "收招", "咬完松口的收势；速度越快越短。"),
         /** 冷却：15 − 速度偏移[−4,2] + 过载 4；夹 8..27。 */
         recharge: seconds(
             F.base(15).minus(F.stat("speed").minus(55).times(0.04).clamp(-4, 2))

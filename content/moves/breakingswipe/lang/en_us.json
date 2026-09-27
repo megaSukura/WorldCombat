@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.breakingswipe.summary": "Stands still and sweeps its tough tail from one side to the other across the ground in a wide arc: every enemy the tail passes takes contact damage, is shoved away and has its Attack lowered by one stage. Wide mode covers more, focused mode hits harder.",
+  "worldcombat.skill.breakingswipe.summary": "Stands still and sweeps its tough tail from one side to the other at the body's real height in a wide arc: every enemy the tail passes takes contact damage, is shoved away and has its Attack lowered by one stage, with the actual stages reported. Wide mode covers more, focused mode hits harder.",
   "worldcombat.skill.breakingswipe.use.0": "Lower a whole crowd pressing in at once",
   "worldcombat.skill.breakingswipe.use.1": "Shove everyone adjacent away and open space",
   "worldcombat.skill.breakingswipe.use.2": "Cut several physical attackers at once while they crowd together",
@@ -25,8 +25,9 @@
   "worldcombat.skill.breakingswipe.preference.ai.maxChase": "Engagement distance",
   "worldcombat.skill.breakingswipe.preference.ai.maxChase.help": "The companion only swings once the target is within this distance; larger values swing earlier and miss more while still out of position.",
   "worldcombat.skill.breakingswipe.preference.ai.cluster": "Aim at crowds",
-  "worldcombat.skill.breakingswipe.preference.ai.cluster.help": "On: a target with other enemies within 3.2 blocks ranks higher, so one sweep lowers several at once. Off: ordinary combat ordering.",
+  "worldcombat.skill.breakingswipe.preference.ai.cluster.help": "On: a target with other visible enemies inside the real sweep fan ranks higher, so one sweep lowers several at once. Off: ordinary combat ordering.",
   "world_combat.move.breakingswipe.text.drop": "Attack down x%1$s",
+  "world_combat.move.breakingswipe.text.hit": "Tail sweep hit %1$s",
   "world_combat.move.breakingswipe.text.miss": "Tail sweep misses",
   "worldcombat.skill.breakingswipe.value.maxTargets": "Sweep limit"
 }

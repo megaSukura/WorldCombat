@@ -12,6 +12,7 @@
  *
  * 每个参数依赖不同的精灵数据（分散到不同参数）：
  *   reach      读取距离：体型（碰撞箱高度）决定能隔着多远看清对手的上一手。
+ *   memory     读取记忆：只采信最近这么久内真正发生过的进攻；更老的招不再被纹理２读取（久远招排除）。
  *   hold       纹理维持：等级与特防支撑重织的稳定。
  *   charge     起手：速度决定看懂并重织得多快。
  *   afterglow  收势：等级决定重织后的平复。
@@ -26,6 +27,9 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "能隔着多远看清对手的上一手；个头越高看得越远。它也是本招的实际射程来源。"
             }),
+        memory: seconds(
+            F.base(200).plus(F.level().times(3)).clamp(120, 400).round(0),
+            "读取记忆", "只采信最近这么久内真正发生过的进攻；比这更老的招不再被纹理２读取。"),
         hold: seconds(
             F.base(200).plus(F.level().times(4)).plus(F.stat("specialDefence").div(3)).clamp(160, 1200).round(0),
             "纹理维持", "重织后的属性维持多久；等级与特防越高越稳。"),
@@ -52,7 +56,7 @@ namespace PokemonSkills {
 
     describe("conversion2", [
         { key: "world", values: ["hold"] },
-        { key: "description.0", values: ["reach", "charge"] },
+        { key: "description.0", values: ["reach", "charge", "memory"] },
         { key: "description.1", values: ["hold", "pref.wide"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.hold", "tier.0.reach"] }

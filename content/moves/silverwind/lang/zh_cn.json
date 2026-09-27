@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.silverwind.summary": "抖翅把银鳞扇成一大片向前铺开：扇面里的敌人各被割一下，鳞粉缓缓飘落后散尽；回卷的一撮鳞粉有概率把自身五项战斗能力短时各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
+  "worldcombat.skill.silverwind.summary": "抖翅把银鳞扇成一大片向前铺开：起手聚鳞时是对手走位躲开的窗口，扇出后扇面里的敌人各立即被割一下，鳞粉随后缓缓飘落散尽、只是余尘；回卷的一撮鳞粉有概率把自身五项战斗能力短时各抬一级。浓鳞式短而窄、更重；疏鳞式铺得更远更宽、出手更快。",
   "worldcombat.skill.silverwind.use.0": "一次割到并排站着的几个人",
   "worldcombat.skill.silverwind.use.1": "在远一点的距离先手消耗",
   "worldcombat.skill.silverwind.use.2": "抓住反哺后的短时强化窗口进攻",
@@ -24,7 +24,7 @@
   "worldcombat.skill.silverwind.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.silverwind.preference.ai.maxChase.help": "超过这个距离就不主动抖翅，先走近；越大越愿意对更远的目标扫去。",
   "worldcombat.skill.silverwind.preference.ai.preferCrowd": "成片时优先",
-  "worldcombat.skill.silverwind.preference.ai.preferCrowd.help": "开启后，目标身边 3 格内还站着别的敌人时优先，一扇能同时割到好几个人；关闭则只按普通攻击排序。",
+  "worldcombat.skill.silverwind.preference.ai.preferCrowd.help": "开启后，按自己指向目标的真实三维扇面数到里面还站着别的可达敌人时优先，一扇能同时割到好几个人；侧后方的人不算。关闭则只按普通攻击排序。",
   "world_combat.move.silverwind.text.surge": "潜力：%1$s 项 +%2$s 级（%3$s 秒）",
   "world_combat.move.silverwind.text.hit": "银鳞割到 %1$s 个敌人",
   "world_combat.move.silverwind.text.miss": "鳞粉空扇",

@@ -27,7 +27,7 @@
   "worldcombat.skill.rage.preference.ai.maxChase": "Strike distance",
   "worldcombat.skill.rage.preference.ai.maxChase.help": "Only light up at a foe within this distance; the step is short, so larger values often still need to close in first.",
   "worldcombat.skill.rage.preference.ai.healthFloor": "Light-up floor",
-  "worldcombat.skill.rage.preference.ai.healthFloor.help": "Only light the rage above this percentage of health - the fire needs hits to grow, so lighting up too low is risky. Lower dares more at low health; higher only strengthens when healthy. Once lit, dropping below this line makes the companion strike back instead of standing and taking more hits.",
+  "worldcombat.skill.rage.preference.ai.healthFloor.help": "Only light the rage above this percentage of health - the fire needs hits to grow, so lighting up too low is risky. Lower dares more at low health; higher only strengthens when healthy. Once lit, it is not re-cast; the turn goes to a real damage move instead.",
   "world_combat.move.rage.text.ignite": "Rage lit (%1$s s)",
   "world_combat.move.rage.text.hit": "Angry blow",
   "world_combat.move.rage.text.stoke": "Rage +%1$s (now %2$s)",

@@ -21,6 +21,26 @@ namespace PokemonSkills {
         return Math.max(0.3, Math.min(0.7, width * 0.32));
     }
 
+    /** 双束的真实发射几何：中心、朝向、侧向与左右起射点。左右起射点若探到墙内就向内收拢，保证两条束都不穿墙起射。 */
+    function signalbeamFroms(world: CombatWorld, body: CombatObservation | null, origin: CombatPoint, focus: CombatPoint,
+        direction: CombatPoint, gauge: number): { centre: CombatPoint; heading: CombatPoint; side: CombatPoint; froms: CombatPoint[] } {
+        const height = body === null ? 1.4 : body.height();
+        const centre = origin.plus(WorldCombat.point(0, height * 0.35, 0));
+        const heading = WorldGeometry.flatUnit(focus.minus(origin), direction);
+        const side = WorldCombat.point(-heading.z(), 0, heading.x());
+        let half = Math.max(0.2, Math.min(2.4, gauge));
+        for (let probe = 0; probe < 6; probe++) {
+            let blocked = false;
+            for (let s = -1; s <= 1 && !blocked; s += 2)
+                if (WorldGeometry.blockHit(world, centre, centre.plus(side.scale(half * s))) !== null) blocked = true;
+            if (!blocked) break;
+            half = Math.max(0.2, half * 0.6);
+            if (half <= 0.2) break;
+        }
+        return { centre: centre, heading: heading, side: side,
+            froms: [centre.plus(side.scale(half)), centre.minus(side.scale(half))] };
+    }
+
     /** 把错乱挂到目标身上：借共享身份 confusion，振幅存失手概率百分数，独一无二地替换同类载体。 */
     function signalbeamJam(world: CombatWorld, victim: CombatActor, at: CombatPoint, ticks: number, fumblePct: number): boolean {
         if (!CombatStatus.apply(world, victim, "confusion", signalbeamEffect, ticks, fumblePct, { unique: true })) return false;
@@ -62,8 +82,15 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:signalbeam:windup", signalbeamScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather", pulse: config && config.pulse === true }));
+            // 起手的两枚信号源就对在真实发射点上：用和 execute 相同的几何，先量出左右 froms 再播预告。
+            const geometry = action.sense();
+            const body = geometry.observe(action.actor());
+            const origin = body === null ? action.origin() : body.position();
+            const gauge = p(signalbeamId, "gauge", action);
+            const froms = signalbeamFroms(geometry, body, origin, action.targetPosition(), action.direction(), gauge).froms;
+            const pulse = config && config.pulse === true;
+            action.present("world_combat:signalbeam:windup:left", signalbeamScene, 1, froms[0], JSON.stringify({ moment: "gather_left", pulse: pulse }));
+            action.present("world_combat:signalbeam:windup:right", signalbeamScene, 1, froms[1], JSON.stringify({ moment: "gather_right", pulse: pulse }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -79,53 +106,31 @@ namespace PokemonSkills {
             const fumblePct = Math.round(Math.max(0.05, Math.min(0.9, p(signalbeamId, "fumble", action))) * 100);
             const motes = Math.max(12, Math.round(p(signalbeamId, "motes", action)));
             const maxTargets = Math.max(1, Math.round(p(signalbeamId, "maxTargets", action)));
-            const crowd = !(config && config.ai && config.ai.crowd === false);
-            const height = body === null ? 1.4 : body.height();
             const beamRadius = signalbeamRadius(body);
             const scale = Math.max(0.6, Math.min(2.2, gauge / 0.6));
             const intensity = Math.max(0.5, Math.min(2.2, power / 62));
             const selfRef = String(actor.ref());
-            const centre = origin.plus(WorldCombat.point(0, height * 0.35, 0));
             const targeted: { [ref: string]: boolean } = {};
             let targetCount = 0, hits = 0;
 
-            // 焦点：手动瞄点。AI（或开启“优先照扎堆”的配置）在目标身边还挤着别的敌人时，把交点略向身前收，
-            // 让两条束在目标之前交叉、到目标距离时已张开扫向两侧；单体则交点正对身体。
-            let focus = action.targetPosition();
-            const primary = action.target();
-            if (crowd && primary !== null && world.valid(primary)) {
-                const primaryBody = world.observe(primary);
-                if (primaryBody !== null) {
-                    const near = world.query(primaryBody.position(), 2.5, false);
-                    let others = 0;
-                    for (let i = 0; i < near.length; i++) {
-                        const other = near[i];
-                        if (String(other.ref()) === selfRef || String(other.ref()) === String(primary.ref()) || world.friendly(other)) continue;
-                        const observation = world.observe(other);
-                        if (observation !== null && observation.health() > 0) others++;
-                    }
-                    const toFocus = focus.minus(origin), gap = toFocus.length();
-                    if (others > 0 && gap > 0.8) focus = origin.plus(toFocus.unit().scale(gap * 0.7));
-                }
-            }
-
-            const heading = WorldGeometry.flatUnit(focus.minus(origin), action.direction());
-            const side = WorldCombat.point(-heading.z(), 0, heading.x());
-            const emitterHalf = Math.max(0.2, Math.min(2.4, gauge));
-            const froms: CombatPoint[] = [centre.plus(side.scale(emitterHalf)), centre.minus(side.scale(emitterHalf))];
+            // 焦点就是当刻的瞄准点：手动与 AI 都用各自的真实瞄点。收焦是 AI 决策，已在上游完成，这里不再擅自改动。
+            const focus = action.targetPosition();
+            const geometry = signalbeamFroms(world, body, origin, focus, action.direction(), gauge);
+            const heading = geometry.heading;
+            const froms: CombatPoint[] = geometry.froms;
             const moments: string[] = ["beam_left", "beam_right"];
 
             sound(action, "minecraft:block.beacon.activate");
 
-            /** 一条束的真实终点：沿“发射点 → 焦点”方向拉到原 reach，再用原生方块射线裁墙。 */
-            function cast(from: CombatPoint): { end: CombatPoint; clipped: boolean; cell: CombatPoint | null; face: string } {
+            /** 一条束的真实终点：沿“发射点 → 焦点”方向铺满原 reach 就停，焦点更远也不强行延长；再用原生方块射线裁墙。 */
+            function cast(from: CombatPoint): { end: CombatPoint; clipped: boolean; face: string } {
                 const toFocus = focus.minus(from), span = toFocus.length();
                 const direction = span < 0.05 ? heading : toFocus.unit();
-                const wanted = from.plus(direction.scale(Math.max(reach, span)));
+                const wanted = from.plus(direction.scale(reach));
                 const clip = world.clipBlocks(from, wanted);
                 if (clip !== null && clip.blocked())
-                    return { end: clip.position(), clipped: true, cell: clip.blockPosition(), face: clip.blockFace() };
-                return { end: wanted, clipped: false, cell: null, face: "" };
+                    return { end: clip.position(), clipped: true, face: clip.blockFace() };
+                return { end: wanted, clipped: false, face: "" };
             }
 
             /** 落在这一段细束里的非友方：每束每人一次半伤，全局按目标数封顶 maxTargets。 */
@@ -153,11 +158,11 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, signalbeamScene, 1, focus,
                     { moment: moments[i], path: [[from.x(), from.y(), from.z()], [shot.end.x(), shot.end.y(), shot.end.z()]],
                         motes: motes, scale: scale, intensity: intensity }, 24);
-                if (shot.clipped && shot.end.minus(from).length() < focus.minus(from).length() - 0.05) crossed = false;
+                if (shot.end.minus(from).length() < focus.minus(from).length() - 0.05) crossed = false;
                 if (shot.clipped) {
-                    const cell = shot.cell === null ? shot.end : shot.cell;
-                    WorldFeedback.emit(world, signalbeamScene, 1, cell,
-                        { moment: "wall", face: shot.face, point: [cell.x(), cell.y(), cell.z()],
+                    // 墙火花落在弹线的实际接触点（shot.end），不再用方块格坐标假装命中点。
+                    WorldFeedback.emit(world, signalbeamScene, 1, shot.end,
+                        { moment: "wall", face: shot.face,
                             motes: Math.max(6, Math.round(motes * 0.4)), scale: scale }, 20);
                 }
                 strikes(from, shot.end);

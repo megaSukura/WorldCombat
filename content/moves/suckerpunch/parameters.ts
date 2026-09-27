@@ -8,6 +8,7 @@
  *   朝瞄准方向闪身刺出一记；这一刺打中的第一个活体要处在出手窗内才算命中。
  *   「正在出手」按两条可观察事实读取：目标最近 `window` 刻内完成过一次真实攻击（原生近战／投射物由
  *   `DamageSemantics.recentAttack` 提供，脚本招式由世界事件 `world_combat:committed` 记下，非变化招式不算）。
+ *   脚本记录按招式类别判断（物理／特殊都算，与目标种类无关），所以锁定目标的 enemy 招与朝一个方向的 aim 招同样计数。
  *   两条都不成立时这一记会落空——PP 照扣（与原作「招式失败」一致），所以 AI 只在读准时才提议，而玩家可以
  *   朝任意方向硬赌，空放也会消费。
  *
@@ -42,7 +43,7 @@ namespace PokemonSkills {
     }
     /** 原生模板能读到且为变化招式时，不算「攻击招式」。读不到模板时保守地当作攻击。 */
     export function suckerpunchStatus(moveId: string): boolean {
-        try { return String(CobblemonCombat.moveTemplate(moveId).category()) === "Status"; }
+        try { return String(CobblemonCombat.moveTemplate(moveId).category()) === "status"; }
         catch (error) { return false; }
     }
     export function suckerpunchRemember(world: CombatWorld, actor: CombatActor, moveId: string): void {
@@ -61,16 +62,17 @@ namespace PokemonSkills {
         if (target === null || !world.valid(target) || world.friendly(target)) return false;
         return suckerpunchOpen(world, target, window);
     }
-    /** 起手时找一个能读到出手窗的邻近敌人做标记；读不到返回 null（表现为单纯蓄势）。 */
-    export function suckerpunchMark(world: CombatWorld, origin: CombatPoint, range: number, window: number): CombatActor | null {
+    /** 起手时在**当前瞄准线**上找一个能读到出手窗、且在闪身距离内够得到的最近敌人做标记；读不到或不在线上返回 null。 */
+    export function suckerpunchMark(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, range: number, halfWidth: number, window: number): CombatActor | null {
         var radius = Math.max(0.5, range), best = radius + 0.01, nearest: CombatActor | null = null;
+        var lane = WorldGeometry.lane(origin, direction, radius, Math.max(0.3, halfWidth));
         var found = world.query(origin, radius, false);
         for (var i = 0; i < found.length; i++) {
             var candidate = found[i];
             if (candidate === null || world.friendly(candidate)) continue;
             if (!suckerpunchOpen(world, candidate, window)) continue;
             var body = world.observe(candidate);
-            if (body === null) continue;
+            if (body === null || !lane.contains(body.position())) continue;
             var gap = body.position().minus(origin).length();
             if (gap <= best) { best = gap; nearest = candidate; }
         }
@@ -148,9 +150,10 @@ namespace PokemonSkills {
     ]);
 
     // 记账：任何生物提交一次攻击招式（非变化）就记下这一刻；突袭读取它判断对手「正在出手」。
+    // 按招式类别过滤（enemy 与 aim 都算，只看是不是攻击招式），不以目标种类代替出手事实。
     WorldCombat.on("world_combat:suckerpunch/read", "world_combat:committed", "", function (event: CombatWorldEvent) {
         var action = event.action();
-        if (action === null || action.targetKind() !== "enemy") return;
+        if (action === null) return;
         var world = event.world(), actor = event.actor();
         if (!world.valid(actor) || world.observe(actor) === null) return;
         var moveId = suckerpunchMoveId(String(action.content()));

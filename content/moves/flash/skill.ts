@@ -48,10 +48,12 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "gather", form: config && config.form === "tight" ? "tight" : "wide" }));
             return prepare;
         },
-        indicator: function (config, pokemon) {
-            const context: NumberContext = { pokemon: pokemon!, skill: skills[flashId], detail: { values: config } };
+        indicator: function (config, pokemon, inspection) {
             const tight = config && config.form === "tight";
-            return { radius: Math.round(p(flashId, "radius", context) * (tight ? 0.75 : 1.35) * 10) / 10,
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[flashId], detail: { values: config || {} },
+                world: inspection && inspection.world, actor: inspection && inspection.actor, attributes: inspection && inspection.attributes };
+            const radius = pokemon ? Math.min(10, Math.round(p(flashId, "radius", context) * (tight ? 0.75 : 1.35) * 10) / 10) : (tight ? 3 : 5.4);
+            return { radius: radius,
                 geometry: "circle", style: "light", color: 0xFFE9A0, label: tight ? "闪光·聚光" : "闪光·散射" };
         },
         execute: function (action, move, config, done) {
@@ -60,7 +62,7 @@ namespace PokemonSkills {
             const body = world.observe(self);
             const origin = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.55, 0));
             const tight = !!(config && config.form === "tight");
-            const radius = Math.max(2.5, Math.round(p(flashId, "radius", action) * (tight ? 0.75 : 1.35) * 10) / 10);
+            const radius = Math.min(10, Math.round(p(flashId, "radius", action) * (tight ? 0.75 : 1.35) * 10) / 10);
             const stage = Math.max(1, Math.min(3, Math.round(p(flashId, "blindStage", action)) + (tight ? 1 : 0)));
             const duration = Math.max(60, Math.round(p(flashId, "duration", action) * (tight ? 1.2 : 1)));
             const afterimage = Math.max(16, Math.round(p(flashId, "afterimage", action)));
@@ -71,16 +73,19 @@ namespace PokemonSkills {
                 if (facts.friendly() || String(actor.ref()) === String(self.ref())) return;
                 if (!world.clear(origin, facts.position())) return;
                 const gap = facts.position().minus(origin).length();
-                const landed = Math.max(1, stage - (gap > near ? 1 : 0));
-                MobEffects.apply(world, actor, flashEffect, duration, 0);
-                NativeEffects.boost(world, actor, "accuracy", -landed);
+                const wanted = Math.max(1, stage - (gap > near ? 1 : 0));
+                // 两份效果分别结算：短攻击压制落在真实状态上，永久命中等级走能力阶梯。各自按实际结果回执。
+                const effect = MobEffects.apply(world, actor, flashEffect, duration, 0);
+                const dropped = Math.abs(NativeEffects.boost(world, actor, "accuracy", -wanted));
+                if (dropped === 0 && effect === null) return;
+                caught++;
                 const at = world.observe(actor);
                 if (at !== null) {
                     WorldFeedback.emit(world, flashScene, 1, at.position(),
-                        { moment: "dazzle", target: String(actor.ref()), stage: landed, burst: 26 + landed * 22, afterimage: afterimage }, 34);
-                    WorldFeedback.text(world, flashAbove(at.position()), "world_combat.move.flash.text.dazzle", [landed], 36);
+                        { moment: "dazzle", target: String(actor.ref()), stage: dropped, burst: 26 + Math.max(1, dropped) * 22, afterimage: afterimage }, 34);
+                    if (dropped > 0)
+                        WorldFeedback.text(world, flashAbove(at.position()), "world_combat.move.flash.text.dazzle", [dropped], 36);
                 }
-                caught++;
             });
             WorldFeedback.emit(world, flashScene, 1, origin,
                 { moment: "flare", radius: radius, caught: caught, stage: stage, afterimage: afterimage,

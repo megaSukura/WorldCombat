@@ -41,7 +41,7 @@ const SpikecannonDefinition: ParticleDefinition = {
                 },
                 {
                     name: "line", bind: "source", offset: [0, 0.5, 0], height: 0.4,
-                    orient: "direction",
+                    orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     rate: 8, shape: { kind: "line", length: { data: "span", fallback: 6 } },
                     direction: "shape", speed: [0.0, 0.02],
@@ -121,9 +121,10 @@ const SpikecannonDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "ricochet", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "shards", fallback: 6 }, at: 0 },
-                    shape: { kind: "sphere", radius: 0.26 },
+                    shape: { kind: "hemisphere", radius: 0.26 },
                     direction: "outward", speed: [0.05, 0.22], spread: 32, gravity: 0.12, drag: 0.86,
                     lifetime: [5, 10], size: [0.06, 0.015],
                     color: 0xF0F3F8, alpha: [0.75, 0], light: "full", maxParticles: 28

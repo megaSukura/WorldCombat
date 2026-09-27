@@ -40,24 +40,23 @@ const IcehammerDefinition: ParticleDefinition = {
             ]
         },
         swing: {
-            duration: 12,
-            exit: { stop: 5, drain: 10 },
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "ice_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
-                    shape: { kind: "polyline" }, burst: { count: { data: "shards", fallback: 12 } },
+                    shape: { kind: "polyline" }, rate: 80,
                     direction: "shape", orient: "direction", speed: [0.05, 0.16], spread: 6, spin: 10,
                     lifetime: [4, 8], size: [0.24, 0.05], sizeMode: "index",
-                    color: 0x8FD6F5, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
+                    color: 0x8FD6F5, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 120
                 },
                 {
                     name: "cold_smear", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    shape: { kind: "polyline" }, burst: { count: 14 },
+                    shape: { kind: "polyline" }, rate: 32,
                     direction: "shape", orient: "direction", speed: [0.04, 0.12],
                     lifetime: [4, 8], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0xEAFBFF, alpha: [0.5, 0], light: "world", maxParticles: 30
+                    color: 0xEAFBFF, alpha: [0.5, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -163,7 +162,7 @@ const IcehammerDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "ice_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "ice_ring", bind: "point", fit: "world", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 1.5 } },
@@ -172,7 +171,7 @@ const IcehammerDefinition: ParticleDefinition = {
                     color: 0x8FD6F5, alpha: [0.5, 0], light: "full", maxParticles: 6
                 },
                 {
-                    name: "snow_drift", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "snow_drift", bind: "point", fit: "world", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
                     burst: { count: { data: "shards", fallback: 14 }, at: 0 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 } },
@@ -182,7 +181,7 @@ const IcehammerDefinition: ParticleDefinition = {
                     color: 0xEAFBFF, alpha: [0.5, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "mist", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    name: "mist", bind: "point", fit: "world", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 10, at: 0 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 } },
@@ -226,3 +225,41 @@ const IcehammerDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_icehammer", 1, IcehammerDefinition);
+
+/**
+ * 垂直落锤里的那枚裹冰拳：服务端每刻给出拳当前真实所在的世界点与起点，客户端在原位画一枚带短尾的拳形，
+ * 随下落切换帧，命中/撞墙即被 lifecycle 停掉。固定绘制（一枚拳 + 一段尾线），复用原生图集，不生成粒子或额外实体。
+ */
+const IcehammerFistScene = "world_combat:move_icehammer/fist";
+const IcehammerFistSprite = "cobblemon:particle/generic/fist";
+const IcehammerFistFrames = 5;
+
+function icehammerTriple(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function icehammerNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(IcehammerFistScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "fist" || data.lifecycle) return;
+    const point = icehammerTriple(data.point);
+    if (point === null) return;
+    const from = icehammerTriple(data.from);
+    const scale = Math.max(0.6, Math.min(2.0, icehammerNumber(data.scale, 1)));
+    const intensity = Math.max(0.6, Math.min(2.2, icehammerNumber(data.intensity, 1)));
+    const progress = Math.max(0, Math.min(1, icehammerNumber(data.progress, 0)));
+    const alpha = Math.round(Math.max(150, Math.min(245, 170 + intensity * 35)));
+    const bright = (alpha << 24 | 0xEAFBFF) | 0;
+    const tail = (Math.round(alpha * 0.5) << 24 | 0x8FD6F5) | 0;
+    if (from !== null) frame.line(from[0], from[1], from[2], point[0], point[1], point[2], tail);
+    const spriteFrame = Math.max(0, Math.min(IcehammerFistFrames - 1, Math.floor(progress * IcehammerFistFrames)));
+    frame.sprite(IcehammerFistSprite, point[0], point[1], point[2], 0.4 * scale + 0.1, 0, bright, spriteFrame, true);
+});

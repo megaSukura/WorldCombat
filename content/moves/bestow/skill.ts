@@ -1,4 +1,5 @@
-/** 把自己携带的一件道具交给空手的友方宝可梦、普通生物或玩家。对方已有持物或被查封时无法递送。 */
+/** 把自己携带的一件道具交给空手的友方宝可梦、普通生物或玩家。对方已有持物或被查封时无法递送。
+ *  递交是原子的一次交换：成功当刻道具就到对方手里，画面只给一闪交接，没有飞行在途的假承诺。 */
 namespace PokemonSkills {
     export interface BestowHeld { id: string; key: string; pokemon: CombatPokemon | null; }
     /** 一名战斗者当前的持有物。宝可梦取携带物、原版生物/玩家取主手/副手，同一原生装备读取路径；空手返回 null。 */
@@ -7,6 +8,10 @@ namespace PokemonSkills {
         return held === null ? null : { id: held.id, key: held.pokemon ? String(held.pokemon.heldKey()) : "", pokemon: held.pokemon };
     }
     function bestowItemKey(id: string): string { return "item." + String(id).replace(":", "."); }
+    /** 递交／接收点取身体中心附近的手部高度；不再用「中心再抬 0.6 身高」，那常越过手部甚至头。 */
+    function bestowHand(body: CombatObservation): CombatPoint {
+        return body.position().plus(WorldCombat.point(0, body.height() * 0.06, 0));
+    }
 
     define({
         id: "bestow",
@@ -22,7 +27,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 85,
         style: "gift",
-        defaults: { urgent: false, ai: { maxChase: 12, giftBelow: 1.0, leaveStation: false } },
+        defaults: { urgent: false, ai: { maxChase: 12, giftBelow: 1.0, leaveStation: false, autoGift: false, onlyBerries: true } },
         fields: [flag("urgent", "急递")],
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["bestow"], detail: { values: config },
@@ -62,8 +67,6 @@ namespace PokemonSkills {
             var ribbons = Math.max(6, Math.round(p("bestow", "ribbons", action)));
             var motes = Math.max(6, Math.round(p("bestow", "motes", action)));
             var shine = Math.max(6, Math.round(p("bestow", "shine", action)));
-            var glide = Math.max(6, Math.round(p("bestow", "glide", action)));
-            var reach = Math.max(1, p("bestow", "reach", action));
             function fizzle(reason: string, point: CombatPoint, text: string): void {
                 WorldFeedback.emit(world, bestowScene, 1, point, { moment: reason, scale: scale }, 22);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), text, [], 26);
@@ -79,32 +82,22 @@ namespace PokemonSkills {
             if (mine === null) { fizzle("empty", body.position(), bestowEmptyText); return; }
             if (bestowHeldOf(world, target) !== null) { fizzle("full", tbody.position(), bestowFullText); return; }
             if (NativeItems.sealed(world, target) || NativeItems.sealed(world, caster)) { fizzle("sealed", tbody.position(), bestowSealedText); return; }
+            // 原子移交：一件道具此刻就从施法者手里进到对方手里；没有事后飞行的假承诺，到账与画面同拍。
             if (!NativeItems.exchangeHeld(world, caster, target).ok) {
                 fizzle("refused", tbody.position(), bestowRefusedText); return;
             }
             var itemId = mine.id;
-            var origin = body.position().plus(WorldCombat.point(0, body.height() * 0.6, 0));
-            var dest = tbody.position().plus(WorldCombat.point(0, tbody.height() * 0.6, 0));
-            var delta = dest.minus(origin);
-            var direction = delta.length() < 0.05 ? aim(action) : delta.unit();
-            var flight = action.projectile(origin, direction.scale(Math.max(0.35, delta.length() / Math.max(1, glide))), 0, 0.2, reach, glide + 4,
-                function () { }, function () { },
-                JSON.stringify({ item: itemId, scale: 1, glow: true, spin: true, pierce: 1, homing: { target: String(target.ref()), turn: 90 } }));
-            var path: (string | number[])[] = [String(caster.ref()), String(target.ref())];
+            var origin = bestowHand(body), dest = bestowHand(tbody);
             WorldFeedback.emit(world, bestowScene, 1, origin,
-                { moment: "offer", target: String(target.ref()), item: itemId, ribbons: ribbons, scale: scale }, 20);
-            WorldFeedback.emit(world, bestowScene, 1, origin,
-                { moment: "stream", target: String(target.ref()), projectile: flight, path: path, item: itemId,
-                    ribbons: ribbons, motes: motes, scale: scale, direction: [direction.x(), direction.y(), direction.z()],
-                    reach: Math.max(0.5, Math.min(reach, delta.length() || reach)) }, 26);
-            WorldFeedback.emit(world, bestowScene, 1, tbody.position(),
+                { moment: "offer", target: String(target.ref()), item: itemId, motes: motes, ribbons: ribbons, scale: scale }, 20);
+            WorldFeedback.emit(world, bestowScene, 1, dest,
                 { moment: "receive", target: String(target.ref()), item: itemId, shine: shine, scale: Math.max(0.6, tbody.height()) }, 26);
-            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), bestowGiftText,
+            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 0.7, 0)), bestowGiftText,
                 [{ key: bestowItemKey(itemId), fallback: itemId }], 28);
-            WorldFeedback.text(world, tbody.position().plus(WorldCombat.point(0, 1.2, 0)), bestowReceiveText,
+            WorldFeedback.text(world, dest.plus(WorldCombat.point(0, 0.7, 0)), bestowReceiveText,
                 [{ key: bestowItemKey(itemId), fallback: itemId }], 30);
             world.sound("minecraft:block.amethyst_block.chime", origin, 16, "{}");
-            world.sound("minecraft:entity.item.pickup", tbody.position(), 14, "{}");
+            world.sound("minecraft:entity.item.pickup", dest, 14, "{}");
             done(action);
         },
         indicator: function (config, pokemon) {

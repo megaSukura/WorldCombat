@@ -1,17 +1,16 @@
 /**
  * 惩罚 / punishment 的出手方式。
  *
- * 核心念头：看准目标身上叠起来的强化，用一记近身压顶把那些层数称进威力。判定不直读提交时的目标，
- *   而是朝本次瞄准方向递出一条真实短拳路：`action.trace(origin, end, edge, true)` 取真正的首个接触
+ * 核心念头：看准目标身上叠起来的强化，用一记近身压顶把那些层数称进威力。判定用提交时的瞄准方向，
+ *   在身前上举处到身前落点之间拉出一条有限的重臂扫线：`action.trace(top, low, edge, true)` 取真正的首个接触
  *   （前排的身体、同伴或实墙都会截住它），只有首个接触是非友方活体时才结算一记 `judge` 接触伤害。
- *   墙当面截住拳路就没有伤害；空挥只是白砸一记，不称重、不计增益。
+ *   墙当面截住扫线就没有伤害；空挥只是白砸一记，不称重、不计增益。抬臂期间目标可以移出这条线，本招不再自动贴近。
  *
  * 强化计数：`punishmentBoosts` 读目标七项正向能力等级，加上药水／信标等正面 MobEffect 的层数（I 级计 1 层），
  *   在**命中那一刻**对真正被打中的对象读取；总数封顶，Boss 挂着一堆常驻效果也不会无限增威。命中的对象保留
  *   这些增益，本招只把它们的层数称进这一次威力。
  *
- * 选取：`kind: "aim"`——朝方向或世界点都能出手，也能空砸；提交与执行都不要求存在敌人，`target` 为 null 时
- *   按 `aim(action)` 读到的方向/点出手，实体推荐只帮助共享接近逻辑贴近。
+ * 选取：`kind: "aim"`——朝方向或世界点都能出手，也能空砸；提交与执行都不要求存在敌人，实体推荐只帮助共享接近逻辑贴近。
  *
  * 与同族分开：逐步击破是贴脸分高度连击、ＤＤ金勾臂是原地整圈横扫、圣剑是最长的一记正前切斩；
  *   惩罚凭「先看目标涨了多少、再一记压顶称进去」认出来。
@@ -75,41 +74,35 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const world = action.sense(), target = action.target();
             const marks = target !== null && world.valid(target) && !world.friendly(target) ? punishmentBoosts(world, target) : 0;
-            action.present("world_combat:move_punishment:weigh", punishmentScene, 1, action.origin(),
-                JSON.stringify({ moment: "weigh", windup: prepare, marks: marks, heavy: config && config.heavy === true }));
+            const body = world.observe(action.actor());
+            const look = action.direction();
+            const flat = WorldCombat.point(look.x(), 0, look.z());
+            const forward = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
+            const lift = body === null ? 1.0 : body.height() * 0.8;
+            const arm = action.origin().plus(WorldCombat.point(0, lift, 0)).plus(forward.scale(0.35));
+            action.present("world_combat:move_punishment:weigh", punishmentScene, 1, arm,
+                JSON.stringify({ moment: "weigh", windup: prepare, marks: marks, scale: Math.max(0.6, Math.min(1.9, p(punishmentId, "reach", action) / 2.0)),
+                    target: target !== null && world.valid(target) ? String(target.ref()) : "", heavy: config && config.heavy === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), actor = action.actor(), target = action.target();
-            const heading = punishmentHeading(aim(action));
+            const world = action.world(), actor = action.actor();
+            const self = world.observe(actor);
+            if (self === null) { done(action); return; }
+            // 已提交的瞄准方向：抬臂期间目标可以移出这条线；不再朝它自动贴近。
+            const heading = punishmentHeading(action.direction());
             const reach = Math.max(1.6, p(punishmentId, "reach", action));
             const edge = Math.max(0.28, p(punishmentId, "edge", action));
             const base = p(punishmentId, "judge", action);
             const heavy = config && config.heavy === true ? 1 : 0;
-            const self = world.observe(actor);
-            if (self === null) { done(action); return; }
             const origin = self.position();
-            const drop = Math.max(1.5, self.height() * 1.2);
+            const lift = self.height() * 0.95;
+            const top = origin.plus(WorldCombat.point(0, lift, 0)).plus(heading.scale(reach * 0.15));
+            const low = origin.plus(heading.scale(reach));
             const scale = Math.max(0.6, Math.min(1.9, reach / 2.0));
-            const intensity = Math.max(0.6, Math.min(2.4, base / 56));
 
-            // 有推荐敌人且还够不到时，朝它压上有限的半步；自由方向出手则按瞄准方向站定。
-            if (target !== null && world.valid(target) && !world.friendly(target)) {
-                const toTarget = world.observe(target);
-                if (toTarget !== null) {
-                    const delta = toTarget.position().minus(origin);
-                    const distance = delta.length();
-                    if (distance > reach * 0.85) {
-                        const step = Math.min(distance - reach * 0.6, reach);
-                        if (step > 0.05) world.displace(actor, delta.unit().scale(step));
-                    }
-                }
-            }
-            const arrived = world.observe(actor);
-            const at0 = arrived === null ? origin : arrived.position();
-
-            // 权威首碰：拳路真正碰到的第一个身体或方块就是这一记压顶的落点。
-            const contact = action.trace(at0, at0.plus(heading.scale(reach)), edge, true);
+            // 权威首碰：短重臂从身前上举处落下，第一个碰到的身体或墙就是这一记的落点。
+            const contact = action.trace(top, low, edge, true);
             const at = contact.position();
             const lander = contact.hitEntity() ? contact.target() : null;
             const victim = lander !== null && String(lander.ref()) !== String(actor.ref()) && !world.friendly(lander) ? lander : null;
@@ -117,12 +110,10 @@ namespace PokemonSkills {
             if (victim === null) {
                 // 空挥或撞墙：不称重、不计增益，只留一记空砸。
                 const blocked = contact.blocked();
-                const cell = blocked && contact.blockPosition() !== null ? contact.blockPosition() : null;
-                const point = cell === null ? at : cell;
-                WorldFeedback.emit(world, punishmentScene, 1, point,
+                WorldFeedback.emit(world, punishmentScene, 1, at,
                     { moment: "miss", direction: blocked ? punishmentFace(contact.blockFace()) : [heading.x(), heading.y(), heading.z()],
                       scale: scale }, 16);
-                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), punishmentMissText, [], 20);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.0, 0)), punishmentMissText, [], 20);
                 sound(action, "minecraft:block.anvil.land");
                 done(action);
                 return;
@@ -134,11 +125,12 @@ namespace PokemonSkills {
             const power = p(punishmentId, "judge", hitContext);
             const weights = Math.max(6, Math.round(p(punishmentId, "weights", hitContext)));
             const intensityHit = Math.max(0.6, Math.min(2.4, power / 56));
-            const fall = [[at.x(), at.y() + drop, at.z()], [at.x(), at.y(), at.z()]];
+            const stroke = at.minus(top), length = stroke.length();
+            const down = length < 1e-6 ? [heading.x(), -1, heading.z()] : [stroke.x() / length, stroke.y() / length, stroke.z() / length];
 
             sound(action, "minecraft:block.anvil.land");
             WorldFeedback.emit(world, punishmentScene, 1, at,
-                { moment: "fall", path: fall, direction: [heading.x(), heading.y(), heading.z()],
+                { moment: "strike", path: [[top.x(), top.y(), top.z()], [at.x(), at.y(), at.z()]], direction: down,
                   boost: boost, weights: weights, scale: scale, intensity: intensityHit, heavy: heavy }, 18);
 
             const landed = impact(action, contact, punishmentId, power,

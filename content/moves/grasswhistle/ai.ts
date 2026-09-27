@@ -5,6 +5,7 @@
  *   且与自己之间有一条没被墙挡住的直线的目标时出手；同时它最想在有多个敌人排在一条线上时吹——音束会
  *   一路穿过去。已经被挡住视线、目标已睡着、或把握不足的，不抢着吹。单个贴身敌不必舍近用远。
  * 对谁出手：当前威胁；正在逃跑的威胁抬分（这一声能从远处把它钉住）。
+ * 驻守：收到「驻守」且未开 leaveStation 时仍可在射程内原地吹，只有目标在射程外、必须离位走过去时才放弃。
  * 够不到怎么办：由共享任务走到 reach；accepts 不按距离硬拒，会先靠近再吹。
  * 放完之后：被穿透的一串人一起睡下；伙伴交回共享顺序，可以换个方向再吹一条线或转火。
  * 优先级：基础 42；音线里每多一个非友方 +8，上限 82；命中把握不足降权；逃跑中的威胁再 +16。
@@ -60,9 +61,13 @@ namespace PokemonSkills {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "sleep")) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
-        if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 12)) return false;
+        const distance = CompanionBehavior.distance(self.point, target.point);
+        const reach = item.data.range && item.data.range > 0 ? item.data.range : 10;
+        // 驻守且不许离位时仍可原地出手：只在目标超出本招射程、必须先走过去时才放弃。
+        const stationed = (context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false);
+        if (stationed && distance > reach) return false;
+        if (distance > CompanionBehavior.ai<number>(item, "maxChase", 12)) return false;
         return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
     }
 

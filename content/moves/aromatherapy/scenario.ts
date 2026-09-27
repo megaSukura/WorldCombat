@@ -31,7 +31,7 @@ Smoke.scenario("aromatherapy", function (stage) {
             return stage.hadMobEffect(ally, "world_combat:status/burn") && !stage.hasMobEffect(ally, "world_combat:status/burn");
         }, function () {
             stage.expect(!stage.hasMobEffect(ally, "world_combat:status/burn"), "the lingering cloud cleansed a burn applied after the cast");
-            stage.note("香云落在选定点（AI 施放即自身位置），stay 每 5 刻扫一次：云里的友善战斗者带着主异常就当场化掉，因此先挂后洗与再挂再洗都成立。半径随特攻与体型、停留随特防与等级、香雾随特防与体型；浓香／弥香在半径与停留之间取舍。云的可视范围即判定范围，留给完整装配的人工试玩。", {
+            stage.note("香云落在 AI 选出的覆盖点（自己与患者中能罩住最多受害友方的位置，且落在施放范围内），stay 每 5 刻扫一次：云里的友善战斗者带着主异常就当场化掉，因此先挂后洗与再挂再洗都成立。半径随特攻与体型、停留随特防与等级、香雾随特防与体型；浓香／弥香在半径与停留之间取舍。云的可视范围即判定范围，release 香线用真实送香距离铺满，云轮廓由场地效果托管；留给完整装配的人工试玩。", {
                 casterCasts: stage.casts("aromatherapy", caster),
                 allyPoisonEver: stage.hadMobEffect(ally, "world_combat:status/poison"),
                 allyPoisonNow: stage.hasMobEffect(ally, "world_combat:status/poison"),

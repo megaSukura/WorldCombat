@@ -30,6 +30,21 @@ namespace PokemonSkills {
             || block.tagged("minecraft:crops") || block.tagged("minecraft:saplings") || block.tagged("minecraft:replaceable_plants"));
     }
 
+    /** 真实脚点：用原生碰撞箱底部取样脚下那一格，高矮生物的脚点一致，不再用「中心 − 1」的固定高度。 */
+    export function secretpowerFoot(body: CombatObservation): CombatPoint {
+        var centre = body.position(), min = body.boundsMin();
+        return WorldCombat.point(centre.x(), min.y() - 0.02, centre.z());
+    }
+
+    /** 预告、AI 与命中共用的脚点：有实体读它当前碰撞箱，没有就取瞄准落点下的地面。 */
+    export function secretpowerFootPoint(world: CombatWorld, target: CombatActor | null, fallback: CombatPoint): CombatPoint {
+        if (target !== null && world.valid(target)) {
+            var body = world.observe(target);
+            if (body !== null) return secretpowerFoot(body);
+        }
+        return WorldGeometry.ground(world, fallback, 3);
+    }
+
     /** 读出命中点脚下的场所：注册表 tag 优先，既有 id 映射兜底，水/雨、火焰、草木，其余为普通地面。 */
     export function secretpowerSite(world: CombatWorld, point: CombatPoint): string {
         var block = world.block(point), id = block ? String(block.id()) : "";
@@ -68,7 +83,7 @@ namespace PokemonSkills {
         var body = world.observe(target);
         if (!body)
             return;
-        var centre = body.position(), foot = WorldCombat.point(centre.x(), centre.y() - 1, centre.z());
+        var centre = body.position(), foot = secretpowerFoot(body);
         var site = secretpowerSite(world, foot);
         var status = plain ? "paralysis" : secretpowerStatus(site);
         var chance = p("secretpower", "chance", current);
@@ -96,8 +111,11 @@ namespace PokemonSkills {
         var aimed = aim(action), flat = WorldCombat.point(aimed.x(), 0, aimed.z());
         var direction = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
         var power = p("secretpower", "power", action);
-        movementScenes.show(action, "travel", action.origin(), { moment: "travel", intensity: 1, scale: 1 });
         var travelled = 0, length = p("secretpower", "distance", action);
+        // 行进瞬间的持续时长按这次真实的距离／速度给出，收势时立即 stop，不再固定 20 刻拖尾。
+        var travelTicks = Math.max(2, Math.ceil(length / Math.max(0.05, p("secretpower", "speed", action))) + 4);
+        function travelData(): any { return { moment: "travel", intensity: 1, scale: 1, travelTicks: travelTicks }; }
+        movementScenes.show(action, "travel", action.origin(), travelData());
         function advance(current: CombatAction): void {
             var world = current.world(), origin = current.origin(),
                 delta = direction.scale(Math.min(p("secretpower", "speed", current), length - travelled));
@@ -111,7 +129,7 @@ namespace PokemonSkills {
             var moved = swept.moved;
             travelled += moved;
             if (hit.blocked() || moved < p("secretpower", "minimumMove", current) || travelled >= length) {
-                movementScenes.show(current, "travel", hit.position(), { moment: "travel", intensity: 1, scale: 1 });
+                movementScenes.show(current, "travel", hit.position(), travelData());
                 movementScenes.finish(current, done);
                 return;
             }
@@ -123,16 +141,35 @@ namespace PokemonSkills {
     define({
         freeMovement: true, id: "secretpower", name: "秘密之力",
         description: "借命中处场所之力的一记短击：火焰引燃、草木催眠、水与雨导电麻痹，其余则概率麻痹；直击形态无视场所换取更高威力。可瞄准目标，也可只朝一个方向空冲。",
-        uses: ["近身借力", "环境利用"], kind: "aim", range: 5, prepare: 6, active: 0, recover: 8, cooldown: 26, style: "site",
+        uses: ["近身借力", "环境利用"], kind: "aim", range: 6, maxRange: 6, prepare: 6, active: 0, recover: 8, cooldown: 26, style: "site",
         defaults: { plain: false }, fields: [flag("plain", "直击形态")],
-        indicator: function () { return { radius: 5, geometry: "line", style: "site", label: "秘密之力" }; },
+        indicator: function (config: any, pokemon?: CombatPokemon) {
+            // 指示范围与真实突进距离（公式上限）取同一棵树，不再写死 5 格。
+            var radius = 6;
+            if (pokemon) { var context: NumberContext = { pokemon: pokemon, skill: skills["secretpower"], detail: { values: config } }; radius = p("secretpower", "distance", context); }
+            return { radius: radius, geometry: "line", style: "site", label: "秘密之力" };
+        },
         windup: function (action: CombatAction, config: any, prepare: number): number {
-            var plain = config && config.plain === true, site = "plain";
-            try { site = secretpowerSite(action.sense(), action.targetPosition()); } catch (error) { site = "plain"; }
-            var hint = plain ? { fire: 0, thicket: 0, water: 0 } : secretpowerHint(site);
-            action.present("world_combat:secretpower:" + action.id(), SECRETPOWER_SCENE, 1, action.origin(),
-                JSON.stringify({ moment: "windup", plain: plain, site: plain ? "plain" : site,
-                    hintFire: hint.fire, hintThicket: hint.thicket, hintWater: hint.water }));
+            var plain = config && config.plain === true;
+            // 预告按真实脚点取样：有实体目标读它当前碰撞箱，没有就读瞄准落点下的地面。准备期内按拍续期，
+            // 目标走位后预告跟着更新；命中时再按当时的脚点最终决定，二者共用同一取样。
+            function present(current: CombatAction): void {
+                var site = "plain", target = current.target();
+                try {
+                    var foot = secretpowerFootPoint(current.sense(), target, current.targetPosition());
+                    site = plain ? "plain" : secretpowerSite(current.sense(), foot);
+                    var hint = plain ? { fire: 0, thicket: 0, water: 0 } : secretpowerHint(site);
+                    current.present("world_combat:secretpower:" + current.id(), SECRETPOWER_SCENE, 1, foot,
+                        JSON.stringify({ moment: "windup", plain: plain, site: site,
+                            target: target === null ? "" : String(target.ref()), point: [foot.x(), foot.y(), foot.z()],
+                            hintFire: hint.fire, hintThicket: hint.thicket, hintWater: hint.water }));
+                } catch (error) { }
+            }
+            present(action);
+            var ticks = Math.max(1, Math.round(prepare)), step = Math.max(1, Math.round(ticks / 3));
+            for (var at = step; at < ticks; at += step) {
+                (function (delay: number) { action.after(delay, function (current: CombatAction) { present(current); }); })(at);
+            }
             return prepare;
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {

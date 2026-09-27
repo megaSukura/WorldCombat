@@ -1,12 +1,14 @@
 /**
  * 偷懒 / Slack Off 的粒子语言。
  *
- * 一句话：它一屁股瘫坐下去，脚边扬起一圈慵懒的尘土，接着头顶慢慢冒起一串睡意的气泡；缓过来时抖一抖起身。
- * 色相家族：土黄 0xC9A66B 作瘫坐尘，暖白 0xFFF0D0 作高光，睡意蓝 0x8FA6C4 只出现在气泡层。
- * 拍子：起（windup）／摊（flop）／睡（loaf，持续整段倦怠）／起（rise）。
+ * 一句话：它一屁股瘫坐下去，脚边扬起一圈慵懒的尘土，接着身上一次次冒出沉甸甸的倦意（不是睡眠的「Z」）；
+ *   缓过来时抖一抖起身；治疗被原生封锁时就地冒一股闷烟、当场收回。
+ * 色相家族：土黄 0xC9A66B 作瘫坐尘，暖白 0xFFF0D0 作高光，倦意只走暖灰 0xB9A472，不做睡眠蓝。
+ * 拍子：起（windup）／摊（flop）／倦（loaf，持续整段）／被封锁（blocked）／起（rise）。
  * 范围：作用于自己，绑 source（fit body）；瘫坐尘环半径随 data.scale（体型派生），玩家看得出是这具身体摊下。
- * 机制驱动：flop 的尘土数绑定 data.dust（体重派生）；loaf 的气泡速率绑定 data.snores、整段时长随 data.loaf（倦怠时长）——
- *   身板越沉，瘫坐越重、气泡越密、倦得越久。
+ * 机制驱动：flop 的尘土数绑定 data.dust（体重派生）；loaf 的倦意速率绑定 data.snores、尺寸随 data.scale——
+ *   身板越沉，瘫坐越重、倦意越密。
+ * 生命周期：loaf 由本次倦怠载体拥有（服务端 onEffect），载体到期或被清除时随之一并收，不留旧图形。
  */
 const SlackoffDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -53,28 +55,47 @@ const SlackoffDefinition: ParticleDefinition = {
             ]
         },
         loaf: {
-            exit: { drain: 20 },
             emitters: [
                 {
-                    name: "zzz", bind: "source", offset: [0, 0.75, 0], height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/status/sleep_zzz",
-                    rate: { data: "snores", fallback: 6 }, shape: { kind: "sphere", radius: 0.35 }, direction: "up", speed: [0.006, 0.02],
-                    lifetime: [22, 36], size: [0.14, 0.03],
-                    color: 0x8FA6C4, alpha: [0.5, 0], light: "world", maxParticles: 26
+                    name: "weary", bind: "source", offset: [0, 0.7, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    rate: { data: "snores", fallback: 6 }, shape: { kind: "sphere", radius: 0.3 }, direction: "up", speed: [0.006, 0.02],
+                    lifetime: [22, 36], size: { data: "scale", fallback: 0.14 },
+                    color: 0xB9A472, alpha: [0.4, 0], light: "world", maxParticles: 26
                 },
                 {
-                    name: "bubble", bind: "source", offset: [0, 0.6, 0], height: 0.2,
-                    particle: "world_combat_core:cobblemon/generic/status/sleep_bubble",
+                    name: "breath", bind: "source", offset: [0, 0.4, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
                     rate: 4, shape: { kind: "sphere", radius: 0.3 }, direction: "up", speed: [0.004, 0.014],
                     lifetime: [20, 32], size: [0.08, 0.02],
-                    color: 0xDCE6F0, alpha: [0.45, 0], light: "world", maxParticles: 20
+                    color: 0xFFF0D0, alpha: [0.35, 0], light: "world", maxParticles: 20
                 },
                 {
-                    name: "breath", bind: "source", offset: [0, 0.25, 0], height: 0,
+                    name: "floor_dust", bind: "source", offset: [0, 0.2, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 4, shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.005, 0.02],
                     lifetime: [14, 22], size: [0.05, 0.01],
                     color: 0xC9A66B, alpha: [0.4, 0], light: "world", maxParticles: 16
+                }
+            ]
+        },
+        blocked: {
+            duration: 18,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "seethe", bind: "source", offset: [0, 0.35, 0], height: 0.2,
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.4 }, direction: "outward", speed: [0.02, 0.07],
+                    lifetime: [12, 20], size: [0.12, 0.02],
+                    color: 0x9A958C, alpha: [0.55, 0], light: "world", maxParticles: 20
+                },
+                {
+                    name: "seal_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 2 }, shape: { kind: "circle", radius: 0.45 }, direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.22, 0.5],
+                    color: 0xBFB4A0, alpha: [0.5, 0], light: "world", maxParticles: 12
                 }
             ]
         },

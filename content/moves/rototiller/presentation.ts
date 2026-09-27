@@ -80,7 +80,7 @@ const RototillerDefinition: ParticleDefinition = {
             ]
         },
         fed: {
-            duration: 28,
+            // 不设固定 duration：这只草属性还在土上被滋养多久，叶光就飘多久；离场/土复原时随托管回执一起收。
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {

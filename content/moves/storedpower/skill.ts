@@ -58,6 +58,10 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.psychic.actor");
             WorldFeedback.emit(world, storedpowerScene, 1, centre,
                 { moment: "nova", radius: radius, boost: boosts, raised: raised, motes: motes, scale: scale, intensity: intensity }, 30);
+            // 确定中心、按本次真实释放半径画满一圈边界／球壳；判定与画面共用同一个 radius。
+            WorldFeedback.emit(world, storedpowerRingsScene, 1, centre,
+                { moment: "nova", kind: "nova", point: [centre.x(), centre.y(), centre.z()], radius: radius,
+                    start: world.tick(), intensity: intensity, boost: boosts }, 30);
 
             WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(centre, radius),
                 function (enemy, facts) {
@@ -79,6 +83,10 @@ namespace PokemonSkills {
             if (spent > 0) {
                 WorldFeedback.emit(world, storedpowerScene, 1, centre,
                     { moment: "spent", spent: spent, scale: scale, intensity: intensity }, 26);
+                // 增益消失与回执同步：只有真的清空了正贡献，才画这一圈更亮的边界。
+                WorldFeedback.emit(world, storedpowerRingsScene, 1, centre,
+                    { moment: "spent", kind: "spent", point: [centre.x(), centre.y(), centre.z()], radius: radius,
+                        start: world.tick(), intensity: intensity, spent: spent }, 26);
                 WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.45, 0)), storedpowerSpendText, [spent], 28);
                 world.sound("minecraft:entity.warden.sonic_boom", centre, 16, "{}");
             }

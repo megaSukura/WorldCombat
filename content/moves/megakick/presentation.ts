@@ -1,10 +1,12 @@
 /**
  * 百万吨重踢 / megakick 的客户端表现。
  *
- * 一句话：施法者把一条腿高抬后撤、身体后仰，尘点向脚下收拢 → 整身贴地撞出去，身后拖出速度线与土屑 →
- * 命中点爆开一记钝击与一只外冲的脚影 → 被踢中的人被抛飞出去、沿下坠方向拖出一条尘线。
+ * 一句话：施法者把一条腿高抬后撤、身体后仰、足缘沿出脚反向拉开，尘点向脚下收拢 → 整身贴地撞出去、
+ * 脚尖拉出真实短足线并拖出速度线与土屑 → 命中点爆开一记钝击与一只外冲的脚影（伤害被拒绝只留一记轻钝触）
+ * → 被踢中的人被抛飞出去、沿下坠方向拖出一条尘线。
  * 色相家族：暖土褐（earth / tinydust）与暖金钝击（impact_fighting / foot）为主，速度线为浅米色，无饱和色。
- * 拍子：起 haul（抬腿收尘）→ 行 drive（俯冲撞出）→ 击 impact（钝击与脚影）→ 飞 launch（目标离地拖尾）→ 空 whiff（踢空扬尘）。
+ * 拍子：起 haul（抬腿收尘 + 向后收的足缘）→ 行 drive（俯冲撞出 + 真实短足线）→ 击 impact（钝击与脚影）→
+ *     飞 launch（目标离地拖尾）→ 空 whiff（踢空扬尘）→ 阻 blocked（伤害被拒的轻钝触）。
  * 范围：impact 落在消息位置（命中点或收势落点），画出的就是踢中的位置；这是一记直线单体招，弧面与地面不带持续区域。
  * 运动：drive 沿瞄准方向拖出速度线（`orient: "direction"` 读载荷方向），落地尘向外炸；launch 的尘沿目标被抛飞的方向拖出一条抛物线。
  * 数：drive 起步尘量绑 `data.stride`（突进距离派生）；impact 的尘与脚影用整数基数，由 `data.intensity`（本击威力 / 110）自动缩放；
@@ -41,6 +43,15 @@ const MegaKickDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.07],
                     lifetime: [5, 9], size: [0.14, 0.02],
                     color: 0xF2E3C2, alpha: [0.4, 0], light: "full", maxParticles: 44
+                },
+                {
+                    // 准备期的一条向后收的足缘：沿实际出脚方向的反向（data.direction）拉出一小段脚影。
+                    name: "edge", bind: "source", offset: [0, 0.2, 0], height: 0.12, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/foot",
+                    rate: 8, shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [5, 9], size: [0.2, 0.04],
+                    color: 0xF0C884, alpha: [0.55, 0], light: "world", maxParticles: 30
                 }
             ]
         },
@@ -73,6 +84,15 @@ const MegaKickDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.09],
                     lifetime: [7, 13], size: [0.08, 0.01],
                     color: 0xC2A163, alpha: [0.45, 0], light: "world", maxParticles: 130
+                },
+                {
+                    // 推出时的真实短足线：长度绑 data.leg，与实际 lunge 同源（服务端按同一个突进距离派生）。
+                    name: "toe", bind: "source", offset: [0, 0.2, 0], height: 0.1, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/foot",
+                    rate: 14, shape: { kind: "line", length: { data: "leg", fallback: 0.5 } },
+                    direction: "shape", speed: [0.03, 0.1],
+                    lifetime: [3, 6], size: [0.2, 0.03],
+                    color: 0xF0C884, alpha: [0.6, 0], light: "full", maxParticles: 44
                 }
             ]
         },
@@ -107,6 +127,23 @@ const MegaKickDefinition: ParticleDefinition = {
                     gravity: 0.04, drag: 0.92,
                     lifetime: [8, 16], size: [0.07, 0.01],
                     color: 0xB99660, alpha: [0.55, 0], light: "world", maxParticles: 100
+                }
+            ]
+        },
+        blocked: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    // 伤害被拒绝/免疫时的一记轻钝触：没有脚影、没有爆点，明确区别于成功命中。
+                    name: "dull", bind: "point",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    gravity: 0.03, drag: 0.93,
+                    lifetime: [6, 10], size: [0.07, 0.01],
+                    color: 0xB99660, alpha: [0.4, 0], light: "world", maxParticles: 40
                 }
             ]
         },

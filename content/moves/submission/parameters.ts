@@ -60,10 +60,10 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("pin", text("worldcombat.skill.submission.preference.pin")), F.const(1), F.const(0.4)))
                 .clamp(12, 90).round(0),
             "压制时长", "被摔倒在地后爬不起来、移动被拖慢的时长；自身体重越大压得越久，目标越沉压得越短。压制式显著更长，抛摔式只是摔一下。"),
-        /** 抓取窗口：基础 10 刻，速度每比 60 快 1 加 0.05（夹 -2..4）；夹 7..16。 */
+        /** 抓取窗口：基础 10 刻，速度每比 60 快 1 减 0.05（夹 -2..4 刻）；夹 7..16。 */
         gripTicks: seconds(
-            F.base(10).plus(F.stat("speed").minus(60).times(0.05).clamp(-2, 4)).clamp(7, 16).round(0),
-            "抓取窗口", "抓住目标到把它摔下去之间的时间；也是对手挣脱或队友打断这一摔的窗口。速度越快拧身越干脆。"),
+            F.base(10).minus(F.stat("speed").minus(60).times(0.05).clamp(-2, 4)).clamp(7, 16).round(0),
+            "抓取窗口", "抓住目标到把它摔下去之间的时间；也是对手挣脱或队友打断这一摔的窗口。速度越快拧身越干脆，窗口越短。"),
         /** 扑抓距离：基础 2.6 格，速度每比 60 快 1 加 0.014（夹 -0.5..1.0）；夹 2.0..3.6。 */
         reach: formula(
             F.base(2.6).plus(F.stat("speed").minus(60).times(0.014).clamp(-0.5, 1)).clamp(2, 3.6).round(2),

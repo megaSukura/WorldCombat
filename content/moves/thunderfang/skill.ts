@@ -41,7 +41,7 @@ namespace PokemonSkills {
         recover: 5,
         cooldown: 15,
         style: "bite",
-        defaults: { overload: false, ai: { maxChase: 9, lockParalyzed: true } },
+        defaults: { overload: false, ai: { maxChase: 9 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p("thunderfang", "grip", pokemon) : 0.42) * 1.5, geometry: "line", style: "bite",
@@ -59,12 +59,13 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:thunderfang:windup", thunderfangScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", overload: config && config.overload === true }));
+                JSON.stringify({ moment: "charge", overload: config && config.overload === true, windup: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(thunderfangScene);
             const world = action.world();
+            const actor = action.actor();
             const direction = aim(action);
             const length = p("thunderfang", "reach", action);
             const step = p("thunderfang", "lunge", action);
@@ -96,13 +97,17 @@ namespace PokemonSkills {
                 movementScenes.stop(current);
                 const scope = current.world();
                 const victimRef = String(victim.ref());
+                const body = scope.observe(actor);
+                const toward = body === null ? null : at.minus(body.position());
+                const biteDir = toward !== null && toward.length() > 0.01 ? toward.unit() : direction;
                 const wasParalyzed = CombatStatus.has(scope, victim, "paralysis");
                 const landed = impact(current, contact, "thunderfang", power,
                     { damage: damageSpec("thunderfang", "fang"), contact: true, bite: true });
                 // 已麻痹的身体这次电花更明确，但只作表现，不附定身等额外强控。
                 WorldFeedback.emit(scope, thunderfangScene, 1, at,
                     { moment: "bite", target: victimRef, sparks: wasParalyzed ? Math.round(sparks * 1.5) : sparks,
-                        scale: scale, intensity: intensity }, 22);
+                        scale: scale, intensity: intensity,
+                        direction: [biteDir.x(), biteDir.y(), biteDir.z()] }, 22);
                 sound(current, "cobblemon:impact.electric");
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), thunderfangHitText, [], 22);

@@ -21,7 +21,7 @@ Smoke.scenario("comeuppance", function (stage) {
         stage.expect(stage.casts("comeuppance", caster) >= 1, "umbreon committed comeuppance");
         stage.expect(stage.damageTo(caster) > 0, "the zombie's blow landed and was recorded");
         stage.expect(stage.damageTo(foe) > 0, "the hunted shadow dealt damage");
-        stage.note("the AI waits for a fresh grudge, so the first hunt comes only after a hit lands; the shadow then returns 1.5x the last damage recorded on the caster after a short stalk delay", {
+        stage.note("the AI waits for a fresh grudge, so the first hunt comes only after a hit lands; the shadow then returns 1.5x the last damage recorded on the caster after a short stalk delay, and the strike feedback reports the damage actually applied (immunity or a wall would only whiff)", {
             casts: stage.casts("comeuppance", caster),
             dealt: Math.round(stage.damageBy(caster) * 10) / 10,
             taken: Math.round(stage.damageTo(caster) * 10) / 10,

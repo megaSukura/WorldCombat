@@ -28,5 +28,6 @@
   "worldcombat.skill.stickyweb.preference.ai.lead.help": "Lead a moving target by this many ticks; 0 lays on its current spot, larger suits stopping a charging foe.",
   "world_combat.move.stickyweb.text.lay": "Sticky web spreads",
   "world_combat.move.stickyweb.text.snare": "Caught in sticky web (Speed -%1$s)",
+  "world_combat.move.stickyweb.text.snare.blocked": "Caught in sticky web (Speed cannot drop further)",
   "effect.world_combat.stickywebbed": "Caught in sticky web"
 }

@@ -6,7 +6,8 @@
  * 色相家族：岩石的暖灰褐（earth／tinydust／large_rock／impact_rock 原色）＋一处近白高光（glowingsparkle）标示围栏合拢。
  * 拍子：起（windup 拎石）→ 击（throw 飞行、hit 砸实）→ 收（cage 围栏合拢 / pillar 逐根起尘 / shatter 石屑 / miss 落地）。
  * 范围：`cage` 用 ring 形状画出与判定同一半径的地面圈（`data.scale`＝封锁半径 / 1.3）；石柱不再整圈一次冒，
- *   改由服务端对原生真正放下的每一根石柱各发一次 `pillar`（bind point，点在真实格子上），缺口处不会亮。
+ *   改由服务端对原生真正放下的每一根石柱各发一次 `pillar`（bind point，点在真实格子上），缺口处不会亮；
+ *   服务端按柱子序号给出 `phase`（0..3），每根石柱的尘与石核分四短拍依次亮起，读得出逐根立起。
  * 运动：拎石是石屑向内收，飞行是贴石屑的短尾迹，围栏是贴地环向外扩后再逐根起尘；离地/砸墙则整块石头向外炸开。
  * 数：`data.notes`（投石威力换算）绑定命中石屑数，`data.pillars`（实际放下的石柱根数，仅作留档）与逐根 `pillar` 的
  *   实际发点数绑定围栏量，`data.stages`（实际降速级数）绑定合拢高光的强度，`data.intensity`（威力 / 55）放大整幕。
@@ -110,7 +111,7 @@ const RocktombDefinition: ParticleDefinition = {
                 {
                     name: "pillar_dust", bind: "point", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: 4, at: 0 },
+                    burst: { count: 4, at: { data: "phase", fallback: 0 } },
                     shape: { kind: "sphere", radius: 0.28 },
                     direction: "up", speed: [0.08, 0.22],
                     gravity: 0.08, drag: 0.92,
@@ -120,7 +121,7 @@ const RocktombDefinition: ParticleDefinition = {
                 {
                     name: "pillar_core", bind: "point", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: 1, at: 1 },
+                    burst: { count: 1, at: { data: "phase", fallback: 0 } },
                     shape: { kind: "sphere", radius: 0.2 },
                     direction: "up", speed: [0.06, 0.14],
                     gravity: 0.09, drag: 0.9, spin: 6,

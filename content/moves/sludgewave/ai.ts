@@ -12,13 +12,26 @@ namespace PokemonSkills {
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= CompanionBehavior.ai<number>(item, "maxChase", 8);
     }
 
-    /** 自身体周 `range` 格内的敌人数；围住自己的越多，一次泼开越值。 */
-    function sludgewaveRing(context: WorldBehavior.Context, range: number): number {
-        var nearby = context.facts.nearby as CompanionBehavior.Entity[], count = 0, self = CompanionBehavior.source(context).point;
+    /** 本次泥幕范围（真实半径 + 真实高度带 + 无实墙）内的敌人数；围住自己的越多，一次泼开越值。 */
+    function sludgewaveRing(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        var self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[],
+            world = CompanionBehavior.world(context), count = 0;
+        var scope: PokemonSkills.FactContext = { world: world, actor: world.source(), skill: skills["sludgewave"],
+            detail: { values: capability.data.config } };
+        var radius = Math.max(2.2, p("sludgewave", "waveRadius", scope));
+        var height = Math.max(0.8, p("sludgewave", "curtainHeight", scope));
+        var half = self.height ? self.height / 2 : 0.7;
+        var base = self.point[1] - half, span = half + height;
+        var centre = CompanionBehavior.point(self.point);
         for (var i = 0; i < nearby.length; i++) {
             var other = nearby[i];
             if (other.friendly || other.health <= 0) continue;
-            if (CompanionBehavior.distance(other.point, self) <= range) count++;
+            var dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
+            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+            var targetHalf = other.height ? other.height / 2 : 0.7;
+            if (other.point[1] + targetHalf < base - 0.5 || other.point[1] - targetHalf > base + span) continue;
+            if (!world.clear(centre, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -38,9 +51,10 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !sludgewaveWants(context, capability, target)) return 0;
             var base = 18;
-            if (!CompanionBehavior.status(context, target, "poison")) base += 8;
+            // 剧毒与中毒同属已有毒，已带毒的目标不再给这份加价。
+            if (!CompanionBehavior.status(context, target, "poison") && !CompanionBehavior.status(context, target, "toxic")) base += 8;
             if (!CompanionBehavior.ai<boolean>(capability, "cluster", true)) return base;
-            return sludgewaveRing(context, capability.data.range) >= 2 ? base + 16 : base;
+            return sludgewaveRing(context, capability) >= 2 ? base + 16 : base;
         }
     });
 

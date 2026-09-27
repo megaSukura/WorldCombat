@@ -27,6 +27,6 @@
   "worldcombat.skill.matblock.preference.ai.cover.help": "开启后，只有警戒范围内还有别的友方才掀席；关闭则自己受压就掀。",
   "world_combat.move.matblock.text.raise": "掀榻榻米（吃伤 %1$s／%2$s 人／%3$s 秒）",
   "world_combat.move.matblock.text.block": "席子吃下 %1$s（余 %2$s）",
-  "world_combat.move.matblock.text.fall": "席子落下",
+  "world_combat.move.matblock.text.fall": "这一角的席子破了",
   "effect.world_combat.mat_block": "掀榻榻米"
 }

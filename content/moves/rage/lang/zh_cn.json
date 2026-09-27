@@ -27,7 +27,7 @@
   "worldcombat.skill.rage.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.rage.preference.ai.maxChase.help": "对手离自己这么远以内才主动开火；本招欺身距离短，调大也常要靠近后才用得上。",
   "worldcombat.skill.rage.preference.ai.healthFloor": "开火下限",
-  "worldcombat.skill.rage.preference.ai.healthFloor.help": "自身生命高于这个百分比才开火——火要靠挨打才旺，生命太低时开火风险大。调低更敢在残血时赌一把，调高则只在状态好时强化；火已点起后低于此线会立即回击，而不是继续站着等挨打。",
+  "worldcombat.skill.rage.preference.ai.healthFloor.help": "自身生命高于这个百分比才开火——火要靠挨打才旺，生命太低时开火风险大。调低更敢在残血时赌一把，调高则只在状态好时强化；火已点起后不再重开，会把出手机会让给真正的输出招。",
   "world_combat.move.rage.text.ignite": "怒火燃起（%1$s 秒）",
   "world_combat.move.rage.text.hit": "愤怒一击",
   "world_combat.move.rage.text.stoke": "怒火 +%1$s（共 %2$s）",

@@ -9,6 +9,15 @@
  * 放完之后：连打式三拳打完再交回共享顺序；单拳式一击即回，可以按冷却反复出。
  */
 namespace CompanionBehavior {
+    /** 连打式两段间隙里目标可能又拉开多远：按当刻水平速度外推。够不到就不为它加分。 */
+    function fleeGap(context: WorldBehavior.Context, target: CompanionBehavior.Entity, config: any): number {
+        var velocity = CompanionBehavior.velocity(context, target);
+        var speed = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : 0.15;
+        var world = CompanionBehavior.world(context);
+        var gap = PokemonSkills.p("drainpunch", "gaps", { world: world, actor: world.source(), detail: { values: config } });
+        return (isFinite(speed) ? Math.max(0, speed) : 0.15) * Math.max(0, 2 * gap);
+    }
+
     registerUse("drainpunch", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -27,12 +36,18 @@ namespace CompanionBehavior {
             var dist = CompanionBehavior.distance(self.point, target.point);
             if (dist > CompanionBehavior.ai<number>(capability, "maxChase", 6)) return 0;
             var wounded = CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "healBelow", 0.85);
+            var config = capability.data.config || {};
+            var combo = config.combo === true;
             // 满血时不为连打追远：够不到拳距就不主动扑，交给别的招。
             if (!wounded && dist > capability.data.range) return 0;
             var score = 19;
             if (wounded) score += 15;
-            if (CompanionBehavior.fleeing(context, target)) score += 9;
-            else if (dist <= capability.data.range) score += 5;
+            if (CompanionBehavior.fleeing(context, target)) {
+                // 单拳随手一记，逃敌照追；连打要三拳都够到，远逃的不一概加分。
+                if (!combo) score += 9;
+                else if (dist + fleeGap(context, target, config) <= capability.data.range) score += 9;
+                else score -= 4;
+            } else if (dist <= capability.data.range) score += 5;
             return score;
         }
     });

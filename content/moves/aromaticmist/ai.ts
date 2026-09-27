@@ -3,7 +3,8 @@
  *
  * 什么局面有意义：有看得见的威胁、在 ai.maxChase 以内；有一个还没被香裹住的伙伴，且它脚下还没别的香云。
  * 对谁出手：当前照顾的伙伴；以它的位置为落点把香云铺开，罩住它和身边一圈人。
- * 候选之间怎么排：伙伴正在打威胁或刚受伤时 priority 70，否则 45。
+ * 候选之间怎么排：刚被特殊伤害打中的伙伴 priority 80；正在打威胁或刚受伤时 70，否则 45。
+ * 驻守：未开 ai.leaveStation 时，伙伴在送香距离以内仍可原地铺云，只有超出射程才放弃。
  * 够不到怎么办：reach 就是送香距离，超出就先走近；ai.leaveStation 决定驻守时是否离位。
  * 放完之后：云留在原地，雾里的友方陆续被裹上；伙伴已经带着同一身份、或脚下已有香云时不再重复。
  */
@@ -30,10 +31,13 @@ namespace CompanionBehavior {
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, target) {
             if (context.facts.mounted) return false;
-            if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false)) return false;
             if (!target || target.health <= 0 || !target.visible) return false;
             const self = CompanionBehavior.source(context);
             if (!target.friendly || target.ref === self.ref) return false;
+            // 驻守且不许离位时仍可原地送香：只在伙伴超出送香距离、必须先走过去时才放弃。
+            const stationed = (context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false);
+            const reach = capability.data.range && capability.data.range > 0 ? capability.data.range : 5;
+            if (stationed && CompanionBehavior.distance(self.point, target.point) > reach) return false;
             if (CompanionBehavior.status(context, target, "aromaticmist")) return false;
             const threat = context.senses["world_combat:threat"];
             if (!threat || threat.health <= 0 || !threat.visible) return false;
@@ -49,6 +53,8 @@ namespace CompanionBehavior {
             if (!target || !target.friendly || target.health <= 0) return 0;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
+            // 刚被特殊伤害打中的伙伴更急着补特防。
+            if (PokemonSkills.aromaticBracedRecently(world(context), target.ref)) return 80;
             return target.attacking === threat.ref || (typeof target.hurtAgo === "number" && target.hurtAgo < 60) ? 70 : 45;
         }
     });

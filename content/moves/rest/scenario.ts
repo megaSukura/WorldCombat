@@ -11,11 +11,11 @@
  *   「安全窗口里的完整一觉」这一幕稳定跑完。
  *
  * 必然事实：施术者提交过睡觉；施术者身上出现过共享睡眠 world_combat:status/sleep；在无干扰窗口里睡满后，
- *   沉睡档必定给出 world_combat:refreshed（execute 里 complete && !shortNap 才给），不受随机数影响。睡满回血、
- *   敌人何时上前、是否只睡到一半被惊醒都属于位置与时机的随机项，写进 note 而不作断言。
+ *   沉睡档必定给出 world_combat:refreshed（execute 里 complete && !shortNap 才给），并且把起睡时缺失的生命补满。
+ *   其余（敌人何时上前、是否只睡到一半被惊醒）都属于位置与时机的随机项，写进 note 而不作断言。
  *
  * 共享前置：私有装配只注册本单元的动作，目标的小拉达「撞击」不在装配里，所以它不会真的出招、也不会把施术者
- *   打醒；这一层只能由完整装配验证。
+ *   打醒；这一层只能由完整装配验证。免眠/守护把 sleep carrier 挡下的分支同样需要完整装配才能构造。
  */
 Smoke.scenario("rest", function (stage) {
     stage.weather("clear");
@@ -48,9 +48,10 @@ Smoke.scenario("rest", function (stage) {
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/sleep"), "sleep landed on the caster through the shared identity world_combat:status/sleep");
         stage.after(400, function () {
             stage.expect(stage.hadMobEffect(caster, "world_combat:refreshed"), "slept through the whole window and left refreshed");
+            stage.expect(maximum > 0 && caster.health() >= maximum - 0.01, "the full deep sleep restored all the health missing when it fell asleep");
             stage.hostile(caster, foe);
             stage.after(300, function () {
-                stage.note("睡满回血、敌人上前打断、被惊醒的比例结算都属于位置与时机的随机项：睡满（execute 的 ratio>=0.98 且沉睡档）会回复全部缺失生命并给 refreshed；被任何伤害提前惊醒只按已睡比例回复、并追加 minecraft:slowness。本装配里目标的小拉达只带撞击、其招式单元不在私有装配，所以它不会真的打醒施术者。", {
+                stage.note("睡满回血、敌人上前打断、被惊醒的比例结算都属于位置与时机的随机项：睡满（execute 的 ratio>=0.98 且沉睡档）会回复起睡时全部缺失生命并给 refreshed；被任何伤害提前惊醒只按已睡比例回复、并追加 minecraft:slowness。等待只认本次自己的 sleep carrier：外来睡眠刷新覆盖、免眠/守护拒绝时本招按事实收尾（拒绝不发半疗）。本装配里目标的小拉达只带撞击、其招式单元不在私有装配，所以它不会真的打醒施术者。", {
                     casterCasts: stage.casts("rest", caster),
                     sleptEver: stage.hadMobEffect(caster, "world_combat:status/sleep"),
                     refreshedEver: stage.hadMobEffect(caster, "world_combat:refreshed"),

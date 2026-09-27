@@ -45,12 +45,14 @@ const CottonSporeDefinition: ParticleDefinition = {
                     color: 0xE4D6C4, alpha: [0.3, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "burst_motes", bind: "point", height: 0.4,
+                    // 贴地的外扩边圈：半径按机制值单次缩放，一拍盖住真正结算的那一圈。
+                    name: "burst_boundary", bind: "point", height: 0.05,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 40, shape: { kind: "circle", radius: { data: "scale", fallback: 1 } }, direction: "up",
-                    speed: [0.01, 0.06],
-                    lifetime: [12, 22], size: [0.06, 0.01],
-                    color: 0xE9C9B8, alpha: [0.6, 0], light: "world", maxParticles: 80
+                    burst: { count: { data: "spores", fallback: 30 } },
+                    shape: { kind: "ring", radius: 3.0, thickness: 0.3 }, direction: "outward",
+                    speed: [0.05, 0.18], drag: 0.9,
+                    lifetime: [12, 22], size: [0.07, 0.02],
+                    color: 0xE9C9B8, alpha: [0.7, 0], light: "world", maxParticles: 90
                 }
             ]
         },

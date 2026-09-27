@@ -4,7 +4,7 @@
   "worldcombat.skill.snarl.use.1": "Use repeated barks to force a foe out of the cone",
   "worldcombat.skill.snarl.use.2": "Open from range by stripping a special attacker",
   "worldcombat.skill.snarl.description.0": "Each bark deals about %1$s damage, %2$s barks in all, one every %3$s s; every enemy in the cone is hit by each bark, and the target's Sp. Def, type and crit are settled on each hit.",
-  "worldcombat.skill.snarl.description.1": "A target hit by the first bark loses %1$s Sp. Atk stage(s) and is marked scolded for about %2$s; the Sp. Atk drop stays until cleared or the fight ends, while the scolded mark only tells companions not to keep shouting at the same target first.",
+  "worldcombat.skill.snarl.description.1": "A target hit by the first bark loses %1$s Sp. Atk stage(s) and is marked scolded for about %2$s; the later barks of the Rant form only keep dealing damage and never drop it again. The Sp. Atk drop stays until cleared or the fight ends, while the scolded mark only tells companions not to keep shouting at the same target first.",
   "worldcombat.skill.snarl.description.2": "The cone reaches %1$s blocks and opens %2$s degrees.",
   "worldcombat.skill.snarl.option.on": "Rant: three barks in a row, each about x0.62, tighter spacing, a narrower and longer cone and cooldown +6 ticks - the same foes take all three, but they can step out of the cone to dodge the later barks.",
   "worldcombat.skill.snarl.option.off": "Bark: a single shout at x1.4 power with a wider cone and the base cooldown - one heavier burst, good for hit-and-run.",

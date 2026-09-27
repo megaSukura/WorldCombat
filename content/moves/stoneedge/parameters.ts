@@ -27,6 +27,10 @@
 namespace PokemonSkills {
     export const stoneedgeId = "stoneedge";
     export const stoneedgeScene = "world_combat:move_stoneedge";
+    /** 逐段真正升起/回落的短尖石；主体形状由客户端按真实地表顶点绘制。 */
+    export const stoneedgeSpikeScene = "world_combat:move_stoneedge_spike";
+    /** 按真实触地点画出的地面裂痕，随 scarTicks 自然消退；不再替换地表方块。 */
+    export const stoneedgeCrackScene = "world_combat:move_stoneedge_crack";
     export const stoneedgePierceText = "world_combat.move.stoneedge.text.pierce";
     export const stoneedgeMissText = "world_combat.move.stoneedge.text.miss";
 

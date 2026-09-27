@@ -3,14 +3,15 @@
  *
  * 一句话：施法者长时间把电灌进炮膛、身周电弧一圈圈收拢变亮，炮口聚成一颗明显大球；开炮时被后坐推得向后退、
  *   炮口炸出一圈后坐波，一枚沉甸甸的亮芯电弹朝锁定方向慢慢飞出去、拖一条厚尾，真实撞上时炸开一大片电光；
- *   打空或撞墙只在该点留一下散电。
+ *   打空、撞墙或飞尽只在该点留一下散电。
  * 色相家族：冷青白（0x8FE8FF / 0xEAFBFF）与电黄（0xFFE14D）为主，浅青绿（0xC8F0A0）只做地面环的细节。
- * 拍子：起（charge 长时间蓄能）→ 轰（fire 炮口后坐）→ 飞（shell 慢速厚尾电弹）→ 击（burst 大爆 / fizzle 散电）。
- * 范围：burst 绑在命中点上，形状半径按参考值 1.0 格书写，服务端把 `data.scale = 实际爆开半径 / 1.0` 传进来，
- *   `fit: "none"` 让几何跟着 `scale` 走——画出来的圈就是真正会被电到的地。
+ * 拍子：起（charge 长时间蓄能，电弧脉冲铺满整段起手）→ 轰（fire 炮口后坐）→ 飞（shell 慢速厚尾电弹）→ 击（burst 单体爆 / fizzle 散电）。
+ * 范围：命中是单体弹，没有范围伤害。弹头本体随真实 `radius`（碰撞半径）缩放；burst 的爆闪只在命中点，
+ *   服务端把 `data.scale = 冲击表现半径 / 1.0` 传进来只缩放画面，不代表真正会被电到的范围，也没有地面圈。
  * 运动：电弹以远低于同族的速度直线飞行、尾迹厚而慢（一眼看出可以躲开），命中点向四周炸开。
  * 数：`data.sparks`（由威力派生）绑定爆发粒子数，`data.arcs`（由特攻派生）绑定电弧与蓄能脉冲的条数，
- *   `data.flow`（由威力派生）绑定拖尾密度，`data.scale` 同时缩放尺寸，`data.recoil` 在开炮拍给出后坐提示。
+ *   `data.cycles`（由起手长度派生）让蓄能脉冲铺满整段起手，`data.flow`（由威力派生）绑定拖尾密度，
+ *   `data.scale` 同时缩放尺寸，`data.recoil` 在开炮拍给出后坐提示。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ZapCannonDefinition: ParticleDefinition = {
@@ -31,7 +32,7 @@ const ZapCannonDefinition: ParticleDefinition = {
                 {
                     name: "crack", bind: "source", offset: [0, 0.4, 0.35], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    burst: { count: { data: "arcs", fallback: 10 }, interval: 5, repeats: 7 },
+                    burst: { count: { data: "arcs", fallback: 10 }, interval: 5, repeats: { data: "cycles", fallback: 7 } },
                     shape: { kind: "sphere_surface", radius: 0.42 },
                     direction: "outward", speed: [0.04, 0.18],
                     lifetime: [4, 10], size: [0.12, 0.02],
@@ -132,15 +133,6 @@ const ZapCannonDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.1, 0.42], spread: 14,
                     lifetime: [6, 14], size: [0.2, 0.04],
                     color: 0xFFE14D, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 120
-                },
-                {
-                    name: "ring", bind: "point", offset: [0, 0.08, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 2, at: 1, interval: 4, repeats: 2 },
-                    shape: { kind: "ring", radius: 1.0, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.08, 0.24],
-                    lifetime: [12, 20], size: [0.36, 0.14],
-                    color: 0xC8F0A0, alpha: [0.55, 0], light: "world", maxParticles: 24
                 },
                 {
                     name: "cling", bind: "target", height: 0.5,

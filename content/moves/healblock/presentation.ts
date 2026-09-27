@@ -6,13 +6,15 @@
  *
  * 色相家族：镇静紫（0x9B6BE8）画镇环与紫条，深紫（0x6C4AB0）画余韵，近白（0xEDE6FF）只做锁扣高光；
  *   被按灭的回升用暗灰紫（0x8A86A0），同一家族里压低饱和，读作「没能回上来」。
- * 层次：起（windup 拢环）／飞（cast 沿 path 直线）／镇（seal 收紧）／持续（hold 低密度转动）／
+ * 层次：起（windup 拢环）／飞（cast 沿瞄准方向直线扑出）／镇（seal 收紧）／持续（hold 低密度转动）／
  *   按灭（block 回升被吸走）／松（release 自己松开、break 被硬拔、miss 落空）。
  * 起击收：windup 16t → cast 18t → seal 32t → hold → block 22t（可重复）／release／break 24t。
- * 范围：seal／break 的环按 data.scale（镇环半径比）铺开，画出「套住多大一块身体」。
- * 运动：紫条沿 data.path 的直线飞行；镇环由外向内收紧；block 时回升的光点向内收进中心再暗下去；release 向外散开。
+ * 范围：seal 的镇环线绑 data.ring（服务端按目标横向体型算出的世界半径，fit: world），只用一个世界尺度画出「套住多大一块身体」；
+ *   data.scale 只缩放粒子尺寸，不再充当半径。
+ * 运动：紫条沿 data.direction 从施法者朝对手直线扑出（bind: point 的线状流，orient: direction 让线上粒子沿方向流动），不再沿整条静态连线随机铺开；
+ *   镇环由外向内收紧；block 时回升的光点向内收进中心再暗下去；release 向外散开。
  * 数：镇环数绑 data.rings（特攻派生），飞行紫条数绑 data.veils（等级派生），封锁强弱绑 data.intensity（时长派生），
- *   被按灭的回量绑 data.motes（由真实被挡回的生命派生）。
+ *   被按灭的回量绑 data.motes、收紧环数绑 data.knots（都由真实被挡回的生命派生）。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const HealBlockDefinition: ParticleDefinition = {
@@ -44,18 +46,20 @@ const HealBlockDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "cast_rings", bind: "path", fit: "none",
+                    name: "cast_rings", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
-                    rate: { data: "veils", fallback: 8 }, trail: { minDistance: 0.28 },
-                    shape: { kind: "polyline" }, direction: "shape", speed: [0.04, 0.12],
+                    rate: { data: "veils", fallback: 8 },
+                    shape: { kind: "line", length: { data: "reach", fallback: 8 } },
+                    orient: "direction", direction: "shape", speed: [0.25, 0.5], spread: 6,
                     lifetime: [6, 11], size: [0.15, 0.03],
                     color: 0x9B6BE8, alpha: [0.95, 0], light: "full", bloom: 0.2, maxParticles: 60
                 },
                 {
-                    name: "cast_line", bind: "path", fit: "none",
+                    name: "cast_line", bind: "point", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 30, trail: { minDistance: 0.2 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.02, 0.07],
+                    rate: 30,
+                    shape: { kind: "line", length: { data: "reach", fallback: 8 } },
+                    orient: "direction", direction: "shape", speed: [0.2, 0.45], spread: 4,
                     lifetime: [5, 9], size: [0.1, 0.02],
                     color: 0x6C4AB0, alpha: [0.5, 0], light: "full", maxParticles: 60
                 }
@@ -74,10 +78,10 @@ const HealBlockDefinition: ParticleDefinition = {
                     color: 0xEDE6FF, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 40
                 },
                 {
-                    name: "seal_rings", bind: "target", height: 0.5,
+                    name: "seal_rings", bind: "target", fit: "world", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
                     burst: { count: { data: "rings", fallback: 10 } },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: { data: "ring", fallback: 0.34 } },
                     direction: "inward", speed: [0.04, 0.14],
                     lifetime: [10, 18], size: [0.18, 0.04], sizeMode: "index", spin: 10,
                     color: 0x9B6BE8, alpha: [0.8, 0], light: "full", maxParticles: 44
@@ -135,7 +139,7 @@ const HealBlockDefinition: ParticleDefinition = {
                 {
                     name: "block_knot", bind: "target", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.34 },
+                    burst: { count: { data: "knots", fallback: 1 } }, shape: { kind: "ring", radius: 0.34 },
                     direction: "inward", speed: [0.04, 0.12],
                     lifetime: [10, 16], size: [0.24, 0.6], sizeMode: "sin",
                     color: 0x9B6BE8, alpha: [0.6, 0], light: "full", maxParticles: 16

@@ -61,7 +61,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const actor = action.actor();
             const power = p(airslashId, "blade", action);
             const speed = p(airslashId, "flight", action);
@@ -72,11 +71,14 @@ namespace PokemonSkills {
             const shards = Math.max(12, Math.round(p(airslashId, "shards", action)));
             const scale = Math.max(0.6, Math.min(2.0, radius / airslashReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 80));
+            // 刃的飞行表现由这次动作自己拥有：飞行真正结束（命中/撞墙/到程）就停，不在消失点继续喷刃。
+            const scenes = WorldFeedback.actionScenes(airslashScene, 1);
             let settled = false, hits = 0, wall = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
+                scenes.stop(current, "flight");
                 done(current);
             }
 
@@ -122,17 +124,16 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) {
                 if (settled) return;
-                settled = true;
                 const scope = current.world(), body = scope.observe(actor);
                 if (hits === 0 && !wall && body !== null) {
                     WorldFeedback.emit(scope, airslashScene, 1, body.position(), { moment: "miss", scale: scale }, 18);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.05, 0)), airslashMissText, [], 20);
                     sound(current, "cobblemon:move.gust.target");
                 }
-                done(current);
+                finish(current);
             });
-            WorldFeedback.keep(world, "airslash:flight:" + action.id(), airslashScene, 1, action.origin(),
-                { moment: "flight", projectile: flight, scale: scale, intensity: intensity, shards: shards }, 180);
+            scenes.show(action, "flight", action.origin(),
+                { moment: "flight", projectile: flight, scale: scale, intensity: intensity, shards: shards });
         }
     });
 

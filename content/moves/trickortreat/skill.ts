@@ -7,15 +7,15 @@
  *
  * 三幕：
  *   招呼（windup，提交前只观察与预告，可被打断，不花代价）。
- *   披壳（提交后）：把目标当前属性加一条 ghost 写进 NativeModifiers 的临时属性层，并挂世界效果
- *     world_combat:trick_shell（共享身份 world_combat:status/trickortreat）；记录层 world_combat:trick_record
- *     记下属性层实例、装饰量与外壳时长，并绑定持壳表现。属性和 STAB、受击相性、AI 与 ready 一起变化。
- *   脱壳（外壳到期或被解除）：解除属性层，属性随原生个体本身恢复；自然到期额外播一次剥落。若属性层先被
- *     单独解除（被别的驱散带走），记录层会立刻把外壳一起脱掉，画面不留一件空壳。
+ *   披壳（提交后）：先取得真实外壳 carrier（MobEffect），再用共享 CombatTypes.apply 往它身上追加一条
+ *     `add ghost` 类型层——所有活体走同一条路，不特判属性来源；记录层 world_combat:trick_record 记下类型层
+ *     实例、装饰量与外壳时长，并绑定持壳表现。属性层随 carrier 一起生灭，到期或提前解除只撤本层。
+ *   脱壳（外壳到期或被解除）：类型层随 carrier 结束，属性随原生个体本身恢复；自然到期额外播一次剥落。
  *
- * 与识破同族：识破一族在对手身上「看穿并摘掉幽灵」，万圣夜反过来「把幽灵外壳套上去」——一摘一套，正好成对。
- * 反制：已是幽灵、属性层已满、或属性被特性锁定的目标套不上（预检直接拒绝，不浪费 20 发 PP）；非宝可梦没有
- *   属性，同样明确拒绝，不编造属性。识破／气味侦测能把壳的幽灵免疫再摘掉。
+ * 与世界一致：原生未知元素的剑箭不会仅因目标被追加类型就自动按相性结算；只有真正被 NativeAttackTypes
+ *   分类／转换的攻击才吃这层相性。画面表现的是「追加了哪些已知弱点、挡下哪些已知攻击」，不承诺所有原生伤害。
+ *
+ * 反制：已是幽灵、属性层已满（当前有效属性已达三种）、或属性被特性锁定的目标预检直接拒绝，不浪费 20 发 PP。
  *
  * 瞄准：kind:aim。敌我实体都可指定，空点不套壳（走 fizzle），照付同样的 PP 与冷却。
  */
@@ -30,12 +30,17 @@ namespace PokemonSkills {
         });
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    // 持壳表现绑到记录层上；并每 20 刻核对属性层是否还带着 ghost，层被单独解除时立刻整件脱掉。
+    // 持壳表现绑到记录层上；并每 20 刻核对有效属性是否还带着 ghost，类型层被单独解除时立刻整件脱掉。
     WorldCombat.effectHandler(trickortreatRecordEffect, "start", function (effect) {
         const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
         const body = world.observe(target);
-        if (body !== null) WorldFeedback.onEffect(world, effect.id(), "hold", trickortreatScene, 1, body.position(),
-            { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(data.motes) / 2)) });
+        if (body !== null) {
+            WorldFeedback.onEffect(world, effect.id(), "hold", trickortreatScene, 1, body.position(),
+                { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(data.motes) / 2)) });
+            // 随记录层存续的鬼面／外衣轮廓：逐帧绘制，不产生粒子生灭，记录层一收就一起消失。
+            WorldFeedback.onEffect(world, effect.id(), "shell", trickortreatShellScene, 1, body.position(),
+                { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(data.motes))) });
+        }
         effect.schedule("watch", "watch", 20, "{}");
     });
     WorldCombat.effectHandler(trickortreatRecordEffect, "watch", function (effect) {
@@ -60,22 +65,21 @@ namespace PokemonSkills {
         const views = world.effects(target, trickortreatRecordEffect);
         for (let index = 0; index < views.length; index++) world.operation(views[index].id(), "world_combat:dispel", "{}");
     }
-    /** 目标当前生效的属性（含临时层）；非宝可梦返回空。 */
+    /** 目标当前生效的属性（含共享类型层）；所有活体走同一条读取。 */
     function trickortreatTypes(world: CombatWorld, target: CombatActor): string[] {
-        if (String(target.domain()) !== "cobblemon" || !world.valid(target)) return [];
-        return NativeEffects.types(CobblemonCombat.pokemon(target), NativeEffects.read(world, target));
+        if (!world.valid(target)) return [];
+        return PokemonDamage.combatants.read(world, target).types;
     }
-    /** 能不能套：非宝可梦没有属性；已是幽灵、或已到第三属性仍没有空位都套不上。返回拒绝原因或空串。 */
+    /** 能不能套：已是幽灵、属性层已满三种、或属性被特性锁定都套不上。返回拒绝原因或空串。 */
     function trickortreatRefusal(world: CombatWorld, target: CombatActor): string {
         const types = trickortreatTypes(world, target);
-        if (types.length === 0) return "no-types";
         if (types.indexOf("ghost") >= 0) return "already-ghost";
         if (NativeModifiers.typeLocked(world, target)) return "type-locked";
         // The temporary type layer can hold the native two plus one appended type; a dual-type target is fair game.
         return types.length >= 3 ? "no-room" : "";
     }
 
-    // 脱壳：外壳到期或被清除时解除属性层，属性随原生个体本身恢复；自然到期额外播一次剥落。
+    // 脱壳：外壳到期或被清除时解除类型层，属性随原生个体本身恢复；自然到期额外播一次剥落。
     WorldCombat.on("world_combat:move_trickortreat/end", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== trickortreatShellEffect) return;
@@ -168,9 +172,22 @@ namespace PokemonSkills {
             }
             const shell = Math.max(60, Math.round(p(trickortreatId, "shell", action)));
             const motes = Math.max(8, Math.round(p(trickortreatId, "motes", action)));
-            const types = trickortreatTypes(world, target).concat(["ghost"]);
-            const layer = NativeModifiers.apply(world, target, { types: types }, shell);
-            MobEffects.apply(world, target, trickortreatShellEffect, shell, 0);
+            // 先取得真实外壳 carrier，再由共享类型政策追加 ghost；所有活体同一条路。
+            const carrier = MobEffects.apply(world, target, trickortreatShellEffect, shell, 0);
+            if (carrier === null) {
+                WorldFeedback.emit(world, trickortreatScene, 1, point, { moment: "blocked", target: String(target.ref()), reason: "shell-refused" }, 20);
+                WorldFeedback.text(world, trickortreatAbove(point), trickortreatBlockedText, [], 26);
+                done(action);
+                return;
+            }
+            const layer = CombatTypes.apply(world, target, { operation: "add", types: ["ghost"] }, carrier);
+            if (layer <= 0) {
+                world.removeMobEffect(target, trickortreatShellEffect, carrier.key());
+                WorldFeedback.emit(world, trickortreatScene, 1, point, { moment: "blocked", target: String(target.ref()), reason: "type-locked" }, 20);
+                WorldFeedback.text(world, trickortreatAbove(point), trickortreatNoRoomText, [], 28);
+                done(action);
+                return;
+            }
             trickortreatReleaseRecord(world, target);
             world.effect(trickortreatRecordEffect, target, JSON.stringify({ layer: layer, motes: motes, shell: shell }), shell);
             sound(action, "cobblemon:item.medicine.candy.use");
@@ -178,8 +195,13 @@ namespace PokemonSkills {
             if (at !== null) {
                 WorldFeedback.emit(world, trickortreatScene, 1, at.position(),
                     { moment: "dress", target: String(target.ref()), motes: motes, shell: shell,
-                        types: types.length, scale: Math.max(0.6, Math.min(2.2, shell / 260)),
+                        scale: Math.max(0.6, Math.min(2.2, shell / 260)),
                         intensity: Math.max(0.7, Math.min(2, 0.7 + motes / 40)) }, 34);
+                // 鬼面／外衣轮廓：由自定义场景在身上成形，路径只在有真实连线时给出。
+                WorldFeedback.emit(world, trickortreatShellScene, 1, at.position(),
+                    { moment: "dress", target: String(target.ref()), motes: motes, start: world.tick(), duration: 34,
+                        path: [String(actor.ref()), String(target.ref())],
+                        scale: Math.max(0.6, Math.min(2.2, shell / 260)) }, 34);
                 WorldFeedback.text(world, trickortreatAbove(at.position()), trickortreatDressText, [Math.round(shell / 20)], 30);
             }
             done(action);

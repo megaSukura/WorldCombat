@@ -33,7 +33,7 @@
   "worldcombat.skill.bounce.preference.ai.maxChase": "弹跳距离",
   "worldcombat.skill.bounce.preference.ai.maxChase.help": "伙伴在威胁离自己这么远以内时才考虑弹跳；调小只在近处落击，调大愿意从更远处扑过去。",
   "worldcombat.skill.bounce.preference.ai.escapeBelow": "躲闪血线",
-  "worldcombat.skill.bounce.preference.ai.escapeBelow.help": "伙伴生命低于这个比例时把弹跳当成「弹开贴地近战的一击」，priority 提前；调高更常在挨打时弹起来。",
+  "worldcombat.skill.bounce.preference.ai.escapeBelow.help": "伙伴生命低于这个比例、身边确实贴着地面上的近战威胁、头顶又有净空时，才把弹跳当成「弹开贴地近战的一击」提前考虑；任意低血本身不算安全逃生。调高更常在挨打时弹起来。",
   "worldcombat.skill.bounce.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.bounce.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位弹出去落击敌人。",
   "world_combat.move.bounce.text.land": "落下命中 ×%1$s",

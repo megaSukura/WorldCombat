@@ -95,8 +95,9 @@ declare namespace Smoke {
         hits(actor: Actor, incoming?: boolean): number;
         /** How many of `actor`'s damage receipts were native critical hits. */
         criticals(actor: Actor): number;
-        /** Injects native damage of `damageType` (default "minecraft:generic") into `actor`; the metadata is explicit. */
-        hurt(actor: Actor, amount: number, damageType?: string, options?: { source?: Actor; metadata?: { [key: string]: any } }): void;
+        /** Injects native damage of `damageType` (default "minecraft:generic") into `actor`; without a separate source,
+         * explicitly permits this setup self-hit. Native defenses/cancellation remain active. Relationship permission is per call. */
+        hurt(actor: Actor, amount: number, damageType?: string, options?: { source?: Actor; metadata?: { [key: string]: any }; relations?: { self?: boolean; friendly?: boolean } }): void;
         /** Places the already-registered field `rule` immediately, using `source` or the first arena actor. */
         field(rule: string, at: number[], ticks: number, radius?: number, data?: any, source?: Actor): void;
         /** Apply setup stage changes immediately through the shared stage mechanism. */

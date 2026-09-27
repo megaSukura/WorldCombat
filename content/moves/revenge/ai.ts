@@ -7,11 +7,16 @@
  *   但只有那名打人者仍在近处才换（正好是翻倍的窗口）；否则照原目标走。
  * 排序：刚被当前目标本人打过时 priority 抬到 54；否则按普通近战 15 排序。
  * 放完接什么：交回共享交战计划；它是一记站定还肘，不负责追击。
+ * 记仇窗口读参数层实际 window（速度偏移与硬扛会改变它），不再写死 60 刻。
  */
 namespace PokemonSkills {
+    function revengeWindow(context: WorldBehavior.Context): number {
+        return Math.max(1, Math.round(p(revengeId, "window", CompanionBehavior.world(context))));
+    }
+
     function revengeProvoked(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         const self = CompanionBehavior.source(context);
-        return typeof self.hurtAgo === "number" && self.hurtAgo <= 60
+        return typeof self.hurtAgo === "number" && self.hurtAgo <= revengeWindow(context)
             && typeof self.lastAttacker === "string" && self.lastAttacker === target.ref;
     }
 
@@ -27,7 +32,7 @@ namespace PokemonSkills {
         selectTarget: function (context, capability, proposed) {
             if (!CompanionBehavior.ai<boolean>(capability, "avenge", true)) return proposed;
             const self = CompanionBehavior.source(context);
-            if (typeof self.hurtAgo !== "number" || self.hurtAgo > 60 || typeof self.lastAttacker !== "string") return proposed;
+            if (typeof self.hurtAgo !== "number" || self.hurtAgo > revengeWindow(context) || typeof self.lastAttacker !== "string") return proposed;
             const attacker = CompanionBehavior.entity(context, self.lastAttacker);
             if (attacker === null || attacker.health <= 0 || attacker.friendly) return proposed;
             // 只在打人者仍近身时换目标：不为回肘远追射手。

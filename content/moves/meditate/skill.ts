@@ -19,6 +19,9 @@ namespace PokemonSkills {
     const meditateCalmText = "world_combat.move.meditate.text.deep";
     /** 表现里的参考半径：`data.scale = 实际灵环半径 / 这个数`。 */
     const meditateReferenceRadius = 1.2;
+    /** 入静余韵的续期节奏与单次时长：随「入静」标记存在，标记被驱散后最多再飘这么久。 */
+    const meditateAuraRefresh = 40;
+    const meditateAuraTicks = 60;
 
     function meditateAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.3, 0)); }
 
@@ -26,7 +29,7 @@ namespace PokemonSkills {
         id: "meditate",
         cooldownParameter: "wait",
         name: "Meditate",
-        description: "静下心来，唤醒身体深处沉睡的力量，从而提高攻击。站定越久、越没被打扰，唤醒得越深：安静时能叫醒两层。",
+        description: "静下心来，唤醒身体深处沉睡的力量，从而提高攻击。最近没有被打扰（距上次受伤够久）时唤醒得更深、能一次叫醒两层；正被追打时只叫醒一层。",
         uses: ["开战前趁没人打扰，一口气把物攻叫到两层", "被追打时快速叫醒一层，抢回出手的底气", "在安全换位里补一口静心，把物攻垫住"],
         kind: "self",
         range: 1,
@@ -39,7 +42,10 @@ namespace PokemonSkills {
         stationary: true,
         defaults: { deepBreath: false },
         fields: [],
-        indicator: function () { return { radius: 1, style: "psy", color: 0xB39DDB, label: "瑜伽姿势" }; },
+        indicator: function (_config, pokemon) {
+            // 提示环按真实灵环半径显示，与脚下的判定圈同径。
+            return { radius: pokemon ? p("meditate", "spread", pokemon) : 0.9, style: "psy", color: 0xB39DDB, label: "瑜伽姿势" };
+        },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["meditate"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
@@ -63,17 +69,31 @@ namespace PokemonSkills {
             const motes = Math.max(8, Math.round(p("meditate", "motes", action)));
             const spread = Math.max(0.6, p("meditate", "spread", action));
             const scale = spread / meditateReferenceRadius;
-            NativeEffects.boost(world, actor, "atk", gift);
-            MobEffects.apply(world, actor, meditateEffect, stillness, gift);
+            // 以实际落下的等级回报：物攻已到顶时不再虚报收益。
+            const gain = Math.max(0, NativeEffects.boost(world, actor, "atk", gift));
+            const mark = MobEffects.apply(world, actor, meditateEffect, stillness, gift);
             WorldFeedback.emit(world, meditateScene, 1, body.position(),
-                { moment: "awaken", actor: String(actor.ref()), gift: gift, motes: motes, spread: spread, scale: scale,
-                    intensity: Math.max(0.7, Math.min(2, 0.8 + gift * 0.5 + motes / 60)) }, 32);
-            WorldFeedback.keep(world, "world_combat:move_meditate/stillness/" + String(actor.ref()), meditateScene, 1, body.position(),
-                { moment: "stillness", actor: String(actor.ref()), gift: gift, scale: scale }, Math.min(stillness, 640));
-            WorldFeedback.text(world, meditateAbove(body.position()), gift >= 2 ? meditateCalmText : meditateText, [gift], 30);
-            world.sound(gift >= 2 ? "minecraft:entity.player.levelup" : "minecraft:block.amethyst_block.chime", body.position(), 16, "{}");
+                { moment: "awaken", actor: String(actor.ref()), gift: gain, motes: motes, spread: spread, scale: scale,
+                    intensity: Math.max(0.7, Math.min(2, 0.8 + gain * 0.5 + motes / 60)) }, 32);
+            // 入静余韵跟着标记走：标记还在就由它的 tick 续期，被驱散后自然收尾。
+            if (mark !== null) WorldFeedback.keep(world, "world_combat:move_meditate/stillness/" + String(actor.ref()), meditateScene, 1, body.position(),
+                { moment: "stillness", actor: String(actor.ref()), gift: gain, scale: scale }, meditateAuraTicks);
+            if (gain > 0) WorldFeedback.text(world, meditateAbove(body.position()), gain >= 2 ? meditateCalmText : meditateText, [gain], 30);
+            world.sound(gain >= 2 ? "minecraft:entity.player.levelup" : "minecraft:block.amethyst_block.chime", body.position(), 16, "{}");
             done(action);
         }
+    });
+
+    // 入静标记还在时按自己的节奏续期，与标记同寿；标记消失后不再续期。
+    WorldCombat.on("world_combat:move_meditate/stillness", "world_combat:mob_effect_tick", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== meditateEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor) || world.tick() % meditateAuraRefresh !== 0) return;
+        const body = world.observe(actor);
+        if (body === null) return;
+        WorldFeedback.keep(world, "world_combat:move_meditate/stillness/" + String(actor.ref()), meditateScene, 1, body.position(),
+            { moment: "stillness", actor: String(actor.ref()) }, meditateAuraTicks);
     });
 
     // 入静窗口走完：只是气息平复。物攻等级由本招唤醒，按设计不随窗口收回。
@@ -82,6 +102,8 @@ namespace PokemonSkills {
         if (String(data.id) !== meditateEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        // 刷新/替换时旧应用被移除而新应用仍在：不是真的结束。
+        if (MobEffects.read(world, actor, meditateEffect) !== null) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, meditateScene, 1, body.position(),

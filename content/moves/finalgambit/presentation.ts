@@ -6,8 +6,9 @@
  * 色相家族：血红到暗金（impact_fighting / smallexplosion / groundquake），倒地用焦黑烟。
  * 拍子：起（charge 蓄气血，亮度随押上的生命比例）→ 扑（dash）→ 击（detonate 自爆）→ 殒（faint 倒地）／留（spent）。
  * 范围：detonate 的爆环与地裂画的就是爆裂半径（data.scale = 实际半径 / 1.2）。
- * 运动：赤红能量从脚下升起、在头顶聚成球；扑身速度线沿实际方向铺开；自爆以命中点为中心向外爆。
- * 数：charge 的亮度由 data.stake（押上的生命比例）决定，detonate 的爆点数量由 data.count（与伤害占最大生命比例相关）决定。
+ * 运动：赤红能量从脚下升起、在头顶聚成球；扑身速度线沿实际方向铺开；自爆在命中点向前压出一道冲击。
+ * 数：charge 的光量 data.count 与核心 data.core／data.scale 直接来自押上的生命比例；detonate 的爆点数量由
+ *   data.count（与伤害占最大生命比例相关）决定，冲击锥沿 data.direction 压出——单体撞击，不画成环状群伤。
  */
 const FinalGambitDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -19,7 +20,7 @@ const FinalGambitDefinition: ParticleDefinition = {
                 {
                     name: "life_rise", bind: "source", offset: [0, 0.04, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
-                    rate: { data: "stake", fallback: 1 },
+                    rate: { data: "count", fallback: 6 },
                     shape: { kind: "ring", radius: 0.5 }, direction: "up", speed: [0.04, 0.14],
                     lifetime: [8, 14], size: [0.16, 0.04], sizeMode: "sin",
                     color: 0xC0392B, alpha: [0.7, 0], light: "full", maxParticles: 60
@@ -27,7 +28,7 @@ const FinalGambitDefinition: ParticleDefinition = {
                 {
                     name: "life_core", bind: "source", offset: [0, 0.9, 0], height: 0.6,
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
-                    rate: 16, shape: { kind: "sphere", radius: 0.3 },
+                    rate: { data: "core", fallback: 3 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 0.3 } },
                     direction: "inward", speed: [0.04, 0.12],
                     lifetime: [7, 12], size: [0.18, 0.05], sizeMode: "sin",
                     color: 0xF0C060, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 48
@@ -71,13 +72,13 @@ const FinalGambitDefinition: ParticleDefinition = {
                     color: 0xF09050, alpha: [0.9, 0], light: "full", maxParticles: 12
                 },
                 {
-                    name: "shock_ring", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    name: "shock_cone", bind: "target", offset: [0, 0.4, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 20, at: 2 },
-                    shape: { kind: "ring", radius: 0.6 },
-                    direction: "outward", speed: [0.07, 0.22],
-                    lifetime: [10, 16], size: [0.4, 0.14],
-                    color: 0xB58A4A, alpha: [0.7, 0], light: "world", maxParticles: 70
+                    burst: { count: 12, at: 2 },
+                    shape: { kind: "cone", radius: 0.55, angleDegrees: 45 },
+                    orient: "direction", direction: "shape", speed: [0.06, 0.2], spread: 18,
+                    lifetime: [9, 15], size: [0.34, 0.12],
+                    color: 0xB58A4A, alpha: [0.65, 0], light: "world", maxParticles: 44
                 },
                 {
                     name: "embers", bind: "target", height: 0.5,

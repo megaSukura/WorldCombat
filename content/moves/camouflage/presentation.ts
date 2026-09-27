@@ -232,8 +232,8 @@ const CamouflageSceneDefinition: ParticleDefinition = {
             ]
         },
         wear: {
-            duration: 40,
-            exit: { stop: 20, drain: 24 },
+            duration: 0,
+            exit: { stop: 0, drain: 24 },
             emitters: [
                 {
                     name: "wear_glow", bind: "source", fit: "body", height: 0.45,

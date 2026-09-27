@@ -12,7 +12,7 @@ namespace PokemonSkills {
     define({
         id: "sandstorm",
         name: "沙暴",
-        description: "把地面的沙卷成一片横扫的沙幕：除岩石、地面、钢属性外，幕里的活体被一趟趟磨掉生命并被风推着走，岩石之躯的特防提高；磨落的沙留在地表一段时间。",
+        description: "把地面的沙卷成一片横扫的沙幕：除岩石、地面、钢属性外，幕里的活体被一趟趟磨掉生命并被风推着走，岩石之躯的特防提高；地表只留下一层沙痕。",
         uses: ["压制没有岩土护体的对手", "把成群的敌人磨在沙幕里", "增强岩石之躯的特防并推散站位"],
         kind: "point",
         range: 14,
@@ -59,15 +59,19 @@ namespace PokemonSkills {
             const origin = body !== null ? body.position() : action.origin();
             // 提交时定格风向：施法者到落点的水平方向；落点与脚下重叠时退回面朝方向。
             const wind = WorldGeometry.flatUnit(point.minus(origin), action.direction());
+            // 风带只占有限高度：水平跨度=沙幕直径，沿风向厚度=条带宽，竖直厚度另给一个上界；yaw 让盒子对准风向。
+            const yaw = Math.atan2(wind.x(), wind.z()) * 180 / Math.PI;
+            const span = radius * 2;
+            const bandHeight = Math.max(1.2, Math.min(3.2, gustWidth));
             WorldEnvironment.replaceOwnWeather(world, actor);
             WorldEffects.field(world, sandstormField, point, radius,
                 { swept: swept, density: density, scour: scour, drift: drift, interval: interval,
                     wind: [wind.x(), 0, wind.z()], gustWidth: gustWidth, gustStep: gustStep, band: -radius,
-                    next: 0 }, ticks);
+                    span: span, height: bandHeight, yaw: yaw, next: 0 }, ticks);
             world.sound("minecraft:entity.wind_charge.wind_burst", point, 32, "{}");
             WorldFeedback.emit(world, sandstormScene, 1, point,
                 { moment: "burst", radius: radius, scale: radius / 9, density: density,
-                    direction: [wind.x(), 0, wind.z()], width: gustWidth }, 48);
+                    direction: [wind.x(), 0, wind.z()], width: gustWidth, span: span, height: bandHeight, yaw: yaw }, 48);
             done(action);
         }
     });

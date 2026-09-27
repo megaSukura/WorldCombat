@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.energyball.summary": "把周围植被的生机吸进球心再直线掷出：造成特殊伤害，并可能把目标特防压低 1 级；命中或落地时球在落点绽开，地面短暂长出一小片花草。周围自然越多，这一球越重。",
+  "worldcombat.skill.energyball.summary": "把周围植被的生机吸进球心再直线掷出：造成特殊伤害，并可能把目标特防压低 1 级；命中或撞上地面时球在落点绽开，仅在能生长的地表短暂长出一小片花草，纯空放不留。周围自然越多，这一球越重。",
   "worldcombat.skill.energyball.use.0": "站在草木繁茂处的一记重击",
   "worldcombat.skill.energyball.use.1": "中距离单体点射并磨掉特防",
   "worldcombat.skill.energyball.use.2": "在落点留下短暂的花草标记",
@@ -26,5 +26,6 @@
   "worldcombat.skill.energyball.preference.ai.maxChase.help": "超过这个距离就不主动起手，先走近；越大越愿意在更远处先吸后掷。",
   "worldcombat.skill.energyball.preference.ai.verdantFirst": "先吸草木",
   "worldcombat.skill.energyball.preference.ai.verdantFirst.help": "开启后，自己脚下周围有植被（能吸到生机）时抬高这一球的优先级；关闭则不看环境，只按普通远程攻击排序。",
-  "world_combat.move.energyball.text.sunder": "特防 -%1$s"
+  "world_combat.move.energyball.text.sunder": "特防 -%1$s",
+  "world_combat.move.energyball.text.gather": "生机 ×%1$s · 威力 %2$s"
 }

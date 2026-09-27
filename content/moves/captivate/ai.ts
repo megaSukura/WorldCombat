@@ -1,45 +1,21 @@
 /**
- * 诱惑 的伙伴 AI 用途：这招自己的一套出手计划，而不是共享控制位的顺手一放。
+ * 诱惑 的伙伴 AI 用途：这招自己的出手计划——要不要用一条持续视线换掉自己的一段出手权。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没被迷住、也没到 −6 特攻底线、
- *   宝可梦目标为异性、回眸还要视线畅通。献舞要圈里至少站着 ai.minOnlookers 个看得见的非友方。
- * 对谁出手：当前威胁；同性宝可梦、已被迷住或特攻已到底线的目标跳过。默认 ai.preferSpecial 开启时，
- *   特攻明显高于物攻的目标优先级更高——把迷魂留给真正的法系威胁。
- * 出手时机：ai.opening=迎击时只在目标正打自己或主人、或自己刚被打过时抬眸；随时则见威胁就行。
- * 够不到怎么办：reach 就是凝视距离，超出的先走近；凝视要求通视，被挡住时交回共享接近逻辑。
- * 放完之后：目标大幅掉特攻；献舞时圈的敌人一起中招，伙伴随即交回共享顺序。
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没被迷住、也没到 −6 特攻底线、回眸要视线通畅。
+ * 对谁出手：当前威胁；优先挑特攻明显高于物攻的目标（`ai.preferSpecial`，默认开），把这道目光留给真正的法系输出。
+ *   目标已被迷住、或特攻已经到底线的跳过，不重复。
+ * 出手时机：队友正在打同一个高特殊威胁时最值得（维持期间帮手能放大这份削弱）；独自作战只在迎击、
+ *   刚被打过或需要拖住危险窗口时才用——用 ai.opening 与优先级把机会让给更直接的进攻，不无限霸占攻击计划。
+ * 够不到怎么办：reach 就是凝视距离，超出先走近；视线被掩体挡住时交回共享接近逻辑。
+ * 放完之后：目标在窗口里持续掉特攻，术者若改用其他动作、被打断或目标脱离视线则立即收回；伙伴随即交回共享顺序。
  */
 namespace CompanionBehavior {
-    PokemonSkills.addPreferences("captivate", { ai: { maxChase: 10, opening: "anytime", minOnlookers: 2, preferSpecial: true, leaveStation: false } }, [
+    PokemonSkills.addPreferences("captivate", { ai: { maxChase: 10, opening: "anytime", preferSpecial: true, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 20, 1),
         PokemonSkills.choice("ai.opening", "出手时机", ["anytime", "targeting"], ["随时", "迎击时"]),
-        PokemonSkills.number("ai.minOnlookers", "献舞最少人数", 1, 4, 1),
         PokemonSkills.flag("ai.preferSpecial", "优先法系威胁"),
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
-
-    /** Pokemon must be the opposite gender; every other body has no gender and passes. */
-    function captivateAllows(context: WorldBehavior.Context, target: Entity): boolean {
-        const access = world(context), other = access.actor(target.ref);
-        if (!other || String(other.domain()) !== "cobblemon") return true;
-        const self = access.source();
-        if (String(self.domain()) !== "cobblemon") return true;
-        const a = String(CobblemonCombat.pokemon(self).gender()).toLowerCase();
-        const b = String(CobblemonCombat.pokemon(other).gender()).toLowerCase();
-        return a === "male" && b === "female" || a === "female" && b === "male" || a === "m" && b === "f" || a === "f" && b === "m";
-    }
-
-    /** 献舞时身边这么近、看得见的非友方数量；命中判定仍走招式自己的 ringRadius。 */
-    function captivateOnlookers(context: WorldBehavior.Context, self: Entity, radius: number): number {
-        const nearby = context.facts.nearby as Entity[];
-        let count = 0;
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (!other.visible || other.friendly || other.health <= 0) continue;
-            if (distance(other.point, self.point) <= radius) count++;
-        }
-        return count;
-    }
 
     /** 法系倾向：特攻相对物攻越高越值得迷；2 明显法系、1 偏法系、0 物系或未知。 */
     function captivateSpecial(context: WorldBehavior.Context, target: Entity): number {
@@ -51,6 +27,17 @@ namespace CompanionBehavior {
         return 1;
     }
 
+    /** 是否有队友正在攻击这个目标；有的话这道削弱能立刻被队友放大，维持更值得。 */
+    function captivateSupported(context: WorldBehavior.Context, threat: Entity): boolean {
+        const nearby = context.facts.nearby as Entity[], self = source(context);
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (!other.friendly || other.ref === self.ref || other.health <= 0) continue;
+            if (other.attacking === threat.ref) return true;
+        }
+        return false;
+    }
+
     function captivateWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
@@ -58,9 +45,6 @@ namespace CompanionBehavior {
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
         if (status(context, threat, "captivated")) return false;
         if (stage(context, threat, "spa") <= -6) return false;
-        if (!captivateAllows(context, threat)) return false;
-        if (item.data.config && item.data.config.pose === "dance")
-            return captivateOnlookers(context, self, 3) >= ai<number>(item, "minOnlookers", 2);
         if (!world(context).clear(point(self.point), point(threat.point))) return false;
         if (ai<string>(item, "opening", "anytime") !== "targeting") return true;
         const owner = context.facts.owner;
@@ -71,15 +55,14 @@ namespace CompanionBehavior {
         protocols: ["world_combat:control"],
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) { return !target || captivateWants(context, item, target); },
-        accepts: function (context, _item, target) {
-            return !target.friendly && target.health > 0 && target.visible && captivateAllows(context, target);
-        },
+        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !captivateWants(context, item, target)) return 0;
-            if (item.data.config && item.data.config.pose === "dance")
-                return Math.min(95, 70 + (captivateOnlookers(context, source(context), 3) - 1) * 6);
-            const special = ai<boolean>(item, "preferSpecial", true) ? captivateSpecial(context, target) : 0;
-            return 55 + special * 8;
+            const special = ai<boolean>(item, "preferSpecial", true) ? captivateSpecial(context, target) : 1;
+            let value = 38 + special * 9;
+            if (captivateSupported(context, target)) value += 12;
+            if (!special) value = Math.min(value, 30);
+            return Math.min(88, value);
         }
     });
 }

@@ -3,9 +3,9 @@
  *
  * 原生事实：Psychic／变化／威力 —／命中 必中／PP 10／场上场地 5 回合：地面上的宝可梦不会受到先制招式的
  *   攻击；超能力属性招式威力 ×1.3（Gen 8+）。
- * 世界化：把「5 回合的场地」翻成一片真的铺在地上的精神域——施法者把念力压进选定的地面，粉色纹路成圈铺开；
- *   站在地上（grounded）的活体带上 psychicterrain 身份：被先制招式指向时伤害被抹掉，超能力招式更猛。
- *   对双方一视同仁。
+ * 世界化：把「5 回合的场地」翻成一片真的铺在地上的精神域——施法者把念力压进选定的地面，粉色纹路成圈铺开。
+ *   与场地同层且贴地（grounded）的活体带上 psychicterrain 身份：受到的击退、冲量与位移削减一半（原生位移事件桥接，
+ *   多片场也只减一次），超能力招式按**自己所站那片场**的增幅更猛；离地或离场立即失去两者。对双方一视同仁。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   gather       起手：基础 13 刻，速度每快 1 点减 0.04 刻，夹 9..20。
@@ -13,7 +13,6 @@
  *   reach        施放距离：基础 15 格，20 级起每级 +0.08，夹 11..19。
  *   fieldRadius  精神域半径：基础 3.2 格 +（特攻超过 60）×0.012 +（身高超过 1.4）×0.5，再乘主场系数，夹 2.2..6.0。
  *   fieldTicks   精神域持续：基础 300 刻 + 20 级起每级 5 刻，再乘主场系数，夹 220..560。
- *   markTicks    离场余量：基础 60 刻 + 速度 ×0.5，夹 40..160；离开精神域后身份仍保留的时长。
  *   boost        超能增幅：聚焦 1.45、护场 1.15，夹 1.1..1.5；站在场上的活体超能招式威力乘上的系数。
  *   density      纹路密度：基础 26 + 特攻 ÷8，再乘主场系数，夹 14..60；直接驱动粒子数量。
  *   surge        入场合能：基础 10 + 特攻 ÷12，夹 6..22；踩进精神域时身上迸出的念点。
@@ -25,7 +24,6 @@ namespace PokemonSkills {
     export const psychicterrainGround = "world_combat:psychicterrain_ground";
     export const psychicterrainScene = "world_combat:move_psychicterrain";
     export const psychicterrainStatus = "psychicterrain";
-    export const psychicterrainWardText = "world_combat.move.psychicterrain.text.ward";
 
     actionParameters.define(psychicterrainId, {
         gather: seconds(F.base(13).plus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(9, 20),
@@ -45,8 +43,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("focus"), F.const(1.25), F.const(0.85)))
                 .clamp(220, 560),
             "精神域持续", "这片精神域亮多久；聚焦更久（×1.25）、护场更短（×0.85），等级提升会延长。"),
-        markTicks: seconds(F.base(60).plus(F.stat("speed").times(0.5)).clamp(40, 160),
-            "离场余量", "离开精神域后身份仍保留、先制仍被挡的时长；速度越快余念散得越慢。"),
         boost: formula(
             F.when(F.pref("focus"), F.const(1.45), F.const(1.15)).clamp(1.1, 1.5).round(2),
             "超能增幅", { base: 1.3, unit: " 倍", format: function (value) { return "×" + (Math.round(value * 100) / 100); },

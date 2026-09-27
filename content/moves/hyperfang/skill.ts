@@ -1,14 +1,15 @@
 /**
  * 必杀门牙 / hyperfang 的出手方式。
  *
- * 核心念头：扑上去一口咬死，牙齿不松、身体左右猛甩——那一甩把猎物从站位里晃出来，并按体重把它定住一小会儿；
+ * 核心念头：扑上去一口咬死，牙齿不松、沿配置选定的一侧猛甩——那一甩把猎物从站位里晃出来，并按体重把它定住一小会儿；
  * 甩得够狠就把它彻底甩懵。它是全族单口直接伤害最高的一招，代价是没有持久削弱。
  *
  * 三幕：
  *   起（windup，提交前）：兽首张大、门牙泛出白光，只播预告表现。
  *   咬（pounce → bite）：提交后沿瞄准方向扑出，trace 咬中即结算 `fang`；命中处炸开骨白牙影与迸溅。
- *   甩（shake → stun）：咬住后按**配置里明确的左／右偏好**、相对释放方向沿选定侧分 3 刻小步甩到总 `shove` 格，
- *       受阻即停；按体重把目标钉住 `pinTicks`；每刻只有真实位移才画出甩线（`actual` 距离），免位移目标只留咬痕。
+ *   甩（shake → stun）：咬住后按**配置里明确的左／右偏好**、相对释放方向沿选定侧一段有界侧甩，总预算 `shove` 格；
+ *       侧甩走原生受击位移，抗击退或墙会把它停在实际位移处；按体重把目标钉住 `pinTicks`，钉住真的成立才报「钳住」。
+ *       只有真实位移才画出甩线（真实 `actual` 距离与 from→to），免位移目标只留咬痕。
  *       甩完按 `flinchChance` 掷畏缩，甩懵则挂共享身份 `world_combat:status/flinch` 并投递 `world_combat:interrupt`。
  *
  * 与同族分开：咬住把人拽近、咬碎研磨压塌护甲、愤怒门牙削掉一半生命、贝壳刃横扫削甲；
@@ -32,7 +33,7 @@ namespace PokemonSkills {
         id: "hyperfang",
         cooldownParameter: "recharge",
         name: "Hyper Fang",
-        description: "扑上去一口咬死，牙齿不松、左右猛甩：这一口是全族最重的直接伤害，甩出的侧向位移把目标从站位里晃开，并按体重把它钉住一小会儿；甩得够狠就把它甩懵，打断它正在做的事。代价是没有持久削弱。",
+        description: "扑上去一口咬死，牙齿不松、沿选定的一侧猛甩：这一口是全族最重的直接伤害，甩出的侧向位移把目标从站位里晃开，并按体重把它钉住一小会儿；甩得够狠就把它甩懵，打断它正在做的事。代价是没有持久削弱。",
         uses: ["用全族最重的单口直接伤害咬实", "咬住猛甩，把目标钉住一会儿", "甩懵对手，打断它正在做的事"],
         kind: "aim",
         range: 2.0,
@@ -82,8 +83,6 @@ namespace PokemonSkills {
             const sideSign = config && config.side === "left" ? -1 : 1;
             const flat = WorldGeometry.flatUnit(direction);
             const sideDir = WorldCombat.point(-flat.z() * sideSign, 0, flat.x() * sideSign);
-            const whipSteps = 3;
-            const perWhip = shove / whipSteps;
             let travelled = 0, settled = false;
 
             movementScenes.show(action, "pounce", action.origin(), { moment: "pounce", direction: [direction.x(), direction.y(), direction.z()], scale: scale });
@@ -99,7 +98,7 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 甩完（或受阻停下）：按畏缩许可掷一次甩懵，然后收场。位移在甩步里已按真实 actual 结算。 */
+            /** 甩完：按畏缩许可掷一次甩懵，然后收场。 */
             function afterWhip(current: CombatAction, victimRef: string, at: CombatPoint): void {
                 const scope = current.world();
                 const victim = scope.actor(victimRef);
@@ -115,25 +114,27 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 分 3 刻把目标沿选定侧小步带到位；每刻只画真实发生的位移，受阻立即停。 */
-            function whipStep(current: CombatAction, victimRef: string, at: CombatPoint, index: number): void {
+            /**
+             * 沿选定侧的一次有界侧甩：走原生受击位移，抗击退与墙都会挡下，总预算就是 `shove`；
+             * 只按实际位移画真实 from→to 拖痕，免位移的目标不画甩线、只留咬痕。
+             */
+            function whipOnce(current: CombatAction, victimRef: string, at: CombatPoint): void {
                 const scope = current.world();
                 const victim = scope.actor(victimRef);
                 if (victim === null || !scope.valid(victim)) { afterWhip(current, victimRef, at); return; }
                 const before = scope.observe(victim);
                 const from = before === null ? at : before.position();
-                const actual = scope.displace(victim, sideDir.scale(perWhip));
+                const actual = scope.hitDisplace(victim, sideDir.scale(shove));
                 const after = scope.observe(victim);
                 const to = after === null ? from.plus(sideDir.scale(actual)) : after.position();
                 if (actual > 0.02) {
                     WorldFeedback.emit(scope, hyperfangScene, 1, from,
-                        { moment: "shake", target: victimRef, pin: pin, sparks: Math.round(10 + perWhip * 36),
-                            reach: Math.round(actual * 100) / 100, step: index + 1,
+                        { moment: "shake", target: victimRef, pin: pin, sparks: Math.round(20 + actual * 40),
+                            reach: Math.round(actual * 100) / 100,
                             direction: [sideDir.x(), sideDir.y(), sideDir.z()],
                             path: [[from.x(), from.y() + 0.25, from.z()], [to.x(), to.y() + 0.25, to.z()]], scale: scale }, 20);
                 }
-                if (actual < perWhip * 0.25 || index + 1 >= whipSteps) { afterWhip(current, victimRef, at); return; }
-                current.after(1, function (next: CombatAction) { whipStep(next, victimRef, at, index + 1); });
+                afterWhip(current, victimRef, at);
             }
 
             function latch(current: CombatAction, victim: CombatActor, at: CombatPoint, contact: CombatImpact): void {
@@ -146,11 +147,13 @@ namespace PokemonSkills {
                     { moment: "bite", target: victimRef, morsels: morsels, scale: scale, intensity: intensity }, 24);
                 sound(current, "cobblemon:move.hyperfang.target");
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
-                // 牙齿不松：先按体重钉住，再沿选定侧逐步甩出；免位移的 Boss 仍吃这一口重咬。
-                WorldEffects.apply(scope, victim, "rooted", {}, pin);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), hyperfangLatchText, [], 22);
-                sound(current, "minecraft:entity.iron_golem.attack");
-                whipStep(current, victimRef, at, 0);
+                // 牙齿不松：先按体重钉住；钉住是否真的成立决定要不要报「钳住」。免推的 Boss 仍吃这一口重咬。
+                const rootId = WorldEffects.apply(scope, victim, "rooted", {}, pin);
+                if (rootId > 0 && scope.effects(victim, "world_combat:rooted").length > 0) {
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), hyperfangLatchText, [], 22);
+                    sound(current, "minecraft:entity.iron_golem.attack");
+                }
+                whipOnce(current, victimRef, at);
             }
 
             function advance(current: CombatAction): void {

@@ -4,7 +4,8 @@
  * 原生：Electric／Status／PP 25／优先度 +1／pseudoWeather iondeluge，持续 1 回合：
  *       场上一段时间内一般属性的招式变成电属性（对双方所有宝可梦）。
  * 世界化：在选定地面铺开一片带电粒子浴场——区域内任何人身上会挂一层短暂的「离子膜」；带着膜出招时，
- *         一般属性的招式在结算前变成电属性。于是它既是强化（自己的普通招吃电本系/打击面），
+ *         一般属性的招式在结算前变成电属性。脚本招式走伤害元数据，原生普通攻击走共享 NativeAttackTypes，
+ *         所以真实普通 MC 生物的普通近战/箭也能被转电。于是它既是强化（自己的普通招吃电本系/打击面），
  *         也是干扰（对手的普通招也会变电，可能被地面免疫或电吸收特性吃掉）。走出浴场，膜很快脱落。
  *
  * 数值来源（都来自个体，分散在不同参数上）：
@@ -18,6 +19,8 @@ namespace PokemonSkills {
     export const ionDelugeScene = "world_combat:move_iondeluge";
     export const ionField = "world_combat:iondeluge";
     export const ionFilm = "world_combat:ion_film";
+    // 真实膜的托管表现载体：自身随 ionFilm 的剩余时间结束，不随某一片浴场。
+    export const ionFilmVisual = "world_combat:ion_film_visual";
     export const ionizeText = "world_combat.move.iondeluge.text.ionize";
     function ionWide(detail: any): boolean { return !!(detail && detail.values && detail.values.wide); }
 

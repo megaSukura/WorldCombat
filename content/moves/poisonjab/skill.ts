@@ -20,7 +20,7 @@ namespace PokemonSkills {
     const poisonjabScene = "world_combat:move_poisonjab";
     const poisonjabHitText = "world_combat.move.poisonjab.text.hit";
     const poisonjabVenomText = "world_combat.move.poisonjab.text.venom";
-    const poisonjabImmuneText = "world_combat.move.poisonjab.text.immune";
+    const poisonjabBlockedText = "world_combat.move.poisonjab.text.blocked";
     const poisonjabWhiffText = "world_combat.move.poisonjab.text.whiff";
 
     define({
@@ -84,12 +84,12 @@ namespace PokemonSkills {
             const hit = action.trace(origin, end, radius, true);
             const victim = hit.hitEntity() ? hit.target() : null;
             const contact = hit.position();
-            const span = Math.max(0.4, Math.min(reach, contact.minus(origin).length()));
 
             sound(action, "minecraft:entity.player.attack.strong");
+            // 判定与画面同源：肢体只画一条有向刺线，两端就是真实出手起点与真实首碰（或尽头），长度不再被二次缩放。
             WorldFeedback.emit(world, poisonjabScene, 1, origin,
                 { moment: "thrust", drops: drops, swing: swing, scale: scale, intensity: intensity,
-                    direction: [direction.x(), direction.y(), direction.z()], reach: span }, 20);
+                    path: [LivingActions.coordinates(origin), LivingActions.coordinates(contact)] }, 20);
 
             if (victim !== null && !world.friendly(victim)) {
                 const dealt = hurt(action, victim, "poisonjab", power,
@@ -111,7 +111,7 @@ namespace PokemonSkills {
                 } else {
                     WorldFeedback.emit(world, poisonjabScene, 1, contact,
                         { moment: "whiff", drops: Math.round(drops * 0.5), swing: swing, scale: scale }, 20);
-                    WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 1.0, 0)), poisonjabImmuneText, [], 22);
+                    WorldFeedback.text(world, contact.plus(WorldCombat.point(0, 1.0, 0)), poisonjabBlockedText, [], 22);
                 }
                 done(action);
                 return;

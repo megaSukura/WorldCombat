@@ -3,8 +3,9 @@
  *
  * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 13）格内、自己还没站在交换空间里，且落点范围内
  *   至少有一个「交换能带来正收益」的对象时出手。没有可交换对象（例如全场只有单通道生物）就不自动放。
- * 收益怎么判：从注册事实读实际双防；己方是物理输出时优先覆盖「特防高、物防低」的己方，或「物防高、特防低」
- *   的敌方，收益按两条通道的差值算；己方偏特攻时方向相反。没有双防事实的对象保守跳过。
+ * 收益怎么判：从注册事实读实际双防；友方看威胁的实际攻击类别（优先最近一次真实原生攻击的记忆，其次按它自身攻/特攻取向）
+ *   把对方打来的那一路守厚，敌方看我自己打的是哪一类把对方那一路削薄；对落点内每个双通道对象求「交换对己方是否有利」
+ *   并求和，不再统一沿我方 atk/spa 且只取单个最大值。没有双防事实的对象保守跳过。
  * 出手前的位置：`ai.advance` 关闭（默认）时按在脚下先换自己；开启时前压到交战区 40% 处，让双方一起被换。
  * 放完之后：把伤害交回共用交战计划；还站在空间里时不再重复。配置 span（广域／紧凑）改变半径、时长与节奏。
  */
@@ -36,13 +37,34 @@ namespace CompanionBehavior {
         for (let i = 0; i < areas.length; i++) if (distance(areas[i].position, self.point) <= areas[i].radius) return true;
         return false;
     }
-    // 队伍输出方向：用施法者本人的实际攻击／特攻取向作代理，决定把哪条通道压给对手。
-    function wonderRoomPhysical(context: WorldBehavior.Context): boolean {
+    // 我方输出方向：用施法者本人的实际攻击／特攻取向作代理，决定把敌方的哪条通道削薄。
+    function wonderRoomSelfPhysical(context: WorldBehavior.Context): boolean {
         const facts = CompanionBehavior.combatStats(context, source(context));
         const stats = facts && facts.stats;
         if (!stats) return true;
         const atk = Number(stats.atk), spa = Number(stats.spa);
         return !isFinite(atk) || !isFinite(spa) ? true : atk >= spa;
+    }
+    // 敌实际攻击类别：优先读威胁最近一次真正发生的原生攻击记忆，其次按威胁自身攻/特攻取向估计。
+    function wonderRoomFoePhysical(context: WorldBehavior.Context, threat: Entity | null): boolean {
+        const access = world(context);
+        if (threat) {
+            const actor = access.actor(threat.ref);
+            if (actor !== null) {
+                const recent = DamageSemantics.recentAttack(access, actor, 200);
+                if (recent) {
+                    if (recent.category === "special") return false;
+                    if (recent.category === "physical") return true;
+                }
+            }
+            const stats = CompanionBehavior.combatStats(context, threat);
+            const values = stats && stats.stats;
+            if (values) {
+                const atk = Number(values.atk), spa = Number(values.spa);
+                if (isFinite(atk) && isFinite(spa)) return atk >= spa;
+            }
+        }
+        return true;
     }
     // 用机制本身解出的空间半径判断落点覆盖，避免在 AI 里另写一份常数。
     function wonderRoomRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
@@ -61,24 +83,25 @@ namespace CompanionBehavior {
         const length = Math.max(0.001, Math.sqrt(dx * dx + dz * dz)), step = Math.min(2, length * 0.4);
         return [self.point[0] + dx / length * step, self.point[1], self.point[2] + dz / length * step];
     }
-    // 交换收益：把两条通道的差值按关系与队伍输出方向换算；只认有双防事实的对象。
-    function wonderRoomAssess(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity | null): { any: boolean; best: number } {
-        const physical = wonderRoomPhysical(context), radius = wonderRoomRadius(context, item);
+    // 交换收益：对每个对象的双防差值按「哪一方受益」选方向，再对落点内所有双通道对象求净收益。
+    // 友方：看威胁真正打来的是物理还是特殊，把那一侧守厚；敌方：看我自己打的是哪一类，把那一侧削薄。
+    function wonderRoomAssess(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity | null): { any: boolean; net: number } {
+        const foePhysical = wonderRoomFoePhysical(context, threat), selfPhysical = wonderRoomSelfPhysical(context);
+        const radius = wonderRoomRadius(context, item);
         const placement = wonderRoomPlacement(context, item, threat);
         const candidates: Entity[] = [source(context)].concat((context.facts.nearby as Entity[]) || []);
-        let any = false, best = 0;
+        let any = false, net = 0;
         for (let i = 0; i < candidates.length; i++) {
             const subject = candidates[i];
             if (!subject || subject.health <= 0 || distance(subject.point, placement) > radius) continue;
             const stats = CompanionBehavior.fact<{ def: number; spd: number }>(context, "world_combat:move_wonderroom/stats", subject);
             if (!stats || typeof stats.def !== "number" || typeof stats.spd !== "number") continue;
             const diff = stats.spd - stats.def;
-            const benefit = subject.friendly ? (physical ? diff : -diff) : (physical ? -diff : diff);
+            const benefit = subject.friendly ? (foePhysical ? diff : -diff) : (selfPhysical ? -diff : diff);
             if (!isFinite(benefit)) continue;
-            if (!any || benefit > best) best = benefit;
-            any = true;
+            net += benefit; any = true;
         }
-        return { any: any, best: best };
+        return { any: any, net: net };
     }
     function wonderRoomWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity | null): boolean {
         if (!threat || threat.health <= 0 || !threat.visible || threat.friendly) return false;
@@ -86,14 +109,14 @@ namespace CompanionBehavior {
         if (context.facts.focus !== threat.ref && distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 13)) return false;
         if (wonderRoomInside(context)) return false;
         const assessment = wonderRoomAssess(context, item, threat);
-        return assessment.any && assessment.best > 0;
+        return assessment.any && assessment.net > 0;
     }
     function wonderRoomPriority(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const threat: Entity | null = context.senses["world_combat:threat"];
         if (!threat) return 0;
         const assessment = wonderRoomAssess(context, item, threat);
-        if (!assessment.any || assessment.best <= 0) return 0;
-        return Math.max(32, Math.min(74, 46 + assessment.best * 0.15));
+        if (!assessment.any || assessment.net <= 0) return 0;
+        return Math.max(32, Math.min(74, 46 + assessment.net * 0.15));
     }
 
     registerUse("wonderroom", {

@@ -29,5 +29,10 @@
   "world_combat.move.skillswap.text.same": "特性相同，无需对调",
   "world_combat.move.skillswap.text.returned": "交换结束",
   "worldcombat.skill.skillswap.world": "目标为普通生物时，只交换双方共同拥有的原生攻击力、移动速度、护甲、护甲韧性与抗击退属性，持续 %1$s；一端窗口失效后本对贡献一起撤除。装备留在原主身上，后续其他属性贡献照常生效。",
-  "world_combat.move.skillswap.text.attributes": "双方共同拥有的攻击、移动与防护属性"
+  "world_combat.move.skillswap.text.attributes": "双方共同拥有的攻击、移动与防护属性",
+  "world_combat.move.skillswap.attribute.attack_damage": "攻击",
+  "world_combat.move.skillswap.attribute.movement_speed": "移速",
+  "world_combat.move.skillswap.attribute.armor": "护甲",
+  "world_combat.move.skillswap.attribute.armor_toughness": "韧性",
+  "world_combat.move.skillswap.attribute.knockback_resistance": "抗击退"
 }

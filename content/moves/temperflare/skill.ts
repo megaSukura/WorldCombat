@@ -7,8 +7,9 @@
  * 两幕：
  *   起（gather，提交前）：火从脚下窜起、裹住身体，只播预告。
  *   撞（charge → burst／scorch／miss）：提交后逐刻朝目标冲，trace 撞上活体即结算 `flare` 接触伤害、
- *       把目标顶开，并在落点炸开一圈 `scorch` 溅射；没撞到人也在尽头炸开一次。带豁出去时命中/燎到的敌人被点燃，
- *       但免疫火的生物只吃伤害、不会被点着。
+ *       把目标沿受击位移 `hitDisplace` 顶开（抗推只伤不飞），并在落点炸开一圈 `scorch` 溅射；没撞到人也在尽头炸开一次。
+ *       带豁出去时命中/燎到的敌人被原生点燃，火焰表现由本单元托管效果按真实 `isOnFire` 存续，提前熄灭即随停；
+ *       免疫火的生物只吃伤害、不会被点着。
  *
  * 与同族分开：
  *   跺脚（stompingtantrum）是原地跺地、沿一条缝掀人，走的是地面；
@@ -22,6 +23,44 @@ namespace PokemonSkills {
         if (String(target.domain()) !== "cobblemon") return false;
         try { return !NativeEffects.statusAllowed(world, target, "burn", false, true); }
         catch (error) { return false; }
+    }
+
+    /**
+     * 点燃表现：绑在这次施放自己的托管效果上，每 5 刻读一次目标真实原生火（`isOnFire`）。
+     * 火还在就续画面，被水浇灭、烧完或被别的机制熄掉就同刻收束，不留余火；同源再次点燃会先撤旧效果再挂新的。
+     */
+    const temperBurnEffect = "world_combat:temperflare_burn";
+    function temperBurnWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        if (!world.valid(target)) { effect.end(); return; }
+        const body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        const native: { isOnFire(): boolean } | null = world.nativeEntity(target);
+        if (native === null || typeof native.isOnFire !== "function" || !native.isOnFire()) { effect.end(); return; }
+        const state = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:temperflare/burn", temperScene, 1, body.position(),
+            { moment: "burn", target: String(target.ref()), embers: state.embers, scale: state.scale,
+                intensity: state.intensity, burnTicks: state.burnTicks });
+        effect.schedule("watch", "watch", 5, "{}");
+    }
+    WorldCombat.effect(temperBurnEffect, 1, 260, "actor", function (json) {
+        const value = JSON.parse(json);
+        ["embers", "scale", "intensity", "burnTicks"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid temperflare burn state");
+        });
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(temperBurnEffect, "start", temperBurnWatch);
+    WorldCombat.effectHandler(temperBurnEffect, "watch", temperBurnWatch);
+    WorldCombat.effectHandler(temperBurnEffect, "operation:world_combat:dispel", effect => effect.end());
+    function temperBurnAttach(world: CombatWorld, target: CombatActor, embers: number, scale: number, intensity: number, burnTicks: number): void {
+        const owner = world.valid(world.source()) ? String(world.source().key()) : "";
+        world.effects(target, temperBurnEffect).forEach(function (view) {
+            if (String(view.source().key()) === owner) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        world.effect(temperBurnEffect, target,
+            JSON.stringify({ embers: embers, scale: scale, intensity: intensity, burnTicks: burnTicks }),
+            Math.min(260, Math.max(20, Math.round(burnTicks)) + 40));
     }
 
     define({
@@ -70,7 +109,7 @@ namespace PokemonSkills {
             const length = p(temperId, "dash", action);
             const step = p(temperId, "charge", action);
             const radius = p(temperId, "collisionRadius", action);
-            const doubled = CombatStatus.has(world, actor, temperStatus);
+            const doubled = temperWhiffed(world, actor, action);
             let travelled = 0, settled = false;
 
             sound(action, "minecraft:entity.blaze.shoot");
@@ -101,11 +140,10 @@ namespace PokemonSkills {
                         if (impact(current, primary, temperId, flarePower, { damage: damageSpec(temperId, "flare"), contact: true })) {
                             struck++;
                             const away = primary.position().minus(current.origin());
-                            if (away.length() > 0.05 && scope.valid(target)) scope.displace(target, away.unit().scale(push));
+                            // 受击位移走原生入口：抗推/无敌/权限由共享层处理，完全抗位移只伤不飞。
+                            if (away.length() > 0.05 && scope.valid(target)) scope.hitDisplace(target, away.unit().scale(push));
                             if (doubled && scope.valid(target) && !temperFireImmune(scope, target) && scope.ignite(target, ignite))
-                                WorldFeedback.emit(scope, temperScene, 1, primary.position(),
-                                    { moment: "burn", target: String(target.ref()), embers: Math.max(6, Math.round(embers / 2)),
-                                        burnTicks: burnTicks, scale: scale, intensity: intensity }, burnTicks);
+                                temperBurnAttach(scope, target, Math.max(6, Math.round(embers / 2)), scale, intensity, burnTicks);
                         }
                     }
                 }
@@ -118,18 +156,18 @@ namespace PokemonSkills {
                     struck++;
                     const away = facts.position().minus(point);
                     if (scope.valid(enemy)) {
-                        if (away.length() > 0.2) scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push * 0.7));
+                        // 副溅先判水平长度：正上/正下的目标水平分量为零，不拿零向量去 unit() 抛错。
+                        const flat = WorldCombat.point(away.x(), 0, away.z());
+                        if (flat.length() > 0.2) scope.hitDisplace(enemy, flat.unit().scale(push * 0.7));
                         if (doubled && !temperFireImmune(scope, enemy) && scope.ignite(enemy, ignite))
-                            WorldFeedback.emit(scope, temperScene, 1, facts.position(),
-                                { moment: "burn", target: ref, embers: Math.max(4, Math.round(embers / 2)),
-                                    burnTicks: burnTicks, scale: scale, intensity: intensity }, burnTicks);
+                            temperBurnAttach(scope, enemy, Math.max(4, Math.round(embers / 2)), scale, intensity, burnTicks);
                     }
                     WorldFeedback.emit(scope, temperScene, 1, facts.position(),
                         { moment: "scorch", target: ref, embers: Math.max(4, Math.round(embers / 2)), scale: scale, intensity: intensity }, 22);
                 });
 
                 WorldFeedback.emit(scope, temperScene, 1, point,
-                    { moment: "burst", embers: embers, scale: scale, intensity: intensity }, 26);
+                    { moment: "burst", embers: embers, blast: Math.round(blast * 100) / 100, scale: scale, intensity: intensity }, 26);
                 sound(current, doubled ? "minecraft:entity.generic.explode" : "cobblemon:impact.fire");
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)),
                     doubled ? temperRageText : struck > 0 ? temperHitText : temperMissText, doubled || struck > 0 ? [struck] : [], 26);

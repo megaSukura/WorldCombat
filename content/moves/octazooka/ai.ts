@@ -2,7 +2,7 @@
  * 章鱼桶炮 的伙伴 AI 用途：一套自己的出手计划。
  *
  * 什么局面下出手：有可见威胁、在 `ai.maxChase` 之内。它的价值在糊眼，所以在目标正出手时优先度更高——
- * 趁它动作中喷墨，让它接下来的攻击更容易偏。
+ * 趁它动作中喷墨，让它接下来的攻击更容易偏；目标命中已经被大幅削过时只剩伤害收益，不再加这份价值。
  * 对谁出手：当前威胁；不可见、友方或已倒下的目标不接受。
  * 够不到怎么办：reach 就是本招射程，不够就先走近交给共享接近逻辑；`ai.leaveStation` 决定驻守时是否离位。
  * 放完之后：目标脸上糊墨、地上留墨渍一段，交回共享顺序继续战斗。
@@ -24,7 +24,9 @@ namespace PokemonSkills {
             if (!target) return 0;
             const inReach = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range;
             const base = inReach ? 18 : 0;
-            return target.attacking ? base + 10 : base;
+            // 命中已经被大幅削过（能力等级还有下限）时不再把糊眼当满额价值，这只算伤害收益。
+            const blurred = CompanionBehavior.stage(context, target, "accuracy") <= -2;
+            return target.attacking && !blurred ? base + 10 : base;
         }
     });
 

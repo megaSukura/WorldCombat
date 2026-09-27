@@ -34,7 +34,7 @@ namespace PokemonSkills {
             F.base(9).plus(F.body("height").minus(1.4).times(5)).clamp(4, 22).round(0),
             "扇形张角", {
                 unit: "度",
-                description: "针雨摊开的半角；大个子抖出的面更宽，也更容易覆盖移动中的目标。"
+                description: "针雨摊开的总张角；大个子抖出的面更宽，也更容易覆盖移动中的目标。"
             }),
         /** 单针飞行速度：基础 2.1 格/刻，速度每比 40 多 1 加 0.005，夹在 1.4..3.0。 */
         barbSpeed: formula(

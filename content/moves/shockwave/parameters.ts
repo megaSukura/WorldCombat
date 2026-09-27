@@ -2,13 +2,12 @@
  * 电击波 / shockwave 的参数与伤害段。
  *
  * 原生事实：Electric、特殊、威力 60、命中必定（accuracy true）、PP 20、单体、无次要效果（Cobblemon 1.8）。
- * 翻译：把“向对手快速发出电击”翻成一道出手即到的电流——不显示飞行过程，直击沿直线闪到目标身上，
- *       首个拦路的身体或方块就是终点；直击不做随机命中检定。目标湿身或在雨里时，电沿水传导得更狠；
- *       配置 ground（地导）让电流沿瞄准方向扫过身前贴地的一条走廊，可空扫，直击则单体更重。
- * 数据分散：特攻定直击与地导威力、湿身加成与折数，身高定走廊宽度与判定，等级定地导射程。
- * 配置 ground 经 resolve 改变射程与节奏：地导更远更广，但起手与冷却更长。
+ * 翻译：把“向对手快速发出电击”翻成一道出手即到的电流——不显示飞行过程，电流沿施法者到目标的直线一瞬
+ *       闪到身上，首个拦路的身体或方块就是真实终点；不做随机命中检定，空放也成立。目标湿身或在雨里时，
+ *       电沿水传导得更狠。
+ * 数据分散：特攻定威力、湿身加成与折数，身高定判定半径。
  *
- * 伤害段：jolt 是直击那一下，surge 是地导走廊里每个目标的那一下。
+ * 伤害段：jolt 是这一下直击。
  */
 namespace PokemonSkills {
     actionParameters.define("shockwave", {
@@ -17,14 +16,7 @@ namespace PokemonSkills {
             F.base(58).plus(F.stat("specialAttack").minus(60).times(0.18)).clamp(32, 100).round(1),
             "直击威力", {
                 unit: "威力",
-                description: "直击形态下落在单体身上的威力；特攻越高越重。对手防御、相性与暴击在命中时另算。"
-            }),
-        /** 地导威力：特攻每比 60 多 1 加 0.14，夹在 26..80。 */
-        surge: formula(
-            F.base(46).plus(F.stat("specialAttack").minus(60).times(0.14)).clamp(26, 80).round(1),
-            "地导威力", {
-                unit: "威力",
-                description: "地导形态下走廊里每个目标承受的威力；能量摊在一条线上，单点比直击轻。"
+                description: "电流落在单体身上的威力；特攻越高越重。对手防御、相性与暴击在命中时另算。"
             }),
         /** 折数：基础 5，特攻每比 60 多 1 加 0.03，夹在 4..8 并向下取整。 */
         jags: formula(
@@ -32,13 +24,6 @@ namespace PokemonSkills {
             "折数", {
                 unit: "折",
                 description: "电流在施法者与目标之间炸开几处折点；特攻越高电流越暴烈。"
-            }),
-        /** 走廊半宽：基础 0.9 格，碰撞箱每比 1.4 高 1 格加 0.15，夹在 0.6..1.6。 */
-        corridor: formula(
-            F.base(0.9).plus(F.body("height").minus(1.4).times(0.15)).clamp(0.6, 1.6).round(2),
-            "走廊半宽", {
-                unit: "格",
-                description: "地导时电流走廊的一半宽度；大个子推开的电流更宽。"
             }),
         /** 湿身加成：基础 0.45，特攻每比 60 多 1 加 0.002，夹在 0.25..0.7。 */
         wetBonus: percent(
@@ -54,18 +39,16 @@ namespace PokemonSkills {
     });
 
     defineDamage("shockwave", "jolt", {});
-    defineDamage("shockwave", "surge", {});
 
     stages("shockwave", [
-        { level: 32, values: { jolt: 66, surge: 52 } },
+        { level: 32, values: { jolt: 66 } },
         { level: 50, values: { wetBonus: 0.5 } }
     ]);
 
     describe("shockwave", [
         { key: "description.0", values: ["jolt","wetBonus"] },
-        { key: "description.1", values: ["surge","corridor","wetBonus"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.jolt", "tier.0.surge"] },
+        { key: "growth.0", values: ["tier.0.level", "tier.0.jolt"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.wetBonus"] }
     ]);
 }

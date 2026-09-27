@@ -4,8 +4,10 @@
  * 一句话：屈膝收身时脚边水光打转，随后连跳三次——每一跳沿施术者真实起落的身体拖一条水线，下落扎到敌人身上时
  *   溅起一整片水花；被打湿的目标身上水光还没散，后两钻落上去时水花更大。
  * 色相家族：水青（waterjet / bubble / impact_water）与近白（水花尖），只在湿身那一层多一点点高饱和青。
- * 拍子：起 coil（收身）→ 升 rise（真实上升的身体水线）→ 落 fall（真实下落的身体水线）→ 击 splash（命中水花外爆）／空放 land。
- * 位置：rise／fall 的发射器绑 source，随施术者真实移动逐刻留下水线（trail），不画计划弧线；splash 绑 target、land 绑 point。
+ * 拍子：起 coil（收身）→ 升 rise（真实上升的身体水线）→ 落 fall（真实下落的身体水线）→ 击 splash（命中水花外爆）／空放 land
+ *   → 持续 linger（目标身上的水光，随真实 soaked 载体存续）。
+ * 位置：rise／fall 的发射器绑 source，随施术者真实移动逐刻留下水线（trail），不画计划弧线；splash 绑 target、land 绑 point；
+ *   linger 由托管效果的 onEffect 挂在载体上，载体被驱散/刷新时同刻收束。
  * 数：`data.splashes`（物攻派生的水花点数）驱动 coil 与命中的粒子量；`data.rise`（本钻实际跳跃高度）驱动上升水滴速度；
  *   `data.soak`（目标已湿身时 1）额外冒一层大泡；`data.scale`（水花判定半径派生）缩放尺寸；`data.intensity`（本钻威力 / 15）放大整幕。
  */
@@ -126,6 +128,28 @@ const TriplediveDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.12], gravity: 0.1,
                     lifetime: [6, 11], size: [0.09, 0.02],
                     color: 0x8FD8F0, alpha: [0.55, 0], light: "world", maxParticles: 20
+                }
+            ]
+        },
+        // 持续湿身：由属于本次施放的托管效果挂在真实 soaked 载体上；载体被驱散/刷新时 ManagedEffect 收束，画面同刻收回。
+        linger: {
+            exit: { drain: 30 },
+            emitters: [
+                {
+                    name: "mark", bind: "target", offset: [0, 0.35, 0], height: 0.9,
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    rate: 2, shape: { kind: "ring", radius: 0.3 },
+                    direction: "inward", speed: [0.0, 0.04],
+                    lifetime: [14, 22], size: [0.14, 0.03],
+                    color: 0x6FD0EA, alpha: [0.45, 0], alphaMode: "sin", light: "world", maxParticles: 10
+                },
+                {
+                    name: "beads", bind: "target", offset: [0, 0.6, 0], height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
+                    rate: 2, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "up", speed: [0.01, 0.04],
+                    lifetime: [12, 20], size: [0.07, 0.01],
+                    color: 0xBFEAF6, alpha: [0.4, 0], light: "world", maxParticles: 12
                 }
             ]
         }

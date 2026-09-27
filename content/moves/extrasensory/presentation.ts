@@ -7,14 +7,15 @@
  * 拍子：起（mark 幻影悬停在点上，长而淡）→ 攥（snap 向内收拢的内爆）→ 中（hit 逐个被攥住）→ 懵（flinch）／空（miss）。
  * 范围：mark 与 snap 的紫环都按服务端传的 `data.radius`（真实合拢半径）画出，玩家看到的圈就是会被攥住的地。
  * 运动：起手幻影几乎静止、只缓慢旋转；合拢时四面向内收束并向下压；命中时暗紫环从外朝内收一圈。
- * 数：`data.motes`（特攻与等级派生）决定力丝的密度，`data.delay` 让幻影的存在时长可读，`data.intensity` 抬高合拢亮度。
+ * 数：`data.motes`（特攻与等级派生）决定力丝的密度，`data.markTicks`（起手 + 伏笔）让幻影一直悬到合拢，
+ *   同 key 更新不会重置它的时钟，所以由服务端给足这一整段时长；`data.intensity` 抬高合拢亮度。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const ExtrasensoryDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         mark: {
-            duration: 40,
+            duration: { data: "markTicks", fallback: 46 },
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {

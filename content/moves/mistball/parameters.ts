@@ -32,6 +32,8 @@ namespace PokemonSkills {
     export const mistballCling = "world_combat:mistball_cling";
     export const mistballDownText = "world_combat.move.mistball.text.down";
     export const mistballMissText = "world_combat.move.mistball.text.miss";
+    /** 这一抛可以等待的最长飞行时间（刻）；实际可达的弧必须落在这一预算内，执行与 AI 读同一个预算。 */
+    export const mistballFlightTicks = 110;
 
     actionParameters.define(mistballId, {
         /** 羽绒威力：70 + 特攻偏移[−12,40] + 等级(≥30)偏移[0,12]；浓雾 ×0.88 / 轻羽 ×1.12；夹 44..170。 */
@@ -64,9 +66,9 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "羽绒球离手时的初速；身高越高抛得越有力，浓雾式因为球更重而更慢。"
             }),
-        /** 下坠：0.04 − 体重偏移[−0.02,0.008]；浓雾 ×1.15 / 轻羽 ×0.9；夹 0.02..0.06。 */
+        /** 下坠：0.04 + 体重偏移[−0.02,0.008]；浓雾 ×1.15 / 轻羽 ×0.9；夹 0.02..0.06。 */
         fall: formula(
-            F.base(0.04).minus(F.body("weight").minus(60).times(0.0001).clamp(-0.02, 0.008))
+            F.base(0.04).plus(F.body("weight").minus(60).times(0.0001).clamp(-0.02, 0.008))
                 .times(F.when(F.pref("suffuse"), F.const(1.15), F.const(0.9)))
                 .clamp(0.02, 0.06).round(3),
             "下坠", {

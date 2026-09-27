@@ -5,8 +5,8 @@
  *   火星四散燎到身边的人；真正被点着的目标身上挂一段火尾，免疫火的目标只吃伤害、不挂火。
  * 色相家族：炽橙与赤红（0xFF7A2A / 0xE0562A）为主体，近白（0xFFE6B0）只给爆炸核心，灰烟作余韵；一个暖色家族。
  * 拍子：起 gather（点火）→ 撞 charge（拖火尾冲锋）→ 击 burst（炸开）→ 燎 scorch（溅射）→ 燃 burn（真正点燃的火尾）。
- * 范围：burst 的核心与外扩按 `data.scale`（爆开半径 / 1.5）放大；没有地面残留。
- * 运动：火苗从脚下向上、冲锋时沿身体轨迹拖在身后、撞击时向外炸开，火尾跟在被点燃的目标身上。
+ * 范围：burst 的核心与外扩直接按 `data.blast`（实际爆开半径，格）画出，不再经 scale 间接折算；没有地面残留。
+ * 运动：火苗从脚下向上、冲锋时沿身体轨迹拖在身后、撞击时向外炸开；火尾绑在托管效果上，随目标真实 `isOnFire` 续或停。
  * 数：burst／scorch／burn 的火星量绑定 `data.embers`（物攻与等级换算），强度绑定命中威力 `data.intensity`（失手翻倍时更高）。
  */
 const TemperflareDefinition: ParticleDefinition = {
@@ -61,28 +61,28 @@ const TemperflareDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "burst_fire", bind: "point", offset: [0, 0.2, 0],
+                    name: "burst_fire", bind: "point", offset: [0, 0.2, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere_surface", radius: { data: "blast", fallback: 1.5 } },
                     direction: "outward", speed: [0.12, 0.36], spread: 30,
                     lifetime: [8, 15], size: [0.5, 0.08],
                     color: 0xFFFFFF, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 10
                 },
                 {
-                    name: "burst_rock", bind: "point", offset: [0, 0.2, 0],
+                    name: "burst_rock", bind: "point", offset: [0, 0.2, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/burning_rock",
                     burst: { count: { data: "embers", fallback: 18 }, at: 0 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: { data: "blast", fallback: 1.5 } },
                     direction: "outward", speed: [0.16, 0.5], gravity: 0.06, drag: 0.95, spread: 40,
                     lifetime: [10, 20], size: [0.16, 0.04],
                     color: 0xFF7A2A, alpha: [0.95, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "burst_ring", bind: "point", offset: [0, 0.06, 0],
+                    name: "burst_ring", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: { data: "blast", fallback: 1.5 } },
                     direction: "outward", speed: [0.08, 0.2],
                     lifetime: [10, 18], size: [0.36, 0.9], sizeMode: "linear",
                     color: 0xFF9A3A, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 8
@@ -105,7 +105,7 @@ const TemperflareDefinition: ParticleDefinition = {
             ]
         },
         burn: {
-            duration: { data: "burnTicks", fallback: 40 },
+            duration: 0,
             exit: { drain: 10 },
             emitters: [
                 {

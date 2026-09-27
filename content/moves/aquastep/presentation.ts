@@ -5,7 +5,8 @@
  * 水花在圈里炸开。色相家族：青蓝（water_ripple / splash / waterjet / impact_water，0x4FC3E8），泡沫近白。
  * 拍子：起（bow 水纹）→ 舞（step × N 每拍一圈）→ 击（spin 整圈水刃）→ 提（boost）。
  * 范围：spin 的一整圈半径就是判定半径（`data.scale` 由 reach 派生），玩家看得出站进圈里会被扫到。
- * 运动：step 的水花贴地向外荡开、细沫上抛；spin 的水刃沿圈向外甩、命中点炸开。
+ * 运动：step 的水花绑定服务端给出的真实脚点（bind:point，不跟身体），贴地向外荡开、细沫上抛；
+ *   spin 的水刃沿圈向外甩、命中点炸开。
  * 数：水花数量绑定 `data.splash`（速度与雨量派生），命中强弱绑定 `data.intensity`（旋舞威力派生），
  *   拍数绑定 `data.steps`、当前第几拍绑定 `data.index`。
  */
@@ -38,7 +39,7 @@ const AquastepDefinition: ParticleDefinition = {
             emitters: [
                 {
                     // 整圈水纹只在真的迈出这一步时亮起（data.ring 由位移回执给出）。
-                    name: "ring", bind: "source", offset: [0, 0.06, 0], height: 0.06,
+                    name: "ring", bind: "point", offset: [0, 0.06, 0], height: 0.06,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: { data: "ring", fallback: 1 } }, shape: { kind: "ring", radius: 0.55 },
                     direction: "outward", speed: [0.05, 0.16],
@@ -46,7 +47,7 @@ const AquastepDefinition: ParticleDefinition = {
                     color: 0x4FC3E8, alpha: [0.65, 0], light: "world", maxParticles: 20
                 },
                 {
-                    name: "splash", bind: "source", offset: [0, 0.1, 0], height: 0.1,
+                    name: "splash", bind: "point", offset: [0, 0.1, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/water/splash",
                     burst: { count: { data: "splash", fallback: 22 } }, shape: { kind: "circle", radius: 0.5 },
                     direction: "outward", speed: [0.06, 0.24], gravity: 0.05, drag: 0.9,
@@ -54,7 +55,7 @@ const AquastepDefinition: ParticleDefinition = {
                     color: 0xDFF6FF, alpha: [0.85, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "foam", bind: "source", offset: [0, 0.18, 0], height: 0.18,
+                    name: "foam", bind: "point", offset: [0, 0.18, 0], height: 0.18,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     rate: { data: "splash", fallback: 14 }, shape: { kind: "ring", radius: 0.45 }, direction: "up", speed: [0.05, 0.18],
                     gravity: 0.04, lifetime: [7, 12], size: [0.08, 0.02],

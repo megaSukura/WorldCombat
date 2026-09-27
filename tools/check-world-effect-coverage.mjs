@@ -62,6 +62,18 @@ const world = { tick: () => now, source: () => source, valid: a => a.valid, rand
   observe: a => ({ attacking: () => a.attacking, health: () => 20, maxHealth: () => 20, position:()=>point() }),
   effects: (a, definition) => [...a.effects.values()].filter(e => e.definition() === definition && !e.ended),
   mobEffect: effectView, mobEffects: a => [...a.markers.keys()].map(id => effectView(a, id)).filter(Boolean),
+  matchesMobEffect(a, id, key) { const value = this.valid(a) && this.mobEffect(a, id); return !!value && String(value.key()) === key; },
+  transformMobEffects(a, json) {
+    const rows = JSON.parse(json).changes, before = new Map(a.markers);
+    if (a.refuse || a.removeRefuse || rows.some(row => !this.matchesMobEffect(a, row.id, row.key))) return 0;
+    const next = new Map(before); rows.forEach(row => next.delete(row.id));
+    for (const row of rows) {
+      const value = before.get(row.id), old = next.get(row.to);
+      if (old && (old.amplifier > value.amplifier || old.amplifier === value.amplifier && (old.until < 0 || value.until >= 0 && old.until >= value.until))) return 0;
+      next.set(row.to, { ...value, revision: ++serial });
+    }
+    a.markers = next; return rows.length;
+  },
   marker(a, id, ticks, amplifier) {
     if (a.refuse) return;
     const old = effectView(a, id);
@@ -149,6 +161,14 @@ test('paired reversal preserves simultaneous opposite effects and their clocks',
   world.marker(ordinary, 'minecraft:regeneration', 120, 1); assert.equal(M.invert(world, ordinary, false), 2);
   assert.equal(effectView(ordinary, 'minecraft:slowness').amplifier(), 2); assert.equal(effectView(ordinary, 'minecraft:slowness').duration(), 90);
   assert.equal(effectView(ordinary, 'minecraft:speed').duration(), 45); assert(effectView(ordinary, 'minecraft:regeneration'));
+});
+test('refused reversal keeps the complete original pair and reports zero', () => {
+  world.marker(ordinary, 'minecraft:speed', 90, 2); world.marker(ordinary, 'minecraft:slowness', 45, 0);
+  const before = [...ordinary.markers].map(([id, value]) => [id, { ...value }]);
+  ordinary.refuse = true; assert.equal(M.invert(world, ordinary, false), 0);
+  assert.deepEqual([...ordinary.markers], before); ordinary.refuse = false;
+  ordinary.removeRefuse = true; assert.equal(M.invert(world, ordinary, false), 0);
+  assert.deepEqual([...ordinary.markers], before); ordinary.removeRefuse = false;
 });
 test('limited cleansing lowers an actual harmful effect by exactly one level', () => {
   world.marker(ordinary, 'minecraft:poison', 150, 2); assert.equal(M.reduce(world, ordinary, 'harmful', 1), 1);

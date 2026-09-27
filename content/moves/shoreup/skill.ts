@@ -4,17 +4,16 @@
  * 核心念头：把脚边的散沙一缕缕卷起来、糊到身上堵住伤口；能取到多少沙，就补回多少。
  *
  * 出手：共享节奏。windup（提交前）只播预告——脚边的沙粒先被吸起来；准备可被打断，不花代价。
- * 结算（提交后，一次结算）：只**读取**探沙范围内实际有沙的位置并据此扬起沙粒（`shoreupSite`，不改地形），
- *   再把明确落在脚边的松散沙**掉落物**收走（`shoreupDrawDrops`，这是唯一修改世界的一步）；随后按 `heal`
- *   回复自己——`heal` 读的是取沙那一刻的散沙密度与沙暴身份，所以站在沙地上的这一口明显更足。
- * 画面：起沙（gather，含每个真实沙位的 gather_site）→ 糊身（pack，数量随实际回复）→ 余尘（settle）；沙暴中额外镀亮沙。
+ * 结算（提交后，一次结算）：只**读取**探沙范围内实际有沙的位置并据此扬起沙粒（`shoreupSite`），
+ *   不挖走方块、也不消耗任何掉落物，世界完全不被改动；随后按 `heal` 回复自己——`heal`、取材与画面
+ *   读同一个脚点、同一片沙与同一个 WorldEnvironment 沙暴读数，所以站在沙地上的这一口明显更足。
+ * 画面：起沙（gather，含每个真实沙位朝身体收拢的 gather_site 短吸沙路径）→ 糊身（pack，数量随实际回复）
+ *   → 余尘（settle）；沙暴中额外镀亮沙，脚下无沙时只剩一层弱土尘。
  *
- * 反制：这招吃地面——把施法者逼离沙地／沙丘，它就只剩一点土尘；但脚下的承重沙块不会被挖走，地表保持连续，
- *   所以它不会把战场越用越烂，只会收走散落的浮沙。
+ * 反制：这招吃地面——把施法者逼离沙地／沙丘又不在沙暴里，它就只剩一点土尘；地表与掉落物都不被改动。
  * 与同族分开：光合作用只读光照；羽栖是落地分段；集沙吃地面材质，并在沙暴里最强。
  */
 namespace PokemonSkills {
-    declare const Java: { loadClass(name: string): any };
     const shoreupScene = "world_combat:move_shoreup";
     const shoreupTextStorm = "world_combat.move.shoreup.text.storm";
     const shoreupTextSand = "world_combat.move.shoreup.text.sand";
@@ -67,30 +66,10 @@ namespace PokemonSkills {
         return points;
     }
 
-    /** 收走脚边明确掉落的松散沙（真正修改世界的一步）；返回取走的粒数与它们的实际位置。 */
-    function shoreupDrawDrops(world: CombatWorld, feet: CombatPoint, reach: number, limit: number): { count: number; points: CombatPoint[] } {
-        var result = { count: 0, points: [] as CombatPoint[] };
-        if (limit <= 0) return result;
-        var entities: any[] = world.nativeEntities(feet, reach, "minecraft:item") as any;
-        if (!entities || entities.length === 0) return result;
-        var Registries = Java.loadClass("net.minecraft.core.registries.BuiltInRegistries");
-        for (var i = 0; i < entities.length && result.count < limit; i++) {
-            var item = entities[i], stack = item.getItem();
-            if (!stack || stack.isEmpty()) continue;
-            var id = String(Registries.ITEM.getKey(stack.getItem()));
-            if (id !== "minecraft:sand" && id !== "minecraft:red_sand") continue;
-            var at = WorldCombat.point(Number(item.getX()), Number(item.getY()), Number(item.getZ()));
-            item.discard();
-            result.count++;
-            result.points.push(at);
-        }
-        return result;
-    }
-
     define({
         id: shoreupId, name: "集沙",
-        description: "把脚边的散沙卷起来糊到身上，回复最大生命的一半左右；身边的沙越密回得越多，身处沙暴时回到约三分之二。取材只读取地面的沙、不挖走承重沙块，地表保持连续；只有落在脚边的松散沙掉落物会被收走。",
-        uses: ["站在沙地上补一大口", "借沙暴的风取之不尽的沙回血", "收拢脚下的浮沙换取一次强回复"],
+        description: "把脚边的散沙卷起来糊到身上，回复最大生命的一半左右；身边的沙越密回得越多，身处沙暴时回到约三分之二。取材只读取地面的沙、不挖走承重沙块也不消耗任何掉落物，地表保持连续；脚下没有沙时只能糊一层土尘。",
+        uses: ["站在沙地上补一大口", "借沙暴的风取之不尽的环境回血", "在沙丘上把脚边的散沙卷起来补身"],
         kind: "self", range: 0, prepare: 14, active: 0, recover: 8, cooldown: 210, style: "sand", maximumTicks: 200,
         defaults: { thick: false },
         fields: [flag("thick", "厚结")],
@@ -125,37 +104,39 @@ namespace PokemonSkills {
             var budget = Math.max(0, Math.round(p(shoreupId, "grains", action)));
             var reach = Math.max(1, p(shoreupId, "sandReach", action));
             var density = Math.max(8, Math.round(p(shoreupId, "grainDensity", action)));
-            var storm = CombatStatus.has(world, self, "sandstorm") || WorldEnvironment.weather(world, body.position()) === "sandstorm";
-            var feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            // 脚点统一：疗量(heal 公式)、取材与画面读同一片脚底沙；沙暴读 WorldEnvironment，与画面一致、离场即失效。
+            var feet = shoreupFeet(body);
+            var sand = shoreupSandAround(world, feet);
+            var storm = shoreupStormAt(world, feet);
             var sites = shoreupSite(world, feet, reach, budget);
-            var drawn = shoreupDrawDrops(world, feet, reach, budget);
             var before = body.health();
             shoreupHeal(world, self, healFraction, "shoreup");
             var after = world.observe(self);
             var gained = after ? Math.max(0, after.health() - before) : 0;
             var share = body.maxHealth() > 0 ? Math.max(0, Math.min(1, gained / body.maxHealth())) : 0;
             var scale = Math.max(0.7, Math.min(1.8, reach / 2.6));
-            var motes = Math.max(10, Math.round(density * (storm ? 1.35 : 0.85) + drawn.count * 3));
-            var gild = storm ? Math.max(10, Math.round(motes * 0.6)) : 0;
-            var packMotes = Math.max(8, Math.round(motes * (0.5 + share)));
-            var siteMotes = Math.max(4, Math.round(motes / (sites.length + drawn.points.length + 1)));
+            // 沙越密取景越足；无沙又无沙暴时只剩一层弱土尘。数据只驱动画面，不改变疗量。
+            var richness = Math.max(0.2, Math.min(1.6, (0.3 + 0.7 * sand) * (storm ? 1.5 : 0.85)));
+            var motes = Math.max(6, Math.round(density * richness));
+            var gild = storm ? Math.max(8, Math.round(motes * 0.6)) : 0;
+            var packMotes = Math.max(6, Math.round(motes * (0.5 + share)));
+            var siteMotes = Math.max(4, Math.round(motes / (sites.length + 1)));
             var siteSize = scale * 0.06;
+            var bodyRef = String(self.ref());
 
             sound(action, "minecraft:block.sand.place");
             WorldFeedback.emit(world, shoreupScene, 1, feet,
-                { moment: "gather", motes: motes, reach: reach, scale: scale }, 30);
+                { moment: "gather", motes: motes, reach: reach, scale: scale, sand: sand }, 30);
+            // 每个真实沙位从地面画一条朝身体收拢的短吸沙路径；没有沙位时只在脚下扬一层弱尘。
             for (var i = 0; i < sites.length && i < 6; i++)
                 WorldFeedback.emit(world, shoreupScene, 1, sites[i],
-                    { moment: "gather_site", motes: siteMotes, siteSize: siteSize }, 24);
-            for (var j = 0; j < drawn.points.length && j < 6; j++)
-                WorldFeedback.emit(world, shoreupScene, 1, drawn.points[j],
-                    { moment: "gather_site", motes: siteMotes, siteSize: siteSize }, 24);
+                    { moment: "gather_site", motes: siteMotes, siteSize: siteSize, target: bodyRef }, 24);
             WorldFeedback.emit(world, shoreupScene, 1, body.position(),
                 { moment: "pack", motes: packMotes, gild: gild, packSize: scale * (thick ? 1.3 : 1) }, 30);
             WorldFeedback.emit(world, shoreupScene, 1, feet,
                 { moment: "settle", motes: Math.round(motes * 0.5), scale: scale }, 26);
             WorldFeedback.text(world, shoreupAbove(body.position()),
-                storm ? shoreupTextStorm : (sites.length > 0 || drawn.count > 0) ? shoreupTextSand : shoreupTextDust,
+                storm ? shoreupTextStorm : sites.length > 0 ? shoreupTextSand : shoreupTextDust,
                 [Math.round(gained * 10) / 10], 30);
             done(action);
         }

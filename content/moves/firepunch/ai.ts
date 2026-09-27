@@ -2,8 +2,8 @@
  * 火焰拳 / firepunch 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑。
- * 对谁出手：`ai.preferUnlit`（默认开）打开时，还没烧起来的目标排得更前（再点一个已经着了的人收益小）；
- *   目标身边还挤着别人时再抬一档——火能蔓延过去。
+ * 对谁出手：`ai.preferUnlit`（默认开）打开时，还没烧起来的目标排得更前；但只要目标身边有真正能被点着、
+ *   又在本招实际 spreadRange 内的邻敌，就抬一档——已燃主敌能稳定把火传出去，收益按一次算，不按邻居数量叠加。
  * 够不到怎么办：火拳射程短，reach 之内才动手，不够先贴近。
  * 放完之后：让灼伤持续结算，交回共享交战计划去处理减攻窗口。
  */
@@ -13,6 +13,14 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
+    }
+
+    /** 邻敌是否真能被点着：已灼伤的会被跳过，火属性等天生免疫灼伤的也不计收益。 */
+    function firepunchBurnable(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        if (CompanionBehavior.status(context, target, "burn")) return false;
+        const world = CompanionBehavior.world(context), actor = world.actor(target.ref);
+        if (actor === null || String(actor.domain()) !== "cobblemon") return true;
+        return PokemonDamage.combatants.read(world, actor).types.indexOf("fire") < 0;
     }
 
     CompanionBehavior.registerUse("firepunch", {
@@ -31,17 +39,23 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 21;
-            if (CompanionBehavior.ai<boolean>(capability, "preferUnlit", true) && !CompanionBehavior.status(context, target, "burn")) score += 10;
-            // 只有还能被传火点着的邻敌才算收益：已灼伤的邻居不会虚增这笔账。
+            const burning = CompanionBehavior.status(context, target, "burn");
+            if (CompanionBehavior.ai<boolean>(capability, "preferUnlit", true) && !burning) score += 8;
+            // 用本招真实 spreadRange 和邻敌是否真能被点着来算这笔账：只算一次，不按邻居数量叠收益。
+            const world = CompanionBehavior.world(context);
+            const facts: FactContext = { world: world, actor: world.source(), detail: { values: capability.data.config } };
+            const spreadRange = p("firepunch", "spreadRange", facts);
             const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
-            let spreadable = 0;
-            for (let i = 0; i < nearby.length; i++) {
+            let spreadable = false;
+            for (let i = 0; i < nearby.length && !spreadable; i++) {
                 const other = nearby[i];
                 if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                if (CompanionBehavior.status(context, other, "burn")) continue;
-                if (CompanionBehavior.distance(other.point, target.point) <= 2.6) spreadable++;
+                if (CompanionBehavior.distance(other.point, target.point) > spreadRange) continue;
+                if (!firepunchBurnable(context, other)) continue;
+                spreadable = true;
             }
-            if (spreadable > 0) score += Math.min(12, spreadable * 6);
+            // 已燃主敌能稳定传火，比未燃主敌更值得现在出拳；不再一律优先未燃。
+            if (spreadable) score += burning ? 10 : 6;
             return score;
         }
     });

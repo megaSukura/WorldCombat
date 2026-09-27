@@ -7,8 +7,9 @@
  * 两幕：
  *   起（windup 播「眯眼」，提交前只观察与预告，可被打断，打断不花代价）。
  *   扫（提交后）：以施法者为顶点、朝瞄准方向张开 sweepAngle 度、推出 sweepRange 格；
- *     WorldGeometry.sector 选出锥内所有非友方，逐个挂共享的 world_combat:leer_spook（身份
- *     world_combat:status/guardbroken）并下降防御。表现用的扇面顶点与判定读同一份形状。
+ *     WorldGeometry.sector 选出扇面内所有非友方，通视才扫到，防御真实下降的才挂共享的
+ *     world_combat:leer_spook（身份 world_combat:status/guardbroken）并计成功。表现用的扇面顶点与判定读同一份形状，
+ *     整片是水平扇面，不用纵向锥体暗示不存在的覆盖。
  * 反制：躲到掩体后（挡住视线就扫不到）、或绕过扇面走到身侧与身后。
  */
 namespace PokemonSkills {
@@ -65,10 +66,15 @@ namespace PokemonSkills {
                     target: action.target() === null ? "" : String(action.target()!.ref()) }));
             return prepare;
         },
-        indicator: function (config) {
+        indicator: function (config, pokemon, inspection) {
             const focus = !!(config && config.focus);
-            return { radius: focus ? 4 : 5, geometry: "area", style: "glare", color: 0x7FA6C4,
-                label: focus ? "瞪眼·瞪住" : "瞪眼·横扫" };
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[leerId], detail: { values: config || {} },
+                world: inspection && inspection.world, actor: inspection && inspection.actor, attributes: inspection && inspection.attributes };
+            const reach = pokemon ? Math.max(3, Math.min(8, p(leerId, "sweepRange", context))) : (focus ? 3.4 : 4);
+            const angle = pokemon ? Math.max(45, Math.min(160, Math.round(p(leerId, "sweepAngle", context)))) : (focus ? 54 : 121);
+            // 水平扇面：spread 是整张角、orientation ground 把方向压到地面，和判定用的 sector 一致。
+            return { radius: reach, geometry: "cone", spread: angle, orientation: "ground", style: "glare", color: 0x7FA6C4,
+                label: (focus ? "瞪眼·瞪住" : "瞪眼·横扫") + " " + angle + "°" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
@@ -82,24 +88,28 @@ namespace PokemonSkills {
             const path = leerFan(origin, heading, reach, angle);
             const region = WorldGeometry.sector(origin, heading, reach, angle, { below: 1, above: 3 });
             sound(action, "minecraft:entity.vindicator.ambient");
-            let hits = 0;
+            let hits = 0, softened = 0;
             WorldGeometry.select(world, region, function (actor, facts) {
                 // 目光要被看见：通视才算扫到。
                 if (facts.friendly() || !world.clear(origin, facts.position())) return;
+                // 防御真实下降才算扫破；已满负级或被能力拒绝时不占回执、不留身份，也不播成功。
+                const applied = Math.max(0, -NativeEffects.boost(world, actor, "def", -drop));
+                if (applied === 0) return;
                 MobEffects.apply(world, actor, leerEffect, scowl, 0);
-                NativeEffects.boost(world, actor, "def", -drop);
                 hits++;
+                softened += applied;
                 WorldFeedback.emit(world, leerScene, 1, facts.position(),
-                    { moment: "mark", target: String(actor.ref()), drop: drop, glares: glares }, 26);
+                    { moment: "mark", target: String(actor.ref()), drop: applied, glares: glares }, 26);
             });
             WorldFeedback.emit(world, leerScene, 1, origin,
                 { moment: "sweep", path: path, reach: reach, halfAngle: angle / 2, drop: drop, glares: glares, hits: hits,
                     direction: [heading.x(), heading.y(), heading.z()] }, 30);
+            const perDrop = hits > 0 ? Math.max(1, Math.round(softened / hits)) : drop;
             const body = world.observe(self);
             if (body !== null)
                 WorldFeedback.text(world, leerAbove(body.position()),
                     hits > 0 ? "world_combat.move.leer.text.gaze" : "world_combat.move.leer.text.empty",
-                    hits > 0 ? [hits, drop] : [], 30);
+                    hits > 0 ? [hits, perDrop] : [], 30);
             done(action);
         }
     });

@@ -5,11 +5,11 @@
  * 照进活人的眼里只落下枚晕符，之后目标头顶一直转着一只迷路的飞鸟。
  *
  * 色相家族：幽紫（0x8A5CFF）为主体，靛蓝（0x5A3FA0）只压在核心，近白只做高光小点。
- * 层次：汇聚（起手）、细光（沿 data.direction 的截断直线，长度绑机制射程 data.reach）、
- *       晕符（命中只一枚，绑在目标头顶）、打墙（splinter 撞在真实方块面）、
+ * 层次：汇聚（起手）、细光（沿真实 data.path 的一条世界线段，顶点就是 trace 原点与接触点）、
+ *       晕符（命中只一枚，绑在目标头顶）、打墙（splinter 撞在真实接触点）、
  *       被身体挡下（blocked）、控制免疫（ward）、空放（dissipate）、迷乱飞鸟（持续）、反噬（真正失误后碎开）。
- * 起击收：windup（攒光）→ beam（到截断点为止）→ main（晕符）→ linger（还在发懵）。
- * 数：细光上的高光数与命中密度按服务端 data.motes 派生，越强的特攻越密；光束长度按 data.reach。
+ * 起击收：windup（攒光）→ beam（整段世界线一次铺到截断点）→ main（晕符）→ linger（托管载体期间还在发懵）。
+ * 数：细光上的高光数与命中密度按服务端 data.motes 派生，越强的特攻越密；线段两端由服务端判定给出。
  */
 const ConfuserayDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -18,7 +18,7 @@ const ConfuserayDefinition: ParticleDefinition = {
             duration: 18,
             emitters: [
                 {
-                    name: "gather_orb", bind: "source", height: 0.62,
+                    name: "gather_orb", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
                     rate: 26, shape: { kind: "sphere", radius: 0.22 },
                     direction: "inward", speed: [0.03, 0.08],
@@ -26,7 +26,7 @@ const ConfuserayDefinition: ParticleDefinition = {
                     color: 0x8A5CFF, alpha: [0.8, 0], alphaMode: "sin", light: "full", maxParticles: 60
                 },
                 {
-                    name: "gather_glint", bind: "source", height: 0.62,
+                    name: "gather_glint", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     rate: 10, shape: { kind: "sphere_surface", radius: 0.3 },
                     direction: "inward", speed: [0.02, 0.06],
@@ -39,19 +39,19 @@ const ConfuserayDefinition: ParticleDefinition = {
             duration: 26,
             emitters: [
                 {
-                    name: "beam_core", bind: "source", height: 0.62, orient: "direction",
+                    name: "beam_core", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
-                    rate: 150, shape: { kind: "line", length: { data: "reach", fallback: 16 } },
-                    direction: "shape", speed: [0.35, 0.7],
+                    rate: 150, shape: { kind: "polyline" },
+                    direction: "up", speed: [0.01, 0.03],
                     lifetime: [4, 9], size: [0.18, 0.03],
                     color: 0x8A5CFF, alpha: [0.95, 0], light: "full", maxParticles: 220
                 },
                 {
-                    name: "beam_glint", bind: "source", height: 0.62, orient: "direction",
+                    name: "beam_glint", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "motes", fallback: 16 }, interval: 2, repeats: 2 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 16 } },
-                    direction: "shape", speed: [0.25, 0.6],
+                    shape: { kind: "polyline" },
+                    direction: "up", speed: [0.02, 0.06],
                     lifetime: [6, 12], size: [0.1, 0.02],
                     color: 0xCDB8FF, alpha: [0.95, 0], light: "full", maxParticles: 180
                 }

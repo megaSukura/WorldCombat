@@ -6,7 +6,7 @@
  * 场面：会怒火中烧的黑鲁加带这一招，站在两只挤在一起的小敌前；它必须先走进气场半径里再炸开。
  *
  * 断言只取必然事实：这招被放过、至少有一只小敌挨到伤害。畏缩是否触发（约 20% 的随机掷）、
- * 两只敌人在圈内的距离衰减各是多少，都写进 note 供读轨迹判断。
+ * 两只敌人在圈内的距离衰减各是多少、以及是否被推向圈外，都写进 note 供读轨迹判断。
  */
 Smoke.scenario("fierywrath", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -22,7 +22,7 @@ Smoke.scenario("fierywrath", function (stage) {
     }, function () {
         stage.expect(stage.casts("fierywrath", caster) >= 1, "houndoom committed fierywrath");
         stage.expect(stage.damageTo(first) > 0 || stage.damageTo(second) > 0, "the aura dealt damage");
-        stage.note("crit, the flinch roll and the distance falloff for each foe are random/positional", {
+        stage.note("爆发按真实身体体积挑人、按到施法者中心的距离衰减、近前远后取到上限；完整实墙截住那一路。crit, the flinch roll and the distance falloff for each foe are random/positional", {
             casts: stage.casts("fierywrath", caster),
             firstDamage: Math.round(stage.damageTo(first) * 10) / 10,
             secondDamage: Math.round(stage.damageTo(second) * 10) / 10,

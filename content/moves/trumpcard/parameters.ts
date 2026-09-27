@@ -9,7 +9,7 @@
  * 最后一张是全场最重的一掷。与另外三招分开：只有它走投射物，只有它把「自己的资源余量」当威力表。
  *
  * 数据分散：power 读本招剩余 PP 比例与特攻；flightSpeed 读速度；flightRange 读等级；turn 读特攻；
- * push 读体重；collisionRadius 读体型。配置 sure（必中式）让牌自己拐弯追人（几乎不会落空），
+ * push 读体重；collisionRadius 读体型。配置 sure（追踪式）让牌有限拐弯追人，
  * 但飞行更慢、威力 ×0.9——想稳就换掉一点伤害，想狠就掷直球。
  */
 namespace PokemonSkills {
@@ -31,13 +31,15 @@ namespace PokemonSkills {
         spent: percent(
             F.const(1).minus(F.resource("ppRatio", text("worldcombat.skill.trumpcard.value.ppRatio"))).clamp(0, 1).round(3),
             "余牌消耗", "这叠牌用掉了多少；越大代表剩下的牌越少、这一掷越重，末牌是满值。"),
-        /** 投后余牌：本招当前 PP − 1（这一张会付掉），夹在 0..每叠上限。它是画面里手中剩余小牌数的读数来源。 */
+        /** 投后余牌：本招当前 PP − 1（这一张会付掉），夹在 0..每叠上限。它是详情页/起手里手中剩余小牌数的读数来源。 */
         ppRemaining: formula(
             F.resource("pp").minus(1).clamp(0, 99),
             "投后余牌", {
                 unit: "张",
                 description: "这一掷用掉一张后还剩几张牌；0 表示这是末牌。补满 PP 后这个值会跟着回升，不会再显示成末牌。"
             }),
+        /** 付费提交后的真实余牌：直接读本招原生资源槽余额（已扣掉本次实际 PP 成本，含任何额外消耗），只在结算时取值。 */
+        ppAfter: formula(F.resource("pp").clamp(0, 99), "", { visible: false, base: 5 }),
         /** 这叠牌上限：本招最大 PP，用于把余牌换算成档位；拿不到时按 5。 */
         maxCards: formula(F.resource("maxPp").clamp(1, 99), "", { visible: false, base: 5 }),
         /** 飞行速度：基础 0.9 格/刻，速度每比 60 多 1 加 0.005（夹 −0.15..+0.4），必中 ×0.85；夹在 0.6..1.5。 */
@@ -47,7 +49,7 @@ namespace PokemonSkills {
                 .clamp(0.6, 1.5).round(2),
             "飞行速度", {
                 unit: "格/刻",
-                description: "牌飞出去的速度；直球更快、更难被躲开，必中式的牌拐弯追人所以略慢。"
+                description: "牌飞出去的速度；直球更快、更难被躲开，追踪式的牌拐弯追人所以略慢。"
             }),
         /** 投掷距离：基础 11 格，等级每高 1 加 0.08（夹 −1..+4）；夹在 9..16。它同时是实际射程来源。 */
         flightRange: formula(
@@ -61,7 +63,7 @@ namespace PokemonSkills {
             F.base(10).plus(F.stat("specialAttack").minus(60).times(0.05).clamp(-1, 6)).clamp(7, 20).round(1),
             "追踪转向", {
                 unit: "度/刻",
-                description: "必中式里牌每刻朝目标转向的最大角度；特攻越高拐得越急，追得越死。直球式不使用。"
+                description: "追踪式里牌每刻朝目标转向的最大角度；特攻越高拐得越急，追得越死。直球式不使用。"
             }),
         /** 顶开距离：基础 0.35 格，体重每比 50 重 1 加 0.002（夹 −0.06..+0.6）；夹在 0.1..1.0。 */
         push: formula(

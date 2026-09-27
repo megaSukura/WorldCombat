@@ -3,7 +3,7 @@
   "worldcombat.skill.screech.use.0": "Strip the Defence of enemies charging at you in a line, one after another",
   "worldcombat.skill.screech.use.1": "Press physical threats through a low wall",
   "worldcombat.skill.screech.use.2": "Soften a whole rank coming through a doorway",
-  "worldcombat.skill.screech.description.0": "Each enemy the front passes loses %1$s stages of Defence and is left with about %2$s of ringing, once per target; the ringing itself changes neither stats nor actions, and the Defence drop does not come back when the ringing ends - it stays as a normal stat-stage change.",
+  "worldcombat.skill.screech.description.0": "Each enemy the thin front truly passes actually loses %1$s stages of Defence (at the floor or immune it drops no further and reports none), once per target, and is left with about %2$s of ringing ears. The ringing only means the ears ring - it changes neither stats nor actions; the Defence drop is an ordinary stat-stage change and does not come back when the ringing ends.",
   "worldcombat.skill.screech.description.1": "The wave reaches %1$s blocks straight ahead and %2$s blocks to each side, and the front takes about %3$s to sweep the whole way; cover does not block it, so nearby enemies are caught first and distant ones a moment later.",
   "worldcombat.skill.screech.description.2": "Telegraph %1$s, cooldown %2$s.",
   "worldcombat.skill.screech.timing": "Range %1$s blocks, telegraph %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -25,6 +25,7 @@
   "worldcombat.skill.screech.preference.ai.leaveStation": "Leave station to shriek",
   "worldcombat.skill.screech.preference.ai.leaveStation.help": "On: the companion will leave a hold position to deliver the shriek.",
   "world_combat.move.screech.text.hit": "Screech pierced %1$s targets (Def -%2$s)",
+  "world_combat.move.screech.text.deaf": "Screech reached %1$s targets (Defence already at the floor)",
   "world_combat.move.screech.text.miss": "Screech hit nothing",
   "effect.world_combat.screech_ringing": "Ringing ears"
 }

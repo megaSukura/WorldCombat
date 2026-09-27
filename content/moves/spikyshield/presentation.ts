@@ -5,7 +5,8 @@
  * 变化招式被刺甲抖开，量尽时藤刺倒下散成一地草屑。
  * 色相家族：草绿为主体（razorleaf／leaf／impact_grass），刺尖偏黄绿强调；烟尘层低饱和中性。
  * 拍子：起（raise 0–16t，藤刺自下而上顶出并扬草屑）→ 击（block 每次拦截、punish 每次穿刺）→ 收（fall 倒下散开）。
- * 范围：hold 的刺环按 `data.scale`（藤刺半径／1.6）铺开——画面就是被判定的那一圈。
+ * 范围：hold/raise 的刺环用一个固定参考半径 1.6，只由 `data.scale`（藤刺半径／1.6）缩放一次；hold 再按
+ *   `data.reach`（参考半径 × 剩余量比例）随容量削减而收拢——画面就是被判定的那一圈，不再平方放大。
  * 运动：起手藤刺向上顶出；持甲几乎静止，只在被撞击处向内一震；穿刺时从接触点朝攻击者射出一丛长刺。
  * 数：`data.piercing`（刺伤威力取整）就是 punish 长刺的根数，`data.intensity`（剩余量／初始量）决定亮度，`data.scale` 放大刺环。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -20,7 +21,7 @@ const SpikyShieldDefinition: ParticleDefinition = {
                 {
                     name: "thorns", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    rate: 34, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 34, shape: { kind: "ring", radius: 1.6 },
                     direction: "up", speed: [0.05, 0.18],
                     lifetime: [10, 20], size: [0.24, 0.05], sizeMode: "index",
                     color: 0x5EA83C, alpha: [0.9, 0], gravity: 0.03, drag: 0.92,
@@ -29,7 +30,7 @@ const SpikyShieldDefinition: ParticleDefinition = {
                 {
                     name: "blades", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    rate: 24, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 24, shape: { kind: "ring", radius: 1.6 },
                     direction: "outward", speed: [0.08, 0.24], spin: 24,
                     lifetime: [10, 18], size: [0.16, 0.03], sizeMode: "index",
                     color: 0x7CC24E, alpha: [0.9, 0], gravity: 0.05, drag: 0.9,
@@ -38,7 +39,7 @@ const SpikyShieldDefinition: ParticleDefinition = {
                 {
                     name: "leafdust", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 18, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 18, shape: { kind: "ring", radius: 1.6 },
                     direction: "outward", speed: [0.03, 0.12], spin: 40,
                     lifetime: [14, 26], size: [0.1, 0.02],
                     color: 0xA7D07A, alpha: [0.6, 0], gravity: 0.04, light: "world", maxParticles: 70
@@ -51,7 +52,7 @@ const SpikyShieldDefinition: ParticleDefinition = {
                 {
                     name: "stake_ring", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    rate: 7, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 7, shape: { kind: "ring", radius: { data: "reach", fallback: 1.6 } },
                     direction: "up", speed: [0.0, 0.01], spin: 4,
                     lifetime: [26, 44], size: [0.2, 0.2], sizeMode: "sin",
                     color: 0x4F9A34, alpha: [0.4, 0.12], alphaMode: "sin",
@@ -60,7 +61,7 @@ const SpikyShieldDefinition: ParticleDefinition = {
                 {
                     name: "base_ring", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 4, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 4, shape: { kind: "ring", radius: { data: "reach", fallback: 1.6 } },
                     direction: "outward", speed: [0.0, 0.01],
                     lifetime: [24, 38], size: [0.5, 0.5], sizeMode: "sin",
                     color: 0x3F7A2E, alpha: [0.2, 0.06], alphaMode: "sin",
@@ -141,7 +142,7 @@ const SpikyShieldDefinition: ParticleDefinition = {
                     name: "ward", bind: "target", offset: [0, 0.03, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
                     burst: { count: 24 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: 1.6 },
                     direction: "outward", speed: [0.08, 0.22],
                     lifetime: [10, 18], size: [0.5, 0.1],
                     color: 0x7CC24E, alpha: [0.6, 0], light: "world"

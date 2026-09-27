@@ -49,7 +49,7 @@ namespace PokemonSkills {
             }),
         scowlTicks: seconds(
             F.base(90).plus(F.stat("attack").minus(40).max(0).times(0.8)).clamp(60, 240).round(0),
-            "胆怯时长", "被瞪住的人架势散多久；施法者物攻越高，那份凶相留得越久。"),
+            "胆怯时长", "破防身份（被瞪住）在目标身上留多久，供后续撕旧缺口的招消费；防御等级的下降是永久的，不随标记消退而收回。施法者物攻越高，标记留得越久。"),
         glares: formula(
             F.base(20).plus(F.stat("speed").minus(50).max(0).times(0.3)).clamp(14, 44).round(0),
             "目光量", {

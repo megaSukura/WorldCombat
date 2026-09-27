@@ -5,7 +5,9 @@
  * 把目标围在中间；目标撞向栅栏时那一段电弧炸亮、把它弹回，笼内每隔一会儿也整圈劈一道电。
  * 色相家族：电黄（0xE8E24A）为主、近白（0xF8FFE0）做电芯高光、电青（0xBFF2FF）只在接触点上。
  * 拍子：起（charge 聚电）→ 掷（cast 电矢）→ 驻（enclose 立笼 / cage 电栅 / arc 越界 / zap 笼内电击）→ 收（release / shatter）；碰墙走 scatter。
- * 范围：enclose 与 cage 都是 `bind: "point"`、`fit: "none"`，用 `data.radius` 画电栅半径、`data.height` 封顶沿——画出来的圈就是栏杆的位置。
+ * 范围：固定竖栅与上下沿由自定义场景 `world_combat:move_thundercage/cage` 按真实 `data.radius`/`data.height`/`data.bars`
+ *   逐帧画出——画出来的就是可读的笼边界，顶沿高度就是真实的脱出高度；粒子的 enclose/cage 只作电弧余辉，不再用固定柱体冒充笼形。
+ *   破笼与消散把真实 radius/height/bars 一并传出，shatter 按实际几何炸开。
  * 运动：电栅沿局部 +Y 竖直竖起并自转，粒子在笼壁上下窜动；越界时 `link` 用 `data.path` 沿实际接触把那一根栅连到人；
  *   抗推突破时走 shatter，整圈电栅从突破面炸开散去，不再拖出远程连人线。
  * 数：`data.bars`（特攻派生）决定电栅根数与密度，`data.flow`（根数派生）决定笼壁电丝量，
@@ -91,7 +93,7 @@ const ThundercageDefinition: ParticleDefinition = {
                     name: "wall", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     rate: { data: "flow", fallback: 28 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.6 }, length: 2.4, thickness: 1 },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.6 }, length: { data: "height", fallback: 2.4 }, thickness: 1 },
                     direction: "up", speed: [0.01, 0.07], spread: 6, spin: 22,
                     lifetime: [8, 16], size: [0.11, 0.02],
                     color: 0xE8E24A, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 220
@@ -105,9 +107,9 @@ const ThundercageDefinition: ParticleDefinition = {
                     color: 0xBFF2FF, alpha: [0.4, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "motes", bind: "point", offset: [0, 0.5, 0], height: 0.3, fit: "none",
+                    name: "motes", bind: "point", offset: [0, 0.1, 0], height: 0.3, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 20, shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.6 }, length: 2.2 },
+                    rate: 20, shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.6 }, length: { data: "height", fallback: 2.4 } },
                     direction: "up", speed: [0.02, 0.09], spin: 10,
                     gravity: -0.004, drag: 0.95,
                     lifetime: [10, 18], size: [0.08, 0.02],
@@ -243,3 +245,39 @@ const ThundercageDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_thundercage", 1, ThundercageDefinition);
+
+/**
+ * 雷电囚笼的固定笼形（自定义场景，不用粒子生灭或额外实体）：
+ * 服务端把真实半径/高度/根数与脚点锚交给客户端，这里每帧就地在锚点周围画出固定竖栅、顶沿与底沿——
+ * 画出的圆柱边界就是判定里的笼子，顶沿高度就是真实的脱出高度，根数就是真实的电栅根数。
+ * 静止对象用固定世界点画线，不依赖 `bind:"path"` 的质心移动，因此笼子不移动也不会不发射。
+ */
+function thundercageNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene("world_combat:move_thundercage/cage", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const radius = Math.max(0.4, thundercageNumber(data.radius, 1.6));
+    const height = Math.max(0.6, thundercageNumber(data.height, 2.4));
+    const bars = Math.max(6, Math.round(thundercageNumber(data.bars, 12)));
+    const cx = entry.position[0], cy = entry.position[1], cz = entry.position[2];
+    const base = cy, top = cy + height;
+    const pulse = 0.62 + 0.3 * Math.sin(frame.serverTick() * 0.35);
+    const vert = ((Math.round(pulse * 240) << 24) | 0xE8E24A) | 0;
+    const rim = ((Math.round(pulse * 205) << 24) | 0xF8FFE0) | 0;
+    let px = 0, pz = 0, fx = 0, fz = 0;
+    for (let i = 0; i < bars; i++) {
+        const a = i * Math.PI * 2 / bars;
+        const bx = cx + Math.cos(a) * radius, bz = cz + Math.sin(a) * radius;
+        frame.line(bx, base, bz, bx, top, bz, vert);
+        if (i === 0) { fx = bx; fz = bz; }
+        else { frame.line(px, top, pz, bx, top, bz, rim); frame.line(px, base, pz, bx, base, bz, rim); }
+        px = bx; pz = bz;
+    }
+    frame.line(px, top, pz, fx, top, fz, rim);
+    frame.line(px, base, pz, fx, base, fz, rim);
+});

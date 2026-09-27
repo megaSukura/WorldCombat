@@ -11,23 +11,32 @@ const aim={target:'target',point:{x:2,y:0,z:3}},party=new Map();let blockPick={t
 const bridge={listen:(a,b,c)=>{input=a;update=b;reply=c;},request:(...args)=>{requests.push(args);return requests.length;},look:()=>JSON.stringify(aim),blockAim:()=>JSON.stringify(blockPick),aim:mode=>JSON.stringify({...aim,mode}),cast:(...args)=>casts.push(args),command:(...args)=>commands.push(args),indicator:value=>{indicator=value;},
  dispatch:(key,pokemon,move)=>{dispatches.push({key,pokemon,move});update(JSON.stringify({...activeSnapshot,...party.get(pokemon),pokemon,inspection:true,entityId:-1,skills:undefined}));return input(JSON.stringify({key,move,pressed:true}));}};
 const summaryBridge={listen:(accepts,draw,click)=>Object.assign(summary,{accepts,draw,click})};
-const classes={...mock.classes,NativeUiHost:host,CompanionContentClient:bridge,SummaryContentBridge:summaryBridge,Minecraft:{getInstance:()=>({font:{plainSubstrByWidth:value=>value,split:value=>({size:()=>1,get:()=>value})}})}};
+const classes={...mock.classes,NativeUiHost:host,CompanionContentClient:bridge,SummaryContentBridge:summaryBridge,Minecraft:{getInstance:()=>({font:{...mock.classes.Minecraft.getInstance().font,split:value=>({size:()=>1,get:()=>value})}})}};
 const scenes=new Map();
 const context=vm.createContext({Java:{loadClass:name=>{const type=classes[name.slice(name.lastIndexOf('.')+1)];assert(type,name);return type;}},WorldCombatClient:{scene:(id,_version,draw)=>scenes.set(id,draw),cleanup:(id,handler)=>{cleanups[id]=handler;}},
  CompanionWorldUi:{select(){},target(){},explainReason:key=>key}});
 for(const file of ['../behavior/contributions','library/ui-state','library/ui-surfaces','library/attribute-view','library/schema-editor','library/radial-menu','library/indicator-geometry','adapters/cobblemon-companion-ui','companion-interface'])vm.runInContext(ts.transpileModule(fs.readFileSync('content/client/'+file+'.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES5,module:ts.ModuleKind.None}}).outputText,context);
 const actor='test:companion';let snapshot={session:'one',epoch:1,pokemon:actor,name:'Partner',entityId:1,stage:'idle',intent:'follow',commandKey:'G',settingsKey:'H',confirmKey:'Mouse 1',backKey:'Mouse 2',precisionKey:'`',skills:[{id:'world_combat:vinewhip',label:'cobblemon.move.vinewhip',remaining:9,maximum:10}],keys:['Z']};activeSnapshot=snapshot;
 const send=(key,pressed=true)=>input(JSON.stringify({key,pressed}));const respond=(data,pokemon=snapshot.pokemon)=>reply(JSON.stringify({channel:'world_combat:skills',pokemon,code:'ok',data:JSON.stringify(data)}));
-const find=text=>widgets(screen).find(widget=>widget.text===text&&widget.click),click=text=>{assert(find(text),'Missing '+text);find(text).click();};
+const find=text=>widgets(screen).find(widget=>widget.click&&(widget.text===text||String(widget.tooltip||'').split('\n')[0]===text)),click=text=>{assert(find(text),'Missing '+text);find(text).click();};
 const menu=[{id:'company',label:'Company'},{id:'company/hold',parent:'company',label:'Wait',command:'hold',target:'none'},
 {id:'work',label:'Work',command:'work',target:'point'}, {id:'skills',label:'Skills'},{id:'skills/vine',parent:'skills',label:'Vine'}, {id:'skills/vine/player',parent:'skills/vine',label:'On player',command:'cast',target:'owner',slot:0}, {id:'locked',label:'Locked',disabled:'Needs daylight',command:'cast',target:'self',slot:0}];
 // The real production contribution provides only targeting callbacks; missing optional tick/status must leave updates alive.
-update(JSON.stringify(snapshot));assert(widgets(hud).some(widget=>widget.text==='[Z] 藤鞭'));respond({skills:[],menu,supportedMoves:['vinewhip','solarbeam','tackle']});
+update(JSON.stringify(snapshot));assert(widgets(hud).some(widget=>widget.text==='藤鞭'));assert(widgets(hud).some(widget=>widget.text==='Z'));assert(widgets(hud).some(widget=>widget.text==='9/10'));assert(!widgets(hud).some(widget=>String(widget.text).includes('-1')));respond({skills:[],menu,supportedMoves:['vinewhip','solarbeam','tackle']});
+const liveHud=hud;
+update(JSON.stringify({...snapshot,reason:'waiting-cooldown',skills:[{...snapshot.skills[0],cooldown:31}]}));
+assert.equal(hud,liveHud,'Cooldown and queued state update the existing HUD tree');
+assert(widgets(hud).some(widget=>widget.text==='1.6秒'));assert(widgets(hud).some(widget=>widget.text==='9/10'));
+assert(widgets(hud).some(widget=>widget.text==='等待冷却'));
+update(JSON.stringify({...snapshot,entityId:-1}));assert(!widgets(hud).some(widget=>widget.text==='9/10'),'Recalled state collapses inactive move cards');
+assert(widgets(hud).some(widget=>widget.text==='已收回'));
+update(JSON.stringify({...snapshot,inspection:true}));assert.equal(hud,null,'Native detail inspection has no combat HUD');
+update(JSON.stringify(snapshot));
 const drawn=[];
 scenes.get('world_combat:command')({data:()=>JSON.stringify({position:[2,3,4],data:{geometry:'circle',radius:2,color:0x77BB99}}),ring:(...args)=>drawn.push(args)});
 assert.deepEqual(drawn,[[2,3,4,2,0xFF77BB99|0]]);
 update(JSON.stringify({...snapshot,name:'Updated partner',skills:[{...snapshot.skills[0],remaining:4}]}));
-assert(widgets(hud).some(widget=>String(widget.text).includes('Updated partner')));
+assert(widgets(hud).some(widget=>String(widget.text).startsWith('Updated partner')));
 send('command');click('Company ›');assert.equal(commands.length,0);click('Wait');assert.equal(commands.length,1,'A leaf click executes immediately');send('command',false);assert.equal(commands.at(-1)[0],'hold');assert.equal(screen,null);
 cursor=[240,70];send('command');input(JSON.stringify({key:'command',pressed:false,heldMillis:60}));assert.equal(commands.length,1);assert(screen,'A quick tap keeps the wheel open even above a sector');send('cancel');cursor=[240,70];
 send('command');click('Skills ›');click('Vine ›');click('On player');send('command',false);assert.equal(JSON.parse(casts.at(-1)[1]).mode,'player');
@@ -42,7 +51,7 @@ blockPick.reason='no-surface';update(JSON.stringify(snapshot));assert.equal(indi
 blockPick.reason='';update(JSON.stringify(snapshot));const cell=JSON.parse(indicator);assert.deepEqual(cell.position,[2.5,.5,3.5]);assert.equal(cell.data.geometry,'block');
 const edges=[];scenes.get('world_combat:command')({data:()=>indicator,line:(...line)=>edges.push(line)});assert.equal(edges.length,12);send('confirm');assert.equal(commands.at(-1)[0],'block-work');assert.equal(JSON.parse(commands.at(-1)[1]).target,blockPick.target);respond(singleWork);
 // Rebound modifier combinations and selection instructions come from the live input snapshot.
-update(JSON.stringify({...snapshot,castKeys:['Ctrl+7'],precisionHeld:true,previewSlot:0,cancelKey:'P'}));assert(widgets(hud).some(widget=>widget.text==='[Ctrl+7] 藤鞭'));assert(widgets(hud).some(widget=>String(widget.text).includes('P 取消')));update(JSON.stringify(snapshot));
+update(JSON.stringify({...snapshot,castKeys:['Ctrl+7'],precisionHeld:true,previewSlot:0,cancelKey:'P'}));assert(widgets(hud).some(widget=>String(widget.text).startsWith('Ctrl')));assert(widgets(hud).some(widget=>String(widget.text).includes('P 取消')));update(JSON.stringify(snapshot));
 const skill=(id='vinewhip',full=true)=>({id,name:id==='vinewhip'?'藤鞭':id,slot:0,detailsComplete:full,fields:full?[{path:['rescue'],label:'Rescue',kind:'boolean'},{path:['threshold'],kind:'number',label:'AI threshold',group:'ai',min:.1,max:.5,step:.05,display:{scale:100,suffix:'%'}}]:[],values:{rescue:true,threshold:.3},revision:null,
  description:full?{paragraphs:[{key:'test.skill.description',args:[{binding:'damage'}]}],bindings:{damage:{label:'Damage',value:'3.2',contributions:[{label:'Attack contribution',value:'+1.2'}]}}}:undefined});
 respond({skills:[skill()],menu});send('settings');respond({skills:[skill()],menu});let prose=widgets(screen).find(widget=>widget.runs);assert.equal(prose.text,'造成 3.2 伤害。');assert(prose.runs.find(run=>run.text==='3.2').tooltip.includes('Attack contribution'));assert(!find('全部数值'));

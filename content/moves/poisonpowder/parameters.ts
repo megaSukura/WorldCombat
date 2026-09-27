@@ -50,7 +50,7 @@ namespace PokemonSkills {
             F.base(220).plus(F.stat("specialAttack").minus(60).times(1.0).clamp(-40, 100))
                 .times(F.when(F.pref("cling"), F.const(1.3), F.const(0.8)))
                 .clamp(140, 420).round(0),
-            "中毒时长", "被毒上之后持续掉血多久；特攻越高毒性越厚，黏附式留得更久。"),
+            "中毒时长", "被毒上之后持续掉血多久；特攻越高毒性越厚，黏附式留得更久，最终夹在 7–21 秒（140–420 刻），成长台阶也落在同一区间。"),
         /** 抛粉速度：1.2 + 速度偏移[−0.2,0.6]；夹 0.9..1.8。 */
         puffSpeed: formula(
             F.base(1.2).plus(F.stat("speed").minus(60).times(0.005).clamp(-0.2, 0.6)).clamp(0.9, 1.8).round(2),

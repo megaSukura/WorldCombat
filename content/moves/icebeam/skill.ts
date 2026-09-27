@@ -16,6 +16,8 @@
  */
 namespace PokemonSkills {
     const icebeamScene = "world_combat:move_icebeam";
+    /** 光束轴由自定义场景按真实三维端点绘制，与命中/墙面粒子分开注册。 */
+    const icebeamAxisScene = "world_combat:move_icebeam_axis";
     const icebeamHitText = "world_combat.move.icebeam.text.hit";
     const icebeamMissText = "world_combat.move.icebeam.text.miss";
 
@@ -77,9 +79,8 @@ namespace PokemonSkills {
             const actor = action.actor();
             const body = world.observe(actor);
             const origin = body === null ? action.origin() : body.position();
-            const at = action.targetPosition();
-            const flat = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
-            const heading = WorldGeometry.flatUnit(flat, action.direction());
+            // 真实三维瞄准：保留俯仰，向上/向下指向的真实方向就是光束轴。
+            const heading = WorldGeometry.basis(aim(action), action.direction()).forward;
             const maxLength = Math.max(4, p("icebeam", "beamLength", action));
             const halfWidth = Math.max(0.2, p("icebeam", "beamWidth", action));
             const power = p("icebeam", "beam", action);
@@ -90,11 +91,10 @@ namespace PokemonSkills {
             let end = cut.end, length = end.minus(origin).length(), scale = length / 13.0;
             const intensity = Math.max(0.6, Math.min(2.4, power / 85));
             const interval = Math.max(2, Math.round(beamTicks / 4));
-            let path = [icebeamCoords(origin), icebeamCoords(end)], lastWall = "";
             const direction = [heading.x(), heading.y(), heading.z()];
             const hit: { [ref: string]: boolean } = {};
-            const scenes = WorldFeedback.actionScenes(icebeamScene, 1);
-            let hits = 0, elapsed = 0, settled = false;
+            const scenes = WorldFeedback.actionScenes(icebeamAxisScene, 1);
+            let hits = 0, elapsed = 0, settled = false, lastWall = "";
 
             function caught(current: CombatAction, victim: CombatActor, spot: CombatPoint): void {
                 if (!hurt(current, victim, "icebeam", power,
@@ -120,21 +120,24 @@ namespace PokemonSkills {
                 const scope = current.world();
                 cut = icebeamEnd(scope, origin, heading, maxLength);
                 end = cut.end; length = end.minus(origin).length(); scale = length / 13.0;
-                path = [icebeamCoords(origin), icebeamCoords(end)];
+                const beamPath = [icebeamCoords(origin), icebeamCoords(end)];
                 scenes.show(current, "beam", origin,
-                    { moment: "beam", direction: direction, path: path, width: halfWidth, beamTicks: beamTicks,
+                    { moment: "beam", direction: direction, path: beamPath, width: halfWidth, beamTicks: beamTicks,
                         pierce: maxTargets, intensity: intensity, scale: scale,
-                        rate: Math.round(90 + power * .7), shardRate: Math.round(20 + power * .2) });
+                        impactCount: Math.round(14 + power * .3),
+                        wall: cut.wall === null ? null : icebeamCoords(cut.wall) });
                 const wallKey = cut.wall === null ? "" : icebeamCoords(cut.wall).join(",");
                 if (cut.wall !== null && wallKey !== lastWall) WorldFeedback.emit(scope, icebeamScene, 1, cut.wall,
                     { moment: "wall", direction: [-direction[0], -direction[1], -direction[2]],
                         impactCount: Math.round(14 + power * .3), intensity: intensity, scale: scale }, 22);
                 lastWall = wallKey;
                 if (hits < maxTargets && length > .001) {
-                    const region = WorldGeometry.lane(origin, heading, length, halfWidth, { below: 2, above: 3 });
+                    // 光束半宽判定：真实身体箱与以半宽膨胀过的光轴线段相交，再按原生通视与近远排序取穿透上限。
                     const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-                    WorldGeometry.selectEnemies(current.world(), region, function (enemy, facts) {
-                        if (hit[String(enemy.ref())] || !scope.clear(origin, facts.position())) return;
+                    WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(origin, end, halfWidth), function (enemy, facts) {
+                        const ref = String(enemy.ref());
+                        if (ref === String(actor.ref()) || facts.friendly() || hit[ref]) return;
+                        if (!scope.clear(origin, facts.position())) return;
                         candidates.push({ actor: enemy, at: facts.position() });
                     });
                     candidates.sort(function (a, b) { return a.at.minus(origin).length() - b.at.minus(origin).length(); });
@@ -143,9 +146,10 @@ namespace PokemonSkills {
                         caught(current, candidates[i].actor, candidates[i].at);
                     }
                 }
-                elapsed += interval;
-                if (elapsed < beamTicks) current.after(interval, pass);
-                else finish(current);
+                // 按实际 elapsed 走满 beamTicks：第一次显示之后不再提前一拍结束。
+                const now = elapsed;
+                if (now + interval < beamTicks) { elapsed = now + interval; current.after(interval, pass); }
+                else current.after(Math.max(0, beamTicks - now), finish);
             }
 
             sound(action, "cobblemon:move.icebeam.actor");

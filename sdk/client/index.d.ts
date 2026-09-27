@@ -12,9 +12,24 @@ interface CombatClientFrame {
     textWidth(text: string): number;
     wrappedText(text: string, x: number, y: number, color: number, width: number, maxLines: number): number;
     distance(x: number, y: number, z: number): number;
+    /** Fraction of the current native client tick. Use for interpolation between authored scene poses. */
+    partialTick(): number;
+    /** Synchronized combat tick plus the rendered tick fraction, for authored phase timelines. */
+    serverTick(): number;
+    /** One camera-facing, world-depth-tested atlas sprite. Texture accepts native particle/item/block sprite IDs,
+     * including cobblemon:particle/<path>. Height is in blocks, roll in degrees, color is signed ARGB.
+     * Frame explicitly selects a flipbook frame (wrapped); fullBright chooses light. No particle/entity is spawned. */
+    sprite(texture: string, x: number, y: number, z: number, height: number, roll: number, color: number, frame: number, fullBright: boolean): void;
+    /** Redraw a loaded living actor's native model, texture and equipment at world feet x/y/z. Scale axes
+     * multiply its current native size; yaw adds a world-Y rotation in degrees. Signed ARGB tints/fades the
+     * original colours with world depth testing. Native poses and skin/form stay live; visibility follows
+     * the source renderer. No entity/particle is created or moved, and labels/leashes are omitted.
+     * False when unavailable, transparent or recursively invoked from an entity renderer. */
+    entityEcho(actor: string, x: number, y: number, z: number, scaleX: number, scaleY: number, scaleZ: number, yaw: number, color: number, fullBright: boolean): boolean;
     marker(actor: string, text: string, color: number): void;
     graphics(): any;
-    /** Interpolated native entity position/height, MC health and name; JSON null if absent. */
+    /** Interpolated native feet x/y/z, width/height, yaw/pitch/bodyYaw in Minecraft degrees,
+     * MC health/maxHealth, name and camera distance; JSON null if absent. Horizontal forward is [-sin(yaw),0,cos(yaw)]. */
     anchor(actor: string): string;
     billboard(actor: string, heightOffset: number, pixelSize: number, draw: (surface: CombatClientFrame) => void): void;
     billboard(x: number, y: number, z: number, pixelSize: number, draw: (surface: CombatClientFrame) => void): void;
@@ -413,6 +428,9 @@ interface ParticleChild {
 }
 
 interface ParticleMoment {
+    /** Native spatial sound, once when this phase enters. Payload refreshes do not replay it; no server gameplay write.
+     * Bound position is sampled when played. Volume defaults to 1, pitch to 1, bind to point. */
+    sound?: { id: string; volume?: ParticleNumber; pitch?: ParticleNumber; bind?: "point" | "source" | "target" };
     /** Ticks; 0 = until the server releases the key. Default 0. */
     duration?: ParticleNumber;
     /** exit.stop = stop-emitting tick, default duration; exit.drain = ticks to wait for survivors, default 40. */

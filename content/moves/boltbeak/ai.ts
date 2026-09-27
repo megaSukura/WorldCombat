@@ -8,10 +8,29 @@
  * 放完接什么：交回共享交战计划；它是点到即走的先手，不负责收尾。
  */
 namespace PokemonSkills {
+    /**
+     * 先手预判与实际翻倍共用同一份 `boltbeakLead`（真实 window 随施法者速度在 12~36 刻间变化），
+     * 不再用固定 45 刻替代，也不再读目标仇恨（attacking 是 Mob.getTarget，会误判尚未出手的锁定怪）。
+     * 低血或身后有可退空间只是独立的一档分数，不改变先手条件本身。
+     */
     function boltbeakWouldLead(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        const self = CompanionBehavior.source(context);
-        if (typeof self.hurtAgo === "number" && self.hurtAgo <= 45 && self.lastAttacker === target.ref) return false;
-        return !(typeof target.attacking === "string" && target.attacking === self.ref);
+        const world = CompanionBehavior.world(context);
+        const self = world.actor(CompanionBehavior.source(context).ref);
+        const foe = target.ref ? world.actor(target.ref) : null;
+        return self !== null && foe !== null && boltbeakLead(withTarget({ world: world, actor: self }, foe)) > 0;
+    }
+
+    /** 后方（远离目标一侧）是否有真实可退空间：有则更适合打一下退开。 */
+    function boltbeakRetreatOpen(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const self = world.actor(CompanionBehavior.source(context).ref);
+        if (self === null || typeof world.freeSpace !== "function") return true;
+        const body = world.observe(self);
+        if (body === null) return true;
+        const from = body.position();
+        const away = from.minus(CompanionBehavior.point(target.point));
+        const dir = away.length() < 0.01 ? WorldCombat.point(0, 0, 1) : away.unit();
+        return world.freeSpace(from.plus(dir.scale(1.2)), Math.max(0.5, body.width()), Math.max(0.8, body.height()));
     }
 
     CompanionBehavior.registerUse(boltbeakId, {
@@ -32,7 +51,11 @@ namespace PokemonSkills {
             if (distance > capability.data.range) return 0;
             if (!CompanionBehavior.ai<boolean>(capability, "leadFirst", true)) return 10;
             if (!boltbeakWouldLead(context, target)) return 10;
-            return distance >= 2 ? 45 : 26;
+            let score = distance >= 2 ? 45 : 26;
+            const skirmish = !!(capability.data.config && capability.data.config.skirmish === true);
+            if (boltbeakRetreatOpen(context, target)) score += 6;
+            else score -= skirmish ? 18 : 8;
+            return score;
         }
     });
 

@@ -16,7 +16,7 @@ Smoke.scenario("dragontail", function (stage) {
         stage.after(30, function () {
             stage.expect(stage.casts("dragontail", caster) > 0, "龙尾被放出来了");
             stage.expect(stage.damageTo(foe) > 0, "尾扫打到了目标身上");
-            stage.note("尾扫分 6 刻摆过扇形；离中心越远越接近尾梢重击（外三分之一吃满，内段折扣），位移撞墙会被挡住。是否命中（原生命中 90）与暴击不被舞台接口决定，不写断言。",
+            stage.note("尾扫分 6 刻摆过扇形；离中心越远越接近尾梢重击（外三分之一吃满，内段折扣）。尾长只按方块裁剪，实体挡在墙前不会替墙挡住后方；只有真正吃下伤害的目标才计入抽飞，位移撞墙会被挡住。是否命中（原生命中 90）与暴击不被舞台接口决定，不写断言。",
                 { casts: stage.casts("dragontail", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                     travelled: Math.round(stage.travelled(foe) * 10) / 10, foeAt: foe.position() });
             stage.done();

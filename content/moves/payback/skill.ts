@@ -56,6 +56,14 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "gather", wound: Math.round(missing * 100) / 100,
                     gather: Math.round(16 + Math.max(0, Math.min(1, missing)) * 60),
                     patient: config && config.patient === true, windup: prepare }));
+            // 本次真实反击窗口尚可用时给一个短提示，窗口走完即停；它只表示自己正处在受击窗口内。
+            if (body !== null) {
+                const window = Math.max(1, Math.round(p(paybackId, "window", action)));
+                const remaining = body.lastAttacker() === null ? 0 : window - body.hurtAgo();
+                if (remaining > 0) action.present("payback:ready:" + action.id(), paybackScene, 1, action.origin(),
+                    JSON.stringify({ moment: "ready", remaining: Math.round(remaining), window: window,
+                        scale: Math.min(1.6, Math.max(0.6, window / 40)) }));
+            }
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -79,11 +87,12 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:entity.vex.charge");
 
-            function settleDust(current: CombatAction, power: number, doubled: boolean): void {
+            function settleDust(current: CombatAction, power: number, doubled: boolean, pushed: number): void {
                 const scope = current.world(), body = scope.observe(current.actor());
                 if (body === null) return;
                 WorldFeedback.emit(scope, paybackScene, 1, body.position(),
                     { moment: "settle", doubled: doubled ? 1 : 0, power: Math.round(power * 10) / 10,
+                        pushed: Math.round(pushed * 100) / 100,
                         count: Math.round(8 + Math.min(30, travelled * 4)), scale: scale }, 20);
             }
 
@@ -104,14 +113,16 @@ namespace PokemonSkills {
                         // 伤害被拒绝时不当成已命中：不推、不播、不冒称反击。
                         if (landed) {
                             const away = hit.position().minus(here);
-                            if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
+                            // 顶开走原生受击位移：抗击退/被拒真实返回 0，不假报推动。
+                            const pushed = scope.valid(victim) && away.length() > 0.05
+                                ? scope.hitDisplace(victim, away.unit().scale(push)) : 0;
                             WorldFeedback.emit(scope, paybackScene, 1, hit.position(),
                                 { moment: doubled ? "counter" : "strike", target: String(victim.ref()), doubled: doubled ? 1 : 0,
-                                    power: Math.round(power * 10) / 10, count: count, scale: scale }, 30);
+                                    power: Math.round(power * 10) / 10, count: count, pushed: Math.round(pushed * 100) / 100, scale: scale }, 30);
                             scope.sound(doubled ? "minecraft:entity.player.attack.strong" : "cobblemon:impact.dark", hit.position(), 16, "{}");
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)),
                                 doubled ? paybackCounterText : paybackHitText, [], 26);
-                            settleDust(current, power, doubled);
+                            settleDust(current, power, doubled, pushed);
                         }
                     }
                     finish(current);
@@ -126,7 +137,7 @@ namespace PokemonSkills {
                             travelled: Math.round(travelled * 100) / 100, gait: Math.round(6 + travelled * 3), scale: scale });
                 }
                 if (hit.blocked() || moved < p(paybackId, "minimumMove", current) || travelled >= length) {
-                    settleDust(current, 0, false);
+                    settleDust(current, 0, false, 0);
                     finish(current);
                     return;
                 }

@@ -43,9 +43,10 @@ namespace PokemonSkills {
         return false;
     }
 
-    /** 该列最上面一块实心方块；水面／岩浆／基岩不算地面。返回其高度与是否天然沙。 */
+    /** 该列最上面一块实心方块；水面／岩浆／基岩不算地面。返回其高度与是否天然沙。
+     *  从真实接触高度向下找，不再从接触点上方起扫——头顶的顶棚不是落点。 */
     function scorchingSurface(world: CombatWorld, x: number, z: number, centerY: number, drop: number): { y: number; sand: boolean } | null {
-        const top = Math.floor(centerY) + 2;
+        const top = Math.floor(centerY);
         for (let y = top; y >= top - Math.max(1, Math.floor(drop)); y--) {
             const block = world.block(WorldCombat.point(x, y, z));
             if (block === null) return null;
@@ -57,8 +58,21 @@ namespace PokemonSkills {
         return null;
     }
 
+    /**
+     * 初爆中心：以弹体的真实接触点为落点；命中方块侧面时沿面的外向挪半格，避免炸点与热格落进墙里。
+     * 不再向上取“头顶面”，顶棚不会被当成落地。
+     */
+    function scorchingCentre(contact: CombatPoint, face: string): CombatPoint {
+        let x = contact.x(), z = contact.z();
+        if (face === "north") z -= 0.5;
+        else if (face === "south") z += 0.5;
+        else if (face === "west") x -= 0.5;
+        else if (face === "east") x += 0.5;
+        return WorldCombat.point(x, contact.y(), z);
+    }
+
     /** 从真实落点附近的天然沙起步，沿同高差可达的暴露沙面有限扩散；返回热格 [x,y,z]（y 是沙块本身）。 */
-    function scorchingCells(world: CombatWorld, landing: CombatPoint, radius: number, cap: number): number[][] {
+    export function scorchingCells(world: CombatWorld, landing: CombatPoint, radius: number, cap: number): number[][] {
         const baseX = Math.floor(landing.x()), baseZ = Math.floor(landing.z()), baseY = Math.floor(landing.y());
         let startX = 0, startZ = 0, startY = 0, found = false, best = 1e9;
         for (let dx = -1; dx <= 1; dx++) for (let dz = -1; dz <= 1; dz++) {
@@ -113,25 +127,33 @@ namespace PokemonSkills {
         return false;
     }
 
-    /** 闷烧式留下的逐格热沙：踏上一次判一次灼伤，站着不走按间隔反复挨烫。 */
+    /** 首次接触热格判一次灼伤（与从哪一侧进圈无关）；不管是否点着都记账，进出不重复滚。 */
+    function scorchingFirstBurn(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
+        const burned = field.data.burned || (field.data.burned = {});
+        const ref = String(actor.ref());
+        if (burned[ref]) return;
+        const body = world.observe(actor);
+        if (body === null) return;
+        burned[ref] = true;
+        if (world.random() < (Number(field.data.chance) || 0) && CombatStatus.inflict(world, actor, "burn"))
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), scorchingBurnText, [], 24);
+    }
+
+    /** 逐格热沙：贴到还热的热格才生效，进入和停留用同一份真实接触判据；失热的格立即停表现。 */
     WorldEffects.fieldRule(scorchingField, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (world.friendly(actor)) return;
             if (!scorchingContact(world, actor, field)) return;
             const body = world.observe(actor);
-            if (body === null) return;
-            const ref = String(actor.ref());
-            WorldFeedback.emit(world, scorchingScene, 1, body.position(),
-                { moment: "smolder", target: ref, scale: 1 }, 20);
-            const burned = field.data.burned || (field.data.burned = {});
-            if (burned[ref]) return;
-            burned[ref] = true;
-            if (world.random() < (Number(field.data.chance) || 0) && CombatStatus.inflict(world, actor, "burn"))
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), scorchingBurnText, [], 24);
+            if (body !== null) WorldFeedback.emit(world, scorchingScene, 1, body.position(),
+                { moment: "smolder", target: String(actor.ref()), scale: 1 }, 20);
+            scorchingFirstBurn(world, actor, field);
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (world.friendly(actor)) return;
             if (!scorchingContact(world, actor, field)) return;
+            // 已经在场内、后来才踩上热格的人也要补首次判烧，而不是只按间隔挨伤。
+            scorchingFirstBurn(world, actor, field);
             const ref = String(actor.ref()), next = field.data.next || (field.data.next = {});
             if (world.tick() < (next[ref] || 0)) return;
             next[ref] = world.tick() + (Number(field.data.interval) || 12);
@@ -140,8 +162,36 @@ namespace PokemonSkills {
             if (!hurt(world, actor, "scorchingsands", Number(field.data.power) || 1, { damage: damageSpec("scorchingsands", "hearth") })) return;
             WorldFeedback.emit(world, scorchingScene, 1, body.position(),
                 { moment: "smolder", target: ref, seethe: Math.round(Number(field.data.power) || 0), scale: 1 }, 18);
+        },
+        scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
+            const cells: number[][] = field.data.cells || [];
+            const shown: { [key: string]: boolean } = field.data.shown || (field.data.shown = {});
+            const live: { [key: string]: boolean } = {};
+            const heat = Math.round(Number(field.data.power) || 0);
+            for (let i = 0; i < cells.length; i++) {
+                const cell = cells[i], key = cell[0] + "," + cell[1] + "," + cell[2];
+                if (!scorchingHot(world, cell)) continue;
+                live[key] = true;
+                const at = WorldCombat.point(cell[0] + 0.5, cell[1] + 1, cell[2] + 0.5);
+                world.present(scorchingFieldKey(effect, key), scorchingScene, 1, at,
+                    JSON.stringify({ moment: "smolder", heat: heat, scale: 1 }));
+            }
+            Object.keys(shown).forEach(function (key) {
+                if (live[key]) return;
+                const parts = key.split(",");
+                const at = WorldCombat.point(Number(parts[0]) + 0.5, Number(parts[1]) + 1, Number(parts[2]) + 0.5);
+                world.present(scorchingFieldKey(effect, key), scorchingScene, 1, at,
+                    JSON.stringify({ moment: "smolder", lifecycle: { reason: "settled" } }));
+                delete shown[key];
+            });
+            Object.keys(live).forEach(function (key) { shown[key] = true; });
         }
-    });
+    }, { tags: [WorldEffects.categories.hazard] });
+
+    /** 每个热格的稳定表现 key，挂在场地效果上：失热时可单独收，随场地一起清理。 */
+    function scorchingFieldKey(effect: CombatEffect, cell: string): string {
+        return "scorch:" + effect.id() + ":" + cell;
+    }
 
     /** 合并两组热格，去掉重复。 */
     function scorchingMerge(first: number[][], second: number[][]): number[][] {
@@ -217,14 +267,11 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            function land(current: CombatAction, contact: CombatPoint): void {
+            function land(current: CombatAction, contact: CombatPoint, face: string): void {
                 if (landed) return;
                 landed = true;
                 const scope = current.world();
-                const surface = scorchingSurface(scope, Math.floor(contact.x()), Math.floor(contact.z()), Math.floor(contact.y()), 4);
-                const centre = surface !== null
-                    ? WorldCombat.point(Math.floor(contact.x()) + 0.5, surface.y + 1, Math.floor(contact.z()) + 0.5)
-                    : contact;
+                const centre = scorchingCentre(contact, face);
                 sound(current, "minecraft:block.sand.break");
                 WorldFeedback.emit(scope, scorchingScene, 1, centre,
                     { moment: "burst", radius: radius, scale: scale, embers: embers, intensity: intensity }, 30);
@@ -249,25 +296,27 @@ namespace PokemonSkills {
                     if (hot.length > 0) {
                         const owner = String(scope.source().ref());
                         const mine = WorldEffects.areas(scope, scorchingField, centre, radius + 1);
-                        let fieldId = 0, merged = hot, existingRadius = radius + 1;
+                        let fieldId = 0, merged = hot, fieldCentre = centre;
                         for (let i = 0; i < mine.length; i++) {
                             if (mine[i].source !== owner) continue;
                             fieldId = mine[i].id;
-                            existingRadius = Math.max(existingRadius, mine[i].radius);
+                            fieldCentre = WorldCombat.point(mine[i].position[0], mine[i].position[1], mine[i].position[2]);
                             const previous = mine[i].data && mine[i].data.cells;
                             if (previous) merged = scorchingMerge(previous, hot);
                             break;
                         }
                         if (merged.length > cells) merged = merged.slice(0, cells);
-                        if (fieldId > 0) WorldEffects.update(scope, fieldId, { radius: existingRadius, ticks: coat,
-                            data: { power: hPower, interval: hInterval, chance: hChance, cells: merged } });
-                        else fieldId = WorldEffects.field(scope, scorchingField, centre, existingRadius,
-                            { power: hPower, interval: hInterval, chance: hChance, cells: merged, next: {}, burned: {} }, coat);
+                        // 合并后把覆盖半径扩到能装下每一格热沙，旧的逐敌间隔（next）由 update 的浅合并保留。
+                        let coverage = radius;
                         for (let i = 0; i < merged.length; i++) {
-                            const cell = merged[i], at = WorldCombat.point(cell[0] + 0.5, cell[1] + 1, cell[2] + 0.5);
-                            WorldFeedback.onEffect(scope, fieldId, "scorch:" + cell[0] + "," + cell[1] + "," + cell[2],
-                                scorchingScene, 1, at, { moment: "smolder", heat: Math.round(hPower), scale: 1 });
+                            const cell = merged[i], dx = cell[0] + 0.5 - fieldCentre.x(), dz = cell[2] + 0.5 - fieldCentre.z();
+                            coverage = Math.max(coverage, Math.sqrt(dx * dx + dz * dz) + 0.9);
                         }
+                        coverage = Math.min(16, coverage);
+                        if (fieldId > 0) WorldEffects.update(scope, fieldId, { radius: coverage, ticks: coat,
+                            data: { power: hPower, interval: hInterval, chance: hChance, cells: merged } });
+                        else WorldEffects.field(scope, scorchingField, centre, coverage,
+                            { power: hPower, interval: hInterval, chance: hChance, cells: merged, next: {}, burned: {} }, coat);
                     }
                 }
                 WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.0, 0)), scorchingHitText, [total], 26);
@@ -282,7 +331,7 @@ namespace PokemonSkills {
             const flight = LivingActions.projectile(action, {
                 speed: speed, direction: direction, range: distance + 4, radius: 0.4, gravity: 0.05, lifetime: 180,
                 appearance: appearance,
-                impact: function (current: CombatAction, hit: CombatImpact) { land(current, hit.position()); }
+                impact: function (current: CombatAction, hit: CombatImpact) { land(current, hit.position(), hit.blockFace()); }
             }, function (current: CombatAction) {
                 // 到程没有真实接触：不跳回准点补炸、不留热区，只结束。
                 finish(current);

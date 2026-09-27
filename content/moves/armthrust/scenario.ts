@@ -23,7 +23,7 @@ Smoke.scenario("armthrust", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("armthrust", caster) > 0, "armthrust was committed");
             stage.expect(stage.damageTo(foe) > 0, "the open-palm thrusts dealt damage to the foe");
-            stage.note("thrust count (2-5) follows Attack/level and the drive/planted choice; this move never misses; the iron golem is knockback-resistant, so by design its refused shove is NOT counted as a wall slam even with the stone wall right behind it (a non-resistant target pushed into a wall would take the slam segment; design facts verified in the full assembly)", {
+            stage.note("thrust count (2-5) follows Attack/level and the drive/planted choice; this move never misses; each thrust re-checks the real body reach and blocks between the palm and the target, so a raised or wall-hidden target ends the string; the iron golem is knockback-resistant, so by design its refused shove is NOT counted as a wall slam even with the stone wall right behind it (a non-resistant target actually pushed into a wall within this thrust's real travel would take the slam segment)", {
                 casts: stage.casts("armthrust", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

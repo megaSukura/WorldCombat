@@ -33,6 +33,12 @@
 namespace PokemonSkills {
     export const grasspledgeId = "grasspledge";
     export const grasspledgeScene = "world_combat:move_grasspledge";
+    /** 印记／组合的真实边界与剩余（自定义绘制，绑在场地效果上）。 */
+    export const grasspledgeFieldScene = "world_combat:move_grasspledge_field";
+    /** 草柱主体的盘绕藤体。 */
+    export const grasspledgeVineScene = "world_combat:move_grasspledge_vine";
+    /** 命中者脚部被缠住的短根须（拒绝时只落叶）。 */
+    export const grasspledgeRootScene = "world_combat:move_grasspledge_roots";
     /** 本单元的草之誓约印（只由本单元注册；共鸣后仍是这一条规则）。 */
     export const grasspledgeScar = "world_combat:field/pledge_grass";
     export const grasspledgeHitText = "world_combat.move.grasspledge.text.hit";

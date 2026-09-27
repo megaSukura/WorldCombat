@@ -59,7 +59,7 @@ namespace PokemonSkills {
             F.when(F.pref("extend", text("worldcombat.skill.powerwhip.preference.extend")), F.const(96), F.const(360)).clamp(60, 360).round(0),
             "横扫弧度", {
                 unit: "度",
-                description: "青藤扫过的扇面张角；长鞭式是身前一道窄弧，旋身式是原地一整圈。画面里填出的弧面就是这个范围。"
+                description: "青藤鞭尖顺次扫过的张角；长鞭式是身前一道窄弧，旋身式是原地一整圈。鞭尖扫过的那一片角度就是命中范围。"
             }),
         /** 同时命中数：长鞭式 2 / 旋身式 4；夹在 1..5。 */
         maxTargets: formula(

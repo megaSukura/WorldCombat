@@ -8,7 +8,7 @@
   "worldcombat.skill.bide.description.1": "The ledger caps at %1$s of the user's maximum health; the payback reaches the last attacker within %2$s blocks, or the nearest enemy if that one is out of reach.",
   "worldcombat.skill.bide.description.2": "Prepare %1$s s, recover %2$s s, cooldown %3$s s.",
   "worldcombat.skill.bide.rooted.on": "Rooted endurance: the stance lasts x1.15 and the payback multiplier is x1.1, but the user cannot move for the whole stance.",
-  "worldcombat.skill.bide.rooted.off": "Mobile endurance: the user may reposition, at the cost of a x0.8 stance and a x0.9 payback multiplier.",
+  "worldcombat.skill.bide.rooted.off": "Mobile endurance: still inside the stance and unable to start another move, but free to reposition; the cost is a x0.8 stance and a x0.9 payback multiplier.",
   "worldcombat.skill.bide.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.bide.value.window": "Endurance window",
   "worldcombat.skill.bide.value.capFraction": "Ledger cap",

@@ -28,6 +28,23 @@ public final class NativeEquipmentSuppression {
             result.put(new Key(attribute, modifier.id()), new Declared(slot, modifier)));
         return result;
     }
+    /** Same declarations as suppression, with current native-instance equality; no mutation or ability inference. */
+    public String facts(LivingEntity entity) {
+        combat.checkThread(); var result = new com.google.gson.JsonArray();
+        declarations(entity).forEach((key, declared) -> {
+            var name = key.attribute().unwrapKey(); if (name.isEmpty()) return;
+            var instance = entity.getAttribute(key.attribute()); var modifier = declared.modifier();
+            var value = new com.google.gson.JsonObject();
+            value.addProperty("slot", declared.slot().getName());
+            value.addProperty("attribute", name.get().location().toString());
+            value.addProperty("id", key.modifier().toString());
+            value.addProperty("amount", modifier.amount());
+            value.addProperty("operation", modifier.operation().getSerializedName());
+            value.addProperty("active", instance != null && modifier.equals(instance.getModifier(key.modifier())));
+            result.add(value);
+        });
+        return result.toString();
+    }
     public int acquire(long owner, ActorHandle actor) {
         combat.checkThread(); if (owner == 0) throw new IllegalStateException("Equipment suppression needs an action/effect owner");
         var entity = combat.resolve(actor); if (entity == null) return 0;

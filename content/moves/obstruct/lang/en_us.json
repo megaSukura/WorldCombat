@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.obstruct.summary": "Raise a barricade and root yourself in place: it fully blocks enemy damage up to a pool, and contact attackers lose a lot of Defence. Using it again in quick succession tends to fail.",
-  "worldcombat.skill.obstruct.description.0": "The barricade lasts %1$s and holds %2$s points, fully blocking enemy damage until spent and shattering; anything beyond the remaining pool passes through. A contact attacker loses %3$s Defence stages, once per foe.",
+  "worldcombat.skill.obstruct.summary": "Raise a barricade and root yourself in place: it fully blocks damage from the fixed front, and contact attackers from the front lose a lot of Defence. Attacks from the side or back still hit you. Using it again in quick succession tends to fail.",
+  "worldcombat.skill.obstruct.description.0": "The barricade lasts %1$s and holds %2$s points, fully blocking damage that lands within a fixed 120-degree front until spent and shattering; anything beyond the remaining pool passes through. A front contact attacker loses %3$s Defence stages, once per foe. Side or back attacks still hit you.",
   "worldcombat.skill.obstruct.description.1": "Raise %1$s, cooldown %2$s.",
   "worldcombat.skill.obstruct.description.2": "Repeat-use failure rate %1$s; barbed adds +1 to the contact Defence drop with x0.75 pool, x0.85 duration and 6-tick recovery; reinforced gives x1.2 pool, x1.15 duration and 10-tick recovery.",
   "worldcombat.skill.obstruct.use.0": "Bait a melee foe onto the barricade",
@@ -20,5 +20,5 @@
   "world_combat.move.obstruct.text.block": "Barricade blocked %1$s (left %2$s)",
   "world_combat.move.obstruct.text.punish": "Defence -%1$s",
   "world_combat.move.obstruct.text.shatter": "The barricade shattered",
-  "worldcombat.skill.obstruct.description.hold": "While the barricade stands the user is rooted in place and cannot move; the user's own damage (falls, burns) does not drain it."
+  "worldcombat.skill.obstruct.description.hold": "While the barricade stands the user is rooted in place and cannot move; the root is released the moment the barricade is pierced. The user's own damage (falls, burns) does not drain it."
 }

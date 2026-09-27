@@ -21,8 +21,9 @@ namespace CompanionBehavior {
         const result = navigate(context, trail.point, .8);
         return result === "path-blocked" ? WorldBehavior.success() : WorldBehavior.running();
     }); } });
+    // 追味搜索排在明确命令之后：玩家下达的移动/攻击选择优先，只有没有命令可跟时才去最后看见的位置找气味。
     orderGoals("world_combat:odorsleuth/search", function (_context, order) {
-        const at = order.indexOf("world_combat:command"); order.splice(at < 0 ? order.length : at, 0, "world_combat:odorsleuth/search");
+        const at = order.indexOf("world_combat:command"); order.splice(at < 0 ? order.length : at + 1, 0, "world_combat:odorsleuth/search");
     });
     PokemonSkills.addPreferences("odorsleuth", { ai: { maxChase: 14, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 22, 1),
@@ -38,7 +39,6 @@ namespace CompanionBehavior {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (context.facts.mounted) return false;
-        if (status(context, threat, "odorsleuth") || status(context, threat, "foresight")) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (distance(self.point, threat.point) > ai<number>(item, "maxChase", 14)) return false;
         return !!world(context).clear(point(self.point), point(threat.point));
@@ -52,6 +52,8 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !odorsleuthWants(context, item, target)) return 0;
             if (fleeing(context, target)) return 86;
+            // 正闪避越高的目标越值得先剥；幽灵再高一点，普通怪按基础值。
+            if (stage(context, target, "evasion") > 0) return 80;
             if (odorsleuthTargetGhost(context, target)) return 78;
             return 56;
         }

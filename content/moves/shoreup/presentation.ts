@@ -1,13 +1,13 @@
 /**
  * 集沙 / Shore Up 的粒子语言。
  *
- * 一句话：脚边实际有沙的位置被一股吸力从四周拉起、旋着糊到身上，压实后从身上落下一点余尘；沙暴里整场都是流沙、还镀着亮沙。
+ * 一句话：脚边实际有沙的位置被一股吸力从地面拉起、朝身体收拢再糊上身，压实后从身上落下一点余尘；沙暴里整场都是流沙、还镀着亮沙。
  * 色相家族：沙金 0xD8B26A 作主体，浅砂 0xF0E0B0 作高光，土褐 0x8A6A3A 作余尘；沙暴时细节层用亮沙 0xF7E7A8。
  * 拍子：起（windup）／取（gather + 每个真实沙位的 gather_site）／糊（pack）／余（settle）。
  * 范围：作用于自己，绑 source（fit body）；取沙的外环半径绑定 data.reach（探沙范围），玩家看得出它能从多远的沙地取材。
- * 机制驱动：gather/pack 的沙粒数绑定 data.motes（沙粒密度 × 收走的浮沙量 × 沙暴算出）、pack 的数量已按**实际回复**
- *   缩放；每个 gather_site 落在服务端真实采样到的沙位（data 只带该点的粒数与尺寸）；沙暴中额外一层亮沙绑定 data.gild；
- *   整体尺寸绑定 data.scale、糊身尺寸绑定 data.packSize —— 沙越多、暴越烈、补得越足，画面越密越亮越大。
+ * 机制驱动：gather/pack 的沙粒数绑定 data.motes（脚底真实散沙密度 × 沙暴算出），pack 的数量已按**实际回复**缩放；
+ *   每个 gather_site 落在服务端真实采样到的沙位，并用 direction/orient:toward 朝身体画一条短吸沙路径；沙暴中额外一层亮沙
+ *   绑定 data.gild；整体尺寸由 data.scale 统一乘一次（size 不再二次绑定 scale）—— 沙越多、暴越烈、补得越足，画面越密越亮越大。
  */
 const ShoreupDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -59,7 +59,7 @@ const ShoreupDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 2 }, shape: { kind: "circle", radius: { data: "reach", fallback: 2.2 } },
                     direction: "inward", speed: [0.03, 0.1],
-                    lifetime: [14, 24], size: { data: "scale", fallback: 0.3 },
+                    lifetime: [14, 24], size: 0.3,
                     color: 0x8A6A3A, alpha: [0.5, 0], light: "world", maxParticles: 12
                 }
             ]
@@ -69,11 +69,11 @@ const ShoreupDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "pull", bind: "point", fit: "none", offset: [0, 0.1, 0], height: 0,
+                    name: "pull", bind: "point", fit: "none", offset: [0, 0.1, 0], height: 0, orient: "toward",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "motes", fallback: 6 } }, shape: { kind: "sphere", radius: 0.32 },
-                    direction: "up", speed: [0.05, 0.16], drag: 0.9,
-                    lifetime: [10, 18], size: { data: "siteSize", fallback: 0.06 },
+                    direction: "toward", speed: [0.14, 0.28], drag: 0.9,
+                    lifetime: [6, 12], size: { data: "siteSize", fallback: 0.06 },
                     color: 0xF0E0B0, alpha: [0.85, 0], light: "world", maxParticles: 24
                 }
             ]
@@ -115,7 +115,7 @@ const ShoreupDefinition: ParticleDefinition = {
                     name: "falling", bind: "source", offset: [0, 0.5, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "motes", fallback: 10 } }, shape: { kind: "sphere", radius: 0.5 }, direction: "down", speed: [0.02, 0.06], gravity: 0.01,
-                    lifetime: [10, 18], size: { data: "scale", fallback: 0.06 },
+                    lifetime: [10, 18], size: 0.06,
                     color: 0x8A6A3A, alpha: [0.6, 0], light: "world", maxParticles: 30
                 }
             ]

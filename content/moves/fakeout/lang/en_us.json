@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.fakeout.summary": "A snappy slap thrown the instant the user is sent out: top priority and near-instant, it may not hurt much but it dazes the target and cuts short whatever it was starting. Once the user has taken any other action, this opening is gone.",
+  "worldcombat.skill.fakeout.summary": "Available as your first move in each encounter: take a short step and clap quickly, attempting flinch and interruption. Committing another move or a recorded native hit spends the opening; it returns after actual disengagement.",
   "worldcombat.skill.fakeout.use.0": "Strike first for a daze right after entering battle",
   "worldcombat.skill.fakeout.use.1": "Cut short an opening the foe is winding up",
   "worldcombat.skill.fakeout.use.2": "Clap after a short entry step",
   "worldcombat.skill.fakeout.description.0": "The slap deals about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.fakeout.description.1": "Step up to %1$s blocks at %2$s blocks per tick, then clap %4$s blocks forward with a %3$s-block contact radius. A whiff spends the opening too.",
-  "worldcombat.skill.fakeout.description.2": "A solid hit dazes the target for %1$s: an interruptible action in progress is cut short, and no new move or ordinary attack can be started while it lasts.",
+  "worldcombat.skill.fakeout.description.2": "On contact, attempt %1$s of flinch through shared move and supported native attack gates. Show interruption only when an interruptible action actually ends; private Boss behavior keeps its own rules.",
   "worldcombat.skill.fakeout.feint.on": "Feint form: damage x0.85 and a longer daze (x1.35) with a 1-tick faster wind-up, at the cost of a 4-tick longer cooldown.",
   "worldcombat.skill.fakeout.feint.off": "Hard form (default): damage x1.12 but a shorter daze (x0.9).",
   "worldcombat.skill.fakeout.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, %4$s PP and %5$s s cooldown. Only the first action of an encounter; disengage to regain it. Waiting while engaged does not refresh it.",
@@ -25,6 +25,7 @@
   "worldcombat.skill.fakeout.preference.ai.maxChase.help": "Only blink in at a foe within this distance. The blink is short, so larger values often cannot reach; smaller values keep it to point-blank openings.",
   "world_combat.move.fakeout.text.hit": "Smack! %1$s",
   "world_combat.move.fakeout.text.daze": "Dazed",
+  "world_combat.move.fakeout.text.broken": "Action cut short",
   "world_combat.move.fakeout.text.miss": "Whiffed",
   "effect.world_combat.fakeout_daze": "Dazed",
   "worldcombat.skill.fakeout.value.palmReach": "Palm reach"

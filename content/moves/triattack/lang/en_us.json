@@ -5,7 +5,7 @@
   "worldcombat.skill.triattack.use.2": "Open with a three-colour volley to wear a group down",
   "worldcombat.skill.triattack.description.0": "The three rays leave the hand one after another; each ray that hits a target deals about %1$s special damage and has about a %2$s chance to leave the matching element mark (electric paralyses, fire burns, ice freezes). The target's Sp. Def, type matchup and criticals settle at impact.",
   "worldcombat.skill.triattack.description.1": "The rays lock onto targets within %1$s blocks and fly at %2$s blocks per tick, steering %3$s degrees per tick onto the target; that only corrects movement, so a hard sideways dash still escapes.",
-  "worldcombat.skill.triattack.description.2": "The rays leave %1$s apart (never inside the hit invulnerability window, so each settles separately); wind-up %2$s, cooldown %3$s.",
+  "worldcombat.skill.triattack.description.2": "The rays leave %1$s apart (each is its own native projectile, so even the same target settles each hit and rolls each mark); wind-up %2$s, cooldown %3$s.",
   "worldcombat.skill.triattack.wide.on": "Wide form: the three rays split among up to three different valid enemies within %1$s blocks of the primary for much wider coverage; when it cannot find enough, the extra rays return to an already-chosen valid target rather than going to waste. The cost is x0.85 per ray, x0.85 mark chance, wind-up +1 tick and cooldown x1.15.",
   "worldcombat.skill.triattack.wide.off": "Focused form (default): all three rays lock the same target, x1.04 per ray and x1.1 mark chance, and it comes out sooner with a shorter cooldown.",
   "worldcombat.skill.triattack.timing": "Range %1$s, wind-up %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

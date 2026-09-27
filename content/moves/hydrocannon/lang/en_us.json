@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.hydrocannon.summary": "Pick a direction or point and compress water to its limit into one thick short high-pressure shot: the hit shoves the target back and soaks it through, and an already-soaked target takes a heavier follow-up; it stops at the first contact and never pierces, and the user is left spent, unable to act or move.",
+  "worldcombat.skill.hydrocannon.summary": "Pick a direction or point and compress water to its limit into one thick short high-pressure shot: the hit shoves the target back and soaks it through, and an already-soaked target takes a heavier follow-up; it stops at the first contact and never pierces, and the user is spent for a while the moment it fires (even if the cast is interrupted), unable to act or move.",
   "worldcombat.skill.hydrocannon.description.0": "The shot deals about %1$s special damage on a hit.",
-  "worldcombat.skill.hydrocannon.description.1": "On a hit the target is shoved %1$s blocks along the jet; the jet's hit radius is %2$s blocks.",
+  "worldcombat.skill.hydrocannon.description.1": "On a hit the target is pushed %1$s blocks along the jet (a knockback-resistant or immune target moves less or not at all); the jet's hit radius is %2$s blocks.",
   "worldcombat.skill.hydrocannon.description.2": "A struck target is soaked for %1$s; against an already-soaked target (carrying a soak marker, or simply wet) this shot deals %2$s more damage.",
-  "worldcombat.skill.hydrocannon.description.3": "The jet reaches %1$s blocks at %2$s blocks per tick; wind-up %3$s, then the user is spent for %4$s, unable to start moves or ordinary attacks and unable to move.",
+  "worldcombat.skill.hydrocannon.description.3": "The jet reaches %1$s blocks at %2$s blocks per tick; wind-up %3$s, then the user is spent for %4$s the moment it fires (even if the cast is interrupted), unable to start moves or ordinary attacks and unable to move.",
   "worldcombat.skill.hydrocannon.use.0": "One compressed high-pressure shot",
   "worldcombat.skill.hydrocannon.use.1": "Shove a target back and soak it through",
   "worldcombat.skill.hydrocannon.use.2": "Follow up on an already-soaked target",

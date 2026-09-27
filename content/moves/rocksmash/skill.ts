@@ -26,8 +26,8 @@ namespace PokemonSkills {
         description: "贴脸连出几记快拳，拳骨砸在对手最硬的地方：每记造成少量接触伤害，收拳时若打实，有机会把对手防御砸低一级；出手快、冷却短，适合反复拆防。",
         uses: ["贴脸连打拆防", "用便宜的快拳反复消耗", "先用碎岩砸开缺口，再让重击兑现"],
         kind: "aim",
-        range: 3.0,
-        maxRange: 3.8,
+        range: 2.0,
+        maxRange: 2.0,
         prepare: 4,
         active: 22,
         recover: 4,
@@ -44,7 +44,8 @@ namespace PokemonSkills {
                 prepare: p("rocksmash", "prepare", context),
                 recover: p("rocksmash", "recover", context),
                 cooldown: p("rocksmash", "cooldown", context),
-                range: Math.max(3.0, p("rocksmash", "reach", context) * 1.6)
+                // 实际拳程就是这一招的射程：AI 与出手都在拳能探到的距离内，不再报 3 格虚射程。
+                range: p("rocksmash", "reach", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -91,23 +92,33 @@ namespace PokemonSkills {
                 if (body === null) { finish(current); return; }
                 const from = body.position();
                 const selected = action.target();
-                const selectedBody = selected !== null && scope.valid(selected) ? scope.observe(selected) : null;
-                const to = selectedBody !== null ? selectedBody.position() : from.plus(direction.scale(reach));
+                // 每拳朝当前目标的真实身体但只探到拳程：目标退到拳程外，这一拳就落在空处。
+                let to = from.plus(direction.scale(reach));
+                if (selected !== null && scope.valid(selected)) {
+                    const nearest = scope.closestPoint(selected, from), offset = nearest.minus(from);
+                    to = offset.length() > reach ? from.plus(offset.unit().scale(reach)) : nearest;
+                }
                 const hit = current.trace(from, to, radius);
                 const point = hit.hitEntity() || hit.blocked() ? hit.position() : to;
                 const victim = hit.hitEntity() ? hit.target() : null;
+                let connected = false;
                 if (victim !== null && !scope.friendly(victim)
                     && hurt(current, victim, "rocksmash", power, { damage: damageSpec("rocksmash", "jab"), contact: true, punch: true })) {
                     noteHit(victim, index);
                     landed = true;
+                    connected = true;
                 }
                 // 每拳只画命中点附近的一小段触痕，让画面读成点触而不是一整条拳路。
                 const line = point.minus(from), span = line.length();
                 const tail = span > 0.75 ? point.minus(line.unit().scale(0.75)) : from;
                 WorldFeedback.emit(scope, rocksmashScene, 1, point,
-                    { moment: "strike", target: victim ? String(victim.ref()) : "", hit: victim !== null, index: index + 1, jabs: jabs,
+                    { moment: "strike", target: victim ? String(victim.ref()) : "", hit: connected, index: index + 1, jabs: jabs,
                         notes: notes, scale: radius / 0.4, direction: [direction.x(), direction.y(), direction.z()],
                         path: [[tail.x(), tail.y(), tail.z()], [point.x(), point.y(), point.z()]] }, 20);
+                // 只有真的打实才崩出岩屑；挥空只剩拳路。
+                if (connected)
+                    WorldFeedback.emit(scope, rocksmashScene, 1, point,
+                        { moment: "impact", target: String(victim!.ref()), notes: notes, scale: radius / 0.4 }, 20);
                 sound(current, index + 1 >= jabs ? "minecraft:entity.player.attack.strong" : "minecraft:entity.player.attack.weak");
                 const next = index + 1;
                 if (next < jabs) { current.after(gap, function (later: CombatAction) { jab(later, next); }); return; }

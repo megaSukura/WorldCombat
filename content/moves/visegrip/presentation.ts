@@ -1,8 +1,9 @@
-/** Claws follow real short paths; the held connection ends with the action. */
+/** Claws follow their real shoulder→contact paths (staggered so the tips close, not a static V); resist reads as a flinch,
+ *  the held outline follows the live carrier, and the connection ends with the action. */
 const VisegripDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        close: { duration: 7, emitters: [{ name: "claw_edge",bind:"path",fit:"world",particle:"world_combat_core:cobblemon/generic/spike",rate:24,shape:{kind:"polyline"},lifetime:[3,6],size:[.12,.04],color:0xE89080,alpha:[.75,0] }] },
+        close: { duration: 7, emitters: [{ name: "claw_edge",bind:"path",fit:"world",start:{data:"start",fallback:0},particle:"world_combat_core:cobblemon/generic/spike",rate:24,shape:{kind:"polyline"},lifetime:[3,6],size:[.12,.04],color:0xE89080,alpha:[.75,0] }] },
         hold: { emitters: [{name:"held_joint",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/grab",rate:14,shape:{kind:"sphere_surface",radius:.35},lifetime:[2,4],size:[.25,.12],color:0xE89080,alpha:[.6,.1]}] },
         release: { duration:8,emitters:[{name:"open_again",bind:"target",fit:"body",particle:"world_combat_core:cobblemon/generic/spike",burst:{count:4},shape:{kind:"sphere_surface",radius:.3},direction:"outward",speed:[.02,.05],lifetime:[3,6],size:[.1,.02],alpha:[.5,0]}] },
         open: {
@@ -68,6 +69,22 @@ const VisegripDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.04, 0.14], spread: 8,
                     lifetime: [10, 18], size: [0.4, 0.5], sizeMode: "linear",
                     color: 0xE8B0A0, alpha: [0.6, 0], light: "full", maxParticles: 16
+                }
+            ]
+        },
+        resist: {
+            // The strike landed but the body refused the pull: a short outward flinch, never a held grip.
+            duration: 14,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "refuse", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "motes", fallback: 6 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.32 },
+                    direction: "outward", speed: [0.05, 0.16], spread: 18,
+                    lifetime: [6, 11], size: [0.12, 0.03],
+                    color: 0xDCC3B0, alpha: [0.6, 0], light: "world", maxParticles: 20
                 }
             ]
         },

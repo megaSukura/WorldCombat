@@ -1,12 +1,12 @@
 /**
  * 生蛋 / Soft-Boiled 的粒子语言。
  *
- * 一句话：一枚温热的蛋滚落脚边，蛋壳透出蜜色的光，一下一下地脉动；片刻后啄开，暖光顺着地缝爬上受益者把它补回去。
+ * 一句话：一枚温热的蛋完整地滚落脚边，蛋壳透出蜜色的光，一下一下地脉动；成熟时亮一次，受益人走近啄开才把回复补回去。
  * 色相家族：暖白 0xFFF6E6 作蛋与高光，蜜黄 0xF2D06B 作脉动暖光，壳粉 0xE8C4C8 只作蛋壳碎片。
- * 拍子：起（windup）／产（lay）／守（cradle，持续到孵化）／孵（hatch）／废（wasted）／碎（smashed）。
- * 范围：产蛋镜头绑 source（施法者）；守候镜头绑 source（此时 source 就是蛋本体），所以玩家能看到蛋在地上等；
- *   孵化镜头绑 point（受益者位置）——一眼看出回复是落在谁身上。
- * 机制驱动：lay 与 smashed 的碎片数绑定 data.shells（体重派生）、cradle 的脉动密度绑定 data.cradle（身高派生）、
+ * 拍子：起（windup）／产（lay，完整一枚、不碎壳）／守（cradle，持续到成熟）／熟（ready）／食（hatch）／碎（smashed）。
+ * 范围：产蛋镜头绑 source（施法者）；守候与成熟镜头绑 source（此时 source 就是蛋本体），所以玩家能看到蛋在地上等；
+ *   取食镜头绑 point（受益者位置）——一眼看出回复是落在谁身上。
+ * 机制驱动：hatch 与 smashed 的碎片数绑定 data.shells（体重派生）、cradle 的脉动密度绑定 data.cradle（身高派生）、
  *   整体尺寸绑定 data.scale —— 蛋越大、碎片越多、等待时脉动越明显。
  */
 const SoftboiledDefinition: ParticleDefinition = {
@@ -32,16 +32,9 @@ const SoftboiledDefinition: ParticleDefinition = {
                 {
                     name: "drop", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/moves/softboiled_egg",
-                    burst: { count: 3 }, shape: { kind: "sphere", radius: 0.25 }, direction: "outward", speed: [0.03, 0.09],
+                    burst: { count: 1 }, shape: { kind: "sphere", radius: 0.2 }, direction: "outward", speed: [0.02, 0.06],
                     lifetime: [14, 24], size: { data: "scale", fallback: 0.3 }, sizeMode: "index",
-                    color: 0xFFF6E6, alpha: [0.95, 0], light: "full", maxParticles: 10
-                },
-                {
-                    name: "shards", bind: "source", offset: [0, 0.15, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/moves/eggbomb_eggshards",
-                    burst: { count: { data: "shells", fallback: 14 } }, shape: { kind: "sphere_surface", radius: 0.4 }, direction: "outward", speed: [0.05, 0.16], gravity: 0.02, drag: 0.92,
-                    lifetime: [10, 18], size: [0.08, 0.01],
-                    color: 0xE8C4C8, alpha: [0.85, 0], light: "world", maxParticles: 50
+                    color: 0xFFF6E6, alpha: [0.95, 0], light: "full", maxParticles: 6
                 },
                 {
                     name: "nest", bind: "source", offset: [0, 0.05, 0], height: 0,
@@ -49,6 +42,26 @@ const SoftboiledDefinition: ParticleDefinition = {
                     burst: { count: 2 }, shape: { kind: "circle", radius: { data: "scale", fallback: 1 } }, direction: "outward", speed: [0.03, 0.08],
                     lifetime: [12, 20], size: [0.24, 0.54],
                     color: 0xFFF6E6, alpha: [0.6, 0], light: "full", maxParticles: 12
+                }
+            ]
+        },
+        ready: {
+            duration: 26,
+            exit: { stop: 8, drain: 16 },
+            emitters: [
+                {
+                    name: "mature", bind: "source", offset: [0, 0.12, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: 16 }, shape: { kind: "ring", radius: 0.35 }, direction: "up", speed: [0.05, 0.16],
+                    lifetime: [12, 22], size: [0.1, 0.02],
+                    color: 0xFFF6E6, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 30
+                },
+                {
+                    name: "crackle", bind: "source", offset: [0, 0.14, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    rate: 10, shape: { kind: "sphere_surface", radius: 0.2 }, direction: "up", speed: [0.01, 0.03],
+                    lifetime: [8, 14], size: [0.05, 0.01],
+                    color: 0xF2D06B, alpha: [0.7, 0], light: "full", maxParticles: 20
                 }
             ]
         },
@@ -88,19 +101,6 @@ const SoftboiledDefinition: ParticleDefinition = {
                     burst: { count: 22 }, shape: { kind: "ring", radius: 0.45 }, direction: "up", speed: [0.04, 0.12],
                     lifetime: [12, 22], size: [0.06, 0.01],
                     color: 0xFFF6E6, alpha: [0.9, 0], light: "full", maxParticles: 44
-                }
-            ]
-        },
-        wasted: {
-            duration: 22,
-            exit: { stop: 6, drain: 12 },
-            emitters: [
-                {
-                    name: "duds", bind: "source", offset: [0, 0.12, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.01, 0.05], gravity: 0.01,
-                    lifetime: [12, 20], size: [0.06, 0.01],
-                    color: 0xE8C4C8, alpha: [0.5, 0], light: "world", maxParticles: 20
                 }
             ]
         },

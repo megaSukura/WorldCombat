@@ -15,7 +15,7 @@ namespace CompanionBehavior {
         return attack > special ? "ram" : "beam";
     }
 
-    /** Non-friendly bodies within `radius` of the segment self→target (t in [0,1]). */
+    /** Non-friendly living bodies whose body box the self→target beam segment actually crosses. */
     function terablastLine(context: WorldBehavior.Context, self: WorldMethods.Subject, target: WorldMethods.Subject, radius: number): number {
         var nearby: WorldMethods.Subject[] = context.facts.nearby || [], from = self.point, to = target.point;
         var dx = to[0] - from[0], dy = to[1] - from[1], dz = to[2] - from[2], lengthSquared = dx * dx + dy * dy + dz * dz;
@@ -23,19 +23,26 @@ namespace CompanionBehavior {
         var count = 0;
         for (var i = 0; i < nearby.length; i++) {
             var other = nearby[i];
-            if (other.friendly === true || other.visible === false) continue;
+            if (other.friendly === true || other.visible === false || !(other.health > 0)) continue;
             var ox = other.point[0] - from[0], oy = other.point[1] - from[1], oz = other.point[2] - from[2];
             var t = (ox * dx + oy * dy + oz * dz) / lengthSquared;
             if (t < 0 || t > 1) continue;
             var px = ox - dx * t, py = oy - dy * t, pz = oz - dz * t;
-            if (Math.sqrt(px * px + py * py + pz * pz) <= radius) count++;
+            var body = (typeof other.width === "number" && other.width > 0 ? other.width : 0.9) / 2;
+            if (Math.sqrt(px * px + py * py + pz * pz) <= radius + body) count++;
         }
         return count;
     }
 
+    /** The real beam half-width for this individual, so the AI does not over-count with a fixed radius. */
+    function terablastWidth(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        var world = CompanionBehavior.world(context);
+        return PokemonSkills.p("terablast", "beamWidth", { world: world, actor: world.source(), skill: PokemonSkills.skills["terablast"], detail: { values: item.data.config } });
+    }
+
     function terablastTopMaximum(context: WorldBehavior.Context): number {
         var nearby: WorldMethods.Subject[] = context.facts.nearby || [], best = 0;
-        for (var i = 0; i < nearby.length; i++) if (nearby[i].friendly !== true && nearby[i].visible !== false) best = Math.max(best, Number(nearby[i].maximum) || 0);
+        for (var i = 0; i < nearby.length; i++) if (nearby[i].friendly !== true && nearby[i].visible !== false && nearby[i].health > 0) best = Math.max(best, Number(nearby[i].maximum) || 0);
         return best;
     }
 
@@ -57,7 +64,7 @@ namespace CompanionBehavior {
             var self = source(context);
             if (terablastForm(context, self) === "ram")
                 return (Number(target.maximum) || 0) >= terablastTopMaximum(context) - 0.001 ? 45 : 5;
-            return terablastLine(context, self, target, 1.4) >= 2 ? 55 : 5;
+            return terablastLine(context, self, target, terablastWidth(context, item)) >= 2 ? 55 : 5;
         }
     });
     PokemonSkills.addPreferences("terablast", { ai: { maxChase: 14, leaveStation: false } },

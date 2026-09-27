@@ -3,9 +3,10 @@
  *
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自己为圆心、和睦半径内至少站着
  *   ai.minFoes 个还没被劝住的非友方（默认 1，看见一个就愿意摊手）。人不够就交回共享接近逻辑，不空放。
- * 对谁出手：当前威胁；它已经在和睦里时跳过，避免重复。
- * 什么时候最想出手：自己受伤、被追着打或正在护送对象时，这份和睦就是脱身／拉开距离的窗口；
- *   若队友已经在围殴同一个目标，马上接上的攻击会把和睦打碎，此时降低优先，避免白费一手。
+ * 对谁出手：当前威胁；它已经在和睦里时跳过，避免重复。攻击已降到 -6 的目标仍可劝——平息敌意本身就是救援，
+ *   此时只是没有额外降攻，所以不排除、只略降优先。
+ * 什么时候最想出手：自己受伤、被追着打或正在护送对象时，这份和睦就是脱身／拉开距离的窗口；正在攻击自己或
+ *   友军的目标救援价值最高，优先劝它；若队友已经在围殴同一个目标，马上接上的攻击会把和睦打碎，此时降低优先。
  * 够不到怎么办：reach 就是和睦半径，由共享任务把身体带进人群；这招靠近本身就是它的准备。
  * 放完之后：圈里的敌人一起掉攻击并停手，伙伴交回共享顺序，再决定追击还是趁空档脱离。
  */
@@ -45,6 +46,19 @@ namespace CompanionBehavior {
         return false;
     }
 
+    /** 这个威胁正在攻击自己或友军：劝停它就是最直接的救援。 */
+    function playniceAttackingAlly(context: WorldBehavior.Context, threat: Entity): boolean {
+        if (!threat.attacking) return false;
+        const self = source(context);
+        if (threat.attacking === self.ref) return true;
+        const nearby = context.facts.nearby as Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === threat.attacking && other.friendly && other.health > 0) return true;
+        }
+        return false;
+    }
+
     function playniceWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (context.facts.mounted) return false;
@@ -52,7 +66,6 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 11)) return false;
         if (status(context, threat, "befriended")) return false;
-        if (stage(context, threat, "atk") <= -6) return false;
         return playniceCaught(context, self.point, playniceRadius(context, item)) >= ai<number>(item, "minFoes", 1);
     }
 
@@ -66,10 +79,14 @@ namespace CompanionBehavior {
             if (!target || !playniceWants(context, item, target)) return 0;
             const self = source(context);
             const caught = playniceCaught(context, self.point, playniceRadius(context, item));
-            // 撤退／护送时最想把对手劝停；队友正围殴则先让位，免得和睦一铺上就被打碎。
+            // 撤退／护送时最想把对手劝停；正在打自己人或友军的敌人救援价值最高；
+            // 攻击已见底(-6)的只是没有额外降攻，仍可救援，仅略降优先；队友正围殴则先让位，免得一铺上就被打碎。
             const retreat = self.hurtAgo < 60 || ratio(self) < 0.55 || context.facts.intent === "protect";
+            const assault = playniceAttackingAlly(context, target);
+            const maxed = stage(context, target, "atk") <= -6;
             const squad = playniceSquadAttacking(context, target);
-            return Math.max(1, Math.min(92, 58 + caught * 7 + (retreat ? 14 : 0) - (squad ? 20 : 0)));
+            return Math.max(1, Math.min(92, 58 + caught * 7 + (retreat ? 14 : 0) + (assault ? 16 : 0)
+                - (maxed ? 12 : 0) - (squad ? 20 : 0)));
         }
     });
 }

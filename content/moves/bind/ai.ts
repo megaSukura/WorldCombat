@@ -52,7 +52,7 @@ namespace PokemonSkills {
 
     addPreferences("bind", {}, [
         field(pathOf("choke"), "勒紧式", "boolean", {
-            help: "开启：绳更短、每勒加紧更快、回拽更狠、留得更久，但基础威力更低、冷却更久，目标被死死拖在脚边；关闭（牵引式）：绳更长、加紧更缓、威力满值，宽容地牵着走，自己也松快些。"
+            help: "开启：绳更短、每勒加紧更快、回拽更狠、留得更久、单次威力 ×1.1，但冷却更久，目标被死死拖在脚边；关闭（牵引式）：绳更长、加紧更缓、单次威力为基础值，宽容地牵着走，自己也松快些。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,

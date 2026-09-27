@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.infestation.summary": "Four clusters of bugs cling and gnaw. The target can move, shedding one cluster after each stretch travelled; fewer remaining clusters means weaker bites.",
   "worldcombat.skill.infestation.description.0": "The hit deals about %1$s special damage and leaves the swarm on the target.",
-  "worldcombat.skill.infestation.description.1": "The swarm lasts up to %1$s. While intact, it requests %2$s of maximum health every %3$s; shedding clusters proportionally reduces later bites. Native damage rules settle the loss, and curing the swarm ends it immediately.",
+  "worldcombat.skill.infestation.description.1": "The swarm lasts up to %1$s. While intact it bites every %3$s: it requests %2$s of maximum health, floored and never below 1 point, multiplied by the remaining clusters out of four, so even a low-health target takes at least 1 per bite. Native damage rules settle the loss, and curing the swarm ends it immediately.",
   "worldcombat.skill.infestation.description.2": "Range %1$s blocks, swarm speed %2$s blocks per tick; it attaches to the first target it touches in flight (collision radius %4$s blocks) and scatters if it hits a block first. Wind-up %3$s.",
   "worldcombat.skill.infestation.use.0": "Stick a lasting gnaw on a stubborn target",
   "worldcombat.skill.infestation.use.1": "Make stationary attackers move to shake off bugs",

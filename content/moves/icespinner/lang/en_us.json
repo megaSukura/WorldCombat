@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.icespinner.summary": "Covers its feet in thin ice and spins out along any direction (or merely across a patch of ground, no enemy needed): the spin sweeps the terrain out of its path, leaves a slippery, short-lived ice trail, and a struck target takes ice contact damage and is shoved away. The slick choice rides farther and its ice lasts longer; the shard choice spins harder.",
+  "worldcombat.skill.icespinner.summary": "Covers its feet in thin ice and spins out along any direction (or merely across a patch of ground, no enemy needed): the spin sweeps the terrain out of the ground it actually crosses, leaves a slippery, short-lived ice trail, and a struck target takes ice contact damage and is shoved away. The slick choice rides farther and its ice lasts longer; the shard choice spins harder.",
   "worldcombat.skill.icespinner.use.0": "Drive into a grounded target and shove it away",
   "worldcombat.skill.icespinner.use.1": "Sweep away the terrain a foe is relying on",
   "worldcombat.skill.icespinner.use.2": "Leave a short-lived ice trail across the ground",
   "worldcombat.skill.icespinner.description.0": "Spin low along your aim for up to %1$s blocks (%2$s blocks/tick); the first target struck takes one contact hit for about %3$s ice damage.",
-  "worldcombat.skill.icespinner.description.1": "Along the dash it wipes out every terrain field within %1$s blocks of its path (friendly or not); the spin's hit radius is %2$s blocks, and a hit shoves the target up to %3$s blocks along the charge.",
+  "worldcombat.skill.icespinner.description.1": "Along the ground it actually crosses it wipes out every terrain field within %1$s blocks (friendly or not, same floor only); ground it has not reached yet is untouched. The spin's hit radius is %2$s blocks, and a hit shoves the target up to %3$s blocks along the charge.",
   "worldcombat.skill.icespinner.description.2": "The ground it crosses is left with about %1$s cells of slippery ice that last %2$s before the original blocks return.",
   "worldcombat.skill.icespinner.slick.on": "Ice-slick mode: reach x1.25, spin speed x1.2, ice lasts x1.5 and knockback x0.7 for a longer, slipperier ride, at the cost of x0.85 main power and +4 ticks of cooldown.",
   "worldcombat.skill.icespinner.slick.off": "Shard mode: main power x1.15, sweep radius x1.3 and knockback x1.4 for a harsher spin, at the cost of x0.8 reach, x0.6 ice duration and +2 ticks wind-up.",
@@ -28,7 +28,7 @@
   "worldcombat.skill.icespinner.preference.ai.maxChase": "Engagement distance",
   "worldcombat.skill.icespinner.preference.ai.maxChase.help": "The companion only spins toward a target within this distance; larger values let it commit from further out.",
   "worldcombat.skill.icespinner.preference.ai.clearTerrain": "Prefer to sweep terrain",
-  "worldcombat.skill.icespinner.preference.ai.clearTerrain.help": "On: targets carrying a terrain identity rank higher, so the spin sweeps it away on the way. Off: ordinary melee ordering.",
+  "worldcombat.skill.icespinner.preference.ai.clearTerrain.help": "On: targets actually standing on the same-floor terrain rank higher, so the spin sweeps it away on the way. Off: ordinary melee ordering.",
   "world_combat.move.icespinner.text.hit": "Iced",
   "world_combat.move.icespinner.text.clear": "Terrain swept -%1$s",
   "world_combat.move.icespinner.text.miss": "Spin missed"

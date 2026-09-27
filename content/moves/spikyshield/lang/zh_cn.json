@@ -24,5 +24,5 @@
   "world_combat.move.spikyshield.text.fall": "藤甲倒下",
   "worldcombat.skill.spikyshield.description.pool": "自己造成的伤害、以及没有敌人的环境伤害都不消耗藤甲。",
   "worldcombat.skill.spikyshield.description.thorn": "每一次被藤甲挡下的接触攻击都会反刺攻击者，造成约 %1$s 点物理伤害（对手防御、相性与暴击在命中时另算）；同一个攻击者在一次藤甲里只会被扎一次。",
-  "worldcombat.skill.spikyshield.description.ward": "藤甲存续期间，敌人指向你的变化招式在出手前被抖开、无法生效。"
+  "worldcombat.skill.spikyshield.description.ward": "藤甲存续期间，敌人指向你的变化招式在出手前被抖开；任何经共享状态路由落到你身上的有害状态也被藤甲挡下，都无法生效。"
 }

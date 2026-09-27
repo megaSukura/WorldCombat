@@ -1,7 +1,7 @@
 /**
  * 猛扑 / lunge 的出手方式。
  *
- * 核心念头：把整个身体抛出去的一记跳扑。后腿蓄力、贴着地面向前扑进，把全部体重压在一撞上；撞实之后
+ * 核心念头：把整个身体贴着地面朝前推出去的一记重撞。后腿蓄力、水平向前推进，把全部体重压在一撞上；撞实之后
  *   对手被撞得后仰、挥不动手（攻击下降），自己则停在落点。它是本组单体最重的一记，也唯一承诺方向。
  *
  * 两幕（提交前只播预告）：
@@ -36,7 +36,7 @@ namespace PokemonSkills {
         id: "lunge",
         cooldownParameter: "recharge",
         name: "Lunge",
-        description: "后腿蓄力、把整个身体朝瞄准方向抛出去，用全部体重压在一撞上：撞实后造成接触伤害并把目标顶开，同时让它的攻击下降一级。全力式更重、顶得更开、扑得更远，但更慢。",
+        description: "后腿蓄力、把整个身体贴着地面朝瞄准方向推进，用全部体重压在一撞上：撞实后造成接触伤害并把目标顶开，同时让它的攻击下降一级。全力式更重、顶得更开、推进得更远，代价是起手与收招更久。",
         uses: ["冲上去压低对手的物理输出", "把单个硬目标撞开、撞得它挥不动手", "抢在对手贴身之前先扑进去"],
         kind: "aim",
         range: 2.8,
@@ -105,12 +105,14 @@ namespace PokemonSkills {
                     { moment: "crash", target: victim !== null ? String(victim.ref()) : "", chitin: chitin, stages: stages, scale: scale, intensity: intensity }, 28);
                 if (landed && victim !== null && scope.valid(victim)) {
                     scope.hitDisplace(victim, direction.scale(push));
-                    if (scope.valid(victim)) NativeEffects.boost(scope, victim, "atk", -stages);
-                    if (scope.valid(victim)) {
+                    // 降攻按真实回执：被原生拒绝、免疫或已到最低级时不播压攻图，也不报级数。
+                    const dropped = scope.valid(victim) ? NativeEffects.boost(scope, victim, "atk", -stages) : 0;
+                    const lost = dropped < 0 ? -dropped : 0;
+                    if (lost > 0) {
                         const body = scope.observe(victim);
                         WorldFeedback.emit(scope, lungeScene, 1, body !== null ? body.position() : at,
-                            { moment: "pin", target: String(victim.ref()), stages: stages, chitin: chitin, scale: scale, intensity: intensity }, 24);
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), lungeDropText, [stages], 24);
+                            { moment: "pin", target: String(victim.ref()), stages: lost, chitin: chitin, scale: scale, intensity: intensity }, 24);
+                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), lungeDropText, [lost], 24);
                     }
                     scope.sound("cobblemon:impact.bug", at, 16, "{}");
                 }

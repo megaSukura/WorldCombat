@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.dualwingbeat.summary": "张开双翼俯冲而下：一只翅膀先拍下去、把目标拍开，另一只翅膀在上掀时顺着空当反拍，第一拍命中则第二拍更重。俯冲式贴脸更重、把身位交出去；悬停式隔空拍出风压、射程更远。",
+  "worldcombat.skill.dualwingbeat.summary": "张开双翼俯冲而下：一只翅膀先朝身前下方拍下去、把目标拍开，另一只翅膀在上掀时从新身位朝身后上方反拍；两拍方向相反、各自判定，第二拍不因第一拍命中而变重。俯冲式贴脸接触、更重，把身位交出去；悬停式隔空拍出风压（非接触）、射程更远。",
   "worldcombat.skill.dualwingbeat.use.0": "一次俯冲、两只翅膀各拍一下",
-  "worldcombat.skill.dualwingbeat.use.1": "先拍开再上掀，把同一个目标连吃两拍",
+  "worldcombat.skill.dualwingbeat.use.1": "先朝前下拍开，再从新身位向后上掀回，前后夹击",
   "worldcombat.skill.dualwingbeat.use.2": "把身前一小片扇区里的对手扫开",
-  "worldcombat.skill.dualwingbeat.description.0": "每拍约 %1$s 点接触伤害（走物攻）；出手距离 %2$s 格，翼扫张角 %3$s 度。",
+  "worldcombat.skill.dualwingbeat.description.0": "每拍约 %1$s 点伤害（走物攻；俯冲式是接触，悬停式是隔空风压、不接触）；出手距离 %2$s 格，翼扫张角 %3$s 度。",
   "worldcombat.skill.dualwingbeat.description.1": "两拍间隔 %1$s；每拍把命中的目标沿该拍翼势推开最多 %2$s 格。俯冲式下，第一拍会朝目标先冲进最多 %3$s 格。",
   "worldcombat.skill.dualwingbeat.description.2": "俯冲式下，第二拍上掀时施法者退回 %1$s 格；每拍最多扫到 %2$s 个目标。",
   "worldcombat.skill.dualwingbeat.dive.on": "当前俯冲形态：先冲进贴身，两拍都是接触、每拍更重、间隔更短，但射程更短、把身位交出去。",

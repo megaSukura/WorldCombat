@@ -1,15 +1,30 @@
-/** The actual extending spear path is followed by a persistent exhaustion cue. */
+/** The locked spear line, the actual extending shaft and a persistent exhaustion cue. */
 const MeteorassaultDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        thrust: { emitters: [{ name: "extended_spear", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-            rate: 36, shape: { kind: "polyline" }, speed: [0, .005], lifetime: [4, 7], size: [.18, .1], color: 0xD6C39B, alpha: [.75, .2], light: "world", maxParticles: 32 }] },
+        thrust: { emitters: [
+            { name: "extended_spear", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                rate: 64, shape: { kind: "polyline" }, speed: [0, .005], lifetime: [4, 7],
+                size: [{ data: "width", fallback: .3 }, { data: "width", fallback: .3 }], color: 0xD6C39B, alpha: [.8, .15], light: "world", maxParticles: 80 },
+            { name: "spear_edge", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                rate: 30, shape: { kind: "polyline" }, speed: [0, .004], lifetime: [5, 8],
+                size: [.1, .02], color: 0xEAF6B0, alpha: [.85, .1], light: "full", maxParticles: 32 },
+            { name: "spear_tip", bind: "point", fit: "world", particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                burst: { count: 3, interval: 2 }, shape: { kind: "sphere", radius: .14 }, direction: "shape", speed: [.0, .03],
+                lifetime: [4, 8], size: [.34, .05], color: 0xFFFFFF, alpha: [.9, 0], light: "full", maxParticles: 12 }
+        ] },
         contact: { duration: 18, emitters: [{ name: "spear_contact", bind: "target", fit: "body", particle: "world_combat_core:cobblemon/generic/hit_yellow",
             burst: { count: 12 }, shape: { kind: "sphere_surface", radius: .3 }, speed: [.04, .14], lifetime: [6, 12], size: [.3, .05], alpha: [.9, 0] }] },
         windup: {
             duration: 10,
             exit: { stop: 6, drain: 12 },
             emitters: [
+                {
+                    // 准备期就画出锁定的枪线：长度 reach、粗细绑定本招真实半宽。
+                    name: "spear_line", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    rate: 40, shape: { kind: "polyline" }, speed: [0, .003], lifetime: [4, 8],
+                    size: [{ data: "width", fallback: .3 }, { data: "width", fallback: .3 }], color: 0xA8D060, alpha: [.45, .08], light: "world", maxParticles: 40
+                },
                 {
                     name: "raise", bind: "source", offset: [0, 1.0, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
@@ -25,39 +40,6 @@ const MeteorassaultDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [5, 11], size: [0.05, 0.02],
                     color: 0xA79A6E, alpha: [0.45, 0], light: "world", maxParticles: 30
-                }
-            ]
-        },
-        swing: {
-            duration: 24,
-            exit: { stop: 14, drain: 14 },
-            emitters: [
-                {
-                    name: "sweep", bind: "source", offset: [0, 0.85, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/softswipe",
-                    orient: "direction",
-                    rate: 120, shape: { kind: "cone", radius: 3, angleDegrees: { data: "half", fallback: 55 } },
-                    direction: "shape", speed: [0.08, 0.28],
-                    lifetime: [4, 9], size: [0.4, 0.06], sizeMode: "index",
-                    color: 0xA8D060, alpha: [0.85, 0], light: "full", maxParticles: 320
-                },
-                {
-                    name: "blade_trail", bind: "source", offset: [0, 0.85, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/slash",
-                    orient: "direction",
-                    burst: { count: { data: "hits", fallback: 4 }, interval: 1, repeats: 3 },
-                    shape: { kind: "cone", radius: 3, angleDegrees: { data: "half", fallback: 55 } },
-                    direction: "shape", speed: [0.05, 0.16],
-                    lifetime: [6, 11], size: [0.34, 0.05],
-                    color: 0xF2FFC0, alpha: [0.9, 0], light: "full", maxParticles: 160
-                },
-                {
-                    name: "ground_grit", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 40, shape: { kind: "cone", radius: 3, angleDegrees: { data: "half", fallback: 55 } },
-                    direction: "outward", speed: [0.06, 0.22],
-                    lifetime: [8, 15], size: [0.09, 0.02], sizeMode: "index",
-                    color: 0x8F8779, alpha: [0.5, 0], gravity: 0.04, drag: 0.92, light: "world", maxParticles: 200
                 }
             ]
         },

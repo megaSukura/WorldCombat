@@ -5,7 +5,7 @@
  *   计数只算**真正落在实际冲击圈内**的敌人——横向不超过本个体 resolve 出的冲击半径，纵向在实际上下作用高度内，
  *   且到中心视线可达（墙后的目标不算被波及）。`ai.minFoes` 调大时只认圈内人数；默认 1 时允许先接近到射程内，
  *   真正施放前共享任务会复核圈内人数，所以圈外或隔墙的目标不会让它原地空震。
- * `available` 用 `ai.maxChase`（默认 7）决定是否先接近；它不挑目标站不站在地上（古力半球连空中的也罩）。
+ * `available` 用 `ai.maxChase`（默认 7）决定是否先接近；它不挑目标站不站在地上（古力圆柱连空中的也罩）。
  * 够不到交给共享接近逻辑；走到冲击半径以内、圈内人数达标就原地轰开。
  */
 namespace PokemonSkills {
@@ -14,7 +14,12 @@ namespace PokemonSkills {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
         const world = CompanionBehavior.world(context);
         const limit = typeof item.data.range === "number" ? item.data.range : 3.4;
-        const band = Math.max(1.1, p("ancientpower", "band", world));
+        // 作用高度按本个体真实公式求值（含体型与深源式），求值失败退回设计基准。
+        let band = 1.6;
+        try {
+            band = Math.max(1.1, p("ancientpower", "band", { world: world, actor: world.source(),
+                skill: skills["ancientpower"], detail: { values: item.data.config } }));
+        } catch (error) { }
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];

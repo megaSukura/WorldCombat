@@ -7,8 +7,8 @@
  * 色相家族：盐白（powder、white、smallsparkle）为主，麻痹黄（paralysis_spark）只在「真的拍了拍醒」时进入。
  * 拍子：起 pouch 0–24t ／ 拍 slap 0–20t ／ 击 wake（敌方麻痹）0–28t ／ 击 plain（敌方未麻痹）0–26t
  *   ／ 友 ally 0–26t（cured／numb 由 `data` 决定有无电麻纹）／ 空 miss。
- * 范围：wake／plain／ally 的盐爆与地环绑命中点，尺寸由 `data.scale`（判定半径派生）决定；slap 的盐线沿 `data.direction` 前射。
- * 运动：pouch 的盐向内聚；slap 前喷；命中由内向外炸开；wake 与 ally 的黄色火花向外呈放射状飞出（spark 为 0 时不发）。
+ * 范围：wake／plain／ally 的盐爆与地环绑命中点，尺寸由 `data.scale`（判定半径派生）决定；slap 的盐线沿 `data.path` 从施法者连到真实接触点。
+ * 运动：pouch 的盐向内聚；slap 沿施法者到接触点的连线喷出；命中由内向外炸开；wake 与 ally 的黄色火花向外呈放射状飞出（spark 为 0 时不发）。
  * 数：`data.puff`（速度与等级派生的盐屑数）驱动各段发射量；`data.spark`（麻痹离体时的火花数，未治愈为 0）单独驱动醒神层；
  *   `data.intensity`（最终威力／是否治愈派生）抬高命中爆发的亮度与尺寸。
  */
@@ -42,9 +42,9 @@ const SmellingsaltsDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "trail", bind: "source", offset: [0, 0.5, 0], height: 0.25,
+                    name: "push", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/powder",
-                    rate: { data: "puff", fallback: 12 }, shape: { kind: "line", length: 0.42 }, orient: "direction",
+                    rate: { data: "puff", fallback: 12 }, shape: { kind: "polyline" }, orient: "direction",
                     direction: "shape", speed: [0.08, 0.24], spread: 14,
                     lifetime: [6, 12], size: [0.12, 0.02], sizeMode: "index",
                     color: 0xF2E6B0, alpha: [0.8, 0], light: "full", maxParticles: 80
@@ -150,11 +150,11 @@ const SmellingsaltsDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "scatter", bind: "source", offset: [0, 0.4, 0], height: 0.25,
+                    name: "scatter", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "puff", fallback: 6 } },
                     shape: { kind: "sphere", radius: 0.35 },
-                    direction: "outward", speed: [0.05, 0.18],
+                    direction: "shape", orient: "direction", speed: [0.05, 0.18],
                     gravity: 0.03,
                     lifetime: [6, 13], size: [0.06, 0.01],
                     color: 0xE8DDB0, alpha: [0.5, 0], light: "world"

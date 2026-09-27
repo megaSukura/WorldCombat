@@ -24,7 +24,7 @@
   "worldcombat.skill.telekinesis.preference.ai.requireGrounded": "只抬站在地上的目标",
   "worldcombat.skill.telekinesis.preference.ai.requireGrounded.help": "开启：只对还站在地上的目标出手，飞在空中的目标跳过；关闭：本就离地的目标也照抬。",
   "worldcombat.skill.telekinesis.preference.ai.avoidProtecting": "避开地面弱势目标",
-  "worldcombat.skill.telekinesis.preference.ai.avoidProtecting.help": "开启：对火／电／毒／岩／钢等怕地面招的目标不出手，免得替它们免掉地面伤害；关闭：控住优先，照抬。",
+  "worldcombat.skill.telekinesis.preference.ai.avoidProtecting.help": "开启：按整条属性克制判断，对真正怕地面招的目标（地面克制乘积大于 1）不出手，免得替它们免掉地面伤害；关闭：控住优先，照抬。",
   "worldcombat.skill.telekinesis.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.telekinesis.preference.ai.leaveStation.help": "开启后，驻守中的伙伴也会离位去悬空目标；关闭则只在原地够得到时出手。",
   "effect.world_combat.telekinesis_field": "意念移物",
@@ -34,5 +34,5 @@
   "world_combat.move.telekinesis.text.negate": "地面招式够不到",
   "worldcombat.skill.telekinesis.description.3": "同一名对手已被悬空时不能再抬；地鼠、三地鼠、沙丘娃、噬沙堡爷这类本就钻地的物种也抬不起来，起手还要求中间没有遮挡、看得见目标。",
   "worldcombat.skill.telekinesis.description.4": "时间走完念力自行松开，被压住的移动随之恢复；中途被击落类效果（击落、重力）打断则提前结束。",
-  "worldcombat.skill.telekinesis.description.1": "扎根、击落与原生拒绝会阻止托举；受到实际伤害、解除、施术者失效或偏离托点便松开。顶棚决定实际高度。"
+  "worldcombat.skill.telekinesis.description.1": "扎根、击落与原生拒绝会阻止托举；受到实际伤害、解除、施术者失效、施术者走远或被墙挡住念力连线、或目标偏离托点，都会松开。顶棚决定实际高度。"
 }

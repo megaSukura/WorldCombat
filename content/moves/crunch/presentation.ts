@@ -6,10 +6,10 @@
  * 色相家族：深靛紫（0x4E3C6E）与骨白牙影（0xF0E6D2），钢灰碎片（0xA8B0C0）承担"护甲被碾碎"这一层；
  * 饱和紫只出现在暗色核心与咬实峰值的小面积。
  * 拍子：起 windup（口边聚光）→ 扑 pounce → 咬 bite（峰值）／ miss → 磨 grind（持续碎屑，贴得越紧牙弧收得越小）
- *      → 塌 crack（成功咬塌才播）／ 松 release（目标脱开或隔墙时断开）。
+ *      → 塌 crack（成功咬塌才播）／ 松 release（目标脱开或隔墙时断开）→ 缺口 gap（与破防身份同存，被清掉即停）。
  * 范围：bite／grind／crack／release 都绑命中目标或命中点，画出的就是这一口咬中的位置与大小（data.scale 来自咬合判定）。
- * 运动：pounce 的尘迹沿施法者实际走过的直线铺开；grind 的碎屑贴接触点向内翻卷，半径由 `data.press`（真实身体间隙
- *      派生的贴合度）决定；crack 的碎片从咬点向外崩开；release 是一小团松口的气流。
+ * 运动：bite／grind 的上下夹合牙弧沿服务端算出的真实接触点闭合轮廓铺开，研磨时按实际身体间隙收紧（data.path）；
+ *      pounce 的尘迹沿施法者实际走过的直线铺开；crack 的碎片从咬点向外崩开；release 是一小团松口的气流。
  * 数：`data.morsels`（咬合威力派生）决定咬中迸溅与碎屑量，`data.grind`（研磨刻数）决定 grind 幕时长，
  * `data.shards`（咬塌级数派生）决定压塌碎片量，`data.intensity`（威力 / 80）抬高亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -67,13 +67,14 @@ const CrunchDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "fang_frames", bind: "target", height: 0.5,
+                    // 沿服务端算出的真实接触点上下夹合牙弧铺开，不再朝随机球面发散。
+                    name: "jaw_arc", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/fang",
-                    burst: { count: 5, at: 1 },
-                    shape: { kind: "sphere", radius: 0.26 },
-                    direction: "outward", speed: [0.04, 0.16],
-                    lifetime: [6, 11], size: [0.32, 0.06], sizeMode: "index",
-                    color: 0xF0E6D2, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 24
+                    burst: { count: 40, at: 1 },
+                    shape: { kind: "polyline", closed: true },
+                    direction: "shape", speed: [0.03, 0.12],
+                    lifetime: [6, 11], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xF0E6D2, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 48
                 },
                 {
                     name: "dark_burst", bind: "target", height: 0.44,
@@ -100,6 +101,14 @@ const CrunchDefinition: ParticleDefinition = {
             duration: { data: "grind", fallback: 16 },
             exit: { stop: 10, drain: 14 },
             emitters: [
+                {
+                    name: "grind_jaw", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/fang",
+                    rate: 20, shape: { kind: "polyline", closed: true },
+                    direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [5, 9], size: [0.24, 0.04], sizeMode: "index",
+                    color: 0xE8DCC4, alpha: [0.8, 0], light: "full", maxParticles: 36
+                },
                 {
                     name: "grind_press", bind: "target", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
@@ -157,6 +166,20 @@ const CrunchDefinition: ParticleDefinition = {
                     gravity: 0.04, drag: 0.92,
                     lifetime: [9, 16], size: [0.07, 0.02],
                     color: 0xA8B0C0, alpha: [0.6, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        gap: {
+            // 破防身份的存续画面：由服务端托管的缺口载体驱动，随真实状态一起停。
+            duration: 0,
+            emitters: [
+                {
+                    name: "gap_embers", bind: "target", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 4, shape: { kind: "ring", radius: 0.3, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.01, 0.05], gravity: 0.03, drag: 0.94,
+                    lifetime: [10, 18], size: [0.07, 0.01],
+                    color: 0x4E3C6E, alpha: [0.5, 0], light: "full", maxParticles: 18
                 }
             ]
         },

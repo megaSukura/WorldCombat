@@ -9,9 +9,10 @@
  * 免推的大型目标照样优先：命中结算不依赖能否推开，破防与湿身照挂。
  */
 namespace PokemonSkills {
-    /** 扇里还站着几个敌人：以施法者为顶点、候选方向为轴，数半张角 80°、射程内的人。 */
+    /** 扇里还站着几个敌人：以施法者为顶点、候选方向为轴，数个体实际横扫半角 `sweepAngle/2`、射程内的人。 */
     function liquidationCrowd(context: any, capability: any, subject: any): number {
-        const self = CompanionBehavior.source(context), limit = capability.data.range, half = 80 * Math.PI / 180;
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
+        const limit = capability.data.range, half = p("liquidation", "sweepAngle", world) * Math.PI / 360;
         const dx = subject.point[0] - self.point[0], dz = subject.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz) || 1, cosHalf = Math.cos(half);
         let count = 1;
@@ -39,6 +40,8 @@ namespace PokemonSkills {
         },
         selectTarget: function (context, capability, proposed) {
             if (proposed && proposed.ref === context.facts.focus) return proposed;
+            // crowd 关闭时不按群体覆盖目标，只按共享的威胁与距离排序。
+            if (!CompanionBehavior.ai<boolean>(capability, "crowd", true)) return proposed || null;
             const self = CompanionBehavior.source(context), limit = CompanionBehavior.ai<number>(capability, "maxChase", 6);
             const candidates = (context.facts.nearby as any[]).filter(function (other: any) {
                 return !other.friendly && other.health > 0 && other.visible && CompanionBehavior.distance(self.point, other.point) <= limit;

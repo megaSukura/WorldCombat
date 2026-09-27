@@ -20,7 +20,7 @@ Smoke.scenario("trailblaze", function (stage) {
         stage.after(80, function () {
             stage.expect(stage.casts("trailblaze", caster) >= 1, "caster committed trailblaze");
             stage.expect(stage.damageTo(foe) > 0, "trailblaze dealt damage to the foe");
-            stage.note("brush cover at the cast moment, the bound arc and crit vary with positioning", {
+            stage.note("brush cover at the cast moment, the per-tick bound segments and crit vary with positioning", {
                 casts: stage.casts("trailblaze", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 movedBy: Math.round(stage.travelled(caster) * 10) / 10,

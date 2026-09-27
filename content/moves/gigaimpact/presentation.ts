@@ -127,6 +127,21 @@ const GigaimpactDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 撞到友体或被拒伤：只在这一撞真的停下的接触点收一小蓬接触尘，不冒充命中爆点、不顶开。
+        blocked: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "contact", bind: "point", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [8, 14], size: [0.18, 0.04],
+                    color: 0x8F8779, alpha: [0.4, 0], light: "world", maxParticles: 26
+                }
+            ]
+        },
         miss: {
             duration: 22,
             exit: { stop: 8, drain: 16 },

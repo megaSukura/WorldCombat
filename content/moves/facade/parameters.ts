@@ -2,8 +2,10 @@
  * 硬撑 / facade 的参数与伤害段。
  *
  * 原生事实：Normal、物理、威力 70、命中 100、PP 20、接触；自己处于异常（除睡眠外）时威力翻倍（Cobblemon 1.8）。
- * 翻译：把“身上的异常”当成燃料——撞出去这一下由**自己的中毒／剧毒、灼伤、麻痹、冰冻**翻倍，
- * 越剩不下命越狠；推进与冲撞距离交给**速度**，顶开距离交给**体重**，判定宽度交给**碰撞箱高度**。
+ * 翻译：把“身上的异常”当成燃料——撞出去这一下由**自己的中毒／剧毒、灼伤、麻痹**翻倍；
+ * 冰冻是共享门禁里无法行动的状态，不作为可用的翻倍承诺。越剩不下命越狠；
+ * 推进与冲撞距离交给**速度**，顶开距离交给**体重**，判定宽度交给**碰撞箱高度**。
+ * 本段显式豁免灼伤的物理减攻（ignoreBurnPenalty），异常本身不因这一下消失。
  * 配置 brutal（变本加厉）：威力与顶开更高、冲得更远，代价是命中时按最大生命反噬自己。
  *
  * 公式即最终值：取整与限幅都写进公式，执行、AI 与悬浮说明读同一棵树。
@@ -15,7 +17,7 @@ namespace PokemonSkills {
         power: formula(
             F.base(70)
                 .times(F.when(
-                    F.status("burn").plus(F.status("poison")).plus(F.status("paralysis")).plus(F.status("frozen")).gt(0),
+                    F.status("burn").plus(F.status("poison")).plus(F.status("paralysis")).gt(0),
                     F.const(2), F.const(1)).as({ key: "worldcombat.skill.facade.value.afflicted", fallback: "带伤硬顶" }))
                 .times(F.when(F.pref("brutal"), F.const(1.15), F.const(1)))
                 .plus(F.const(1).minus(F.actor("healthRatio")).max(0).times(20))
@@ -62,7 +64,7 @@ namespace PokemonSkills {
         minimumMove: hidden(0.05)
     });
 
-    defineDamage("facade", "power", {}, { contact: true });
+    defineDamage("facade", "power", {}, { contact: true, ignoreBurnPenalty: true });
 
     describe("facade", [
         { key: "description.0", values: ["power"] },

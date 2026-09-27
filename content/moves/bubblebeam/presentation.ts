@@ -2,11 +2,12 @@
  * 泡沫光线 / bubblebeam 的客户端表现。
  *
  * 一句话：口边堆起一团泡，随后按节拍一颗接一颗吐出可辨认的慢泡球，各自沿线飘、首次碰到谁/墙就在哪破开；
- *   被糊到的人身上不停往上冒泡、直到泡沫自己爆掉。
+ *   被糊到的人身上不停往上冒泡、直到泡沫自己爆掉，真正掉了速度的人脚下另有一记下压的水环。
  * 色相家族：泡沫青（0x8FE0F0）与近白（0xEAFBFF）；大面积低饱和的泡面 + 小面积高亮的泡核心。
- * 拍子：起 charge（堆泡）→ 涌 stream（每颗泡各自飘）→ 击 burst（破在实体上）／ 空 splat（破在墙或尽头）→ 收 cling／pop。
+ * 拍子：起 charge（堆泡）→ 涌 stream（每颗泡各自飘）→ 击 burst（破在实体上，出现泡膜）／ 空 splat（破在墙或真实弹末点）→
+ *   缓 slow（只有真正掉速才播的下压记号）→ 收 cling／pop（冒泡挂在泡沫载体上，清掉即止）。
  * 运动：每颗泡球沿当刻准线慢速飘行（服务端 velocity），小泡带轻微上浮（浮力）向外散；没被碰到的继续前行。
- * 数：`data.bubbles`（特攻＋等级换算的泡数）绑定各层发射量；`data.stages` / `data.slowed` 让掉速那一下更亮；
+ * 数：`data.bubbles`（特攻＋等级换算的泡数）绑定各层发射量；`data.slowed` / `data.stages` 决定是否出现下降记号；
  *   `data.intensity`（总威力 / 65）放大整幕，`data.scale`（泡半径 / 0.28）让大个子的泡球更大。
  */
 const BubblebeamDefinition: ParticleDefinition = {
@@ -117,7 +118,33 @@ const BubblebeamDefinition: ParticleDefinition = {
                 }
             ]
         },
+        slow: {
+            // 真正掉了速度才播：下压的水花与脚边一记横放水环，和纯泡膜的 burst/cling 形态区分开。
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "drag", bind: "target", offset: [0, 0.9, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_water",
+                    burst: { count: { data: "stages", fallback: 1 }, interval: 5, repeats: 2 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "down", speed: [0.05, 0.18], gravity: 0.04, drag: 0.9,
+                    lifetime: [7, 12], size: [0.28, 0.05], sizeMode: "index",
+                    color: 0x8FE0F0, alpha: [0.9, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "foot_ripple", bind: "target", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.4 } },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [10, 16], size: [0.5, 0.16], sizeMode: "index",
+                    color: 0x8FE0F0, alpha: [0.7, 0], light: "world", maxParticles: 6
+                }
+            ]
+        },
         cling: {
+            // 由泡沫载体托管的持续冒泡：载体会被清除/替换/到期，effect 随之结束，画面立即收。
             duration: 0,
             emitters: [
                 {

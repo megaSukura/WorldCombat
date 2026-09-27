@@ -1,9 +1,10 @@
 /**
  * 铁蹄光线 / steelbeam 的伙伴 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、活着、在 `ai.maxChase` 之内，且**自己足够健康**——这一招固定扣掉最大生命的
- * 一大截，生命低于 `ai.minHealth` 时不出手（除非对手已经残到值得一收）。默认门槛高，是为了不让伙伴把自己
- * 剥成一具空壳。
+ * 什么局面下出手：对手可见、敌对、活着、在 `ai.maxChase` 之内，且**付得起这一笔自损**——按真实数值算出
+ * 出手后还剩多少血（当前生命 − 最大生命 × 实际自损比例，比例用本个体当前配置的 cost，淬火式也是真实值），
+ * 留不到保命下限就不放。生命低于 `ai.minHealth` 时通常不出手；只有对手快倒、且付完这笔后仍留有余地时，
+ * 才破例收尾——**不会仅因为目标比例低就放宽自杀**。
  * 对谁出手：在所有够得到的敌人里挑最残的那个（这一记往往就是终结），残血相同时挑最近的。
  * 怎么够到：共享接近把身位收进钢梁长度以内，再沿目标方向射出。出手前用只读世界入口
  *   `CompanionBehavior.world(context).clear` 探自身到目标的通视线；被墙挡住时钢梁会在墙面截断，不再发起。
@@ -12,6 +13,19 @@
 namespace PokemonSkills {
     function steelbeamValid(target: CompanionBehavior.Entity): boolean {
         return !target.friendly && target.health > 0 && target.visible;
+    }
+
+    /** 本个体当前配置下的真实自损比例；读不到时退回设计基准 0.5。 */
+    function steelbeamCostFraction(context: WorldBehavior.Context): number {
+        const world = CompanionBehavior.world(context);
+        const value = Number(p(steelbeamId, "cost", world));
+        return isFinite(value) ? Math.max(0, Math.min(1, value)) : 0.5;
+    }
+
+    /** 出手后剩余生命。生存判断只看真实血值减去真实最大生命成本。 */
+    function steelbeamAfterCost(self: CompanionBehavior.Entity, cost: number): number {
+        const maximum = Math.max(1, self.maximum);
+        return self.health - maximum * cost;
     }
 
     /** 自身到目标是否有通视射线；被地形挡住时钢梁会先撞墙，够不到目标。 */
@@ -46,8 +60,13 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 11)) return false;
             if (!steelbeamReachable(context, target)) return false;
+            const maximum = Math.max(1, self.maximum);
+            const after = steelbeamAfterCost(self, steelbeamCostFraction(context));
+            if (after < Math.max(1, maximum * 0.15)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.55);
-            return CompanionBehavior.ratio(self) >= minHealth || CompanionBehavior.ratio(target) <= 0.3;
+            const healthy = CompanionBehavior.ratio(self) >= minHealth;
+            const finishing = CompanionBehavior.ratio(target) <= 0.3 && after >= maximum * 0.25;
+            return healthy || finishing;
         },
         accepts: function (context, capability, target) { return steelbeamValid(target); },
         priority: function (context, capability, target) {
@@ -55,10 +74,15 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             if (!steelbeamReachable(context, target)) return 0;
+            const maximum = Math.max(1, self.maximum);
+            const cost = steelbeamCostFraction(context);
+            const after = steelbeamAfterCost(self, cost);
             let score = 22;
-            if (CompanionBehavior.ratio(target) <= 0.3) score += 26;
-            // 固定自损纳入评分：自身越虚，这一笔越舍不得付。
-            score -= Math.round((1 - CompanionBehavior.ratio(self)) * 30);
+            // 收尾收益只在付完这笔后仍留有余地时成立，残血目标不再单独放宽自杀。
+            if (after >= maximum * 0.25 && CompanionBehavior.ratio(target) <= 0.3) score += 26;
+            score -= Math.round(cost * 20);
+            // 固定自损纳入评分：出手后越接近危险线，这一笔越舍不得付。
+            score -= Math.round(Math.max(0, 1 - after / maximum) * 30);
             if (CompanionBehavior.ratio(self) >= 0.8) score += 8;
             return Math.max(1, score);
         }
@@ -74,7 +98,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.minHealth"), "自损门槛", "number", {
             min: 0.2, max: 0.95, step: 0.05,
-            help: "自身生命低于这个比例时不再主动出手（除非对手已残）。这一招固定扣掉一大截最大生命，门槛越低越敢用，也越容易把自己剥到危险线。"
+            help: "自身生命低于这个比例时不再主动出手（除非对手已残且付完这笔仍留有余地）。这一招固定扣掉一大截最大生命，门槛越低越敢用，也越容易把自己剥到危险线。"
         })
     ]);
 }

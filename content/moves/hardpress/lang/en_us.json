@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.hardpress.summary": "Raise an arm or claw and press the foe into the ground with a short palm face in front: attack and weight set the force, and the more HP the target still has, the heavier the press - a wounded target takes far less. It is the fastest and cheapest of the three pressing moves, meant to be laid down again and again; the two-arm form widens the palm face to cover several foes standing side by side but hits each one lighter, with the same tempo.",
+  "worldcombat.skill.hardpress.summary": "Raise an arm or claw and press the foe downward with a short palm face in front: attack and weight set the force, and the more HP the target still has, the heavier the press - a wounded target takes far less. It is the fastest and cheapest of the three pressing moves, meant to be laid down again and again; the two-arm form widens the palm face to cover several foes standing side by side but hits each one lighter, with the same tempo.",
   "worldcombat.skill.hardpress.description.0": "Each crushed target takes about %1$s Steel contact damage; the more HP that target still has, the heavier the press on it.",
-  "worldcombat.skill.hardpress.description.1": "A short palm face is laid out in front: %1$s blocks long along the aim and %2$s blocks half-wide to each side; every enemy inside it is hit once. A hit sinks it %3$s blocks into the ground and shoves it %4$s blocks away from the palm centre.",
+  "worldcombat.skill.hardpress.description.1": "A short palm face is laid out in front: %1$s blocks long along the aim and %2$s blocks half-wide to each side; every enemy inside it is hit once. A hit gives it %3$s blocks/tick of downward velocity and shoves it %4$s blocks away from the palm centre.",
   "worldcombat.skill.hardpress.description.2": "You can reach up to %1$s blocks.",
   "worldcombat.skill.hardpress.brace.on": "Two-arm form: both arms/pincers press down at once - the palm half-width is x1.7, covering several foes standing side by side; in exchange the single-target power is x0.86, with the same wind-up and cooldown.",
   "worldcombat.skill.hardpress.brace.off": "One-arm form (default): a focused press, heavier on a single target and narrower, holding only what stands in front of it.",
@@ -13,7 +13,7 @@
   "worldcombat.skill.hardpress.use.2": "Keep pressing with the fastest cycle of the three",
   "worldcombat.skill.hardpress.value.press": "Press power",
   "worldcombat.skill.hardpress.value.pressRadius": "Press radius",
-  "worldcombat.skill.hardpress.value.sink": "Sink depth",
+  "worldcombat.skill.hardpress.value.sink": "Downward velocity",
   "worldcombat.skill.hardpress.value.shove": "Shove distance",
   "worldcombat.skill.hardpress.value.reach": "Reach",
   "worldcombat.skill.hardpress.value.motes": "Chip count",

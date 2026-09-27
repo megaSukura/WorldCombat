@@ -14,12 +14,15 @@ Smoke.scenario("aromaticmist", function (stage) {
     stage.hostile(caster, foeCaster);
 
     stage.until(900, function () {
-        return stage.casts("aromaticmist", caster) > 0 && stage.hadMobEffect(ally, "world_combat:status/aromaticmist");
+        return stage.casts("aromaticmist", caster) > 0 && stage.hadMobEffect(ally, "world_combat:status/aromaticmist")
+            && (stage.stages(ally).spd || 0) >= 1;
     }, function () {
         stage.expect(stage.casts("aromaticmist", caster) > 0, "aromatic mist was cast");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/aromaticmist"), "the ally under the cloud carried the shared aromaticmist identity");
-        stage.note("芳香薄雾以选定点为落点留一片香云，云每 5 刻扫一次给雾里的友方挂身份并写特防；离雾后香随留香窗口自行走完。具体罩住几人、留香多久随特防/等级/亲密度与走位变化，留给完整装配试玩核对。", {
-            casts: stage.casts("aromaticmist", caster), casterHp: caster.health(), allyHp: ally.health(), tick: stage.tick()
+        stage.expect((stage.stages(ally).spd || 0) >= 1, "the boostWindow really raised the ally's Sp. Def");
+        stage.note("芳香薄雾以选定点为落点留一片香云，云扫到雾里的友方时挂身份并由绑定载体的 boostWindow 写特防；离雾后香随留香窗口自行走完、特防只收回本招这一份。具体罩住几人、留香多久随特防/等级/亲密度与走位变化，留给完整装配试玩核对。", {
+            casts: stage.casts("aromaticmist", caster), casterHp: caster.health(), allyHp: ally.health(),
+            allyStages: stage.stages(ally), tick: stage.tick()
         });
         stage.done();
     }, "aromatic mist covers the ally");

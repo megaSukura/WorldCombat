@@ -42,12 +42,24 @@ namespace PokemonSkills {
         if (mark === null) return 20;
         return mark.duration() < 0 ? magicRoomMaximum : Math.max(20, Math.min(magicRoomMaximum, mark.duration()));
     }
+    /** 本投影自己那一份携带物抑制层是否已存在：别的来源的 suppressItems 不替代我们这一份。 */
+    function magicRoomOwnItemLayer(world: CombatWorld, actor: CombatActor, projection: number): boolean {
+        const entries = world.effects(actor, "cobblemon_world_combat:modifier");
+        for (let i = 0; i < entries.length; i++) {
+            try {
+                const value = JSON.parse(String(entries[i].data()));
+                if (value.suppressItems && value.source === magicRoomId && value.owner
+                    && Number(value.owner.id) === projection && String(value.owner.definition) === magicRoomHolder) return true;
+            } catch (error) { }
+        }
+        return false;
+    }
     /** 投影内真实压制：原生装备槽的属性贡献 + 宝可梦携带物效果；返回真正被压制的件数。 */
     function magicRoomPress(world: CombatWorld, actor: CombatActor, projection: number): number {
         let pieces = world.suppressEquipment(actor);
         if (String(actor.domain()) === "cobblemon" && NativeItems.heldOf(world, actor) !== null) {
-            const layers = NativeModifiers.read(world, actor);
-            if (!layers.suppressItems) NativeModifiers.apply(world, actor, { suppressItems: true, source: magicRoomId,
+            // 携带物抑制持本投影自身归属：其他来源的 suppressItems 结束，不会让本场短失效。
+            if (!magicRoomOwnItemLayer(world, actor, projection)) NativeModifiers.apply(world, actor, { suppressItems: true, source: magicRoomId,
                 owner: { actor: String(actor.ref()), definition: magicRoomHolder, id: projection } }, magicRoomLayerTicks(world, actor));
             pieces += 1;
         }
@@ -91,9 +103,16 @@ namespace PokemonSkills {
         WorldFeedback.emit(world, magicRoomScene, 1, body.position(), { moment: "chip", target: String(target.ref()) }, 18);
     });
     WorldCombat.effectHandler(magicRoomHolder, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 最后一份 membership 载体被清掉（离圈、牛奶、别的招式）时，同刻收掉该成员身上的接收者投影。
+    WorldCombat.on("world_combat:move_magicroom/release", "world_combat:mob_effect_removed", "", function (event) {
+        if (String(JSON.parse(String(event.data())).id) !== magicRoomGag) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor) || MobEffects.read(world, actor, magicRoomGag) !== null) return;
+        world.effects(actor, magicRoomHolder).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
+    });
 
     // 场地层：扫描时维持两人都看得见的边界与稀疏方格；进入／持续时确保每名成员有一份投影。
-    WorldEffects.fieldRules.define({ id: "world_combat:move_magicroom/members", apply: function (context) {
+    WorldEffects.fieldRules.define({ id: "world_combat:move_magicroom/members", applies: context => context.field.rule === magicRoomField, apply: function (context) {
         const world = context.world, field = context.field, actor = context.actor;
         if (context.phase === "scan") {
             const id = field.id === undefined ? 0 : field.id;
@@ -103,6 +122,13 @@ namespace PokemonSkills {
                 { moment: "inside", density: Number(field.data.density) || 22, scale: scale });
             WorldFeedback.onEffect(world, id, "world_combat:move_magicroom/grid/" + id, magicRoomGridScene, 1, point,
                 { moment: "grid", radius: field.radius, scale: scale });
+            return;
+        }
+        // 离开时若最后一份 membership 已消失，立即收掉接收者投影，不留额外静默；重叠场保留。
+        if (context.phase === "leave" && actor !== null) {
+            if (magicRoomHolderView(world, actor) === null) return;
+            if (StatusContributions.list(world, actor, magicRoomGag).length > 0) return;
+            world.effects(actor, magicRoomHolder).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
             return;
         }
         if (actor === null || (context.phase !== "enter" && context.phase !== "stay")) return;

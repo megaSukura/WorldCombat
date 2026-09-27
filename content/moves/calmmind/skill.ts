@@ -7,7 +7,7 @@
  * 两幕：
  *   静（windup 播「凝神」，提交前只观察与预告，打断不花代价）。
  *   明（提交后）：临时特攻、特防等级挂在共享身份 world_combat:status/calmmind 的清明窗口上。
- * 结束：清明到期或被清除时，结束两项贡献。
+ * 结束：清明到期或被清除时，结束两项贡献；持续的贴身清明标识由这条真实窗口持有，随它一起收束。
  */
 namespace PokemonSkills {
     const calmMindScene = "world_combat:move_calmmind";
@@ -22,7 +22,7 @@ namespace PokemonSkills {
         id: "calmmind",
         cooldownParameter: "wait",
         name: "冥想",
-        description: "收住心神，把自己罩进一层几乎透明的清明：特攻与特防一起提高。它是本组里唯一抬特攻的一招，深冥想更强更久但更慢，浅冥想瞬发随时能补；清明结束或被清除时两项等级一起收回。",
+        description: "收住心神，把自己罩进一层几乎透明的清明：特攻与特防一起提高。它是本组里唯一抬特攻的一招，深冥想更强更久但更慢，浅冥想更快、随时能补；清明结束或被清除时两项等级一起收回。",
         uses: ["开场先静一息，把特攻与特防一起垫起来", "硬仗前坐深，拉锯里用浅冥想随时补", "把特防抬起来顶对面的特殊火力"],
         kind: "self",
         range: 1,
@@ -50,8 +50,11 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            // 起手表现按真实 prepare 时长与体型缩放，收心聚拢的范围与提交同径。
+            const ripple = Math.max(0.6, p("calmmind", "ripple", action));
             action.present("world_combat:move_calmmind:gather", calmMindScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather", deep: config && config.deep === true ? 1 : 0 }));
+                JSON.stringify({ moment: "gather", deep: config && config.deep === true ? 1 : 0,
+                    prepare: prepare, scale: ripple / calmMindReferenceRadius }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -64,28 +67,35 @@ namespace PokemonSkills {
             const ripple = Math.max(0.6, p("calmmind", "ripple", action));
             const motes = Math.max(12, Math.round(p("calmmind", "motes", action)));
             const breaths = Math.max(2, Math.min(4, Math.round(p("calmmind", "breaths", action))));
+            // 静环每拍一圈、间隔 6 刻；发射截止要盖住最后一拍，等级派生的拍数才全部兑现。
+            const settleStop = (breaths - 1) * 6 + 2;
             const scale = ripple / calmMindReferenceRadius;
-            const beforeInsight = NativeEffects.effectiveStage(world, actor, "spa"), beforePoise = NativeEffects.effectiveStage(world, actor, "spd");
-            const previous = MobEffects.read(world, actor, calmMindFocus), carrier = MobEffects.apply(world, actor, calmMindFocus, window, previous ? previous.amplifier() : 0);
             const contribution = "world_combat:move/calmmind";
-            let insightLevels = 0, poiseLevels = 0;
-            if (carrier) {
-                NativeEffects.boostWindow(world, actor, { spa: insight, spd: poise }, carrier.duration(), contribution, carrier, previous);
-                insightLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spa") - beforeInsight);
-                poiseLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - beforePoise);
-                const amplifier = Math.max(insightLevels, poiseLevels);
-                if (carrier.amplifier() !== amplifier) {
-                    const shown = MobEffects.apply(world, actor, calmMindFocus, window, amplifier);
-                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+            const beforeInsight = NativeEffects.effectiveStage(world, actor, "spa"), beforePoise = NativeEffects.effectiveStage(world, actor, "spd");
+            const previous = MobEffects.read(world, actor, calmMindFocus);
+            const carrier = MobEffects.apply(world, actor, calmMindFocus, window, previous ? previous.amplifier() : 0);
+            if (carrier === null) { done(action); return; }
+            // 两项贡献由这一条清明窗口持有；刷新改了显示等级时，再落到最新一次应用的载体上。
+            let windowId = NativeEffects.boostWindow(world, actor, { spa: insight, spd: poise }, carrier.duration(), contribution, carrier, previous);
+            const insightLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spa") - beforeInsight);
+            const poiseLevels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - beforePoise);
+            const amplifier = Math.max(insightLevels, poiseLevels);
+            if (carrier.amplifier() !== amplifier) {
+                const shown = MobEffects.apply(world, actor, calmMindFocus, window, amplifier);
+                if (shown) {
+                    const renewed = NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
+                    if (renewed) windowId = renewed;
                 }
             }
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             WorldFeedback.emit(world, calmMindScene, 1, feet,
                 { moment: "settle", actor: String(actor.ref()), insight: insightLevels, poise: poiseLevels, motes: motes,
-                    breaths: breaths, scale: scale, deep: deep ? 1 : 0,
+                    breaths: breaths, settleStop: settleStop, scale: scale, deep: deep ? 1 : 0,
                     intensity: Math.max(0.8, Math.min(1.8, (insightLevels + poiseLevels) / 3)) }, 34);
-            WorldFeedback.keep(world, "calmmind:calm:" + String(actor.ref()), calmMindScene, 1, body.position(),
-                { moment: "calm", actor: String(actor.ref()), motes: motes, scale: scale }, Math.min(window, 240));
+            // 持续清明绑在真实窗口上：刷新跟最新载体走，到期/驱散由它自己收回，不再另开定时发射。
+            if (windowId)
+                WorldFeedback.onEffect(world, windowId, "calmmind:calm", calmMindScene, 1, body.position(),
+                    { moment: "calm", actor: String(actor.ref()), motes: motes, scale: scale });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.35, 0)), calmMindSettleText,
                 [insightLevels, poiseLevels, Math.round(window / 20)], 32);
             world.sound("cobblemon:move.psychic.actor", body.position(), 16, "{}");

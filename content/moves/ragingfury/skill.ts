@@ -1,8 +1,8 @@
 /**
  * 大愤慨 / ragingfury 的出手方式。
  *
- * 核心念头：连续三口收不住的猛烈火舌，每一口从嘴端向前猛推进到 `reach`，拍间转头换一条火路；
- *   火舌是狭长的真实 3D 宽束，墙把它截断，沿途的多个敌人都被烧中；它只在实际接触过的地面留下细短的余火。
+ * 核心念头：连续三口收不住的猛烈火舌，每一口从真实嘴端向前喷到 `reach`（即喷，不是沿程推进），拍间转头换一条火路；
+ *   火舌是狭长的真实 3D 宽束，墙把它截断，沿途的多个敌人都被烧中；它只在真实打到可支撑地面的位置留下细短的余火。
  *   与逆鳞（本人撞单敌）不同，本体只原 `lunge` 垫一步，不假装冲满整条火线。
  *
  * 出手（`kind: "aim"`）：每段读当刻自由 aim，可空喷；提交后按住技能键可在段间重新瞄向，段内方向固定。
@@ -10,8 +10,8 @@
  * 三幕（execute 自管节奏）：
  *   起（windup，提交前）：压低身体、喉头聚起火，只播预告。
  *   喷（execute，提交后）：`strikes` 段。每段先按当刻 aim 读方向、身体只垫进 `lunge` 一步，再从真实嘴端沿该方向
- *       推进到 `reach`，用 `clipBlocks` 裁到第一面墙；火束里的每个非友方各吃一次 `blaze`、被点着 `igniteTicks`、
- *       朝外推 `push` 格（段内每敌一次，可烧到多个）。火束实际触到的可支撑地面按 `emberRadius` 留下余火
+ *       喷到 `reach`，用 `clipBlocks` 裁到第一面墙；火束里的每个非友方各吃一次 `blaze`、被点着 `igniteTicks`、
+ *       朝外推 `push` 格（段内每敌一次，可烧到多个）。火束真实打到、且落在火体半径内的可支撑地面按 `emberRadius` 留下余火
  *       （共享 field 规则 world_combat:ragingfury/ember，持续 `emberTicks`，与同源的余火合并而不叠加）。两段之间隔 `gap` 刻。
  *   晕（结束）：喷完给自己挂共享身份 world_combat:status/confusion（载体本单元自己的 effect，时长按首次写入的
  *       `dazeTicks`，反噬不再续时）。
@@ -78,6 +78,14 @@ namespace PokemonSkills {
         return true;
     }
 
+    /** 真实支撑：从火束取样点向下打一条块射线，命中真实块面才返回接触点，没有任何支撑返回 null。 */
+    function ragingfurySupport(world: CombatWorld, sample: CombatPoint, drop: number): CombatPoint | null {
+        const from = sample.plus(WorldCombat.point(0, 0.25, 0));
+        const to = sample.minus(WorldCombat.point(0, Math.max(0.5, drop), 0));
+        const hit = WorldGeometry.blockHit(world, from, to);
+        return hit === null ? null : hit.position();
+    }
+
     interface FuryState { left: number; strikes: number; index: number; }
 
     function ragingfurySpent(current: CombatAction, state: FuryState): void {
@@ -136,7 +144,7 @@ namespace PokemonSkills {
         WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(mouth, end, radius),
             function (target, facts) {
                 if (String(target.ref()) === String(actor.ref()) || world.friendly(target)) return;
-                if (current.trace(mouth, facts.position(), Math.max(0.2, radius * 0.4), true).blocked()) return;
+                if (!world.clear(mouth, facts.position())) return;
                 if (!hurt(current, target, ragingfuryId, power, { damage: damageSpec(ragingfuryId, "blaze") })) return;
                 hits++;
                 if (world.valid(target)) world.ignite(target, igniteTicks);
@@ -150,25 +158,27 @@ namespace PokemonSkills {
             ragingfuryChargeText, [Math.round(power)], 24);
         sound(current, "cobblemon:impact.fire");
 
-        // 余烬只留在实际火舌下方的可支撑地面短条上：沿火束取几点，找脚下真实地面。
-        let embers = 0;
+        // 余烬只留在火舌真实打到的可支撑地面：沿火束取样，向下打到真实块面，且接触点在火体半径范围内。
+        const emberPoints: CombatPoint[] = [];
+        const touch = Math.max(0.9, radius + 1.2);
         if (emberRadius > 0.5 && length > 0.5) {
             const slots = Math.max(1, Math.min(3, Math.round(length / 2)));
             for (let i = 1; i <= slots; i++) {
                 const sample = mouth.plus(heading.scale(length * i / (slots + 1)));
-                const ground = WorldGeometry.ground(world, sample, 4);
-                if (ground.minus(sample).length() > 4.5) continue;
-                const at = WorldCombat.point(ground.x(), ground.y(), ground.z());
-                if (at.y() > sample.y() + 1.5) continue;
-                if (ragingfuryEmber(world, at, emberRadius, igniteTicks, emberTicks)) embers++;
+                const at = ragingfurySupport(world, sample, 4);
+                if (at === null) continue;
+                const drop = sample.y() - at.y();
+                if (drop < -0.5 || drop > touch) continue;
+                if (ragingfuryEmber(world, at, emberRadius, igniteTicks, emberTicks)) emberPoints.push(at);
             }
         }
-        if (embers > 0) {
-            WorldFeedback.emit(world, ragingfuryScene, 1, mouth.plus(heading.scale(Math.max(0.6, length * 0.5))),
-                { moment: "ember", target: String(actor.ref()), radius: emberRadius, scale: Math.max(0.6, Math.min(2.4, emberRadius / 2.2)),
+        for (let index = 0; index < emberPoints.length; index++) {
+            WorldFeedback.emit(world, ragingfuryScene, 1, emberPoints[index],
+                { moment: "ember", target: String(actor.ref()), scale: Math.max(0.6, Math.min(2.4, emberRadius / 2.2)),
                     intensity: Math.max(0.6, Math.min(2.0, power / 40)) }, 40);
-            WorldFeedback.text(world, mouth.plus(heading.scale(Math.max(0.6, length * 0.5))).plus(WorldCombat.point(0, 0.4, 0)),
-                ragingfuryEmberText, [], 26);
+        }
+        if (emberPoints.length > 0) {
+            WorldFeedback.text(world, emberPoints[0].plus(WorldCombat.point(0, 0.4, 0)), ragingfuryEmberText, [], 26);
         }
 
         state.left = state.left - 1;
@@ -187,7 +197,7 @@ namespace PokemonSkills {
         id: ragingfuryId,
         cooldownParameter: "recharge",
         name: "Raging Fury",
-        description: "连续几口收不住的猛烈火舌：每口从嘴端向前推进、遇墙截断，沿途多个敌人被烧中、点着并推开；只有实际触到的可支撑地面留下细短余火。拍间可转头换火路。喷完自己陷入恍惚，出手可能被打散。",
+        description: "连续几口收不住的猛烈火舌：每口从真实嘴端向前喷出、遇墙截断，沿途多个敌人被烧中、点着并推开；只有真实打到的可支撑地面留下细短余火。拍间可转头换火路。喷完自己陷入恍惚，出手可能被打散。",
         uses: ["一口火舌扫过一条线上的多个敌人并点着它们", "在要道落下一片持续燃烧的余火", "把贴身的对手烧开并迫使其离开原地"],
         kind: "aim",
         range: 4.4,

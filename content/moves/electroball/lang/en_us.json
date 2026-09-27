@@ -20,7 +20,7 @@
   "worldcombat.skill.electroball.value.collisionRadius": "Orb radius",
   "worldcombat.skill.electroball.value.sparks": "Sparks",
   "worldcombat.skill.electroball.value.tempo": "Wind-up",
-  "worldcombat.skill.electroball.value.recover": "Recovery",
+  "worldcombat.skill.electroball.value.aftercast": "Recovery",
   "worldcombat.skill.electroball.value.recharge": "Cooldown",
   "worldcombat.skill.electroball.preference.overcharge": "Overcharge",
   "worldcombat.skill.electroball.preference.overcharge.help": "On: higher power and radius, but a heavier orb flying slower (easier to walk out of) with longer wind-up and cooldown. Off (default): light form, flying and casting fast and recovering cleanly at slightly lower power.",

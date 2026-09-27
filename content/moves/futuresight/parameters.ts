@@ -21,6 +21,7 @@
 namespace PokemonSkills {
     export const futureSightId = "futuresight";
     export const futureSightScene = "world_combat:move_futuresight";
+    export const futureSightMoteScene = "world_combat:move_futuresight_mote";
     export const futureSightCharge = "world_combat:futuresight_charge";
     export const futureSightSeal = "world_combat:futuresight_seal";
     export const futureSightStatus = "futuresight";

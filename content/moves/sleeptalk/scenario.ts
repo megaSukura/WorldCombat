@@ -15,7 +15,8 @@ Smoke.scenario("sleeptalk", function (stage) {
     stage.note("awake first: the sleep identity is the move's gate, so it must not be offered yet");
     function keepAsleep() {
         if (stage.casts("sleeptalk", user) >= 1) return;
-        stage.command("effect give @e[type=cobblemon:pokemon,limit=1,sort=nearest] world_combat:sleep 20 0 true");
+        // Longer than the re-apply gap so the sleep identity never lapses mid-murmur: the entry recheck must see it hold.
+        stage.command("effect give @e[type=cobblemon:pokemon,limit=1,sort=nearest] world_combat:sleep 60 0 true");
         stage.after(30, keepAsleep);
     }
     stage.after(120, function () {

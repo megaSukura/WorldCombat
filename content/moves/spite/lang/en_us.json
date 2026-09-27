@@ -1,12 +1,12 @@
 {
   "effect.world_combat.spite_grudge": "Grudge",
-  "worldcombat.skill.spite.summary": "Send a slow, homing grudge at a target: on hitting a Pokemon it tears 4 PP out of the move that target used last, while an ordinary creature without PP loses nothing. Either way the grudge clings, slowing its movement and lengthening its cooldowns. The grudge itself deals no damage and fizzles if it cannot keep up, is shaken off or meets an obstacle.",
-  "worldcombat.skill.spite.use.0": "Punish a target that just acted",
+  "worldcombat.skill.spite.summary": "Send a slow, homing grudge at a target: the hit remembers the target's most recent real offense and tears 4 PP out of the move that target used last. The next time the target lands an effective direct hit with that remembered offense, the hit is cut down to a fraction and the grudge is spent; switching moves or acting without damage bypasses it. With no readable recent offense only the PP is settled. The grudge itself deals no damage and fizzles if it cannot keep up, is shaken off or meets an obstacle.",
+  "worldcombat.skill.spite.use.0": "Blunt the next blow from the move that just hurt you",
   "worldcombat.skill.spite.use.1": "Tear PP out of a move a foe relies on",
-  "worldcombat.skill.spite.use.2": "Slow down a pursuer",
-  "worldcombat.skill.spite.description.0": "The grudge reaches %1$s blocks and flies at %2$s blocks per tick with a %3$s-block hit radius; it deals no damage itself - a hit only bites PP and leaves a grudge.",
-  "worldcombat.skill.spite.description.1": "On hitting a Pokemon it cuts %1$s PP from the move that target used last; only casts within the last %2$s count, and an older move, no usable move or an empty one simply loses nothing. An ordinary creature has no PP to cut at all, yet the grudge still slows it.",
-  "worldcombat.skill.spite.description.2": "Each tick the bolt turns at most %2$s degrees toward the target; if it cannot keep up, is shaken off or meets an obstacle it fizzles, biting no PP and leaving no grudge. On a hit the grudge lasts %1$s, lowering the target's movement speed by 15%% and its ability haste by 30 (skill cooldowns about 40%% longer), and a fresh hit refreshes the duration.",
+  "worldcombat.skill.spite.use.2": "Punish a target that keeps leaning on one move",
+  "worldcombat.skill.spite.description.0": "The grudge reaches %1$s blocks and flies at %2$s blocks per tick with a %3$s-block hit radius; it deals no damage itself - a hit only records the target's most recent offense and may leave a grudge.",
+  "worldcombat.skill.spite.description.1": "On hitting a Pokemon it cuts %1$s PP from the move that target used last; only casts within the last %2$s count, and an older move, no usable move or an empty one simply loses nothing.",
+  "worldcombat.skill.spite.description.2": "The next effective direct hit with the remembered offense keeps only %2$s of its damage, then the grudge is spent; switching moves or acting without damage bypasses it. The grudge lasts %1$s and expires or is cleared. Each tick the bolt turns at most %3$s degrees toward the target; if it cannot keep up, is shaken off or meets an obstacle it fizzles, recording nothing.",
   "worldcombat.skill.spite.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.spite.growth.0": "From level %1$s the memory window rises to %2$s s and the grudge lasts %3$s s.",
   "worldcombat.skill.spite.growth.1": "From level %1$s the memory window is %2$s s and the range %3$s blocks.",
@@ -15,6 +15,7 @@
   "worldcombat.skill.spite.value.wispTurn": "Tracking turn",
   "worldcombat.skill.spite.value.collisionRadius": "Collision radius",
   "worldcombat.skill.spite.value.ppCut": "PP cut",
+  "worldcombat.skill.spite.value.penalty": "Grudge cut",
   "worldcombat.skill.spite.value.memory": "Memory window",
   "worldcombat.skill.spite.value.grudgeTicks": "Grudge duration",
   "worldcombat.skill.spite.value.shards": "Grudge shards",
@@ -27,5 +28,10 @@
   "worldcombat.skill.spite.preference.ai.leaveStation.help": "When on, the user may leave its post to send a grudge; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.spite.text.bite": "PP -%1$s",
   "world_combat.move.spite.text.mark": "Grudge clings",
-  "world_combat.move.spite.text.fizzle": "The grudge fades"
+  "world_combat.move.spite.text.nomemory": "Nothing to resent",
+  "world_combat.move.spite.text.spend": "Grudge spent",
+  "world_combat.move.spite.text.fizzle": "The grudge fades",
+  "world_combat.move.spite.identity.contact": "Remembered contact attack",
+  "world_combat.move.spite.identity.projectile": "Remembered projectile",
+  "world_combat.move.spite.identity.direct": "Remembered direct attack"
 }

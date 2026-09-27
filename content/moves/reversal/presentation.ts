@@ -2,7 +2,8 @@
  * 起死回生 / reversal 的客户端表现。
  *
  * 一句话：贴着伤口亮起的橙红光在脚下攒成一圈，随后人一低身扑到对手身下，落地时朝身前掀开一道格斗系扇面，
- * 把扇面内的敌人伤害并掀开，真被推动的目标才带出位移痕；后方没有圈光。
+ * 并真正向前掀出一记拳/臂；扇面内的敌人被伤害并掀开，真被推动的目标才带出位移痕，后方没有圈光。
+ * 扑近尾迹（press）由动作拥有，动作一结束就随动作清理，不再拖到动作结束后。
  * 色相家族：格斗橙红与近白（impact_fighting、groundquake、energyorb、glowingsparkle_yellow、lightbeam）为主，
  * 扬尘用暖土橙；没有冷色。
  * 拍子：起（brace 攒力）→ 行（press 扑身）→ 击（burst 身前扇面）→ 中（shove 推开的位移痕 / strike 免位移只吃伤害）→ 收（fade 空喷 / spent 反噬）。
@@ -194,3 +195,33 @@ const ReversalDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_reversal", 1, ReversalDefinition);
+
+/**
+ * 真实前方掀击：服务端在喷发时发一次，带上身前短弧 `data.path` 与起始刻、时长；客户端把一枚拳/臂沿这条
+ *   短弧向前上方掀出去，读得出「这一记是往前顶的一拳」而不是只有一圈伤后扇图。低血（`data.wound`）时更大更亮。
+ *   固定一枚拳形加一条短速度线，无粒子生灭或额外实体成本。
+ */
+const ReversalFist = "cobblemon:particle/generic/bigfist";
+function reversalNumber(value: any, fallback: number): number { return typeof value === "number" && isFinite(value) ? value : fallback; }
+
+WorldCombatClient.scene("world_combat:move_reversal_fist", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const path: number[][] = Array.isArray(data.path) && data.path.length >= 2 ? data.path : null;
+    if (path === null) return;
+    const start = reversalNumber(data.start, frame.serverTick());
+    const duration = Math.max(1, reversalNumber(data.duration, 4));
+    const progress = Math.max(0, Math.min(1, (frame.serverTick() - start) / duration));
+    const scale = Math.max(0.6, Math.min(1.8, reversalNumber(data.scale, 1)));
+    const wound = Math.max(0, Math.min(1, reversalNumber(data.wound, 0)));
+    const from = path[0], to = path[path.length - 1];
+    const x = from[0] + (to[0] - from[0]) * progress;
+    const y = from[1] + (to[1] - from[1]) * progress;
+    const z = from[2] + (to[2] - from[2]) * progress;
+    const fade = 1 - progress * 0.3;
+    frame.line(from[0], from[1], from[2], x, y, z, (Math.round(0.4 * fade * 255) << 24 | 0xF5D8C0) | 0);
+    frame.sprite(ReversalFist, x, y, z, (0.34 + 0.14 * wound + 0.1 * scale) * fade, 0,
+        (Math.round((0.85 + 0.15 * wound) * fade * 255) << 24 | 0xFFE0C0) | 0, Math.floor(frame.serverTick() * 0.5) % 9, true);
+});

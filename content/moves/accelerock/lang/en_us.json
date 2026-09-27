@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.accelerock.summary": "Clad in shattered rock, the user smashes along the ground into the target: a landed hit sends it flying and kicks up a short-lived dust cloud at the impact. The heaviest first strike in its family. The breakthrough form instead plows straight through a line.",
-  "worldcombat.skill.accelerock.use.0": "The heaviest grounded first strike, launching the target",
+  "worldcombat.skill.accelerock.summary": "Clad in shattered rock, the user smashes along the ground into the target: a landed hit sends it flying and kicks up a short-lived dust cloud at the impact. It stops on the first target; the breakthrough form instead plows straight through a line, and only reports a miss if it never landed once.",
+  "worldcombat.skill.accelerock.use.0": "A grounded rock-clad first strike that launches the target",
   "worldcombat.skill.accelerock.use.1": "Plow through a line of enemies with the breakthrough form",
   "worldcombat.skill.accelerock.use.2": "Kick up a dust cloud at the impact that quickly settles",
   "worldcombat.skill.accelerock.description.0": "The rock-clad body deals about %1$s contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.splash.summary": "One flop in the chosen direction: crouch, arc up, land — and nothing at all happens. No damage, no status, no one else touched. It can carry you over a step or out of the line of an attack; it is the only move that moves nobody but you.",
+  "worldcombat.skill.splash.summary": "One flop in the chosen direction: crouch, arc up, land — and nothing at all happens. No damage, no status, no one else touched. It needs solid ground or water to leap from, and can carry you over a step or out of the line of an attack; it is the only move that moves nobody but you.",
   "worldcombat.skill.splash.use.0": "Clear a step or a small stretch of water",
   "worldcombat.skill.splash.use.1": "Move yourself out of a line attack's landing spot",
   "worldcombat.skill.splash.use.2": "Reposition low and long to open a gap",
@@ -23,6 +23,6 @@
   "worldcombat.skill.splash.preference.ai.retreatBelow": "Crisis health",
   "worldcombat.skill.splash.preference.ai.retreatBelow.help": "With an attack on hand, the partner treats the flop as an escape (higher priority) while below this health fraction and crowded; raise it to pull out sooner, lower it to hop only when nearly gone.",
   "worldcombat.skill.splash.preference.ai.keepAway": "Melee gap",
-  "worldcombat.skill.splash.preference.ai.keepAway.help": "A foe this close counts as crowding the partner; only then does a partner that has an attack hop away, picking the landing spot with a freeSpace probe.",
+  "worldcombat.skill.splash.preference.ai.keepAway.help": "A foe this close counts as crowding the partner; only then does a partner that has an attack hop away, picking the landing spot with support and arc-clearance probes.",
   "world_combat.move.splash.text.nothing": "Nothing happened..."
 }

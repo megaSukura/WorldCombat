@@ -22,7 +22,7 @@ Smoke.scenario("darkestlariat", function (stage) {
         stage.after(40, function () {
             stage.expect(stage.casts("darkestlariat", caster) > 0, "darkestlariat was committed");
             stage.expect((stage.damageTo(left) + stage.damageTo(right)) > 0, "the spin hit at least one bystander");
-            stage.note("原地一整圈横扫，圈内每个非友方各吃一记并被向外顶开；本招无视目标涨起来的防御能力等级。铁傀儡没有涨防，实际命中几人取决于站位，随机暴击留待人工试玩。", {
+            stage.note("原地一整圈横扫，脚底到覆盖高度之间与整圈相交的每个非友方各吃一记并被向外顶开；与中心之间隔墙的抡不到。本招无视目标涨起来的物防能力等级。铁傀儡没有涨防，实际命中几人取决于站位，随机暴击留待人工试玩。", {
                 casts: stage.casts("darkestlariat", caster),
                 onLeft: Math.round(stage.damageTo(left) * 10) / 10,
                 onRight: Math.round(stage.damageTo(right) * 10) / 10,

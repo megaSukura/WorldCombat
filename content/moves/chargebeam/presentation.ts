@@ -6,11 +6,12 @@
  * 色相家族：电黄（0xFFE14D）与冷白（0xEAFBFF）为主——与十万伏特同族同色，符合「电与白光是一家」。
  * 拍子：起（charge 收电聚束）→ 束（beam 喷口连到实际落点）→ 击（hit 炸开）→ 灌（surge 升弧）→ 回（reflux 倒流）
  *   → 咬（residual 束尾余流）→ 空（fizzle 散电）。
- * 范围：`beam` 的折线顶点就是服务端当刻判定用的喷口与首碰点，画到哪就判到哪；`hit`／`residual` 的炸开半径用参考值
+ * 范围：`beam` 的折线顶点就是服务端当刻判定用的喷口与首碰点，画到哪就判到哪；束尖只有真正碰到实体或墙
+ *   （`data.contact`）才迸出接触闪，打在空处只留一点轻光；`hit`／`residual` 的炸开半径用参考值
  *   0.28 格书写，服务端把 `data.scale = 实际判定半径 / 0.28` 传进来，`fit: "none"` 让几何跟着 `scale` 走。
  * 运动：细束沿 `data.path` 铺设（`polyline` 在整条边上采样）；回流沿目标→施法者的 `data.path`、粒子朝 `data.direction` 走；
  *   命中点向四周炸开，回灌电弧从施法者身上向上升。
- * 数：`data.arcs`（特攻派生）绑定电弧、束尖与回流的粒子数，`data.flow`（威力派生）绑定束鞘密度，
+ * 数：`data.arcs`（特攻派生）绑定电弧与接触闪数量，`data.flow`（威力派生）绑定束鞘密度，
  *   `data.intensity`（本次威力比例）缩放发射量，`data.stages`（实际回灌级数）绑定回灌电弧的量。
  */
 
@@ -67,9 +68,17 @@ const ChargebeamDefinition: ParticleDefinition = {
                     color: 0xFFE14D, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 170
                 },
                 {
-                    name: "head", bind: "point", fit: "none",
+                    name: "glow", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    rate: 8, shape: { kind: "sphere", radius: 0.12 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [3, 6], size: [0.1, 0.03],
+                    color: 0xEAFBFF, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 30
+                },
+                {
+                    name: "contact", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
-                    burst: { count: { data: "arcs", fallback: 8 }, interval: 3, repeats: 3 },
+                    burst: { count: { data: "contact", fallback: 0 }, interval: 3, repeats: 3 },
                     shape: { kind: "sphere", radius: 0.24 },
                     direction: "outward", speed: [0.04, 0.18], spread: 16,
                     lifetime: [3, 7], size: [0.18, 0.03], sizeMode: "index",

@@ -7,17 +7,47 @@
  * 只剩本招时：威胁一进 `ai.range` 就会立盾。
  */
 namespace PokemonSkills {
+    /** 正在朝自己飞来的敌对弹体位置：读真实 projectiles 快照，速度方向与「弹体→自己」一致才算。 */
+    function kingShieldInbound(context: WorldBehavior.Context, range: number): number[] | null {
+        const key = "kingsshield:inbound";
+        const cache = context.scratch[key] as { tick: number; actor: string; value: number[] | null } | undefined;
+        if (cache && cache.tick === context.tick && cache.actor === context.actor) return cache.value;
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
+        let value: number[] | null = null;
+        try {
+            const list = JSON.parse(String(world.projectiles(CompanionBehavior.point(self.point), range)));
+            if (Array.isArray(list)) for (let i = 0; i < list.length; i++) {
+                const shot = list[i];
+                if (!shot || !shot.hostile || !Array.isArray(shot.position) || !Array.isArray(shot.velocity)) continue;
+                const from = shot.position, velocity = shot.velocity;
+                const to = [self.point[0] - from[0], self.point[1] - from[1], self.point[2] - from[2]];
+                const tl = Math.sqrt(to[0] * to[0] + to[1] * to[1] + to[2] * to[2]);
+                const vl = Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);
+                if (!(tl > 1e-3) || !(vl > 1e-3)) continue;
+                if ((to[0] * velocity[0] + to[1] * velocity[1] + to[2] * velocity[2]) / (tl * vl) > 0.6) { value = from.slice(); break; }
+            }
+        } catch (error) { value = null; }
+        context.scratch[key] = { tick: context.tick, actor: context.actor, value: value };
+        return value;
+    }
+
     CompanionBehavior.registerUse("kingsshield", {
         protocols: ["world_combat:survive"],
-        target: function (context, _item, target) {
+        target: function (context, capability, target) {
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return target;
-            const facing = JSON.parse(JSON.stringify(target)); facing.point = threat.point.slice(); return facing;
+            const inbound = kingShieldInbound(context, Math.max(6, CompanionBehavior.ai<number>(capability, "range", 5)));
+            const facing = JSON.parse(JSON.stringify(target));
+            // 有弹体正朝自己飞来就朝它立盾；否则面向威胁。
+            if (inbound) facing.point = inbound;
+            else if (threat) facing.point = threat.point.slice();
+            return facing;
         },
         reach: function (context, capability) { return 0; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (CompanionBehavior.guarded(context, CompanionBehavior.source(context), KingShieldRule)) return false;
+            // 飞弹已经进入正面范围时也值得立盾，不再只看仇恨对象与距离。
+            if (kingShieldInbound(context, Math.max(6, CompanionBehavior.ai<number>(capability, "range", 5)))) return true;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point)
@@ -25,10 +55,17 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             const threat = context.senses["world_combat:threat"];
-            if (!threat) return 0;
             const self = CompanionBehavior.source(context);
-            const distance = CompanionBehavior.distance(self.point, threat.point);
-            return CompanionBehavior.ratio(self) < 0.5 && distance <= 4 ? 105 : 60;
+            const range = CompanionBehavior.ai<number>(capability, "range", 5);
+            let score = 0;
+            // 真正的攻击/飞弹已经进入正面：举盾抢在落地前。
+            if (kingShieldInbound(context, Math.max(6, range))) score = Math.max(score, 104);
+            if (threat && threat.attacking === self.ref
+                && CompanionBehavior.distance(self.point, threat.point) <= Math.max(4, range)) score = Math.max(score, 102);
+            if (threat && CompanionBehavior.distance(self.point, threat.point) <= range) score = Math.max(score, 60);
+            // 贴脸残血时最厚的一面留给致命一击。
+            if (threat && CompanionBehavior.ratio(self) < 0.5 && CompanionBehavior.distance(self.point, threat.point) <= 4) score = Math.max(score, 105);
+            return score;
         }
     });
 

@@ -2,16 +2,17 @@
  * 破音 / overdrive 的出手方式。
  *
  * 核心念头：这是一段朝瞄准方向弹出去、带电的声浪乐句。施法者扎住脚，把乐器提到身前连拨三下，
- *   每一下都从**当刻的身体位置**朝当刻的自由瞄准方向推出一道窄声路：路里的敌人各挨一次重击并被打退半步；
- *   电声可能把人震到麻痹。两下之间可以转准心，第一下锁定的目标不会被自动追着走。
- *   开余响时，第三拨之后动作就收束、可以继续走位，而第三拨那条声路会被托管留起：隔 `echoGap` 刻在**原位置**
- *   重放一记更重的迟到声浪（原 `echoRatio`），不跟新目标转头——那是原生的回声意象。
+ *   每一下都从**当刻的身体位置**朝**当刻的自由瞄准方向**推出一道窄声路：当刻整条走廊一次齐鸣，路里的敌人
+ *   各挨一次重击并被打退半步；电声可能把人震到麻痹。三下各自独立、逐拍可转向，第一下锁定的目标不会被自动追着走。
+ *   开余响时，第三拨之后动作就收束、可以继续走位，而第三拨那条声路会被托管留起：第三拨落下当刻的位置、方向、
+ *   宽高与状态一并存进托管声路，隔 `echoGap` 刻在**原位置**重放一记更重的迟到声浪（原 `echoRatio`），
+ *   不跟新目标转头、也不重读施法者之后的变化——那是原生的回声意象。
  *
  * 三幕（可加一段余响）：
  *   起（windup，提交前）：把乐器提起、指尖聚电的预告；起手可被打断。
- *   拨（pluck × 3 → paralyze）：提交后按 interval 连拨三下，每下沿当刻朝向扫过一条走廊，
+ *   拨（pluck × 3 → paralyze）：提交后按 interval 连拨三下，每下从当刻身体位置、沿当刻朝向让整条走廊一次齐鸣，
  *       路里每个敌人各挨一次 thrum、被沿走廊方向推退，并各掷一次麻痹。
- *   响（echo，仅配置开启）：第三拨后动作结束；一条托管声路记下它的真实起终点与宽度，echoGap 后原地重放。
+ *   响（echo，仅配置开启）：第三拨后动作结束；一条托管声路记下它的当刻位置、方向、宽高与状态，echoGap 后原地重放。
  *
  * 与同族分开：虫鸣是锥、刺耳声是只一下的细走廊、闪焰高歌是火锥；破音是**同一条直线走廊上连续数下的
  *   电声乐句**，唯一带电、唯一概率麻痹，且余响留在旧声路上而不是追着人跑。
@@ -32,17 +33,20 @@ namespace PokemonSkills {
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
     }
 
-    /** 走廊四角顶点；判定（lane）与表现（path）读同一份形状。 */
+    /**
+     * 音道的实际体积轮廓：把「长 reach、半宽 half、相对身体中心上下 overdriveBand」的走廊画成一条箱形线架。
+     * 判定（`WorldGeometry.lane`，同一组 reach/half/overdriveBand）与画面（polyline）读同一份尺寸，画到哪就震到哪。
+     */
     function overdriveLane(origin: CombatPoint, heading: CombatPoint, reach: number, half: number): number[][] {
         const side = WorldCombat.point(-heading.z(), 0, heading.x());
+        const low = origin.y() - overdriveBand.below, high = origin.y() + overdriveBand.above;
         const nearA = origin.plus(side.scale(half)), nearB = origin.minus(side.scale(half));
         const far = origin.plus(heading.scale(reach));
         const farA = far.plus(side.scale(half)), farB = far.minus(side.scale(half));
+        const vertex = (point: CombatPoint, y: number): number[] => [point.x(), y, point.z()];
         return [
-            [nearA.x(), nearA.y() + 0.06, nearA.z()],
-            [farA.x(), farA.y() + 0.06, farA.z()],
-            [farB.x(), farB.y() + 0.06, farB.z()],
-            [nearB.x(), nearB.y() + 0.06, nearB.z()]
+            vertex(nearA, low), vertex(farA, low), vertex(farB, low), vertex(nearB, low),
+            vertex(nearB, high), vertex(farB, high), vertex(farA, high), vertex(nearA, high), vertex(nearA, low)
         ];
     }
 
@@ -63,7 +67,7 @@ namespace PokemonSkills {
         const finite = function (n: any): boolean { return typeof n === "number" && isFinite(n); };
         if (!Array.isArray(value.origin) || value.origin.length !== 3 || !value.origin.every(finite)) throw new Error("Invalid overdrive echo origin");
         if (!Array.isArray(value.heading) || value.heading.length !== 2 || !value.heading.every(finite)) throw new Error("Invalid overdrive echo heading");
-        ["reach", "width", "power", "push", "chance", "paralyzeTicks", "cap", "arcs", "intensity", "strength", "gap"].forEach(function (key) {
+        ["reach", "width", "power", "push", "chance", "paralyzeTicks", "cap", "arcs", "intensity", "strength", "gap", "below", "above"].forEach(function (key) {
             if (!finite(value[key])) throw new Error("Invalid overdrive echo state");
         });
         return JSON.stringify(value);
@@ -78,7 +82,7 @@ namespace PokemonSkills {
         WorldFeedback.onEffect(world, effect.id(), "overdrive:string", overdriveScene, 1, origin,
             { moment: "string", path: overdriveLane(origin, heading, data.reach, data.width),
                 direction: [heading.x(), 0, heading.z()], reach: data.reach, half: data.width,
-                arcs: data.arcs, intensity: data.intensity });
+                below: data.below, above: data.above, arcs: data.arcs, intensity: data.intensity });
         effect.schedule("echo", "echo", Math.max(1, Math.round(data.gap)), "{}");
     });
     WorldCombat.effectHandler(overdriveEcho, "echo", function (effect) {
@@ -87,7 +91,7 @@ namespace PokemonSkills {
         const heading = WorldCombat.point(data.heading[0], 0, data.heading[1]);
         const path = overdriveLane(origin, heading, data.reach, data.width);
         let struck = 0;
-        WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, data.reach, data.width, { below: 2, above: 3 }), function (other) {
+        WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, data.reach, data.width, overdriveBand), function (other) {
             if (struck >= data.cap) return;
             if (!hurt(world, other, "overdrive", data.power, { damage: damageSpec("overdrive", "thrum"), sound: true })) return;
             struck++;
@@ -103,8 +107,8 @@ namespace PokemonSkills {
         });
         WorldFeedback.emit(world, overdriveScene, 1, origin, {
             moment: "echo", path: path, direction: [heading.x(), 0, heading.z()],
-            reach: data.reach, half: data.width, index: overdrivePulses, struck: struck,
-            arcs: data.arcs, intensity: data.intensity, strength: data.strength
+            reach: data.reach, half: data.width, below: data.below, above: data.above,
+            index: overdrivePulses, struck: struck, arcs: data.arcs, intensity: data.intensity, strength: data.strength
         }, 30);
         world.sound("cobblemon:impact.electric", origin, 16, "{}");
         effect.end();
@@ -178,7 +182,7 @@ namespace PokemonSkills {
             function strike(current: CombatAction, from: CombatPoint, heading: CombatPoint, strength: number): number {
                 const scope = current.world();
                 let struck = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.lane(from, heading, reach, width, { below: 2, above: 3 }), function (other) {
+                WorldGeometry.selectEnemies(scope, WorldGeometry.lane(from, heading, reach, width, overdriveBand), function (other) {
                     if (struck >= cap) return;
                     const landed = hurt(current, other, "overdrive", power * strength, { damage: damageSpec("overdrive", "thrum"), sound: true });
                     if (!landed) return;
@@ -214,16 +218,23 @@ namespace PokemonSkills {
                 const struck = strike(current, from, heading, 1);
                 hits += struck;
                 index++;
+                // 每拍先在身体上拨一下（三拍各自可数），再把当刻整条音道齐鸣的声浪线架铺出去。
+                WorldFeedback.emit(scope, overdriveScene, 1, from, {
+                    moment: "riff", target: "", direction: [heading.x(), heading.y(), heading.z()],
+                    index: index, arcs: arcs, intensity: intensity
+                }, 20);
                 WorldFeedback.emit(scope, overdriveScene, 1, from, {
                     moment: "pluck", target: "", direction: [heading.x(), heading.y(), heading.z()], path: path,
-                    reach: reach, half: width, index: index, struck: struck, arcs: arcs, intensity: intensity, strength: 1
+                    reach: reach, half: width, below: overdriveBand.below, above: overdriveBand.above,
+                    index: index, struck: struck, arcs: arcs, intensity: intensity, strength: 1
                 }, 26);
                 if (index >= overdrivePulses) {
-                    // 第三拨的真实起终点与宽度存成一条短托管声路；动作随即收束，echoGap 后原地重放。
+                    // 第三拨的当刻位置、方向、宽高与状态一并存成一条托管声路；动作随即收束，echoGap 后原地重放。
                     if (echo && echoRatio > 0) {
                         current.effect(overdriveEcho, action.actor(), JSON.stringify({
                             origin: [from.x(), from.y(), from.z()], heading: [heading.x(), heading.z()],
-                            reach: reach, width: width, power: power * echoRatio, push: push, chance: chance,
+                            reach: reach, width: width, below: overdriveBand.below, above: overdriveBand.above,
+                            power: power * echoRatio, push: push, chance: chance,
                             paralyzeTicks: paralyzeTicks, cap: cap, arcs: arcs, intensity: intensity,
                             strength: echoRatio, gap: echoGap
                         }), echoGap + 40);

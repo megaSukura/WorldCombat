@@ -7,11 +7,14 @@ namespace PokemonSkills {
     export const disableEffect = "world_combat:disable_lock";
     /** 机读旁挂：记下被点名的招式与画面要用的数。 */
     export const disableMark = "world_combat:disable_mark";
+    /** 本作脚本动作的真实成功提交记录（普通生物/魔改 Boss），补上原生伤害类型之外的可读身份。 */
+    export const disableTrace = "world_combat:disable_trace";
     export const disableLockText = "world_combat.move.disable.text.lock";
     export const disableBlockText = "world_combat.move.disable.text.block";
     export const disableFadeText = "world_combat.move.disable.text.fade";
     export const disableBreakText = "world_combat.move.disable.text.break";
     export const disableMissText = "world_combat.move.disable.text.miss";
+    export const disablePreviewText = "world_combat.move.disable.text.preview";
 
     actionParameters.define(disableId, {
         disableTicks: seconds(

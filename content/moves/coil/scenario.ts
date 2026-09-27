@@ -1,35 +1,21 @@
-/**
- * 盘蜷 / coil 的可执行设计说明。
- *
- * 场面：一只只会「盘蜷」的阿柏蛇与一只弱小的小拉达隔开 11 格、石质场地上开战；技能表里只有这一招，
- *   所以 AI 只能先盘一圈。有威胁且在盘蜷距离内、还没贴身时，它会先盘紧再考虑交战。
- * 必然事实：本招被提交过；施术者身上出现过共享身份 world_combat:status/coil 的盘势窗口；
- *   盘定后公共能力阶梯上攻/防/命中三项各自真的被抬高了至少一级（盘定前不提前写入）。
- */
-Smoke.scenario("coil", function (stage) {
-    stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "ekans", level: 34, moves: ["coil"], at: [-4, 0, 0] });
-    var foe = stage.pokemon({ species: "rattata", level: 12, moves: ["tackle"], at: [7, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1200, function () {
-        return stage.casts("coil", caster) > 0
-            && stage.hadMobEffect(caster, "world_combat:status/coil");
-    }, function () {
-        stage.expect(stage.casts("coil", caster) > 0, "coil was committed");
-        stage.expect(stage.hadMobEffect(caster, "world_combat:status/coil"), "the brace window carried the shared identity");
+Smoke.scenario("coil", stage => {
+    stage.fill([-9, -1, -5], [9, -1, 5], "minecraft:stone");
+    stage.time("day"); stage.weather("clear");
+    const caster = stage.pokemon({ species: "ekans", level: 34, moves: ["coil", "tackle"], at: [-3, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:cow", at: [1, 0, 0] });
+    stage.noai(foe); stage.hostile(caster, foe);
+    stage.until(1200, () => stage.casts("coil", caster) > 0 && stage.hadMobEffect(caster, "world_combat:status/coil"), () => {
+        stage.expect(stage.travelled(caster) > .2, "coil spring moved the real body");
         const stages = stage.stages(caster);
-        stage.expect((stages.atk || 0) >= 1 && (stages.def || 0) >= 1 && (stages.accuracy || 0) >= 1,
-            "the three raises landed on the shared ladder only at settle");
-        stage.after(80, function () {
-            stage.note("the brace window length and how much the window takes back are design facts read here; the three ladder gains are asserted above", {
-                casts: stage.casts("coil", caster),
-                damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
-                foeCasts: stage.casts("tackle", foe),
-                casterAlive: caster.alive()
+        stage.expect((stages.atk || 0) === 0 && (stages.def || 0) === 0, "coil carries one contact opportunity without an attack/defence stance");
+        stage.until(500, () => stage.damageBy(caster) > 0, () => {
+            stage.expect(stage.casts("tackle", caster) > 0, "the prepared follow-up was used against an ordinary body");
+            stage.after(1, () => {
+                stage.expect(!stage.hasMobEffect(caster, "world_combat:status/coil"), "successful physical contact consumed the single spring charge");
+                stage.note("AI prepared a real spring and followed with contact; per-hurt reservation/zero-hit rollback are covered by the shared neutral checks. Wall stops and the visible single token need play review.",
+                    { casts: stage.casts("coil", caster), followups: stage.casts("tackle", caster), distance: stage.travelled(caster), damage: stage.damageBy(caster) });
+                stage.done();
             });
-            stage.done();
-        });
-    }, "coil engages");
+        }, "coil follow-up contact");
+    }, "coil spring and ready token");
 });

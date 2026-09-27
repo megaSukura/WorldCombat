@@ -7,10 +7,12 @@
  * 过程：提交后进入原 soakTicks 的整段光合，均分成 4 次小回复：每次读当刻日照，按「单次 heal 比例 / 4」
  *   补一小口。固定上限是开始时缺血量，中途再挨打也不会把总预算撑大；阴影或天气变化会改变剩余几口的量。
  * 中断：整段站定且可被任何伤害打断；已到账的小回复保留，未完成的几口取消，叶片当刻合拢。
- * 表现：四片叶脉依次亮，只有真正回了血才有一颗绿光进入身体；日照低时叶脉与光点明显暗弱。
+ * 表现：四片叶位由独立的自定义客户端场景画成稳定可数图形，真正进账一口才收亮一片、并有一颗绿光进入身体；
+ *   日照低时叶阵与光点明显暗弱。实际光合拍数取 floor(光合时长/4)×4，与说明里的实际拍数一致。
  */
 namespace PokemonSkills {
     const synthesisScene = "world_combat:move_synthesis";
+    const synthesisLeafScene = "world_combat:move_synthesis_leaves";
     const synthesisTextBloom = "world_combat.move.synthesis.text.bloom";
     const synthesisTextLow = "world_combat.move.synthesis.text.low";
 
@@ -70,9 +72,11 @@ namespace PokemonSkills {
             var interval = Math.max(1, Math.floor(soak / pulses));
             var soakEnd = interval * pulses;
             var budget = startMissing;
-            var healedTotal = 0, beat = 0, elapsed = 0, settled = false;
+            var healedTotal = 0, beat = 0, lit = 0, elapsed = 0, settled = false;
             // 持续光合期由一个 action-scoped 场景承载：每次 execute 自己创建，结束 finish、被打断 stop，叶片随之合拢。
             var scenes = WorldFeedback.actionScenes(synthesisScene, 1);
+            // 四片叶位由独立的自定义客户端场景画成稳定可数图形，随动作存亡逐片收亮。
+            var leaves = WorldFeedback.actionScenes(synthesisLeafScene, 1);
 
             function finishNow(current: CombatAction): void {
                 if (settled) return;
@@ -80,6 +84,7 @@ namespace PokemonSkills {
                 var at = current.world().observe(self);
                 if (at !== null) WorldFeedback.text(current.world(), synthesisAbove(at.position()),
                     healedTotal > 0 ? synthesisTextBloom : synthesisTextLow, [], 30);
+                leaves.stop(current);
                 scenes.finish(current, done);
             }
 
@@ -108,13 +113,17 @@ namespace PokemonSkills {
                             s2: beat === 3 ? 0 : 30, s3: beat === 4 ? 0 : 30,
                             motes: Math.max(3, Math.round(3 + light * 7)), petalSize: 0.09 + light * 0.09 }, 18);
                     if (gained > 0) {
-                        // 只有真正进账了才落一颗绿光进身体。
+                        // 只有真正进账了才多亮一片叶、落一颗绿光进身体。
+                        lit++;
                         WorldFeedback.emit(scope, synthesisScene, 1, at.position(),
                             { moment: "mote", target: String(self.ref()), light: light, scale: 1 + light * 0.6,
                                 moteSize: 0.10 + Math.min(0.12, gained / Math.max(1, startMissing) * 0.6) }, 20);
                         feedback(scope, self, at.position(), "heal", { amount: Math.round(gained * 10) / 10 });
                     }
                 }
+                // 稳定叶阵：已真正到账的片数逐片收亮，当前这一拍高亮，日照越足越大越亮。
+                leaves.show(current, "leaves", at.position(),
+                    { moment: "soak", target: String(self.ref()), lit: lit, beat: beat, light: light });
                 if (beat >= pulses && elapsed >= soakEnd) { finishNow(current); return; }
                 current.after(1, step);
             }
@@ -124,6 +133,7 @@ namespace PokemonSkills {
                 settled = true;
                 try {
                     var scope = current.world();
+                    leaves.stop(current);
                     scenes.stop(current);
                     var at = scope.observe(self);
                     if (at !== null) WorldFeedback.emit(scope, synthesisScene, 1, at.position(),

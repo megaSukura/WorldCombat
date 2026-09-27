@@ -5,12 +5,14 @@
  *   命中的人当场炸开泥花、眼睛里挂上泥点，浪推完地面留下一层湿泥的浮尘。
  * 色相家族：泥褐（0x6B5A3E）与淤土黄（0x8E7B5A / 0x9C8A66）；近白只出现在溅起的那一下高光。
  * 拍子：起 gather（囤浑水）→ 涌 surge（泥浪按步推进）→ 击 hit（炸开泥花）／ 空 miss → 沉 silt → 收 linger／clear。
- * 范围：surge 用 `data.path`（与服务端同一个扇环多边形，内弧/外弧即当步的 inner/outer）画成面，
- *   玩家看到泥浪铺到哪就知道站哪会被糊到；判定与这条前沿读同一组顶点。
- * 运动：泥浪沿地面一步步向前推，`data.path` 每一刻都被替换成当前那一圈扇环；泥点带轻微重力往下沉。
- * 数：`data.drops`（特攻＋等级换算的泥点数量）绑定发射量，`data.intensity`（泥浪威力 / 90）放大整幕，
- *   `data.scale` 让大个子的泥浪更粗，`data.film` 决定地面上短泥膜的碎点数，`data.density` 决定糊眼期间
- *   头顶下坠泥点的疏密；泥膜不替换任何方块，只按 `data` 里的时长自然散去。
+ * 范围：surge 用 `data.path`（与服务端同一个扇环多边形，顶点取自实际走到的真实地表；内弧/外弧即当步的
+ *   inner/outer）画成面，玩家看到泥浪铺到哪就知道站哪会被糊到；判定与这条前沿读同一组顶点。
+ * 运动：泥浪沿真实地面一步步向前推，`data.path` 每一刻都被替换成当前那一圈扇环；泥点带轻微重力往下沉。
+ * 数：`data.flow`（泥点数量换算成的每秒铺量）绑定前缘发射量，把整道泥面铺满而不只是稀稀几粒；
+ *   `data.drops`（特攻＋等级换算的泥点数量）驱动命中处与地面泥膜的碎点数，
+ *   `data.intensity`（泥浪威力 / 90）放大整幕，`data.scale` 让大个子的泥浪更粗，
+ *   `data.film` 决定地面上短泥膜的碎点数，`data.density` 决定糊眼期间头顶下坠泥点的疏密；
+ *   泥膜不替换任何方块，只按 `data` 里的时长自然散去。
  */
 
 const MuddywaterDefinition: ParticleDefinition = {
@@ -45,7 +47,7 @@ const MuddywaterDefinition: ParticleDefinition = {
                 {
                     name: "band", bind: "path", fit: "none", shape: { kind: "polygon" },
                     particle: "world_combat_core:cobblemon/generic/mud/mudsplash",
-                    rate: { data: "drops", fallback: 18 },
+                    rate: { data: "flow", fallback: 96 },
                     direction: "up", speed: [0.03, 0.11], spread: 14,
                     gravity: 0.035, drag: 0.9,
                     lifetime: [10, 18], size: [0.22, 0.04],
@@ -54,7 +56,7 @@ const MuddywaterDefinition: ParticleDefinition = {
                 {
                     name: "crest", bind: "path", fit: "none", shape: { kind: "polyline", closed: true },
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
-                    rate: { data: "drops", fallback: 18 },
+                    rate: { data: "flow", fallback: 96 },
                     direction: "up", speed: [0.05, 0.16], spread: 12,
                     gravity: 0.02, drag: 0.92,
                     lifetime: [8, 15], size: [0.32, 0.06], sizeMode: "index",
@@ -63,7 +65,7 @@ const MuddywaterDefinition: ParticleDefinition = {
                 {
                     name: "haze", bind: "path", fit: "none", shape: { kind: "polygon" },
                     particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
-                    rate: { data: "drops", fallback: 18 },
+                    rate: { data: "flow", fallback: 96 },
                     direction: "up", speed: [0.01, 0.06],
                     lifetime: [12, 22], size: [0.12, 0.02],
                     color: 0x8E7B5A, alpha: [0.35, 0], light: "world", maxParticles: 180

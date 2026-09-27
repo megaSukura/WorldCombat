@@ -5,7 +5,7 @@
   "worldcombat.skill.fairywind.use.2": "Open from range and push a target off cover",
   "worldcombat.skill.fairywind.description.0": "The scented gale flies straight along the chosen direction or point (and can be cast into empty space); every foe it sweeps takes about %1$s special damage (the target's defence, type matchup and crits settle on the hit), and the wind pierces up to %2$s more foes without stopping.",
   "worldcombat.skill.fairywind.description.1": "Range %1$s blocks; the wind travels straight at %2$s blocks/tick with a swirl radius of %3$s blocks.",
-  "worldcombat.skill.fairywind.description.2": "A swept foe is flung %1$s blocks to the side of the wind.",
+  "worldcombat.skill.fairywind.description.2": "A swept foe is flung %1$s blocks toward the side of the wind axis it already stands on; one sitting on the axis is flung toward the fixed spin shown at launch.",
   "worldcombat.skill.fairywind.description.3": "Wind-up %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.fairywind.wide.on": "Wide: swirl radius x1.5, pierce +1 and fling x1.4, but damage x0.85, range x0.95, wind-up +1 tick and cooldown +5 ticks - a wider, looser sweep with a slightly shorter reach.",
   "worldcombat.skill.fairywind.wide.off": "Skimming (default): full damage and full range, a faster throw and shorter cooldown, but a narrow swirl, less pierce and a weaker fling - a thinner, sharper line.",
@@ -27,7 +27,7 @@
   "worldcombat.skill.fairywind.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.fairywind.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger prefers opening from farther away.",
   "worldcombat.skill.fairywind.preference.ai.through": "Pierce a line",
-  "worldcombat.skill.fairywind.preference.ai.through.help": "On: with other foes lined up behind the aim, the wind is preferred to run through the line; off: no line counting, ranked as an ordinary ranged attack.",
+  "worldcombat.skill.fairywind.preference.ai.through.help": "On: count the non-allies inside the real 3D corridor from you to the target, within range, not blocked by walls and within the true swirl radius (capped by the pierce budget); with two or more it prefers a wind that runs through. Off: no corridor counting, ranked as an ordinary ranged attack.",
   "world_combat.move.fairywind.text.hit": "Swept %1$s by the wind",
   "world_combat.move.fairywind.text.miss": "The breeze scattered"
 }

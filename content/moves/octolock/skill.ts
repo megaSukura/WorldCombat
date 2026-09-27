@@ -29,29 +29,47 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
+    /**
+     * 真实接触端点：从术者身体表面指向目标的表面，而不是两个质心。触手因此落在双方的真实碰撞箱上，
+     * 表现里那条线就是触手实际咬住的位置；围合用的环按目标身体半宽另给。
+     */
+    function octoContact(world: CombatWorld, caster: CombatActor, victim: CombatActor): number[][] {
+        const held = world.observe(victim), holder = world.observe(caster);
+        if (held === null || holder === null) return [];
+        const from = world.closestPoint(caster, held.position()), to = world.closestPoint(victim, holder.position());
+        return [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]];
+    }
+
+    function octoGirth(world: CombatWorld, victim: CombatActor): number {
+        const body = world.observe(victim);
+        return body === null ? 0.4 : Math.max(0.3, body.width() * 0.5);
+    }
+
     function octoVisual(world: CombatWorld, victim: CombatActor, caster: CombatActor, state: any, ticks: number, moment: string, drops: number): void {
         const body = world.observe(victim);
         if (body === null) return;
         WorldFeedback.emit(world, octoScene, 1, body.position(),
-            { moment: moment, target: String(victim.ref()), path: [String(caster.ref()), String(victim.ref())],
+            { moment: moment, target: String(victim.ref()), path: octoContact(world, caster, victim),
                 tentacles: state.tentacles, round: state.round, drops: drops,
-                scale: state.scale, intensity: state.intensity }, ticks);
+                girth: octoGirth(world, victim), scale: state.scale, intensity: state.intensity }, ticks);
     }
 
     /** 持续缠线：绑在本单元的托管触手效果上，效果自然到期、被驱散或术者离场都一起收回。 */
-    function octoHold(world: CombatWorld, effectId: number, victim: CombatActor, state: any, tension: number): void {
+    function octoHold(world: CombatWorld, effectId: number, victim: CombatActor, caster: CombatActor, state: any, tension: number): void {
         const body = world.observe(victim);
-        if (body === null) return;
+        if (body === null || !world.valid(caster)) return;
         WorldFeedback.onEffect(world, effectId, octoHoldKey, octoScene, 1, body.position(),
-            { moment: "hold", target: String(victim.ref()), path: ["source", String(victim.ref())],
-                tentacles: state.tentacles, round: state.round, tension: tension, intensity: state.intensity });
+            { moment: "hold", target: String(victim.ref()), path: octoContact(world, caster, victim),
+                tentacles: state.tentacles, round: state.round, tension: tension,
+                girth: octoGirth(world, victim), intensity: state.intensity });
     }
 
-    /** 沿提交方向在触手伸出距离内取最近的敌人；没有就不建立关系。 */
+    /** 沿提交方向在触手伸出距离内取最近的敌人；被实墙挡住视线的更近者跳过，找得到视线的那个。 */
     function octoFirstEnemy(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number): CombatActor | null {
         let found: CombatActor | null = null, best = Infinity;
         WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, direction, reach, Math.max(1.2, reach * 0.35), { below: 2, above: 2 }),
             function (enemy, facts) {
+                if (WorldGeometry.blockHit(world, origin, facts.position()) !== null) return;
                 const distance = facts.position().minus(origin).length();
                 if (distance < best) { best = distance; found = enemy; }
             });
@@ -61,28 +79,36 @@ namespace PokemonSkills {
     WorldCombat.effect(octoBind, 1, 600, "actor", octoBindData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(octoBind, "start", function (effect) {
         const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
-        octoHold(world, effect.id(), victim, state, 0.35);
+        octoHold(world, effect.id(), victim, effect.source(), state, 0.35);
+        effect.schedule("check", "check", 4, "{}");
         effect.schedule("squeeze", "squeeze", Math.max(1, Math.round(state.interval)), "{}");
     });
-    WorldCombat.effectHandler(octoBind, "squeeze", function (effect) {
+    // 连接复查与勒紧分开：每几刻量一次距离与通视，断线立刻收，不等下一个勒紧间隔。
+    WorldCombat.effectHandler(octoBind, "check", function (effect) {
         const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
         const caster = effect.source();
         const held = world.observe(victim), holder = world.valid(caster) ? world.observe(caster) : null;
-        // 距离或视线断开就立刻停下后续降防，不强行补抓；目标由此脱困。
         if (holder === null || held === null || held.position().minus(holder.position()).length() > state.grip
             || !world.clear(holder.position(), held.position())) {
             state.slipped = true; effect.state(JSON.stringify(state)); effect.end(); return;
         }
+        octoHold(world, effect.id(), victim, caster, state, Math.max(0.35, Math.min(1, state.round / Math.max(1, state.maxRounds))));
+        effect.schedule("check", "check", 4, "{}");
+    });
+    WorldCombat.effectHandler(octoBind, "squeeze", function (effect) {
+        const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
+        if (!world.valid(victim)) { effect.end(); return; }
         if (state.round >= state.maxRounds) { effect.end(); return; }
+        const caster = effect.source();
+        if (!world.valid(caster)) { effect.end(); return; }
         state.round += 1;
         const def = NativeEffects.boost(world, victim, "def", -state.squeeze);
         const spd = NativeEffects.boost(world, victim, "spd", -state.squeeze);
         const drops = Math.abs(def) + Math.abs(spd);
-        MobEffects.apply(world, victim, octoBound, Math.max(20, effect.remaining()), 0);
         effect.state(JSON.stringify(state));
-        octoHold(world, effect.id(), victim, state, Math.max(0.35, Math.min(1, state.round / Math.max(1, state.maxRounds))));
-        if (drops > 0) {
+        const held = world.observe(victim);
+        if (drops > 0 && held !== null) {
             octoVisual(world, victim, caster, state, 24, "squeeze", drops);
             WorldFeedback.text(world, held.position().plus(WorldCombat.point(0, 1.1, 0)), octoSqueezeText, [state.round, drops], 22);
             world.sound("minecraft:entity.glow_squid.squirt", held.position(), 11, "{}");
@@ -93,9 +119,10 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
         if (!world.valid(victim)) return;
         const seal = MobEffects.read(world, victim, octoBound);
-        // 标记已被原生手段清掉（牛奶／/effect clear）时视为目标拒绝了牵制，走 slip。
+        // 只有本次施法自己挂上、key 仍匹配的标记才收回；被别的来源刷新时保留它的新标记。
+        const owned = seal !== null && state.carrier && MobEffects.matches(world, victim, state.carrier);
         const refused = seal === null;
-        if (seal !== null) world.removeMobEffect(victim, octoBound, seal.key());
+        if (owned) world.removeMobEffect(victim, octoBound, seal.key());
         const body = world.observe(victim);
         if (body === null) return;
         const slipped = state.slipped === true || refused;
@@ -104,6 +131,7 @@ namespace PokemonSkills {
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)),
             slipped ? octoSlipText : octoReleaseText, [], 24);
     });
+    WorldCombat.effectHandler(octoBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     // 牛奶／/effect clear 清掉缠绕标记时，收回触手。
     WorldCombat.on("world_combat:move_octolock/release", "world_combat:mob_effect_removed", "", function (event) {
@@ -174,8 +202,9 @@ namespace PokemonSkills {
             const body = world.observe(target);
             if (body === null) { done(action); return; }
             const targetPoint = body.position();
-            // 墙挡住连线（或超出伸出距离）就不起连。
-            if (origin.minus(targetPoint).length() > reach + 1.5 || !world.clear(origin, targetPoint)) {
+            // 按真实身体表面判定伸出距离（施法者中心到目标碰撞箱最近点），并把连线也交给同一条贴面路径。
+            const surface = world.closestPoint(target, origin);
+            if (origin.minus(surface).length() > reach || !world.clear(origin, targetPoint)) {
                 WorldFeedback.emit(world, octoScene, 1, targetPoint, { moment: "fizzle", target: String(target.ref()) }, 18);
                 done(action); return;
             }
@@ -186,14 +215,18 @@ namespace PokemonSkills {
             const tentacles = Math.max(6, Math.round(p(octoId, "tentacles", action)));
             const scale = Math.max(0.6, Math.min(2.4, body.width() / 0.9));
             const intensity = Math.max(0.6, Math.min(2.4, tentacles / 16));
-            if (!CombatStatus.apply(world, target, "octolock", octoBound, bindTicks, 0, { unique: true })) { done(action); return; }
+            // 重施前先精确收回上一份本招的缠绕（旧效果只撤自己 key 匹配的标记）。
             const existing = world.effects(target, octoBind);
             for (let index = 0; index < existing.length; index++) world.operation(existing[index].id(), "world_combat:dispel", "{}");
+            // 载体比缠绕本身多留 20 刻：缠绕正常走完时载体仍在，end 才能按 key 精确收回并走「松开」。
+            if (!CombatStatus.apply(world, target, "octolock", octoBound, bindTicks + 20, 0, { unique: true })) { done(action); return; }
+            const seal = MobEffects.read(world, target, octoBound);
             world.effect(octoBind, target, JSON.stringify({ caster: String(self.ref()), grip: grip, interval: interval,
-                tentacles: tentacles, squeeze: 1, round: 0, maxRounds: maxRounds, scale: scale, intensity: intensity }), bindTicks);
+                tentacles: tentacles, squeeze: 1, round: 0, maxRounds: maxRounds, scale: scale, intensity: intensity,
+                carrier: seal === null ? null : MobEffects.anchor(seal) }), bindTicks);
             WorldFeedback.emit(world, octoScene, 1, targetPoint,
-                { moment: "lash", target: String(target.ref()), path: [String(self.ref()), String(target.ref())],
-                    tentacles: tentacles, round: 0, scale: scale, intensity: intensity }, 30);
+                { moment: "lash", target: String(target.ref()), path: octoContact(world, self, target),
+                    tentacles: tentacles, round: 0, girth: octoGirth(world, target), scale: scale, intensity: intensity }, 30);
             WorldFeedback.text(world, targetPoint.plus(WorldCombat.point(0, 1.1, 0)), octoLashText,
                 [Math.round(interval / 20 * 10) / 10], 26);
             sound(action, "minecraft:block.chain.place");

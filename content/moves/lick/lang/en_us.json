@@ -2,7 +2,7 @@
   "worldcombat.skill.lick.summary": "Snap a tongue far past ordinary melee range at the target: the hit is light, but it comes out very fast and is likely to leave the target numb. The coil form can also drag them a step closer.",
   "worldcombat.skill.lick.description.0": "A landed lick deals about %1$s contact damage.",
   "worldcombat.skill.lick.description.1": "The tongue reaches %1$s blocks from the mouth along the chosen direction with a %3$s block tip radius; a licked target has a %2$s%% chance to be paralysed. You may lash empty air, and a wall, cover or a front ally/foe blocks the tongue first.",
-  "worldcombat.skill.lick.description.2": "There is a %1$s second gap between snapping out and landing; the coil form drags the target up to %2$s blocks closer (less if terrain blocks it).",
+  "worldcombat.skill.lick.description.2": "There is a %1$s second gap between snapping out and landing; the tongue extends tick by tick and stops on the first body or wall it touches; the coil form uses native knockback resistance to drag the target up to %2$s blocks closer (less when resistance or terrain holds it).",
   "worldcombat.skill.lick.use.0": "Lick a target from beyond melee range",
   "worldcombat.skill.lick.use.1": "Top up paralysis on a foe that is not numb yet",
   "worldcombat.skill.lick.use.2": "Drag a licked target a step closer",

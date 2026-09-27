@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.bonerush.summary": "把手里的硬骨一枚枚按弧线抛出，夯在目标脚下的地面上：冲击沿地层钻到落点周围贴地敌人的脚底（地面伤害、不接触），落点只留一圈会自己散去的尘痕、不改动地表，最后一击最重。可以点敌人，也可以只朝一个世界点自由抛骨；骨头撞墙就在接触面结束，砸在哪震哪，飞行或悬空的目标不吃震动。重夯式每击更重、可到 5 击，裂地式震波更大、尘痕更久。",
+  "worldcombat.skill.bonerush.summary": "把手里的硬骨从身体顶一枚枚按弧线抛出，瞄准目标脚底的真实支撑面夯下去：冲击沿地层钻到落点周围同一层、真实贴地敌人的脚底（地面伤害、不接触），落点只留一圈会自己散去的尘痕、不改动地表，最后一击最重。可以点敌人，也可以只朝一个世界点自由抛骨；骨头撞墙或打到空中的目标就只在接触面收势，不隔墙跨层传震，飞行或悬空的目标不吃震动。重夯式每击更重、可到 5 击，裂地式震波更大、尘痕更久。",
   "worldcombat.skill.bonerush.use.0": "隔着距离把骨头一下下夯到目标脚下",
   "worldcombat.skill.bonerush.use.1": "落点震波把一小片地面的人一起掀起",
-  "worldcombat.skill.bonerush.use.2": "裂地式用更久的尘痕占住战场",
+  "worldcombat.skill.bonerush.use.2": "裂地式留下更久的落点尘痕",
   "worldcombat.skill.bonerush.use.3": "只给一个世界点自由抛骨",
   "worldcombat.skill.bonerush.description.0": "每击约 %1$s 点地面伤害（不接触）；骨头朝目标当前所在处抛出，落地前走开就砸在空地上。这一串最多 %2$s 击，骨头本身带命中偏差，可能砸歪。",
   "worldcombat.skill.bonerush.description.1": "掷距 %1$s 格，骨速 %2$s 格/刻，弧坠 %3$s；每一击落地的震波波及半径 %4$s 格，范围内真正贴地的敌人各挨一次地面伤害并被向上顶起（飞行或悬空的目标不吃震动）。",
@@ -24,7 +24,6 @@
   "worldcombat.skill.bonerush.value.lift": "挑起",
   "worldcombat.skill.bonerush.value.boneRadius": "骨判定",
   "worldcombat.skill.bonerush.value.gap": "间隔",
-  "worldcombat.skill.bonerush.value.accuracy": "每击命中率",
   "worldcombat.skill.bonerush.value.dust": "扬尘数量",
   "worldcombat.skill.bonerush.value.tempo": "起手",
   "worldcombat.skill.bonerush.value.settle": "收招",

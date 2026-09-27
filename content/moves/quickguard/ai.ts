@@ -1,17 +1,17 @@
 /**
- * 快速防守 的伙伴 AI 用途：这是这招自己的一套出手计划——对准「贴速度打来的先制」那一瞬。
+ * 快速防守 的伙伴 AI 用途：这是这招自己的一套出手计划——对准「对手下一手就要打上来」那一瞬。
  *
- * 什么局面有意义：有看得见的威胁、进入 ai.trigger 距离、自己身上还没有同一面快板；关键的一条是「确有先制压力」——
- *   警戒范围内的敌人要么配招里带着 priority > 0 的招式，要么本单元的观察点记到它真的出手过先制。只看敌在附近
- *   就当先制会白架给普通 Mob／Boss；没有这条事实时，这招留给玩家手动预举。ai.ally 开启时还要身边有别的伙伴可护。
- * 什么时候最想出手：威胁贴身或自己被先制打到过时 priority 100——抢在共享交战次序前把快板先架起来；
- *   只是远处对峙时 58，作为一轮防御预备。
+ * 什么局面有意义：有看得见的威胁、进入 ai.trigger 距离、自己身上还没有同一面快板；ai.ally 开启时还要身边有
+ *   别的伙伴可护。先制不再是生效的前置条件——普通 MC 生物与模组 Boss 的原生攻击同样会被这面快板接住，
+ *   因此它们靠近、逼近或已有弹丸飞来时都算有意义；本单元观察到的「敌人真的出手过先制」只作为强提示加分。
+ * 什么时候最想出手：威胁贴身或自己被先制打到过时 base 高，抢在共享交战次序前把快板先架起来；有弹丸/近战正在
+ *   逼近时再加一档，作为一轮防御预备。
  * 对谁出手：以自身为锚架板，身边同伴顺势被罩住；不追人、不换位（架板时定身）。
- * 放完之后：快板只架一瞬，磨穿或到时自动收；板还在时不重复架。
+ * 放完之后：快板只架很短一瞬，其中任一人接住第一记直击、或到时自动收；板还在时不重复架。
  */
 namespace CompanionBehavior {
     const quickGuardTrigger = PokemonSkills.number("ai.trigger", "反应距离", 2, 16, 1);
-    quickGuardTrigger.help = "威胁进入这个距离、并且警戒范围内确有先制压力（配招带先制或见过它出手先制）时，才考虑架板；越大越早预判，也越可能白架。";
+    quickGuardTrigger.help = "威胁进入这个距离就考虑架板；越大越早预判，也越可能白架。";
     const quickGuardAlly = PokemonSkills.flag("ai.ally", "留到有伙伴才架板");
     quickGuardAlly.help = "开启后，只有警戒范围内还有别的友方才架板；关闭则自己受压就架。";
     /** 观察到的先制出手在多长时间内算数。 */
@@ -45,7 +45,7 @@ namespace CompanionBehavior {
         return false;
     }
 
-    /** 警戒范围内是否已有先制压力：某名敌人配招带先制，或本单元的观察点见过它出手先制。 */
+    /** 是否真的有先制压力：某名敌人配招带先制，或本单元的观察点见过它出手先制。只作评分提示，不作门槛。 */
     function quickGuardPressureNear(context: WorldBehavior.Context, radius: number): boolean {
         const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
@@ -56,6 +56,32 @@ namespace CompanionBehavior {
             if (PokemonSkills.quickGuardPrioritySeen(other.ref, world.tick(), quickGuardPressureWindow)) return true;
             if (quickGuardPriorityMoveset(world, other.ref)) return true;
         }
+        return false;
+    }
+
+    /** 是否有正在逼近自己的敌方近战身体或飞来的敌方弹丸：不依赖先制，普通攻击也算。 */
+    function quickGuardIncoming(context: WorldBehavior.Context, radius: number): boolean {
+        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || other.visible === false) continue;
+            const velocity = other.velocity;
+            if (!velocity || velocity.length !== 3) continue;
+            const distance = CompanionBehavior.distance(other.point, self.point);
+            if (distance > radius + 2) continue;
+            const dx = self.point[0] - other.point[0], dy = self.point[1] - other.point[1], dz = self.point[2] - other.point[2];
+            if (velocity[0] * dx + velocity[1] * dy + velocity[2] * dz > 0) return true;
+        }
+        try {
+            const world = CompanionBehavior.world(context);
+            const shots: CombatProjectileFacts[] = JSON.parse(String(world.projectiles(CompanionBehavior.point(self.point), radius + 4)));
+            for (let i = 0; i < shots.length; i++) {
+                const shot = shots[i];
+                if (!shot.hostile) continue;
+                const dx = self.point[0] - shot.position[0], dy = self.point[1] - shot.position[1], dz = self.point[2] - shot.position[2];
+                if (shot.velocity[0] * dx + shot.velocity[1] * dy + shot.velocity[2] * dz > 0) return true;
+            }
+        } catch (error) { return false; }
         return false;
     }
 
@@ -70,8 +96,6 @@ namespace CompanionBehavior {
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             const trigger = CompanionBehavior.ai<number>(capability, "trigger", 8);
             if (CompanionBehavior.distance(self.point, threat.point) > trigger) return false;
-            // 没有实际的先制行为或配招时，不把普通敌人当先制；这招留给玩家手动预举。
-            if (!quickGuardPressureNear(context, Math.max(trigger, 4))) return false;
             if (CompanionBehavior.ai<boolean>(capability, "ally", false) && !quickGuardAllyNear(context, 5)) return false;
             return true;
         },
@@ -81,7 +105,11 @@ namespace CompanionBehavior {
             const threat = context.senses["world_combat:threat"], self = CompanionBehavior.source(context);
             if (!threat) return 0;
             const distance = CompanionBehavior.distance(self.point, threat.point);
-            return self.hurtAgo < 60 || distance <= 4 ? 100 : 58;
+            const trigger = CompanionBehavior.ai<number>(capability, "trigger", 8);
+            let value = self.hurtAgo < 60 || distance <= 4 ? 80 : 45;
+            if (quickGuardPressureNear(context, Math.max(trigger, 4))) value += 20;
+            if (quickGuardIncoming(context, Math.max(trigger, 4))) value += 25;
+            return value;
         }
     });
 }

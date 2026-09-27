@@ -11,7 +11,8 @@
  *
  * 数据分散（每项读不同的精灵数据）：
  *   crash      扑击威力：物攻给狠度，速度把扑势压进去；雨中 ×1.14；瀑落式 ×1.08。
- *   climb      抬升高度：体重越轻抬得越高，等级让水柱更足；它是水柱的目标高度。
+ *   climb      抬升高度：体重越轻抬得越高，等级让水柱更足；瀑落式 ×1.15。它是水柱能托到的上限，
+ *              实际只抬到锁定目标点所需的量，平地不必升满。
  *   pounce     扑击距离：速度与身高决定扑得多远，也是本招射程基准。
  *   pace       扑速：速度决定每刻推进多少。
  *   collisionRadius 判定半径：身高决定身周水墙多宽。
@@ -91,10 +92,11 @@ namespace PokemonSkills {
         climb: formula(
             F.base(1.5).minus(F.body("weight").minus(50).times(0.005).clamp(-0.2, 0.8))
                 .plus(F.level().minus(30).times(0.012).clamp(0, 0.6))
+                .times(F.when(F.pref("torrent", text("worldcombat.skill.waterfall.preference.torrent")), F.const(1.15), F.const(1)))
                 .clamp(0.8, 2.6).round(2),
             "抬升高度", {
                 unit: "格",
-                description: "脚下水柱能把身体托多高；越轻、等级越高抬得越高，头顶有方块时按实际净空压低。表现里的水柱高度就是实际升起来的高度。"
+                description: "脚下水柱能托起的最高高度；越轻、等级越高越足，瀑落式再抬一档。实际只抬到锁定目标点所需的量，平地不必升满，头顶有方块时按实际净空压低。"
             }),
         tempo: seconds(
             F.base(9).minus(F.stat("speed").minus(55).times(0.04).clamp(-2, 3))

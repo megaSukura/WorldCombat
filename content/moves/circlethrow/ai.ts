@@ -4,11 +4,12 @@
  * 什么局面下出手：贴身过肩摔，带伤害也带逐退，只对一个人。`available` 要求威胁在 `ai.maxChase`（默认 7）格内；
  *   更远由共享接近逻辑走过去，实际抓取距离由 grip 决定（很短）。
  * 对谁出手：`selectTarget` 只接一个——优先「正在攻击自己或主人」的那个（借它冲上来的力摔最顺），并列时挑最近的。
- *   出手前用 `CompanionBehavior.world(context).freeSpace` 探一下自己背后是否有放得下它的空位，有可靠落点时更愿意出手；
+ *   出手前按本招真实投掷距离 `fling` 算出身后的落点，用 `CompanionBehavior.world(context).freeSpace` 探它是否放得下；
+ *   完全抗搬（抗击退 ≥ 0.9）的目标搬不动，按「只吃伤害」计价值，不再为它加分也不因它排除。
  *   玩家「关注」的焦点目标直接 honored；`accepts` 排除友方、已死、不可见与已经带着「溃退」的目标。
- * 什么时候最想出手：对手已经贴得很近、正在攻击、且身后有空位时 priority 抬高——它是一记贴身反击，不是远攻。
+ * 什么时候最想出手：对手已经贴得很近、正在攻击、且身后有真实合法落点时 priority 抬高——它是一记贴身反击，不是远攻。
  * 够不到怎么办：reach 是抓取距离，共享任务先贴上去再抓。
- * 放完之后：目标挨一记摔击、被摔到背后并可能强制换下，伙伴交回共享交战计划。
+ * 放完之后：目标挨一记摔击、被搬到背后并可能强制换下，伙伴交回共享交战计划。
  * `ai.leaveStation`：驻守中的伙伴是否愿意离位去抓（默认关闭）。
  */
 namespace CompanionBehavior {
@@ -25,14 +26,22 @@ namespace CompanionBehavior {
         return distance(source(context).point, subject.point) <= ai<number>(item, "maxChase", 7);
     }
 
-    /** 出手前探一探自己背后（背对目标的方向）有没有放得下这个目标的可达空位。 */
+    /** 完全抗搬：原生抗击退已到顶，越肩摔搬不动，只能当伤害用。 */
+    function circlethrowResist(context: WorldBehavior.Context, subject: Entity): boolean {
+        const access = world(context), actor = access.actor(subject.ref);
+        if (actor === null) return false;
+        const attribute = access.attributeValue(actor, "minecraft:generic.knockback_resistance");
+        return attribute !== null && attribute.value() >= 0.9;
+    }
+
+    /** 出手前按本招真实投掷距离算出目标落在背后的哪一点，探那里是否放得下它。 */
     function circlethrowLanding(context: WorldBehavior.Context, item: WorldBehavior.Capability, subject: Entity): boolean {
         const self = source(context), access = world(context);
         const dx = subject.point[0] - self.point[0], dz = subject.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1e-6) return false;
-        const reach = Math.max(2, item.data.range + 1);
-        const behind = point([self.point[0] - dx / length * reach, self.point[1], self.point[2] - dz / length * reach]);
+        const fling = PokemonSkills.p("circlethrow", "fling", access);
+        const behind = point([self.point[0] - dx / length * fling, self.point[1], self.point[2] - dz / length * fling]);
         try { return access.freeSpace(behind, subject.width || 0.9, subject.height || 1.4); }
         catch (error) { return true; }
     }
@@ -62,7 +71,8 @@ namespace CompanionBehavior {
             const self = source(context), limit = Math.max(1, ai<number>(item, "maxChase", 7));
             let base = 26 + Math.round((1 - Math.min(1, distance(self.point, target.point) / limit)) * 10);
             if (target.attacking === self.ref) base += 8;
-            if (circlethrowLanding(context, item, target)) base += 4;
+            // 抗搬目标按「只吃伤害」计：不因身后没落点而排除，也不给落地加分。
+            if (!circlethrowResist(context, target) && circlethrowLanding(context, item, target)) base += 4;
             if (ratio(self) < 0.5) base += 6;
             return Math.min(80, base);
         }

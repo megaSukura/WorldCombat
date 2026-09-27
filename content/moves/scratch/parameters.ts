@@ -11,7 +11,7 @@
  * 数据分散（每项读不同的精灵数据）：
  *   claw       每道爪痕的深浅：物攻定刃口，等级给熟练度；宽搔摊薄、直搔更重。
  *   lines      爪痕道数：速度决定这一爪划出几道。
- *   span       爪痕张角：宽搔铺得更开。
+ *   span       爪痕总宽：整排平行爪痕横向铺开的总宽；宽搔铺得更开。
  *   reach      爪痕探出多远：身高给前肢舒展的长度，也是实际射程。
  *   line       单道爪痕半宽：体宽定爪面多厚，决定多宽的对手会被同一道扫到。
  *   step       出手时垫前的一小步：速度给起手的冲量。
@@ -44,13 +44,13 @@ namespace PokemonSkills {
                 unit: "道",
                 description: "这一爪同时划出几道痕；速度快的个体抬手更快、多划一道。道数是真实判定次数，画面里的爪痕数量与它一致。"
             }),
-        /** 爪痕张角：52 + 宽搔 +24 / 直搔 −14；夹 28..92 度。 */
+        /** 爪痕总宽：1.8 + 宽搔 +0.55 / 直搔 −0.3；夹 0.9..2.6 格。 */
         span: formula(
-            F.base(52).plus(F.when(F.pref("sweep", text("worldcombat.skill.scratch.preference.sweep")), F.const(24), F.const(-14)))
-                .clamp(28, 92).round(0),
-            "爪痕张角", {
-                unit: "度",
-                description: "一整排爪痕铺开多大扇面；宽搔式更开、能罩住并排或大体型的对手，直搔式收拢成一道窄弧。"
+            F.base(1.8).plus(F.when(F.pref("sweep", text("worldcombat.skill.scratch.preference.sweep")), F.const(0.55), F.const(-0.3)))
+                .clamp(0.9, 2.6).round(2),
+            "爪痕总宽", {
+                unit: "格",
+                description: "一整排平行爪痕在身前横向铺开的总宽；宽搔式更宽、能罩住并排或大体型的对手，直搔式收拢成一道窄排。爪痕道数越少、每道之间拉得越开。"
             }),
         /** 爪痕探出距离：2.05 + 身高偏移[−0.3,0.8] ×0.5；宽搔 −0.15 / 直搔 +0.28；夹 1.6..2.9。 */
         reach: formula(

@@ -2,20 +2,41 @@
  * 终极冲击的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。这是一记带真实力竭的全力冲撞，
- * 所以只在自身生命高于 `ai.minHealth`、或对手已经能用这一下收掉时才排到前面。
- * 贴身且在射程内时 priority 抬高；对手残血且已进入冲程时最优先。
- * 冲完自己会定在原地，所以身边还挤着多个近敌时明显降优先——那是挨打的窗口；
- * 有己方伙伴贴近掩护时再抬一点，敢在有后手时冲。力竭期间招式自动不可用（共享起手门禁）。
+ * 所以只在自身生命高于 `ai.minHealth`、或这一撞能用真实公式预估收掉目标时才排到前面。
+ * 冲完自己会停在预计终点，所以按**预计终点**周围的人数评分：身边还挤着多个近敌时明显降优先——那是挨打的窗口；
+ * 有己方伙伴贴近终点掩护时再抬一点。力竭期间招式自动不可用（共享起手门禁）。
  */
 namespace PokemonSkills {
-    /** 施法者身周贴近的其他活体：敌人数（冲完被围的代价）与友方数（能掩护的后手）。 */
-    function gigaimpactSurround(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): { crowd: number; cover: number } {
+    /** 本招实际公式的出手侧伤害预估：与出手读同一条 power/攻击/本系加成链。非宝可梦或失败时回退 0。 */
+    function gigaimpactEstimate(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context), actor = world.source();
+        try {
+            const power = p("gigaimpact", "crash", { world: world, actor: actor, skill: skills["gigaimpact"],
+                detail: { values: capability.data.config } });
+            const facts = PokemonDamage.combatants.read(world, actor);
+            const preview = PokemonDamage.preview(world, actor, facts, CobblemonCombat.moveTemplate("gigaimpact"),
+                damageFeatures("gigaimpact", "crash"), { power: { value: power } });
+            return preview && typeof preview.amount === "number" && isFinite(preview.amount) ? Math.max(0, preview.amount) : 0;
+        } catch (error) {
+            return 0;
+        }
+    }
+
+    /** 施法者沿冲撞方向跑完 lunge 后的预计终点，周围贴近的其他活体：敌人数（冲完被围的代价）与友方数（能掩护的后手）。 */
+    function gigaimpactSurround(context: WorldBehavior.Context, item: WorldBehavior.Capability, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): { crowd: number; cover: number } {
+        const world = CompanionBehavior.world(context);
+        const values: FactContext = { world: world, actor: world.source(), skill: skills["gigaimpact"], detail: { values: item.data.config } };
+        const lunge = Math.max(0, p("gigaimpact", "lunge", values));
+        const start = CompanionBehavior.point(self.point), goal = CompanionBehavior.point(target.point);
+        const delta = goal.minus(start);
+        const end = start.plus((delta.length() < 0.05 ? WorldCombat.point(0, 0, 1) : delta.unit()).scale(lunge));
+        const endPoint = [end.x(), end.y(), end.z()];
         var nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         var crowd = 0, cover = 0;
         for (var i = 0; i < nearby.length; i++) {
             var other = nearby[i];
             if (!other.visible || !(other.health > 0)) continue;
-            var away = CompanionBehavior.distance(other.point, self.point);
+            var away = CompanionBehavior.distance(other.point, endPoint);
             if (other.friendly) { if (away <= 6) cover++; }
             else if (String(other.ref) !== String(target.ref) && away <= 5) crowd++;
         }
@@ -41,8 +62,9 @@ namespace PokemonSkills {
             var self = CompanionBehavior.source(context);
             var close = CompanionBehavior.distance(self.point, target.point) <= capability.data.range;
             if (!close) return 0;
-            var score = CompanionBehavior.ratio(target) <= 0.3 ? 74 : 22;
-            var around = gigaimpactSurround(context, self, target);
+            // 用真实预估判断这一撞能否收尾，而不是只看目标残血比例。
+            var score = gigaimpactEstimate(context, capability) >= target.health ? 74 : 22;
+            var around = gigaimpactSurround(context, capability, self, target);
             score -= Math.min(3, around.crowd) * 8;
             if (around.cover > 0) score += Math.min(2, around.cover) * 5;
             return Math.max(0, score);
@@ -51,7 +73,7 @@ namespace PokemonSkills {
 
     addPreferences("gigaimpact", {}, [
         field(pathOf("brace"), "收势", "boolean", {
-            help: "开启：撞到前主动收力——力竭时间明显更短、击退更小，但冲程与冲击范围也缩水；关闭：把全身压进去，冲得更远、撞得更重、把目标顶得更开，代价是撞完后更长的无法行动。"
+            help: "开启：撞到前主动收力——力竭时间明显更短、击退更小，但冲程与这一撞的威力也缩水；关闭：把全身压进去，冲得更远、撞得更重、把目标顶得更开，代价是更长的无法行动。"
         }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 20, step: 1,

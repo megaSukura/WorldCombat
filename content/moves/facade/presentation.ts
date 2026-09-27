@@ -7,8 +7,9 @@
  * 拍子：起（brace 0–7t，压低蓄势）→ 击（drive 与 impact）→ 收（shove 余韵、whiff 落空）。
  * 范围：brace/drive 的尘环贴施法者脚下、impact/shove 的爆与环绑命中点——画出的就是判定命中的位置。
  * 运动：速度线随施法者沿冲撞方向掠过，命中后尘土沿顶开方向退去，异常粒子从命中处向上散开。
- * 数：`data.essence`／`data.essenceRate` 画出身上异常的种类与量，`data.intensity`（本次威力 / 70）抬高爆尘密度与亮度，
- * `data.scale`（判定半径 / 0.55）放大 drive 的尘环。
+ * 数：`data.essence`／`data.essenceRate` 画出身上异常的种类与量；无异常时 rate 直接为 0，不靠 trail 触发，保证不冒粒子；
+ * `data.intensity`（本次威力 / 70）抬高爆尘密度与亮度，`data.scale`（判定半径 / 0.55）放大 drive 的尘环。
+ * impact／shove 绑命中点（`data.point`），目标被击杀后爆闪与顶开环仍画在实际接触处。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const FacadeDefinition: ParticleDefinition = {
@@ -69,7 +70,7 @@ const FacadeDefinition: ParticleDefinition = {
                     name: "ache_trail", bind: "source", offset: [0, 0.5, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
                     rate: { data: "essenceRate", fallback: 0 }, shape: { kind: "sphere", radius: 0.22 },
-                    direction: "shape", speed: [0.02, 0.1], trail: { minDistance: 0.3 },
+                    direction: "shape", speed: [0.02, 0.1],
                     lifetime: [6, 12], size: [0.08, 0.02],
                     color: { data: "tint", fallback: 0xE8D8B0 }, alpha: [0.6, 0], light: "full", maxParticles: 90
                 }
@@ -80,7 +81,7 @@ const FacadeDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "hit_flash", bind: "target", height: 0.4,
+                    name: "hit_flash", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: { data: "flash", fallback: 14 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.34 },
@@ -89,7 +90,7 @@ const FacadeDefinition: ParticleDefinition = {
                     alpha: [1, 0], light: "full", bloom: 0.4
                 },
                 {
-                    name: "burst_dust", bind: "target", height: 0.4,
+                    name: "burst_dust", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: { data: "dust", fallback: 30 } },
                     shape: { kind: "sphere", radius: 0.44 },
@@ -98,7 +99,7 @@ const FacadeDefinition: ParticleDefinition = {
                     color: 0x8C7448, alpha: [0.35, 0], light: "world", maxParticles: 130
                 },
                 {
-                    name: "grit", bind: "target", height: 0.35,
+                    name: "grit", bind: "point", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "grit", fallback: 46 } },
                     shape: { kind: "sphere", radius: 0.5 },
@@ -107,7 +108,7 @@ const FacadeDefinition: ParticleDefinition = {
                     color: 0xD8C48C, alpha: [0.7, 0], gravity: 0.03, drag: 0.9, light: "world", maxParticles: 150
                 },
                 {
-                    name: "thrown_ache", bind: "target", height: 0.55,
+                    name: "thrown_ache", bind: "point", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
                     burst: { count: { data: "essence", fallback: 0 } },
                     shape: { kind: "sphere", radius: 0.4 },
@@ -122,7 +123,7 @@ const FacadeDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "push_ring", bind: "target", offset: [0, 0.06, 0], height: 0,
+                    name: "push_ring", bind: "point", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 26 },
                     shape: { kind: "ring", radius: 0.5 },
@@ -131,7 +132,7 @@ const FacadeDefinition: ParticleDefinition = {
                     color: 0xA89162, alpha: [0.55, 0], light: "world"
                 },
                 {
-                    name: "skid", bind: "target", offset: [0, 0.03, 0], height: 0,
+                    name: "skid", bind: "point", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/earth",
                     rate: 20, shape: { kind: "ring", radius: 0.4 },
                     direction: "outward", speed: [0.03, 0.1],

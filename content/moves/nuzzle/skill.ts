@@ -14,8 +14,10 @@
  */
 namespace PokemonSkills {
     const nuzzleScene = "world_combat:move_nuzzle";
+    const nuzzleCheekScene = "world_combat:move_nuzzle_cheeks";
     const nuzzleHitText = "world_combat.move.nuzzle.text.hit";
     const nuzzleImmuneText = "world_combat.move.nuzzle.text.immune";
+    const nuzzleResistText = "world_combat.move.nuzzle.text.resist";
     const nuzzleWhiffText = "world_combat.move.nuzzle.text.whiff";
 
     define({
@@ -47,13 +49,18 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const arcs = Math.max(3, Math.round(p(nuzzleId, "arcs", action)));
-            action.present("nuzzle:cheek:" + action.id(), nuzzleScene, 1, action.origin(),
-                JSON.stringify({ moment: "cheek", windup: prepare, arcs: arcs, pounce: config && config.pounce ? 1 : 0 }));
+            const touch = p(nuzzleId, "touchReach", action);
+            // 脸颊由客户端按真实身体朝向逐帧摆放：转身时双颊跟着前方走，不用固定世界轴偏移。
+            action.present("nuzzle:cheek:" + action.id(), nuzzleCheekScene, 1, action.origin(),
+                JSON.stringify({ moment: "cheek", windup: prepare, arcs: arcs,
+                    scale: Math.max(0.6, Math.min(1.8, touch / 0.85)),
+                    pounce: config && config.pounce ? 1 : 0, start: action.sense().tick() }));
             return prepare;
         },
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills[nuzzleId], detail: { values: config } };
-            return { radius: p(nuzzleId, "reach", context), geometry: "area", style: "spark", color: 0xFFE96A,
+            // 预览画的是身体起手后真正扫过的范围（前扑 + 接触半径），而不是只画锁定距离。
+            return { radius: p(nuzzleId, "lunge", context) + p(nuzzleId, "touchReach", context), geometry: "area", style: "spark", color: 0xFFE96A,
                 label: config && config.pounce === true ? "蹭蹭脸颊·猛扑" : "蹭蹭脸颊" };
         },
         execute: function (action, move, config, done) {
@@ -82,13 +89,16 @@ namespace PokemonSkills {
                 finished = true;
                 const scope = current.world();
                 if (victim !== null) {
-                    // 真实蹭上：伤害成功后才尝试施加必麻；免疫照常反馈。
+                    // 真实蹭上：伤害成功后才尝试施加必麻；伤害被拒、施麻被拒与成功分别反馈。
                     const dealt = hurt(current, victim, nuzzleId, power, { damage: damageSpec(nuzzleId, "nudge"), contact: true });
                     const applied = dealt ? CombatStatus.inflict(scope, victim, "paralysis", numbTicks) : false;
                     WorldFeedback.emit(scope, nuzzleScene, 1, contact,
-                        { moment: "touch", target: String(victim.ref()), sparks: dealt ? Math.round(10 + power * 0.6) : 6,
-                            arcs: arcs, scale: scale, intensity: intensity }, 24);
-                    WorldFeedback.text(scope, contact.plus(WorldCombat.point(0, 1.0, 0)), applied ? nuzzleHitText : nuzzleImmuneText, [], 24);
+                        { moment: "touch", target: String(victim.ref()),
+                            sparks: dealt ? Math.round(10 + power * 0.6) : 6,
+                            numbing: applied ? Math.max(6, Math.round(6 + arcs)) : 0,
+                            arcs: arcs, scale: scale, intensity: intensity, dealt: dealt ? 1 : 0, paralysis: applied ? 1 : 0 }, 24);
+                    WorldFeedback.text(scope, contact.plus(WorldCombat.point(0, 1.0, 0)),
+                        applied ? nuzzleHitText : dealt ? nuzzleImmuneText : nuzzleResistText, [], 24);
                     scope.sound("minecraft:entity.cat.purr", contact, 14, "{}");
                     if (applied) sound(current, "cobblemon:move.thundershock.target");
                 } else {

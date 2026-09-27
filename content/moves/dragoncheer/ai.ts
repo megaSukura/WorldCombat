@@ -7,24 +7,24 @@
  * 对谁出手：以自身为中心的一整片，不需要选中队友；由共用任务直接施放。
  * 够不到怎么办：吼的范围就是招式实际的 cheerRadius；威胁太远就先不理会，等它靠近。
  * 放完之后：友方身上的士气按各自 mark 兑现；还在身上时不再重复，已聚气的队友始终跳过。
+ * 驻守：这是以自身为心的自用招，收到「驻守」指令也照吼，不因原地不动而失效。
  * 配置：roar（长啸／短吼）改变半径、时长与节奏；ai.maxChase 决定追多远。
  */
 namespace CompanionBehavior {
-    PokemonSkills.addPreferences("dragoncheer", { ai: { maxChase: 15, leaveStation: false } }, [
-        PokemonSkills.number("ai.maxChase", "考虑距离", 4, 28, 1),
-        PokemonSkills.flag("ai.leaveStation", "驻守时离位")
+    PokemonSkills.addPreferences("dragoncheer", { ai: { maxChase: 15 } }, [
+        PokemonSkills.number("ai.maxChase", "考虑距离", 4, 28, 1)
     ]);
 
-    /** 实际鼓舞半径：直接求本招参数，与 execute 用的是同一份 cheerRadius，不再另立一个分离的距离。 */
+    /** 实际鼓舞半径：直接求本招 cheerRadius 的公式，与 execute 用的是同一份，不再另立一个分离的距离。 */
     function dragoncheerRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const world = context.services.world;
-        if (world) {
-            try {
-                const value = PokemonSkills.p(PokemonSkills.dragonCheerId, "cheerRadius", world);
-                if (typeof value === "number" && isFinite(value) && value > 0) return value;
-            } catch (error) { }
-        }
-        const fallback = item.data && typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range : 6;
+        const world = CompanionBehavior.world(context);
+        try {
+            const value = PokemonSkills.p(PokemonSkills.dragonCheerId, "cheerRadius",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills[PokemonSkills.dragonCheerId],
+                    detail: { values: item.data.config || {} } });
+            if (typeof value === "number" && isFinite(value) && value > 0) return Math.max(2, value);
+        } catch (error) { }
+        const fallback = item.data && typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range : 4;
         return Math.max(2, fallback);
     }
     /** 实际半径内还有多少可以鼓舞的友方（含自己，不含已聚气或已有龙声者）。 */

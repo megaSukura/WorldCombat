@@ -26,9 +26,9 @@
   "worldcombat.skill.soak.growth.0": "From level %1$s, base cooldown is shortened by 0.5 s.",
   "worldcombat.skill.soak.growth.1": "From level %1$s, base cooldown is shortened by 1.1 s, replacing the previous growth reduction.",
   "world_combat.move.soak.text.drench": "Drenched, turned Water-type",
-  "world_combat.move.soak.text.dry": "The water dries; its type returns",
+  "world_combat.move.soak.text.dry": "The water dries; Soak fades",
   "world_combat.move.soak.text.fizzle": "Already pure Water, nothing to drench",
-  "world_combat.move.soak.text.empty": "Only water splashed out; no type to drench",
+  "world_combat.move.soak.text.empty": "Only water splashed out; no target was chosen",
   "effect.world_combat.soaked_through": "Drenched (Water-type)",
-  "worldcombat.skill.soak.description.3": "A target that is already pure Water, has its type locked, or has no types (non-Pokemon) cannot be turned; the attempt is refused and costs no PP."
+  "worldcombat.skill.soak.description.3": "Vanilla and modded creatures can also become Water-type. Pure Water or type-locked targets refuse Soak. Removing the drench removes its Water-type layer."
 }

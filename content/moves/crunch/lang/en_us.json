@@ -31,7 +31,7 @@
   "worldcombat.skill.crunch.preference.ai.openGuard": "Open the guard first",
   "worldcombat.skill.crunch.preference.ai.openGuard.help": "On: prefer targets that do not yet carry the guardbroken identity, saving the gap for later moves. Off: sort Crunch as an ordinary melee heavy bite.",
   "worldcombat.skill.crunch.preference.ai.hardShell": "Chew the hard shell first",
-  "worldcombat.skill.crunch.preference.ai.hardShell.help": "On: prefer higher-Defence and larger targets so the armour-piercing fangs open the gap first. Off: sort every melee target as an ordinary heavy bite.",
+  "worldcombat.skill.crunch.preference.ai.hardShell.help": "On: weigh native armour, Pokemon Defence and body size together to spot a hard shell, and prefer targets that are held in place or slow to pull away so the armour-piercing fangs open the gap first. Off: sort every melee target as an ordinary heavy bite.",
   "world_combat.move.crunch.text.latch": "Latched on",
   "world_combat.move.crunch.text.crush": "Guard crushed %1$s stage",
   "world_combat.move.crunch.text.miss": "Bit nothing",

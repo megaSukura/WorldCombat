@@ -3,8 +3,8 @@
  *
  * 场面：一只会龙之波动的刺龙王（Kingdra，50 级），正前方 7 格与 10 格各站一只只带跃起、不还手的果然翁，
  * 排在同一条直线上——用来读贯通式能不能把一列上的第二个目标也扫到。
- * 必然事实：本招被提交过；至少一个目标受到过伤害。
- * 是否穿透到第二个目标、伤害数值、波何时到头，写进 note 供读轨迹判断。
+ * 必然事实：本招被提交过；连锁式下前后两只都受到过伤害（首击与沿同一 3D 线前扫的后体）。
+ * 伤害数值、波何时到头、墙截断，写进 note 供读轨迹判断。
  */
 Smoke.scenario("dragonpulse", function (stage) {
     stage.time("day");
@@ -25,9 +25,9 @@ Smoke.scenario("dragonpulse", function (stage) {
         // 波以约 0.85 格/刻前进，等一小段让它走完 10 格再读第二个目标。
         stage.after(30, function () {
             stage.expect(stage.casts("dragonpulse", caster) > 0, "dragonpulse was committed");
-            stage.expect(stage.damageTo(near) + stage.damageTo(far) > 0, "the dragon pulse dealt damage");
-        stage.note("龙之波动沿直线持续前进：贯通式按 pierce 以完整威力穿过成排目标；连锁式在第一个目标处收束，"
-            + "再沿同一条线依次命中后续目标、每级威力递减。这一场用连锁式，读刺龙王在 50 级能否把身后的第二只也扫到。",
+            stage.expect(stage.damageTo(near) > 0, "the dragon pulse dealt damage to the first foe");
+            stage.expect(stage.damageTo(far) > 0, "the chain reached the foe behind the first");
+        stage.note("龙之波动沿真实 3D 方向持续前进：贯通式按 pierce 以完整威力穿过成排目标；连锁式在第一个目标处收束，再沿同一条线逐段前扫、墙截断，只有真正落下的伤害才计数、每级 ×0.72 递减。这一场用连锁式，读刺龙王在 50 级能否把身后的第二只也扫到。",
                 { casts: stage.casts("dragonpulse", caster), onNear: Math.round(stage.damageTo(near) * 10) / 10, onFar: Math.round(stage.damageTo(far) * 10) / 10,
                     piercedFar: stage.damageTo(far) > 0, nearAlive: near.alive(), farAlive: far.alive(), casterTravelled: Math.round(stage.travelled(caster) * 10) / 10 });
             stage.done();

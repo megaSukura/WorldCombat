@@ -6,8 +6,8 @@
  *
  * 色相家族：雾白青（0xBFE6F0）为主体，近白（0xE8F6FA）做高光，灰青（0x9FC3CC）做脚下影与淡出。
  * 一个效果一个色相家族。要遮挡是这招的本意，所以主体层可以密；但持续层压在脚下与身侧，让出目标本体视线。
- * 层次：吐雾（起手，源侧）／铺开环＋雾团（罩住一圈）／身周薄雾（持续）／吞掉下降（事件）／
- *       某人丢雾（lose）／整片来源退出（fade）。
+ * 层次：吐雾（起手，源侧）／铺开环＋雾团（罩住一圈，半径按真实世界格数）／身周薄雾（持续）／
+ *       施法者补给边缘（持续，按真实半径）／吞掉下降（事件）／某人丢雾（lose）／整片来源退出（fade）。
  * 起击收：windup（聚雾）→ veil（铺开）→ veiled（持续）→ guard（吞掉一次下降）→ lose（某人失雾）→ fade（来源退出）。
  * 数：铺开的雾团量与持续时间绑定服务端算出的 data.density；雾圈半径绑定 data.field；
  * 吞掉下降的粒子量绑定实际被还原的等级数（data.motes 由 absorbed 派生）。
@@ -35,7 +35,7 @@ const MistDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 30 },
             emitters: [
                 {
-                    name: "veil_ring", bind: "source", height: 0.06, offset: [0, 0.04, 0],
+                    name: "veil_ring", bind: "source", fit: "world", height: 0.06, offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 34 }, shape: { kind: "ring", radius: { data: "field", fallback: 3 } },
                     direction: "outward", speed: [0.05, 0.16],
@@ -51,7 +51,7 @@ const MistDefinition: ParticleDefinition = {
                     color: 0xBFE6F0, alpha: [0.4, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "veil_spread", bind: "source", height: 0.2, offset: [0, 0.04, 0],
+                    name: "veil_spread", bind: "source", fit: "world", height: 0.2, offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/glowingsmoke_cyan",
                     burst: { count: 18, interval: 4, repeats: 3 }, shape: { kind: "ring", radius: { data: "field", fallback: 3 } },
                     direction: "outward", speed: [0.03, 0.1], drag: 0.92,
@@ -59,7 +59,7 @@ const MistDefinition: ParticleDefinition = {
                     color: 0xE8F6FA, alpha: [0.35, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "veil_dust", bind: "source", height: 0.02,
+                    name: "veil_dust", bind: "source", fit: "world", height: 0.02,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 20 }, shape: { kind: "ring", radius: { data: "field", fallback: 3 } },
                     direction: "outward", speed: [0.02, 0.1], drag: 0.94,
@@ -86,6 +86,28 @@ const MistDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [22, 34], size: [0.12, 0.03], sizeMode: "sin",
                     color: 0xE8F6FA, alpha: [0.22, 0], light: "world", maxParticles: 14
+                }
+            ]
+        },
+        // 施法者自己沿真实半径续一圈淡薄补给边缘，标出这份雾罩到哪；受护队友只有自己的身周雾。
+        supply: {
+            exit: { drain: 26 },
+            emitters: [
+                {
+                    name: "supply_edge", bind: "source", fit: "world", height: 0.05, offset: [0, 0.04, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 2.5, shape: { kind: "ring", radius: { data: "field", fallback: 3 } },
+                    direction: "up", speed: [0.0, 0.02],
+                    lifetime: [16, 26], size: [0.16, 0.05], sizeMode: "sin",
+                    color: 0x9FC3CC, alpha: [0.24, 0], light: "world", maxParticles: 26
+                },
+                {
+                    name: "supply_dust", bind: "source", fit: "world", height: 0.0, offset: [0, 0.04, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 3, shape: { kind: "ring", radius: { data: "field", fallback: 3 } },
+                    direction: "up", speed: [0.005, 0.03],
+                    lifetime: [20, 32], size: [0.06, 0.01],
+                    color: 0xBFE6F0, alpha: [0.28, 0], light: "world", maxParticles: 32
                 }
             ]
         },
@@ -138,7 +160,7 @@ const MistDefinition: ParticleDefinition = {
                     color: 0xBFE6F0, alpha: [0.24, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "fade_ring", bind: "target", height: 0.04,
+                    name: "fade_ring", bind: "target", fit: "world", height: 0.04,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 16 }, shape: { kind: "ring", radius: { data: "field", fallback: 3 } },
                     direction: "outward", speed: [0.02, 0.08], drag: 0.94,

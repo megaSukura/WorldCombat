@@ -7,8 +7,9 @@
  * 能不能冻住读得出来——看目标身上有没有霜、脚边有没有水。
  *
  * 拳是**自由 3D 短拳**：从身体中心沿瞄准方向伸出 `fistReach`，由 `action.trace` 判首碰（墙与其他身体会挡住，
- * 也可以空拳），不会为了逃开的选定对象自动伸长。冻结**先尝试、再消费**：只有 `CombatStatus.inflict` 真的成功，
- * 才收走这层寒霜；免冻的 Boss 会保留原霜的剩余时间，画面也只给碎霜与抵抗反馈，不假装冻住。
+ * 也可以空拳），不会为了逃开的选定对象自动伸长；命中当刻在源到接触点之间画出一道短拳路径。冻结**先尝试、再消费**：
+ * 只有共享次级路由（`secondary:true`）真的把目标冻住，才收走这层寒霜；免冻的 Boss 会保留原霜的剩余时间，
+ * 画面也只给碎霜与抵抗，只有真免疫才说明，不假装冻住。
  *
  * 配置 `deepfreeze`（深冻式）由 resolve 改时序、由公式改威力／时长，提交后才触碰世界。
  */
@@ -25,8 +26,8 @@ namespace PokemonSkills {
         id: "icepunch",
         cooldownParameter: "recharge",
         name: "Ice Punch",
-        description: "一记覆满寒霜的拳沿瞄准方向打出，命中第一个挡在拳程里的目标，给它留下一层拖慢行动的寒霜；若目标已经带霜、或正浸在水里，则先尝试把它冻在原地（浸水时冻得更久），冻结真的成功才收走那层霜。冻结免疫的目标会保留原有的霜，拳伤照样成立。",
-        uses: ["贴身给目标结一层拖慢它的寒霜", "对已经结霜或浸水的目标补一拳冻住", "把关键目标按停"],
+        description: "一记覆满寒霜的拳沿瞄准方向打出，命中第一个挡在拳程里的目标，给它留下一层拖慢行动的寒霜；若目标已经带霜、或正浸在水里/被水浇透，则先尝试把它冻在原地（湿身时冻得更久），冻结真的成功才收走那层霜。冻结免疫的目标会保留原有的霜，拳伤照样成立。",
+        uses: ["贴身给目标结一层拖慢它的寒霜", "对已经结霜或湿身的目标补一拳冻住", "把关键目标按停"],
         kind: "aim",
         range: 2.5,
         maxRange: 3.4,
@@ -38,7 +39,7 @@ namespace PokemonSkills {
         defaults: { deepfreeze: false, ai: { maxChase: 6, finishFrozen: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("icepunch", "fistReach", pokemon) + 0.3, geometry: "line", style: "ice", color: 0x8FD8F0,
+            return { radius: p("icepunch", "fistReach", pokemon) + 0.4, geometry: "line", style: "ice", color: 0x8FD8F0,
                 label: config && config.deepfreeze === true ? "深冻拳" : "冰冻拳" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -57,6 +58,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const world = action.world();
             const actor = action.actor();
             const reach = p("icepunch", "fistReach", action);
             const power = p("icepunch", "frost", action);
@@ -70,6 +72,13 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
+            // 拳前凝霜覆盖总 prepare+jab：windup 的凝霜随提交结束，这里在出拳延迟期间续上同一幕，等待才不空。
+            if (jab > 0) {
+                const gathering = world.observe(actor);
+                if (gathering !== null)
+                    WorldFeedback.emit(world, icepunchScene, 1, gathering.position(), { moment: "charge" }, jab + 6);
+            }
+
             function whiff(current: CombatAction): void {
                 const scope = current.world(), me = scope.observe(current.actor());
                 if (me !== null) {
@@ -82,18 +91,20 @@ namespace PokemonSkills {
             /** 命中后决定结霜还是冻结：先尝试合法冻结，成功才收走寒霜；失败保留原霜，只给抵抗反馈。 */
             function settle(current: CombatAction, struck: CombatActor, point: CombatPoint): void {
                 const scope = current.world(), body = scope.observe(struck);
-                const wet = body !== null && body.wet();
+                const wet = body !== null && (body.wet() || CombatStatus.has(scope, struck, "soaked"));
                 const chilled = CombatStatus.has(scope, struck, "chill");
                 if (!chilled && !wet) {
-                    CombatStatus.apply(scope, struck, "chill", icepunchChill, chillTicks, 0, { unique: true });
-                    WorldFeedback.emit(scope, icepunchScene, 1, point,
-                        { moment: "chill", target: String(struck.ref()), shards: shards, intensity: intensity }, 22);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), icepunchChillText, [], 22);
+                    // 只有真正挂上寒霜（共享次级路由许可）才播慢与文字；被次级免疫拒绝不冒成功。
+                    if (CombatStatus.apply(scope, struck, "chill", icepunchChill, chillTicks, 0, { unique: true, secondary: true })) {
+                        WorldFeedback.emit(scope, icepunchScene, 1, point,
+                            { moment: "chill", target: String(struck.ref()), shards: shards, intensity: intensity }, 22);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), icepunchChillText, [], 22);
+                    }
                     return;
                 }
                 const duration = Math.max(20, Math.round(wet ? freezeBase * 1.5 : freezeBase));
-                const frozen = CombatStatus.inflict(scope, struck, "frozen", duration);
-                if (frozen) {
+                const outcome = CombatStatus.impose(scope, struck, "frozen", duration, { secondary: true });
+                if (outcome.applied) {
                     CombatStatus.cure(scope, struck, "chill");
                     const melt = Math.max(1, Math.min(6, Math.round(duration / 60)));
                     WorldFeedback.emit(scope, icepunchScene, 1, point,
@@ -102,10 +113,11 @@ namespace PokemonSkills {
                     sound(current, "minecraft:block.glass.break");
                     sound(current, "minecraft:entity.player.hurt_freeze");
                 } else {
-                    // 免冻：不消费本招的寒霜，画面只给碎霜与抵抗，不假装冻结。
+                    // 免冻：不消费本招的寒霜，画面只给碎霜与抵抗；只有真免疫才说明，其他拒绝不冒充免疫。
                     WorldFeedback.emit(scope, icepunchScene, 1, point,
                         { moment: "resist", target: String(struck.ref()), shards: shards, intensity: intensity }, 22);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), icepunchImmuneText, [], 24);
+                    if (outcome.reason.indexOf("immune") >= 0)
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), icepunchImmuneText, [], 24);
                 }
             }
 
@@ -121,7 +133,8 @@ namespace PokemonSkills {
                 const point = contact.position();
                 sound(current, "minecraft:block.powder_snow.break");
                 WorldFeedback.emit(scope, icepunchScene, 1, point,
-                    { moment: "hit", target: String(struck.ref()), shards: shards, intensity: intensity }, 22);
+                    { moment: "hit", target: String(struck.ref()), shards: shards, intensity: intensity,
+                        path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]] }, 22);
                 const landed = impact(current, contact, "icepunch", power,
                     { damage: damageSpec("icepunch", "frost"), contact: true, punch: true });
                 if (landed && scope.valid(struck)) {

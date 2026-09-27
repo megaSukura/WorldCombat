@@ -61,7 +61,7 @@ namespace PokemonSkills {
         /** 穿透数：2 + 等级(≥25)偏移[0,3]；夹 2..5。 */
         through: formula(
             F.base(2).plus(F.level().minus(25).times(0.05).clamp(0, 3)).clamp(2, 5).round(0),
-            "穿透数", { unit: "个", description: "水弹能穿过几个挡在路上的其他生物；穿过去不影响锁定，只有被准星标中的那只挨伤害。等级越高穿得越多。" }),
+            "穿透数", { unit: "个", description: "水弹最多能穿过几个挡在路上的其他生物；穿过去不影响锁定，只有被准星标中的那只挨伤害。这是有限预算——挡路者超过它，水弹会被拦下。等级越高穿得越多。" }),
         /** 追踪转向：22 + 特攻偏移[−4,8]；夹 14..34。 */
         turn: formula(
             F.base(22).plus(F.stat("specialAttack").minus(55).times(0.1).clamp(-4, 8)).clamp(14, 34).round(0),

@@ -98,10 +98,10 @@ const SpiderwebDefinition: ParticleDefinition = {
                 {
                     name: "cocoon_shell", bind: "target", offset: [0, 0.7, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/cotton",
-                    rate: { data: "layers", fallback: 1 }, shape: { kind: "cylinder", radius: 0.42, length: 1.3 },
+                    rate: { data: "cocoonRate", fallback: 12 }, shape: { kind: "cylinder", radius: 0.42, length: 1.3 },
                     direction: "inward", speed: [0.0, 0.02],
                     lifetime: [22, 38], size: [0.18, 0.05], sizeMode: "sin",
-                    color: 0xE6E2D6, alpha: [0.3, 0.08], alphaMode: "sin", light: "world", maxParticles: 44
+                    color: 0xE6E2D6, alpha: [0.3, 0.08], alphaMode: "sin", light: "world", maxParticles: 140
                 },
                 {
                     name: "cocoon_drip", bind: "target", height: 0.12,
@@ -169,6 +169,42 @@ const SpiderwebDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.12], drag: 0.9,
                     lifetime: [10, 16], size: [0.12, 0.03],
                     color: 0xE6E2D6, alpha: [0.6, 0], light: "world", maxParticles: 26
+                }
+            ]
+        },
+        web_burn: {
+            duration: 26,
+            exit: { stop: 10, drain: 18 },
+            emitters: [
+                {
+                    name: "web_burn_flash", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
+                    burst: { count: 26 }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.04, 0.16],
+                    lifetime: [8, 15], size: [0.26, 0.06], sizeMode: "index",
+                    color: 0xF0A24A, alpha: [1, 0], light: "full", bloom: 0.3, maxParticles: 70
+                },
+                {
+                    name: "web_burn_smoke", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 16, interval: 3, repeats: 2 }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.02, 0.1], drag: 0.9,
+                    lifetime: [16, 28], size: [0.26, 0.08],
+                    color: 0x3A3226, alpha: [0.5, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        web_fade: {
+            duration: 24,
+            exit: { stop: 9, drain: 18 },
+            emitters: [
+                {
+                    name: "web_fall", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/cotton",
+                    burst: { count: 20, interval: 3, repeats: 2 }, shape: { kind: "polygon" },
+                    direction: "down", speed: [0.01, 0.05], gravity: 0.03, drag: 0.95,
+                    lifetime: [16, 28], size: [0.14, 0.04],
+                    color: 0xE6E2D6, alpha: [0.5, 0], light: "world", maxParticles: 50
                 }
             ]
         }

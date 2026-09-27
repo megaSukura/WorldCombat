@@ -16,22 +16,34 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 6);
     }
 
-    /** 目标两侧那条剪线上还站着几个别的敌人。 */
+    /**
+     * 目标所在交叉点附近，另一名敌人落在任一条刃线上的估计数：合拢平面垂直于出手方向，
+     * 两刃沿该平面的两条对角伸到目标两侧；用真实身体宽高判断是否被擦到，靠近交点则更可能双覆盖。
+     */
     function crosspoisonPair(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
-        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-        const length = Math.sqrt(dx * dx + dz * dz);
+        const ax = target.point[0] - self.point[0], ay = target.point[1] - self.point[1], az = target.point[2] - self.point[2];
+        const length = Math.sqrt(ax * ax + ay * ay + az * az);
         if (length < 0.5) return 0;
-        const ux = dx / length, uz = dz / length;
+        const hx = ax / length, hy = ay / length, hz = az / length;
+        const frame = WorldGeometry.basis(CompanionBehavior.point([hx, hy, hz]));
+        const rx = frame.right.x(), ry = frame.right.y(), rz = frame.right.z();
+        const ux = frame.up.x(), uy = frame.up.y(), uz = frame.up.z();
+        const width = self.width || 0.9;
+        const spread = Math.min(1.3, Math.max(0.55, 0.7 + Math.min(0.5, Math.max(-0.1, (width - 0.9) * 0.3))));
+        const reach = spread * 1.28;
         const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
+        const inv = 1 / Math.sqrt(1.64);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref || other.ref === self.ref) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-            const along = ox * ux + oz * uz;
-            if (along <= 0.3) continue;
-            if (Math.abs(ox * uz - oz * ux) <= 1.1) count++;
+            const ox = other.point[0] - target.point[0], oy = other.point[1] - target.point[1], oz = other.point[2] - target.point[2];
+            if (Math.abs(ox * hx + oy * hy + oz * hz) > 0.6 + (other.height || 1.0) * 0.5) continue;
+            const sx = ox * rx + oy * ry + oz * rz, sy = ox * ux + oy * uy + oz * uz;
+            const bodyRadius = Math.max(0.35, (other.width || 0.9) * 0.5) + 0.25;
+            if (Math.sqrt(sx * sx + sy * sy) > reach + bodyRadius) continue;
+            if (Math.min(Math.abs(sx * 0.8 * inv - sy * inv), Math.abs(sx * 0.8 * inv + sy * inv)) <= bodyRadius) count++;
         }
         return count;
     }

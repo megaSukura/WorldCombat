@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.barrier.summary": "点选一个落点，在那里竖起一面垂直于施法方向的硬光板墙，同时提高自身防御。墙消失后，本次防御提升结束。",
+  "worldcombat.skill.barrier.summary": "点选一个落点，在它附近的真实支撑上竖起一面垂直于施法方向的硬光板墙，同时提高自身防御。墙被拆光、到期或你离墙过远时，本次防御提升结束。",
   "worldcombat.skill.barrier.use.0": "在对手冲上来的通道上亲手立墙",
   "worldcombat.skill.barrier.use.1": "把墙立到侧路，而不是被迫朝最近的敌人",
   "worldcombat.skill.barrier.use.2": "用高墙遮住视线，断掉远程的射界",
@@ -33,5 +33,5 @@
   "worldcombat.skill.barrier.preference.ai.minGap.help": "威胁近于这个距离时不再立墙，直接应对近身攻击。",
   "worldcombat.skill.barrier.preference.ai.lead": "预判来路",
   "worldcombat.skill.barrier.preference.ai.lead.help": "对移动中的威胁提前这么多刻取来路方向，把墙铺在它要经过的位置；0 表示只看它当前所在方向。",
-  "worldcombat.skill.barrier.description.place": "能选 %1$s 格以内的落点；墙只在空气位立起，实体占位或固体处留缺口，一格没放下就不成墙，也不显示完整护墙。"
+  "worldcombat.skill.barrier.description.place": "能选 %1$s 格以内的落点；墙根坐在所选落点附近的真实支撑上，只在空气位立起，实体占位或固体处留缺口，缺格就留通行缺口，一格没放下就不成墙。施法者离墙过远时本次墙与防御一并收回。"
 }

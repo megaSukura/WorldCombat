@@ -2,9 +2,10 @@
  * 蘑菇孢子 的伙伴 AI 用途：这招自己的一套出手计划——先把自己送进人群，再抖开孢子。
  *
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自己为圆心、孢子半径内至少站着 ai.minFoes 个
- *   还醒着、且不吃粉末的非友方。它是四式里最可靠但也最贵的一记，所以只在能一次罩住人时才用。
+ *   还醒着、且不吃粉末的非友方。半径与实际高度带都读本招自己的公式（`p`），不再自写近似值。它是四式里最
+ *   可靠但也最贵的一记，所以只在能一次罩住人时才用。
  * 对谁出手：当前威胁；已经睡着的跳过。
- * 够不到怎么办：reach 就是孢子半径，够不到就由共享任务走近目标——自爆式范围招的接近就是它的准备。
+ * 够不到怎么办：reach 就是孢子半径，够不到就由共享任务走近目标；收到「驻守」时固定原地（够到才抖、不追击）。
  * 放完之后：圈里还醒着的非友方几乎必睡；伙伴交回共享顺序，等最长的一档冷却。
  * 优先级：基础 52；圈里每多一个醒着的非友方 +8，最高 90；逃跑中的威胁再 +10。
  */
@@ -15,22 +16,28 @@ namespace PokemonSkills {
         return !!facts && facts.types.indexOf("grass") >= 0;
     }
 
-    /** 与参数公式同源的孢子半径估算（AI 只用体宽与配置；实际判定仍走招式自己的公式）。 */
+    /** 与出招同一棵公式的实际孢子半径（体宽、特攻、等级与浓／蓬配置），AI 不再自写近似值。 */
     function sporeRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const self = CompanionBehavior.source(context);
-        const width = self.width === undefined ? 0.9 : self.width;
-        const dense = !!(item.data.config && item.data.config.dense);
-        return Math.max(1.5, Math.min(3.4, (2.2 + Math.max(-0.3, Math.min(1.1, (width - 0.9) * 0.9))) * (dense ? 0.8 : 1.25)));
+        const world = CompanionBehavior.world(context);
+        try {
+            return Math.max(1.5, Math.min(3.4, PokemonSkills.p(sporeId, "burstRadius",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills.spore, detail: { values: item.data.config || {} } })));
+        } catch (error) {
+            return 2.2;
+        }
     }
 
-    /** 孢子半径里还醒着的非友方数量。 */
-    function sporeAwakeFoes(context: WorldBehavior.Context, centre: number[], radius: number): number {
+    /** 孢子半径与出招同一条实际高度带（自身中心下 2、上 3）里还醒着的非友方数量。 */
+    function sporeAwakeFoes(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const self = CompanionBehavior.source(context), radius = sporeRadius(context, item);
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, centre) > radius) continue;
+            const dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2], dy = other.point[1] - self.point[1];
+            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+            if (dy < -2 || dy > 3) continue;
             if (CompanionBehavior.status(context, other, "sleep")) continue;
             if (sporeImmune(context, other)) continue;
             count++;
@@ -38,14 +45,18 @@ namespace PokemonSkills {
         return count;
     }
 
+    /** 收到「驻守」且未允许离位：可以原地抖粉，但不为追人挪窝。 */
+    function sporeStation(context: WorldBehavior.Context, item: WorldBehavior.Capability): boolean {
+        const holding = context.facts.intent === "hold" || context.facts.intent === "stay";
+        return holding && !CompanionBehavior.ai<boolean>(item, "leaveStation", false);
+    }
+
     function sporeWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (CompanionBehavior.status(context, threat, "sleep")) return false;
         if (sporeImmune(context, threat)) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
-        const self = CompanionBehavior.source(context);
-        return sporeAwakeFoes(context, self.point, sporeRadius(context, item)) >= CompanionBehavior.ai<number>(item, "minFoes", 1);
+        return sporeAwakeFoes(context, item) >= CompanionBehavior.ai<number>(item, "minFoes", 1);
     }
 
     CompanionBehavior.registerUse(sporeId, {
@@ -53,11 +64,11 @@ namespace PokemonSkills {
         reach: function (context, item) { return sporeRadius(context, item); },
         available: function (context, item, purpose, target) { return !target || sporeWants(context, item, target); },
         accepts: function (context, item, target) { return !target.friendly && target.health > 0 && target.visible; },
-        approachTarget: function (context, item, target) { return target; },
+        // 驻守时固定原地（够到才抖），否则把目标当作接近点。
+        approachTarget: function (context, item, target) { return sporeStation(context, item) ? CompanionBehavior.source(context) : target; },
         priority: function (context, item, target) {
             if (!target || !sporeWants(context, item, target)) return 0;
-            const self = CompanionBehavior.source(context);
-            const awake = sporeAwakeFoes(context, self.point, sporeRadius(context, item));
+            const awake = sporeAwakeFoes(context, item);
             const flee = CompanionBehavior.fleeing(context, target) ? 10 : 0;
             return Math.min(90, 52 + awake * 8) + flee;
         }

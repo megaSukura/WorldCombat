@@ -16,7 +16,7 @@
  *   surge        暗波威力：特攻定暗能，等级定范围；蚀夜式把能量摊开所以更轻。
  *   waveRadius   暗波半径：特攻与等级决定铺多大；蚀夜式更大。它也是本招实际射程来源。
  *   crest        暗波高度：体型高度决定这道波往上罩多高，能不能盖到空中的目标。
- *   waveTicks    推进步数：速度决定波推得多快（每刻一圈）。
+ *   waveTicks    推进步数：速度决定波分成几层推出去（每刻一层，层越多整体越慢）。
  *   shroudChance 笼罩概率：原生 40% 起，特攻与等级提高咬住的机会；蚀夜式更高。
  *   shroudStages 掉命中级数：特攻很高时一次掉 2 级。
  *   shroudTicks  笼罩时长：等级与蚀夜式决定。
@@ -39,7 +39,9 @@ namespace PokemonSkills {
     export const nightdazeEffect = "world_combat:nightdaze_shroud";
     export const nightdazeScene = "world_combat:move_nightdaze";
     export const nightdazeIdentity = "world_combat:status/shrouded";
+    export const nightdazeLinger = "world_combat:move_nightdaze/linger";
     export const nightdazeShroudText = "world_combat.move.nightdaze.text.shroud";
+    export const nightdazeAimText = "world_combat.move.nightdaze.text.aim";
     export const nightdazeMissText = "world_combat.move.nightdaze.text.miss";
 
     actionParameters.define(nightdazeId, {
@@ -76,7 +78,7 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("eclipse"), F.const(2), F.const(-1))).clamp(3, 9).round(0),
             "推进步数", {
                 unit: "步",
-                description: "暗波从脚下推到半径尽头要走几步（每刻一圈）；速度越快推得越快，蚀夜式更慢。"
+                description: "暗波从脚下推到半径尽头要分成几层（每刻向前一层）；速度越快层数越多、每层推得越细，整体推到尽头越久，蚀夜式层数更多。"
             }),
         /** 笼罩概率：基础 0.40 + 特攻偏移[0,0.16] + 等级偏移[0,0.04] + 蚀夜 +0.08 / 爆发 −0.06；夹 0.2..0.7。 */
         shroudChance: percent(

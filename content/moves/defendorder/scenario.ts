@@ -1,7 +1,7 @@
 /**
- * Verify the live-shell design: the owned window caps on top of an existing +5/+5 ladder, every underling lost
- * withdraws its stage at the moment it ends (not on the next 20-tick sweep), and removing the carrier keeps only
- * the prior +5/+5 contribution.
+ * Verify the living-shell design: underlings must actually cling close and in sight before their stage is granted on
+ * top of an existing +5/+5 ladder, every underling lost withdraws its stage at the moment it ends (not on the next
+ * 20-tick sweep), and losing the last one ends the shell carrier, freeing a recast.
  */
 Smoke.scenario("defendorder", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -16,27 +16,27 @@ Smoke.scenario("defendorder", function (stage) {
     });
     stage.hostile(caster, foe);
     stage.until(1200, function () {
+        const raised = stage.stages(caster);
         return stage.casts("defendorder", caster) > 0
-            && stage.hadMobEffect(caster, "world_combat:status/defendorder");
+            && stage.hadMobEffect(caster, "world_combat:status/defendorder")
+            && raised.def === 6 && raised.spd === 6;
     }, function () {
         stage.expect(stage.casts("defendorder", caster) > 0, "defend order was committed");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/defendorder"), "the shell window carried the shared identity");
         const raised = stage.stages(caster);
-        stage.expect(raised.def === 6 && raised.spd === 6, "owned shell window caps on top of the existing +5 stages");
-        // 阻止重召，再打掉全部手下：等级应当随每只结束当刻收回，而不是等 20 刻补扫。
+        // 只有真正飞到身边、有通视的手下才供给：等级在手下到达后才抬到封顶的 +6。
+        stage.expect(raised.def === 6 && raised.spd === 6, "underlings that clung close and in sight raised both defenses to the +6 cap");
+        // 阻止重召，再打掉全部手下：等级随每只结束当刻收回，最后一只失去即结束载体。
         stage.setPp(caster, "defendorder", 0);
         stage.command("kill @e[type=world_combat_core:body]");
-        stage.after(4, function () {
+        stage.until(120, function () {
+            return !stage.hasMobEffect(caster, "world_combat:defendorder_guard");
+        }, function () {
             const empty = stage.stages(caster);
             stage.expect(empty.def === 5 && empty.spd === 5, "losing every underling withdraws the whole window at once");
-            stage.command("effect clear " + caster.ref.split("/")[0] + " world_combat:defendorder_guard");
-            stage.after(3, function () {
-                const remaining = stage.stages(caster);
-                stage.expect(!stage.hasMobEffect(caster, "world_combat:defendorder_guard"), "cleared shell carrier is gone");
-                stage.expect(remaining.def === 5 && remaining.spd === 5, "shell removal preserves the prior +5/+5 contribution");
-                stage.note("The owned contribution capped at +6 while active, each underling end withdrew its stage at once, and carrier removal took back only the shell's own window.", { raised: raised, afterBodiesGone: empty, afterCarrierCleared: remaining });
-                stage.done();
-            });
-        });
-    }, "defend order engages");
+            stage.expect(!stage.hasMobEffect(caster, "world_combat:defendorder_guard"), "the last underling lost ends the shell carrier, so the cooldown alone gates a recast");
+            stage.note("The owned contribution capped at +6 only after underlings clung close and visible, each underling end withdrew its stage at once, and losing the last one ended the shell carrier (freeing a recast). A walled-off underling grants nothing.", { raised: raised, afterBodiesGone: empty });
+            stage.done();
+        }, "the shell ends after the last underling");
+    }, "defend order engages and underlings cling");
 });

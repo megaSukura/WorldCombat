@@ -59,10 +59,10 @@ namespace PokemonSkills {
                 unit: " 格/刻",
                 description: "光点悬停时向外漂浮的速度；速度越高漂得越急。"
             }),
-        /** 凝神节拍：速度决定多急。 */
+        /** 凝神节拍：速度决定多急。收益已在入定完成时给出，节拍只压缩收尾装饰。 */
         beat: seconds(
-            F.base(7).minus(F.stat("speed").minus(60).times(0.02)).clamp(4, 9).round(0),
-            "凝神节拍", "两拍之间隔多久；速度越高走得越急。"),
+            F.base(7).minus(F.stat("speed").minus(60).times(0.02)).clamp(3, 6).round(0),
+            "凝神节拍", "两拍之间隔多久；速度越高走得越急。收益在入定完成时已经给出，节拍只决定收尾装饰的快慢。"),
         /** 凝神窗口：特攻留在身上的时长。 */
         span: seconds(
             F.base(180).plus(F.level().times(3)).plus(F.stat("specialAttack").times(0.5))

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.hypnosis.summary": "Sends a hypnotic suggestion down a clear line into the target's mind and puts it to sleep at once. It works at range and instantly, but the outcome is a contest of will — if the user's Special Attack and level cannot overpower the target's Special Defence and level, the rings only scatter into a little drowsiness.",
+  "worldcombat.skill.hypnosis.summary": "Sends a hypnotic suggestion down a clear line and puts the locked target to sleep at once. The wave flies at range and turns to follow the target only to a limited degree; a wall or another body in its path blocks it, and firing at empty air sends one wave without picking anyone. The outcome is a contest of will — if the user's Special Attack and level cannot overpower the target's Special Defence and level, the rings only scatter into a little drowsiness.",
   "worldcombat.skill.hypnosis.use.0": "Drop a distant threat before the fight starts",
   "worldcombat.skill.hypnosis.use.1": "Open a sleep window for an ally's Dream Eater or Nightmare",
   "worldcombat.skill.hypnosis.use.2": "Force an opponent to break line of sight or back off",
-  "worldcombat.skill.hypnosis.description.0": "Gaze down an unobstructed line; the gaze reach is %1$s. Whether it takes hold is a contest of will, currently %2$s.",
+  "worldcombat.skill.hypnosis.description.0": "Send the suggestion down an unobstructed line; the gaze reach is %1$s. The wave turns to follow the locked target only to a limited degree, and a wall or another body in its path blocks it. Whether it takes hold is a contest of will, currently %2$s.",
   "worldcombat.skill.hypnosis.description.1": "The target sleeps for %1$s: it cannot act or move, and any damage wakes it at once.",
   "worldcombat.skill.hypnosis.focus.on": "Steady gaze: success ×1.25 and sleep ×1.2, at the cost of reach ×0.85, +3 ticks wind-up and cooldown ×1.15.",
   "worldcombat.skill.hypnosis.focus.off": "Loose gaze: reach ×1.2, quick wind-up and short cooldown, at the cost of success ×0.8 and sleep ×0.8.",

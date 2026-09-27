@@ -24,6 +24,11 @@ namespace PokemonSkills {
         state.active=false;
     }
     WorldCombat.effectHandler(roarRout,"end",effect=>roarRelease(effect,JSON.parse(effect.state())));
+    // A body whose route fails cannot be driven away: mark it refused so the AI stops re-estimating fear on it.
+    function roarBlocked(world:CombatWorld,actor:CombatActor,body:CombatObservation):void {
+        world.effect(roarRefused,actor,"{}",160);
+        WorldFeedback.emit(world,roarScene,1,body.position(),{moment:"resist",target:String(actor.ref())},12);
+    }
     function roarGoal(world:CombatWorld,body:CombatObservation,threat:CombatPoint,distance:number,turn:number):CombatPoint|null {
         const here=body.position(),delta=WorldGeometry.flatUnit(here.minus(threat)),angles=[0,45,-45,90,-90];
         for(let offset=0;offset<angles.length;offset++){
@@ -59,17 +64,17 @@ namespace PokemonSkills {
             state.previous=[at.x(),at.y(),at.z()];
             if(!state.goal||world.tick()>=(state.replan||0)||state.stale>=10){
                 if(state.stale>=10){state.turn=((state.turn||0)+1)%5;state.failed=(state.failed||0)+1;}
-                if(state.failed>=3){roarRelease(effect,state);state.blocked=true;effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
+                if(state.failed>=3){roarRelease(effect,state);state.blocked=true;roarBlocked(world,actor,body);effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
                 const goal=roarGoal(world,body,threat,Math.min(6,Math.max(2,gap+1)),state.turn||0);
                 if(!goal){
                     state.failed=(state.failed||0)+1;roarRelease(effect,state);
-                    if(state.failed>=3){state.blocked=true;WorldFeedback.emit(world,roarScene,1,body.position(),{moment:"resist",target:String(actor.ref())},12);}
+                    if(state.failed>=3){state.blocked=true;roarBlocked(world,actor,body);}
                     effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;
                 }
                 if(!state.active){world.interrupt(actor,"world_combat:interrupt");world.controlled(true);state.active=true;effect.state(JSON.stringify(state));}
                 state.goal=[goal.x(),goal.y(),goal.z()];state.replan=world.tick()+10;
                 const moved=world.navigate(goal,.45,chosen.payload.speed);
-                if(moved!=="moving"&&moved!=="arrived"){roarRelease(effect,state);state.blocked=true;effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
+                if(moved!=="moving"&&moved!=="arrived"){roarRelease(effect,state);state.blocked=true;roarBlocked(world,actor,body);effect.state(JSON.stringify(state));effect.schedule("flee","flee",10,"{}");return;}
             }
             if(body.velocity().length()>.03)WorldFeedback.emit(world,roarScene,1,body.position(),{moment:"flee",target:String(actor.ref())},8);
         }
@@ -131,6 +136,7 @@ namespace PokemonSkills {
                 }
                 if (partyForceOut(world, target, partyFeet(facts)) !== null)
                     WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.1, 0)), roarSwitchText, [], 24);
+                WorldFeedback.emit(world, roarScene, 1, facts.position(), { moment: "rout", target: String(target.ref()) }, 22);
                 hits++;
             });
             WorldFeedback.emit(world, roarScene, 1, centre, { moment: "wave", radius: reach, scale: reach / 5, waves: waves, hits: hits }, 30);

@@ -84,10 +84,11 @@ namespace PokemonSkills {
             const band = { below: 1.0, above: 2.0 };
             const scale = Math.max(0.6, Math.min(1.6, reach / 2.7));
             const intensity = Math.max(0.5, Math.min(2.4, power / 19));
+            const actorRef = String(actor.ref());
             // 提交那刻锁死拳道：整串不随旧目标转身。
             const heading = WorldGeometry.flatUnit(NativeSemantics.aim(action, move,
                 WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction()), 1.3));
-            let index = 0, landed = 0, targetRef = "", settled = false;
+            let index = 0, thrown = 0, landed = 0, targetRef = "", settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
@@ -96,9 +97,9 @@ namespace PokemonSkills {
                 const self = scope.observe(actor);
                 const at = self !== null ? self.position() : current.origin();
                 WorldFeedback.emit(scope, cometpunchScene, 1, at,
-                    { moment: "settle", punches: punches, landed: landed, sparks: sparks, scale: scale }, 18);
+                    { moment: "settle", punches: punches, thrown: thrown, landed: landed, sparks: sparks, scale: scale }, 18);
                 if (landed > 0)
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), cometpunchTallyText, [landed, punches], 22);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), cometpunchTallyText, [thrown, landed], 22);
                 finish(current);
             }
 
@@ -111,15 +112,15 @@ namespace PokemonSkills {
                 const origin = self.position();
                 const shot = index + 1;
                 const laneHalf = Math.max(0.35, Math.min(0.8, self.width() * 0.5));
-                // 固定拳道：聚焦式一条窄道，乱打式一片固定扇面，都不随目标转。
-                const region = scatter
-                    ? WorldGeometry.sector(origin, heading, reach, Math.max(12, cone), band)
-                    : WorldGeometry.lane(origin, heading, reach, laneHalf, band);
-                // 已锁定的原目标走出固定拳道：不追旋，提前收串。
+                // 固定拳道：聚焦式一条窄道，乱打式一片固定扇面，都不随目标转；判定用真实实体箱相交。
+                const region: WorldGeometry.BodyRegion = scatter
+                    ? WorldGeometry.bodySector(origin, heading, reach, Math.max(12, cone), band)
+                    : WorldGeometry.bodyLane(origin, heading, reach, laneHalf, band);
+                // 已锁定的原目标走出固定拳道：不追旋，提前收串；按身体相交而非中心判断。
                 if (targetRef !== "") {
                     const victim = scope.actor(targetRef);
                     const body = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                    if (body === null || !region.contains(body.position())) {
+                    if (body === null || !region.intersects(body.boundsMin(), body.boundsMax())) {
                         WorldFeedback.emit(scope, cometpunchScene, 1, origin.plus(heading.scale(reach)),
                             { moment: "out", target: targetRef, index: shot, punches: punches, sparks: sparks, scale: scale,
                                 direction: [heading.x(), heading.y(), heading.z()] }, 18);
@@ -128,6 +129,16 @@ namespace PokemonSkills {
                         return;
                     }
                 }
+                // 固定朝向、左右交替：每拳一枚清楚拳形，短路径前伸/收回由独立客户端场景按真实肩位画出。
+                thrown = shot;
+                const frame = WorldGeometry.basis(heading), hand = shot % 2 === 0 ? 1 : -1;
+                const shoulder = origin.plus(frame.right.scale(hand * self.width() * 0.4)).plus(frame.up.scale(-self.height() * 0.06));
+                const fistEnd = origin.plus(heading.scale(reach));
+                WorldFeedback.emit(scope, cometpunchFistScene, 1, shoulder,
+                    { moment: "thrust", from: [shoulder.x(), shoulder.y(), shoulder.z()],
+                        at: [fistEnd.x(), fistEnd.y(), fistEnd.z()], direction: [heading.x(), heading.y(), heading.z()],
+                        hand: hand, index: shot, punches: punches, start: scope.tick(), dur: Math.max(3, gap),
+                        scale: scale, intensity: intensity }, 16);
                 // 拳影逐拳加密：后拳间隔更短，表现里的速度线数量随 shot 抬升。
                 const swing = scatter ? cometpunchTurn(heading, (scope.random() * 2 - 1) * cone / 2) : heading;
                 WorldFeedback.emit(scope, cometpunchScene, 1, origin,
@@ -144,8 +155,9 @@ namespace PokemonSkills {
                     return;
                 }
                 let hits = 0;
-                WorldGeometry.selectEnemies(scope, region, function (other, facts) {
+                WorldGeometry.selectBodies(scope, region, function (other, facts) {
                     if (hits >= cap) return;
+                    if (String(other.ref()) === actorRef || scope.friendly(other)) return;
                     if (!scope.clear(origin, facts.position())) return;
                     if (!hurt(current, other, cometpunchId, power, { damage: damageSpec(cometpunchId, "punch"), contact: true })) return;
                     hits++;
@@ -168,8 +180,8 @@ namespace PokemonSkills {
                 }
                 index = shot;
                 if (index >= punches) { settle(current); return; }
-                // 后拳更密：每一拳把间隔压 1 刻，总时长不超过原来的匀速串。
-                const nextGap = Math.max(2, gap - index);
+                // 先疏后密：首拳间隔就是 gap，之后每拳收紧 1 刻、最低 2 刻，绝不把多拳堆到同一帧。
+                const nextGap = Math.max(2, gap - (shot - 1));
                 current.after(nextGap, function (next: CombatAction) { flurry(next); });
             }
 

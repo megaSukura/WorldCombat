@@ -68,11 +68,13 @@ namespace PokemonSkills {
                     touched++;
                     WorldFeedback.emit(scope, burnupScene, 1, contact, { moment: main ? "scorch" : "splash", target: ref }, 30);
                 });
-                const boundary = front.far.map(point => { const wall = scope.clipBlocks(origin, point), actual = wall ? wall.position() : point;
+                const boundary = front.far.map(point => { const wall = WorldGeometry.blockHit(scope, origin, point), actual = wall === null ? point : wall.position();
                     return [actual.x(), actual.y(), actual.z()]; });
                 boundary.push(boundary[0]);
+                // 每刻把这一小段真实扩口前沿（含实际被墙截断的端点）连同尺寸交给表现：判定与画面共用同一组端点。
                 scenes.show(current, "burst", end, { moment: "burst", path: boundary, ember: ember,
-                    direction: [direction.x(), direction.y(), direction.z()] });
+                    direction: [direction.x(), direction.y(), direction.z()],
+                    front: 0.25 + next * tangent, travel: next, half: cone / 2 });
                 travelled = next;
                 if (travelled >= reach) {
                     WorldFeedback.text(scope, current.origin(), touched ? burnupBlastText : burnupFizzleText, touched ? [touched] : [], 28);

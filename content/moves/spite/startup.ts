@@ -1,13 +1,11 @@
-// 怨恨的「怀恨」：一枚真实的 MobEffect，只借共享身份 world_combat:status/grudge，行为全在本单元。
-// 被怀恨的活体脚步变沉、出招变慢；宝可梦的一侧再由 skill.ts 从它上一招里抽走 PP。
+// 怨恨的「怀恨」：一枚真实的 MobEffect，只借共享身份 world_combat:status/grudge 做标记，行为全在本单元。
+// 它不再改动移动速度或技能急速；真正的作用是让被记住的那一手在下一次有效直击时被削去一份（见 skill.ts 的
+// DamageBudgets 预算），效果本身负责图标、可见性与预算挂靠的载体身份。
 // 宝可梦、原版生物、玩家、其他模组生物走同一条路径：物品栏可见、/effect 可用、牛奶可解。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:spite_grudge")
     .harmful()
     .color(0x5B3FA0)
     .tag("world_combat:status/grudge")
     .tag("world_combat:status/identity_only")
-    .modifyAttribute("minecraft:generic.movement_speed", "world_combat:spite_grudge_slow", -0.15, "add_multiplied_total")
-    // skill_haste 越低，共享冷却公式让招式冷却越长——「招出得慢」对任何持有者成立。
-    .modifyAttribute("world_combat:skill_haste", "world_combat:spite_grudge_haste", -30, "add_value")
-    // 非空 tick 回调才会驱动原生效果时钟，进而触发 world_combat:mob_effect_tick。
+    // 非空 tick 回调才会驱动原生效果时钟，进而触发 world_combat:mob_effect_tick 并正常到期。
     .effectTick((entity: any, amplifier: number) => { }));

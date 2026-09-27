@@ -6,10 +6,11 @@
  * 色相家族：琥珀金（0xF0B23A）主体，暖白（0xFFF3C4）强调，深褐（0x8A5A22）余韵；与「蓄力」同一色相，读得出这一口
  *   吐的就是攒下的那些力。
  * 拍子：起 gather（聚气）→ 出 spit／spray（喷出）→ 击 burst（命中爆开）→ 空 whiff。
- * 范围：spray 的锥形用 `data.path`（与服务端 `WorldGeometry.sector` 同一组顶点）填成一整片扇面，画出的就是会喷到的地；
- *   直喷式的命中范围由 `data.scale`（判定半径 / 0.22）画出的爆环表达。
+ * 范围：spray 的锥形用 `data.path`（与服务端 `spitupFan` 逐射线按真实墙面截短、判定用 `bodyPolygon` 的同一组顶点）
+ *   填成一整片扇面、`fan_edge` 描出全判定边界，画出的就是会喷到的地；直喷式的命中范围由 `data.scale`
+ *   （判定半径 / 0.22）画出的爆环表达，空放散在 `world.projectilePosition` 的真实末点。
  * 运动：聚气时琥珀点由外向内收；spit 沿 `data.direction` 向前喷出；spray 沿线铺开；命中碎光沿球面外抛带重力。
- * 数：`data.layers`（蓄力层数）决定聚气点量与弹体大小，`data.motes`（层数与特攻派生）决定碎光量，
+ * 数：`data.layers`（蓄力层数）与 `data.motes`（层数与特攻派生）一起决定聚气点量、弹体压力与碎光量，
  *   `data.intensity`（本口威力 / 120）抬高亮度，`data.reach`／`data.degrees` 只用于扇面几何。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -69,7 +70,7 @@ const SpitupDefinition: ParticleDefinition = {
                 {
                     name: "fan", bind: "path", fit: "none", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 70, shape: { kind: "polygon" },
+                    rate: { data: "motes", fallback: 40 }, shape: { kind: "polygon" },
                     direction: "shape", speed: [0.03, 0.12], drag: 0.94,
                     lifetime: [12, 22], size: [0.4, 0.1],
                     color: 0xF0B23A, alpha: [0.3, 0], light: "world", maxParticles: 220
@@ -77,10 +78,20 @@ const SpitupDefinition: ParticleDefinition = {
                 {
                     name: "fan_mote", bind: "path", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 40, shape: { kind: "polygon" },
+                    rate: { data: "motes", fallback: 26 }, shape: { kind: "polygon" },
                     direction: "shape", speed: [0.05, 0.2], gravity: 0.01, drag: 0.94,
                     lifetime: [8, 16], size: [0.09, 0.02],
                     color: 0xFFF3C4, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 160
+                },
+                {
+                    // 外沿描边与服务端 spitupFan 的整组扇弧顶点同源：玩家看到的边界就是实际判定边界。
+                    name: "fan_edge", bind: "path", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
+                    burst: { count: { data: "motes", fallback: 28 } },
+                    shape: { kind: "polyline" },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [{ data: "scale", fallback: 1 }, 0.04], sizeMode: "index",
+                    color: 0xFFF3C4, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 80
                 }
             ]
         },

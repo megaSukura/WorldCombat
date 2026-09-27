@@ -5,6 +5,8 @@
  * 必然事实：本招被提交过；目标身上出现过共享毒性（`world_combat:status/poison` 身份与 `minecraft:poison` 效果）；
  * 毒性跳过一次伤害；在云里点火之后，云爆燃并把目标点着（共享灼伤身份）。
  * 随机结果：命中率 90、卡比兽是否走出云外都写进 note 供读轨迹判断。
+ * 云只作用云内可达（无墙阻隔）者，爆燃与上毒各守同一人数预算、只在状态真的落下时才播放命中回执；墙隔火不点燃、墙隔敌不爆伤，
+ * 由服务端的可达性判定保证，留给完整装配试玩核对。
  */
 Smoke.scenario("poisongas", function (stage) {
     var caster = stage.pokemon({ species: "Koffing", level: 35, moves: ["poisongas"], at: [-2, 0, 0] });

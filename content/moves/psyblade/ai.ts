@@ -8,6 +8,11 @@
  * 放完之后：命中的每个目标各挨一次、被顶开，交回共享顺序决定继续贴身还是走位。
  */
 namespace CompanionBehavior {
+    /** 与本招执行同一份真实接地电场事实：AI 按施法者此刻站的地评分，不看离场后残留的余电。 */
+    registerFact("world_combat:psyblade-charged", function (access, actor, _argument) {
+        return PokemonSkills.psybladeChargedNow(access, actor);
+    });
+
     function psybladeWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
@@ -15,19 +20,21 @@ namespace CompanionBehavior {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 9);
     }
 
-    /** 带电时机体会被自身脚下电荷延长：当前实际刃长 = 短刃 + 延展段。 */
+    /** 带电时机体会被自身脚下电荷延长：当前实际刃长 = 短刃 + 延展段，条件与执行/指示同源。 */
     function psybladeReach(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
         const self = CompanionBehavior.source(context);
         const world = CompanionBehavior.world(context);
         const base = typeof capability.data.range === "number" ? capability.data.range : PokemonSkills.p(PokemonSkills.psybladeId, "reach", world);
-        if (!CompanionBehavior.status(context, self, "electricterrain")) return base;
+        if (!CompanionBehavior.fact<boolean>(context, "world_combat:psyblade-charged", self)) return base;
         return base + PokemonSkills.p(PokemonSkills.psybladeId, "surge", world);
     }
 
-    /** 以自己→目标这条线为轴，数一数窄线内还排着几个非友方（含目标）；只有带电的长线才值得数。 */
+    /** 以自己→目标这条线为轴，数窄线内还排着几个非友方（含目标）；只有带电的长线才值得数，
+     * 每个计数点都要求真实通视且高度大致同层，避免隔着墙/楼板的人被算进穿排。 */
     function psybladeLineCount(context: WorldBehavior.Context, target: CompanionBehavior.Entity, reach: number): number {
         const world = CompanionBehavior.world(context);
         const self = CompanionBehavior.source(context).point;
+        const origin = CompanionBehavior.point(self);
         const half = Math.max(0.2, PokemonSkills.p(PokemonSkills.psybladeId, "bladeHalf", world));
         const dx = target.point[0] - self[0], dz = target.point[2] - self[2], length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1e-6) return 1;
@@ -41,7 +48,10 @@ namespace CompanionBehavior {
             const along = ox * ux + oz * uz;
             if (along < 0 || along > reach) continue;
             const lateral = Math.abs(ox * uz - oz * ux);
-            if (lateral <= half + 0.3) count++;
+            if (lateral > half + 0.3) continue;
+            if (Math.abs(other.point[1] - self[1]) > 2.2) continue;
+            if (!world.clear(origin, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -62,11 +72,11 @@ namespace CompanionBehavior {
             const self = CompanionBehavior.source(context);
             const reach = psybladeReach(context, capability);
             if (CompanionBehavior.distance(self.point, target.point) > reach) return 0;
-            const charged = CompanionBehavior.status(context, self, "electricterrain");
+            const charged = !!CompanionBehavior.fact<boolean>(context, "world_combat:psyblade-charged", self);
             let score = 20;
             if (CompanionBehavior.ai<boolean>(capability, "seekTerrain", true) && charged) {
                 score += 24;
-                // 带电的长线：目标方向上排着别人时，一次能刺穿整排。
+                // 带电的长线：目标方向上排着别人时，一次能刺穿整排。只有真实电场、真实通视/同层才算数。
                 if (psybladeLineCount(context, target, reach) >= 2) score += 10;
             }
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", true) && CompanionBehavior.ratio(target) <= 0.4)

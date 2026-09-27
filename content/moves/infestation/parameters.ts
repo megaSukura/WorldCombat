@@ -16,7 +16,7 @@ namespace PokemonSkills {
         /** 每口啃咬：基础 1.8%，特攻每比 60 多 1 加 0.02%；夹在 1.0%..4.0%。 */
         swarmShare: percent(
             F.base(0.018).plus(F.stat("specialAttack").minus(60).times(0.0002).clamp(-0.006, 0.022)).clamp(0.010, 0.040).round(4),
-            "每口啃咬", "每过一个啃咬间隔，按目标最大生命的这个比例请求伤害，甩落虫簇按余份减轻。"),
+            "每口啃咬", "每过一个啃咬间隔，按目标最大生命的这个比例向下取整、且每口至少 1 点，再乘以剩余虫份（剩余簇数 ÷ 4）请求伤害：低血目标每口也至少 1 点，甩落虫簇后剩下几簇就只咬几份。"),
         /** 缠绕持续：基础 120 tick，特攻每比 60 多 1 加 0.5 tick；夹在 80..240 tick。 */
         duration: seconds(
             F.base(120).plus(F.stat("specialAttack").minus(60).times(0.5).clamp(-24, 90)).clamp(80, 240).round(),

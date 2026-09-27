@@ -4,8 +4,9 @@
  * 一句话：空气被瞬间撕开——口前先是一圈白环，随后一条笔直的裂纹当刻连到对手身上，裂痕边缘迸出细碎的白点；
  * 回响式再补一条略偏青的裂纹。
  * 色相家族：近白（0xEAF6FF）为主，回响补一层浅青（0xA9E6FF），强调用原型 impact_normal；身份来自 Sonic Boom 贴图。
- * 拍子：起（charge 白环内收）→ 击（crack 即时裂纹、impact 命中）→ 回（reverb 第二声）。
- * 范围：crack／reverb 用 `data.path`（施法者口前 → 裂痕终点）画 polyline，裂纹连到哪就是打到哪；线两侧宽度读 `data.scale`（裂痕宽度 / 0.34）。
+ * 拍子：起（charge 白环内收）→ 击（crack 即时裂纹、impact 命中）→ 回（echo 细线提示 → reverb 第二声）。
+ * 范围：crack／reverb 用 `data.path`（施法者口前 → 裂痕终点，绝对世界坐标，offset 归零，不再二次抬高度）画
+ *   polyline，裂纹连到哪就是打到哪；线两侧宽度读 `data.scale`（裂痕宽度 / 0.34）。
  * 运动：白环向外炸开后立刻收束成一点，裂纹由口前向终点铺开；没有可见弹体，只有被拉开的空气。
  * 数：`data.sparks`（特攻与等级换算的碎点数）绑定裂纹发射率与命中爆发数量，`data.echo`（第几声）切换色相与亮度，
  * `data.intensity`（sparks / 20）抬高亮度。
@@ -50,7 +51,7 @@ const SonicboomDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.6, maxParticles: 4
                 },
                 {
-                    name: "line", bind: "path", offset: [0, 0.45, 0],
+                    name: "line", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     shape: { kind: "polyline" },
                     burst: { count: { data: "sparks", fallback: 16 }, at: 0 }, direction: "shape", speed: [0.02, 0.1],
@@ -58,7 +59,7 @@ const SonicboomDefinition: ParticleDefinition = {
                     color: 0xEAF6FF, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 220
                 },
                 {
-                    name: "shards", bind: "path", offset: [0, 0.45, 0],
+                    name: "shards", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/white",
                     shape: { kind: "polyline" },
                     burst: { count: { data: "sparks", fallback: 16 } },
@@ -73,7 +74,7 @@ const SonicboomDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "line", bind: "path", offset: [0, 0.45, 0],
+                    name: "line", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/moves/sonicboom",
                     shape: { kind: "polyline" },
                     burst: { count: { data: "sparks", fallback: 16 }, at: 0 }, direction: "shape", speed: [0.02, 0.1],
@@ -81,13 +82,28 @@ const SonicboomDefinition: ParticleDefinition = {
                     color: 0xA9E6FF, alpha: [0.75, 0], light: "full", bloom: 0.4, maxParticles: 200
                 },
                 {
-                    name: "shards", bind: "path", offset: [0, 0.45, 0],
+                    name: "shards", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
                     shape: { kind: "polyline" },
                     burst: { count: { data: "sparks", fallback: 16 } },
                     direction: "shape", speed: [0.06, 0.26], spread: 22,
                     lifetime: [4, 10], size: [0.09, 0.02],
                     color: 0xA9E6FF, alpha: [0.85, 0], light: "full", maxParticles: 140
+                }
+            ]
+        },
+        echo: {
+            // 回响前的细线提示：第二声会从施法者那时的新位置沿原方向重新裂开，不锁定原来那条线。
+            duration: 0,
+            exit: { drain: 8 },
+            emitters: [
+                {
+                    name: "hint", bind: "path", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/moves/sonicboom",
+                    shape: { kind: "polyline" },
+                    rate: 5, direction: "shape", speed: [0.0, 0.02],
+                    lifetime: [3, 6], size: [0.06, 0.02], sizeMode: "sin",
+                    color: 0xA9E6FF, alpha: [0.35, 0], light: "full", maxParticles: 40
                 }
             ]
         },

@@ -35,8 +35,8 @@ const DrillpeckDefinition: ParticleDefinition = {
             ]
         },
         bore: {
-            duration: 22,
-            exit: { stop: 8, drain: 12 },
+            duration: 0,
+            exit: { stop: 0, drain: 12 },
             emitters: [
                 {
                     name: "drill", bind: "path", fit: "none",
@@ -136,3 +136,69 @@ const DrillpeckDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_drillpeck", 1, DrillpeckDefinition);
+
+/**
+ * 真实钻头：服务端每一口按当前身体轴上传一次轴线与钻头压深，客户端固定数量的贴图绕轴自转、从锥底收紧到喙尖，
+ * 读得出「围轴钻进、随身体前推」而不是整条轴随机撒贴图。轴线端点与剑击判定共用；实际命中仍由服务端 `bite` 回执驱动。
+ */
+const DrillpeckHeadDrill = "cobblemon:particle/generic/drill";
+const DrillpeckHeadSpiral = "cobblemon:particle/generic/spinbeam";
+const DrillpeckHeadTip = "cobblemon:particle/generic/impact/impact_flying";
+
+function drillpeckNumberAt(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+function drillpeckVecAt(value: any, fallback: number[] | null): number[] | null {
+    if (Array.isArray(value) && value.length === 3 && (value as any[]).every(function (n) { return typeof n === "number" && isFinite(n); }))
+        return [Number(value[0]), Number(value[1]), Number(value[2])];
+    return fallback;
+}
+
+function drillpeckPointsAt(value: any): number[][] {
+    if (!Array.isArray(value)) return [];
+    const points: number[][] = [];
+    for (let i = 0; i < value.length; i++) { const point = drillpeckVecAt(value[i], null); if (point) points.push(point); }
+    return points;
+}
+
+WorldCombatClient.scene("world_combat:move_drillpeck_head", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const path = drillpeckPointsAt(data.path);
+    if (path.length < 2) return;
+    const scale = Math.max(0.5, Math.min(1.8, drillpeckNumberAt(data.scale, 1)));
+    const intensity = Math.max(0.4, Math.min(2.4, drillpeckNumberAt(data.intensity, 1)));
+    const origin = path[0];
+    const far = path[1];
+    const dir = drillpeckVecAt(data.direction, [0, 0, 1])!;
+    const length = Math.sqrt(dir[0] * dir[0] + dir[1] * dir[1] + dir[2] * dir[2]) || 1;
+    const ux = dir[0] / length, uz = dir[2] / length;
+    let sx = -uz, sz = ux;
+    const side = Math.sqrt(sx * sx + sz * sz);
+    if (side < 1e-4) { sx = 1; sz = 0; } else { sx /= side; sz /= side; }
+    const head = drillpeckVecAt(data.head, [far[0], far[1], far[2]])!;
+    const tick = frame.serverTick();
+    frame.line(origin[0], origin[1], origin[2], head[0], head[1], head[2], 0x669FD6FF | 0);
+    const beads = 6 + Math.round(intensity * 2);
+    for (let i = 0; i < beads; i++) {
+        const t = beads <= 1 ? 1 : i / (beads - 1);
+        const along = 0.4 + 0.6 * t;
+        const px = origin[0] + (head[0] - origin[0]) * along;
+        const py = origin[1] + (head[1] - origin[1]) * along;
+        const pz = origin[2] + (head[2] - origin[2]) * along;
+        const angle = tick * 0.7 + t * Math.PI * 4;
+        const radius = (0.22 - 0.16 * t) * scale;
+        const ox = Math.cos(angle) * radius, oy = Math.sin(angle) * radius;
+        frame.sprite(DrillpeckHeadSpiral,
+            px + sx * ox, py + oy, pz + sz * ox,
+            (0.13 + 0.06 * (1 - t)) * scale, (angle * 180 / Math.PI) % 360, 0xCC9FD6FF | 0, Math.floor(tick / 2 + i) % 27, true);
+        frame.sprite(DrillpeckHeadDrill,
+            px + sx * ox * 0.8, py + oy * 0.8, pz + sz * ox * 0.8,
+            (0.2 + 0.05 * (1 - t)) * scale, (angle * 180 / Math.PI) % 360, 0xFFE8F6FF | 0, Math.floor(tick / 2 + i) % 6, true);
+    }
+    frame.sprite(DrillpeckHeadTip, head[0], head[1], head[2], (0.26 + 0.1 * intensity) * scale,
+        0, 0xFFFFFFFF | 0, Math.floor(tick) % 7, true);
+});

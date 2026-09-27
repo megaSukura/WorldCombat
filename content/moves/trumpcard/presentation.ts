@@ -1,8 +1,8 @@
 /**
  * 王牌 / trumpcard 的客户端表现。
  *
- * 一句话：起手时一张牌在身前亮起、牌面随余牌变少而越来越亮，并数出手中还剩几张（末牌时完整大印一次）；
- * 随后牌打着旋飞向对手或点，一路拖出金色碎光，在目标身上炸开一道决绝的白金光痕（末牌不附爆圈），撞墙则在方块格上碎开。
+ * 一句话：起手时一张牌在身前亮起、牌面随余牌变少而越来越亮，并数出手中还剩几张（末牌时打出一枚稳定大印）；
+ * 随后牌打着旋飞向对手或点，一路拖出金色碎光，在目标身上炸开一道决绝的白金光痕（末牌另加完整大印），撞墙则在接触点碎开。
  * 色相家族：金与近白（mediumfadeorb、bigsparkle、glowingsparkle_yellow、impact_normal、slash、largering）为主，
  * 余韵收在中性浅金；没有第二个色相。
  * 拍子：起（draw 亮牌）→ 行（throw 脱手、flight 飞行）→ 击（strike 炸开）→ 收（fade 落空 / break 撞墙碎牌）。
@@ -48,12 +48,21 @@ const TrumpcardDefinition: ParticleDefinition = {
                 },
                 {
                     name: "last_seal", bind: "source", offset: [0, 0.7, 0], height: 0.45,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
                     burst: { count: { data: "last", fallback: 0 }, at: 0 },
-                    shape: { kind: "ring", radius: 0.34 },
+                    shape: { kind: "ring", radius: 0.5 },
                     direction: "shape", speed: [0.01, 0.04],
-                    lifetime: [10, 16], size: [0.34, 0.7],
-                    color: 0xFFF2C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 4
+                    lifetime: [14, 20], size: [0.72, 0.72],
+                    color: 0xFFF2C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 2
+                },
+                {
+                    name: "last_mark", bind: "source", offset: [0, 0.7, 0], height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
+                    burst: { count: { data: "last", fallback: 0 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "shape", speed: [0.01, 0.03],
+                    lifetime: [14, 20], size: [0.62, 0.62],
+                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.6, maxParticles: 2
                 }
             ]
         },
@@ -148,8 +157,8 @@ const TrumpcardDefinition: ParticleDefinition = {
                     burst: { count: { data: "last", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
                     direction: "shape", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.5, 0.12],
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.6, maxParticles: 6
+                    lifetime: [14, 20], size: [0.74, 0.74],
+                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.6, maxParticles: 4
                 }
             ]
         },

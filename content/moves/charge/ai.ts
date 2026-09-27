@@ -45,9 +45,12 @@ namespace CompanionBehavior {
         if (status(context, self, "charge")) return false;
         if (!chargeUseful(context, threat)) return false;
         if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
-        if (ai<string>(item, "opening", "anytime") !== "incoming") return !!threat;
+        if (!threat) return false;
+        // 主 goal 分支同样执行 ai.maxChase：不再只靠 registerUse.available 限制距离。
+        if (distance(self.point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
+        if (ai<string>(item, "opening", "anytime") !== "incoming") return true;
         const owner = context.facts.owner;
-        return self.hurtAgo < 60 || !!threat && (threat.attacking === self.ref || !!owner && threat.attacking === owner.ref);
+        return self.hurtAgo < 60 || threat.attacking === self.ref || !!owner && threat.attacking === owner.ref;
     }
 
     registerUse("charge", {

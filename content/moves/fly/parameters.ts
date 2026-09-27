@@ -30,6 +30,8 @@
 namespace PokemonSkills {
     /** 配置项的值：追踪俯冲（true）与定点击落（false）。 */
     export function flyTrack(config: any): boolean { return !config || config.track !== false; }
+    /** 定点击落的范围倍率；skill 判定与 AI 聚群共用这一个常数。 */
+    export const flyPinFactor = 1.9;
 
     actionParameters.define("fly", {
         /** 落地威力：90 + (物攻 − 70) × 0.25，夹在 64..140。 */

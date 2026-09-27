@@ -1,16 +1,21 @@
 // 魔法空间的可执行设计说明：一片按在地面、双方平等生效的静默空间，暂停装备提供的属性增益。
 // 必然事实：魔法空间被放出来过；站在空间里的施法者身上出现了共享身份 world_combat:status/magicroom；
-// 一具穿了钻石头+钻石头盔的原版生物在区域内护甲属性回落、离开后原样恢复（装备与修饰没有丢失）。
+// 一具穿了钻石胸甲与头盔的原版生物在区域内护甲属性回落、离开后原样恢复（装备与修饰没有丢失）。
 // 「宝可梦携带物效果被封」走共享的 NativeModifiers suppressItems 层，不是 MobEffect，smoke 读不到，
 // 写进 note 供完整装配试玩核对。
 Smoke.scenario("magicroom", function (stage) {
     stage.weather("clear");
     stage.time("day");
 
-    // 施法者空手，目标带一件携带物，于是 AI 认为「敌人装备收益更高、己方依赖小」而出手。
+    // 施法者空手；附近真实原生护甲敌人的装备收益让空间有可观察的净收益。
     const caster = stage.pokemon({ species: "abra", level: 32, moves: ["magicroom"], at: [-3, 0, 0] });
     const target = stage.pokemon({ species: "rattata", level: 22, moves: ["tackle"], item: "cobblemon:choice_band", at: [5, 0, 0] });
     stage.hostile(caster, target);
+    const armoredThreat = stage.mob({ type: "minecraft:zombie", at: [0, 0, 1] });
+    stage.noai(armoredThreat); stage.hostile(caster, armoredThreat);
+    stage.command("item replace entity " + armoredThreat.ref.split("/")[0] + " armor.head with minecraft:diamond_helmet");
+    stage.command("item replace entity " + armoredThreat.ref.split("/")[0] + " armor.chest with minecraft:diamond_chestplate");
+    stage.after(2, () => stage.prefer(caster, "magicroom", { ai: { advance: true } }));
 
     // 一具静止的原版生物，穿上声明了属性修饰的装备，用来读「装备贡献在区域内消失」。
     const guard = stage.mob({ type: "minecraft:zombie", at: [16, 0, 0] });

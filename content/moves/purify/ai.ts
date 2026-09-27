@@ -11,26 +11,35 @@
  */
 namespace CompanionBehavior {
     registerFact("world_combat:move_purify/harmful", (world, actor) => CombatStatus.hasHarmful(world, actor));
+    /** 只有真正有害的状态计入对敌交易门槛；正面与中性效果不算。 */
+    registerFact("world_combat:move_purify/harmfulCount", (world, actor) => CombatStatus.harmfulEffects(world, actor).length);
     const purifySelfBelow = PokemonSkills.number("ai.selfBelow", "自救阈值", 0.3, 0.9, 0.05);
     purifySelfBelow.help = "自己生命低于该比例时，伙计才允许把净化用在对手身上换一口生机；调低更克制，调高则一缺血就愿意做这笔交易。";
     const purifyEnemyStatus = PokemonSkills.number("ai.enemyStatus", "可换病痛", 1, 3, 1);
     purifyEnemyStatus.help = "对手身上被缠住的有害状态不超过这么多项时，才值得把他的病痛拿走换自己的回复；调低只碰轻微中招的对手，调高愿意替更病重的对手祛病。";
+    const purifyWorthGap = PokemonSkills.number("ai.worthGap", "值得换血缺口", 0.1, 0.6, 0.05);
+    purifyWorthGap.help = "自己缺口不到目标最大生命这个比例时，不值得替对手祛病换血（回复量按目标最大生命算）；调高更挑伤害，调低更愿意顺手换一口。";
 
-    PokemonSkills.addPreferences("purify", { deep: false, helpFriends: true, ai: { healBelow: 0.9, selfBelow: 0.55, enemyStatus: 1 } },
-        [purifySelfBelow, purifyEnemyStatus]);
+    PokemonSkills.addPreferences("purify", { deep: false, helpFriends: true, ai: { healBelow: 0.9, selfBelow: 0.55, enemyStatus: 1, worthGap: 0.25 } },
+        [purifySelfBelow, purifyEnemyStatus, purifyWorthGap]);
 
     function purifyAfflicted(context: WorldBehavior.Context, target: Entity): boolean {
         return fact<boolean>(context, "world_combat:move_purify/harmful", target) === true;
     }
 
-    /** 对敌交易是否划算：自身掉血够多、这笔回复补得回来，且拿走的对手负面项数够少。 */
+    function purifyHarmfulCount(context: WorldBehavior.Context, target: Entity): number {
+        const count = fact<number>(context, "world_combat:move_purify/harmfulCount", target);
+        return typeof count === "number" && isFinite(count) ? Math.max(0, count) : 0;
+    }
+
+    /** 对敌交易是否划算：自身掉血够多（缺口相对目标最大生命够大）、这笔回复补得回来，且拿走的有害项数够少。 */
     function purifyEnemyWorth(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: Entity): boolean {
         const self = source(context);
         if (ratio(self) > ai<number>(capability, "selfBelow", 0.55)) return false;
         const missing = self.maximum - self.health;
         if (!(missing > 0)) return false;
-        if (missing < target.maximum * 0.2) return false;
-        return statuses(context, target).length <= ai<number>(capability, "enemyStatus", 1);
+        if (missing < target.maximum * ai<number>(capability, "worthGap", 0.25)) return false;
+        return purifyHarmfulCount(context, target) <= ai<number>(capability, "enemyStatus", 1);
     }
 
     registerUse("purify", {

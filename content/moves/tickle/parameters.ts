@@ -48,7 +48,7 @@ namespace PokemonSkills {
             F.base(100).plus(F.individual("friendship").times(0.6))
                 .times(F.when(F.pref("firm", text("worldcombat.skill.tickle.preference.firm")), F.const(1.35), F.const(0.9)))
                 .clamp(70, 260).round(0),
-            "笑不停时长", "目标笑到站不稳多久；施法者越亲近越放得开，猛挠笑得更久。"),
+            "笑不停时长", "痒意标记持续多久；它只是身份，用来提醒伙伴别再重复挠，既不延长也不撑住已经下降的攻击与防御。施法者越亲近越放得开，猛挠标记更久。"),
         sparks: formula(F.base(16).plus(F.stat("speed").minus(60).times(0.3)).clamp(12, 44).round(0), "碎点数", {
             unit: " 个",
             description: "一次挠出的碎点数量；速度越快越多，画面里的碎点也按它画出。"

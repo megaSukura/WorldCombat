@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.kingsshield.summary": "Stand and hold a fixed-facing royal shield against frontal attacks; rear attacks still land. Each attacker that truly contacts this shield loses Attack at most once this use.",
-  "worldcombat.skill.kingsshield.description.0": "For %1$s the shield catches up to %2$s damage from its 120-degree front; overflow passes through. True contact lowers that attacker's Attack by %3$s stages once per shield. Status moves still work.",
+  "worldcombat.skill.kingsshield.summary": "Stand and hold a fixed-facing royal shield whose face has real width and height to stop frontal direct attacks; rear attacks still land. Each attacker that truly contacts this shield loses Attack at most once this use.",
+  "worldcombat.skill.kingsshield.description.0": "For %1$s the shield catches up to %2$s damage from direct attacks that cross its frontal face; overflow or attacks around the side/back pass through. A true contact lowers that attacker's Attack by %3$s stages once per shield. Status moves and residual damage still work.",
   "worldcombat.skill.kingsshield.description.1": "Raise %1$s, cooldown %2$s.",
   "worldcombat.skill.kingsshield.description.2": "Repeat-use failure rate %1$s: raising the shield again soon after makes failure more likely, and the count resets after a pause. With Majesty on, the contact Attack drop is +1 level, but pool x0.8, duration x0.85 and recovery 7 ticks; with it off (Bulwark), pool x1.25, duration x1.15, recovery 5 ticks, and no extra drop.",
   "worldcombat.skill.kingsshield.use.0": "Block melee damage and soften the attacker",

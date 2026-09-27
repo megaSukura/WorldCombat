@@ -29,7 +29,7 @@
   "worldcombat.skill.pinmissile.preference.barbed.help": "开启：单针威力 ×1.25、钉住时长 ×1.5、散布 ×0.7，适合把目标粘住慢慢磨；代价是针数收在 3 根、针速 ×0.92、间隔 +1 刻、起手 +2 刻、冷却 +4 刻。关闭（速射针）：针数可到 5 根、间隔更密、针速更快，代价是单针威力 ×0.9、钉住更短、散布 ×1.15。",
   "worldcombat.skill.pinmissile.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.pinmissile.preference.ai.maxChase.help": "超过这个距离就不主动射针，先走近。越大越愿意从更远处先手。",
-  "worldcombat.skill.pinmissile.preference.ai.stick": "优先钉没被粘住的",
-  "worldcombat.skill.pinmissile.preference.ai.stick.help": "开启：已经带着钉刺的目标排得稍后，把针留给还没被减速的对手；关闭则所有目标同价。",
+  "worldcombat.skill.pinmissile.preference.ai.stick": "按钉数估值",
+  "worldcombat.skill.pinmissile.preference.ai.stick.help": "开启：按目标实际钉数与剩余时长估计这一梭的减速增益——没钉住的最优先，未到 3 针仍加分，饱和后只为刷新时长或补伤害小幅加分；关闭则只按普通攻击排序。",
   "effect.world_combat.pinmissile_quills": "钉刺"
 }

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.quiverdance.summary": "A light butterfly dance: a few beats shed scales that hang around the user as a thin veil, raising Sp. Atk, Sp. Def and Speed. The veil lasts for a visible window, after which the three stats it raised are taken back.",
+  "worldcombat.skill.quiverdance.summary": "A light butterfly dance: a few beats, each tapping a small step to the side as scales fall and hang around the user as a thin veil. Only the final beat raises Sp. Atk, Sp. Def and Speed; the veil lasts for a visible window, after which the three stats it raised are taken back.",
   "worldcombat.skill.quiverdance.use.0": "Build Sp. Atk, Sp. Def and Speed before a fight",
   "worldcombat.skill.quiverdance.use.1": "Raise a scale veil first when pressed by special attacks",
-  "worldcombat.skill.quiverdance.use.2": "Spread scales while repositioning to make the ground around you your own",
-  "worldcombat.skill.quiverdance.description.0": "After the wind-up Sp. Atk, Sp. Def and Speed each rise by %1$s, with each beat stepping %2$s blocks to alternating sides (shrinking to the space available against a wall).",
+  "worldcombat.skill.quiverdance.use.2": "Shake off scales while repositioning, then collect the boost once the dance lands",
+  "worldcombat.skill.quiverdance.description.0": "On the final beat Sp. Atk, Sp. Def and Speed each rise by %1$s; before then only dance trails show, and an interrupted dance grants nothing. Each beat steps %2$s blocks to alternating sides (shrinking to the space and foot support available).",
   "worldcombat.skill.quiverdance.description.1": "The veil lasts %1$s; dancing again while it stands raises each stat once more and renews the window, up to 6 levels each; when the window ends, the accumulated levels are taken back.",
   "worldcombat.skill.quiverdance.veil.on": "Thick veil: the veil window by 1.35, at the cost of a 2-tick longer wind-up and 12 ticks more cooldown.",
   "worldcombat.skill.quiverdance.veil.off": "Light dusting: fewer scales and the regular window, but quicker to finish.",
@@ -28,7 +28,7 @@
   "worldcombat.skill.quiverdance.preference.ai.maxChase.help": "The move is considered only against a threat within this distance; larger means laying the veil earlier.",
   "worldcombat.skill.quiverdance.preference.ai.minGap": "Close-range floor",
   "worldcombat.skill.quiverdance.preference.ai.minGap.help": "A threat closer than this makes the companion attack instead of dancing; larger gives up the buff more often up close.",
-  "world_combat.move.quiverdance.text.bloomed": "Scale veil · Sp. Atk / Sp. Def / Speed +%1$s",
+  "world_combat.move.quiverdance.text.bloomed": "Scale veil · Sp. Atk +%1$s / Sp. Def +%2$s / Speed +%3$s",
   "world_combat.move.quiverdance.text.dispersed": "The scales scatter",
   "effect.world_combat.quiverdance_bloom": "Scale Veil"
 }

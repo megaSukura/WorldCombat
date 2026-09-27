@@ -6,8 +6,8 @@
  * 色相家族：灵能紫 0xC07CFF 作能力等级，淡紫白 0xE9C6FF 作药水增益与高光；不引入第二个色相。
  * 拍子：起 read 0–12t（读解连线＋扫描环）／ 击 mirror 30t（两路符号按 `direction` 真实流回＋按项点亮）／ 收 settle 24t。
  * 范围：read 的发射器绑 `data.path`（施法者与目标两个实体顶点画的 polyline），画的就是“读到多远、读谁”；
- *   扫描环绑 target。mirror 的流动符号绑 emit 点（目标位置）并以 `orient:"direction"` 沿 `data.direction` 走完 `data.span`，
- *   是真正的移动前沿，不是把一条静止的线说成飞行。
+ *   扫描环绑 target。mirror 不画一条静止的整段连线，只让流动符号绑 emit 点（目标位置）并以 `orient:"direction"`
+ *   沿 `data.direction` 走完 `data.span`，是真正的移动前沿，而不是把一条全线同时亮起说成转移。
  * 数：能力符号数量绑 `data.stats`（本次真实抄到的等级项数），药水符号数量绑 `data.potions`（真实复制的增益数）；
  *   回响密度绑 `data.echoes`（特攻派生），整体强弱绑 `data.intensity`。未抄到的条目不发射，因此不亮。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -50,14 +50,6 @@ const PsychupSceneDefinition: ParticleDefinition = {
             duration: 30,
             exit: { stop: 10, drain: 18 },
             emitters: [
-                {
-                    name: "mirror_link", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/thought_trail_small",
-                    shape: { kind: "polyline" },
-                    rate: { data: "echoes", fallback: 8 }, direction: "shape", speed: [0.03, 0.1], spread: 8,
-                    lifetime: [8, 15], size: [0.08, 0.02], sizeMode: "sin",
-                    color: 0xC07CFF, alpha: [0.55, 0], light: "full", maxParticles: 100
-                },
                 {
                     name: "flow_stage", bind: "point", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",

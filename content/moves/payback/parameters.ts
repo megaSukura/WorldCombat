@@ -4,7 +4,8 @@
  * 原生事实：Dark／物理／威力 50／命中 100／PP 10／接触；「如果能在对手之后攻击，威力翻倍」（Cobblemon 1.8）。
  *
  * 翻译：即时战斗里没有先手判定，本实现把「在对手之后出手」翻成可观察的事实——命中那一刻，
- * 目标在最近一段窗口内打过施法者，或此刻正朝施法者出手。满足时这一记回击翻倍。
+ * 目标在最近一段窗口内真正出手打过施法者（施法者最近被它击中，或目标最近一次原生攻击的目标就是施法者）。
+ * 满足时这一记回击翻倍。仇恨/追踪字段不算出手。
  * 与原生「蓄力攻击」相配的另一条：施法者越是带伤，这一记把郁结得越重（缺的血打进威力）。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
@@ -28,21 +29,21 @@ namespace PokemonSkills {
     export const paybackId = "payback";
     export const paybackScene = "world_combat:move_payback";
 
-    /** 命中目标是否已经先动过手：最近 window 刻内打过施法者，或此刻正朝施法者出手。 */
+    /** 命中目标是否已经先动过手：最近 window 刻内真正打过施法者。 */
     export function paybackReckoning(context: FactContext): number {
         const world = context.world, actor = context.actor;
         if (!world || !actor || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return 0;
         const target = context.target && context.target.actor ? context.target.actor : context.action ? context.action.target() : null;
         if (!target || !world.valid(target) || world.friendly(target)) return 0;
-        const window = p(paybackId, "window", <NumberContext>context);
-        const self = world.observe(actor), foe = world.observe(target);
-        if (self === null) return 0;
-        const last = self.lastAttacker();
-        if (self.hurtAgo() <= window && last !== null && String(last.ref()) === String(target.ref())) return 1;
-        if (foe !== null) {
-            const swinging = foe.attacking();
-            if (swinging !== null && String(swinging.ref()) === String(actor.ref())) return 1;
+        const window = Math.max(1, p(paybackId, "window", <NumberContext>context));
+        const self = world.observe(actor);
+        if (self !== null) {
+            const last = self.lastAttacker();
+            if (self.hurtAgo() <= window && last !== null && String(last.ref()) === String(target.ref())) return 1;
         }
+        // 真正出手的事实：目标最近一次原生攻击的目标就是施法者。仇恨/追踪字段不算出手。
+        const recent = DamageSemantics.recentAttack(world, target, window);
+        if (recent !== null && String(recent.target) === String(actor.ref())) return 1;
         return 0;
     }
 
@@ -76,7 +77,7 @@ namespace PokemonSkills {
         window: seconds(
             F.base(32).minus(F.stat("speed").minus(55).times(0.12).clamp(-6, 10))
                 .plus(F.when(F.pref("patient"), F.const(16), F.const(0))).clamp(20, 60).round(0),
-            "反算窗口", "目标在这段时间内打过施法者，或此刻正朝施法者出手，就触发翻倍；蓄势式把窗口拉长。"),
+            "反算窗口", "目标在这段时间内真正出手打过施法者，就触发翻倍；蓄势式把窗口拉长。"),
         /** 扑击距离：2.6 格 + 速度偏移[−0.5,1.4] + 等级偏移[0,1.2]；夹 2..5。 */
         dash: formula(
             F.base(2.6).plus(F.stat("speed").minus(55).times(0.014).clamp(-0.5, 1.4))

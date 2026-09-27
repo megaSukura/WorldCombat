@@ -7,7 +7,7 @@
  *
  * 断言只取必然事实：这招被放过、至少有一只小拉达挨到伤害（气场到点炸开、半径足以罩住它们，
  * 但两只会不会同时在圈里仍受它们走位影响，所以不假设两只都中）。暴击与约 20% 的畏缩掷骰、
- * 具体命中几只都写进 note 供读轨迹判断。
+ * 具体命中几只都写进 note 供读轨迹判断。爆心是气场实际抵达/撞上的真实接触点；圈伤逐敌 clear，隔墙不受。
  */
 Smoke.scenario("darkpulse", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -23,10 +23,12 @@ Smoke.scenario("darkpulse", function (stage) {
     }, function () {
         stage.expect(stage.casts("darkpulse", caster) >= 1, "absol committed darkpulse");
         stage.expect(stage.damageTo(first) > 0 || stage.damageTo(second) > 0, "the aura burst dealt damage");
-        stage.note("crit, the flinch roll (about 20%), how many foes stood inside the burst radius, and whether the aura burst early on the first body it met are random/positional; the burst centre is whatever point the aura actually reached", {
+        stage.note("crit, the flinch roll (about 20%), how many foes stood inside the burst radius, and whether the aura burst early on the first body or wall it met are random/positional; the burst centre is the real contact or the last real projectile position", {
             casts: stage.casts("darkpulse", caster),
             firstDamage: Math.round(stage.damageTo(first) * 10) / 10,
             secondDamage: Math.round(stage.damageTo(second) * 10) / 10,
+            firstHits: stage.hits(first, true),
+            secondHits: stage.hits(second, true),
             firstFlinched: stage.hadMobEffect(first, "world_combat:status/flinch"),
             secondFlinched: stage.hadMobEffect(second, "world_combat:status/flinch"),
             tick: stage.tick()

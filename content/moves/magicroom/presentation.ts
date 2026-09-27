@@ -108,6 +108,14 @@ WorldCombatClient.scene("world_combat:move_magicroom_grid", 1, function (frame) 
     const x = entry.position[0], y = entry.position[1] + 0.06, z = entry.position[2];
     const spacing = Math.max(0.8, radius / 2.5), steps = Math.floor(radius / spacing);
     const color = 0x55C8D0E0;
+    // The field uses a sphere around its support point. Two upper meridians expose its actual height.
+    for (let i = 0; i < 24; i++) {
+        const a = Math.PI * i / 24, b = Math.PI * (i + 1) / 24;
+        frame.line(x + Math.cos(a) * radius, y + Math.sin(a) * radius, z,
+            x + Math.cos(b) * radius, y + Math.sin(b) * radius, z, color);
+        frame.line(x, y + Math.sin(a) * radius, z + Math.cos(a) * radius,
+            x, y + Math.sin(b) * radius, z + Math.cos(b) * radius, color);
+    }
     for (let i = -steps; i <= steps; i++) {
         const offset = i * spacing, chord = Math.sqrt(Math.max(0, radius * radius - offset * offset));
         if (chord <= 0.05) continue;

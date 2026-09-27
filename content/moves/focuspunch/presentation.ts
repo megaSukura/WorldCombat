@@ -4,7 +4,9 @@
  * 一句话：施法者低身收势，四周的气一点点收进拳里、越聚越亮（收得越久越多）→ 收满的一刻拳面炸开一圈光，
  * 身体一步踏出、把攒了整段时间的力道砸在目标身上；收势被打断时，气从拳上散成一缕灰烟。
  * 色相家族：暖橙（0xE6A23C）与近白金（0xFFE8B0）；饱和只出现在拳面的强调层。
- * 拍子：起 brace（长收势，duration 由机制 `windup` 给出）→ 放 release（收满）→ 击 strike（命中）／散 broken（被打断）／空 whiff（踏空）。
+ * 拍子：起 brace（长收势，duration 由机制 `windup` 给出）→ 放 release（收满）→ 击 strike（命中）／阻 resist（原生拒绝）／散 broken（被打断）／空 whiff（踏空）。
+ * 拳：聚满后那枚显式拳由自定义客户端场景 `world_combat:move_focuspunch_fist` 从真实聚气位置插值送出，
+ *   落在真实拳路终点，不靠粒子近似整段拳路。
  * 范围：strike 的爆环半径用 `data.scale`（判定半径 / 0.5）给出，玩家看出这一拳能咬住多大的圈。
  * 运动：brace 的气由外向内收、越收越快；release 从拳面向外一顶；strike 的碎片由内向外炸。
  * 数：`data.gather`（物攻与等级派生的聚气速率）决定收势粒子速率，`data.count`（拳力派生）决定命中碎片数，
@@ -102,6 +104,28 @@ const FocuspunchDefinition: ParticleDefinition = {
                 }
             ]
         },
+        resist: {
+            duration: 22,
+            exit: { stop: 10, drain: 14 },
+            emitters: [
+                {
+                    name: "dulled", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [6, 11], size: [0.24, 0.04], sizeMode: "index",
+                    color: 0x9A8E74, alpha: [0.7, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "guard", bind: "target", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: { data: "scale", fallback: 0.8 } },
+                    direction: "outward", speed: [0.0, 0.03],
+                    lifetime: [8, 13], size: [0.34, 0.13],
+                    color: 0x9A8E74, alpha: [0.5, 0], light: "world", maxParticles: 4
+                }
+            ]
+        },
         broken: {
             duration: 20,
             exit: { stop: 8, drain: 14 },
@@ -154,3 +178,26 @@ const FocuspunchDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_focuspunch", 1, FocuspunchDefinition);
+
+/**
+ * 聚满的这一拳：服务端给出当刻身体起点 `from` 与真实拳路终点 `at`，这里用 `serverTick` 在前 75% 时间内把
+ * 拳头直送到接触点、随后收拳。固定一枚拳头图形，不生成粒子或实体；起点随身体朝向由服务端逐刻算出。
+ */
+WorldCombatClient.scene("world_combat:move_focuspunch_fist", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry<{ moment?: string; from?: number[]; at?: number[]; start?: number; dur?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data;
+    if (!data || data.moment !== "thrust") return;
+    const from = data.from, at = data.at;
+    if (!Array.isArray(from) || !Array.isArray(at) || from.length !== 3 || at.length !== 3) return;
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const duration = typeof data.dur === "number" && data.dur > 0 ? data.dur : 8;
+    const elapsed = frame.serverTick() - start;
+    if (elapsed < 0 || elapsed > duration) return;
+    const phase = elapsed / duration;
+    const extend = phase < 0.75 ? phase / 0.75 : Math.max(0, 1 - (phase - 0.75) / 0.25);
+    const x = from[0] + (at[0] - from[0]) * extend, y = from[1] + (at[1] - from[1]) * extend, z = from[2] + (at[2] - from[2]) * extend;
+    const frameIndex = Math.max(0, Math.min(4, Math.floor(extend * 5)));
+    frame.sprite("cobblemon:particle/generic/fist", x, y, z, 0.46, extend * 18, (((0xFF << 24) | 0xE6A23C) | 0), frameIndex, true);
+    if (extend > 0.05) frame.line(from[0], from[1], from[2], x, y, z, (((Math.round(120 * extend) << 24) | 0xE6A23C) | 0));
+});

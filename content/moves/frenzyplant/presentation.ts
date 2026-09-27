@@ -16,8 +16,14 @@ const FrenzyplantDefinition: ParticleDefinition = {
     moments: {
         root_hint:{emitters:[{name:"root_entry",bind:"point",fit:"world",particle:"world_combat_core:cobblemon/generic/tinydust",rate:12,
             shape:{kind:"circle",radius:.3,thickness:.9},direction:"up",speed:[.005,.02],lifetime:[4,8],size:[.07,.02],color:0x806244,alpha:[.45,0]}]},
-        arm: { emitters: [{ name: "actual_path", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-            rate: 32, shape: { kind: "polyline" }, speed: [0,.006], lifetime: [4,8], size: [.22,.12], color: 0x628743, alpha: [.7,.15], light: "world", maxParticles: 42 }] },
+        arm: { emitters: [{ name: "arm_body", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+            rate: 14, shape: { kind: "polyline" }, speed: [0,.006], lifetime: [4,8], size: [.16,.06], color: 0x628743, alpha: [.35,.08], light: "world", maxParticles: 36 }] },
+        tip: { emitters: [
+            { name: "tip_core", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/grass/sprout",
+                rate: 46, shape: { kind: "polyline" }, speed: [0,.01], lifetime: [4,8], size: [.36,.08], color: 0x8FC24E, alpha: [.95,0], light: "full", bloom: 0.2, maxParticles: 90 },
+            { name: "tip_seed", bind: "path", fit: "world", particle: "world_combat_core:cobblemon/generic/grass/seed",
+                rate: 24, shape: { kind: "polyline" }, speed: [.01,.05], gravity: 0.04, drag: 0.94, lifetime: [5,10], size: [.12,.03], color: 0x5A4A32, alpha: [.8,0], light: "world", maxParticles: 60 }
+        ] },
         windup: {
             duration: { data: "windup", fallback: 12 },
             exit: { stop: 6, drain: 12 },

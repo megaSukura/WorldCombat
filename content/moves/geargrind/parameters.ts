@@ -22,7 +22,7 @@
  *   gearRadius 判定半径：碰撞箱宽度。
  *   shards    迸出的钢屑数量：物攻，直接驱动粒子发射量。
  *   gap       两枚间隔：速度。
- *   tempo/recover/recharge：速度与等级。
+ *   tempo/aftercast/recharge：速度与等级。
  *
  * 配置 `cross`（交错式，默认开）双向取舍：开启＝两枚齿轮从身体两侧甩出、错开后追踪合拢，侧向躲闪会被另一枚兜住
  *   （偏角更宽），代价是每枚 ×0.95、飞得略慢、间隔 +2 刻。关闭（直射式）＝两枚沿同一条线笔直快飞、不追踪，
@@ -83,13 +83,14 @@ namespace PokemonSkills {
                 unit: "度",
                 description: "每一枚齿轮出手时可能偏掉的随机角度——原生命中 85 的翻译；出手越快偏得越小，直射式更准。"
             }),
-        /** 追踪转向：基础 16 度/刻，等级每比 20 高 1 加 0.4（夹 0..8）；交错 ×1 / 直射 ×0；夹在 0..28。 */
+        /** 追踪转向：基础 16 度/刻，等级 52 起 +6（阶梯 0/6）；合起来再乘交错系数；直射 ×0 恒为 0；夹在 0..28。 */
         turn: formula(
-            F.base(16).plus(F.level().minus(20).times(0.4).clamp(0, 8))
+            F.base(16).plus(F.growth([[0, 0], [52, 6]], { key: "worldcombat.value.growth" }))
                 .times(F.when(F.pref("cross"), F.const(1), F.const(0))).clamp(0, 28).round(1),
             "追踪转向", {
+                base: 16,
                 unit: "度/刻",
-                description: "齿轮每刻能修正多少航向；等级越高吸得越准。直射式为 0，齿轮只沿出手方向笔直飞。"
+                description: "齿轮每刻能修正多少航向；等级 52 起吸得更准。直射式为 0，齿轮只沿出手方向笔直飞。"
             }),
         /** 两侧错开：基础 0.9 格，身宽每比 0.9 宽 1 格加 0.9（夹 -0.2..1.4）；交错 ×1 / 直射 ×0；夹在 0..2.4。 */
         offset: formula(
@@ -122,8 +123,8 @@ namespace PokemonSkills {
         tempo: seconds(
             F.base(7).minus(F.stat("speed").minus(60).times(0.025).clamp(-1.2, 2)).clamp(4, 11).round(0),
             "起手", "从身上旋出两枚齿轮、对准方向的时间；速度越快越短。"),
-        /** 收招：基础 8 刻，速度每比 60 快 1 减 0.02（夹 -1..1.5）；夹 4..12。 */
-        recover: seconds(
+        /** 收招（非保留名 aftercast）：基础 8 刻，速度每比 60 快 1 减 0.02（夹 -1..1.5）；夹 4..12。 */
+        aftercast: seconds(
             F.base(8).minus(F.stat("speed").minus(60).times(0.02).clamp(-1, 1.5)).clamp(4, 12).round(0),
             "收招", "两枚齿轮甩完后收回姿势的时间；速度越快收得越快。"),
         /** 冷却：基础 26 刻，等级每比 20 高 1 减 0.12（夹 0..3.5）；夹 16..34。 */
@@ -137,7 +138,7 @@ namespace PokemonSkills {
 
     stages(geargrindId, [
         { level: 36, values: { tooth: 56, sprocket: 56 } },
-        { level: 52, values: { tooth: 64, sprocket: 64, turn: 22 } }
+        { level: 52, values: { tooth: 64, sprocket: 64 } }
     ]);
 
     describe(geargrindId, [
@@ -146,8 +147,8 @@ namespace PokemonSkills {
         { key: "description.ballistic", values: ["gearRadius","gap"] },
         { key: "cross.on", values: [], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: [], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range", "prepare", "aftercast", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.tooth", "tier.0.sprocket"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.tooth", "tier.1.sprocket", "tier.1.turn"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.tooth", "tier.1.sprocket"] }
     ]);
 }

@@ -5,7 +5,8 @@
  * 选厚血、不还手的靶子：目标挨过一砸仍活着，施法者的掉血也只可能来自这一招的反震。
  * 必然事实：本招被提交过；目标受到过伤害（砸实）；施法者自己也受到过伤害（反震）。
  * 落点的地裂只是画面碎屑，不再改动方块；因此这里不断言方块变化。
- * 砸中还是砸空、压了几级速度、暴击，写进 note 供读轨迹判断。
+ * 抬身前沿 reach 锁定落点、下砸有有限路程、砸中才播砸实与反震；砸中还是砸空、压了几级速度、暴击，
+ * 写进 note 供读轨迹判断。
  */
 Smoke.scenario("woodhammer", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
@@ -22,7 +23,7 @@ Smoke.scenario("woodhammer", function (stage) {
             stage.expect(stage.casts("woodhammer", caster) > 0, "woodhammer was committed");
             stage.expect(stage.damageTo(foe) > 0, "the slam dealt damage to the target");
             stage.expect(stage.damageTo(caster) > 0, "the user paid recoil for the hit");
-            stage.note("木槌落地沿接触面扬起短暂的地裂碎屑（只做画面、不改动方块）；命中把目标速度压下 stagger 级。砸中还是砸空、碎屑数量与速度等级取决于站位与设计值", {
+            stage.note("抬身前沿 reach 锁定落点，下砸只走完这段有限路程：地面/墙/首个身体真实截断，不再追着移动目标改向；只有伤害成立才播砸实与反震，砸在真实接触面上才沿接触面法线扬起短暂地裂（只做画面、不改动方块），空中命中不画地裂。砸中还是砸空、碎屑数量与速度等级取决于站位与设计值", {
                 casts: stage.casts("woodhammer", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 selfDamage: Math.round(stage.damageTo(caster) * 10) / 10,

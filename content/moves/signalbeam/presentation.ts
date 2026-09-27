@@ -15,20 +15,26 @@
 const SignalbeamDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        gather: {
+        gather_left: {
             duration: 20,
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "gather_left", bind: "source", offset: [-0.35, 0.35, 0], height: 0.35,
+                    name: "gather_left", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     rate: 10, shape: { kind: "sphere_surface", radius: 0.22 },
                     direction: "inward", speed: [0.03, 0.09],
                     lifetime: [8, 15], size: [0.09, 0.02],
                     color: 0xFF6B6B, alpha: [0.9, 0], light: "full", maxParticles: 20
-                },
+                }
+            ]
+        },
+        gather_right: {
+            duration: 20,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
                 {
-                    name: "gather_right", bind: "source", offset: [0.35, 0.35, 0], height: 0.35,
+                    name: "gather_right", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     rate: 10, shape: { kind: "sphere_surface", radius: 0.22 },
                     direction: "inward", speed: [0.03, 0.09],

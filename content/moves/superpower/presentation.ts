@@ -2,13 +2,13 @@
  * 蛮力 / superpower 的客户端表现。
  *
  * 一句话：施法者沉肩扎马、脚边尘土被吸拢、拳边亮起暖光 → 整个人贴地压身冲出、身后甩下两道速度线与翻起的土 →
- *   真实撞上身体炸开拳劲与碎土（尘土颜色读接触地面/墙面材质）→ 撞墙或冲空只扬一蓬同色灰 → 命中冲过头的重心一沉、两肩各落下
- *   一缕疲劳灰气。
+ *   真实撞上身体炸开拳劲与碎土，一个定向拳图沿真实冲撞方向短伸出去（尘土颜色读接触地面/墙面材质）→
+ *   撞墙或冲空只扬一蓬同色灰 → 命中冲过头的重心一沉、身体落下疲劳灰气。
  * 色相家族：拳劲的暖橙（impact_fighting / bigfist / xsfadeorblite）为主体，土褐（earth / tinydust / quickattack_dashlines）作地面尘，无第二色相。
- * 拍子：起 charge（扎马蓄势）→ 冲 rush（贴地冲刺）→ 击 impact（撞实、尘环）／撞墙 wall（扬灰）→ 收 slump（双肩落下疲劳）／失 miss（扑空）。
- * 范围：本招是单体直线突进，画面靠冲刺轨迹与冲击点尘环标出「这条线 + 落点周围」会被打到；尘环数量绑 `data.dust`，颜色绑 `data.materialTint`。
- * 运动：冲刺沿身体运动方向拖出速度线；冲击向外崩碎土与拳劲；疲劳灰气从双肩缓慢下坠。
- * 数：impact 的尘量绑 `data.dust`（威力与命中数派生）、震荡环量绑 `data.shock`（余震半径派生）、拳劲核心与冲刺绑 `data.intensity`（威力 / 120）。
+ * 拍子：起 charge（扎马蓄势）→ 冲 rush（贴地冲刺）→ 击 impact（撞实、定向拳图）／撞墙 wall（扬灰）→ 收 slump（身体落下疲劳）／失 miss（扑空）。
+ * 范围：本招是单体直线突进，画面靠冲刺轨迹与冲击点标出「这条线 + 真实接触处」会被打到；拳图朝向与尘量绑 `data.direction`、`data.dust`，颜色绑 `data.materialTint`。
+ * 运动：冲刺沿身体运动方向拖出速度线；冲击向外崩碎土与拳劲，拳图沿冲撞方向伸出；疲劳灰气从身体缓慢下坠、跟随施法者。
+ * 数：impact 的尘量绑 `data.dust`（威力派生）、拳劲与冲刺绑 `data.intensity`（威力 / 120）。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const SuperpowerDefinition: ParticleDefinition = {
@@ -63,13 +63,15 @@ const SuperpowerDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "fist", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    // 单个定向拳图：沿 data.direction（真实的冲撞方向）从接触点短伸出去。
+                    name: "fist", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/bigfist",
+                    orient: "direction", direction: "shape",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "sphere", radius: 0.4 },
-                    direction: "outward", speed: [0.12, 0.3],
+                    shape: { kind: "line", length: 0.55 },
+                    speed: [0.08, 0.2],
                     lifetime: [7, 12], size: [0.5, 0.08], sizeMode: "index",
-                    alpha: [1, 0], light: "full", maxParticles: 30
+                    alpha: [1, 0], light: "full", maxParticles: 14
                 },
                 {
                     name: "hit", bind: "point", fit: "none", offset: [0, 0.45, 0],
@@ -81,22 +83,13 @@ const SuperpowerDefinition: ParticleDefinition = {
                     alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 80
                 },
                 {
-                    name: "dust_ring", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "dust", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "dust", fallback: 22 }, at: 0 },
-                    shape: { kind: "circle", radius: 0.9 },
+                    shape: { kind: "sphere", radius: 0.5 },
                     direction: "outward", speed: [0.04, 0.2], gravity: 0.07, drag: 0.9,
                     lifetime: [10, 18], size: [0.07, 0.01],
-                    color: { data: "materialTint", fallback: 0x8C7448 }, alpha: [0.6, 0], light: "world", maxParticles: 110
-                },
-                {
-                    name: "shock_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: { data: "shock", fallback: 0 }, at: 1 },
-                    shape: { kind: "ring", radius: 1.0 },
-                    direction: "outward", speed: [0.14, 0.34],
-                    lifetime: [7, 13], size: [0.5, 0.1], sizeMode: "index",
-                    color: 0xD9C79A, alpha: [0.8, 0], light: "world", maxParticles: 40
+                    color: { data: "materialTint", fallback: 0x8C7448 }, alpha: [0.6, 0], light: "world", maxParticles: 70
                 }
             ]
         },
@@ -127,24 +120,6 @@ const SuperpowerDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [12, 20], size: [0.08, 0.01],
                     color: 0x9A968C, alpha: [0.5, 0], light: "world", maxParticles: 50
-                },
-                {
-                    name: "shoulder_left", bind: "source", offset: [-0.28, 0.62, 0], height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "fatigue", fallback: 8 } },
-                    shape: { kind: "box", size: [0.16, 0.16, 0.16] },
-                    direction: "down", speed: [0.02, 0.07], gravity: 0.02, drag: 0.94,
-                    lifetime: [10, 18], size: [0.06, 0.01],
-                    color: 0x9A968C, alpha: [0.55, 0], light: "world", maxParticles: 24
-                },
-                {
-                    name: "shoulder_right", bind: "source", offset: [0.28, 0.62, 0], height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "fatigue", fallback: 8 } },
-                    shape: { kind: "box", size: [0.16, 0.16, 0.16] },
-                    direction: "down", speed: [0.02, 0.07], gravity: 0.02, drag: 0.94,
-                    lifetime: [10, 18], size: [0.06, 0.01],
-                    color: 0x9A968C, alpha: [0.55, 0], light: "world", maxParticles: 24
                 }
             ]
         }

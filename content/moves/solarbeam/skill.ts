@@ -1,23 +1,11 @@
 /** 日光束：聚光后朝瞄准方向放出一束贯穿直线；真实方块截断光柱，身体判定与光芯使用同一三维线段及宽度。 */
 namespace PokemonSkills {
     const solarbeamScene = "world_combat:move_solarbeam";
+    const solarbeamAxisScene = "world_combat:move_solarbeam_axis";
     const solarbeamSunText = "world_combat.move.solarbeam.text.sun";
     const solarbeamHitText = "world_combat.move.solarbeam.text.hit";
     const solarbeamPierceText = "world_combat.move.solarbeam.text.pierce";
     const solarbeamFizzleText = "world_combat.move.solarbeam.text.fizzle";
-
-    /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的三维光带四角。 */
-    function solarbeamLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): CombatPoint[] {
-        const flat = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(direction.scale(reach));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))];
-    }
-
-    function solarbeamPath(vertices: CombatPoint[]): number[][] {
-        return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
-    }
 
     define({
         id: "solarbeam",
@@ -60,7 +48,8 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const origin = action.origin();
-            const direction = aim(action);
+            // 真实三维瞄准：保留俯仰，向上/向下指向的真实方向就是光轴；光带外壳由自定义场景按同一轴铺开。
+            const direction = WorldGeometry.basis(aim(action), action.direction()).forward;
             action.releaseTarget();
             const wanted = Math.max(3, action.range());
             const half = Math.max(0.2, p("solarbeam", "width", action));
@@ -74,12 +63,15 @@ namespace PokemonSkills {
             const block = world.clipBlocks(origin, origin.plus(direction.scale(wanted)));
             const reach = block === null ? 0 : block.blocked() ? block.position().minus(origin).length() : wanted;
             const tip = origin.plus(direction.scale(reach));
-            const vertices = solarbeamLane(origin, direction, reach, half);
-            const path = solarbeamPath(vertices);
+            const path = [[origin.x(), origin.y(), origin.z()], [tip.x(), tip.y(), tip.z()]];
             let hits = 0;
 
             sound(action, "minecraft:entity.warden.sonic_boom");
-            WorldFeedback.emit(world, solarbeamScene, 1, origin.plus(WorldCombat.point(0, 0.6, 0)),
+            // 光柱主体是自定义场景：按真实三维端点画同轴稳定光柱与外壳，竖直瞄准时也成立。
+            WorldFeedback.emit(world, solarbeamAxisScene, 1, origin,
+                { moment: "beam", path: path, direction: [direction.x(), direction.y(), direction.z()],
+                    width: half, light: light, scale: scale, intensity: intensity, pierce: pierce, reach: reach }, 26);
+            WorldFeedback.emit(world, solarbeamScene, 1, origin,
                 { moment: "beam", path: path, direction: [direction.x(), direction.y(), direction.z()],
                     light: light, scale: scale, intensity: intensity, pierce: pierce, reach: reach }, 26);
 

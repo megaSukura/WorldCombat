@@ -5,6 +5,7 @@
  *   伤口还热着时命中炸开一圈更密更亮的暗紫（羽尖泛红），没追上就散在前方。
  * 色相家族：暗紫（impact_dark、pursuit、glowingsparkle）为主，血红（anger_red）只在「目标带伤」时进入。
  * 拍子：起 stalk 0–28t ／ 追 lunge 0–30t ／ 击 strike（未带伤）0–28t ／ 击 ambush（带伤）0–28t ／ 空 miss。
+ * 起手在目标伤口方向给一次短裂隙（`data.rift`，不在窗口则为 0），并用一条按剩余窗口（`data.reach`）缩短的线表达；窗口合上即收。
  * 范围：strike／ambush 的点爆与环绑命中点，尺寸由 `data.scale`（判定半径派生）决定；lunge 的速度线沿 `data.direction` 前射。
  * 运动：stalk 的羽由外向内收；lunge 贴地前拖；命中由内向外炸；带伤时多一层向内咬合的暗红。
  * 数：`data.quills`（物攻与速度派生的暗羽数）驱动各段的发射量；`data.wounded` 决定是否进入爆发段；
@@ -32,6 +33,27 @@ const AssuranceDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.1],
                     lifetime: [7, 13], size: [0.08, 0.01],
                     color: 0x9B7AD0, alpha: [0.8, 0], light: "full", maxParticles: 40
+                },
+                {
+                    // 目标此刻在窗口内时才有的伤口方向短裂隙；不在窗口则 count 为 0。
+                    name: "rift", bind: "target", offset: [0, 0, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: { data: "rift", fallback: 0 } },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "inward", speed: [0.05, 0.16], spread: 20,
+                    lifetime: [7, 13], size: [0.14, 0.02],
+                    color: 0xB0463C, alpha: [0.9, 0], light: "full", maxParticles: 44
+                },
+                {
+                    // 剩余追击窗口用一条朝伤口方向的短线表达，窗口越短线越短；合上则不发射。
+                    name: "reach", bind: "source", offset: [0, 0.3, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/moves/pursuit",
+                    shape: { kind: "line", length: { data: "reach", fallback: 0 } },
+                    burst: { count: { data: "reachCount", fallback: 0 }, interval: 6, repeats: 4 },
+                    orient: "direction", direction: "shape",
+                    speed: [0.02, 0.08], spread: 8,
+                    lifetime: [5, 10], size: [0.1, 0.02],
+                    color: 0x6A4AB0, alpha: [0.7, 0], light: "full", maxParticles: 30
                 }
             ]
         },
@@ -87,7 +109,17 @@ const AssuranceDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 20 },
             emitters: [
                 {
-                    name: "burst", bind: "target", height: 0.5,
+                    // 先向伤口内收一下，再散开：收拢一拍叠加在爆发之前。
+                    name: "clench", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/moves/pursuit",
+                    burst: { count: { data: "quills", fallback: 12 } },
+                    shape: { kind: "sphere_surface", radius: 0.4 },
+                    direction: "inward", speed: [0.16, 0.4], spread: 18,
+                    lifetime: [4, 8], size: [0.1, 0.02],
+                    color: 0xB0463C, alpha: [0.9, 0.1], light: "full", maxParticles: 70
+                },
+                {
+                    name: "burst", bind: "target", height: 0.5, start: 2,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
                     burst: { count: { data: "quills", fallback: 22 } },
                     shape: { kind: "sphere", radius: 0.36 },
@@ -96,7 +128,7 @@ const AssuranceDefinition: ParticleDefinition = {
                     color: 0xB08AE0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 120
                 },
                 {
-                    name: "wound", bind: "target", height: 0.5,
+                    name: "wound", bind: "target", height: 0.5, start: 2,
                     particle: "world_combat_core:cobblemon/mood/anger_red",
                     burst: { count: { data: "quills", fallback: 18 } },
                     shape: { kind: "sphere_surface", radius: 0.32 },

@@ -2,7 +2,8 @@
  * 鼓击 的伙伴 AI 用途。
  *
  * 什么局面下出手：有可见威胁、在 `ai.maxChase` 之内。它是一记远程的地面连奏，价值在于隔着一段距离把对手钉住。
- * 对谁出手：当前威胁；不可见、友方或已倒下的不接受。`ai.pinRunners` 开启时，正在移动或逃跑的目标优先。
+ * 对谁出手：当前威胁；不可见、友方或已倒下的不接受。`ai.pinRunners` 开启时，正在移动或逃跑的目标优先，
+ *   但用根头真实速度估计到达时机——跑得快又离得远的目标会在根头到达前溜出破土圈，只给较小的先手分。
  * 够不到怎么办：`reach` 就是本招射程，不够就先走近；这是一记地面招式，不负责贴脸。
  * 放完之后：末拍目标被 rootbound、速度等级下降、脚下留下根须，交回共享顺序继续战斗。
  */
@@ -15,6 +16,14 @@ namespace PokemonSkills {
             const delta=CompanionBehavior.point(target.point).minus(from),distance=Math.sqrt(delta.x()*delta.x()+delta.z()*delta.z());
             return !SurfacePaths.advance(access,from,delta,distance,{up:1,down:1,spacing:.5,samples:Math.ceil(distance/.5)+1}).ended;
         });
+    }
+    /** 本个体、当前配置下根头波峰的真实速度；取不到时返回 0。 */
+    function drumbeatingCrest(context:WorldBehavior.Context,capability:WorldBehavior.Capability):number{
+        const world=CompanionBehavior.world(context);
+        try{
+            const value=p("drumbeating","wavePace",{world:world,actor:world.source(),skill:skills["drumbeating"],detail:{values:capability.data.config}});
+            return typeof value==="number"&&isFinite(value)?value:0;
+        }catch(error){return 0;}
     }
     CompanionBehavior.registerUse("drumbeating", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
@@ -31,13 +40,20 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            const self=CompanionBehavior.source(context);
+            if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 17;
             if (CompanionBehavior.ai<boolean>(capability, "pinRunners", true)) {
                 const motion = CompanionBehavior.velocity(context, target);
                 const pace = motion === null ? 0 : Math.sqrt(motion[0] * motion[0] + motion[1] * motion[1] + motion[2] * motion[2]);
-                if (pace >= 0.16) score += 14;
-                else if (pace >= 0.09) score += 7;
+                // 用根头真实速度估计到达时机：跑得快又离得远的目标会在根头到达前溜出破土圈，少加分。
+                if (pace >= 0.09) {
+                    const crest = drumbeatingCrest(context, capability);
+                    const arrival = crest > 0 ? CompanionBehavior.distance(self.point, target.point) / crest : 999;
+                    const escape = pace * arrival;
+                    if (pace >= 0.16) score += escape <= 3 ? 14 : 6;
+                    else score += escape <= 4 ? 7 : 3;
+                }
             }
             if (CompanionBehavior.status(context, target, "rootbound")) score -= 14;
             if (CompanionBehavior.ratio(target) <= 0.3) score += 8;

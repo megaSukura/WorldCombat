@@ -1,7 +1,7 @@
 /**
  * 必杀门牙 / hyperfang —— 可执行设计说明。
  *
- * 一句话：扑上去一口咬死，沿配置选定的一侧分 3 刻小步把目标晃开并钉住，甩得够狠就把它甩懵、打断它正在做的事。
+ * 一句话：扑上去一口咬死，沿配置选定的一侧一段有界侧甩把目标晃开并钉住，甩得够狠就把它甩懵、打断它正在做的事。
  *
  * 场面：一只只会必杀门牙的拉达（45 级）对一只只会跃起、厚血不还手的卡比兽（60 级）；卡比兽生命够厚，
  * 经得起这一口并让"钉住"那段窗口真的走完。断言只取必然事实：这招被提交过、目标受到过伤害。
@@ -20,7 +20,7 @@ Smoke.scenario("hyperfang", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("hyperfang", caster) >= 1, "caster committed hyper fang");
             stage.expect(stage.damageTo(foe) > 0, "hyper fang dealt damage to the foe");
-            stage.note("the bite lands when the pounce connects; the sideways whip then runs in three small steps to the configured side, stopping at the real displacement, and only then rolls the flinch.", {
+            stage.note("the bite lands when the pounce connects; the sideways whip then runs as one bounded shove to the configured side through native hit displacement, stopping at the real displacement (knockback resistance or a wall), and only then rolls the flinch.", {
                 casts: stage.casts("hyperfang", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 flinched: stage.hadMobEffect(foe, "world_combat:status/flinch"),

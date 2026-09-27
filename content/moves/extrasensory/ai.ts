@@ -2,8 +2,9 @@
  * 神通力 / extrasensory 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 13）格内。它落在目标**当下位置**的点上（kind=point），
- *   所以优先挑那些短时间内不会离开原地的目标：沉睡、被定住（`protectedControl`）的对手，或挤在一起、总有人留在圈里的敌人。
- * 选择倾向：圈内还挤着别的敌人时加分（一次攥住一小片）；对手已经被别的招打懵时略降，把手里的伏笔留给还能动的目标。
+ *   所以优先挑那些伏笔期间不会离开原地的目标：沉睡、被定住（`protectedControl`）的对手，或按当前速度估出跑不出合拢圈的敌人。
+ * 选择倾向：圈内还挤着别的敌人时加分（一次攥住一小片）；伏笔里能跑出合拢圈的目标下调，把力留给会停下的目标；
+ *   对手已经被别的招打懵时略降。
  */
 namespace PokemonSkills {
     function extrasensoryCount(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
@@ -15,6 +16,28 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
         }
         return count;
+    }
+
+    /** 本个体当前合拢圈的真实半径；读不到原生个体时退回定义参考半径。 */
+    function extrasensoryRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const access = CompanionBehavior.world(context);
+        try {
+            return Math.max(1.2, PokemonSkills.p(extrasensoryId, "radius", { world: access, actor: access.source(),
+                skill: skills[extrasensoryId], detail: { values: item.data.config || {} } }));
+        } catch (error) { return extrasensoryReference; }
+    }
+
+    /** 目标按当前速度在伏笔期间能移动的水平距离（格）：跑得出合拢圈又没被定住，这一攥多半落空。 */
+    function extrasensoryTravel(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        let delay = 16;
+        try {
+            const access = CompanionBehavior.world(context);
+            delay = Math.max(4, Math.round(PokemonSkills.p(extrasensoryId, "delay", { world: access, actor: access.source(),
+                skill: skills[extrasensoryId], detail: { values: item.data.config || {} } })));
+        } catch (error) { delay = 16; }
+        const velocity = CompanionBehavior.velocity(context, target);
+        if (!velocity) return 0;
+        return Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) * delay;
     }
 
     function extrasensoryWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -38,10 +61,17 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !extrasensoryWants(context, capability, target)) return 0;
             let base = 20;
-            if (CompanionBehavior.protectedControl(target)) base += 14;
-            const count = extrasensoryCount(context, target, 1.8);
+            const held = CompanionBehavior.protectedControl(target);
+            if (held) base += 14;
+            const radius = extrasensoryRadius(context, capability);
+            const count = extrasensoryCount(context, target, radius);
             if (count >= 2) base += Math.min(16, (count - 1) * 8);
             if (CompanionBehavior.status(context, target, "flinch")) base -= 6;
+            // 没被定住的目标：伏笔里能跑出合拢圈就下调，把力留给会停下的目标或更密的圈。
+            if (!held) {
+                const travel = extrasensoryTravel(context, capability, target);
+                if (travel > radius) base -= Math.min(18, Math.round((travel - radius) * 6) + 6);
+            }
             return base;
         }
     });

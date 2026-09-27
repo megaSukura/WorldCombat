@@ -35,25 +35,26 @@ const PsychicnoiseDefinition: ParticleDefinition = {
             ]
         },
         wave: {
-            duration: 34,
-            exit: { stop: 10, drain: 16 },
+            duration: { data: "trailTicks", fallback: 34 },
+            exit: { stop: { data: "trailTicks", fallback: 10 }, drain: 16 },
             emitters: [
                 {
                     name: "wave_core", bind: "projectile", offset: [0, 0, 0], height: 0, fit: "none", orient: "velocity",
+                    trail: { minDistance: 0.35 },
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
                     rate: { data: "discharge", fallback: 26 }, shape: { kind: "cylinder", radius: 0.24, length: 0.5 },
                     direction: "shape", speed: [0.02, 0.08], spin: 4,
                     lifetime: [10, 18], size: [0.3, 0.06],
-                    color: 0xE06AD0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 120
+                    color: 0xE06AD0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 160
                 },
                 {
                     name: "wave_ring", bind: "projectile", offset: [0, 0, 0], height: 0, fit: "none", orient: "velocity",
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
-                    burst: { count: { data: "discharge", fallback: 20 }, interval: 2, repeats: 5 },
+                    rate: { data: "discharge", fallback: 18 }, burst: { count: 6 },
                     shape: { kind: "ring", radius: 0.34 },
                     direction: "shape", speed: [0.05, 0.16],
                     lifetime: [8, 14], size: [0.24, 0.06], sizeMode: "index",
-                    color: 0x7BE0E8, alpha: [0.8, 0], light: "full", maxParticles: 90
+                    color: 0x7BE0E8, alpha: [0.8, 0], light: "full", maxParticles: 120
                 }
             ]
         },

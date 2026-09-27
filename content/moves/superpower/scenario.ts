@@ -12,6 +12,7 @@ Smoke.scenario("superpower", function (stage) {
     stage.weather("clear");
     var caster = stage.pokemon({ species: "machamp", level: 36, moves: ["superpower"], at: [-3, 0, 0] });
     var foe = stage.mob({ type: "minecraft:iron_golem", at: [3, 0, 0] });
+    var startY = caster.position()[1];
     stage.hostile(caster, foe);
     stage.command("data merge entity @e[type=minecraft:iron_golem,distance=..8,limit=1] {NoAI:1b}");
     stage.until(900, function () {
@@ -24,12 +25,14 @@ Smoke.scenario("superpower", function (stage) {
             stage.expect(stage.damageTo(foe) > 0, "the real first contact dealt damage to the foe");
             stage.expect(!changed.some(function (b) { return b.after === "minecraft:cracked_stone_bricks" || b.after === "minecraft:coarse_dirt"; }),
                 "the lunge no longer replaces ground blocks");
-            stage.note("superpower observations: parameters evaluate per real contact; a whiff/wall only raises dust and pays no cost", {
+            stage.expect(Math.abs(caster.position()[1] - startY) < 1.2, "the ground charge never launched the body upward");
+            stage.note("superpower observations: parameters evaluate per real contact; a whiff/wall only raises dust and pays no cost; the ground charge stays on the horizontal plane and never jumps at an airborne target", {
                 casts: stage.casts("superpower", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 moved: Math.round(stage.travelled(caster) * 10) / 10,
                 attackStage: stages.atk || 0,
                 defenseStage: stages.def || 0,
+                verticalRise: Math.round((caster.position()[1] - startY) * 10) / 10,
                 changed: changed
             });
             stage.done();

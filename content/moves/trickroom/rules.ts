@@ -113,7 +113,10 @@ namespace PokemonSkills {
     }, 5);
 
     // 画面：离开／持续。持续层绑在场效果上，场结束即随它收；入圈提示由上面的真实倍率 resolver 负责。
-    WorldEffects.fieldRules.define({ id: "world_combat:move_trickroom/members", apply: function (context) {
+    // applies 只认本招的场地：别的场地（奇妙空间、青草场地等）每次 scan 都不会被这条规则波及。
+    WorldEffects.fieldRules.define({ id: "world_combat:move_trickroom/members",
+        applies: function (context) { return context.field.rule === trickRoomField; },
+        apply: function (context) {
         const world = context.world, field = context.field, actor = context.actor;
         if (context.phase === "leave" && actor !== null) {
             if (trickRoomCovered(world, actor)) return;

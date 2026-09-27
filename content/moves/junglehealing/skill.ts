@@ -48,20 +48,18 @@ namespace PokemonSkills {
                 range: p(junglehealingId, "radius", context)
             };
         },
-        /** 圈里有伤者或带有害状态效果的人（含自己）才值得唤丛林。 */
+        /** 圈里有伤者或带有害状态效果的人（含自己）才值得唤丛林；受益区域与执行共用同一份真实身体箱判定。 */
         ready: function (action) {
             const world = action.sense(), self = action.actor(), body = world.observe(self);
             if (body === null) return "no-body";
             const radius = Math.max(1.2, p(junglehealingId, "radius", action));
-            const actors = world.query(body.position(), radius + 0.6, false);
-            for (let i = 0; i < actors.length; i++) {
-                const other = actors[i];
-                if (!world.friendly(other)) continue;
-                const view = world.observe(other);
-                if (view !== null && view.health() < view.maxHealth() - 0.01) return "";
-                if (CombatStatus.hasHarmful(world, other)) return "";
-            }
-            return "no-wounded";
+            let found = false;
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(body.position(), radius), function (other, facts) {
+                if (found || !world.friendly(other)) return;
+                if (facts.health() < facts.maxHealth() - 0.01) { found = true; return; }
+                if (CombatStatus.hasHarmful(world, other)) found = true;
+            });
+            return found ? "" : "no-wounded";
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_junglehealing:call", junglehealingScene, 1, action.origin(),
@@ -85,23 +83,27 @@ namespace PokemonSkills {
             const coverage = Math.min(1, samples.length / 6);
             const budget = Math.max(1, Math.round(sprouts * (0.5 + 0.5 * coverage)));
             const motes = Math.max(12, Math.round(baseMotes * (0.75 + 0.25 * coverage)));
-            const path = samples.map(function (sample) { return [sample.x(), sample.y(), sample.z()]; });
 
             world.sound("cobblemon:move.leafstorm.actor", ground, 14, "{}");
             WorldFeedback.emit(world, junglehealingScene, 1, ground,
-                { moment: "erupt", radius: radius, motes: motes, scale: scale, vines: budget, ground: samples.length, path: path }, 26);
+                { moment: "erupt", radius: radius, motes: motes, scale: scale, vines: budget, ground: samples.length }, 26);
+            // 自然样点逐点发芽：每个真实地面采样点各自冒一簇嫩芽，不再把样点连成任意线。
+            for (let s = 0; s < samples.length; s++) {
+                const sample = samples[s];
+                WorldFeedback.emit(world, junglehealingScene, 1, sample,
+                    { moment: "sprout", sprout: Math.max(1, Math.round(budget / Math.max(1, samples.length))),
+                        leaf: Math.max(1, Math.round(motes / Math.max(8, samples.length * 3))), scale: scale }, 24);
+            }
 
-            const actors = world.query(ground, radius, false);
-            for (let i = 0; i < actors.length; i++) {
-                const other = actors[i], ref = String(other.ref());
-                if (!world.valid(other) || !world.friendly(other)) continue;
-                const before = world.observe(other);
-                if (before === null) continue;
-                const gained = junglehealingHeal(world, other, fraction, "junglehealing");
+            // 受益区域与 ready／表现统一：以身体中心为准的球体撞真实身体箱，因此高大自身与边缘队友都被罩到。
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(origin, radius), function (other, facts) {
+                if (!world.valid(other) || !world.friendly(other)) return;
+                const ref = String(other.ref());
+                // 先净化、再回血：被禁疗类效果挡住时先把它清掉，这一口才真的落进身体。
                 const cleaned = CombatStatus.cureHarmful(world, other);
-                if (gained <= 0 && cleaned <= 0) continue;
-                const after = world.observe(other);
-                const point = after === null ? before.position() : after.position();
+                const gained = junglehealingHeal(world, other, fraction, "junglehealing");
+                if (gained <= 0 && cleaned <= 0) return;
+                const point = facts.position();
                 // 补血与治病各自按真实结果触发一次短闪：回复量决定绿色光点，实际清除的项数决定金色光点。
                 WorldFeedback.emit(world, junglehealingScene, 1, point,
                     { moment: "embrace", target: ref, gained: Math.round(gained * 10) / 10, cured: cleaned,
@@ -109,7 +111,12 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.2, 0)), junglehealingText,
                     [Math.round(gained * 10) / 10, cleaned], 30);
                 if (cleaned > 0) world.sound("minecraft:block.sweet_berry_bush.pick_berries", point, 10, "{}");
-            }
+                // 真实受益者的短生长连接：从本人脚下抽出一小段藤蔓绕上身体，只有真被罩到的人才长。
+                const lower = WorldCombat.point(point.x(), point.y() - facts.height() / 2 + 0.02, point.z());
+                WorldFeedback.emit(world, junglehealingScene, 1, lower,
+                    { moment: "vine", target: ref, leaf: Math.max(2, Math.round(motes / 12)), scale: scale,
+                        path: [[lower.x(), lower.y(), lower.z()], [point.x(), point.y(), point.z()]] }, 22);
+            });
 
             if (budget > 0) {
                 WorldFeedback.emit(world, junglehealingScene, 1, ground,

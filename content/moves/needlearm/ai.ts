@@ -19,15 +19,24 @@ namespace PokemonSkills {
         return found;
     }
 
-    /** 敌群扇面中心：以目标为起点，把附近同圈敌人的位置平均，作为挥击落点。 */
+    /** 敌群扇面中心：以目标为起点，把附近同圈敌人的位置平均，作为挥击落点；平均点落在可扫扇外就退回扇内最近的敌人。 */
     function needlearmFocus(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): CompanionBehavior.Entity {
         const group = needlearmEnemies(context, target, radius);
         const copy: CompanionBehavior.Entity = JSON.parse(JSON.stringify(target));
         if (group.length <= 1) return copy;
         let x = 0, y = 0, z = 0;
         for (let i = 0; i < group.length; i++) { x += group[i].point[0]; y += group[i].point[1]; z += group[i].point[2]; }
-        copy.point = [x / group.length, y / group.length, z / group.length];
-        return copy;
+        const centre = [x / group.length, y / group.length, z / group.length];
+        const self = CompanionBehavior.source(context).point;
+        if (CompanionBehavior.distance(self, centre) <= radius) { copy.point = centre; return copy; }
+        // 群体中心超出挥扫半径：落点会挥不到，改用扇内最近的敌人，保证群体中心落在真实可扫扇里。
+        let best = target, bestDistance = CompanionBehavior.distance(self, target.point);
+        for (let i = 0; i < group.length; i++) {
+            const distance = CompanionBehavior.distance(self, group[i].point);
+            if (distance <= radius && distance < bestDistance) { best = group[i]; bestDistance = distance; }
+        }
+        const fallback: CompanionBehavior.Entity = JSON.parse(JSON.stringify(best));
+        return fallback;
     }
 
     /** 是否有敌人贴着你绕到侧面/身后（两敌方向夹角超过约 120°）。 */
@@ -70,8 +79,8 @@ namespace PokemonSkills {
             let base = 22;
             const span = typeof capability.data.range === "number" ? capability.data.range : 2.6;
             const group = needlearmEnemies(context, target, span);
-            if (group.length >= 2) base += Math.min(16, (group.length - 1) * 6);
             if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
+                if (group.length >= 2) base += Math.min(16, (group.length - 1) * 6);
                 if (needlearmSurround(context, group)) base += 8;
                 if (target.grounded === true) base += 4;
                 if (CompanionBehavior.fleeing(context, target)) base -= 8;

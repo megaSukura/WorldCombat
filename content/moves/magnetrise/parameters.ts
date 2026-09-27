@@ -34,13 +34,13 @@ namespace PokemonSkills {
     export const magnetriseCutText = "world_combat.move.magnetrise.text.cut";
     /** 弹开 EffectReactions 的操作名。 */
     export const magnetriseRepel = "world_combat:magnetrise_repel";
-    /** 贴身弹开的判定范围（格），skill.ts 的入场规则与说明同源。 */
-    export const magnetriseContactRange = 3.5;
     /** groundLift 的托举响应速度（格/刻）与额外下探支撑（格）：与 liftHeight 一起交给原生维持离地。 */
     export const magnetriseResponse = 0.2;
     export const magnetriseProbe = 0.6;
     /** mark 存续期核对与续订租约的间隔（刻）。 */
     export const magnetriseWatchTicks = 10;
+    /** 托举结束后等待身体真实落地的观察效果：只有脚底真正接地才扬尘。 */
+    export const magnetriseLanding = "world_combat:magnetrise_landing";
 
     actionParameters.define(magnetriseId, {
         hoverTicks: seconds(

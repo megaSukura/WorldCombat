@@ -12,10 +12,10 @@
  *
  * 数据分散（每项读不同的精灵数据）：
  *   verse    这一嗓威力：特攻定嗓门、等级定歌艺；再乘以当前回声层数（1..5）。
- *   audible  传声半径：特攻、等级与身高决定回声能在多远处被接上，也是它和轮唱分开的关键。
+ *   audible  传声半径：特攻、等级与身高决定这一圈回声能在多远处被接上，也是它和轮唱分开的关键。
+ *            这是**发声者**的传播距：接唱者要落在回声发声者自己的半径内，界面/AI/接唱读同一个值。
  *   echoTicks 回声持续：等级与特攻决定接唱的窗口有多长。
- *   reach    歌程：特攻与等级。
- *   waveSpeed 声速：速度决定声波掠过路径多快（也驱动表现）。
+ *   reach    歌程：特攻与等级；声音瞬发，没有需要时间穿行的声速。
  *   motes    声点数量：特攻与等级，直接驱动画面。
  *   ringRadius 声环半径：身高。
  *   tempo／settle／recharge 速度决定起手、收招、冷却。
@@ -38,23 +38,40 @@ namespace PokemonSkills {
         return Math.max(6, Math.min(13, 8.5 + (specialAttack - 60) * 0.015 + (level - 30) * 0.02 + (height - 1.4) * 0.5));
     }
     function echoedvoiceCrescendo(world: CombatWorld, actor: CombatActor): boolean {
+        if (String(actor.domain()) !== "cobblemon") return false;
         return read(config(world, actor, echoId), ["crescendo"]) === true;
     }
-    /** 当前能接上的回声层数：附近（含自己）最强的回声层 +1，上限 5；没有回声时从第 1 层起。 */
+    /** 一圈回声的发声者传播距：由发声者自身的特攻/等级/身高与语气决定，界面、AI、接唱共用同一个值。 */
+    export function echoedvoiceEarshot(world: CombatWorld, actor: CombatActor): number {
+        const body = world.observe(actor);
+        const source = PokemonDamage.combatants.read(world, actor);
+        const raw = echoedvoiceEarshotFrom(source.stats.spa || 60, source.level === undefined ? 30 : source.level,
+            body === null ? 1.4 : body.height());
+        return Math.max(6, Math.min(13, raw * (echoedvoiceCrescendo(world, actor) ? 1.2 : 0.85)));
+    }
+    /** 最大可能的发声者传播距，作为接唱者找回声的查询半径（不会有可听的回声在这个球外）。 */
+    const echoedvoiceMaxEarshot = 13;
+    /**
+     * 当前能接上的回声层数：自己身上，或半径内**发声者传播距**覆盖到自己的最强回声层 +1，上限 5；没有则从第 1 层起。
+     * 听距属于原声发出者，不是本次接唱者——两个人换手时，能否接上仍由那一圈回声留下时的大小决定。
+     */
     export function echoedvoiceLayer(world: CombatWorld, actor: CombatActor): number {
         const body = world.observe(actor);
         if (body === null) return 1;
-        const source = PokemonDamage.combatants.read(world, actor);
-        const earshot = echoedvoiceEarshotFrom(source.stats.spa || 60, source.level === undefined ? 30 : source.level, body.height())
-            * (echoedvoiceCrescendo(world, actor) ? 1.2 : 0.85);
-        const radius = Math.max(6, Math.min(14, earshot));
-        const near = world.query(body.position(), radius, false);
+        const here = body.position();
+        const near = world.query(here, echoedvoiceMaxEarshot, false);
         let strongest = -1;
         for (let index = 0; index < near.length; index++) {
             const other = near[index];
-            if (!world.valid(other) || world.observe(other) === null) continue;
+            if (!world.valid(other)) continue;
             const echo = CombatStatus.representative(world, other, echoStatus);
-            if (echo !== null) strongest = Math.max(strongest, echo.amplifier());
+            if (echo === null) continue;
+            if (String(other.key()) !== String(actor.key())) {
+                const otherBody = world.observe(other);
+                if (otherBody === null) continue;
+                if (here.minus(otherBody.position()).length() > echoedvoiceEarshot(world, other)) continue;
+            }
+            strongest = Math.max(strongest, echo.amplifier());
         }
         return strongest < 0 ? 1 : Math.min(5, strongest + 2);
     }
@@ -81,15 +98,15 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "这一声落在目标身上的基础威力；特攻越高嗓门越亮、等级越高歌艺越纯。乘上当前回声层数（1~5），接得越多越重。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 传声半径：基础 8.5 格，特攻每比 60 多 1 加 0.015、等级每比 30 高 1 加 0.02、碰撞箱每比 1.4 高 1 格加 0.5；渐强式 ×1.2、独唱式 ×0.85；夹 6..13。 */
+        /** 发声者传播距：基础 8.5 格，特攻每比 60 多 1 加 0.015、等级每比 30 高 1 加 0.02、碰撞箱每比 1.4 高 1 格加 0.5；渐强式 ×1.2、独唱式 ×0.85；夹 6..13。 */
         audible: formula(
             F.custom(function (facts: Formula.Facts): number {
                 return echoedvoiceEarshotFrom(Number(facts.read("stat.specialAttack") || 60), Number(facts.read("level") || 30), Number(facts.read("body.height") || 1.4));
             }, text("worldcombat.skill.echoedvoice.value.audible"))
                 .times(F.when(F.pref("crescendo"), F.const(1.2), F.const(0.85))).clamp(6, 13).round(2),
-            "传声半径", {
+            "发声者传播距", {
                 unit: "格",
-                description: "这一圈回声能在多远的范围内被下一个人接上；特攻、等级与身量都影响它。它决定合唱链能拉多长。"
+                description: "这一圈回声能在多远的范围内被下一个人接上；由发声者自己的特攻、等级与身量决定，界面、AI 与接唱读同一个值。"
             }),
         /** 回声持续：基础 120 刻 + 等级 ×1.2 + 特攻 ×0.4；渐强式 ×1.35、独唱式 ×0.8；夹 90..300。 */
         echoTicks: seconds(
@@ -103,13 +120,6 @@ namespace PokemonSkills {
             "歌程", {
                 unit: "格",
                 description: "这一声能送到多远的目标；特攻高、等级高的个体声音送得更远。它也是本招的实际射程来源。"
-            }),
-        /** 声速：基础 1.2 格/刻，速度每比 60 快 1 加 0.004；夹 0.9..1.7。 */
-        waveSpeed: formula(
-            F.base(1.2).plus(F.stat("speed").minus(60).times(0.004)).clamp(0.9, 1.7).round(2),
-            "声速", {
-                unit: "格/刻",
-                description: "声波掠过路径的速度；快的个体这一声更急，画面里的声环也走得越快。"
             }),
         /** 声点数：基础 8，特攻每比 60 多 1 加 0.12，等级每比 30 高 1 加 0.15；夹 6..24。 */
         motes: formula(

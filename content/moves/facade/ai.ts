@@ -2,8 +2,9 @@
  * 硬撑 / facade 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase` 之内。它是一招贴身冲撞，
- * 但只有在**自己带着异常**时才把威力翻倍，所以带着异常时 priority 抬到 45，让它在多个近战候选里先被选中；
- * 没带异常时也照常出手（12），只是不翻倍。够不到就交给共享接近逻辑。
+ * 但只有在**自己带着可用异常**（灼伤、中毒／剧毒、麻痹）时才把威力翻倍，所以带着异常时 priority 抬到 45，
+ * 让它在多个近战候选里先被选中；冰冻属共享门禁的无法行动状态，不作为收益。没带异常时也照常出手（12），
+ * 只是不翻倍。够不到就交给共享接近逻辑。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("facade", {
@@ -23,7 +24,7 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
             var self = CompanionBehavior.source(context);
             var afflicted = CompanionBehavior.status(context, self, "burn") || CompanionBehavior.status(context, self, "poison")
-                || CompanionBehavior.status(context, self, "paralysis") || CompanionBehavior.status(context, self, "frozen");
+                || CompanionBehavior.status(context, self, "paralysis");
             return afflicted ? 45 : 12;
         }
     });

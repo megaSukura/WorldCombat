@@ -5,7 +5,8 @@
  *   落地砸出一圈近白的尘环、冲击波向外荡开 → 落地后重心一沉，身上浮起脱力灰气。
  * 色相家族：天青 0x7FC8D8 与近白 0xE8F6FA 为主体，暖灰 0x8C7448 / 0x777066 作地面尘与碎石，无第二色相。
  * 拍子：起 ready（屈腿蓄势）→ 弃守 guard（护罩碎裂）→ 升 climb（窜空）→ 坠 dive（俯冲）→ 击 hit／land（砸实＋冲击波）→ 收 slump（脱力）。
- * 范围：land 的 `ring`、`shock`、`shockwave` 绑落点、`fit:"none"`，半径按 `data.scale`（冲击半径 / 2）推出，画出的圈就是被震到的范围。
+ * 范围：land 的 `ring`、`shock`、`soil`、`shockwave` 绑落点、`fit:"world"`，形状半径直接取服务端算出的
+ *   `data.ring`，画出的圈就是被震到的范围；`data.scale` 只放大粒子尺寸，不再二次缩放圈。
  * 运动：起手气流向内收；升空时向下的风线与脚边外卷；俯冲贴着身体拖风线、气旋外卷；落地时地环外推、碎土与石块向外崩、白环向外荡开。
  * 数：hit/land 的尘与碎屑量绑 `data.motes`（物攻派生），核心强度绑 `data.intensity`（威力派生；主目标已吃满时服务端会把 land 调弱，不再画第二满击）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -132,34 +133,34 @@ const DragonAscentDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 20 },
             emitters: [
                 {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "ring", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: 0.8 },
+                    shape: { kind: "ring", radius: { data: "ring", fallback: 1.9 } },
                     direction: "outward", speed: [0.3, 0.6], drag: 0.94,
                     lifetime: [8, 14], size: [1.1, 0.18], sizeMode: "index",
                     color: 0xE8F6FA, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 4
                 },
                 {
-                    name: "shock", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "shock", bind: "point", fit: "world", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_flying",
                     burst: { count: { data: "motes", fallback: 16 }, at: 0 },
-                    shape: { kind: "circle", radius: 0.9 },
+                    shape: { kind: "circle", radius: { data: "ring", fallback: 1.9 } },
                     direction: "outward", speed: [0.12, 0.34], spread: 30,
                     lifetime: [8, 14], size: [0.36, 0.06], sizeMode: "index",
                     alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
-                    name: "soil", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    name: "soil", bind: "point", fit: "world", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "motes", fallback: 16 }, at: 0 },
-                    shape: { kind: "circle", radius: 0.9 },
+                    shape: { kind: "circle", radius: { data: "ring", fallback: 1.9 } },
                     direction: "outward", speed: [0.06, 0.24], gravity: 0.08, drag: 0.9,
                     lifetime: [10, 18], size: [0.09, 0.02],
                     color: 0x8C7448, alpha: [0.6, 0], light: "world", maxParticles: 110
                 },
                 {
-                    name: "rock", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    name: "rock", bind: "point", fit: "world", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: 6, at: 0 },
                     shape: { kind: "sphere", radius: 0.4 },
@@ -168,10 +169,10 @@ const DragonAscentDefinition: ParticleDefinition = {
                     color: 0x777066, alpha: [0.85, 0], light: "world", maxParticles: 18
                 },
                 {
-                    name: "shockwave", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "shockwave", bind: "point", fit: "world", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: 0.7 },
+                    shape: { kind: "ring", radius: { data: "ring", fallback: 1.9 } },
                     direction: "outward", speed: [0.2, 0.46],
                     lifetime: [8, 14], size: [0.7, 0.14], sizeMode: "index",
                     color: 0xD8CFC0, alpha: [0.7, 0], light: "world", maxParticles: 6

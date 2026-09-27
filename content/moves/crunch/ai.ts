@@ -4,9 +4,27 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 8）格内；更远交给共享接近逻辑。
  * `ai.openGuard`（默认开）实际改变候选排序：开启时优先咬**还没带破防身份**的目标——咬碎是「开缺口」的招，
  * 对已经带缺口的目标再咬收益低，排在后面；关闭时把它当普通近身重咬排序。
- * `ai.hardShell`（默认开）把高防御与大体型目标往前排——獠牙专门啃硬壳；没有六维数据的原版生物退化为按体型估算。
+ * `ai.hardShell`（默认开）把防护厚、且不容易立刻脱开的目标往前排——獠牙专门啃硬壳。
+ * 防护同时读**原生护甲**（`minecraft:generic.armor`）、宝可梦防御和体型，原生生物不再被 def>70 一条门槛漏掉；
+ * 被定住／束缚、或移动慢的目标更难马上脱离，优先磨它这一口。
  */
 namespace PokemonSkills {
+    /** 目标的“硬壳”程度：原生护甲为主，宝可梦防御与体型为辅。 */
+    function crunchProtection(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(String(target.ref));
+        let value = 0;
+        if (actor !== null) {
+            const armor = world.attributeValue(actor, "minecraft:generic.armor");
+            if (armor !== null) value += Math.max(0, Math.min(16, (armor.value() - 6) * 1.2));
+        }
+        const stats = CompanionBehavior.combatStats(context, target);
+        const def = stats && stats.stats ? Number(stats.stats.def) : NaN;
+        if (isFinite(def)) value += Math.max(0, Math.min(12, (def - 70) * 0.10));
+        const size = (target.width || 0.9) * (target.height || 1.4);
+        return value + Math.max(0, Math.min(8, (size - 1.2) * 5));
+    }
+
     CompanionBehavior.registerUse("crunch", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -26,12 +44,12 @@ namespace PokemonSkills {
             const openGuard = CompanionBehavior.ai<boolean>(capability, "openGuard", true);
             let value = openGuard && CompanionBehavior.status(context, target, "guardbroken") ? 14 : 30;
             if (!CompanionBehavior.ai<boolean>(capability, "hardShell", true)) return value;
-            // 高防御的硬壳最值得磨；没有六维的原版生物按体型（宽×高）粗略代替。
-            const stats = CompanionBehavior.combatStats(context, target);
-            const def: any = stats && stats.stats ? stats.stats.def : null;
-            if (typeof def === "number" && isFinite(def)) value += Math.max(0, Math.min(16, (def - 70) * 0.12));
-            const size = (target.width || 0.9) * (target.height || 1.4);
-            return value + Math.max(0, Math.min(10, (size - 1.2) * 6));
+            value += crunchProtection(context, target);
+            // 咬住要维持接触：被定住／束缚或移动慢的目标不容易立刻脱开，更值得磨这一口。
+            if (CompanionBehavior.bound(context, target)) value += 8;
+            const speed = CompanionBehavior.speed(context, target);
+            if (speed !== null) value += Math.max(0, Math.min(6, (0.25 - speed) * 40));
+            return value;
         }
     });
 

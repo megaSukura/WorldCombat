@@ -30,6 +30,7 @@
   "world_combat.move.simplebeam.text.clear": "Simple effect ended",
   "world_combat.move.simplebeam.text.fizzle": "Its Ability cannot be changed",
   "world_combat.move.simplebeam.text.empty": "The beam scatters into empty space; no target",
+  "world_combat.move.simplebeam.text.line": "The beam was blocked",
   "effect.world_combat.simple_beam": "Simple",
   "worldcombat.skill.simplebeam.world": "Non-Pokémon are affected for %1$s: subsequent stat-stage changes, including accuracy and evasion, are doubled within the usual ±6 limits. Both gains and losses are doubled. Cleansing or expiry ends the multiplier; changes already made remain."
 }

@@ -5,7 +5,8 @@
  *   若那一手折不动，镜盾只裂成一地碎光。
  * 色相家族：飞羽青 0x7FD0E8 与镜银 0xE8F4FF（镜盾本身），一点镜面虹彩只出现在折返的一闪。
  * 拍子：brace 起（0–14t 立盾）→ reflect 击（0–12t 折出）→ burst 落（0–20t）／dull 空（0–20t 裂镜）。
- * 范围：reflect 的折返线沿 path（施法者→目标）连起，线到哪就打到哪；brace/dull 绑施法者。
+ * 范围：reflect 的折返线沿 path（施法者→目标）连起，线到哪就打到哪；brace 的镜屏按 data.front 立在身体前方，
+ *   用 orient:direction 朝 data.direction（对手方向）张开；dull 绑施法者；native_contact 的拳影也沿 data.direction 出手。
  * 运动：立盾时镜面从两侧合拢、朝对手张开；折返时镜光沿来路射回。
  * 数：服务端把 mirrors（特攻派生）交给镜面层数，edge（锐镜倍率）交给折返线的强度与镜光的尺寸。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -15,7 +16,7 @@ const mirrormoveDefinition: ParticleDefinition = {
     moments: {
         native_contact: { duration: 5, exit: { stop: 2, drain: 3 }, emitters: [{ name: "shadow_palm", bind: "source", height: 0.5, orient: "direction",
             particle: "world_combat_core:cobblemon/generic/hollowfist", burst: { count: 1 }, shape: { kind: "point" },
-            direction: [0,0,1], speed: .5, lifetime: 3, size: [.4,.15], color: 0xBFE6F5, alpha: [.85,0], light: "full" }] },
+            direction: "shape", speed: .5, lifetime: 3, size: [.4,.15], color: 0xBFE6F5, alpha: [.85,0], light: "full" }] },
         native_flight: { exit: { stop: 0, drain: 5 }, emitters: [{ name: "shadow_flight", bind: "projectile",
             particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle", rate: 14, trail: { minDistance: .2 },
             shape: { kind: "point" }, speed: 0, lifetime: 6, size: [.06,.02], color: 0xBFE6F5, alpha: [.6,0], light: "world" }] },
@@ -30,7 +31,9 @@ const mirrormoveDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "brace_screen", bind: "source", offset: [0, 0.7, 0], height: 0.5, orient: "toward",
+                    name: "brace_screen", bind: "source", fit: "none",
+                    offset: [{ data: "front.0", fallback: 0 }, { data: "front.1", fallback: 0 }, { data: "front.2", fallback: 0 }],
+                    height: 0.5, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/screen",
                     rate: { data: "mirrors", fallback: 6 },
                     shape: { kind: "circle", radius: 0.52, thickness: 0.15 },
@@ -39,7 +42,9 @@ const mirrormoveDefinition: ParticleDefinition = {
                     color: 0xBFE6F5, alpha: [0.55, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "brace_glint", bind: "source", offset: [0, 0.7, 0], height: 0.5, orient: "toward",
+                    name: "brace_glint", bind: "source", fit: "none",
+                    offset: [{ data: "front.0", fallback: 0 }, { data: "front.1", fallback: 0 }, { data: "front.2", fallback: 0 }],
+                    height: 0.5, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/screen_color",
                     burst: { count: { data: "mirrors", fallback: 6 }, interval: 4, repeats: 2 },
                     shape: { kind: "circle", radius: 0.48, thickness: 0.3 },

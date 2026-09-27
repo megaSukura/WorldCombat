@@ -68,15 +68,9 @@ const GrowthDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2],
                     lifetime: [10, 18], size: [0.11, 0.02],
                     color: 0xFFE07A, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 90
-                }
-            ]
-        },
-        sprout: {
-            duration: 30,
-            exit: { stop: 12, drain: 18 },
-            emitters: [
+                },
                 {
-                    name: "blades_up", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "field_blades", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
                     burst: { count: { data: "blades", fallback: 10 }, interval: 2, repeats: 2 },
                     shape: { kind: "circle", radius: 2.3 },
@@ -85,7 +79,7 @@ const GrowthDefinition: ParticleDefinition = {
                     color: 0x8CC63F, alpha: [0.85, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "leaves_fall", bind: "point", fit: "none", offset: [0, 0.35, 0],
+                    name: "field_leaves", bind: "point", fit: "none", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     burst: { count: { data: "blades", fallback: 10 } },
                     shape: { kind: "sphere", radius: 1.6 },
@@ -101,13 +95,7 @@ const GrowthDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.07],
                     lifetime: [10, 18], size: [0.08, 0.02], sizeMode: "sin",
                     color: 0xD6F58A, alpha: [0.55, 0], light: "full", maxParticles: 60
-                }
-            ]
-        },
-        settle: {
-            duration: 24,
-            exit: { stop: 8, drain: 16 },
-            emitters: [
+                },
                 {
                     name: "soil", bind: "point", fit: "none", offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",

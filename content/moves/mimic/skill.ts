@@ -105,20 +105,26 @@ namespace PokemonSkills {
             }
             const slot = Number(action.argument("native-slot"));
             const hold = Math.max(120, Math.round(p("mimic", "hold", action)));
-            // 借来的招式真的写进槽位；持续镜面绑在同一份 managed effect 上，随它自然或提前结束清理。
+            // 借来的招式真的写进槽位；被拒就不谎报学会，只收成一条断线。
             const layer = slot >= 0 && slot <= 3
                 ? NativeModifiers.apply(world, actor, { moves: (function () { const map: { [key: string]: string } = {}; map[String(slot)] = found.id; return map; })() }, hold)
                 : 0;
-            if (body !== null) {
-                const mirror = { moment: "borrow", move: found.id, strands: strands, fuse: Math.max(1, hold - 3) };
-                WorldFeedback.emit(world, mimicScene, 1, body.position(), {
-                    moment: "copy", move: found.id, strands: strands, scale: 1 + hold / 2400
-                }, 40);
-                if (layer <= 0 || !WorldFeedback.onEffect(world, layer, "world_combat:move_mimic/borrow", mimicScene, 1, body.position(), mirror))
-                    WorldFeedback.emit(world, mimicScene, 1, body.position(), mirror, hold);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), mimicCopyText,
-                    [{ key: "cobblemon.move." + found.id, fallback: found.id }, Math.round(hold / 20)], 40);
+            const point = body === null ? action.origin() : body.position();
+            if (layer <= 0) {
+                WorldFeedback.emit(world, mimicScene, 1, point, { moment: "snap", strands: strands }, 22);
+                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.15, 0)), mimicSnapText, [], 30);
+                sound(action, "minecraft:entity.item.break");
+                done(action);
+                return;
             }
+            // 槽替换与携环同时成立：携环由这份 modifier 载体托管，到期或被驱散时一起收走。
+            const mirror = { moment: "borrow", move: found.id, strands: strands, fuse: Math.max(1, hold - 3) };
+            WorldFeedback.emit(world, mimicScene, 1, point, {
+                moment: "copy", move: found.id, strands: strands, scale: 1 + hold / 2400
+            }, 40);
+            WorldFeedback.onEffect(world, layer, "world_combat:move_mimic/borrow", mimicScene, 1, point, mirror);
+            WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.15, 0)), mimicCopyText,
+                [{ key: "cobblemon.move." + found.id, fallback: found.id }, Math.round(hold / 20)], 40);
             sound(action, "minecraft:entity.illusioner.mirror_move");
             done(action);
         }

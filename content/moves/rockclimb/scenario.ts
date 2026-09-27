@@ -4,11 +4,12 @@ Smoke.scenario("rockclimb",function(stage){
  const base=caster.position()[1];let highest=base;
  stage.after(2,function(){stage.prefer(caster,"rockclimb",{vault:true});stage.provoke(caster,target);});
  stage.until(1000,function(){highest=Math.max(highest,caster.position()[1]);return stage.casts("rockclimb",caster)>0&&highest>base+1.8;},function(){
-  stage.setPp(caster,"rockclimb",0);stage.after(12,function(){
+  stage.setPp(caster,"rockclimb",0);stage.after(60,function(){
    stage.expect(highest>base+1.8,"the body actually climbed the short native wall");
+   stage.expect(caster.position()[1]>=base+1.2,"the crest ended standing on real support above the base");
    stage.expect(stage.changedBlocks().length===0,"wall climbing left the terrain intact");
    stage.expect(stage.hits(caster)<=1,"only one real body-contact strike is possible");
-   stage.note("Actual short-wall ascent, terrain preservation and finite strike budget verified. Sealed ceilings, exact crest route and manual free terrain aiming remain spatial play checks.",{height:highest-base,damage:stage.damageTo(target)});stage.done();
+   stage.note("Actual short-wall ascent, real-support crest, terrain preservation and finite strike budget verified. Sealed ceilings, cancellation gravity return and manual free terrain aiming remain spatial play checks.",{height:highest-base,landed:caster.position()[1]-base,damage:stage.damageTo(target)});stage.done();
   });
  },"climb a real short wall");
 });

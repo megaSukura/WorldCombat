@@ -14,7 +14,7 @@ Smoke.scenario("electricterrain", function (stage) {
         stage.expect(stage.casts("electricterrain", caster) > 0, "electricterrain was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/electricterrain") || stage.hadMobEffect(target, "world_combat:status/electricterrain"),
             "a grounded body on the charged ground carries the shared electricterrain identity");
-        stage.note("charge pressed into the ground; the grounded identity landed on a body standing on it. Electric x1.3, the sleep gate and the wake-up cure need a second caster and are left to play.",
+        stage.note("charge pressed into the ground; the grounded identity landed on a body in the same layer as the field. Electric x1.3, the sleep gate, the wake-up cure and the no-threat rescue need a second caster and are left to play.",
             { casts: stage.casts("electricterrain", caster),
               casterCharged: stage.hadMobEffect(caster, "world_combat:status/electricterrain"),
               targetCharged: stage.hadMobEffect(target, "world_combat:status/electricterrain") });

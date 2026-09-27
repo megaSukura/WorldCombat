@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.hypnosis.summary": "沿一条通视的直线把暗示送进对方脑里，让它当场睡下。它隔空、瞬发，但成败取决于意志对抗——特攻与等级压不过对方的特防与等级就可能只散成一点困意。",
+  "worldcombat.skill.hypnosis.summary": "沿一条通视的方向送出一道暗示波，命中锁定目标后当场让它睡下。波隔空飞行、有限度地转向追着目标；前路的墙或别的实体会把它挡下，朝空处释放时只送出一波、不会自动选人。成败取决于意志对抗——特攻与等级压不过对方的特防与等级就可能只散成一点困意。",
   "worldcombat.skill.hypnosis.use.0": "在交战开始前先放倒一个远处的威胁",
   "worldcombat.skill.hypnosis.use.1": "为队友的食梦或恶梦制造睡眠窗口",
   "worldcombat.skill.hypnosis.use.2": "逼对手绕开视线或拉开距离",
-  "worldcombat.skill.hypnosis.description.0": "沿一条没有被挡住的直线凝视对方，凝视距离 %1$s；是否成立是一次意志对抗，当前成功率 %2$s。",
+  "worldcombat.skill.hypnosis.description.0": "沿一条没有被挡住的视线送出暗示波，凝视距离 %1$s；波会有限度地转向追着锁定的目标，前路的墙或别的实体会把它挡下。是否成立是一次意志对抗，当前成功率 %2$s。",
   "worldcombat.skill.hypnosis.description.1": "目标陷入睡眠 %1$s：期间无法行动、也无法移动，任何伤害都会立刻把它惊醒。",
   "worldcombat.skill.hypnosis.focus.on": "凝神式：成功率 ×1.25、睡眠 ×1.2，换来射程 ×0.85、起手 +3 刻、冷却 ×1.15。",
   "worldcombat.skill.hypnosis.focus.off": "随惑式：射程 ×1.2、出手快、冷却短，换来成功率 ×0.8、睡眠 ×0.8。",

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.supersonic.summary": "把一圈声浪从身体向外推出去，扫过脚下一整片圆面；被波前扫到的敌人陷入混乱，出手可能作废、打中还会自伤。声浪不以某个目标为轴，也绕得过墙——跑出波前才是安全的。",
+  "worldcombat.skill.supersonic.summary": "把一圈薄声浪从身体向外推出去，波前扫过脚下一整片圆面；被波前扫到的敌人陷入混乱，出手可能作废、打中还会自伤。声浪不以某个目标为轴，也绕得过墙——跑出波前才是安全的，已经落进波前内侧的人也不会被回头补控。",
   "worldcombat.skill.supersonic.use.0": "被多个敌人围住时一口气扰乱一圈",
   "worldcombat.skill.supersonic.use.1": "逼退贴身的多个目标",
   "worldcombat.skill.supersonic.use.2": "在混战中制造集体失手窗口",
-  "worldcombat.skill.supersonic.description.0": "声浪以自身为心向外推开，基础半径 %1$s 格（随形态缩放后夹在 4–14 格），波前每刻推进 %2$s 格；被波前扫过的非友方会被卷入，墙体挡不住它。",
+  "worldcombat.skill.supersonic.description.0": "声浪以自身为心向外推开一圈薄波前，基础半径 %1$s 格（随形态缩放后夹在 4–14 格），波前每刻推进 %2$s 格、只扫过与自身差不多高的那一层；被波前扫过的非友方会被卷入，墙体挡不住它。（已经让波前经过的内侧或从后方插进来的人不再被补控。）",
   "worldcombat.skill.supersonic.description.1": "被扫到的非友方挂上混乱，基础持续 %1$s（形态会再增减）：每次出手有约 30%% 的几率作废（集中形态约 40%%）；它打中敌人时会被自己的力量反噬，自伤约为自身最大生命的 5.5%%、再按其攻击放大 0.4–2.5 倍，但不会超过它这一击真正造成的伤害。",
   "worldcombat.skill.supersonic.description.2": "推出这一声要 %1$s，收声 %2$s，冷却 %3$s。广域形态：半径 ×1.3，但混乱时长 ×0.8、失手概率 30%%；集中形态：半径 ×0.7、冷却 ×1.1，换取混乱时长 ×1.3、失手概率 40%%。",
   "worldcombat.skill.supersonic.value.waveReach": "波前半径",

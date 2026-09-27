@@ -34,25 +34,42 @@ namespace PokemonSkills {
     const tarshotCoatText = "world_combat.move.tarshot.text.coat";
     const tarshotWashText = "world_combat.move.tarshot.text.wash";
 
-    /** 结算任何招式时读取目标的沥青身份：火属性那一段的威力 ×2（原作的「弱点变为火」）。 */
-    PokemonDamage.metadata.define({
+    /** 结算任何招式时读取目标的沥青身份：火属性那一段的最终属性相性 ×2（原作的「弱点变为火」）。 */
+    PokemonDamage.effectiveness.define({
         id: "world_combat:move_tarshot/weakness",
         applies: function (context) {
-            return context.metadata.type === "fire" && !!context.target && !!context.world
+            return context.moveType === "fire" && !!context.target && !!context.world
                 && CombatStatus.has(context.world, context.target, "tarshot");
         },
-        apply: function (context) { context.metadata.power *= tarshotWeakness; }
+        apply: function (context) { context.effectiveness *= tarshotWeakness; }
     });
 
-    /** 沥青滩：踩进去的非友方被糊上同样的沥青。 */
+    /**
+     * 脚底那格仍是真实铺下的沥青毯：只有踩在实装地毯上的非友方才被地面场糊上，
+     * 毯子被挖掉、铺在别处或脚下没有地毯时都不施加。
+     */
+    function tarshotOnPuddle(world: CombatWorld, actor: CombatActor): boolean {
+        const body = world.observe(actor);
+        if (body === null) return false;
+        const x = Math.floor(body.position().x()), z = Math.floor(body.position().z()), y = Math.floor(body.boundsMin().y());
+        for (let dy = 0; dy >= -1; dy--) {
+            const block = world.block(WorldCombat.point(x, y + dy, z));
+            if (block !== null && String(block.id()) === tarshotPuddleBlock) return true;
+        }
+        return false;
+    }
+
+    /** 沥青滩：踩在真实地毯上的非友方被糊上同样的沥青。 */
     WorldEffects.fieldRule(tarshotField, {
+        accepts: function (world, actor) { return tarshotOnPuddle(world, actor); },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (world.friendly(actor)) return;
-            const data = field.data || {};
             if (MobEffects.read(world, actor, tarshotCoated) !== null) return;
-            MobEffects.apply(world, actor, tarshotCoated, Math.max(20, Math.round(data.ticks || 60)), 0);
+            const data = field.data || {};
+            const ticks = Math.max(20, Math.round(typeof data.ticks === "number" ? data.ticks : 60));
             const drop = typeof data.drop === "number" ? data.drop : 0;
-            if (drop > 0) NativeEffects.boost(world, actor, "spe", -drop);
+            const drops = typeof data.drops === "number" ? data.drops : 0;
+            tarshotCoat(world, actor, ticks, drop, drops);
         }
     });
 
@@ -120,23 +137,39 @@ namespace PokemonSkills {
         tarshotFilmVisual(world, victim, JSON.parse(effect.state()));
         effect.schedule("watch", "watch", 4, "{}");
     });
+    WorldCombat.effectHandler(tarshotFilm, "operation:world_combat:refresh", function (effect) {
+        const world = effect.world(), victim = effect.target();
+        if (!world.valid(victim)) { effect.end(); return; }
+        const coat = MobEffects.read(world, victim, tarshotCoated);
+        if (coat === null) { effect.end(); return; }
+        const value = JSON.parse(effect.input() || "{}");
+        if (typeof value.drops === "number" && isFinite(value.drops) && typeof value.scale === "number" && isFinite(value.scale))
+            effect.state(JSON.stringify({ drops: value.drops, scale: value.scale }));
+        if (coat.duration() >= 0) effect.remaining(Math.max(1, coat.duration()));
+        tarshotFilmVisual(world, victim, JSON.parse(effect.state()));
+    });
     WorldCombat.effectHandler(tarshotFilm, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    /** 糊身：挂身份、首次命中掉速度、铺滩、起黑膜。 */
+    /** 糊身：挂身份、首次命中掉速度、铺滩、复用同一片黑膜。 */
     function tarshotCoat(world: CombatWorld, actor: CombatActor, ticks: number, drop: number, drops: number): void {
-        const fresh = MobEffects.read(world, actor, tarshotCoated) === null;
-        MobEffects.apply(world, actor, tarshotCoated, ticks, 0);
-        if (fresh && drop > 0) NativeEffects.boost(world, actor, "spe", -drop);
         const body = world.observe(actor);
-        if (body === null) return;
+        // 湿透的身体挂不住沥青：不涂附，也就不再反复降速度等级。
+        if (body === null || body.wet()) return;
+        const fresh = MobEffects.read(world, actor, tarshotCoated) === null;
+        if (MobEffects.apply(world, actor, tarshotCoated, ticks, 0) === null) return;
+        if (fresh && drop > 0) NativeEffects.boost(world, actor, "spe", -drop);
         const scale = Math.max(0.6, Math.min(2.4, body.width() / 0.9));
         WorldFeedback.emit(world, tarshotScene, 1, body.position(),
             { moment: "coat", target: String(actor.ref()), drops: drops, fresh: fresh ? 1 : 0, scale: scale }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), tarshotCoatText, [drop], 28);
-        // 黑膜跟随目标：换一块干净的控制器，让它随糊身状态一起结束。
+        // 黑膜跟随目标：已有就就地续期，同一目标只留一片膜。
         const films = world.effects(actor, tarshotFilm);
-        for (let i = 0; i < films.length; i++) world.operation(films[i].id(), "world_combat:dispel", "{}");
-        world.effect(tarshotFilm, actor, JSON.stringify({ drops: drops, scale: scale }), ticks);
+        if (films.length > 0) {
+            for (let i = 0; i < films.length; i++)
+                world.operation(films[i].id(), "world_combat:refresh", JSON.stringify({ drops: drops, scale: scale }));
+        } else {
+            world.effect(tarshotFilm, actor, JSON.stringify({ drops: drops, scale: scale }), ticks);
+        }
     }
 
     // 沥青黏住脚步：被糊期间 AI 的导航速度压到六成（移动速度属性由状态效果自带）。
@@ -228,41 +261,58 @@ namespace PokemonSkills {
             const puddleTicks = Math.max(40, Math.round(p(tarshotId, "puddleTicks", action)));
             const drops = Math.max(6, Math.round(p(tarshotId, "drops", action)));
             const wide = !!(config && config.wide);
-            let settled = false;
+            let settled = false, splatted = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            function splat(current: CombatAction, point: CombatPoint): void {
+            function splat(current: CombatAction, point: CombatPoint, exclude: string): void {
                 const scope = current.world();
                 const area = wide ? splash : Math.max(0.4, splash * 0.4);
                 const puddleRadius = wide ? puddle * 1.15 : puddle;
                 let caught = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, area), function (actor) {
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, area), function (actor, facts) {
+                    if (exclude && String(actor.ref()) === exclude) return;
+                    // 溅射不穿墙：落点到目标的视线被掩体挡住就不被这一摊糊上。
+                    if (!scope.clear(point, facts.position())) return;
                     tarshotCoat(scope, actor, coatTicks, drop, drops);
                     caught++;
                 });
-                tarshotPuddle(scope, point, puddleRadius, puddleTicks);
-                WorldEffects.field(scope, tarshotField, point, puddleRadius,
-                    { ticks: coatTicks, drop: drop }, puddleTicks);
+                const placed = tarshotPuddle(scope, point, puddleRadius, puddleTicks);
+                // 实装地毯一格都铺不下时不留地面场，避免墙后/无地面也凭空黏附。
+                if (placed > 0) WorldEffects.field(scope, tarshotField, point, puddleRadius,
+                    { ticks: coatTicks, drop: drop, drops: drops }, puddleTicks);
                 WorldFeedback.emit(scope, tarshotScene, 1, point,
                     { moment: "splat", drops: drops, caught: caught, weakness: weakness,
                         scale: Math.max(0.6, Math.min(2.2, area / 1.5)), edge: puddleRadius }, 24);
             }
 
+            // 一泼只散一次：先撞到的真实接触点优先；没撞到才在弹体真实末点散开。
+            function splatOnce(current: CombatAction, point: CombatPoint, exclude: string): void {
+                if (splatted) return;
+                splatted = true;
+                splat(current, point, exclude);
+            }
+
             sound(action, "minecraft:block.slime_block.place");
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius,
                 lifetime: Math.max(40, Math.round(reach / Math.max(0.2, speed) + 30)),
                 appearance: { item: "minecraft:black_dye", scale: Math.max(0.8, radius * 2.4), tint: 0x1E1A17 },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), struck = hit.target();
+                    let exclude = "";
                     if (struck !== null && scope.valid(struck) && !scope.friendly(struck)) {
                         tarshotCoat(scope, struck, coatTicks, drop, drops);
+                        exclude = String(struck.ref());
                     }
-                    splat(current, hit.position());
+                    splatOnce(current, hit.position(), exclude);
                     scope.sound("minecraft:block.honey_block.place", hit.position(), 12, "{}");
                 }
             }, function (current: CombatAction) {
-                splat(current, current.targetPosition());
+                if (!splatted) {
+                    const end = current.world().projectilePosition(flight);
+                    splatOnce(current, end === null ? current.targetPosition() : end, "");
+                }
                 finish(current);
             });
             WorldFeedback.emit(world, tarshotScene, 1, action.origin(),

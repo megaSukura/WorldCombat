@@ -26,9 +26,9 @@
   "worldcombat.skill.soak.growth.0": "达到 %1$s 级后，基础冷却额外缩短 0.5 秒。",
   "worldcombat.skill.soak.growth.1": "达到 %1$s 级后，基础冷却额外缩短 1.1 秒，替代上一档成长修正。",
   "world_combat.move.soak.text.drench": "被水浇透，变成了水属性",
-  "world_combat.move.soak.text.dry": "身上的水干了，属性还原",
+  "world_combat.move.soak.text.dry": "身上的水干了，浸水消退",
   "world_combat.move.soak.text.fizzle": "已经是纯水，浇不进去",
-  "world_combat.move.soak.text.empty": "只泼出一片水，没有属性可浇",
+  "world_combat.move.soak.text.empty": "只泼出一片水，没有选中目标",
   "effect.world_combat.soaked_through": "被浇透（水属性）",
-  "worldcombat.skill.soak.description.3": "已经是纯水、属性被锁住或没有属性（非宝可梦）的目标浇不进去；对它们出手会被挡下，不消耗 PP。"
+  "worldcombat.skill.soak.description.3": "原版与模组生物也能被浇成水属性；已经是纯水或属性被锁住的目标会拒绝浸水。浸水被解除时，这一层水属性随之消退。"
 }

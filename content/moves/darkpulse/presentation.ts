@@ -5,7 +5,8 @@
  * 每个被罩住的人身上卷起黑烟 → 碎缕迅速淡去，不留下似有持续伤害的完整圈；被恐惧攥住的人头上晃星。
  * 色相家族：暗紫与黑（largesmokeorb / impact_dark / obscuringsmoke / largering）为主体，亮紫只在碎缕与核心强调。
  * 拍子：起 windup（聚恶）→ 行 release/travel（脱手与飞行）→ 爆 burst（炸开一次暗纹）→ 罩 veil（附身）。
- * 范围：burst 的领域半径按 `data.scale`（气场半径 / 3 格）铺开，画面就是机制那块实际接触点上炸开的领域。
+ * 范围：burst 的领域边界按 `data.bloom`（真实气场半径）铺出，一到就压开的一圈就是会被罩住的地；命中者
+ *   身上卷起黑烟（veil）。
  * 运动：travel 绑 projectile 沿直线拖尾；release 的气环朝向 `data.direction`；burst 碎缕带初速外抛。
  * 数：`data.motes`（特攻与等级派生）决定飞行尾迹、炸开碎缕的密度，`data.count`（威力派生）决定强调帧数，
  *   `data.intensity` 抬高亮度。
@@ -95,13 +96,13 @@ const DarkPulseDefinition: ParticleDefinition = {
                     color: 0xC9B3F0, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 10
                 },
                 {
-                    name: "field", bind: "point", fit: "none", offset: [0, 0.18, 0],
+                    name: "field", bind: "point", fit: "world", offset: [0, 0.18, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 1 },
-                    shape: { kind: "ring", radius: 0.4 },
-                    direction: "outward", speed: [0.1, 0.3],
-                    lifetime: [12, 20], size: [0.4, 1.0],
-                    color: 0x4A2C6B, alpha: [0.7, 0], light: "world", maxParticles: 6
+                    shape: { kind: "ring", radius: { data: "bloom", fallback: 3 } },
+                    direction: "outward", speed: [0.12, 0.34],
+                    lifetime: [12, 20], size: [0.34, 0.9],
+                    color: 0x4A2C6B, alpha: [0.75, 0], light: "world", maxParticles: 6
                 },
                 {
                     name: "shards", bind: "point", fit: "none", offset: [0, 0.22, 0],

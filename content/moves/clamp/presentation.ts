@@ -1,12 +1,12 @@
 /**
  * 贝壳夹击 / clamp 的客户端表现。
  *
- * 一句话：施法者把厚壳张开、壳缝里冒出一圈水泡，合拢时咬住对手，双方之间被一圈向内收的水环裹住，
- * 每碾一次就从壳缝里迸出一撮壳屑与白水花；松开时噗地散开一团泡。
+ * 一句话：施法者把厚壳张开、壳缝里冒出一圈水泡，合拢时咬住对手，双方身体各被一圈按体型收拢的水环裹住、
+ * 中间由壳缝的丝连成闭合的一壳，每碾一次就从壳缝里迸出一撮壳屑与白水花；松开时噗地散开一团泡。
  * 色相家族：贝壳青白（0xEAF6F8／0x9FD7E8）与海的浅蓝（0x6FA9C0）为主，白色只做水花高光。
- * 拍子：起（gape 张壳）→ 击（seize 合上 + crush 反复碾）→ 收（release 松开 / slip 滑脱 / free 施法者脱身）。
- * 范围：这招只作用在贴身一个目标身上，所以每层都绑 `target`（或施法者 `source`），没有地面圈；
- *   `data.shell`（合拢瞬间的间距）与目标体型一起决定裹身环的大小。
+ * 拍子：起（gape 张壳）→ 击（seize 合上 + hold 持续闭壳 + crush 反复碾）→ 收（release 松开 / slip 滑脱 / free 施法者脱身）。
+ * 范围：这招只作用在贴身一个目标身上，所以每层都绑 `target`、`source` 或两端的 `path`，没有地面圈；
+ *   `data.shell`（合拢瞬间的间距）、`data.selfR`／`data.shellR`（双方体型半宽）一起决定闭壳环的大小。
  * 运动：裹身的水环向内收、壳屑向外迸；松开时水泡向上散。
  * 数：`data.straps`（防御派生）决定每次碾合的壳屑量，`data.crush`（威力派生）决定这一下的强度，
  *   `data.duration` 只用来给持续裹身一个可读的密度。
@@ -58,6 +58,37 @@ const ClampDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.05, 0.14],
                     lifetime: [12, 22], size: [0.26, 0.08],
                     color: 0x9FD7E8, alpha: [0.65, 0], light: "world", maxParticles: 90
+                }
+            ]
+        },
+        hold: {
+            // 持续闭壳：不设 stop，按双方体型把壳围在施法者与目标身上，随托管效果一起收回。
+            duration: 0,
+            exit: { drain: 12 },
+            emitters: [
+                {
+                    name: "hold_shell", bind: "target", height: 0.45, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    rate: 14, shape: { kind: "ring", radius: { data: "shellR", fallback: 0.45 } },
+                    direction: "inward", speed: [0.01, 0.05], spin: 3,
+                    lifetime: [10, 18], size: [0.2, 0.05], sizeMode: "sin",
+                    color: 0x9FD7E8, alpha: [0.5, 0], light: "world", maxParticles: 48
+                },
+                {
+                    name: "hold_mouth", bind: "source", height: 0.4, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    rate: 10, shape: { kind: "ring", radius: { data: "selfR", fallback: 0.45 } },
+                    direction: "inward", speed: [0.01, 0.05], spin: 3,
+                    lifetime: [10, 18], size: [0.16, 0.04], sizeMode: "sin",
+                    color: 0xEAF6F8, alpha: [0.45, 0], light: "world", maxParticles: 36
+                },
+                {
+                    name: "hold_web", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    rate: { data: "straps", fallback: 12 }, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.01, 0.05], spread: 10, spin: 4,
+                    lifetime: [8, 15], size: [0.1, 0.02], sizeMode: "sin",
+                    color: 0x9FD7E8, alpha: [0.45, 0.02], light: "world", maxParticles: 44
                 }
             ]
         },

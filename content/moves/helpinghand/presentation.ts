@@ -1,10 +1,11 @@
 /**
  * 帮助 / Helping Hand 的客户端表现。
  *
- * 一句话：施法者伸手，一串暖光沿两人之间飞向伙伴（reach）→ 伙伴身上亮起一层柔和的暖光并持续一会儿（ready）→
- *         伙伴下一次命中炸开一圈金亮，把这份力用掉（strike）→ 没等到出手时，暖光静静上浮散去（fade）。
+ * 一句话：施法者伸手，暖光立刻沿两人之间的整条连线铺满（reach）→ 伙伴身上亮起一层柔和的待用暖光（ready）→
+ *         伙伴下一次直接命中炸开一圈金亮，把这份力用掉（strike）→ 一直没兑现时，暖光随 hold 结束静静上浮散去（fade）。
  * 色相家族：暖金 0xFFD98A 作主体，奶白 0xFFF3D0 作高光；只有 strike 强调层补一点亮白。
- * 范围：reach 用 `data.path`（施法者 ↔ 伙伴）画 polyline，从谁送到谁一眼可见；路径顶点每帧跟随双方。
+ * 范围：reach 用 `data.path`（施法者 ↔ 伙伴）画 polyline 整段随机发射，从谁送到谁一眼可见；路径顶点每帧跟随双方。
+ * 生命周期：ready 由服务端 hold 效果的 onEffect 拥有，消费或载体失效即随之结束。
  * 运动：光沿两人连线飞、命中时金圈向外炸、暖光慢上浮。
  * 数：光点数 `data.motes`、兑现规模 `data.burst`、强度 `data.boost` 全部来自本招算出的机制值。
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
@@ -37,13 +38,13 @@ const HelpinghandDefinition: ParticleDefinition = {
                 { name: "thread", bind: "path", offset: [0, 0.65, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     shape: { kind: "polyline" },
-                    rate: 70, direction: "shape", speed: [0.02, 0.08], trail: { minDistance: 0.1 },
+                    rate: 46, direction: "shape", speed: [0.02, 0.08],
                     lifetime: [7, 13], size: [0.14, 0.04],
                     color: 0xFFD98A, alpha: [0.85, 0], light: "full", maxParticles: 140 },
                 { name: "thread_dust", bind: "path", offset: [0, 0.6, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     shape: { kind: "polyline" },
-                    rate: 34, direction: "shape", speed: [0.03, 0.12],
+                    rate: 24, direction: "shape", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.05, 0.02],
                     color: 0xFFF3D0, alpha: [0.5, 0], light: "world", maxParticles: 90 }
             ]

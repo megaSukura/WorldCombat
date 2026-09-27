@@ -9,11 +9,18 @@ namespace PokemonDamage {
         /** Signed additive armour contribution accounted by this hit; native equipment and multipliers remain active. */
         armorAddedExcluded?: number; toughnessAddedExcluded?: number;
         ignoreDefenceStages?: boolean;
+        /** This hit's authored property; leaves the source's burn and its other attacks unchanged. */
+        ignoreBurnPenalty?: boolean;
+        /** Per-weather replacement for the common elemental weather factor; authored formulas may
+         * use 1 here when they already account for that weather's distinct behavior. */
+        weatherMultipliers?: { [weather: string]: number };
         knockback?: boolean; bypassCooldown?: boolean;
         /** Explicit launch-time same-type contribution, paired with its already resolved type. A later type change uses live facts instead. */
         sameTypeMultiplier?: number; sameTypeType?: string;
         /** This native hurt invocation leaves at least this much existing HP after Pre modifiers; absorption may leave more. */
         minimumHealth?: number;
+        /** Optional launch-time attack value/ladder. Target defence, immunity, critical rules and native hurt stay live. */
+        attackSnapshot?: AttackSnapshot;
     };
     export type ResolvedMetadata = NativeEffects.Move & Metadata & { move: string; action: number; flags: { [name: string]: boolean } };
     export interface FeatureContext {
@@ -32,6 +39,8 @@ namespace PokemonDamage {
         resolve?: (context: FeatureContext) => Metadata | undefined;
         /** Callback-scoped input for action-owned direct damage and previews; excluded from serialized metadata. */
         actionContext?: CombatAction;
+        /** Fixed damage only: explicit native relationship exceptions for this one hurt invocation. */
+        damageRelations?: { self?: boolean; friendly?: boolean };
     };
     export interface MetadataContext extends FeatureContext { readonly metadata: ResolvedMetadata; }
     /** Ignore the defender's ladder for this hit only; never mutate its persistent stages or equipment. */
@@ -49,6 +58,27 @@ namespace PokemonDamage {
     }
     /** Pure, ordered source modifiers for every actor domain, after segment resolution and before native source modifiers. */
     export var metadata = new WorldContributions.Registry<MetadataContext>();
+    export interface CriticalOffer { actor: string; id: number; }
+    export interface CriticalContext {
+        world: CombatWorld; source: CombatActor; target: CombatActor; data: any; offers: CriticalOffer[];
+    }
+    export interface CriticalGuard extends DamageSemantics.Incoming { allowed: boolean; }
+    export const criticalGuards = new WorldContributions.Registry<CriticalGuard>();
+    export function criticalAllowed(world: CombatWorld, source: CombatActor, target: CombatActor, data: any): boolean {
+        if (data.criticalChance === 0) return false;
+        if (String(target.domain()) === "cobblemon" && world.valid(target) && !data.ignoreAbility) {
+            const native = <NativeFacts | undefined>combatants.read(world, target).data.native;
+            if (native && NativeAbilities.flag(NativeEffects.ability(native.pokemon, native.state), "criticalImmune")) return false;
+        }
+        return criticalGuards.apply({ world, source, target, data, allowed: true }).allowed;
+    }
+    /** Read-only proposals. A proposal owns no use until a real native receipt reserves its budget. */
+    export const criticalOffers = new WorldContributions.Registry<CriticalContext>();
+    export function offeredCriticals(world: CombatWorld, source: CombatActor, target: CombatActor, data: any): CriticalOffer[] {
+        if (data.preview || data.criticalChance === 0 || !DamageSemantics.directOffense(data)) return [];
+        const offers = criticalOffers.apply({ world, source, target, data, offers: [] }).offers;
+        return offers.length && criticalAllowed(world, source, target, data) ? offers : [];
+    }
     // Legacy feature names are views of the canonical native flag names, so either consumer sees the same value.
     const flagAliases: { [name: string]: string } = { contact: "contact", punch: "punch", bite: "bite", sound: "sound", slice: "slicing", pulse: "pulse" };
     function mergeFlags(target: { [name: string]: boolean }, flags: any): void {
@@ -78,7 +108,7 @@ namespace PokemonDamage {
         context.invocation = context.action ? NativeLoadout.invocation(context.action) : null;
         function merge(value: any): void {
             Object.keys(value || {}).forEach(key => {
-                if (key !== "resolve" && key !== "actionContext" && key !== "flags" && value[key] !== undefined)
+                if (key !== "resolve" && key !== "actionContext" && key !== "damageRelations" && key !== "flags" && value[key] !== undefined)
                     data[key] = key === "damage" ? copySpec(value[key]) : key === "deferred" ? value[key].slice() : value[key];
             });
             mergeFlags(data.flags, value && value.flags);
@@ -104,6 +134,12 @@ namespace PokemonDamage {
         if (data.category !== "physical" && data.category !== "special") throw new Error("Choose physical or special damage");
     }
     export var multipliers = { sameType: 1.5, critical: 1.5, burn: .5 };
+    export function weatherMultiplier(data: Metadata, weather: string, fallback: number): number {
+        const value = data.weatherMultipliers && data.weatherMultipliers[weather];
+        const factor = value === undefined ? fallback : value;
+        if (typeof factor !== "number" || !isFinite(factor) || factor < 0) throw new Error("Invalid weather multiplier");
+        return factor;
+    }
     export function sameType(facts: CombatantStats.Facts, type: string): number {
         if (facts.types.indexOf(type) < 0) return 1;
         const native = <NativeFacts | undefined>facts.data.native;
@@ -119,7 +155,9 @@ namespace PokemonDamage {
         return sameType(facts, data.type);
     }
     /** Ordered target-side matchup contributions; they run after the base type product, so grounding can rewrite it. */
-    export interface EffectivenessContext extends FeatureContext {
+    export interface EffectivenessContext extends Omit<FeatureContext, "move"> {
+        /** Null for a typed native hit with no move; native damage provenance stays in data. */
+        move: CombatPokemonMove | null;
         data: any; readonly moveType: string; readonly targetTypes: string[]; effectiveness: number;
     }
     export var effectiveness = new WorldContributions.Registry<EffectivenessContext>();
@@ -139,6 +177,17 @@ namespace PokemonDamage {
             chance: criticalChance(stage), multiplier: NativeAbilities.property(ability, "criticalMultiplier", multipliers.critical) };
     }
     interface NativeFacts { pokemon: CombatPokemon; state: NativeEffects.State; }
+    export interface AttackSnapshot { stat: string; value: number; stage: number; }
+    export function snapshotAttack(world: CombatWorld, actor: CombatActor, stat: string): AttackSnapshot {
+        const facts = combatants.read(world, actor), native = <NativeFacts | undefined>facts.data.native;
+        return { stat, value: facts.stats[stat] || 0, stage: native ? NativeEffects.stage(native.state, stat) : 0 };
+    }
+    function attackSnapshot(data: Metadata, stat: string): AttackSnapshot | null {
+        const snapshot = data.attackSnapshot;
+        if (!snapshot || snapshot.stat !== stat) return null;
+        if (!isFinite(snapshot.value) || snapshot.value < 0 || !isFinite(snapshot.stage)) throw new Error("Invalid attack snapshot");
+        return snapshot;
+    }
     export interface SourceAdjustment { label: string; value: number | string; description?: string; translationKey?: string; }
     export function sourceFacts(pokemon: CombatPokemon, world?: CombatWorld | null, actor?: CombatActor | null): CombatantStats.Facts {
         if (world && actor && world.valid(actor)) return combatants.read(world, actor);
@@ -162,7 +211,8 @@ namespace PokemonDamage {
         var native = <NativeFacts | undefined>facts.data.native, pokemon = native && native.pokemon;
         var state = native ? native.state : NativeEffects.empty(), held = pokemon ? NativeEffects.item(pokemon, state) : "";
         var species = pokemon ? String(pokemon.species()) : "", stat = data.attackStat || (data.category === "physical" ? "atk" : "spa");
-        var sourceValue = facts.stats[stat] || 0, attack = sourceValue * NativeEffects.multiplier(stage);
+        var snapshot = attackSnapshot(data, stat);
+        var sourceValue = snapshot ? snapshot.value : facts.stats[stat] || 0, attack = sourceValue * NativeEffects.multiplier(stage);
         var adjustments: SourceAdjustment[] = [
             { label: "培养属性", value: pokemon ? pokemon.stat(stat) : sourceValue },
             { label: "当前可用属性（含世界修正）", value: sourceValue },
@@ -190,7 +240,8 @@ namespace PokemonDamage {
     function outgoing(world: CombatWorld | null, actor: CombatActor | null, facts: CombatantStats.Facts, data: any, amount: number): number {
         var native = <NativeFacts | undefined>facts.data.native, pokemon = native && native.pokemon;
         var state = native ? native.state : NativeEffects.empty(), ability = pokemon ? NativeEffects.ability(pokemon, state) : "", held = pokemon ? NativeEffects.item(pokemon, state) : "";
-        if (pokemon && String(pokemon.status()) === "cobblemon:burn" && data.category === "physical" && !NativeAbilities.flag(ability, "burnPenaltyImmune")) amount *= multipliers.burn;
+        if (pokemon && String(pokemon.status()) === "cobblemon:burn" && data.category === "physical" && !data.ignoreBurnPenalty
+            && !NativeAbilities.flag(ability, "burnPenaltyImmune")) amount *= multipliers.burn;
         data.amount = amount; if (native) NativeAbilities.applyFacts(native.pokemon, state, "damage", data, world, actor); amount = data.amount;
         if (pokemon) { data.amount = amount; amount = NativeItems.applyFacts(pokemon, state, "damage", data, world, actor).amount; }
         return amount;
@@ -221,7 +272,8 @@ namespace PokemonDamage {
         };
         data.attackStat = data.damage && data.damage.attackStat || (data.category === "physical" ? "atk" : "spa");
         data.defenceStat = data.damage && data.damage.defenceStat || (data.category === "physical" ? "def" : "spd");
-        var stage = NativeEffects.stage(state, data.attackStat);
+        var snapshot = attackSnapshot(data, data.attackStat);
+        var stage = snapshot ? snapshot.stage : NativeEffects.stage(state, data.attackStat);
         var stats = sourceAttack(world, actor, facts, data, stage, 0, null);
         var contributions = combatants.previewContributions({ world, actor, sourceFacts: facts, move: data });
         var calculated = CombatantStats.calculate(power, stats.attack, 0, data.damage, contributions.values, power > 0 ? data.power / power : 1);
@@ -413,7 +465,38 @@ namespace PokemonDamage {
         data.effectiveness = typePolicy === "none" ? 1 : match.effectiveness;
         var applied = typePolicy === "effectiveness" ? amount * match.effectiveness : typePolicy === "immunity" && match.effectiveness === 0 ? 0 : amount;
         if (applied === 0) { immune(world, target, JSON.stringify(data)); return false; }
-        return world.hurt(target, applied, JSON.stringify(data));
+        return world.hurt(target, applied, JSON.stringify(data), JSON.stringify(features.damageRelations || {}));
+    }
+    export interface FixedReceipt { accepted: boolean; actual: number; after: number | null; receiptId: string; tick: number; }
+    interface FixedCapture { source: string; target: string; enclosing: string; candidates: { [receipt: string]: boolean }; settled: boolean; result: FixedReceipt; }
+    const fixedCaptures: { [token: string]: FixedCapture } = Object.create(null);
+    let fixedSequence = 0;
+    WorldCombat.on("world_combat:fixed_receipts/prepare", "world_combat:damage_prepare", "", event => {
+        const data = JSON.parse(event.data()), capture = fixedCaptures[String(data.fixedReceiptToken || "")], target = event.target();
+        if (capture && !capture.settled && target && String(target.ref()) === capture.target
+            && String(event.actor().ref()) === capture.source && data.receiptId) capture.candidates[String(data.receiptId)] = true;
+    });
+    WorldCombat.on("world_combat:fixed_receipts/settle", "world_combat:damage_settled", "", event => {
+        const data = JSON.parse(event.data()), capture = fixedCaptures[String(data.fixedReceiptToken || "")];
+        // Settlement restores CURRENT to its caller before publishing. Even an earlier prepare
+        // hook forwarding all metadata into a nested hit therefore has a different enclosing receipt.
+        if (!capture || capture.settled || !capture.candidates[String(data.receiptId)]
+            || String(event.world().damageReceipt()) !== capture.enclosing) return;
+        capture.settled = true; capture.result.receiptId = String(data.receiptId);
+        capture.result.actual = data.settled === true ? Math.max(0, Number(data.actual) || 0) : 0;
+        capture.result.after = typeof data.after === "number" ? data.after : null;
+    });
+    /** Captures this synchronous fixed hit's native settlement using its enclosing receipt; nested hits cannot replace it. */
+    export function fixedReceipt(world: CombatWorld, target: CombatActor, move: CombatPokemonMove, amount: number,
+                                 features: Features = {}, typePolicy: "immunity" | "effectiveness" | "none" = "immunity", action?: CombatAction): FixedReceipt {
+        const token = String(world.source().ref()) + ":" + (++fixedSequence), result: FixedReceipt = {
+            accepted: false, actual: 0, after: null, receiptId: "", tick: world.tick() };
+        const input: any = {};
+        Object.keys(features).forEach(key => input[key] = (<any>features)[key]); input.fixedReceiptToken = token;
+        fixedCaptures[token] = { source: String(world.source().ref()), target: String(target.ref()),
+            enclosing: String(world.damageReceipt()), candidates: Object.create(null), settled: false, result };
+        try { result.accepted = fixed(world, target, move, amount, input, typePolicy, action); return result; }
+        finally { delete fixedCaptures[token]; }
     }
     export function base(attacker: CombatPokemon, defender: CombatPokemon, type: string, category: string, power: number): number {
         if (!isFinite(power) || power <= 0) throw new Error("A positive finite base power is required");
@@ -430,13 +513,14 @@ namespace PokemonDamage {
         return value * stab * effectiveness;
     }
 
-    /** The action still owns trace validation, once-only settlement, native damage and cleanup. */
+    /** Each native projectile owns its default hit identity; repeated geometric strikes name their beat.
+     * An explicit strike can deliberately share or separate contacts. The action still owns validation and cleanup. */
     export function hit(action: CombatAction, impact: CombatImpact, move: CombatPokemonMove, features?: Features, strike?: string): boolean {
         var target = impact.target();
         if (target === null) return false;
         var result = resolve(action.world(), action.actor(), target, move, features, action.id(), action);
         if (result.amount <= 0) { zeroFeedback(action.world(), target, result); return false; }
-        return action.hit(impact, result.amount, strike || "primary", result.metadata);
+        return action.hit(impact, result.amount, strike || (impact.projectile() ? "projectile:" + impact.projectile() : "primary"), result.metadata);
     }
     /** Same script calculation for geometric hits and composed area/chain effects. */
     export function resolve(world: CombatWorld, source: CombatActor, target: CombatActor, move: CombatPokemonMove,
@@ -458,37 +542,62 @@ namespace PokemonDamage {
         data.criticalChance = blockedCrit ? 0 : critical.chance;
         data.critical = !blockedCrit && (typeof data.critical === "boolean" ? data.critical : world.random() < critical.chance);
         sourcePower(context, data); validateCategory(data);
-        var attackStat = data.damage && data.damage.attackStat || (data.category === "physical" ? "atk" : "spa");
-        var defenceStat = data.damage && data.damage.defenceStat || (data.category === "physical" ? "def" : "spd");
-        data.attackStat = attackStat; data.defenceStat = defenceStat;
-        var aStage = NativeEffects.stage(own, attackStat), dStage = NativeEffects.stage(other, defenceStat);
-        if (data.critical) { aStage = Math.max(0, aStage); dStage = Math.min(0, dStage); }
-        if (NativeAbilities.flag(defending, "ignoreOpponentStages") && !data.ignoreAbility) aStage = 0;
-        if (NativeAbilities.flag(ability, "ignoreOpponentStages")) dStage = 0;
-        var defence = CombatantStats.defence(targetFacts, defenceStat) * NativeEffects.multiplier(dStage);
-        if (defender) defence = NativeItems.applyFacts(defender, other, "defence", { category: data.category, defence, move: data }, world, target).defence;
-        var stats = sourceAttack(world, source, sourceFacts, data, aStage, defence, target);
-        if (nativeTarget && !data.ignoreAbility) NativeAbilities.apply(world, target, "defence", stats, other);
-        var attack = stats.attack; defence = stats.defence;
-        var contributions = combatants.damageContributions({ world: world, actor: source, target: target, sourceFacts: sourceFacts, targetFacts: targetFacts, move: data });
-        var calculation = CombatantStats.calculate(authoredPower, attack, defence, data.damage, contributions, authoredPower > 0 ? data.power / authoredPower : 1);
-        var amount = calculation.amount;
-        data.calculation = calculation;
-        data.calculation.defenceAvailable = targetFacts.stats[defenceStat] !== undefined;
-        amount *= sameTypeFor(data, sourceFacts);
-        var targetTypes = targetFacts.types.slice();
-        data.effectiveness = 1;
-        targetTypes.forEach(function (type) { data.effectiveness *= CobblemonCombat.typeEffectiveness(data.type, type); });
-        var effectScope: EffectivenessContext = { world: world, actor: source, sourceFacts: sourceFacts, target: target, targetFacts: targetFacts,
-            move: move, preview: false, action: action, facts: context.facts, power: context.power, data: data,
-            moveType: data.type, targetTypes: targetTypes, effectiveness: data.effectiveness };
-        effectiveness.apply(effectScope);
-        data.effectiveness = effectScope.effectiveness;
-        amount *= data.effectiveness;
-        data.criticalMultiplier = data.critical ? critical.multiplier : 1;
-        if (data.critical) amount *= data.criticalMultiplier;
-        amount = outgoing(world, source, sourceFacts, data, amount);
-        amount = settledAmount(amount);
-        return { amount: amount, metadata: JSON.stringify(data) };
+        const offers = data.criticalChance === 0 ? [] : offeredCriticals(world, source, target, data);
+        // Keep custom DamageSpec evaluators and other callbacks in the two calculation inputs.
+        // The ordinary/native roll and all metadata/source-power rules have already run exactly once.
+        function calculationInput(criticalHit: boolean): any {
+            const copy: any = {};
+            Object.keys(data).forEach(key => copy[key] = data[key]);
+            copy.damage = copySpec(data.damage);
+            copy.flags = {};
+            Object.keys(data.flags || {}).forEach(key => copy.flags[key] = data.flags[key]);
+            copy.critical = criticalHit;
+            return copy;
+        }
+        function calculate(data: any): Resolution {
+            var attackStat = data.damage && data.damage.attackStat || (data.category === "physical" ? "atk" : "spa");
+            var defenceStat = data.damage && data.damage.defenceStat || (data.category === "physical" ? "def" : "spd");
+            data.attackStat = attackStat; data.defenceStat = defenceStat;
+            var snapshot = attackSnapshot(data, attackStat);
+            var aStage = snapshot ? snapshot.stage : NativeEffects.stage(own, attackStat), dStage = NativeEffects.stage(other, defenceStat);
+            if (data.critical) { aStage = Math.max(0, aStage); dStage = Math.min(0, dStage); }
+            if (NativeAbilities.flag(defending, "ignoreOpponentStages") && !data.ignoreAbility) aStage = 0;
+            if (NativeAbilities.flag(ability, "ignoreOpponentStages")) dStage = 0;
+            var defence = CombatantStats.defence(targetFacts, defenceStat) * NativeEffects.multiplier(dStage);
+            if (defender) defence = NativeItems.applyFacts(defender, other, "defence", { category: data.category, defence, move: data }, world, target).defence;
+            var stats = sourceAttack(world, source, sourceFacts, data, aStage, defence, target);
+            if (nativeTarget && !data.ignoreAbility) NativeAbilities.apply(world, target, "defence", stats, other);
+            var attack = stats.attack; defence = stats.defence;
+            var contributions = combatants.damageContributions({ world: world, actor: source, target: target, sourceFacts: sourceFacts, targetFacts: targetFacts, move: data });
+            var calculation = CombatantStats.calculate(authoredPower, attack, defence, data.damage, contributions, authoredPower > 0 ? data.power / authoredPower : 1);
+            var amount = calculation.amount;
+            data.calculation = calculation;
+            data.calculation.defenceAvailable = targetFacts.stats[defenceStat] !== undefined;
+            amount *= sameTypeFor(data, sourceFacts);
+            var targetTypes = targetFacts.types.slice();
+            data.effectiveness = 1;
+            targetTypes.forEach(function (type) { data.effectiveness *= CobblemonCombat.typeEffectiveness(data.type, type); });
+            var effectScope: EffectivenessContext = { world: world, actor: source, sourceFacts: sourceFacts, target: target, targetFacts: targetFacts,
+                move: move, preview: false, action: action, facts: context.facts, power: context.power, data: data,
+                moveType: data.type, targetTypes: targetTypes, effectiveness: data.effectiveness };
+            effectiveness.apply(effectScope);
+            data.effectiveness = effectScope.effectiveness;
+            amount *= data.effectiveness;
+            data.criticalMultiplier = data.critical ? critical.multiplier : 1;
+            if (data.critical) amount *= data.criticalMultiplier;
+            amount = outgoing(world, source, sourceFacts, data, amount);
+            amount = settledAmount(amount);
+            return { amount: amount, metadata: JSON.stringify(data) };
+        }
+        const ordinary = calculate(calculationInput(!!data.critical));
+        if (!offers.length) return ordinary;
+        const forced = data.critical ? ordinary : calculate(calculationInput(true));
+        if (!(forced.amount > 0)) return ordinary;
+        const result = JSON.parse(ordinary.metadata);
+        result.criticalChoice = { source: String(source.ref()), target: String(target.ref()), offers: offers, ordinaryAmount: ordinary.amount,
+            forced: { amount: forced.amount, data: JSON.parse(forced.metadata) } };
+        // A custom formula can yield zero only in the ordinary branch. Enter the real receipt so it
+        // can choose; damage_prepare restores ordinaryAmount before any unreserved native hurt.
+        return { amount: ordinary.amount > 0 ? ordinary.amount : forced.amount, metadata: JSON.stringify(result) };
     }
 }

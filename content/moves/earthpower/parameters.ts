@@ -3,25 +3,23 @@
  *
  * 原生事实：Ground／特殊／威力 90／命中 100／PP 10／flags 带 nonsky／目标单体／10% 概率让目标特防下降 1 级。
  *
- * 翻译：把「向对手脚下释放出大地之力」落成一记**从目标脚下自下而上爆发**的地脉。它没有飞行物、不看成
- * 施法者的朝向：先在目标脚下亮出一圈将被掀开的记号（`mark`，起手就是对手走位的窗口），随后那一点的地面
- * 向上崩开、把站在地上的目标顶起，并在地面留下一小片裂开的土石。离地的东西（飞行、漂浮、被抛在空中）
- * 从地脉上方过去，什么也吃不到——这是 `nonsky` 的翻译。它是磨防远击四式里唯一从目标脚下出手、唯一只打
- * 站在地上的目标、唯一把地面（而不是自己）掀开的那个。
+ * 翻译：把「向对手脚下释放出大地之力」落成一记**真实支撑面上自下而上爆发**的地脉。它没有飞行物、不看成
+ * 施法者的朝向：先在目标脚下亮出一圈将要崩开的记号（`mark`，起手就是对手走位的窗口），随后那一点的地面
+ * 向上崩开、把站在同一支撑面上的目标顶起。植被等无碰撞的伪地不会被当作地面；离地的东西（飞行、漂浮、
+ * 被抛在空中）从地脉上方过去，什么也吃不到——这是 `nonsky` 的翻译。它是磨防远击四式里唯一从目标脚下出手、
+ * 唯一只打站在地上的目标、唯一认真实碰撞支撑面的那个。
  *
  * 数据分散（每项依赖不同的精灵数据）：
  *   core          地脉威力：特攻定地力，等级定深度。
- *   burstRadius   爆发半径：碰撞箱宽度与特攻共同决定掀开多大一点。
+ *   burstRadius   爆发半径：碰撞箱宽度与特攻共同决定崩开多大一点。
  *   reach         射程：特攻定能送地脉到多远。
  *   launch        上顶初速：特攻决定把目标顶起多高。
  *   tempo         起手：速度决定记号亮起到地面崩开多快，也就是对手的走位窗口。
  *   sunderChance  碾防概率：特攻与等级共同决定，基础 10% 取自原生。
  *   sunderStage   碾防级数：固定 1 级，与原生一致。
- *   ruptureTicks  裂痕停留：等级与特攻决定那片裂地留多久。
- *   ruptureCells  裂痕块数：特攻决定掀开多少块，也驱动表现。
  *   shards        碎土数：特攻与等级决定迸出的碎土数量，也驱动表现。
  *
- * 配置 `fissure`（裂隙式）：开启＝爆发半径 ×1.4、裂痕块数 ×1.6、碎土 ×1.3，但威力 ×0.88、冷却 +4 刻，
+ * 配置 `fissure`（裂隙式）：开启＝爆发半径 ×1.4、碎土 ×1.3，但威力 ×0.88、冷却 +4 刻，
  * 适合一次罩住一小片；关闭＝更窄更痛的一柱地脉，适合点名单体。两向各有适用局面。
  *
  * 伤害段 `core`：地脉顶起那一下，走共享换算（原生类别 Special）。
@@ -76,21 +74,6 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "一次碾防让目标特防下降的能力等级。"
             }),
-        ruptureTicks: seconds(
-            F.base(120)
-                .plus(F.level().minus(28).times(1.1).clamp(0, 60))
-                .plus(F.stat("specialAttack").minus(60).times(0.2).clamp(-4, 12))
-                .clamp(90, 220).round(0),
-            "裂痕停留", "目标脚下那片裂地停留多久；等级与特攻越高裂得越久。到期原方块回来。"),
-        ruptureCells: formula(
-            F.base(10)
-                .plus(F.stat("specialAttack").minus(60).times(0.2).clamp(-2, 6))
-                .times(F.when(F.pref("fissure"), F.const(1.6), F.const(1)))
-                .clamp(8, 28).round(0),
-            "裂痕块数", {
-                unit: "块",
-                description: "目标脚下被掀开的块数；特攻越高掀得越多，裂隙式更宽。它也驱动表现的密度。"
-            }),
         shards: formula(
             F.base(14)
                 .plus(F.stat("specialAttack").minus(60).times(0.14))
@@ -113,7 +96,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["core"] },
         { key: "description.1", values: ["burstRadius", "launch"] },
         { key: "description.2", values: ["sunderChance","sunderStage"] },
-        { key: "description.3", values: ["tempo","reach","ruptureTicks","ruptureCells"] },
+        { key: "description.3", values: ["tempo","reach"] },
         { key: "description.fissure", values: [] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.reach"] }

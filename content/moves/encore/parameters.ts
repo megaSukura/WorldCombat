@@ -3,6 +3,8 @@ namespace PokemonSkills {
     export const encoreId = "encore";
     export const encoreEffect = "world_combat:encore_call";
     export const encoreLoop = "world_combat:encore_loop";
+    /** 所有活体真正提交动作的内容身份记录（本单元自己的事实，读共享 MoveExecutions.committed）。 */
+    export const encoreCommits = "world_combat:encore_commits";
     export const encoreScene = "world_combat:move_encore";
     export const encoreStatus = "encore";
     export const encoreLockText = "world_combat.move.encore.text.lock";

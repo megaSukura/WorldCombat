@@ -43,17 +43,31 @@ namespace PokemonSkills {
                 range: p("psychup", "reach", context)
             };
         },
-        ready: function (action) {
-            const world = action.sense(), target = action.target();
+        ready: function (action, config) {
+            const world = action.sense(), actor = action.actor(), target = action.target();
             // aim: any-relation entity works; an empty point has no reference to read, so it is refused here.
             if (target === null || !world.valid(target)) return "invalid-target";
             const body = world.observe(target);
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("psychup", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
-            const stages = psychupStages(world, target);
-            return psychupStats.some(function (stat) { return (stages[stat] || 0) !== 0; })
-                || MobEffects.native(world, target, "beneficial").length > 0 ? "" : "no-changes";
+            // Compare the two real ladders: a neutral target still clears the caster's own lower negative stages,
+            // while a target that would change nothing is refused instead of burning the cast.
+            const selective = !!(config && config.selective);
+            const mine = psychupStages(world, actor), theirs = psychupStages(world, target);
+            let changes = 0;
+            psychupStats.forEach(function (stat) {
+                const delta = (theirs[stat] || 0) - (mine[stat] || 0);
+                if (delta === 0 || selective && delta < 0) return;
+                changes++;
+            });
+            if (changes === 0) {
+                MobEffects.native(world, target, "beneficial").forEach(function (effect) {
+                    const current = MobEffects.read(world, actor, String(effect.id()));
+                    if (!current || current.amplifier() < effect.amplifier()) changes++;
+                });
+            }
+            return changes > 0 ? "" : "no-changes";
         },
         windup: function (action, config, prepare) {
             const actor = action.actor(), target = action.target();

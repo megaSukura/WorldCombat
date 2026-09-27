@@ -4,12 +4,14 @@
  * 一句话：翅缘亮起银光、鳞粉朝翅上聚起 → 一大扇银鳞沿服务端给的扇面顶点向前铺开、缓缓往前飘 →
  * 被割到的敌人身上炸开一撮银粉 → 回卷的鳞粉落在施法者身上时升起一圈银白光环。
  * 色相家族：银白与浅青（powder / sparkle / flying_bugs 为主体，0xC9D8E6、0xEDF2FA），中性尘（tinydust）只做余韵。
- * 拍子：起 gather（聚鳞）→ 扇 blow（扇面铺开）→ hit（逐个割到）→ 涌 surge／空 miss。
+ * 拍子：起 gather（聚鳞）→ 扇 blow（扇面铺开）→ hit（逐个割到）→ 涌 surge（反哺）／窗口读数 hum／空 miss。
  * 范围：blow 用与服务端判定同源的扇形顶点（圆心＋外缘弧）画出整扇——`polygon` 填面、`polyline` 描边；
  *   顶点在瞄准所在的平面上，可指向上或下，外缘顶点被墙截在真实碰点，扇面多大、站哪会被割到，画面就是那块区域。
+ * 时长：blow 的发身时长绑 `data.drift`（服务端飘散刻数），余尘飘完即止；伤害在扇出当刻已经结算。
  * 运动：鳞粉沿扇面从翅缘向外飘，飘速慢、受轻微重力下落；晶点沿扇缘更快地掠出。
  * 数：`data.scales`（特攻与等级换算）绑定鳞粉与晶点的数量，`data.span`／`data.reach` 决定扇面几何，
  *   `data.intensity`（本次威力比例）缩放发射量，`data.stages`（反哺级数）绑定反哺光环的数量。
+ * 窗口读数：hum 由服务端 `WorldFeedback.onEffect` 绑在真正的能力窗口上，窗口到期或被清除即收。
  */
 const SilverwindDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -37,8 +39,8 @@ const SilverwindDefinition: ParticleDefinition = {
             ]
         },
         blow: {
-            duration: 26,
-            exit: { stop: 12, drain: 24 },
+            duration: { data: "drift", fallback: 24 },
+            exit: { drain: 24 },
             emitters: [
                 {
                     name: "fan_fill", bind: "path", fit: "none",
@@ -112,6 +114,27 @@ const SilverwindDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.08, 0.28], drag: 0.9,
                     lifetime: [8, 15], size: [0.13, 0.03],
                     color: 0xEDF2FA, alpha: [0.85, 0], light: "full", bloom: 0.5, maxParticles: 50
+                }
+            ]
+        },
+        hum: {
+            exit: { drain: 18 },
+            emitters: [
+                {
+                    name: "hum_ring", bind: "source", offset: [0, 0.08, 0], height: 0.08,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 5, shape: { kind: "ring", radius: 0.85 },
+                    direction: "up", speed: [0.004, 0.016], spread: 12,
+                    lifetime: [16, 26], size: [0.08, 0.02], sizeMode: "sin",
+                    color: 0xC9D8E6, alpha: [0.3, 0], alphaMode: "sin", light: "world", maxParticles: 26
+                },
+                {
+                    name: "hum_mote", bind: "source", offset: [0, 0.45, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 4, shape: { kind: "sphere", radius: 0.6 },
+                    direction: "up", speed: [0.004, 0.014],
+                    lifetime: [14, 24], size: [0.09, 0.01], sizeMode: "sin",
+                    color: 0xEDF2FA, alpha: [0.26, 0], alphaMode: "sin", light: "full", bloom: 0.2, maxParticles: 20
                 }
             ]
         },

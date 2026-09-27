@@ -14,7 +14,9 @@ namespace CompanionBehavior {
     function spiderwebWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
+        // 驻守时也允许原地发丝：威胁已在真实吐丝距离内就不必离开岗位；够不到才让位给别的行动。
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)
+            && distance(self.point, threat.point) > item.data.range) return false;
         const wrapped = status(context, threat, "trapped");
         const layers = fact<number>(context, "world_combat:spiderweb/layers", threat) || 0;
         const cap = fact<number>(context, "world_combat:spiderweb/cap", self, item.data.config) || 3;

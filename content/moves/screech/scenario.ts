@@ -23,7 +23,7 @@ Smoke.scenario("screech", function (stage) {
         stage.expect(stage.attribute(foeA, "minecraft:generic.armor") < armorA - 0.001
             || stage.attribute(foeB, "minecraft:generic.armor") < armorB - 0.001,
             "at least one target's armour fell with the Defense drop");
-        stage.note("screech observations", {
+        stage.note("thin-slice design: only the slice between the previous and current front selects bodies once (a target walking in behind the wave is not hit); the Defence drop is counted from the actual boost delta, the ringing identity is applied independently", {
             casts: stage.casts("screech", caster),
             armorA: [armorA, stage.attribute(foeA, "minecraft:generic.armor")],
             armorB: [armorB, stage.attribute(foeB, "minecraft:generic.armor")],

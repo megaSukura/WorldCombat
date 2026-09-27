@@ -2,13 +2,13 @@
  * 十万马力 / highhorsepower 的出手方式。
  *
  * 核心念头：**压低整个身体、把质量当武器压上去**——它不需要助跑、不旋转、不留坑，只是一次贴地的正面冲撞；
- *   这一招的全部内容就是「份量」。撞上的那一刻，体重与速度换算成的「马力」数浮在撞击点上方，撞击扬起的尘量
- *   也按这个数走，所以同招在两只精灵手里画面不同。
+ *   这一招的内容就是「份量」和它较长的蓄势。撞上时把目标顶开 `shove`，并在撞击点上方浮出一个由体重、速度与
+ *   物攻算出的「马力」读数 `might`——那是个趣味回执，不参与伤害；扬尘量另有 `dust` 公式，同样不读取 `might`。
  *
  * 三幕（提交前只播预告）：
- *   起（ready）：压低重心、四足蹬地，脚边尘被往后推，只播预告，此时代价未结清。
- *   冲（drive）：提交后沿瞄准方向贴地冲出（每刻推进 `rush`，最远 `charge`）；每刻把前进的一段扫一遍，
- *       撞上非友方活体就结算 `drive` 接触伤害。
+ *   起（ready）：压低重心、四足蹬地，脚边尘随时间逐步收紧，只播预告，此时代价未结清。
+ *   冲（drive）：提交后沿瞄准方向贴地冲出（每刻推进 `rush`，最远 `charge`），首步真实前移才展开尾迹；每刻把前进的
+ *       一段扫一遍，撞上非友方活体就结算 `drive` 接触伤害。
  *   撞（impact → press / miss）：撞中时在撞击点炸开尘环与土块，把目标沿冲撞方向顶开 `shove`，浮出 `might` 马力；
  *       压身式额外在撞击点向下压出一圈更重的尘环（把目标留在近处）；冲完没撞到人只留下扑空的尘与浮字。
  *
@@ -26,8 +26,8 @@ namespace PokemonSkills {
         id: highhorsepowerId,
         cooldownParameter: "recharge",
         name: "High Horsepower",
-        description: "压低整个身体、把质量当武器的一次贴地正面冲撞：撞上的那一刻，体重与速度换算成的「马力」数浮在撞击点上方，扬起的尘量也按它走。撞完自己站住，不留坑、不自损，全部内容就是这一份份量。",
-        uses: ["用全身质量压低冲撞一个目标", "把对手撞离阵地，或压在近身继续打", "把体重与速度换成看得见的马力数"],
+        description: "压低整个身体、把质量当武器的一次贴地正面冲撞：蓄势较长，撞上时把目标顶开，并在撞击点上方浮出一个趣味「马力」读数。撞完自己站住，不留坑、不自损，内容就是这一份份量与那段较长的蓄势。",
+        uses: ["用全身质量压低冲撞一个目标", "把对手撞离阵地，或留在近身继续打", "较长的蓄势换来一次贴地重撞"],
         kind: "aim",
         range: 3.4,
         maxRange: 5.6,
@@ -56,7 +56,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_highhorsepower:ready", highhorsepowerScene, 1, action.origin(),
-                JSON.stringify({ moment: "ready", press: config && config.press === true ? 1 : 0,
+                JSON.stringify({ moment: "ready", windup: prepare, press: config && config.press === true ? 1 : 0,
                     might: Math.round(p(highhorsepowerId, "might", action)),
                     dust: Math.round(p(highhorsepowerId, "dust", action)) }));
             return prepare;
@@ -65,7 +65,11 @@ namespace PokemonSkills {
             const movementScenes = WorldFeedback.actionScenes(highhorsepowerScene);
             const world = action.world();
             const actor = action.actor();
-            const direction = aim(action);
+            action.releaseTarget();
+            const look = WorldGeometry.facing(world, actor);
+            // A ground charge stays on the ground; flattening the aim keeps a low target from burying the sweep in the floor.
+            const direction = WorldGeometry.flatUnit(aim(action), look === null ? action.direction() : look);
+            const directionData = [direction.x(), direction.y(), direction.z()];
             const charge = p(highhorsepowerId, "charge", action);
             const rush = p(highhorsepowerId, "rush", action);
             const hoof = p(highhorsepowerId, "hoof", action);
@@ -129,15 +133,16 @@ namespace PokemonSkills {
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
-                movementScenes.show(current, "drive", origin, { moment: "drive", might: might,
+                // 尾迹只在真实前移后展开；蓄势表现已由 windup 的 ready 单独承担，不再重复发一次。
+                if (moved > 0.001)
+                    movementScenes.show(current, "drive", origin, { moment: "drive", might: might,
                         dust: Math.round(dust * Math.min(1, travelled / Math.max(0.001, charge))),
-                        scale: scale, intensity: intensity, progress: Math.min(1, travelled / Math.max(0.001, charge)) });
+                        scale: scale, intensity: intensity, direction: directionData,
+                        progress: Math.min(1, travelled / Math.max(0.001, charge)) });
                 if (hit.blocked() || moved < minimumMove || travelled >= charge) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 
-            WorldFeedback.emit(world, highhorsepowerScene, 1, action.origin(),
-                { moment: "ready", press: press ? 1 : 0, might: might, dust: dust, scale: scale }, 16);
             advance(action);
         }
     });

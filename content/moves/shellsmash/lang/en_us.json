@@ -25,5 +25,5 @@
   "worldcombat.skill.shellsmash.preference.ai.minGap.help": "A threat closer than this makes the companion fight instead of smashing; larger is more cautious.",
   "worldcombat.skill.shellsmash.preference.ai.minHealth": "Minimum health",
   "worldcombat.skill.shellsmash.preference.ai.minHealth.help": "Below this health fraction the companion no longer smashes; defense is already strained, so a higher value is more reluctant.",
-  "world_combat.move.shellsmash.text.broken": "Shell Smash · Atk/SpA/Spe +%1$s, Def/SpD -%2$s"
+  "world_combat.move.shellsmash.text.broken": "Shell Smash · Atk +%1$s, SpA +%2$s, Spe +%3$s; Def -%4$s, SpD -%5$s"
 }

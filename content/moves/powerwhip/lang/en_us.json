@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.powerwhip.summary": "The user coils its vines or tentacles up high, then whirls them into a wide lash: the fan it fills is the area it hits, and every enemy caught inside takes the blow and is shoved out. It reaches the farthest and covers the widest of its family, at the cost of a heavy wind-up and cooldown.",
+  "worldcombat.skill.powerwhip.summary": "The user coils its vines or tentacles up high, then whirls them into a wide lash: the tip sweeps in order across a long arc or a full circle, and the stretch it passes over is the area it hits, so every enemy caught there takes the blow and is shoved out. Pick any target, or just aim a direction to break out or whip empty air; nothing behind a wall is reached. It reaches the farthest and covers the widest of its family, at the cost of a heavy wind-up and cooldown.",
   "worldcombat.skill.powerwhip.use.0": "Clear a whole stretch in front with one sweep",
   "worldcombat.skill.powerwhip.use.1": "Open at mid range against a cluster of foes",
   "worldcombat.skill.powerwhip.use.2": "Whirl a full circle when surrounded",
-  "worldcombat.skill.powerwhip.description.0": "The fan sweeps non-allies ahead for about %1$s contact damage, reaching %2$s blocks over a %3$s degree span; the filled fan on screen is the hit area.",
+  "worldcombat.skill.powerwhip.description.0": "The tip sweeps in order across the non-allies ahead for about %1$s contact damage, reaching %2$s blocks over a %3$s degree span; the stretch the tip passes over is the hit area, and nothing behind a wall is reached.",
   "worldcombat.skill.powerwhip.description.1": "One fan settles up to %1$s targets at once, shoving each %2$s blocks; heavier targets are pushed less.",
   "worldcombat.skill.powerwhip.extend.on": "Long-lash form: reaches farther and shoves the few it catches harder, but the span is narrow and only covers the line ahead.",
   "worldcombat.skill.powerwhip.extend.off": "Whirl form: a full circle around the user that covers every side at once, with a heavier hit and shorter cooldown, but shorter reach and longer recovery.",
@@ -20,11 +20,11 @@
   "worldcombat.skill.powerwhip.value.aftercast": "Recovery",
   "worldcombat.skill.powerwhip.value.recharge": "Cooldown",
   "worldcombat.skill.powerwhip.preference.extend": "Long-lash form",
-  "worldcombat.skill.powerwhip.preference.extend.help": "On: reaches farther and shoves the few it catches harder, but the span is narrow and only covers the line ahead. Off (whirl): a full circle around the user, but shorter reach, slightly less power and a longer recovery and cooldown.",
+  "worldcombat.skill.powerwhip.preference.extend.help": "On: reaches farther and shoves the few it catches harder, but the span is narrow and only covers the line ahead. Off (whirl): a full circle around the user, but shorter reach, a heavier single hit, a shorter cooldown and a longer recovery.",
   "worldcombat.skill.powerwhip.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.powerwhip.preference.ai.maxChase.help": "It will not open with Power Whip beyond this distance; it closes in first. The fan already reaches far, so a larger value lets it open earlier.",
   "worldcombat.skill.powerwhip.preference.ai.preferGroups": "Aim at clusters",
   "worldcombat.skill.powerwhip.preference.ai.preferGroups.help": "On: targets with more foes packed around them rank higher, so one fan clears a cluster. Off: it only ranks by threat and distance.",
-  "world_combat.move.powerwhip.text.hit": "Lashed",
+  "world_combat.move.powerwhip.text.hit": "Lashed %1$s",
   "world_combat.move.powerwhip.text.miss": "Whipped at air"
 }

@@ -76,7 +76,10 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.0, guard / 1.6));
             const intensity = Math.max(0.6, Math.min(2.4, power / 100));
             const direction = aim(action);
-            let elapsed = 0, fired = false, settled = false;
+            // 持续过程由本次 execute 独立持有的 scene manager 管理，阶段结束即 stop。
+            const scenes = WorldFeedback.actionScenes(beakblastScene, 1);
+            const startedAt = world.tick();
+            let fired = false, settled = false;
 
             function release(current: CombatAction): void {
                 try {
@@ -87,29 +90,41 @@ namespace PokemonSkills {
                 } catch (error) { /* action already released its world handle */ }
             }
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scenes.stop(current);
+                done(current);
+            }
 
             MobEffects.apply(world, actor, beakblastEffect, heat, 0);
             world.effect(beakblastMark, actor, JSON.stringify({ guard: guard, burnTicks: burnTicks, sparks: sparks }), heat);
             sound(action, "minecraft:item.firecharge.use");
-            WorldFeedback.emit(world, beakblastScene, 1, body.position(),
+            scenes.show(action, "heat", body.position(),
                 { moment: "heat", guard: guard, heat: heat, flames: flames, sparks: sparks, scale: scale,
-                    intensity: intensity, progress: 0 }, 24);
+                    intensity: intensity, progress: 0 });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), beakblastHeatText, [Math.round(heat / 20)], 24);
 
-            /** 加热窗口：站定烧热。窗口里被接触由 parameters.ts 的监听处理，这里只维持表现与计时。 */
+            /**
+             * 加热窗口：按真实 world.tick 差计走过多少刻（第 0 刻不预支），每一刻都保持驻足，而不是每几刻点一下。
+             * 窗口里被接触由 parameters.ts 的监听处理；自带载体被外力提前清掉则立即收势、不再开炮。
+             */
             function heatStep(current: CombatAction): void {
+                if (settled) return;
                 const scope = current.world();
                 const self = scope.observe(actor);
                 if (self === null || !scope.valid(actor)) { release(current); finish(current); return; }
                 current.stopMovement();
-                elapsed += 6;
-                const progress = Math.min(1, elapsed / Math.max(1, heat));
-                WorldFeedback.keep(scope, "beakblast:heat:" + current.id(), beakblastScene, 1, self.position(),
-                    { moment: "heat", guard: guard, heat: heat, flames: flames, sparks: sparks, scale: scale,
-                        intensity: intensity, progress: progress }, 12);
+                const elapsed = Math.max(0, scope.tick() - startedAt);
+                if (elapsed < heat && MobEffects.read(scope, actor, beakblastEffect) === null) {
+                    release(current); finish(current); return;
+                }
                 if (elapsed >= heat) { fire(current); return; }
-                current.after(6, function (next: CombatAction) { heatStep(next); });
+                const progress = Math.min(1, elapsed / Math.max(1, heat));
+                scenes.show(current, "heat", self.position(),
+                    { moment: "heat", guard: guard, heat: heat, flames: flames, sparks: sparks, scale: scale,
+                        intensity: intensity, progress: progress, remaining: heat - elapsed });
+                current.after(1, function (next: CombatAction) { heatStep(next); });
             }
 
             /** 窗口走完，取掉记号，喙弹直线射出。 */
@@ -118,6 +133,7 @@ namespace PokemonSkills {
                 fired = true;
                 const scope = current.world();
                 release(current);
+                scenes.stop(current, "heat");
                 WorldFeedback.emit(scope, beakblastScene, 1, current.origin(),
                     { moment: "fire", velocity: velocity, reach: current.range(), sparks: sparks, scale: scale,
                         intensity: intensity }, 20);

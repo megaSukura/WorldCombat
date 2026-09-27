@@ -35,6 +35,7 @@
   "worldcombat.skill.thrash.preference.ai.leaveStation.help": "开启后，驻守或站定命令下也会为挤进人群离开原位；关闭则只在原地够得到时开闹。",
   "world_combat.move.thrash.text.flail": "大闹一番 %1$s",
   "world_combat.move.thrash.text.stomp": "重跺 %1$s",
+  "world_combat.move.thrash.text.air": "踏空",
   "world_combat.move.thrash.text.daze": "大闹之后晕头转向",
   "world_combat.move.thrash.text.chip": "磕伤自己 %1$s",
   "effect.world_combat.thrash_daze": "大闹一番（恍惚）"

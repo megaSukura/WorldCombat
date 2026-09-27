@@ -2,6 +2,27 @@
 namespace PokemonSkills {
     const lastrespectsFlight = "world_combat:lastrespects_flight";
     WorldCombat.effect(lastrespectsFlight, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    /** 沿真实弹位把有限数量的鬼影排在弹后同一条通道上；返回弹体是否仍在。 */
+    function lastrespectsProcession(effect: CombatEffect, world: CombatWorld, data: any): boolean {
+        const at = world.projectilePosition(String(data.flight));
+        if (at === null) return false;
+        const raw = WorldCombat.point(data.direction[0], data.direction[1], data.direction[2]);
+        const heading = raw.length() > 1e-6 ? raw.unit() : WorldCombat.point(0, 0, 1);
+        const start = WorldCombat.point(data.position[0], data.position[1], data.position[2]);
+        const offset = at.minus(start);
+        const travelled = Math.max(0, offset.x() * heading.x() + offset.y() * heading.y() + offset.z() * heading.z());
+        const spacing = 0.28, total = Math.max(1, Math.min(20, Math.round(data.ghosts)));
+        const path: number[][] = [];
+        for (let index = 0; index < total; index++) {
+            const back = spacing * index;
+            if (index > 0 && back > travelled + 0.05) break;
+            const point = at.minus(heading.scale(back));
+            path.push([point.x(), point.y(), point.z()]);
+        }
+        WorldFeedback.onEffect(world, effect.id(), "procession_ghosts", lastrespectsGhostScene, 1, at,
+            { moment: "march", path: path, total: total, direction: data.direction });
+        return true;
+    }
     WorldCombat.effectHandler(lastrespectsFlight, "start", effect => {
         const world = effect.world(), data = JSON.parse(effect.state());
         const start = WorldCombat.point(data.position[0], data.position[1], data.position[2]);
@@ -10,9 +31,18 @@ namespace PokemonSkills {
             radius: data.width, range: data.reach, lifetime: 100, hit: "hit", complete: "complete",
             appearance: { sprite: "world_combat_core:cobblemon/generic/fire/wisp", scale: data.width, tint: 0x9FE8D0,
                 glow: true, pierce: data.trail } });
+        data.flight = id; effect.state(JSON.stringify(data));
+        // 弹头随真实弹体走；鬼影队列由 march 每刻按实际弹位重排。
         WorldFeedback.onEffect(world, effect.id(), "procession", lastrespectsScene, 1, start,
             { moment: "march", projectile: id, ghosts: data.ghosts, fallen: data.fallen, width: data.width,
                 direction: data.direction });
+        lastrespectsProcession(effect, world, data);
+        effect.schedule("march", "march", 1, "{}");
+    });
+    WorldCombat.effectHandler(lastrespectsFlight, "march", effect => {
+        const world = effect.world(), data = JSON.parse(effect.state());
+        if (!lastrespectsProcession(effect, world, data)) return;
+        effect.schedule("march", "march", 1, "{}");
     });
     WorldCombat.effectHandler(lastrespectsFlight, "hit", effect => {
         const hit = effect.impact(); if (!hit) return;
@@ -38,7 +68,7 @@ namespace PokemonSkills {
         cooldownParameter: "recharge",
         name: "Last Respects",
         description: "为倒下的伙伴送行：从地里升起随行的鬼影，一路走向对手落下这一扫。同阵营倒下的伙伴越多，鬼影越多、这一扫越重；随行式扫过一条走廊，送行式聚到一点重打一个。",
-        uses: ["伙伴倒下后替他们扫出这一记", "随行时沿路清掉一条走廊", "送行时把一个人重捶出很远"],
+        uses: ["伙伴倒下后替他们扫出这一记", "随行时沿路清掉一条走廊", "送行时把重扫聚到一个人身上"],
         kind: "aim",
         range: 3.4,
         maxRange: 7.0,

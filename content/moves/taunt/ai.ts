@@ -1,8 +1,9 @@
 /**
  * 挑衅 的伙伴 AI 用途：这是这招自己的一套出手计划，不是共享控制位的随手一放。
  *
- * 什么局面有意义：有可见威胁、目标还没被挑衅、它在 ai.maxChase 以内，而且要有一条通视直线——
- *   这句话喊不进墙后。出手时机（ai.opening=正在出手时，默认）先看两点实际收益：
+ * 什么局面有意义：有可见威胁、目标还没被挑衅，且它在 ai.maxChase 以内（愿意追出去的意愿门）。
+ *   通视不是事前拒绝的条件——墙后照样值得走过去：approach 会先找一个能看见目标的合法侧位再喊，
+ *   到位后由 execute 按真实射程与通视复核。出手时机（ai.opening=正在出手时，默认）先看两点实际收益：
  *   目标招式表里有变化招式值得封锁，或它正咬着别的队友、可以把注意拉过来；纯普攻又已经盯着自己的
  *   敌人不浪费这一手（自己刚被打过时仍会以骚扰收尾）。=随时时见威胁就喊，当纯扰动手段。
  * 对谁出手：当前威胁；带着共享身份 taunt 的目标会被跳过，不重复喊。
@@ -43,7 +44,7 @@ namespace PokemonSkills {
         const focus = item.data.config && item.data.config.manner === "goad";
         const ceiling = CompanionBehavior.ai<number>(item, "maxChase", 14) * (focus ? 1.15 : 1);
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > ceiling) return false;
-        if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
+        // 通视由 approach 的侧位选择与 execute 的复核处理；这里只判断值不值得追出去喊。
         if (CompanionBehavior.ai<string>(item, "opening", "opening") !== "opening") return true;
         return tauntStatusMoves(context, target) > 0 || tauntRedirects(context, target) || self.hurtAgo < 40;
     }

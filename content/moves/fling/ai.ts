@@ -14,6 +14,29 @@ namespace CompanionBehavior {
         const berry=NativeItems.berryFrom(flingSnapshot(context));if(!berry)return false;
         return berry.heal>0&&ratio(target)<.9 || berry.cures.some(name=>status(context,target,name));
     }
+    /** 抛弧能不能够到：用本招实际的飞行速度与重力解一次低弧；够不到就不值得出手，交给共享接近。 */
+    function flingArcReachable(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
+        try {
+            const access = world(context), actor = access.source();
+            const values = { world: access, actor: actor, skill: PokemonSkills.skills["fling"], detail: { values: item.data.config || {} } };
+            const speed = PokemonSkills.p("fling", "speed", values), gravity = PokemonSkills.p("fling", "gravity", values);
+            return LivingActions.ballistic(point(source(context).point), point(target.point), speed, gravity) !== null;
+        } catch (error) { return true; }
+    }
+    /** 弧线路上还站着谁：道具会先打中拦路的人，自己人和别的身体分开计数，供不同目标取舍。 */
+    function flingCorridor(context: WorldBehavior.Context, target: Entity): { friendly: number; others: number } {
+        const self = source(context), from = point(self.point), to = point(target.point), span = from.minus(to).length();
+        const nearby: Entity[] = <any>context.facts.nearby || [];
+        let friendly = 0, others = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.health <= 0 || String(other.ref) === String(self.ref) || String(other.ref) === String(target.ref)) continue;
+            const at = point(other.point), closest = WorldGeometry.closestOnSegment(at, from, to);
+            if (at.minus(closest).length() > 0.9 || closest.minus(from).length() >= span - 0.6) continue;
+            if (other.friendly) friendly++; else others++;
+        }
+        return { friendly: friendly, others: others };
+    }
     registerUse("fling", {
         protocols: ["world_combat:attack", "world_combat:ranged", "world_combat:heal"],
         reach: (_context,item)=>item.data.range,
@@ -21,8 +44,15 @@ namespace CompanionBehavior {
             const held=flingHeld(context);if(!held)return false;
             if(!target)return true;
             if(distance(source(context).point,target.point)>ai<number>(item,"maxChase",12))return false;
-            if(target.friendly)return item.data.config.helpFriends!==false&&target.ref!==source(context).ref&&flingHelpful(context,target);
-            return !held.berry && (held.status!=="" || held.flinch || ai<boolean>(item,"allowGear",false));
+            if(target.friendly){
+                if(item.data.config.helpFriends===false||target.ref===source(context).ref||!flingHelpful(context,target))return false;
+                // 喂给伙伴要弧线真的够得到，且中途别被别的身体挡住（谁先挡上就先吃到）。
+                const path=flingCorridor(context,target);
+                return flingArcReachable(context,item,target)&&path.friendly===0&&path.others===0;
+            }
+            if(held.berry||!(held.status!==""||held.flinch||ai<boolean>(item,"allowGear",false)))return false;
+            // 打敌人时别让自己人挡在弧线上，否则道具会先喂到队友身上。
+            return flingCorridor(context,target).friendly===0;
         },
         accepts: function(context,_item,target){return target.health>0&&target.visible&&(!target.friendly||flingHelpful(context,target));},
         priority: function(context,_item,target){

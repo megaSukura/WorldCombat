@@ -6,9 +6,9 @@
  *
  * 色相家族：冷银蓝（0xB8C6D8／0x8FA2BC）为主体，近白（0xEEF4FA）只给细节与边缘；没有第二个色相。
  * 层次：喉间聚声（起手）→ 逐刻前推的薄声环与白亮边缘（击）→ 被扫中者的锐利爆点（每个目标）→ 头顶嗡响的细纹（持续）。
- * 起击收：windup（聚声）→ front（前沿逐刻推进、位置与服务端同步）→ stung（逐目标）→ linger（耳鸣还在，慢慢离场）。
- * 范围：front 的环半径绑 `data.half`（走廊半宽），每刻从服务端收到的最新位置就是前沿真正推进到的距离；
- *   声环所在平面垂直 `data.direction`，所以它始终是一堵横着推出去的薄墙。
+ * 起击收：windup（聚声）→ front（前沿逐刻推进、位置与服务端同步）→ stung（逐目标）→ finale（最后前点独立收束）→ linger（耳鸣还在，慢慢离场）。
+ * 范围：front_wall 直接铺 `data.path`（服务端算出的前沿竖墙四角，高度/宽度与判定同一组 below/above 与 half，每刻只发当前薄片）；
+ *   声环所在平面垂直 `data.direction`，所以它始终是一堵横着推出去的薄墙；finale 在最后前点单独收束。
  * 运动：环随前沿位置的每次更新向前跳一格；粒子寿命很短，尾迹迅速消散。
  * 数：环上密度绑 `data.rings`（物防下降级数派生），每人的爆点数量绑 `data.shocks`，掉级绑 `data.drop`。
  */
@@ -52,10 +52,10 @@ const ScreechDefinition: ParticleDefinition = {
                     color: 0xEEF4FA, alpha: [0.85, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "front_wall", bind: "point", fit: "none", height: 0.5,
+                    name: "front_wall", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    shape: { kind: "circle", thickness: 0.55, radius: { data: "half", fallback: 0.9 } },
-                    orient: "direction", direction: "shape", speed: [0.08, 0.28], spread: 6, spin: 14,
+                    shape: { kind: "polygon" },
+                    direction: "shape", speed: [0.08, 0.28], spread: 6, spin: 14,
                     rate: { data: "rings", fallback: 8 },
                     lifetime: [5, 10], size: [0.2, 0.05],
                     color: 0x8FA2BC, alpha: [0.45, 0], light: "world", maxParticles: 180
@@ -101,6 +101,30 @@ const ScreechDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [8, 16], size: [0.07, 0.01],
                     color: 0xEEF4FA, alpha: [0.7, 0], light: "full", maxParticles: 34
+                }
+            ]
+        },
+        finale: {
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "final_ring", bind: "point", fit: "none", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: { data: "rings", fallback: 8 } },
+                    shape: { kind: "ring", radius: { data: "half", fallback: 0.9 } },
+                    orient: "direction", direction: "shape", speed: [0.08, 0.3], spread: 10,
+                    lifetime: [7, 12], size: [0.4, 0.7], sizeMode: "index",
+                    color: 0xEEF4FA, alpha: [0.9, 0], light: "full", maxParticles: 50
+                },
+                {
+                    name: "final_dust", bind: "point", fit: "none", offset: [0, -0.35, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "rings", fallback: 8 } },
+                    shape: { kind: "line", length: { data: "half", fallback: 0.9 } },
+                    direction: "outward", speed: [0.04, 0.16], drag: 0.9,
+                    lifetime: [6, 12], size: [0.07, 0.02],
+                    color: 0x7C8AA0, alpha: [0.45, 0], light: "world", maxParticles: 40
                 }
             ]
         },

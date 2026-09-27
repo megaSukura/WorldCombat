@@ -2,9 +2,9 @@
  * 鬼火的可执行设计说明。
  *
  * 场面：一只只会鬼火的鬼斯对 4 格外的卡比兽放冷焰，卡比兽没有招式、站着挨烧，距离在射程内，AI 会直接出手。
- * 本招现在是 aim：AI 会锁定这个敌对且物攻占优的目标，鬼火有限转向追它；手动空瞄直飞、撞墙熄灭与免疫反馈属于交互范围。
+ * 本招现在是 aim：AI 会锁定这个非友方目标，鬼火有限转向追它；手动空瞄直飞、撞墙熄灭、撞友方截火与免疫反馈属于交互范围。
  * 必然事实：本招被提交过；目标身上出现过共享灼伤（`world_combat:burn` 效果与 `world_combat:status/burn` 身份）；
- * 灼伤跳过一次伤害。
+ * 本招本身不造成直接伤害（灼伤落上那一刻施法者还没有任何伤害记录）；灼伤跳过一次伤害。
  * 随机结果：鬼火能不能追上目标、灼伤时长与目标走位都写进 note 供读轨迹判断。
  */
 Smoke.scenario("willowisp", function (stage) {
@@ -17,8 +17,9 @@ Smoke.scenario("willowisp", function (stage) {
         stage.expect(stage.casts("willowisp") > 0, "will-o-wisp was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:burn"), "the shared default burn effect landed on the target");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/burn"), "the burn carries the shared identity");
+        stage.expect(stage.damageBy(caster) === 0, "the wisp itself deals no direct damage");
         var start = target.health();
-        stage.note("wisp caught the target", { casts: stage.casts("willowisp"), health: start });
+        stage.note("wisp caught the target", { casts: stage.casts("willowisp"), health: start, directDamage: stage.damageBy(caster) });
         stage.until(320, function () { return stage.damageTo(target) > 0; }, function () {
             stage.expect(stage.damageTo(target) > 0, "the burn dealt damage");
             stage.note("burn ticked", { damageToTarget: Math.round(stage.damageTo(target) * 10) / 10,

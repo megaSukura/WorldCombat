@@ -1,5 +1,8 @@
 /** One song grants independent native blessings; each recipient keeps its own clock. */
 namespace PokemonSkills {
+    PokemonDamage.criticalGuards.define({ id: "world_combat:move_luckychant/critical_offer", apply: hit => {
+        if (CombatStatus.has(hit.world, hit.target, luckychantStatus)) hit.allowed = false;
+    } });
     function luckychantGuard(world: CombatWorld, holder: CombatActor): void {
         const body = world.observe(holder); if (!body) return;
         WorldFeedback.emit(world, luckychantScene, 1, body.position(),
@@ -7,10 +10,25 @@ namespace PokemonSkills {
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, body.height() / 2 + 0.3, 0)), luckychantGuardText, [], 24);
         world.sound("minecraft:block.amethyst_block.chime", body.position(), 12, "{}");
     }
-    // The settled script multiplier may come from an ability; it is not always 1.5.
-    NativeEffects.incomingRules.define({ id: "world_combat:move_luckychant/ward", apply: hit => {
+    // Pokemon 结算的伤害在攻防等级被要害改写之前就把这次要害压掉：要害的收益不只是 ×1.5，
+    // 还会忽略攻方负阶与守方正阶；事后再除倍率还原不了这部分。这里直接置 critical=false 并把 criticalChance 归零，
+    // 聚气／龙声鼓舞读到 0 时不会再把机会加回来。经共享 metadata 阶段，脚本招与宝可梦原生结算同走一条。
+    PokemonDamage.metadata.define({
+        id: "world_combat:move_luckychant/ward",
+        applies: function (context) { return !context.preview && !!context.world && !!context.target; },
+        apply: function (context) {
+            const world = context.world, target = context.target;
+            if (!world || !target || !world.valid(target) || !CombatStatus.has(world, target, luckychantStatus)) return;
+            const data: any = context.metadata;
+            if (data.critical === true) luckychantGuard(world, target);
+            data.critical = false; data.criticalChance = 0;
+        }
+    });
+    // Native (non-Pokemon) criticals are a flat multiplier with no stage rewrite, so removing exactly that multiplier is
+    // exact there; Pokemon-computed damage never reaches here with a live critical because the metadata rule already cleared it.
+    NativeEffects.incomingRules.define({ id: "world_combat:move_luckychant/native", apply: hit => {
         const data = hit.data, multiplier = Number(data && data.criticalMultiplier);
-        if (!data || !data.critical || !(data.amount > 0) || data.bypassesInvulnerability ||
+        if (!data || data.nativeCriticalPrepared === true || !data.critical || !(data.amount > 0) || data.bypassesInvulnerability ||
             !(multiplier > 1) || !isFinite(multiplier) || !CombatStatus.has(hit.world, hit.target, luckychantStatus)) return;
         data.amount /= multiplier; data.critical = false; data.criticalMultiplier = 1; data.criticalChance = 0;
         luckychantGuard(hit.world, hit.target);
@@ -88,8 +106,11 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", early: config.wish === "early" ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) { return { radius: 3.5, geometry: "circle", style: "chant", color: 0xFFD26E,
-            label: config && config.wish === "early" ? "早愿" : "深愿" }; },
+        indicator: function (config, pokemon) {
+            var context: NumberContext = { pokemon: pokemon!, skill: skills[luckychantId], detail: { values: config } };
+            return { radius: pokemon ? p(luckychantId, "chantRadius", context) : 3.5, geometry: "circle", style: "chant", color: 0xFFD26E,
+                label: config && config.wish === "early" ? "早愿" : "深愿" };
+        },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             const duration = Math.round(p(luckychantId, "chantTicks", action));

@@ -3,7 +3,9 @@
  *
  * 什么局面下出手：对手可见、敌对、活着，且在 `ai.maxChase` 之内。它是廉价、无副作用的贴身连抓，
  * 所以平时的 `priority` 只是普通近身候选；一旦亲密度低到 `ai.grudge` 以下（这招正因此变强），抬到 55 抢在别的输出前出手；
- * 目标残血且开启 `ai.finish` 时再抬一档，用连抓收尾。AI 读的是共享帧里的 `context.facts.friendship`。
+ * 目标残血且开启 `ai.finish` 时再抬一档，用连抓收尾。
+ * 连抓要求目标留在贴身处：已经在近身够得着的距离内多加一点分，正在逃跑的目标少分，让位给一击即走的收尾手段。
+ * AI 读的是共享帧里的 `context.facts.friendship` 与共享的逃跑感知。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("frustration", {
@@ -25,7 +27,11 @@ namespace PokemonSkills {
             const friendship = context.facts.friendship === undefined ? 255 : Number(context.facts.friendship);
             let value = friendship <= CompanionBehavior.ai<number>(capability, "grudge", 90) ? 55 : 20;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) value += 15;
-            return value;
+            // 近身连抓的收益取决于目标是否留在够得着的距离：贴身时后面的爪更可能落上。
+            if (CompanionBehavior.distance(self.point, target.point) <= capability.data.range * 0.6) value += 5;
+            // 正在逃跑的目标容易在爪间走脱，让位给一击即走的收尾手段。
+            if (CompanionBehavior.fleeing(context, target)) value -= 8;
+            return Math.max(0, value);
         }
     });
 

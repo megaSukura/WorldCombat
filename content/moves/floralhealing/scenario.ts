@@ -27,7 +27,7 @@ Smoke.scenario("floralhealing", function (stage) {
         stage.expect(firstAt > injuredAt, "the first flower restored the ally on the spot");
         stage.after(40, function () {
             stage.expect(ally.health() > firstAt, "the second flower landed after the delay and restored more");
-            stage.note("花疗在伙伴身上分两朵结算：第一朵当场补一半，bloomDelay 之后开第二朵并读取受益人**当时**的青草场地状态（站在青草上按 grassBoost 开大）；受益人可移动，花簇跟人走。本场景验证两朵各自的基础治疗与两朵合计不超总上限，青草加成需要另一施法者的青草场地，留给完整装配的人工试玩。", {
+            stage.note("花疗在伙伴身上分两朵结算：第一朵先复核施放距离与可达线，够不到就不治疗；送达后花苞（attach）总在伙伴身上绽开，只有实际补到生命才出现回复亮光（bloom）与浮字。bloomDelay 之后开第二朵并读取受益人**当时**的青草场地状态（站在青草上按 grassBoost 开大）；受益人可移动，花簇跟人走。本场景验证两朵各自的基础治疗与两朵合计不超总上限，青草加成需要另一施法者的青草场地，留给完整装配的人工试玩。", {
                 casterCasts: stage.casts("floralhealing", caster),
                 allyInjured: Math.round(injuredAt * 10) / 10,
                 allyAfterFirst: Math.round(firstAt * 10) / 10,

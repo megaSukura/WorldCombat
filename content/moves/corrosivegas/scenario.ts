@@ -4,8 +4,8 @@
  * 场面：石地。只会腐蚀气体的臭鼬坦克（Skuntank）带着一名手持浆果的队友（同一队），对面是一名手持铁剑、
  *   原地不动的掠夺者。先让 AI 在「雾里有装备队友」的局面下站着，再让队友离开，观察它是否才动手。
  *
- * 必然事实：有装备队友在雾半径内时本招没有被提交；队友离开后本招被提交，雾里那名持剑敌人身上出现沾酸身份，
- *   铁剑没有被删除而是掉了 6% 最大耐久（15 点），保留物品本体。命中的精确粒子与颜色留给试玩。
+ * 必然事实：有装备队友在雾半径内时本招没有被提交；队友离开后本招被提交，雾里那名持剑敌人手上的铁剑
+ *   按原生耐久掉了 6% 最大耐久（15 点），物品本体与组件保留、没有被删除。命中的精确粒子与颜色留给试玩。
  */
 Smoke.scenario("corrosivegas", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 8], "minecraft:stone");
@@ -25,15 +25,13 @@ Smoke.scenario("corrosivegas", function (stage) {
         // 队友走远，负收益解除，观察这一刻才出手。
         stage.command("tp " + ally.ref.split("/")[0] + " 200 -60 200");
         stage.until(900, function () {
-            return stage.casts("corrosivegas", caster) > 0 && stage.hadMobEffect(near, "world_combat:status/corroded");
+            return stage.casts("corrosivegas", caster) > 0 && (stage.heldDamage(near) || 0) > 0;
         }, function () {
             stage.expect(stage.casts("corrosivegas", caster) > 0, "队友离开后腐蚀气体被放出来了");
-            stage.expect(stage.hadMobEffect(near, "world_combat:status/corroded"),
-                "雾里至少一个目标身上出现了沾酸的共享身份");
             stage.expect(stage.heldItem(near) === "minecraft:iron_sword", "corrosion retained the real sword instead of deleting it");
             stage.expect(stage.heldDamage(near) === 15, "the native iron sword lost six percent of its 250 durability");
-            stage.note("Component preservation, exact wear, stale refusal and the one-durability floor are checked by the shared equipment mechanism regression.",
-                { allyHeld: stage.heldItem(ally) });
+            stage.note("Component preservation, exact wear, stale refusal and real breakage are checked by the shared equipment mechanism regression.",
+                { allyHeld: stage.heldItem(ally), swordDamage: stage.heldDamage(near) });
             stage.done();
         }, "队友离开后喷酸");
     });

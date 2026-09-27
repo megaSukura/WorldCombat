@@ -29,5 +29,10 @@
   "world_combat.move.skillswap.text.same": "Same Ability, nothing to swap",
   "world_combat.move.skillswap.text.returned": "Exchange ended",
   "worldcombat.skill.skillswap.world": "Against a non-Pokémon, exchange only the attack, movement, armour, toughness and knockback attributes both bodies actually have, for %1$s. When either window ends, remove this pair's contributions. Equipment and later unrelated modifiers remain with their owners.",
-  "world_combat.move.skillswap.text.attributes": "shared attack, movement and defence attributes"
+  "world_combat.move.skillswap.text.attributes": "shared attack, movement and defence attributes",
+  "world_combat.move.skillswap.attribute.attack_damage": "Attack HP",
+  "world_combat.move.skillswap.attribute.movement_speed": "Move speed",
+  "world_combat.move.skillswap.attribute.armor": "Armor",
+  "world_combat.move.skillswap.attribute.armor_toughness": "Toughness",
+  "world_combat.move.skillswap.attribute.knockback_resistance": "Knockback resist"
 }

@@ -13,8 +13,8 @@
  *   gallop     冲锋速度：速度决定每刻推进多快。
  *   collisionRadius 牛身半径：碰撞箱高度决定实际扫过的胶囊多粗。
  *   shove      顶开距离：体重决定把目标顶开多远。
- *   wardBreak  碎壁半径：体重决定撞中活体时额外震碎多广的一片屏障（身体扫过的屏另外单独碎）。
  *   tempo／aftercast／recharge 时序：速度决定起势、收势与再冲的等待。
+ * 屏障只按身体真实同高度穿过的轨迹碎，没有“撞中活体再按大半径扩散破屏”的附赠范围。
  * 配置 trample（贯穿式）：一路撞穿、最多能撞到四个目标，但每一下 ×0.9、顶开更远、冷却 +8 刻；
  *   猛停式只撞第一个目标、单下 ×1.1、顶得更近。
  *
@@ -101,15 +101,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "撞实后把目标沿冲势顶开的距离；越重顶得越远，贯穿式顺势把目标甩得更开。"
             }),
-        /** 碎壁半径：基础 8 格，体重每比 1000 重 1 加 0.001（上限 +2.5）；夹 8..10.5。 */
-        wardBreak: formula(
-            F.base(8)
-                .plus(F.body("weight").minus(1000).times(0.001).clamp(-0.5, 2.5))
-                .clamp(8, 10.5).round(2),
-            "碎壁半径", {
-                unit: "格",
-                description: "撞中活体时额外震碎屏障的范围；此外身体真实扫过的光幕都会直接碎掉。被屏障护住的一整簇目标会失去反射壁、光墙与极光幕，越重的个体震得越广。"
-            }),
         /** 起手：基础 8 刻，速度每比 55 快 1 少 0.04（上限 −1.5）；夹 4..12。 */
         tempo: seconds(
             F.base(8)
@@ -148,7 +139,7 @@ namespace PokemonSkills {
 
     describe("ragingbull", [
         { key: "description.0", values: ["ram","collisionRadius"] },
-        { key: "description.1", values: ["charge","gallop","shove","wardBreak"] },
+        { key: "description.1", values: ["charge","gallop","shove"] },
         { key: "trample.on", values: [], when: function (context) { return read(context.detail.values, ["trample"]) === true; } },
         { key: "trample.off", values: [], when: function (context) { return read(context.detail.values, ["trample"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

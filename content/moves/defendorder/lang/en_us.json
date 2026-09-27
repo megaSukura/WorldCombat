@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.defendorder.summary": "Calls a squad of underlings onto its body to form a living shell: each one alive gives +1 Defense and +1 Sp. Def, and each one killed thins the shell at once. The only member of its group whose benefit rides on living bodies — the foe can shoot the underlings off first. Swarm style has more, higher ceiling and frailer bugs; elite style has fewer, sturdier ones.",
+  "worldcombat.skill.defendorder.summary": "Calls a squad of underlings onto its body to form a living shell: each one that clings close and in sight gives +1 Defense and +1 Sp. Def, and each one killed thins the shell at once. The only member of its group whose benefit rides on living bodies — the foe can shoot the underlings off first, and ones walled off or still flying in give nothing. Swarm style has more, higher ceiling and frailer bugs; elite style has fewer, sturdier ones.",
   "worldcombat.skill.defendorder.use.0": "Call a squad onto the body and stack both defenses",
   "worldcombat.skill.defendorder.use.1": "Make the foe clear the bugs before it can reach you",
   "worldcombat.skill.defendorder.use.2": "Lay down a breakable shield in a close-range trade",
-  "worldcombat.skill.defendorder.description.0": "Calls %1$s underlings onto the body; each one alive raises Defense and Sp. Def by %2$s stage.",
+  "worldcombat.skill.defendorder.description.0": "Calls %1$s underlings onto the body; each one that clings close and in sight raises Defense and Sp. Def by %2$s stage. Ones stuck in blocks, walled off, or still flying in grant nothing.",
   "worldcombat.skill.defendorder.description.1": "The underlings stay about %1$s, cling %2$s blocks out, and each has %3$s health.",
   "worldcombat.skill.defendorder.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.defendorder.swarm.on": "Swarm: +2 underlings and a higher ceiling, but each has 3 health and can be wiped in one sweep.",
@@ -31,5 +31,5 @@
   "world_combat.move.defendorder.text.call": "Defend Order (%1$s underlings)",
   "world_combat.move.defendorder.text.scatter": "The shell dispersed",
   "effect.world_combat.defendorder_guard": "Defend Order",
-  "worldcombat.skill.defendorder.description.additional": "The underlings are attackable targets: each one killed withdraws its stage at once, and once all are cleared the shell grants nothing more. Only one shell is kept at a time and it cannot be recast until it disperses; when its time runs out or it is cleared, the underlings scatter together and every stage is withdrawn."
+  "worldcombat.skill.defendorder.description.additional": "The underlings are attackable targets: each one killed withdraws its stage at once, and one that is walled off is not a defensive source. When the last one is lost (killed or expired) the shell ends and the cooldown alone gates a recast; when its time runs out or it is cleared, the underlings scatter together and every stage is withdrawn."
 }

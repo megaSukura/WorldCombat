@@ -10,12 +10,11 @@
  * 放完接什么：交回共享交战计划；它是一记贴身横扫，不负责追击。
  */
 namespace PokemonSkills {
-    /** 从突进终点朝 target 方向的扇面里，当前可见敌人的数量；用于选择「这一刀能扫到几个」。 */
+    /** 沿目标方向的斩击能覆盖到的当前可见敌人数；横扫按扇面、突刺按正前方一条短直线。 */
     function solarbladeFan(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
         const reach = typeof capability.data.range === "number" ? capability.data.range : 3.6;
         const thrust = !!(capability.data.config && capability.data.config.thrust);
-        const arc = (thrust ? 50 : 150) * Math.PI / 360;
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return 1;
@@ -29,7 +28,13 @@ namespace PokemonSkills {
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const distance = Math.sqrt(ox * ox + oz * oz);
             if (distance > limit || distance < 0.01) continue;
-            if (Math.acos(Math.max(-1, Math.min(1, (ox * hx + oz * hz) / distance))) > arc) continue;
+            const forward = ox * hx + oz * hz;
+            if (forward < 0) continue;
+            const lateral = Math.abs(ox * hz - oz * hx);
+            const half = (typeof other.width === "number" ? other.width : 0.9) / 2;
+            if (thrust) {
+                if (lateral > 0.35 + half) continue;
+            } else if (Math.atan2(lateral, forward) > 75 * Math.PI / 180) continue;
             count++;
         }
         return Math.max(1, count);
@@ -85,7 +90,7 @@ namespace PokemonSkills {
     });
 
     const solarbladeThrust = field(pathOf("thrust"), "突刺形态", "boolean", {
-        help: "开启（突刺）：向前踏得更远（×1.5）、斩击更重（×1.25）、刀锋略长，但扇面收成一条窄线（×0.42）、基本只砍到正前方一个，收招多 1 刻；关闭（横扫）：刀锋铺得更开（×1.25 角度），一次扫到挤在面前的一排，但单发更轻、冲得更短。"
+        help: "开启（突刺）：向前踏得更远（×1.5）、斩击更重（×1.25）、刀锋略长，但改为一记沿正前方的短直刺（只沿一条线命中、不再扫开扇面），收招多 1 刻；关闭（横扫）：刀锋铺得更开（×1.25 角度），一次扫到挤在面前的一排，但单发更轻、冲得更短。"
     });
     const solarbladeChase = number("ai.maxChase", "交战半径", 3, 24, 1);
     solarbladeChase.help = "超过这个距离就不主动踏出，先由共享接近把身位收进刀程；越大越愿意追出去斩。";

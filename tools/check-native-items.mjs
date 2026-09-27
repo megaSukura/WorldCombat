@@ -134,4 +134,20 @@ check('authored wear preserves components, rejects stale snapshots and never des
   assert.equal(I.wearHeld(access,wearer,{...nearlyBroken,durability:{damage:25,maximum:250,unbreakable:true}},15).reason,'not-damageable');
   assert.equal(writes,2);
 });
+check('conditional exchange keeps the required receiver empty through native compare-and-set',()=>{
+  const first={domain:()=> 'minecraft'},second={domain:()=> 'minecraft'};
+  let occupied=false,callCount=0;
+  const item={provider:()=> 'minecraft',slot:()=> 'mainhand',index:()=>0,item:()=> 'minecraft:apple',count:()=>1,tagged:()=>false,
+    stack:()=>({serialized:()=> 'apple-stack',damage:()=>0,maxDamage:()=>0,hasComponent:()=>false})};
+  const access={valid:()=>true,equipment:actor=>actor===first?(occupied?[item]:[]):[item],
+    equipmentExchangeResult(...args){callCount++;assert.equal(args[4],'');assert.equal(args[9],'apple-stack');return '{"ok":true}';}};
+  assert(I.exchangeHeld(access,first,second,1,{firstEmpty:true}).ok);
+  occupied=true;assert.equal(I.exchangeHeld(access,first,second,1,{firstEmpty:true}).reason,'destination-occupied');
+  assert.equal(callCount,1);
+});
+check('berry receipts report the stage delta actually accepted',()=>{
+  const original=E.boost;E.boost=()=>0;
+  try {const result=I.eat(world,actor,I.berryOfItem('cobblemon:liechi_berry'),1);assert.equal(result.stages,0);assert.equal(result.stat,'atk');}
+  finally {E.boost=original;}
+});
 console.log(`PASS ${cases} native item/RuleValues checks with inline fixture definitions`);

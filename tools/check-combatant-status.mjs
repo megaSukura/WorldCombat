@@ -63,6 +63,7 @@ const world = { source: () => attacker, tick: () => now, random: () => randomRol
   operation: () => true, health(actor, delta) { actor.health += delta; return delta; },
   marker(actor, id, ticks, amplifier) { actor.markers.set(id, { expires: ticks === -1 ? Infinity : now + ticks, amplifier }); },
   mobEffect(actor, id) { return view(actor, id); },
+  matchesMobEffect(actor, id, key) { const value = this.valid(actor) && this.mobEffect(actor, id); return !!value && String(value.key()) === key; },
   mobEffects(actor) { return [...actor.markers.keys()].map(id => view(actor, id)).filter(Boolean); },
   removeMobEffect(actor, id, expected) { if (view(actor, id)?.key() !== expected) return false; actor.markers.delete(id); return true; },
 };
@@ -228,5 +229,33 @@ check('pre-application native carrier classification preserves beneficial and ne
   assert.equal(S.impose(world, ordinary, 'fresh_neutral', 40, {effect:'fixture:incoming_neutral'}).applied, false);
   assert(S.impose(world, ordinary, 'fresh_neutral', 40, {effect:'fixture:incoming_neutral',side:'neutral'}).applied);
   S.gate.remove('checks:harmful-only-ward');
+});
+check('declared self cures exempt only their own final restrictions', () => {
+  const S=context.CombatStatus;
+  const policy={blocked:{mental:true,independent:true},failures:{confused:.5,unrelated:.4},
+    detail:{mental:{status:'fixture_lock'},independent:{status:'sleep'},confused:{status:'confusion'},unrelated:{status:'paralysis'}}};
+  S.selfCure(policy,['fixture_lock','confusion']);S.applySelfCures(policy);
+  assert.equal(policy.blocked.mental,undefined);assert.equal(policy.failures.confused,undefined);
+  assert.equal(policy.blocked.independent,true);assert.equal(policy.failures.unrelated,.4);
+  assert.equal(S.actionReason(policy),'independent','another live restriction still blocks the action');
+});
+check('paired aim contributions change only the selected target and preview never carries a damage receipt', () => {
+  const N=context.NativeEffects;
+  native.individual=N.empty(); native.individual.stages.accuracy=-6;
+  let seen;
+  N.aimRules.define({id:'checks:paired-aim', apply:value=>{
+    seen=value.data;
+    if(value.source===native && value.target===ordinary)value.precision=3;
+  }});
+  try {
+    assert.equal(N.hitChance(world,native,ordinary),1);
+    assert.equal(seen,undefined);
+    assert.equal(N.hitChance(world,native,attacker),1/3);
+    const receipt={damageId:27};
+    assert.equal(N.hitChance(world,native,ordinary,receipt),1);
+    assert.equal(seen,receipt);
+    assert.equal(N.effectiveStage(world,native,'accuracy'),-6);
+    assert.equal(N.hitChance(world,attacker,ordinary),1);
+  } finally { N.aimRules.remove('checks:paired-aim'); }
 });
 console.log(`PASS combatant status: ${count} scenarios; shared identity, default behaviors, secondary route, variants and the native mirror`);

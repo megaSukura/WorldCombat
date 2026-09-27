@@ -36,5 +36,6 @@
   "world_combat.move.sludgebomb.text.burst": "炸到 %1$s 个",
   "world_combat.move.sludgebomb.text.fuse": "引信嗞嗞响",
   "world_combat.move.sludgebomb.text.poison": "中毒了",
-  "world_combat.move.sludgebomb.text.fizz": "只炸起一蓬烟"
+  "world_combat.move.sludgebomb.text.fizz": "只炸起一蓬烟",
+  "world_combat.move.sludgebomb.text.scatter": "弹壳落不到实地，散了一摊"
 }

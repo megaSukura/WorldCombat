@@ -1,4 +1,8 @@
-/** 原生 poison 负责唯一毒伤时钟；本效果只逐级加深并拥有这次施毒的解除生命周期。 */
+/**
+ * 原生 poison 负责唯一毒伤时钟；本效果只逐级加深并拥有这次施毒的解除生命周期。
+ * 加深从目标身上真正生效的毒载体强度起步：重施时已有更强的毒不被本招的 amp1 降级或重置；
+ * lease 只在载体仍存在时续跑，解毒后立刻停止加深。飞行表现归动作所有，按真弹结束点收束。
+ */
 namespace PokemonSkills {
     const toxicScene = "world_combat:move_toxic";
     const ToxicVenom = "world_combat:toxic_venom";
@@ -82,11 +86,30 @@ namespace PokemonSkills {
             const venomTicks = p("toxic", "venomTicks", action);
             const interval = Math.max(1, Math.round(p("toxic", "escalateInterval", action)));
             const cap = Math.max(1, Math.round(p("toxic", "ampCap", action)));
+            const scenes = WorldFeedback.actionScenes(toxicScene, 1);
+            let resolved = false, flight = "";
             sound(action, "cobblemon:move.sludgebomb.actor");
-            const flight = LivingActions.projectile(action, {
+
+            function finish(current: CombatAction): void {
+                scenes.stop(current, "travel");
+                if (resolved) { done(current); return; }
+                resolved = true;
+                // 真弹的结束点由宿主保留到完成回调内；读不到就不补假终点。
+                const scope = current.world(), end = scope.projectilePosition(flight);
+                if (end !== null) {
+                    WorldFeedback.emit(scope, toxicScene, 1, end, { moment: "fizzle" }, 18);
+                    WorldFeedback.text(scope, end, toxicFizzleText, [], 24);
+                    sound(current, "minecraft:entity.generic.splash");
+                }
+                done(current);
+            }
+
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius,
                 appearance: { sprite: "cobblemon:particle/moves/sludgebomb" },
                 impact: function (current, hit) {
+                    if (resolved) return;
+                    resolved = true;
                     const body = current.world();
                     const target = hit.target();
                     if (target === null || !body.valid(target)) {
@@ -99,15 +122,20 @@ namespace PokemonSkills {
                         WorldFeedback.emit(body, toxicScene, 1, hit.position(), { moment: "immune", target: String(target.ref()) }, 22);
                         return;
                     }
+                    // 从目标身上真正生效的毒载体读取强度：已有更强的毒不被本招的逻辑 amp1 降级或重置。
+                    const poison = MobEffects.read(body, target, "minecraft:poison");
+                    if (poison === null) return;
+                    const amp = Math.max(1, poison.amplifier());
                     body.effects(target, ToxicVenom).forEach(effect => body.operation(effect.id(), "world_combat:dispel", "{}"));
-                    body.effect(ToxicVenom, target, JSON.stringify({ interval: interval, cap: cap, amp: 1 }), venomTicks);
+                    body.effect(ToxicVenom, target, JSON.stringify({ interval: interval, cap: cap, amp: amp }), venomTicks);
                     const ref = String(target.ref());
                     WorldFeedback.emit(body, toxicScene, 1, hit.position(), { moment: "root", target: ref }, 26);
                     WorldFeedback.text(body, hit.position(), toxicRootText, [], 30);
                     sound(current, "cobblemon:move.sludgebomb.target");
                 }
-            }, done);
-            WorldFeedback.emit(world, toxicScene, 1, action.origin(), { moment: "travel", projectile: flight, target: action.target() ? String(action.target()!.ref()) : "" }, 60);
+            }, finish);
+            scenes.show(action, "travel", action.origin(), { moment: "travel", projectile: flight,
+                target: action.target() ? String(action.target()!.ref()) : "" });
         }
     });
 }

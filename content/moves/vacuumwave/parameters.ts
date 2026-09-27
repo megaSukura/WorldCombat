@@ -4,9 +4,10 @@
  * 原生事实：格斗／特殊／威力 40／命中 100／PP 30／优先度 +1／不接触、无次要效果（Cobblemon 1.8 / Showdown）。
  *   描述「挥动拳头，掀起真空波。必定能够先制攻击」。
  *
- * 翻译：本招把「先制」翻成一记**沿地面扫出去的环形低压**——抡拳把空气抽空，一道真空波贴着地面向前推；
- *   它不接触、按特殊结算，是这一族里唯一的远程与特殊招。真空不只是打人：波面经过的敌人被**抽向施法者**
- *   （真空吸），越轻的身板被拽得越远——它能把逃开的人拉回近身、把散开的敌人扫成一堆。
+ * 翻译：本招把「先制」翻成一记**沿瞄准方向推出去的低压空气波**——抡拳把空气抽空，一道真空波从身前向前推；
+ *   它不接触、按特殊结算，是这一族里唯一的远程与特殊招。真空不只是打人：波面在**本刻新扫过的那一段厚带**里
+ *   结算，被扫到的敌人被**抽向施法者**（真空吸），越轻的身板被拽得越远——它能把逃开的人拉回近身、把散开的
+ *   敌人扫成一堆；波面过去之后空出来的地方不再有害，头顶与身侧的空气柱才是它的实际高度。
  *   它身位不动，所以任何时候都能出，也可以在别的招之后立刻补一下。
  *
  * 与场上最像的招分开：音速拳是贴身的一记直拳、只打第一个；水枪是一小口水弹；暗影拳是单体拖拽。
@@ -29,6 +30,8 @@
 namespace PokemonSkills {
     export const vacuumwaveId = "vacuumwave";
     export const vacuumwaveScene = "world_combat:move_vacuumwave";
+    /** 逐刻发真实厚带与前弧的自定义客户端场景（只画线，不生成粒子或实体）。 */
+    export const vacuumwaveFrontScene = "world_combat:move_vacuumwave_front";
     export const vacuumwaveHitText = "world_combat.move.vacuumwave.text.hit";
     export const vacuumwaveMissText = "world_combat.move.vacuumwave.text.miss";
 

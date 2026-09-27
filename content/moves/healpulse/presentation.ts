@@ -5,9 +5,10 @@
  *   抵达伙伴时整圈化开、把他裹住。
  * 色相家族：波青 0x8FD8E8 作主体，近白 0xEAFBFF 作高光与回复，淡紫 0x9AA8E0 只作余韵。
  * 拍子：起（windup）／送（emit）／行（seek）／化（wash）；超范围或伙伴离场走 fizzle。
- * 运动：seek 由服务端每刻更新同一份数据——`point` 是波前当前位置、`path` 是「施法者→波前」已走过的光带、
- *   `direction` 是施法者→伙伴的实时方向。wave_front 绑 point 并靠 orient:"direction" 把环面转向行进方向，
- *   玩家读到的是一个真的在往前走的前沿；wave_lane 绑 path 沿已走过的线段铺开、朝向伙伴。
+ * 运动：seek 由服务端每刻更新同一份数据——`point` 是波前当前真实位置、`path` 是这一小段刚扫过的「上一波前→当前波前」、
+ *   `direction` 是波前当下的行进方向。wave_front 绑 point 并靠 orient:"direction" 把环面转向行进方向，
+ *   玩家读到的是一个真的在往前走的前沿；wave_lane 绑 path 只铺这一小段（不整段重发），逐刻累积成走过的光带。
+ *   服务端在真实到达、撞墙或行程耗尽时 stop/finish 这个持续场景；moment 的固定 stop 已放开，飞行多久就发多久。
  * 数：快慢与粗细读 `density`（光点换算）、`radius`（波动半径）、`frontScale`（波前随行程放大）、
  *   `laneSize`／`sparkSize`（随体型与特攻的上下限）；wash 的化开数量绑定 `glow`，只随**实际回复量**决定，补得越足越亮。
  */
@@ -60,10 +61,10 @@ const HealPulseDefinition: ParticleDefinition = {
         },
         seek: {
             duration: 0,
-            exit: { stop: 6, drain: 14 },
+            exit: { stop: 200, drain: 16 },
             emitters: [
                 {
-                    name: "wave_lane", bind: "path", fit: "none", offset: [0, 0.45, 0],
+                    name: "wave_lane", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
                     rate: { data: "density", fallback: 6 }, shape: { kind: "polyline", closed: false },
                     direction: "toward", speed: [0.04, 0.12], drag: 0.9,
@@ -71,7 +72,7 @@ const HealPulseDefinition: ParticleDefinition = {
                     color: 0x8FD8E8, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
-                    name: "wave_front", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "wave_front", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: { data: "density", fallback: 6 }, shape: { kind: "ring", radius: { data: "radius", fallback: 0.75 } },
                     orient: "direction", direction: "shape", speed: [0.02, 0.08], drag: 0.92,
@@ -79,7 +80,7 @@ const HealPulseDefinition: ParticleDefinition = {
                     color: 0xEAFBFF, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 70
                 },
                 {
-                    name: "wave_spark", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    name: "wave_spark", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
                     rate: { data: "density", fallback: 6 }, shape: { kind: "sphere", radius: { data: "radius", fallback: 0.4 } },
                     direction: "shape", speed: [0.03, 0.12], drag: 0.94,

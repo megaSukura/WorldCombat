@@ -6,10 +6,11 @@
  *
  * 四幕：
  *   起（hoist，提交前）：碎冰向身前汇聚、凝成巨冰，只播预告（这是全家最长的前摇，可被打断）。
- *   掷（throw）：提交后巨冰沿抛物线飞向点选处，拖着冰尘，落点上方摆着下落影；地形挡得住它。
- *   碎（shatter）：**只在实际碰撞点**结算——正面命中的目标吃满 mass 并按 flinchChance 掷畏缩，
- *       碎裂半径内其他敌人各吃一记 splash；落点结出冰面、中心竖起 spikeHeight 格冰锥（linger，到期还原），
- *       只有原生真正放下的冰锥位置才亮起。
+ *   掷（throw）：提交后巨冰从与解算相同的那一点、按同一份弧线飞出，拖着冰尘；下落影摆向真弹预计的第一处碰撞，
+ *       随动作结束一起清理。地形挡得住它。
+ *   碎（shatter）：**只在实际碰撞点**结算——正面命中的目标吃满 mass 并按 flinchChance 掷畏缩、走 hitDisplace 推退；
+ *       只从落点同侧可达的其他敌人各吃一记 splash；落点结出冰面、中心竖起 spikeHeight 格冰锥（linger，到期还原），
+ *       逐格由原生地形裁决，已有活体占据或无支撑的格子跳过，只有真正放下的冰锥位置才亮起。
  *   果（hit / miss）：浮字报出砸中几个，或“落空”；冰面停留 iceTicks。
  *   飞行结束却什么都没撞到时（越顶、飞出世界），巨冰就此消散：**不在旧目标点补炸、也不造冰**。
  *
@@ -40,10 +41,51 @@ namespace PokemonSkills {
         return delta.length() < 0.01 ? fallback : delta.unit();
     }
 
+    /** 空气中、剩余路程内的第一处方块接触；水、未知区块或到程无碰撞时不显示落点。 */
+    function mountaingaleForecast(world: CombatWorld, origin: CombatPoint, velocity: CombatPoint, gravity: number,
+        range: number, lifetime: number): CombatImpact | null {
+        if (!(range > 0) || !(lifetime > 0)) return null;
+        const points = LivingActions.ballisticPath(origin, velocity, gravity, lifetime);
+        let travelled = 0;
+        for (let i = 1; i < points.length; i++) {
+            const delta = points[i].minus(points[i - 1]), steps = Math.max(1, Math.ceil(delta.length() / .2));
+            const hit = world.clipBlocks(points[i - 1], points[i]);
+            if (hit === null) return null;
+            const end = hit.blocked() ? hit.position() : points[i];
+            for (let j = 0; j <= steps; j++) {
+                const fluid = world.fluid(points[i - 1].plus(end.minus(points[i - 1]).scale(j / steps)));
+                if (fluid === null || !fluid.empty()) return null;
+            }
+            if (hit.blocked()) return hit;
+            travelled += delta.length();
+            // 原生先处理整刻接触，再检查总路程预算。
+            if (travelled >= range) return null;
+        }
+        return null;
+    }
+
+    function mountaingaleLaunch(action: CombatAction) {
+        const world = action.sense(), body = world.observe(action.actor());
+        const origin = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * .6, 0));
+        const aimed = action.targetPosition(), speed = p("mountaingale", "flightSpeed", action);
+        const gravity = p("mountaingale", "arcFall", action);
+        const direction = LivingActions.ballistic(origin, aimed, speed, gravity)
+            || mountaingaleHeading(origin, aimed, action.direction());
+        return { origin: origin, velocity: direction.scale(speed), direction: direction, speed: speed,
+            gravity: gravity, range: Math.max(9, aimed.minus(origin).length() + 4) };
+    }
+
+    function mountaingaleWarning(action: CombatAction, scenes: WorldFeedback.ActionScenes, hit: CombatImpact | null, key = "warning"): void {
+        if (hit === null) { scenes.stop(action, key); return; }
+        const at = hit.position();
+        scenes.show(action, key, at, { moment: hit.blockFace() === "up" ? "warning" : "contact",
+            radius: p("mountaingale", "shatterRadius", action), point: [at.x(), at.y(), at.z()] });
+    }
+
     /**
      * 落点结出冰面、中心竖起一小簇冰锥；地面与冰锥各自租借，到期原方块回来。
-     * 地形经原生 `terrainResult` 放置：被保护／不可放的格子会被原生跳过，只有真正放下的冰锥位置才返回，
-     * 供表现按实际位置点亮。未落地时调用方不会走到这里。
+     * 地形逐格交由原生 `terrainResult` 裁决（bestEffort）：被保护／无支撑／已有活体占据的格子跳过，
+     * 只返回真正放下的冰锥位置供表现点亮。未落地时调用方不会走到这里。
      */
     function mountaingaleIce(world: CombatWorld, point: CombatPoint, radius: number, ticks: number, spikeHeight: number): number[][] {
         var patch: any[] = [], spikes: any[] = [], r = Math.ceil(radius);
@@ -74,11 +116,12 @@ namespace PokemonSkills {
                 break;
             }
         }
-        if (patch.length) { try { world.terrain(JSON.stringify({ cells: patch, replace: true, linger: true }), ticks); } catch (error) { } }
+        if (patch.length) { try { world.terrain(JSON.stringify({ cells: patch, replace: true, linger: true, bestEffort: true }), ticks); } catch (error) { } }
         var placedSpikes: number[][] = [];
         if (spikes.length) {
             try {
-                var result = JSON.parse(String(world.terrainResult(JSON.stringify({ cells: spikes, replace: true, linger: true }), ticks)));
+                // 逐格交由原生裁决：被保护、无支撑或已有活体占据的格子跳过，只亮真正放下的冰锥。
+                var result = JSON.parse(String(world.terrainResult(JSON.stringify({ cells: spikes, replace: true, linger: true, bestEffort: true, ground: true }), ticks)));
                 var placed: any[] = result && result.placed ? result.placed : [];
                 for (var i = 0; i < placed.length; i++)
                     placedSpikes.push([placed[i][0], placed[i][1], placed[i][2]]);
@@ -122,15 +165,27 @@ namespace PokemonSkills {
             action.present("mountaingale:hoist", mountaingaleScene, 1, action.origin(),
                 JSON.stringify({ moment: "hoist", glacier: config && config.glacier === true,
                     point: [aimed.x(), aimed.y(), aimed.z()] }));
+            const scenes = WorldFeedback.actionScenes(mountaingaleScene, 1);
+            function preview(current: CombatAction): void {
+                const plan = mountaingaleLaunch(current);
+                mountaingaleWarning(current, scenes, mountaingaleForecast(current.sense(), plan.origin,
+                    plan.velocity, plan.gravity, plan.range, 200), "prepare-warning");
+            }
+            preview(action);
+            function update(current: CombatAction): void {
+                if (!LivingActions.preparing(current.sense(), current.actor()).some(clock => clock.instance === current.id())) {
+                    scenes.stop(current); return;
+                }
+                preview(current);
+                current.after(1, update);
+            }
+            action.after(1, update);
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const body = world.observe(actor);
-            const origin = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.6, 0));
-            const speed = p("mountaingale", "flightSpeed", action);
-            const gravity = p("mountaingale", "arcFall", action);
+            const plan = mountaingaleLaunch(action), origin = plan.origin, speed = plan.speed, gravity = plan.gravity;
             const radius = p("mountaingale", "collisionRadius", action);
             const mass = p("mountaingale", "mass", action);
             const splash = p("mountaingale", "splash", action);
@@ -141,12 +196,12 @@ namespace PokemonSkills {
             const iceTicks = Math.max(40, Math.round(p("mountaingale", "iceTicks", action)));
             const spikeHeight = Math.max(0, Math.round(p("mountaingale", "spikeHeight", action)));
             const aimed = action.targetPosition();
-            const shadow = WorldGeometry.ground(world, aimed, 4);
-            const flightRange = Math.max(9, aimed.minus(origin).length() + 4);
+            const flightRange = plan.range;
             const scale = blast / 2.2;
             const intensity = Math.max(0.6, Math.min(2.4, mass / 100));
-            const launch = LivingActions.ballistic(origin, aimed, speed, gravity);
-            let settled = false, struck = 0;
+            const scenes = WorldFeedback.actionScenes(mountaingaleScene, 1);
+            let settled = false, struck = 0, flight = "";
+            const born = world.tick();
 
             sound(action, "minecraft:entity.snowball.throw");
 
@@ -154,6 +209,7 @@ namespace PokemonSkills {
             function shatter(current: CombatAction, at: CombatPoint, direct: CombatActor | null, hit: CombatImpact | null): void {
                 if (settled) return;
                 settled = true;
+                scenes.stop(current);
                 const scope = current.world();
                 const directRef = direct === null ? "" : String(direct.ref());
                 if (direct !== null && scope.valid(direct)) {
@@ -161,7 +217,8 @@ namespace PokemonSkills {
                         : hurt(current, direct, "mountaingale", mass, { damage: damageSpec("mountaingale", "mass") });
                     if (landed) {
                         struck++;
-                        if (scope.valid(direct)) scope.displace(direct, mountaingaleHeading(origin, at, current.direction()).scale(shove));
+                        // 受击推退走 hitDisplace：原生抗击退、击退事件与碰撞限制参与结算。
+                        if (scope.valid(direct)) scope.hitDisplace(direct, mountaingaleHeading(origin, at, current.direction()).scale(shove));
                         WorldFeedback.emit(scope, mountaingaleScene, 1, at,
                             { moment: "hit", target: directRef, scale: scale, intensity: intensity, hits: Math.round(16 + mass * 0.14) }, 28);
                         if (scope.random() < chance && mountaingaleFlinch(scope, direct, flinchTicks)) {
@@ -172,6 +229,7 @@ namespace PokemonSkills {
                 }
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, blast, { below: 2, above: 4 }), function (enemy, facts) {
                     if (String(enemy.ref()) === directRef) return;
+                    if (!scope.clear(at, facts.position())) return;
                     if (!hurt(current, enemy, "mountaingale", splash, { damage: damageSpec("mountaingale", "splash") })) return;
                     struck++;
                     WorldFeedback.emit(scope, mountaingaleScene, 1, facts.position(),
@@ -196,18 +254,20 @@ namespace PokemonSkills {
             function disperse(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
+                scenes.stop(current);
                 const scope = current.world();
-                const caster = scope.observe(current.actor());
-                if (caster !== null) WorldFeedback.emit(scope, mountaingaleScene, 1, caster.position(),
-                    { moment: "miss", scale: scale, intensity: intensity }, 20);
-                WorldFeedback.text(scope, aimed.plus(WorldCombat.point(0, 1.0, 0)), mountaingaleMissText, [], 22);
+                const end = scope.projectilePosition(flight);
+                if (end !== null) {
+                    WorldFeedback.emit(scope, mountaingaleScene, 1, end, { moment: "miss", scale: scale, intensity: intensity }, 20);
+                    WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.0, 0)), mountaingaleMissText, [], 22);
+                }
                 sound(current, "minecraft:block.powder_snow.fall");
                 done(current);
             }
 
-            const flight = LivingActions.projectile(action, {
-                speed: speed, range: flightRange, radius: radius, gravity: gravity,
-                direction: launch === null ? undefined : launch, lifetime: 200,
+            flight = LivingActions.projectile(action, {
+                speed: speed, range: flightRange, radius: radius, gravity: gravity, origin: origin,
+                direction: plan.direction, lifetime: 200,
                 appearance: { item: "minecraft:packed_ice", scale: Math.max(1.4, radius * 2.4) },
                 impact: function (current, hit) {
                     const at = hit.position(), victim = hit.target();
@@ -215,9 +275,26 @@ namespace PokemonSkills {
                     else shatter(current, at, null, null);
                 }
             }, function (current) { disperse(current); });
-            WorldFeedback.emit(world, mountaingaleScene, 1, origin,
+            scenes.show(action, "throw", origin,
                 { moment: "throw", projectile: flight, scale: scale, intensity: intensity,
-                    rise: Math.max(1, Math.round(mass / 40)), point: [shadow.x(), shadow.y(), shadow.z()] }, 200);
+                    rise: Math.max(1, Math.round(mass / 40)) });
+            mountaingaleWarning(action, scenes, mountaingaleForecast(world, origin, plan.velocity, gravity, flightRange, 200));
+            function updateFlight(current: CombatAction): void {
+                if (settled) return;
+                const scope = current.world(), at = scope.projectilePosition(flight);
+                const shots: CombatProjectileFacts[] = at === null ? [] : JSON.parse(scope.projectiles(at, 1));
+                const shot = shots.filter(candidate => candidate.id === flight)[0];
+                let travelled = 0;
+                if (shot) shot.path.forEach(segment => {
+                    travelled += WorldCombat.point(segment.to[0], segment.to[1], segment.to[2])
+                        .minus(WorldCombat.point(segment.from[0], segment.from[1], segment.from[2])).length();
+                });
+                mountaingaleWarning(current, scenes, at === null || !shot ? null : mountaingaleForecast(scope, at,
+                    WorldCombat.point(shot.velocity[0], shot.velocity[1], shot.velocity[2]), gravity,
+                    flightRange - travelled, 200 - (scope.tick() - born)));
+                current.after(1, updateFlight);
+            }
+            action.after(1, updateFlight);
         }
     });
 

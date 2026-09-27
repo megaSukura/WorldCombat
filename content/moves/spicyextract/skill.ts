@@ -8,8 +8,9 @@
  * 出手：短起手（windup 播红绿星火）后提交，按配置决定是贴脸浓缩还是远处稀释。
  * 自由落点：kind 为 point，可空放预铺入口；瓶子被打偏或被掩体挡下时在接触面炸开。
  * 掷出：LivingActions.projectile 的原生投射物负责飞行与碰撞，外观是一只发光的精华瓶，允许命中友方以定向赠予。
- * 爆开：命中点半径内所有非友方各辣一次；直接被瓶子命中的那一个（可为友方主目标）额外辣一口，
+ * 爆开：命中点半径内、与落点之间视线可达的非友方各辣一次；直接被瓶子命中的那一个（可为友方主目标）额外辣一口，
  *       所有被辣到的 ref 记进「一次性命中者集合」并随辣雾保存，避免落点与入场重复结算。
+ *       若没有命中、瓶子飞尽，则按它真实的最后位置爆开，不在假定的目标点凭空生雾。
  * 残留：WorldEffects.field 的辣雾（规则 world_combat:spicy_haze）里新进入的非友方各辣一次；同一目标只结算一次。
  * 视觉：辣雾表现用 WorldFeedback.onEffect 绑定该 field 效果，随它自然到期或提前驱散一起收掉。
  */
@@ -18,15 +19,17 @@ namespace PokemonSkills {
     const spicyScene = "world_combat:move_spicyextract";
     const spicyBurnText = "world_combat.move.spicyextract.text.burn";
 
-    /** 辣一次：抬高攻击、烧穿防御，并把这张「窗口」画在目标身上。 */
+    /** 辣一次：抬高攻击、烧穿防御，并把这张「窗口」画在目标身上；文字只报真实生效的变化。 */
     function spicyBurn(world: CombatWorld, actor: CombatActor, gift: number, shred: number, scale: number): void {
-        NativeEffects.boost(world, actor, "atk", gift);
-        NativeEffects.boost(world, actor, "def", -shred);
+        const raised = NativeEffects.boost(world, actor, "atk", gift);
+        const cut = NativeEffects.boost(world, actor, "def", -shred);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, spicyScene, 1, body.position(),
-            { moment: "sneeze", target: String(actor.ref()), gift: gift, shred: shred, scale: scale }, 28);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), spicyBurnText, [gift, shred], 36);
+            { moment: "sneeze", target: String(actor.ref()), gift: Math.max(0, raised), shred: Math.max(0, -cut), scale: scale }, 28);
+        // 到能力等级上限、被免疫或同一片雾里已结算过时不再显示假的 +N/−N。
+        if (raised !== 0 || cut !== 0)
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), spicyBurnText, [raised, -cut], 36);
     }
 
     /** 接触面的外法线方向，供表现层把碎瓶与溅射贴着真实表面朝向。 */
@@ -41,13 +44,16 @@ namespace PokemonSkills {
     }
 
     /**
-     * 落点爆开：直接命中的那一个（可为友方主目标）与半径内所有非友方各辣一次；
+     * 落点爆开：直接命中的那一个（可为友方主目标）与半径内视线可达的非友方各辣一次；
      * 命中者集合随辣雾保存，辣雾按实际半径铺开并残留。返回被辣到的人数。
      */
     function spicyBurst(world: CombatWorld, point: CombatPoint, gift: number, shred: number, blast: number, linger: number,
                         direct: CombatActor | null, block: CombatImpact | null): number {
         const scale = blast / spicyReferenceRadius;
         const source = String(world.source().ref());
+        // 贴墙炸开时从块面外一点点取样，视线检查才不会被这面墙本身挡住。
+        const normal = block === null ? null : faceNormal(block.blockFace());
+        const origin = normal === null ? point : point.plus(WorldCombat.point(normal[0], normal[1], normal[2]).scale(0.05));
         const hit: { [ref: string]: boolean } = {};
         let affected = 0;
         function dose(actor: CombatActor): void {
@@ -58,7 +64,11 @@ namespace PokemonSkills {
             affected++;
         }
         if (direct !== null && world.valid(direct)) dose(direct);
-        WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, blast), function (actor) { dose(actor); });
+        WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, blast), function (actor, facts) {
+            // 旁人只有从落点到身体真正无遮挡才吃到；瓶子直击的那个已由真实接触结算，隔墙的敌人不受这一口。
+            if (WorldGeometry.blockHit(world, origin, facts.position()) !== null) return;
+            dose(actor);
+        });
         WorldFeedback.emit(world, spicyScene, 1, point,
             { moment: "burst", scale: scale, drops: Math.round(40 + blast * 30), gift: gift, shred: shred }, 34);
         if (block !== null) {
@@ -81,7 +91,8 @@ namespace PokemonSkills {
             if (hit[ref]) return;
             hit[ref] = true;
             const gift = Math.max(1, Math.round(data.gift || 1)), shred = Math.max(1, Math.round(data.shred || 1));
-            spicyBurn(world, actor, gift, shred, 1);
+            const radius = typeof field.radius === "number" && isFinite(field.radius) ? field.radius : spicyReferenceRadius;
+            spicyBurn(world, actor, gift, shred, Math.max(0.5, radius / spicyReferenceRadius));
         }
     });
 
@@ -129,7 +140,8 @@ namespace PokemonSkills {
             const speed = Math.max(0.4, p("spicyextract", "throwSpeed", action));
             const collision = Math.max(0.15, p("spicyextract", "collision", action));
             const gravity = p("spicyextract", "gravity", action);
-            let bursted = false;
+            const reach = action.range();
+            let bursted = false, flight = "";
             function burst(current: CombatAction, impact: CombatImpact | null, fallback: CombatPoint | null): void {
                 if (bursted) return;
                 bursted = true;
@@ -140,12 +152,14 @@ namespace PokemonSkills {
                 spicyBurst(scope, point, gift, shred, blast, linger, direct, block);
             }
             sound(action, "minecraft:entity.experience_bottle.throw");
-            LivingActions.projectile(action, {
-                speed: speed, range: action.range(), radius: collision, gravity: gravity, lifetime: 80,
+            flight = LivingActions.projectile(action, {
+                speed: speed, range: reach, radius: collision, gravity: gravity, lifetime: 80,
                 appearance: { item: "minecraft:splash_potion", scale: 0.9, glow: true, hitAllies: true },
                 impact: function (current, hit) { burst(current, hit, null); }
             }, function (current) {
-                burst(current, null, current.targetPosition());
+                // 弹体飞尽：读它真实的末次接触/结束位置；没有可用末点就不在假定目标点凭空生雾。
+                const end = current.world().projectilePosition(flight);
+                if (end !== null) burst(current, null, end);
                 done(current);
             });
         }

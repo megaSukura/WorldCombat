@@ -4,8 +4,9 @@
  * 一句话：掌心先拢起一层内敛的暖光，上步贴上对手的一刻整圈力环灌进身体、并从背后透出更薄的一圈，
  * 被震到的人身上闪着麻纹。
  * 色相家族：暖白与琥珀（0xFFE0A8 / 0xFFC46B）为主，格斗冲击用原型 impact_fighting，麻纹用 paralysis_spark 的青色。
- * 拍子：起（gather 拢劲）→ 行（step 上步）→ 击（strike 命中）→ 透／麻（through 背后透出、numb 麻纹）→ 落空（miss）。
- * 范围：strike 的力环半径读 `data.scale`（判定半径 / 0.45）；through 用 `data.path`（目标背后那条透劲线）画 polyline。
+ * 拍子：起（gather 拢劲）→ 行（step 上步）→ 按（reach 掌形推进到真实首碰）→ 击（strike 命中）→ 透／麻（through 背后透出、numb 麻纹）→ 落空（miss）。
+ * 范围：strike 的力环半径读 `data.scale`（判定半径 / 0.45）；reach 用 `data.path` 画掌路、`data.point` 落掌；
+ *   through 用 `data.path`（目标背后那条到墙为止的透劲线）画 polyline，粗细读 `data.thickness`，与判定同轴同厚。
  * 运动：劲气从掌心向内收、贴上去的一刻向外炸开；透劲沿背后直线铺开；麻纹在命中点向上闪。
  * 数：`data.motes`（物攻与等级换算的劲气量）绑定各处爆发数量与持续发射率，`data.intensity`（motes / 20）抬高亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -51,6 +52,31 @@ const ForcepalmDefinition: ParticleDefinition = {
                 }
             ]
         },
+        reach: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "palm_path", bind: "path", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    shape: { kind: "polyline" },
+                    burst: { count: { data: "motes", fallback: 16 } },
+                    direction: "shape", speed: [0.03, 0.14],
+                    gravity: 0.02, drag: 0.94,
+                    lifetime: [5, 10], size: [0.08, 0.02],
+                    color: 0xE8D3A8, alpha: [0.6, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "palm_stamp", bind: "point", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/hollowfist",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [6, 10], size: [0.34, 0.12],
+                    color: 0xFFE0A8, alpha: [0.9, 0], light: "full", maxParticles: 8
+                }
+            ]
+        },
         strike: {
             duration: 26,
             exit: { stop: 12, drain: 16 },
@@ -90,19 +116,19 @@ const ForcepalmDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "exit_line", bind: "path", offset: [0, 0.45, 0],
+                    name: "exit_line", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/white",
                     shape: { kind: "polyline" },
                     rate: { data: "motes", fallback: 16 }, direction: "shape", speed: [0.05, 0.22],
-                    lifetime: [5, 11], size: [0.2, 0.04], sizeMode: "sin",
+                    lifetime: [5, 11], size: [{ data: "thickness", fallback: 0.24 }, 0.05], sizeMode: "sin",
                     color: 0xFFE9C0, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 140
                 },
                 {
-                    name: "exit_ring", bind: "path", offset: [0, 0.45, 0],
+                    name: "exit_ring", bind: "path", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     shape: { kind: "polyline" },
                     rate: 22, direction: "shape", speed: [0.04, 0.16],
-                    lifetime: [6, 12], size: [0.24, 0.06],
+                    lifetime: [6, 12], size: [{ data: "thickness", fallback: 0.24 }, 0.06],
                     color: 0xFFC46B, alpha: [0.55, 0], light: "full", maxParticles: 80
                 }
             ]

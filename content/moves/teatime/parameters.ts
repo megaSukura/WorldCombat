@@ -17,12 +17,12 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("grand"), F.const(0.95), F.const(1)).as("盛宴"))
                 .clamp(4, 8).round(2),
             "施放距离", { unit: " 格", description: "茶席最远能摆到哪里；等级越高越远，盛宴档略近。" }),
-        /** 茶席停留。 */
+        /** 茶气余韵：散场后短促的余汽，只是收尾，不代表还能入席。 */
         teaTicks: seconds(
-            F.base(100).plus(F.level().times(2)).plus(F.individual("friendship").minus(70).times(0.6).clamp(-18, 24).as("亲密度"))
-                .times(F.when(F.pref("grand"), F.const(1.4), F.const(1)).as("盛宴"))
-                .clamp(80, 280).round(0),
-            "茶席停留", "茶气在原地停多久；等级越高、感情越好越久，盛宴档 ×1.4。结算在摆席当刻一次完成，之后只留画面。"),
+            F.base(34).plus(F.level().times(0.25)).plus(F.individual("friendship").minus(70).times(0.2).clamp(-8, 12).as("亲密度"))
+                .times(F.when(F.pref("grand"), F.const(1.3), F.const(1)).as("盛宴"))
+                .clamp(24, 64).round(0),
+            "余韵", "茶会散场后茶气余韵停留多久；结算在摆席当刻一次完成，之后不再有人入席。等级越高、感情越好余韵越久，盛宴档 ×1.3。"),
         /** 茶汤浓度：吃的人回复多少。 */
         brew: formula(
             F.base(0.9).plus(F.stat("specialAttack").minus(55).times(0.003).clamp(-0.15, 0.3).as("特攻"))

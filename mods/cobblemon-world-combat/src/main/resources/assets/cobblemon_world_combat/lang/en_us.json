@@ -236,5 +236,6 @@
   "worldcombat.reason.waiting-cooldown": "Order retained; waiting for this move to cool down",
   "worldcombat.reason.waiting-action": "Order retained; waiting for the current action to finish",
   "worldcombat.reason.already-carried": "This target is already being carried",
-  "worldcombat.reason.already-swapped": "The exchange is still active"
+  "worldcombat.reason.already-swapped": "The exchange is still active",
+  "worldcombat.reason.no-benefit": "This boost has already reached its limit"
 }

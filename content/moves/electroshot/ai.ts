@@ -56,7 +56,7 @@ namespace PokemonSkills {
     });
 
     const electroshotChase = field(pathOf("chase"), "追踪形态", "boolean", {
-        help: "开启（追踪）：电矛转向更强（×1.6）、射程更远，但单发威力 ×0.9、飞行略慢，目标走位很难摆脱；关闭（直射）：飞得更快、威力更高（×1.15），但几乎不修正，容易被侧移躲开。"
+        help: "开启（追踪）：电矛转向更强（×1.6）、射程更远，但单发威力 ×0.9、飞行略慢、冷却多 3 刻；关闭（直射）：飞得更快、威力更高（×1.15），但几乎不修正，容易被侧移躲开。"
     });
     const electroshotRange = number("ai.maxChase", "考虑距离", 5, 30, 1);
     electroshotRange.help = "超过这个距离就不主动出手，先走近；越大越愿意在更远处先手点射。";

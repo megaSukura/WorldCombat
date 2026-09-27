@@ -5,6 +5,7 @@ Smoke.scenario("junglehealing", function (stage) {
     stage.weather("clear");
     stage.time("day");
 
+    // 施术者与同队伙伴都带主异常且被打伤；受益区域以身体中心撞真实身体箱，所以高大的自身也在圈内。
     var caster = stage.pokemon({ species: "zarude", level: 32, moves: ["junglehealing"], at: [0, 0, 0], status: "burn" });
     var ally = stage.pokemon({ species: "pikachu", level: 30, moves: [], at: [2, 0, 0], status: "poison" });
     stage.team("jungle", [caster, ally]);
@@ -19,7 +20,9 @@ Smoke.scenario("junglehealing", function (stage) {
         stage.command("execute positioned " + mate[0] + " " + mate[1] + " " + mate[2]
             + " run damage @e[type=cobblemon:pokemon,distance=..1.2,limit=1,sort=nearest] "
             + Math.max(1, Math.round(mateMax * 0.4)) + " minecraft:generic");
-        stage.after(4, function () { casterLow = caster.health(); allyLow = ally.health(); });
+        // 命令同步结算，立刻记下受伤后的基线，避免 AI 抢在同一刻回应而把基线抬走。
+        casterLow = caster.health();
+        allyLow = ally.health();
     });
 
     stage.until(900, function () {
@@ -30,7 +33,7 @@ Smoke.scenario("junglehealing", function (stage) {
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/poison"), "the ally carried poison before the vines");
         stage.expect(!stage.hasMobEffect(ally, "world_combat:status/poison"), "the vines cleansed the ally's poison");
         stage.expect(!stage.hasMobEffect(caster, "world_combat:status/burn"), "the vines cleansed the caster's own burn");
-        stage.note("丛林治疗为范围内友方回血并清除主异常；原有自然地面仍影响回复与半径，藤蔓和嫩芽由表现承载。", {
+        stage.note("丛林治疗为范围内友方先清有害状态（含禁疗类）再回血；受益区域以身体中心为准的球体撞真实身体箱，高大的自身与边缘队友都被罩到。原有自然地面仍影响回复与半径：采到的每个真实地面点各冒一簇嫩芽，真正获益者从脚下长出短藤绕上身体；只有真被罩到并拿到回血或净化的人才触发缠绕。", {
             casterCasts: stage.casts("junglehealing", caster),
             casterLow: Math.round(casterLow * 10) / 10,
             casterNow: Math.round(caster.health() * 10) / 10,

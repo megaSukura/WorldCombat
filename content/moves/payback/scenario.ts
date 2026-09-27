@@ -19,7 +19,7 @@ Smoke.scenario("payback", function (stage) {
     stage.until(600, function () { return stage.casts("payback", caster) >= 1 && stage.damageTo(target) > 0; }, function () {
         stage.expect(stage.casts("payback", caster) >= 1, "krookodile committed payback");
         stage.expect(stage.damageTo(target) > 0, "the counter blow dealt damage");
-        stage.note("whether the target had already struck the caster inside the window (and so the doubling) is positional and random; the step-in shows as movedBy while the strike lands on the actually reached foe", {
+        stage.note("the frozen hostile has aggro but never truly strikes, so the reckoning does not double; the blow lands on the actually reached foe", {
             casts: stage.casts("payback", caster),
             dealt: Math.round(stage.damageBy(caster) * 10) / 10,
             taken: Math.round(stage.damageTo(caster) * 10) / 10,

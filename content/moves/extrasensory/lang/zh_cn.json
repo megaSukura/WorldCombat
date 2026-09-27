@@ -4,7 +4,7 @@
   "worldcombat.skill.extrasensory.use.1": "把沉睡或被困住的目标按在原地攥住",
   "worldcombat.skill.extrasensory.use.2": "把一小片挤在一起的敌人一起攥住",
   "worldcombat.skill.extrasensory.description.0": "在选定地点合拢，圈内每个敌人各受到一次约 %1$s 点特殊伤害；合拢半径为 %2$s 格。",
-  "worldcombat.skill.extrasensory.description.1": "力量能落在 %1$s 格内；幻影停留 %2$s 后才合拢，这段时间里走出那圈的目标就能躲开。",
+  "worldcombat.skill.extrasensory.description.1": "力量能落在 %1$s 格内；幻影停留 %2$s 后才合拢，这段时间里走出那圈的目标就能躲开。这是看不见的念力而非物理溅射：中间的薄墙、灌木不改变合拢；施法一旦被打断，幻影与力量一同消散，不会留下独立的延迟爆炸。",
   "worldcombat.skill.extrasensory.description.2": "被攥住的每个目标各有 %1$s 概率畏缩 %2$s：先尝试打断它当前可被中断的动作，畏缩期间无法发动新招或进行普通攻击。",
   "worldcombat.skill.extrasensory.description.3": "伏击式开启时：幻影留得更久、合拢圈更大、威力更高，但冷却更长；关闭（即时式）时合拢更快、圈更小、威力略低。",
   "worldcombat.skill.extrasensory.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

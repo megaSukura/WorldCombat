@@ -2,14 +2,15 @@
  * 高速移动 的粒子语言（P5 视觉语言 v2）。
  *
  * 一句话：施法者把周身的空气先吸进脚下一圈，随后那圈风向外炸开、速度线沿身体冲起；
- *   轻身窗口内，身后一直拖着一串短短的残影。
+ *   轻身窗口内只在真实移动时，身后才拖着一段短短的残影。
  *
  * 色相家族：青蓝（0x8FE3F5）为主体，近白（0xEAFBFF）做速度线与高光，浅青（0x9FE8FA）作余韵。没有第二个色相。
  * 层次：内吸风点与碎光（起）／向外的地环、速度线与一下白闪（击）／残影与上升光点（收）。
- * 起击收：gather（聚风）→ burst（炸开）→ wake（拖着残影）。
+ * 起击收：gather（聚风）→ burst（炸开）→ wake（只随真实位移拖残影）。
  * 范围：地环绑脚点、fit none，半径按 `data.scale`（实际风爆半径 / 0.9）推出，画出来的圈就是风真正扫到的范围。
- * 运动：聚风期向内收；爆发期由体内向外炸、速度线沿自身运动甩出；余韵期沿移动轨迹留下残影。
+ * 运动：聚风期向内收；爆发期由体内向外炸、速度线沿自身运动甩出；余韵期只在移动轨迹上留残影。
  * 数：地环与速度线的数量绑 `data.motes`（速度派生），`data.scale` 同时放大整片半径与粒子尺寸。
+ * 拥有：wake 的画面由服务端 WorldFeedback.onEffect 绑在 carrier 的托管 mark 上，净化/到期即收，不留残影。
  */
 const AgilityDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -80,14 +81,15 @@ const AgilityDefinition: ParticleDefinition = {
             exit: { drain: 24 },
             emitters: [
                 {
-                    name: "afterimage", bind: "source", height: 0.4, trail: { minDistance: 0.6 },
+                    // 只在真实移动时沿轨迹拖出残影：静止时锚点没有位移，trail 不发射。
+                    name: "afterimage", bind: "source", height: 0.4, trail: { minDistance: 0.7 },
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
                     rate: 6, shape: { kind: "point" },
                     lifetime: [8, 14], size: [0.3, 0.05],
                     color: 0xBFEFFF, alpha: [0.35, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "wake_orbs", bind: "source", height: 0.3,
+                    name: "wake_orbs", bind: "source", height: 0.3, trail: { minDistance: 0.7 },
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
                     rate: 8, shape: { kind: "sphere", radius: 0.3 },
                     direction: "up", speed: [0.01, 0.04],

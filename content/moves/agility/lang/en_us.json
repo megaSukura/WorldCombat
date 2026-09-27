@@ -4,7 +4,7 @@
   "worldcombat.skill.agility.use.1": "Pull away before being caught",
   "worldcombat.skill.agility.use.2": "Top up a Speed stage between trades",
   "worldcombat.skill.agility.description.0": "Speed +%1$s level(s).",
-  "worldcombat.skill.agility.description.1": "The Light Rush lingers for about %1$s: during this window the companion will not relax again, leaving only a trailing afterimage.",
+  "worldcombat.skill.agility.description.1": "The Light Rush lingers for about %1$s: during this window the companion will not relax again, and leaves an afterimage only while it actually moves; being cleansed ends the trail without touching the Speed already gained.",
   "worldcombat.skill.agility.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.agility.timing": "Self move, range %1$s blocks; after %2$s s of wind-up it spends %4$s PP, recovers for %3$s s and starts a %5$s s cooldown.",
   "worldcombat.skill.agility.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
@@ -21,5 +21,6 @@
   "worldcombat.skill.agility.preference.ai.minGap": "Close-range floor",
   "worldcombat.skill.agility.preference.ai.minGap.help": "Below this distance the companion stops relaxing and deals with the threat; larger gives up the boost more often up close.",
   "world_combat.move.agility.text.rush": "Agility (Speed +%1$s)",
+  "world_combat.move.agility.text.capped": "Speed already maxed",
   "effect.world_combat.agility_rush": "Light Rush"
 }

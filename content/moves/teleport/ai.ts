@@ -3,15 +3,33 @@
  *
  * 什么局面有意义：场上有一个看得见、敌对、存活的威胁在 `ai.maxChase`（默认 14）格内。
  * 对谁出手：不选对象——落点由 `target` 钩子从**合法空间候选**里挑：围绕背离威胁的扇区取样，
- *   用原生 freeSpace 探针按本个体体型核对整个碰撞箱，并要求脚下不是空气（不落悬空深坑），
- *   在站得住又远离真实威胁的候选里取最远的一个；全都站不住就留在原地不施放。
+ *   用原生 freeSpace 探针按本个体体型核对整个碰撞箱，并要求脚下是真实支撑（非空气，且不是岩浆、火、
+ *   仙人掌等会持续伤害或困住身体的危险块），在站得住又远离真实威胁的候选里取最远的一个；
+ *   全都站不住就留在原地不施放。
  * 候选之间怎么排：生命比例掉到 `ai.retreatBelow`（默认 0.35）以下时 priority 96（这就是逃生手段），
  *   否则 30（顺势换位、甩掉追兵）。
  * 够不到怎么办：`reach` 就是瞬移距离，但本招以自身为落点参照，不需要先走近谁。
  * 放完之后：落点甩掉了盯着自己的敌人，交回共享顺序继续走位或脱离。
+ * 驻守：收到「驻守」指令且 `ai.leaveStation` 关闭时，本招的离位不属于该指令允许的移动，不参与出手。
  */
 namespace CompanionBehavior {
     const teleportAir = ["minecraft:air", "minecraft:cave_air", "minecraft:void_air"];
+    /** 明显不能落脚/倚靠的方块：会持续伤害、减速或把身体困住。 */
+    const teleportHazard = [
+        "minecraft:lava", "minecraft:fire", "minecraft:soul_fire", "minecraft:magma_block",
+        "minecraft:campfire", "minecraft:soul_campfire", "minecraft:cactus", "minecraft:sweet_berry_bush",
+        "minecraft:powder_snow", "minecraft:wither_rose", "minecraft:cobweb"
+    ];
+
+    /** 落点必须踩在真实、安全的支撑上：脚底格与支撑格都不是危险块，且支撑不是空气。 */
+    function teleportSupport(world: CombatWorld, point: number[]): boolean {
+        const feet = world.block(CompanionBehavior.point(point));
+        const below = world.block(CompanionBehavior.point([point[0], point[1] - 1, point[2]]));
+        if (feet === null || below === null) return false;
+        const feetId = String(feet.id()), belowId = String(below.id());
+        if (teleportHazard.indexOf(feetId) >= 0 || teleportHazard.indexOf(belowId) >= 0) return false;
+        return teleportAir.indexOf(belowId) < 0;
+    }
 
     /** 背离威胁的扇区里挑最远的合法三维落点；没有就返回 null，调用方保留原场面。 */
     function teleportCandidate(context: WorldBehavior.Context, self: Entity, threat: Entity | null, range: number): number[] | null {
@@ -38,8 +56,7 @@ namespace CompanionBehavior {
                 if (!(step > 0.2)) continue;
                 const candidate: number[] = [self.point[0] + dx * step, feetY, self.point[2] + dz * step];
                 if (!world.freeSpace(CompanionBehavior.point(candidate), width, height)) continue;
-                const below = world.block(CompanionBehavior.point([candidate[0], candidate[1] - 1, candidate[2]]));
-                if (below === null || teleportAir.indexOf(String(below.id())) >= 0) continue;
+                if (!teleportSupport(world, candidate)) continue;
                 const score = threat ? distance(candidate, threat.point) : step;
                 if (score > bestScore) { bestScore = score; best = candidate; }
                 break;
@@ -53,6 +70,9 @@ namespace CompanionBehavior {
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
+            // 驻守指令下本招的离位要显式允许；关闭时留在原位置。
+            if ((context.facts.intent === "hold" || context.facts.intent === "stay")
+                && !ai<boolean>(capability, "leaveStation", false)) return false;
             const threat = context.senses["world_combat:threat"] as Entity | null;
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             if (distance(source(context).point, threat.point) > ai<number>(capability, "maxChase", 14)) return false;

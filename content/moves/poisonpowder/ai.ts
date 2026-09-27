@@ -6,8 +6,8 @@
  * 对谁出手：当前威胁。它最爱目标身边先站着一小撮人的时候——一次点上好几个。
  * 够不到怎么办：由共享任务走到 reach；accepts 不按距离硬拒，会先靠近再撒。
  * 放完之后：圈里的人一起中毒、开始掉血，伙伴交回共享顺序继续交战。它的冷却最短，可以反复顺手点毒。
- * 优先级：目标附近 2.5 格内每多站一个非友方就 +7，最高 80；孤立目标给 40。
- *   草属性穿过粉末，毒属性与钢属性穿过中毒，这三种目标直接跳过。
+ * 优先级：目标落点本次实际 dustRadius 内每多站一个未毒、从落点真实可达的非友方就 +7，最高 80；孤立目标给 40。
+ *   草属性穿过粉末，毒属性与钢属性穿过中毒，这三种目标直接跳过；已毒与隔墙的人也不再计入。
  */
 namespace PokemonSkills {
     /** 草属性穿过粉末，毒／钢属性穿过中毒：这三种目标都不值得为它撒粉。 */
@@ -16,14 +16,24 @@ namespace PokemonSkills {
         return !!facts && (facts.types.indexOf("grass") >= 0 || facts.types.indexOf("poison") >= 0 || facts.types.indexOf("steel") >= 0);
     }
 
-    /** 目标身边 2.5 格内（含自己）站着几个非友方。 */
-    function poisonpowderCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 目标落点周围、本次实际 dustRadius 内、从落点真实可达的未毒非友方数量（含目标本身）。 */
+    function poisonpowderCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context);
+        let radius = 2.5;
+        try {
+            radius = Math.max(1.2, p(poisonpowderId, "dustRadius", { world: world, actor: world.source(), detail: { values: capability.data.config } }));
+        } catch (error) { }
+        const landing = CompanionBehavior.point(target.point);
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 2.5) count++;
+            if (CompanionBehavior.status(context, other, "poison")) continue;
+            if (poisonpowderImmune(context, other)) continue;
+            if (CompanionBehavior.distance(other.point, target.point) > radius) continue;
+            if (!world.clear(landing, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -39,14 +49,14 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 7)) return false;
             if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
-            return poisonpowderCluster(context, target) >= CompanionBehavior.ai<number>(capability, "minFoes", 1);
+            return poisonpowderCluster(context, capability, target) >= CompanionBehavior.ai<number>(capability, "minFoes", 1);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {
             if (!target || CompanionBehavior.status(context, target, "poison") || poisonpowderImmune(context, target)) return 0;
-            return Math.min(80, 40 + poisonpowderCluster(context, target) * 7);
+            return Math.min(80, 40 + poisonpowderCluster(context, capability, target) * 7);
         }
     });
 

@@ -104,12 +104,22 @@ namespace PokemonSkills {
         if (from === null) return null;
         return lightscreenCross(area.position, area.data, from, to);
     }
-    /** 命中这次来袭的幕里取最强一面：cut 大优先、同值 id 小先；没有则 null。 */
+    /**
+     * 该场地的真实矩形是否被 from→to 这段来击穿过：与入场结算读同一组端点、同一面幕。
+     * AI 判断「已有幕是否真挡当前火线」时用同一个几何，不再凭附近有幕就一律拒施。
+     */
+    export function lightscreenBlocks(area: WorldEffects.Area, from: number[], to: number[]): boolean {
+        const start = lightscreenTuple(from), end = lightscreenTuple(to);
+        if (start === null || end === null) return false;
+        return lightscreenCross(area.position, area.data, start, end) !== null;
+    }
+    /** 命中这次来袭的幕里取最强一面：cut 大优先、同值 id 小先；已破（pending）的幕不参与。 */
     function lightscreenStrongest(world: CombatWorld, victim: CombatActor, data: any): { area: WorldEffects.Area; cut: number; damp: number; point: CombatPoint } | null {
         const areas = WorldEffects.areas(world, lightscreenMark);
         let best: { area: WorldEffects.Area; cut: number; damp: number; point: CombatPoint } | null = null;
         for (let i = 0; i < areas.length; i++) {
             const area = areas[i];
+            if (area.pending) continue;
             const owner = world.actor(area.source);
             if (owner === null || !world.allied(owner, victim)) continue;
             const value = area.data || {};
@@ -230,8 +240,11 @@ namespace PokemonSkills {
             return prepare;
         },
         indicator: function (config, pokemon) {
-            return { radius: pokemon ? Math.max(1.5, p(lightscreenId, "screenRadius", pokemon)) : 3,
-                geometry: "area", style: "veil", color: 0xFFE9A8, label: config && config.thick ? "厚幕" : "柔幕" };
+            // 预览用与实际幕相同几何的竖直矩形（宽=半宽×2、高=幕高），法线朝向落点方向，玩家落点前就看出朝向与遮挡面。
+            const width = pokemon ? Math.max(1.5, p(lightscreenId, "screenRadius", pokemon)) : 3;
+            const height = pokemon ? Math.max(1.5, p(lightscreenId, "screenHeight", pokemon)) : 2.2;
+            return { geometry: "lightscreen_wall", width: width, height: height, radius: width,
+                style: "veil", color: 0xFFE9A8, label: config && config.thick ? "厚幕" : "柔幕" };
         },
         execute: function (action, _move, config, done) {
             const world = action.world(), actor = action.actor();

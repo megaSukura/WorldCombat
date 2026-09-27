@@ -1,15 +1,20 @@
 /**
  * 蟹钳锤 / crabhammer 的客户端表现。
  *
- * 一句话：钳口高举过顶、海水在钳面上聚成一层薄膜 → 钳子垂直砸下，落点炸开深青浪花并沿地面荡开一圈水浪 →
- *   裂甲档位下目标的架势被敲裂、溅起碎屑 → 什么都没砸到就只留一地水花。
+ * 一句话：钳口高举过顶、海水在钳面上聚成一层薄膜 → 钳子沿真实弧线逐刻下砸，钳尖带出水光 → 砸到实体或地表才在
+ *   接触处压出一片前扇水花、扇缘按实际半径铺开 → 裂甲档位下目标的架势被敲裂、溅起碎屑 → 什么都没碰到时只在弧尖散水。
  * 色相家族：深海青（0x1F8FA8 主体、0x5FC4D4 亮面）＋浪白（0xEAFBFF）只出现在浪尖与命中，比水流尾的浅蓝更深一档。
- * 拍子：起 hoist（举钳聚水）→ 砸 slam（落点爆开）→ 裂 crack（敲裂架势）＋ shock（地面水环）→ 收 miss。
- * 范围：shock 的地面圈按 `data.radius`（水环半径）铺开，画出的就是会被掀到的那圈。
- * 运动：slam 的浪花从落点向外上抛再落回；shock 的水环贴地向外扩，裂甲碎屑贴目标炸开。
- * 数：`data.splash`（体重与物攻换算）决定浪花与碎屑量，`data.scale`（水环半径换算）决定圈与爆开的尺度，
+ * 拍子：起 hoist（举钳聚水）→ 砸 press（每刻沿当前真实子段下move，钳尖随弧移动）→ slam（接触爆开）→ crack（敲裂）+ shock（前扇）+ spill（被掀旁人）→ 收 miss。
+ * 主体：press 的钳形由自定义场景 `world_combat:move_crabhammer/pincer` 按当刻钳尖与臂向绘制；前扇由自定义场景
+ *   `world_combat:move_crabhammer/fan` 按实际 radius/span 画扇缘与放射边，判定与表现共用同一起点与朝向。
+ * 数：`data.splash`（体重与物攻换算）决定浪花与碎屑量，`data.scale`（前扇半径换算）决定爆开与扇的尺度，
  *   `data.intensity`（砸击威力换算）抬高密度与亮度。
  */
+const CrabhammerPincerScene = "world_combat:move_crabhammer/pincer";
+const CrabhammerFanScene = "world_combat:move_crabhammer/fan";
+const CrabhammerWaterHeadSprite = "cobblemon:particle/generic/water/waterjet_head";
+const CrabhammerRippleSprite = "cobblemon:particle/generic/water/water_ripple";
+
 const CrabhammerDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -120,15 +125,6 @@ const CrabhammerDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 18 },
             emitters: [
                 {
-                    name: "fan", bind: "point", fit: "world", orient: "heading", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "sector", radius: { data: "radius", fallback: 2.2 }, angleDegrees: { data: "span", fallback: 90 } },
-                    direction: "outward", speed: [0.1, 0.3],
-                    lifetime: [12, 22], size: [0.4, 1.1], sizeMode: "sin",
-                    color: 0x5FC4D4, alpha: [0.6, 0], light: "world", maxParticles: 10
-                },
-                {
                     name: "foam", bind: "point", fit: "world", orient: "heading", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     burst: { count: { data: "splash", fallback: 18 }, at: 0 },
@@ -146,6 +142,31 @@ const CrabhammerDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.08],
                     lifetime: [16, 28], size: [0.3, 0.5],
                     color: 0x1F8FA8, alpha: [0.3, 0], light: "world", maxParticles: 50
+                }
+            ]
+        },
+        spill: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "douse", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/water_ripple",
+                    burst: { count: 2, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [8, 14], size: [0.24, 0.5], sizeMode: "sin",
+                    color: 0x5FC4D4, alpha: [0.6, 0], light: "world", maxParticles: 8
+                },
+                {
+                    name: "beads", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    burst: { count: { data: "splash", fallback: 10 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.36 },
+                    direction: "up", speed: [0.05, 0.18], spread: 24,
+                    gravity: 0.05, drag: 0.93,
+                    lifetime: [8, 15], size: [0.08, 0.02],
+                    color: 0xEAFBFF, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         },
@@ -178,3 +199,95 @@ const CrabhammerDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_crabhammer", 1, CrabhammerDefinition);
+
+function crabhammerTriple(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function crabhammerNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+// The claw is a fixed, real shape at the current pincer tip: two prongs opened along the swing heading plus a bright head,
+// redrawn each tick from the tip the server judged with. Nothing is spawned; it leaves with the action's present key.
+WorldCombatClient.scene(CrabhammerPincerScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const point = crabhammerTriple(data.point);
+    if (point === null) return;
+    const root = crabhammerTriple(data.root);
+    const dir = crabhammerTriple(data.direction);
+    const scale = Math.max(0.6, Math.min(2.2, crabhammerNumber(data.scale, 1)));
+    const intensity = Math.max(0.6, Math.min(2.2, crabhammerNumber(data.intensity, 1)));
+    const alpha = Math.round(Math.max(120, Math.min(235, 150 + intensity * 35)));
+    const main = (alpha << 24 | 0x1F8FA8) | 0;
+    const bright = (alpha << 24 | 0x5FC4D4) | 0;
+    const edge = (Math.round(alpha * 0.7) << 24 | 0xEAFBFF) | 0;
+    // Arm direction: from the raised claw root to the current tip, falling back to straight down.
+    let ax = 0, ay = -1, az = 0;
+    if (root !== null) {
+        const dx = point[0] - root[0], dy = point[1] - root[1], dz = point[2] - root[2];
+        const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (length > 1e-3) { ax = dx / length; ay = dy / length; az = dz / length; }
+    }
+    // Horizontal right of the swing heading gives the claw a stable opening across camera angles.
+    let rx = 0, rz = 1;
+    if (dir !== null) {
+        const hx = dir[0], hz = dir[2], length = Math.sqrt(hx * hx + hz * hz);
+        if (length > 1e-6) { rx = -hz / length; rz = hx / length; }
+    }
+    const spread = 0.24 * scale, forward = 0.3 * scale, back = 0.12 * scale;
+    const base = [point[0] - ax * back, point[1] - ay * back, point[2] - az * back];
+    const left = [point[0] + ax * forward + rx * spread, point[1] + ay * forward, point[2] + az * forward + rz * spread];
+    const right = [point[0] + ax * forward - rx * spread, point[1] + ay * forward, point[2] + az * forward - rz * spread];
+    frame.line(base[0], base[1], base[2], left[0], left[1], left[2], main);
+    frame.line(base[0], base[1], base[2], right[0], right[1], right[2], main);
+    frame.line(point[0], point[1], point[2], left[0], left[1], left[2], bright);
+    frame.line(point[0], point[1], point[2], right[0], right[1], right[2], bright);
+    frame.sprite(CrabhammerWaterHeadSprite, point[0], point[1], point[2], 0.5 * scale, 0, edge, 0, true);
+});
+
+// The forward fan is drawn at its real radius and span: the outer rim plus the two radial edges follow the same origin,
+// heading and radius the server judged with, so a bystander reads exactly how far the water reached.
+WorldCombatClient.scene(CrabhammerFanScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const origin = crabhammerTriple(data.point) || crabhammerTriple(entry.position);
+    if (origin === null) return;
+    const dir = crabhammerTriple(data.direction);
+    if (dir === null) return;
+    const radius = Math.max(0.4, crabhammerNumber(data.radius, 2.2));
+    const span = Math.max(10, Math.min(180, crabhammerNumber(data.span, 90)));
+    const start = crabhammerNumber(data.start, frame.serverTick());
+    const age = Math.max(0, frame.serverTick() - start);
+    const life = 24, progress = Math.max(0, Math.min(1, age / life));
+    const alpha = Math.round(200 * (1 - progress) * (1 - progress));
+    if (alpha <= 6) return;
+    const main = (alpha << 24 | 0x1F8FA8) | 0;
+    const edgeColor = (Math.round(alpha * 0.85) << 24 | 0x5FC4D4) | 0;
+    const base = Math.atan2(dir[0], dir[2]), half = span * Math.PI / 360;
+    const samples = Math.max(4, Math.round(span / 15));
+    const px = [], pz = [];
+    for (let i = 0; i <= samples; i++) {
+        const angle = base - half + (2 * half) * i / samples;
+        px.push(origin[0] + Math.sin(angle) * radius);
+        pz.push(origin[2] + Math.cos(angle) * radius);
+    }
+    for (let i = 0; i < samples; i++) frame.line(px[i], origin[1] + 0.08, pz[i], px[i + 1], origin[1] + 0.08, pz[i + 1], edgeColor);
+    frame.line(origin[0], origin[1] + 0.08, origin[2], px[0], origin[1] + 0.08, pz[0], main);
+    frame.line(origin[0], origin[1] + 0.08, origin[2], px[samples], origin[1] + 0.08, pz[samples], main);
+    // Ripples sit exactly on the reached rim; their count follows the real radius, not a second constant.
+    const beads = Math.max(4, Math.min(14, Math.round(radius * 3)));
+    for (let i = 0; i < beads; i++) {
+        const angle = base - half + (2 * half) * (i + 0.5) / beads;
+        frame.sprite(CrabhammerRippleSprite, origin[0] + Math.sin(angle) * radius, origin[1] + 0.1, origin[2] + Math.cos(angle) * radius,
+            0.5, 0, edgeColor, i % 5, false);
+    }
+});

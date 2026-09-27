@@ -7,7 +7,8 @@
  * 拍子：起 windup（聚火）→ 追 cast（真弹体拖尾）→ 击 hit（命中炸开）→ 缠 wrap（绕身盘住、按进度收圈）→ 咬 coil（每跳）
  *   → 收 siphon / 散 slip；打在方块或没有敌人时走 fizzle。
  * 范围：火团拖尾绑定真弹体（data.projectile）；缠火绑定实际目标（data.target）。
- * 运动：火团沿同步的投射物锚点飞；缠焰绕目标做环状公转，`data.ring` 随进度收拢。
+ * 运动：火团沿同步的投射物锚点飞；缠焰是绑定实际目标的一圈火环，`data.ring` 随进度向目标收拢（不再用 cos/sin 速度伪造公转）。
+ * 持续：wrap 跟随缠火托管效果存活到结束（duration 0，不写 exit.stop），进度可见、被净化/替换/离远时随效果一起收。
  * 数：火粒数绑定 `data.wisps`（特攻与等级换算），强弱绑定 `data.intensity`（火团威力 / 70）。
  */
 const MysticalFireDefinition: ParticleDefinition = {
@@ -82,15 +83,15 @@ const MysticalFireDefinition: ParticleDefinition = {
             ]
         },
         wrap: {
-            duration: 60,
-            exit: { stop: 16, drain: 24 },
+            // duration 0 = 跟随缠火效果存活；不写 exit.stop，火环在整个缠身期间持续显示、按 progress 收拢。
+            duration: 0,
+            exit: { drain: 24 },
             emitters: [
                 {
-                    name: "wrap_orbit", bind: "target", offset: [0, 0.45, 0], height: 0.45,
+                    name: "wrap_coil", bind: "target", offset: [0, 0.45, 0], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: 14,
-                    shape: { kind: "point" },
-                    velocity: { x: "0.09*cos(t*6.283)", z: "0.09*sin(t*6.283)", y: "0.01" },
+                    rate: 14, shape: { kind: "ring", radius: { data: "ring", fallback: 0.6 } },
+                    direction: "inward", speed: [0.01, 0.05], spin: 8,
                     lifetime: [12, 20], size: [0.12, 0.02],
                     color: 0xE060C0, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 80
                 },

@@ -17,8 +17,8 @@
  *   edgeRadius    翼缘接触半径：特攻与身高；火势越旺、体型越大，翼尖扫过的判定带越宽。
  *   spin          火焰团数：特攻；表现里的火焰团数量。
  *   blazeChance   涨特攻几率：特攻与等级；原生 50% 的即时化。
- *   blazeStages   涨特攻级数：旋舞式一次升两级。
- *   push          击退：特攻；把命中的人沿当刻径向向外推开。
+ *   blazeStages   涨特攻级数：聚焰 1 级、旋舞 2 级，整舞最多一次，硬上限 2 级。
+ *   push          击退：特攻；把命中的人沿当刻径向用 hitDisplace 推开（原生抗性/事件可拒绝）。
  *   tempo/aftercast/recharge 速度与等级决定起手、收招与冷却；旋舞式以更慢更贵换更大的一支舞。
  *
  * 配置 `spiral`（旋舞）双向取舍：开启＝外圈更大、命中后一次升两级特攻，但每次翼击更轻、起手、收招与冷却更久；
@@ -42,7 +42,7 @@ namespace PokemonSkills {
             F.base(1.6).plus(F.body("height").minus(1.4).times(0.18).clamp(-0.2, 0.6)).clamp(1.20, 2.60).round(2),
             "起始半径", {
                 unit: "格",
-                description: "两片火翼开始时贴着的半径；身板越大起手铺得越开，贴在这个圈里就会被第一刻的翼尖扫到。"
+                description: "第一刻翼尖到达的半径；火翼是一条从身体一直扫到这个半径的翼缘，所以圈内每个点都在第一刻的扫程上。身板越大起手铺得越开。"
             }),
         /** 终止半径：2.8 + 身高偏移[−0.3,0.9] + 速度偏移[−0.3,0.7]；旋舞 ×1.20；夹 2.20..5.00。 */
         outer: formula(
@@ -84,19 +84,19 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("spiral", text("worldcombat.skill.fierydance.preference.spiral")), F.const(1.15), F.const(1)))
                 .clamp(0.30, 0.80).round(3),
             "涨特攻几率", "整支舞至少有一片火翼命中后、火焰更旺而特攻提升的几率；原生约 50%，特攻与等级把它抬得更稳，旋舞式更足。"),
-        /** 涨特攻级数：固定 1，旋舞式 2；夹 1..2。 */
+        /** 涨特攻级数：固定 1，旋舞式 2；夹 1..2，整舞一次，且没有成长台阶把它顶到 3。 */
         blazeStages: formula(
             F.base(1).plus(F.when(F.pref("spiral", text("worldcombat.skill.fierydance.preference.spiral")), F.const(1), F.const(0))).clamp(1, 2).round(0),
             "涨特攻级数", {
                 unit: "级",
-                description: "整支火舞提升的特攻级数；旋舞式多升一级，聚焰式只升一级，整舞最多触发一次。"
+                description: "整支火舞提升的特攻级数；旋舞式多升一级、最多 2 级，聚焰式 1 级，整舞最多触发一次。"
             }),
         /** 击退：0.20 + 特攻偏移[0,0.25]；夹 0.10..0.50。 */
         push: formula(
             F.base(0.20).plus(F.stat("specialAttack").minus(60).times(0.0015).clamp(0, 0.25)).clamp(0.10, 0.50).round(2),
             "击退", {
                 unit: "格",
-                description: "命中后把每个人沿当刻从身体指向它的径向推开多远；火势越旺推得越开。"
+                description: "命中后把每个人沿当刻从身体指向它的径向推开多远；火势越旺推得越开。走原生击退事件与抗性，抗性高的对象可能被拒绝推开。"
             }),
         /** 起手：10 − 速度偏移[−2,3] + 旋舞 3；夹 6..16。 */
         tempo: seconds(
@@ -120,7 +120,7 @@ namespace PokemonSkills {
 
     stages("fierydance", [
         { level: 40, values: { blaze: 90 } },
-        { level: 60, values: { blaze: 100, blazeStages: 2 } }
+        { level: 60, values: { blaze: 100 } }
     ]);
 
     describe("fierydance", [
@@ -132,6 +132,6 @@ namespace PokemonSkills {
         { key: "spiral.off", values: [], when: function (context) { return read(context.detail.values, ["spiral"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.blaze"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.blaze", "tier.1.blazeStages"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.blaze"] }
     ]);
 }

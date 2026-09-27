@@ -14,7 +14,7 @@
  *   surge    每拍威力 24 + 特攻偏移；深灌式 ×1.45。
  *   sap      回血比例 0.50 + 特攻偏移；深灌式 ×1.05。
  *   root     吸根半径（也是射线粗度）0.9 + 体型身高偏移；深灌式 ×1.3。
- *   pulses   拍数 3 + 等级；深灌式压成 2 拍。拍数固定，不因按住更久而增加。
+ *   pulses   普通式 3 拍（等级 ≥ 42 追加 1）；深灌式恒定 2 拍，成长也不改。拍数固定，不因按住更久而增加。
  *   cadence  拍间隔 8 − 速度偏移；深灌式更慢。
  *   reach    吸根够到多远 12 + 特攻 + 等级；也是实际射程与每拍 trace 长度的来源。
  *   tempo／aftercast／recharge 速度决定起手、收招与冷却。
@@ -50,10 +50,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "吸根的粗细：每拍沿瞄准方向检查首碰时，这条线就以它为半径；个高、深灌式更粗。它也是画面里粗根与指示线的范围。"
             }),
-        /** 拍数：3 + 等级 ≥ 45 追加 1；深灌式压成 2；夹 2..4。 */
+        /** 拍数：普通式 3（等级 ≥ 42 追加 1）；深灌式恒定 2，成长也不改；夹 2..4。 */
         pulses: formula(
             F.when(F.pref("deepPour", text("worldcombat.skill.gigadrain.preference.deepPour")), F.const(2),
-                F.base(3).plus(F.level().gte(45)).clamp(3, 4)).clamp(2, 4).round(0),
+                F.base(3).plus(F.level().gte(42))).clamp(2, 4).round(0),
             "抽取拍数", {
                 unit: "拍",
                 description: "按住期间一共查几拍；等级高的个体多一拍，深灌式把拍数压成两记重的。拍数固定，按住更久也不会增加。"
@@ -92,7 +92,7 @@ namespace PokemonSkills {
 
     stages("gigadrain", [
         { level: 24, values: { surge: 28 } },
-        { level: 42, values: { surge: 34, sap: 0.54, pulses: 4 } }
+        { level: 42, values: { surge: 34, sap: 0.54 } }
     ]);
 
     defineDamage("gigadrain", "surge", { defenceCoefficient: 0.005,
@@ -107,6 +107,6 @@ namespace PokemonSkills {
         { key: "deepPour.off", values: [], when: function (context) { return read(context.detail.values, ["deepPour"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.surge"] },
-        { key: "growth.1", values: ["tier.1.level", "tier.1.surge", "tier.1.sap", "tier.1.pulses"] }
+        { key: "growth.1", values: ["tier.1.level", "tier.1.surge", "tier.1.sap"] }
     ]);
 }

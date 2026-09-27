@@ -1,4 +1,4 @@
-/** A consumed held stack follows one real throw and is eaten, broken or dropped exactly once. */
+/** 一件真实持物只跟随一次投掷，最多被吃、碎或落回世界一次；取消且未命中时也恰好归还一次。 */
 namespace PokemonSkills {
     const flingScene = "world_combat:move_fling";
     const flingStatusText: { [code: string]: string } = {
@@ -14,23 +14,25 @@ namespace PokemonSkills {
         return features;
     }
 
-    /** 让飞出去的道具落在地上：谁都能捡，落地延迟由道具重量决定。 */
-    function flingDrop(current: CombatAction, point: CombatPoint, itemId: string, stack: string | null, delay: number): void {
+    /** 让飞出去的道具落在地上：谁都能捡，落地延迟由道具重量决定。空中结束用 fade，只有真实落地才叫 land。 */
+    function flingDrop(current: CombatAction, point: CombatPoint, itemId: string, stack: string | null, delay: number, moment: string): void {
         var world = current.world(), id = stack || itemId;
         if (!id) return;
         world.dropItem(point, id, 1, JSON.stringify({ pickupDelay: Math.max(0, Math.round(delay)) }));
         world.sound("minecraft:item.trident.hit_ground", point, 12, "{}");
-        WorldFeedback.emit(world, flingScene, 1, point, { moment: "land", scale: 1 }, 26);
+        WorldFeedback.emit(world, flingScene, 1, point, { moment: moment, scale: 1 }, 26);
     }
 
     function flingImpact(current: CombatAction, hit: CombatImpact, data: any): void {
         var world = current.world(), target = hit.target(), point = hit.position();
         if (target === null) {
-            if (data.leave) flingDrop(current, point, data.id, data.stack, data.pickup);
+            if (data.leave) flingDrop(current, point, data.id, data.stack, data.pickup, "fade");
             return;
         }
-        if (!world.valid(target)) { if (data.leave) flingDrop(current, point, data.id, data.stack, data.pickup); return; }
+        if (!world.valid(target)) { if (data.leave) flingDrop(current, point, data.id, data.stack, data.pickup, "fade"); return; }
         const friendly = world.friendly(target);
+        const statusName = data.item.status ? CombatStatus.normalize(data.item.status) : "";
+        const before = statusName ? CombatStatus.has(world, target, statusName) : false;
         const landed = !friendly && impact(current, hit, "fling", data.power, flingFeatures(data.item.status));
         if (data.berry) {
             if (friendly || landed) {
@@ -40,14 +42,17 @@ namespace PokemonSkills {
                 return;
             }
         } else if (landed && data.item.flinch) {
-            world.deliver(target, "world_combat:interrupt");
-            WorldFeedback.text(world, point.plus(WorldCombat.point(0, .8, 0)), "world_combat.move.fling.text.flinch", [], 24);
-        } else if (landed && data.item.status) {
-            WorldFeedback.text(world, point.plus(WorldCombat.point(0, .8, 0)), flingStatusText[data.item.status] || flingStatusText.psn, [], 24);
+            // 只有原生真的打断了目标的动作，才报「一窒」；被拒绝就不虚报。
+            if (world.deliver(target, "world_combat:interrupt"))
+                WorldFeedback.text(world, point.plus(WorldCombat.point(0, .8, 0)), "world_combat.move.fling.text.flinch", [], 24);
+        } else if (landed && statusName) {
+            // 只有这次命中真的新挂上状态才报；原本就带着或免疫都不虚报。
+            if (!before && CombatStatus.has(world, target, statusName))
+                WorldFeedback.text(world, point.plus(WorldCombat.point(0, .8, 0)), flingStatusText[data.item.status] || flingStatusText.psn, [], 24);
         }
         if (landed && world.valid(target)) world.hitDisplace(target, data.direction.scale(data.push));
         WorldFeedback.emit(world, flingScene, 1, point, { moment: "impact", target: String(target.ref()), bursts: data.bursts, scale: 1 }, 24);
-        if (data.leave) flingDrop(current, point, data.id, data.stack, data.pickup);
+        if (data.leave) flingDrop(current, point, data.id, data.stack, data.pickup, "land");
     }
 
     function flingThrow(action: CombatAction, config: any, done: (current: CombatAction) => void): void {
@@ -77,16 +82,28 @@ namespace PokemonSkills {
                     leave: !(config && config.leave === false), id: itemId, stack: stack, direction: direction });
             }
         }, function (current) {
-            if (!settled && !(config && config.leave === false)) flingDrop(current, last, itemId, stack, pickup);
+            // 自然收场：用 projectilePosition 读真实结束点，读不到才退回最后观察点；不假造满射程终点或旧瞄准点。
+            if (!settled && !(config && config.leave === false)) {
+                const end = current.world().projectilePosition(flight);
+                flingDrop(current, end !== null ? end : last, itemId, stack, pickup, "fade");
+            }
             settled = true; scenes.finish(current, done);
         });
         scenes.show(action, "flight", action.origin(), { moment: "flight", projectile: flight, scale: 1 });
+        // 取消且尚未结算：这次投掷没有发生，把已经取出的那件道具可靠地放回世界恰好一次，落在弹体最后观察点。
+        action.on("world_combat:interrupt", function (current: CombatAction) {
+            if (settled) return;
+            settled = true;
+            try {
+                const scope = current.world();
+                scenes.stop(current);
+                flingDrop(current, last, itemId, stack, pickup, "fade");
+            } catch (error) { }
+        });
         function observe(current: CombatAction): void {
             if (settled) return;
-            const entities = current.world().nativeEntities(last, Math.max(2, speed * 2 + 1), "");
-            for (let i=0;i<entities.length;i++) if (String(entities[i].uuid !== undefined ? entities[i].uuid : entities[i].stringUUID)===flight) {
-                const at=entities[i].position(); last = WorldCombat.point(Number(at.x()), Number(at.y()), Number(at.z())); break;
-            }
+            const at = current.world().projectilePosition(flight);
+            if (at !== null) last = at;
             current.after(1, observe);
         }
         action.releaseTarget(); action.after(1, observe);

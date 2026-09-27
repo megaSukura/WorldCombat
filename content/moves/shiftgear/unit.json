@@ -13,7 +13,13 @@
     "skill.ts",
     "ai.ts"
   ],
+  "startupSources": [
+    "startup.ts"
+  ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "mobEffectIcons": {
+    "world_combat:shiftgear_gear": "minecraft:mob_effect/speed"
+  }
 }

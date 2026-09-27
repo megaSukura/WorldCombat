@@ -3,12 +3,13 @@
  *
  * 一句话：施法者低身收势、把受过伤的暗色能量从伤势里聚到身体一侧（伤得越重收得越多）→ 短促沉重地迎上前，
  * 脚边沿真实落点留下脚印与尘 → 撞上目标的一刻，若目标先动过手就炸开更暗更密的一记并浮出「以牙还牙！」，
- * 无论中与不中，脚下都顿出一圈收势尘。
- * 色相家族：暗紫到近黑（impact_dark、obscuringsmoke、glowingsparkle），翻倍时混入一点血红强调。
- * 拍子：起 gather（收势）→ 迎 gait（脚痕）→ 击 strike / counter（翻倍）→ 收 settle。
+ * 无论中与不中，脚下都顿出一圈收势尘。若本次真实反击窗口仍开着，准备期另有一圈短提示，窗口走完即停。
+ * 色相家族：暗紫到近黑（impact_dark、obscuringsmoke、glowingsparkle），翻倍时混入一点血红强调；
+ *   ready 窗口提示用暗紫红的 inward 收束环，和受伤聚气区分开。
+ * 拍子：起 gather（收势）+ ready（窗口提示，条件）→ 迎 gait（脚痕）→ 击 strike / counter（翻倍）→ 收 settle。
  * 范围：gather 画在施法者偏一侧；strike/counter 的点爆与环由 `data.scale`（判定半径派生）决定大小，
- *   玩家一眼看出这一记能咬住多大的圈。
- * 运动：gather 的能量由外向内收且偏一侧；gait 沿真实位移留脚印；命中碎片由内向外炸；settle 由脚边向外压开。
+ *   玩家一眼看出这一记能咬住多大的圈；ready 的环由 `data.scale`（窗口长短派生）决定大小。
+ * 运动：gather 的能量由外向内收且偏一侧；gait 沿真实位移留脚印；命中碎片由内向外炸；settle 由脚边向外压开；ready 向身体收束。
  * 数：`data.gather`（缺失生命比例派生）决定收势粒子数量，`data.count`（最终威力/迎步距离派生）决定命中碎片与收势尘数量，
  *   `data.power`（最终威力）与 `data.scale` 抬高亮度与尺寸；画面里的数量与机制里的数一致。
  */
@@ -34,6 +35,28 @@ const PaybackDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.01, 0.06],
                     lifetime: [10, 18], size: [0.18, 0.05],
                     color: 0x3A2C4A, alpha: [0.35, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        ready: {
+            duration: { data: "remaining", fallback: 0 },
+            exit: { stop: 3, drain: 8 },
+            emitters: [
+                {
+                    name: "window", bind: "source", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    rate: 10, shape: { kind: "ring", radius: { data: "scale", fallback: 0.7 } },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.24, 0.06],
+                    color: 0xE24B8A, alpha: [0.7, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "tell", bind: "source", offset: [0, 0, 0], height: 0.65,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    burst: { count: 3, interval: 8, repeats: 3 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [5, 10], size: [0.08, 0.02],
+                    color: 0xE24B8A, alpha: [0.8, 0], light: "full", maxParticles: 16
                 }
             ]
         },

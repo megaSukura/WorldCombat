@@ -5,10 +5,15 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "MobControlMixin",
+    "NativeTargetRequestMixin",
+    "NativeMobAttackStartMixin",
+    "NativeProjectileStartMixin",
+    "ProjectileMotionMixin",
     "MobEffectTickMixin",
     "MobEffectLeaseSaveMixin",
     "NativeEffectAccess",
     "NativeEffectStackAccess",
+    "NativeEffectMutationMixin",
     "ProjectileHitRadiusMixin",
     "ProjectileFlightObservationMixin",
     "PublicAttributeMixin",
@@ -18,8 +23,17 @@
     "NativePathGoalMixin",
     "PreciseNavigationMixin",
     "NativeDamageFloorMixin",
+    "NativeDamageReceiptMixin",
+    "NativePlayerDamageReceiptMixin",
+    "NativeServerPlayerDamageReceiptMixin",
+    "NativeDamageStageMixin",
+    "NativePlayerAttackReceiptMixin",
+    "NativeCriticalEventMixin",
+    "NativeSelfHarmMixin",
+    "NativeSelfHarmSensorMixin",
     "T88NetworkWatcherMixin"
   ],
+  "client": ["NativeEntityEchoMixin"],
   "injectors": {
     "defaultRequire": 1
   }

@@ -25,8 +25,9 @@
   "worldcombat.skill.bulldoze.preference.ai.maxChase": "Approach distance",
   "worldcombat.skill.bulldoze.preference.ai.maxChase.help": "Beyond this distance the companion walks in instead of stomping; higher opens earlier but lets foes step away first.",
   "worldcombat.skill.bulldoze.preference.ai.cluster": "Prefer clusters",
-  "worldcombat.skill.bulldoze.preference.ai.cluster.help": "With this on, the companion raises Bulldoze when 2 or more grounded foes stand inside its own reach, so one stomp catches the ring at its feet; off keeps the normal attack order.",
+  "worldcombat.skill.bulldoze.preference.ai.cluster.help": "With this on, the companion raises Bulldoze when 2 or more grounded foes stand inside its real fissure radius on the same connected surface, so one stomp catches the ring at its feet; off keeps the normal attack order.",
   "world_combat.move.bulldoze.text.hit": "Stomped %1$s",
   "world_combat.move.bulldoze.text.miss": "Fissure missed",
+  "world_combat.move.bulldoze.text.slow": "Shaken slow -%1$s stage(s)",
   "worldcombat.skill.bulldoze.description.ground": "You must be standing on the ground to drive the stomp in; it cannot be cast while airborne, and you stay rooted through the wind-up and recovery."
 }

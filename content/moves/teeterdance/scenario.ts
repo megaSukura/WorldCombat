@@ -4,7 +4,7 @@
  * 场面：一只只会「摇晃舞」的噗噗猪与一只僵尸隔开约 7 格开战。技能表里只有这一招，所以 AI 只能起舞；
  *   它没有攻击手段，会以「控制」的身份先走近到舞圈半径以内再放。
  * 必然事实：本招被提交过；僵尸带上了共享身份 world_combat:status/confusion。
- * 摇晃走位的每步位移、失手概率、顾友／尽兴哪一档，连同被晃到的人数一起写进 note 供读轨迹判断。
+ * 舞步拍数与每拍实际侧步、摇晃走位的每步位移、共享失手门禁、顾友／尽兴哪一档，连同被晃到的人数一起写进 note 供读轨迹判断。
  */
 Smoke.scenario("teeterdance", function (stage) {
     stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
@@ -17,7 +17,7 @@ Smoke.scenario("teeterdance", function (stage) {
     }, function () {
         stage.expect(stage.casts("teeterdance", caster) > 0, "teeter dance was committed");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/confusion"), "the foe carried the shared confusion identity");
-        stage.note("the ongoing stagger, the fumble roll and the considerate/all-out form are design facts read here", {
+        stage.note("the pre-burst side-steps, the ongoing stagger (native hitDisplace), the shared confusion fumble and the considerate/all-out form are design facts read here", {
             casts: stage.casts("teeterdance", caster),
             foeDazed: stage.hasMobEffect(foe, "world_combat:status/confusion"),
             casterHurt: Math.round(stage.damageTo(caster) * 10) / 10,

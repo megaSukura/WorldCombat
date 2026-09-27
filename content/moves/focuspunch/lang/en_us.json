@@ -29,5 +29,6 @@
   "world_combat.move.focuspunch.text.hit": "Focus Punch!",
   "world_combat.move.focuspunch.text.broken": "Focus broken",
   "world_combat.move.focuspunch.text.whiff": "Whiff",
+  "world_combat.move.focuspunch.text.resist": "Blow shrugged off",
   "worldcombat.skill.focuspunch.description.gather": "Flinch cannot break the gather - only actual damage can; a broken gather spends no PP and triggers no cooldown."
 }

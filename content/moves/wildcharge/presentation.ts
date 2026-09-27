@@ -4,8 +4,8 @@
  * 一句话：电流从全身收拢、越跑越亮，整个人笔直冲出去；电流沿真实身体一路走到接触侧——干燥目标在接触点炸开一圈，
  * 湿透目标则沿着躯体表面爬散、被必然灌入麻痹；撞完站在原地短放电收势。湿透的施法者一开冲，脚下就先漏出一小段弧。
  * 色相家族：电黄（0xF2D03A）与冷白（0xEAF6FF），电弧的蓝（0x5AC8F0）用在湿身漏电与传导。
- * 拍子：起 windup（收拢电流）→ 冲 charge（带电直线冲刺，leak 为湿身起冲漏电）→ impact（干燥命中）／conduct（湿身命中）→ settle（原地短放电收势）／ discharge（冲空或墙前泄放）。
- * 范围：charge 的冲刺线沿 `data.path` 两顶点铺成一条电弧带；impact／conduct 的 conductor 也走 `data.path`，画的就是身体到接触侧那一段。
+ * 拍子：起 windup（收拢电流）→ 冲 charge（带电直线冲刺，每刻发当前真实子段，leak 为湿身起冲漏电）→ impact（干燥命中）／conduct（真正传导进麻痹的湿身命中）／contact（友方或拒伤的轻接触）→ settle（原地短放电收势）／ discharge（冲空或墙前泄放）。
+ * 范围：charge 的冲刺线每刻只画判定那一段真实子段（`data.path` 两端点随身体推进更新）；impact／conduct 的 conductor 也走 `data.path`，画的就是身体到接触侧那一段。
  * 运动：速度线沿 `data.direction` 掠过；命中后电弧与火花从接触点散开；湿目标的电流沿躯体表面爬行。
  * 数：`data.spark` 决定冲线、泄放与漏电的火花密度，`data.hits`（威力派生）决定命中迸发数，
  * `data.conducted`（1 表示这次真的灌入麻痹）决定接触点核心的蓄能电弧，`data.soaked`（1 表示自己湿透）决定起冲与收势的漏电，
@@ -162,6 +162,31 @@ const WildchargeDefinition: ParticleDefinition = {
                 }
             ]
         },
+        contact: {
+            duration: 16,
+            exit: { stop: 8, drain: 10 },
+            emitters: [
+                {
+                    // 友方或拒伤：只在接触处轻轻一炸，不沿躯体扩散、不冒充传导。
+                    name: "graze", bind: "point", offset: [0, 0.45, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
+                    burst: { count: { data: "spark", fallback: 8 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.05, 0.16], spread: 18,
+                    lifetime: [5, 9], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xF2D03A, alpha: [0.75, 0], light: "full", bloom: 0.2, maxParticles: 24
+                },
+                {
+                    name: "fizzle", bind: "point", offset: [0, 0.42, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [6, 10], size: [0.09, 0.02],
+                    color: 0x5AC8F0, alpha: [0.55, 0], light: "world", maxParticles: 18
+                }
+            ]
+        },
         conduct: {
             duration: 30,
             exit: { stop: 14, drain: 20 },
@@ -268,20 +293,6 @@ const WildchargeDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.05, 0.18],
                     lifetime: [6, 10], size: [0.16, 0.04],
                     color: 0x5AC8F0, alpha: [0.7, 0], light: "full", maxParticles: 30
-                }
-            ]
-        },
-        wake: {
-            duration: 8,
-            emitters: [
-                {
-                    name: "static", bind: "source", offset: [0, 0.06, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    rate: { data: "motes", fallback: 8 },
-                    shape: { kind: "ring", radius: 0.3 },
-                    direction: "outward", speed: [0.03, 0.1],
-                    lifetime: [6, 10], size: [0.07, 0.02],
-                    color: 0xF2D03A, alpha: [0.5, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 26
                 }
             ]
         }

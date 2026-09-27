@@ -3,12 +3,13 @@
  *
  * 一句话：施法者踩着一段古怪节拍、身侧荡开一圈圈音纹 → 拍子脱手、沿真实轨迹朝选中的对象飞去 →
  *         落定后两端脚边同时亮起短环、身上炸开一圈摆动的音符，说明两边踩到了同一条拍子上；接不住就断拍。
+ *         有效期内受术者身上持续跳出小拍点，跟到状态期满/被清才散去。
  * 色相家族：节拍黄 0xE8C24A 作主体，暖白 0xFFF0C8 作高光。
- * 拍子：起 dance 0–12t ／ 飞 beat 40t（沿 projectile 绑定）／ 落 sync 32t ／ 断 fizzle 22t。
+ * 拍子：起 dance 0–12t ／ 飞 beat 40t（沿 projectile 绑定）／ 落 sync 32t ／ 持续 hold（托管效果同寿）／ 断 fizzle 22t。
  * 范围：beat 的拍子沿真实飞行轨迹拖出，sync 的环按 `data.scale`（节拍密集比）铺开；
- *   落地摆动的密度绑 `data.sway`（特攻派生），飞行的密度绑 `data.beats`（速度派生）。
- * 运动：音纹向两侧荡开、拍子从施法者飞向受术者、落定时两端同时向外扩一圈再收束。
- * 数：`data.beats` 决定飞行拖尾与施法端音符，`data.sway` 决定受术端摆动，`data.intensity`（时长派生）整体加强。
+ *   落地摆动的密度绑 `data.sway`（特攻派生），飞行的密度绑 `data.beats`（速度派生），持续拍点也绑 `data.beats`。
+ * 运动：音纹向两侧荡开、拍子从施法者飞向受术者、落定时两端同时向外扩一圈再收束，持续期小拍点原地起落。
+ * 数：`data.beats` 决定飞行拖尾、施法端音符与持续拍点，`data.sway` 决定受术端摆动，`data.intensity`（时长派生）整体加强。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const EntrainmentSceneDefinition: ParticleDefinition = {
@@ -97,6 +98,28 @@ const EntrainmentSceneDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.06], spin: 20,
                     lifetime: [10, 18], size: [0.11, 0.02], sizeMode: "sin",
                     color: 0xFFF0C8, alpha: [0.75, 0], light: "full", maxParticles: 60
+                }
+            ]
+        },
+        hold: {
+            duration: 0,
+            emitters: [
+                {
+                    name: "hold_beat", bind: "target", fit: "body", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    rate: { data: "beats", fallback: 4 },
+                    shape: { kind: "ring", radius: 0.42 },
+                    direction: "up", speed: [0.01, 0.05], spin: 18,
+                    lifetime: [8, 16], size: [0.1, 0.02], sizeMode: "sin",
+                    color: 0xE8C24A, alpha: [0.6, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "hold_pulse", bind: "target", fit: "body", offset: [0, 0.14, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/warblingring",
+                    rate: 2, shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.02, 0.06],
+                    lifetime: [10, 18], size: [0.24, 0.5], sizeMode: "sin",
+                    color: 0xFFF0C8, alpha: [0.35, 0], light: "full", maxParticles: 24
                 }
             ]
         },

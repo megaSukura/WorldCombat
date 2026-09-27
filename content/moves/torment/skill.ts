@@ -16,6 +16,10 @@ namespace PokemonSkills {
         return views.length ? JSON.parse(String(views[0].data())) : null;
     }
 
+    // 原生攻击没有 originInstance 时的同刻去重：同源、同直接实体、同伤害类型、同一刻的回执只判一次。
+    var tormentNativeSeen: { [ref: string]: { key: string; tick: number } } = Object.create(null);
+    const tormentNative = "world_combat:move_torment/native";
+
     // 烦躁存续的托管标记：把「头上双节拍」绑在真实状态的生命周期上，自然到期、牛奶／`/effect clear`
     // 提前拿掉都随它一起停；表现用 onEffect 绑本标记，标记一收画面立刻停，不靠自己的计时。
     function tormentLinger(effect: CombatEffect): void {
@@ -26,11 +30,13 @@ namespace PokemonSkills {
         const data = JSON.parse(effect.state());
         const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(6000, carrier.duration()));
         const surge = Math.max(0, Math.min(1, 1 - remaining / Math.max(1, data.max)));
-        const beat = Math.floor(world.tick() / 10) % 2;
+        // 拍子按这条烦躁「尚需等待」的剩余时间翻面，跟着自己的标记走，不用与它无关的世界时钟；
+        // 亮侧由 rate 数据驱动，配合 duration 0 的 linger 幕，长状态后半也一直有符号，而不是固定 40 刻后停。
+        const beat = Math.floor(remaining / 10) % 2;
         WorldFeedback.onEffect(world, effect.id(), "linger", tormentScene, 1, body.position(),
             { moment: "linger", target: String(target.ref()), irritation: data.irritation, surge: surge, beat: beat,
-                litLeft: beat === 0 ? 1 : 0, litRight: beat === 1 ? 1 : 0,
-                dimLeft: beat === 0 ? 0 : 1, dimRight: beat === 1 ? 0 : 1, kind: data.lastKind || "" });
+                leftRate: beat === 0 ? 3 : 0.4, rightRate: beat === 1 ? 3 : 0.4,
+                kind: data.lastKind || "" });
         effect.remaining(remaining);
         effect.schedule("watch", "watch", 10, "{}");
     }
@@ -56,26 +62,46 @@ namespace PokemonSkills {
     // 封锁：带着烦躁身份的生物，在提交它最近一次用过的同名招式时被拒绝。
     // 普通攻击按实际成功命中过的攻击类型判定（recentAttack 只记真正造成伤害的那一下），不是 AI 意图。
     // 这条贡献走共享动作策略，原生配招、通用动作与玩家共用同一个提交闸门；对任何带身份的活体成立。
-    CombatStatus.actions.define({ id: "world_combat:move_torment/policy", apply: function (context) {
-        if (!CombatStatus.has(context.world, context.actor, tormentStatus)) return;
-        if (context.phase === "damage" && DamageSemantics.read(context.metadata).attack) {
-            const last = DamageSemantics.recentAttack(context.world, context.actor, 30);
-            if (last && last.type === String(context.metadata.damageType)) {
-                context.blocked.tormented = true;
-                context.detail.tormented = { kind: tormentKind(last.type), type: String(last.type) };
+    CombatStatus.actions.define({ id: "world_combat:move_torment/policy",
+        // 排在原生 skill-policy 之后，提交与伤害两边都能读到原生招式快照。
+        after: ["cobblemon_world_combat:skill-policy"],
+        apply: function (context) {
+            if (!CombatStatus.has(context.world, context.actor, tormentStatus)) return;
+            const ref = String(context.actor.ref());
+            if (context.phase === "damage") {
+                // 这里只判真正的原生攻击。脚本招式的重复已在 available/commit 拦下；伤害阶段不能再读本次提交
+                // 刚更新的 used，否则会把刚获准那一招自己的每一击都拒掉。
+                if (!DamageSemantics.read(context.metadata).attack) return;
+                const origin = String(context.world.originInstance() || "");
+                const prior = MoveExecutions.read(context.world, tormentNative);
+                if (origin && prior !== null && String(prior.origin) === origin) return;
+                const meta = context.metadata || {};
+                const fingerprint = String(meta.sourceEntity || "") + "|" + String(meta.directEntity || "") + "|" + String(meta.damageType || "");
+                const seen = tormentNativeSeen[ref];
+                if (!origin && seen && seen.key === fingerprint && seen.tick === context.world.tick()) return;
+                const last = DamageSemantics.recentAttack(context.world, context.actor, 30);
+                if (last && String(last.type) === String(meta.damageType)) {
+                    context.blocked.tormented = true;
+                    context.detail.tormented = { status: "torment", kind: tormentKind(last.type), type: String(last.type) };
+                }
+                // 记下这次执行的判断：同一次执行的多段回执不再互相拒绝。
+                if (origin) MoveExecutions.write(context.world, tormentNative, { origin: origin });
+                else tormentNativeSeen[ref] = { key: fingerprint, tick: context.world.tick() };
+                return;
             }
-            return;
-        }
-        if (String(context.actor.domain()) !== "cobblemon") return;
-        const move = context.move;
-        if (!move || typeof move.id !== "function") return;
-        const state = NativeEffects.read(context.world, context.actor);
-        if (!state.used) return;
-        if (String(state.used) === String(move.id())) {
-            context.blocked.tormented = true;
-            context.detail.tormented = { move: String(move.id()) };
-        }
-    } });
+            // 脚本配招的重复门禁只在 available 与 commit 读取前次执行：commit 时 used 仍是上一招，
+            // 本次同名提交在此被拦下；提交成功后才更新 used，属于本次执行的伤害不会再被自己拒掉。
+            if (context.phase !== "available" && context.phase !== "commit") return;
+            if (String(context.actor.domain()) !== "cobblemon") return;
+            const move = context.move;
+            if (!move || typeof move.id !== "function") return;
+            const state = NativeEffects.read(context.world, context.actor);
+            if (!state.used) return;
+            if (String(state.used) === String(move.id())) {
+                context.blocked.tormented = true;
+                context.detail.tormented = { status: "torment", move: String(move.id()) };
+            }
+        } });
 
     // 被判回的那一下要看得见：普通攻击与宝可梦共用同一张回执，头上亮出断拍符号并写清原因。
     // 不另叠减速或伤害，拒绝只是拒绝。

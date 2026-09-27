@@ -20,9 +20,11 @@ Smoke.scenario("firelash", function (stage) {
         stage.after(20, function () {
             stage.expect(stage.casts("firelash", caster) > 0, "firelash was committed");
             stage.expect(stage.damageTo(foe) > 0, "the burning lash dealt damage to the foe");
+            stage.expect((stage.stages(foe).def || 0) <= -1, "the landed lash stripped at least one Defense stage");
             stage.note("every landed lash lowers the target's Defense by melt (native 1, entangle form 2); lash power/reach follow Attack/Speed/height/level and the entangle/lash choice (design facts verified in the full assembly)", {
                 casts: stage.casts("firelash", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
+                defStage: stage.stages(foe).def || 0,
                 moved: Math.round(stage.travelled(caster) * 10) / 10,
                 foeMoved: Math.round(stage.travelled(foe) * 10) / 10,
                 foeAlive: foe.alive()

@@ -264,7 +264,10 @@ namespace PokemonBehaviorHost {
             if (memory.commandReturn) state.agent.memory.commandReturn = memory.commandReturn;
             else delete state.agent.memory.commandReturn;
             if (operation === "order-complete") delete state.agent.memory.focusObservation;
-            if (operation !== "tick") { state.agent.stop("command-changed", input); delete state.agent.memory.navigation; }
+            if (operation !== "tick") {
+                state.agent.stop("command-changed", input); delete state.agent.memory.navigation;
+                delete state.agent.memory.observedPositions; delete state.agent.memory.focusObservation;
+            }
             access.controlled(true); input.facts.managed = true;
             if (state.manual !== view.lastManual()) { state.agent.stop("manual-input", input); state.manual = view.lastManual(); }
             if (!view.pendingNavigation() && access.tick() - view.lastManual() >= options.manualGrace && access.tick() % options.decisionTicks === 0) state.agent.tick(input);

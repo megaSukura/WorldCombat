@@ -1,7 +1,7 @@
 /**
  * 欺诈 / foulplay 的出手方式。
  *
- * 核心念头：施法者自己不发力——一条暗影手臂从脚下顺瞄准方向逐刻爬出去，第一个碰到的实体就是被反拧的对象，
+ * 核心念头：施法者自己不发力——一条暗影手臂从身侧顺瞄准方向逐刻伸出去，第一个碰到的实体就是被反拧的对象，
  *   把它的力气按在它自己身上。所以伤害读的是**实际抓到者的物攻**：对手越壮，这一记越重，施法者弱也咬得动强敌。
  *   施法者自身仍按共享伤害公式的基础系数参与，只是不再是主来源。
  *
@@ -10,8 +10,9 @@
  *   伸（crawl → seize / drag / miss）：提交后暗影沿释放时锁定的瞄准方向逐刻伸长（`crawl` 决定每刻头部推进量，
  *       `grasp` 是 trace 半径，`reach` 严格封顶）；每刻用 `action.trace` 只探出头部新走的那一段，把友方与实墙都算作
  *       接触。首碰实体即抓到者：是敌人就按**它当下的物攻**结算一次 trick 伤害；是友方/自己就停在它身上、不伤；
- *       撞墙在实际方块表面散手；一路无人就空伸收回。纠缠式把实际抓到者分 3 刻朝施法者实际方向拖近一段，暗影同步缩回；
- *       反手式当刻反拧松手，不留持续标记。伤害被拒（免疫等）时不附加拉拽与减速。
+ *       撞墙在实际方块表面散手；一路无人就空伸收回。纠缠式用 hitDisplace（保留原生抗击退）把实际抓到者分 3 刻
+ *       朝施法者拖近一段，按实际累计距离回执、被挡住即松手；反手式当刻反拧松手，不留持续标记。
+ *       伤害被拒（免疫等）时不附加拉拽与减速。
  *
  * 与同族分开：本组同族都以对手／自己的某种状态为武器；欺诈读的是**实际抓到者此刻的物攻**，
  *   而且直接把这份力气还给它。它和扑击（读自己的防御）方向相反：一个借别人的，一个用自己的。
@@ -21,7 +22,7 @@ namespace PokemonSkills {
         id: foulplayId,
         cooldownParameter: "recharge",
         name: "Foul Play",
-        description: "伸出一条暗影手臂，顺瞄准方向逐刻爬出：第一个碰到的实体就是被反拧的对象。抓到敌人时按**它当下的物攻**结算物理伤害——对手越壮，借来的力气越大。墙会挡住手臂，没人碰到就空伸收回；纠缠式命中的同时把对方朝自己拖近一小段。",
+        description: "伸出一条暗影手臂，顺瞄准方向逐刻伸出：第一个碰到的实体就是被反拧的对象。抓到敌人时按**它当下的物攻**结算物理伤害——对手越壮，借来的力气越大。墙会挡住手臂，没人碰到就空伸收回；纠缠式命中的同时把对方朝自己拖近一小段。",
         uses: ["用它自己的力气打它", "越壮的目标咬得越重", "纠缠式把强敌拖进近身"],
         kind: "aim",
         range: 5.2,
@@ -79,7 +80,7 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            function endDrag(current: CombatAction, victimRef: string, pull: number): void {
+            function endDrag(current: CombatAction, victimRef: string, dragged: number): void {
                 const scope = current.world();
                 scenes.stop(current, "drag");
                 const victim = scope.actor(victimRef);
@@ -87,28 +88,30 @@ namespace PokemonSkills {
                 if (body !== null) {
                     if (scope.valid(victim!)) scope.marker(victim!, "minecraft:slowness", stagger, 1);
                     WorldFeedback.emit(scope, foulplayScene, 1, body.position(),
-                        { moment: "drag", target: victimRef, pull: pull, scale: scale }, 24);
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.1, 0)), foulplayDragText, [Math.round(pull * 10) / 10], 24);
+                        { moment: "drag", target: victimRef, pull: dragged, scale: scale }, 24);
+                    // 回执报的是真被拖走的距离，不是原计划的预算。
+                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.1, 0)), foulplayDragText, [Math.round(dragged * 10) / 10], 24);
                 }
                 finish(current);
             }
 
-            /** 纠缠回收：分 3 刻把实际抓到者按 pull 总预算朝施法者实际方向拖近，暗手同步缩回。 */
-            function pullIn(current: CombatAction, victimRef: string, pull: number, remaining: number, perTick: number, elapsed: number): void {
+            /** 纠缠回收：分 3 刻把实际抓到者朝施法者实际方向拖近（用 hitDisplace 保留原生抗击退）；
+             *  实际拖了多少就累计回执多少，被挡住或失距即松手。 */
+            function pullIn(current: CombatAction, victimRef: string, pull: number, remaining: number, perTick: number, elapsed: number, dragged: number): void {
                 if (settled) return;
                 const scope = current.world();
                 const self = scope.observe(actor);
                 const victim = scope.actor(victimRef);
                 const held = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                if (self === null || held === null || remaining <= 0.05 || elapsed >= pullTicks) { endDrag(current, victimRef, pull); return; }
+                if (self === null || held === null || remaining <= 0.05 || elapsed >= pullTicks) { endDrag(current, victimRef, dragged); return; }
                 const toward = self.position().minus(held.position());
-                if (toward.length() < 0.05) { endDrag(current, victimRef, pull); return; }
-                const moved = scope.displace(victim!, toward.unit().scale(Math.min(remaining, perTick)));
+                if (toward.length() < 0.05) { endDrag(current, victimRef, dragged); return; }
+                const moved = scope.hitDisplace(victim!, toward.unit().scale(Math.min(remaining, perTick)));
                 const left = Math.max(0, remaining - moved);
                 scenes.show(current, "drag", held.position(),
                     { moment: "drag", target: victimRef, path: ["source", victimRef], scale: scale, remaining: left });
-                if (moved <= 0.001) { endDrag(current, victimRef, pull); return; }
-                current.after(1, function (next: CombatAction) { pullIn(next, victimRef, pull, left, perTick, elapsed + 1); });
+                if (moved <= 0.001) { endDrag(current, victimRef, dragged); return; }
+                current.after(1, function (next: CombatAction) { pullIn(next, victimRef, pull, left, perTick, elapsed + 1, dragged + moved); });
             }
 
             /** 抓到敌人：按**这个实际被抓者当下**的物攻重算威力，只有真伤才反拧、才可纠缠。 */
@@ -135,7 +138,7 @@ namespace PokemonSkills {
                 const pull = p(foulplayId, "pull", withTarget(factContext(current), victim));
                 scenes.show(current, "drag", point,
                     { moment: "drag", target: victimRef, path: ["source", victimRef], pull: pull, scale: scale, remaining: pull });
-                pullIn(current, victimRef, pull, pull, pull / pullTicks, 0);
+                pullIn(current, victimRef, pull, pull, pull / pullTicks, 0, 0);
             }
 
             /** 逐刻伸长：只 trace 新走出的那一段；首碰实体或方块就停，走满 reach 就收回。 */
@@ -149,7 +152,8 @@ namespace PokemonSkills {
                 travelled += at.minus(from).length();
                 head = at;
                 scenes.show(current, "crawl", origin,
-                    { moment: "crawl", path: ["source", [at.x(), at.y(), at.z()]], tendrils: tendrils, scale: scale, reach: reach });
+                    { moment: "crawl", path: ["source", [at.x(), at.y(), at.z()]], point: [at.x(), at.y(), at.z()],
+                      tendrils: tendrils, scale: scale, reach: reach });
                 if (contact.hitEntity()) {
                     const victim = contact.target();
                     if (victim === null || !scope.valid(victim) || scope.friendly(victim) || String(victim.ref()) === String(actor.ref()))

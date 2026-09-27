@@ -1,12 +1,12 @@
 /**
  * 龙爪 / dragonclaw 的客户端表现。
  *
- * 一句话：举爪蓄势时两条臂线上聚起紫晶色的龙气，随后身前铺开两条交叉的巨爪带；被带扫中的目标身上炸开龙系冲击，
- * 只被单带蹭到的边缘目标亮一条爪痕，落在交叉中心的目标再补一记明确的双交叉撕甲痕。
+ * 一句话：举爪蓄势时两条臂线上聚起紫晶色的龙气，随后身前划下两条交叉的斜爪轨迹、在中心亮出一个短交点；
+ * 被爪带扫中的目标身上炸开龙系冲击，只被单爪蹭到的边缘目标亮一条爪痕，落在交叉中心、护甲真被撕开的目标再补一记双交叉撕甲痕。
  * 色相家族：紫晶（0x7A5CFF）作主体、淡紫（0xB79CFF）作细节、近白（0xE8E0FF）作强调；深底（0x3A2C7A）作余韵。
- * 拍子：起 raise（聚气）→ 扫 sweep ×2（两条实际爪带）→ 击 strike → 中心 rend（双交叉）／边缘 claw（单条）／空 miss。
- * 范围：sweep 用 `data.path`（与服务端两条爪带同一组四个顶点）填出整条爪带，两道 sweep 同刻发出，玩家一眼看出交叉的覆盖区。
- * 运动：两条爪带依各自的 polyline 方向扫开；strike 从目标向外爆；rend 的交叉线落在目标身上。
+ * 拍子：起 raise（聚气）→ 扫 sweep ×2（两条斜爪轨迹）＋ cross（中心短交点）→ 击 strike → 中心 rend（双交叉）／边缘 claw（单条）／空 miss。
+ * 范围：sweep 的 `data.path` 是服务端那条斜爪轨迹的线段（不是填满的矩形带），两道 sweep 同刻发出；cross 落在两带交叉中心。
+ * 运动：两条爪轨依各自的 polyline 方向扫开；strike 从目标向外爆；rend 的交叉线落在目标身上。
  * 数：爪带与命中量绑 `data.marks`（物攻换算），命中强度绑 `data.intensity`（本击威力 / 78）规模绑 `data.scale`；
  *     `data.band` 区分左右爪带，`data.centre` 区分中心双爪（1）与边缘单爪（0），`data.stages` 决定撕甲层数。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -43,18 +43,42 @@ const DragonclawDefinition: ParticleDefinition = {
                 {
                     name: "band", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/slash",
-                    shape: { kind: "polygon" }, rate: { data: "marks", fallback: 16 },
+                    shape: { kind: "polyline" }, rate: { data: "marks", fallback: 16 },
                     direction: "shape", orient: "direction", speed: [0.04, 0.14],
                     lifetime: [6, 12], size: [0.3, 0.05], sizeMode: "index",
-                    color: 0x7A5CFF, alpha: [0.35, 0], light: "full", maxParticles: 120
+                    color: 0x7A5CFF, alpha: [0.4, 0], light: "full", maxParticles: 120
                 },
                 {
                     name: "edge", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/cut",
-                    shape: { kind: "polyline", closed: true }, rate: 30,
+                    shape: { kind: "polyline" }, rate: 30,
                     direction: "shape", speed: [0.06, 0.18], spread: 10,
                     lifetime: [5, 9], size: [0.28, 0.05], sizeMode: "index",
                     color: 0xE8E0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 90
+                }
+            ]
+        },
+        cross: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "seam", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "marks", fallback: 16 }, at: 0 },
+                    shape: { kind: "ring", radius: 0.3, thickness: 0.6 },
+                    direction: "outward", speed: [0.05, 0.18], spread: 18,
+                    lifetime: [6, 12], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xE8E0FF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 60
+                },
+                {
+                    name: "pinch", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.05, 0.2],
+                    lifetime: [5, 10], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0x7A5CFF, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 30
                 }
             ]
         },

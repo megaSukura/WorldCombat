@@ -4,11 +4,11 @@
  * 一句话：施法者抬掌聚起一线掌风，随后一只手掌接一只手掌地左右来回扇，两颊之间掌印交替炸开一小簇粉白掌风；
  *   对手被拨得左右晃，没扇到就只剩一道擦空的手影。
  * 色相家族：掌风粉白（0xF6C9D2 偏色）与命中近白（0xFFFFFF）做本体与强调，掌风碎屑（tinydust 原色）只做余韵。
- * 拍子：起 raise（抬掌聚风）→ 抽 swing（一记记掌影）→ 中 hit / 空 miss·away → 收 settle。
+ * 拍子：起 raise（抬掌聚风）→ 抽 swing（一记记空挥掌影）→ 中 hit / 空 miss·away → 收 settle。
  * 范围：本招是贴身单体连抽，画面靠贴在对手身上的一记记掌印标出「谁会被抽到」，没有地面轮廓。
- * 运动：`swing` 从服务端算出的那只掌的真实起点（`data.point`，左右交替）朝目标扇出，所以左右掌各有自己的起点；
- *   掌影的滚转由 `data.tilt`（左右交替的 ±角度）驱动，读作「一会从左扇、一会从右扇」。
- *   命中 `hit` 落在目标朝这只掌最近的脸侧接触点；够不着时 `away` 从掌位朝脱出方向收手。
+ * 运动：`swing` 从服务端算出的那只掌的真实起点（`data.point`）朝目标扇出，交叉式左右交替、直抽式同侧；掌影的滚转由
+ *   `data.tilt` 驱动。`swing` 只画空挥，不在目标身上发火花——只有实中的 `hit` 才在目标朝这只掌最近的脸侧接触点炸开；
+ *   命中率擦空只发 `miss`、够不着或被墙挡住只发 `away`。
  * 数：`data.smack`（物攻换算的掌风量）绑定每一掌与命中的发射量，`data.index` / `data.slaps` 让画面读出演到第几掌、
  *   还剩几掌，`data.intensity`（单掌威力派生）抬高亮度，`data.scale`（臂展换算）让大个子的掌风更大。
  */
@@ -50,15 +50,6 @@ const DoubleslapDefinition: ParticleDefinition = {
                     direction: "toward", speed: [0.35, 0.95], spread: 6,
                     lifetime: [5, 9], size: [0.2, 0.05], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 30
-                },
-                {
-                    name: "spark", bind: "target", offset: [0, 0.45, 0], height: 0.45, fit: "body",
-                    particle: "world_combat_core:cobblemon/generic/minihit",
-                    burst: { count: { data: "smack", fallback: 12 }, at: 0 },
-                    shape: { kind: "sphere_surface", radius: 0.26 },
-                    direction: "outward", speed: [0.05, 0.22], spread: 26, drag: 0.92,
-                    lifetime: [6, 12], size: [0.09, 0.02],
-                    color: 0xF6C9D2, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 90
                 }
             ]
         },

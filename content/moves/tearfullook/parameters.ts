@@ -11,7 +11,7 @@
  *   冷却更长，也必须站得住。它需要通视——眼泪要被看见才成立。
  *
  * 数值来源（每个参数读不同的个体数据）：
- *   despair     1 + (1 − 当前生命 ÷ 最大生命) × 2，夹 1..2；掉血越多，夺走的斗志越多。
+ *   despair     普通档 1 级；自身生命 ≤ 35% 时危机档 2 级；夺走的斗志由当前生命档位决定。
  *   tearRange   身高 × 1.2 + 3 格，夹 4..8；身量越高，眼泪送得越远。
  *   sectorAngle 90 + (宽度 − 0.9) × 40 度，夹 60..140；体型越宽，放声大哭时扇面越开。
  *   sobRadius   2.5 + 宽度 × 1.5 格，夹 2.5..4.5；体型越宽，卷进来的人越多。
@@ -32,11 +32,13 @@ namespace PokemonSkills {
     }
 
     actionParameters.define(tearfullookId, {
-        despair: formula(F.base(1).plus(tearfullookMissing().times(2)).clamp(1, 2).round(0), "斗志下降", {
-            base: 1,
-            unit: " 级",
-            description: "被夺走的攻击与特攻等级；施法者生命越接近见底，从 1 级逼近 2 级。"
-        }),
+        despair: formula(
+            F.when(F.stat("hp").div(F.stat("maxHp")).lte(0.35), F.const(2), F.const(1)).clamp(1, 2).round(0),
+            "斗志下降", {
+                base: 1,
+                unit: " 级",
+                description: "被夺走的攻击与特攻等级；施法者生命不高于 35% 时使出危机档 2 级，否则为普通档 1 级。"
+            }),
         tearRange: formula(F.body("height").times(1.2).plus(3).clamp(4, 8).round(1), "泪眼距离", {
             unit: " 格",
             description: "眼泪能被看见的距离；施法者身形越高，看得越远。"

@@ -82,7 +82,7 @@ namespace PokemonSkills {
             F.base(8).plus(F.stat("speed").minus(60).times(0.12).clamp(-2, 8)).clamp(6, 18).round(0),
             "电弧数", {
                 unit: "道",
-                description: "每次放电画出的分枝电弧数量，随速度增长；表现按它发射，画面里的弧数与机制一致。"
+                description: "命中与泄放时炸开的分枝电弧数量，随速度增长；表现按它发射，命中处的弧数与机制一致。"
             }),
         /** 击退：基础 0.25 格，体重每比 60 多 1 加 0.003（夹 -0.15..0.6）；夹 0.15..1.0。 */
         push: formula(
@@ -100,7 +100,7 @@ namespace PokemonSkills {
         /** 收招：基础 6 刻，速度每比 60 快 1 少 0.02（夹 -2..2.5）；夹 3..10。 */
         aftercast: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.02).clamp(-2, 2.5)).clamp(3, 10).round(0),
-            "收招", "撞完退开半步的收势；速度越快越利落。"),
+            "收招", "撞完在原地收势的时间；速度越快越利落。"),
         /** 冷却：基础 16 刻，速度每比 60 快 1 少 0.04（夹 -4..5），蓄电 +5；夹 8..27。 */
         recharge: seconds(
             F.base(16).minus(F.stat("speed").minus(60).times(0.04).clamp(-4, 5))

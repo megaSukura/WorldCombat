@@ -1,22 +1,9 @@
-/**
- * 自爆 / selfdestruct 的客户端表现。
- *
- * 一句话：施法者的身体先急涨、缝里透出白光，随即在原地炸成一颗紧凑的白热球，碎屑四面炸飞、
- * 一圈尘烟向外压出，最后地上留下一片炸焦的痕迹。
- * 色相家族：近白金做爆心高光（0xFFF4D8），暖橙与浓烟作主体（cloudyfire_white / smoke / burning_rock），
- * 土黄只给落尘。与同族的大爆炸共用暖色家族，但自爆更小、更快、烟更少。
- * 拍子：起 swell 急涨 ／ 击 detonate 爆开 + hit 逐处 ／ 收 scorch 或空爆 miss。
- * 范围：swell 的预告地圈、detonate / scorch 的球与地面圈都按 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地方。
- * 运动：膨胀的内聚光 → 爆心向外炸飞 → 尘烟上腾、碎屑带重力回落 → 落尘在地面慢慢散去。
- * 数：`data.debris`（体重与物攻派生）决定炸飞碎屑与浓烟的量，`data.intensity`（威力派生）抬高亮度与密度，
- *   `data.cells`（炸焦块数）驱动地面残屑，`data.scale`（爆心/4.0）放大尺度。
- */
 const SelfDestructDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         swell: {
-            duration: 16,
-            exit: { stop: 5, drain: 14 },
+            duration: { data: "windup", fallback: 16 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "draw", bind: "source", height: 0.55,
@@ -133,8 +120,8 @@ const SelfDestructDefinition: ParticleDefinition = {
             ]
         },
         scorch: {
-            duration: 26,
-            exit: { stop: 11, drain: 22 },
+            duration: { data: "ticks", fallback: 60 },
+            exit: { drain: 26 },
             emitters: [
                 {
                     name: "residue", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",

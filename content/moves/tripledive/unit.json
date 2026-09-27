@@ -20,6 +20,6 @@
     "startup.ts"
   ],
   "mobEffectIcons": {
-    "world_combat:tripledive_drenched": "minecraft:mob_effect/dolphins_grace"
+    "world_combat:tripledive_soaked": "minecraft:mob_effect/dolphins_grace"
   }
 }

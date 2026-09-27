@@ -8,10 +8,11 @@
  *   起（mourn，提交前）：低头一瞬、身上压出灰白的哀气，带上哀兵时更浓。
  *   撞（charge → strike／miss）：提交后逐刻朝目标冲，trace 撞上活体即结算 `vengeance` 接触伤害并把人顶开；
  *       带着哀兵命中后这口气就泄了（状态被消掉）。没撞上就把这股劲留到下一次。
+ *       伤害、解除与反馈在命中的同一刻重读哀兵快照，三者一致，不在起手时缓存旧值。
  *
  * 与同族分开：
  *   以牙还牙吃的是「自己被打过」、暗色回击；报仇吃的是「同伴倒下了」、一般属性的直撞；
- *   泄愤吃的是「自己被削弱」。三者都翻倍，但读的现场事实完全不同。
+ *   泄愤吃的是「自己被削弱」。三者都加重，但读的现场事实完全不同。
  */
 namespace PokemonSkills {
     define({
@@ -19,7 +20,7 @@ namespace PokemonSkills {
         id: retaliateId,
         cooldownParameter: "recharge",
         name: "Retaliate",
-        description: "为倒下的同伴报仇：朝敌人直直撞过去；同伴刚倒下时，这一记翻倍、越亲近的同伴倒下打得越重，命中后这口气才泄。",
+        description: "为倒下的同伴报仇：朝敌人直直撞过去；同伴刚倒下时，这一记加重（等级与自身和训练家的亲密度决定，倍率 1.8–2.4，最终威力有上限），命中后这口气才泄。",
         uses: ["同伴倒下后立刻替它还手", "带着哀兵之痛打出一记翻倍直撞", "朝刚打完同伴的敌人撞过去"],
         kind: "aim",
         range: 3.0,
@@ -69,7 +70,6 @@ namespace PokemonSkills {
             const radius = p(retaliateId, "collisionRadius", action);
             const push = p(retaliateId, "push", action);
             const streaks = Math.max(6, Math.round(p(retaliateId, "streaks", action)));
-            const avenging = CombatStatus.has(world, actor, retaliateStatus);
             const scale = Math.max(0.5, Math.min(1.8, radius / 0.45));
             let travelled = 0;
 
@@ -84,6 +84,8 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
+                        // 命中的这一刻重读哀兵，伤害公式、解除与反馈共用同一份现场快照。
+                        const avenging = CombatStatus.has(scope, current.actor(), retaliateStatus);
                         const power = p(retaliateId, "vengeance", current);
                         const landed = impact(current, hit, retaliateId, power, { damage: damageSpec(retaliateId, "vengeance"), contact: true });
                         if (landed) {
@@ -95,7 +97,7 @@ namespace PokemonSkills {
                                     intensity: Math.max(0.6, Math.min(2.2, power / 70)) }, 26);
                             if (avenging)
                                 WorldFeedback.emit(scope, retaliateScene, 1, hit.position(),
-                                    { moment: "release", streaks: streaks, scale: scale,
+                                    { moment: "release", target: String(victim.ref()), streaks: streaks, scale: scale,
                                         intensity: Math.max(0.6, Math.min(2.2, power / 70)) }, 24);
                             sound(current, avenging ? "minecraft:entity.player.attack.strong" : "cobblemon:impact.normal");
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)),

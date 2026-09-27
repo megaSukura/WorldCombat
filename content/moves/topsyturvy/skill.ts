@@ -10,8 +10,7 @@ namespace PokemonSkills {
         const body = world.observe(victim);
         const at = body === null ? current.targetPosition() : body.position();
         const scale = Math.max(0.5, Math.min(2, shatter / 0.9));
-        const signs = topsySigns(world, victim, onlyGains);
-        const flipped = topsyFlip(world, victim, onlyGains);
+        const signs = topsyFlip(world, victim, onlyGains), flipped = signs.total;
         if (flipped > 0) {
             MobEffects.apply(world, victim, topsyEffect, markTicks, Math.max(0, Math.min(6, flipped)));
             WorldFeedback.emit(world, topsyScene, 1, at,
@@ -76,16 +75,16 @@ namespace PokemonSkills {
             const shatter = Math.max(0.4, p(topsyId, "shatter", action));
             const onlyGains = !!(config && config.gain);
             const targetRef = action.target() === null ? "" : String(action.target()!.ref());
-            const origin = action.origin();
-            const direction = PokemonSkills.aim(action);
+            const selected = action.target(), allowAllies = selected !== null && world.valid(selected) && world.friendly(selected);
             let struckAnything = false, settled = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
             sound(action, "minecraft:entity.illusioner.prepare_mirror");
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius,
                 lifetime: Math.max(30, Math.round(reach / Math.max(0.2, speed) + 20)),
-                appearance: { sprite: "cobblemon:generic/sparkle/bigsparkle", scale: 0.9, tint: 0xBFE3FF, glow: true },
+                appearance: { sprite: "cobblemon:generic/sparkle/bigsparkle", scale: 0.9, tint: 0xBFE3FF, glow: true, hitAllies: allowAllies },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     struckAnything = true;
                     const scope = current.world(), struck = hit.target();
@@ -97,10 +96,11 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) {
                 if (!struckAnything) {
-                    WorldFeedback.emit(current.world(), topsyScene, 1, origin.plus(direction.scale(reach)),
+                    const end = current.world().projectilePosition(flight);
+                    if (end) { WorldFeedback.emit(current.world(), topsyScene, 1, end,
                         { moment: "shatter", shards: Math.max(6, Math.round(shards / 2)),
                             scale: Math.max(0.5, shatter / 0.9) }, 18);
-                    current.world().sound("minecraft:block.amethyst_cluster.break", origin.plus(direction.scale(reach)), 12, "{}");
+                    current.world().sound("minecraft:block.amethyst_cluster.break", end, 12, "{}"); }
                 }
                 finish(current);
             });

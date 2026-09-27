@@ -5,7 +5,8 @@
  * 每荡过一个人就在他身上溅起一层水幕；被震到的人头顶转起水环与飞鸟。
  * 色相家族：水蓝（0x4FB6E8）与泡沫白（0xDEF4FF）；饱和只出现在水珠与命中的小面积。
  * 拍子：起 gather（收珠）→ 飞 flight（泡沫尾迹）→ 击 burst（水花）→ wave（一圈圈荡开，一拍一环）→ 收 soak／daze。
- * 范围：wave 的每一环用 `data.radius`（机制算出的这一圈半径）铺成环，最外圈就是振鸣半径，玩家一眼看出站哪会被扫到。
+ * 范围：wave 的每一环用服务端给的 `data.inner`→`data.outer`（机制算出的本圈真实覆盖面）铺成环带并只向外轻移；
+ *    最外圈的 outer 就是振鸣半径，不再用意外的外扩把可伤边界画大。
  * 运动：水珠沿直线飞（服务端速度），水波沿地面向外扩散，飞鸟在耳鸣目标头顶绕圈。
  * 数：wave 的水环条数等于机制里的 `pulses` 圈（服务端逐圈发一条），每环的水点数绑定 `data.flows`，
  *    强度绑定命中威力；水珠大小由 `data.scale`（振鸣半径 / 2.6）放大。
@@ -98,18 +99,22 @@ const WaterpulseDefinition: ParticleDefinition = {
                 {
                     name: "ring", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.5 } },
+                    shape: { kind: "ring", radius: { data: "outer", fallback: 2.5 },
+                        innerRadius: { data: "inner", fallback: 0.4 },
+                        outerRadius: { data: "outer", fallback: 2.5 } },
                     burst: { count: { data: "flows", fallback: 40 } },
-                    direction: "outward", speed: [0.03, 0.14], spread: 8,
+                    direction: "outward", speed: { data: "creep", fallback: 0.04 }, spread: 8,
                     lifetime: [8, 14], size: [0.22, 0.06], sizeMode: "index",
                     color: 0x4FB6E8, alpha: [0.75, 0], light: "world", maxParticles: 160
                 },
                 {
                     name: "crest", bind: "point", fit: "none", offset: [0, 0.22, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.5 } },
+                    shape: { kind: "ring", radius: { data: "outer", fallback: 2.5 },
+                        innerRadius: { data: "inner", fallback: 0.4 },
+                        outerRadius: { data: "outer", fallback: 2.5 } },
                     burst: { count: 18 },
-                    direction: "outward", speed: [0.05, 0.2], spread: 6,
+                    direction: "outward", speed: { data: "creep", fallback: 0.05 }, spread: 6,
                     lifetime: [6, 11], size: [0.3, 0.08],
                     color: 0xDEF4FF, alpha: [0.6, 0], light: "full", maxParticles: 60
                 }

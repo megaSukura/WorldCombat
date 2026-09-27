@@ -1,7 +1,7 @@
 /**
  * 念力 / confusion —— 注册与动作。
  *
- * 核心念头：一发又快又便宜的念弹。眉间聚起一点紫光 → 念弹贴着地面直线窜出去 → 命中处炸开一圈扭曲的
+ * 核心念头：一发又快又便宜的念弹。眉间聚起一点紫光 → 念弹沿瞄准方向直线窜出去 → 命中处炸开一圈扭曲的
  * 紫环，偶尔把挨到的人搅得恍惚；被念力缠住的人每次想反打都会被当场再敲一下。
  *
  * 两幕：
@@ -39,7 +39,7 @@ namespace PokemonSkills {
         id: confusionId,
         cooldownParameter: "recharge",
         name: "Confusion",
-        description: "向对手弹出一枚微弱的念弹：贴地直线窜出，命中造成特殊伤害，并可能把目标搅得恍惚。恍惚期间目标出手会失手，每次失手还会被念力再敲一下。",
+        description: "向对手弹出一枚微弱的念弹：沿瞄准方向直线窜出，命中造成特殊伤害，并可能把目标搅得恍惚。恍惚期间目标出手会失手，每次失手还会被念力再敲一下。",
         uses: ["便宜快速的远程骚扰", "用低伤害反复磨血", "压制喜欢连续出手的对手"],
         kind: "aim",
         range: 11,
@@ -52,7 +52,7 @@ namespace PokemonSkills {
         defaults: { focus: false, ai: { maxChase: 15, fresh: true, finish: true } },
         fields: [flag("focus", "凝念")],
         indicator: function (config, pokemon) {
-            return { radius: p(confusionId, "radius", pokemon) * 2.2, geometry: "line", style: "psychic", color: 0xB15CE0,
+            return { radius: pokemon ? p(confusionId, "reach", pokemon) : 11, geometry: "line", style: "psychic", color: 0xB15CE0,
                 label: config && config.focus === true ? "念力·凝念" : "念力" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -99,20 +99,24 @@ namespace PokemonSkills {
                     const scope = current.world();
                     const point = hit.position();
                     const victim = hit.target();
+                    // 只有真实落在敌对活体上并真的结算出伤害，才播命中闪光与恍惚；免伤、被挡或撞墙都只散光。
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const landed = impact(current, hit, confusionId, power, { damage: damageSpec(confusionId, "pulse") });
-                        WorldFeedback.emit(scope, confusionScene, 1, point,
-                            { moment: "hit", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 24);
-                        if (landed && scope.random() < chance) confusionDaze(scope, victim, point, daze, fumblePct);
+                        if (landed) {
+                            WorldFeedback.emit(scope, confusionScene, 1, point,
+                                { moment: "hit", target: String(victim.ref()), motes: motes, scale: scale, intensity: intensity }, 24);
+                            if (scope.random() < chance) confusionDaze(scope, victim, point, daze, fumblePct);
+                            sound(current, "cobblemon:impact.psychic");
+                        }
                     }
                     WorldFeedback.emit(scope, confusionScene, 1, point,
-                        { moment: "burst", target: victim !== null ? String(victim.ref()) : "", motes: motes, scale: scale, intensity: intensity }, 26);
-                    sound(current, "cobblemon:impact.psychic");
+                        { moment: "burst", target: victim !== null ? String(victim.ref()) : "", wall: hit.blocked() ? 1 : 0,
+                            motes: motes, scale: scale, intensity: intensity }, 26);
                     finish(current);
                 }
             }, function (current: CombatAction) { finish(current); });
             WorldFeedback.keep(world, "confusion:trail:" + action.id(), confusionScene, 1, origin,
-                { moment: "flight", projectile: flight, scale: scale, intensity: intensity }, 60);
+                { moment: "flight", projectile: flight, motes: motes, scale: scale, intensity: intensity }, 60);
         }
     });
 
@@ -139,7 +143,7 @@ namespace PokemonSkills {
         }
     } });
 
-    // 恍惚存续期：低密度的飞鸟与紫点每 20 刻续期，让出本体视线；状态结束后不再续期，晕圈随之自然淡出。
+    // 恍惚存续期：低密度的飞鸟与紫点每 20 刻续期，让出本体视线；续期只活到载体真实剩余时长，到期或被净化即随载体收。
     WorldCombat.on("world_combat:move_confusion/linger", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== confusionEffect) return;
@@ -147,7 +151,10 @@ namespace PokemonSkills {
         if (!world.valid(actor) || world.tick() % 20 !== 0) return;
         const body = world.observe(actor);
         if (body === null) return;
+        const carrier = world.mobEffect(actor, confusionEffect);
+        const left = carrier === null ? 0 : carrier.duration() < 0 ? 40 : Math.max(1, Math.min(40, carrier.duration()));
+        if (left <= 0) return;
         WorldFeedback.keep(world, "confusion:daze:" + String(actor.ref()), confusionScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()), fumble: data.amplifier }, 40);
+            { moment: "linger", target: String(actor.ref()), fumble: data.amplifier }, left);
     });
 }

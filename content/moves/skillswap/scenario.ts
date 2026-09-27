@@ -1,6 +1,18 @@
 /** Exercise one-sided native refusal, actual paired abilities, and exact cleanup. */
 let skillswapCheckTarget = "", skillswapRefused = false, skillswapRolledBack = false;
 let skillswapPaired = false, skillswapRestored = false, skillswapClearing = false;
+WorldCombat.effect("checks:skillswap_restore_watch", 1, 40, "actor", json => json, EffectProtocols.unchanged);
+WorldCombat.effectHandler("checks:skillswap_restore_watch", "start", effect => effect.schedule("watch", "watch", 1, "{}"));
+WorldCombat.effectHandler("checks:skillswap_restore_watch", "watch", effect => {
+    const world = effect.world(), self = effect.target(), other = world.actor(JSON.parse(effect.state()).other);
+    if (skillswapClearing && other && world.valid(other) && !MobEffects.read(world, self, "world_combat:skillswap_shift")
+        && !MobEffects.read(world, other, "world_combat:skillswap_shift")) {
+        skillswapRestored = PokemonSkills.skillswapAbility(world, self) === String(CobblemonCombat.pokemon(self).ability())
+            && PokemonSkills.skillswapAbility(world, other) === String(CobblemonCombat.pokemon(other).ability());
+        if (skillswapRestored) { effect.end(); return; }
+    }
+    effect.schedule("watch", "watch", 1, "{}");
+});
 WorldCombat.on("world_combat:checks/skillswap_refuse", "world_combat:mob_effect_incoming", "", event => {
     const data = JSON.parse(event.data()), target = event.target();
     if (!skillswapRefused && target && String(target.ref()).indexOf(skillswapCheckTarget) === 0 && data.id === "world_combat:skillswap_shift") {
@@ -15,13 +27,11 @@ WorldCombat.on("world_combat:checks/skillswap_pair", "world_combat:committed", "
         const a = PokemonSkills.skillswapAbility(world, own), b = PokemonSkills.skillswapAbility(world, target);
         if (skillswapRefused && a === "synchronize" && b === "intimidate")
             skillswapRolledBack = !MobEffects.read(world, own, "world_combat:skillswap_shift") && !MobEffects.read(world, target, "world_combat:skillswap_shift");
-        if (a === "intimidate" && b === "synchronize") skillswapPaired = true;
+        if (a === "intimidate" && b === "synchronize") {
+            skillswapPaired = true;
+            current.world().effect("checks:skillswap_restore_watch", own, JSON.stringify({ other: String(target.ref()) }), 40);
+        }
     });
-});
-WorldCombat.on("world_combat:checks/skillswap_restore", "world_combat:mob_effect_removed", "", event => {
-    if (!skillswapClearing || JSON.parse(event.data()).id !== "world_combat:skillswap_shift") return;
-    const world = event.world(), actor = event.actor();
-    if (String(actor.domain()) === "cobblemon" && PokemonSkills.skillswapAbility(world, actor) === String(CobblemonCombat.pokemon(actor).ability())) skillswapRestored = true;
 });
 Smoke.scenario("skillswap", stage => {
     skillswapRefused = false; skillswapRolledBack = false; skillswapPaired = false; skillswapRestored = false; skillswapClearing = false;

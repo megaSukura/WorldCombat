@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.ominouswind.summary": "放出一道贴地奔袭的幽风：它一路只聚势、到目标脚下才炸开，把那一圈敌人朝中心收拢并造成特殊伤害；回卷的冷气有概率把自身五项战斗能力短时各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
+  "worldcombat.skill.ominouswind.summary": "放出一道在真实三维空间里奔袭的幽风：它一路只聚势、到实际终点才炸开，把那一圈与终点之间无遮挡的敌人朝中心收拢并造成特殊伤害；回卷的冷气有概率把自身五项战斗能力短时各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
   "worldcombat.skill.ominouswind.use.0": "对准一个远处目标，让幽风自己追上去收拢",
   "worldcombat.skill.ominouswind.use.1": "把目标从掩体或队友身边朝中心拽近",
   "worldcombat.skill.ominouswind.use.2": "抓住反哺后的短时强化窗口进攻",
   "worldcombat.skill.ominouswind.description.0": "幽风自施放点追向锁定的目标：抵达收拢时，圈内每个敌人各受到一次约 %1$s 点特殊伤害；它按 %2$s 格的射程选取目标。",
-  "worldcombat.skill.ominouswind.description.1": "奔袭途中它一路只聚势、不伤任何人，以 %1$s 格/刻逼近目标并每刻有限地转向追着它跑，总路程不超过射程；抵达后炸开半径 %2$s 格的一圈，把圈内每个视线可达的敌人朝中心收拢最多 %3$s 格（不越过中心、被挡住则更少）。若途中撞墙会在墙面真实碰点提前卷起，若目标跑远则在走完总路程处收拢、可能落空。",
+  "worldcombat.skill.ominouswind.description.1": "奔袭途中它一路只聚势、不伤任何人，以 %1$s 格/刻逼近目标并每刻有限地转向追着它跑（含上下），总路程不超过射程；抵达后炸开半径 %2$s 格的一圈，把圈内每个与终点之间无遮挡的敌人朝中心收拢最多 %3$s 格（不越过中心、被挡住则更少）。若途中撞墙会在墙面真实碰点提前卷起，若目标跑远则在走完总路程处收拢、可能落空。",
   "worldcombat.skill.ominouswind.description.2": "只要收拢到至少一个敌人，施放者自身就有 %1$s 概率让攻击、防御、特攻、特防和速度各提高 %2$s 级，持续 %3$s；再次触发会刷新时间，始终只保持一层。",
   "worldcombat.skill.ominouswind.description.3": "开启缠魄式时：风威约 ×1.1、收拢半径约 ×0.82、向内收得更紧、反哺概率 +0.05，但奔袭更慢、起手与冷却更长；关闭（漫游式，默认）时奔袭更快、收拢半径约 ×1.15，但单点更轻、内收更弱。",
   "worldcombat.skill.ominouswind.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

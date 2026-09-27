@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.psychicterrain.summary": "在选定地面铺开精神域：只有贴地站在场上的活体不会被其他来源的先制招式打到，超能力属性招式威力提高；对双方一视同仁。",
-  "worldcombat.skill.psychicterrain.use.0": "封住对手的先制招式",
+  "worldcombat.skill.psychicterrain.summary": "在选定地面铺开精神域：贴地站在场上的活体受到的击退、冲量与位移削减一半，超能力属性招式威力提高；对双方一视同仁，离地或走出场地立即失去。",
+  "worldcombat.skill.psychicterrain.use.0": "给阵线上需要守位的队伍削减被击退与位移",
   "worldcombat.skill.psychicterrain.use.1": "给超能力招式加成",
-  "worldcombat.skill.psychicterrain.use.2": "用先制招式反打前先护住队伍",
+  "worldcombat.skill.psychicterrain.use.2": "在贴身的近战对手面前稳住自己的站位",
   "worldcombat.skill.psychicterrain.description.0": "在选定地面铺出半径 %1$s 格的精神域，持续 %2$s；只有贴着地面站在域内的活体才会被念场标记。",
-  "worldcombat.skill.psychicterrain.description.1": "被标记的活体使用超能力（Psychic）属性伤害招式时威力乘上 %1$s；被其他来源带优先度的招式（先制招式）击中时，这一次伤害被抹掉。",
-  "worldcombat.skill.psychicterrain.description.2": "标记只在站在域内期间维持；一旦走出精神域或场地散去，标记与先制保护立即解除。",
+  "worldcombat.skill.psychicterrain.description.1": "站在域内且贴地的活体受到的击退、冲量与位移削减一半（无论来自普通攻击、击退招式还是位移效果，多片场也只减一次）；使用超能力（Psychic）属性伤害招式时威力乘上它脚下那片场的 %1$s。",
+  "worldcombat.skill.psychicterrain.description.2": "增幅与位移削减只在贴着地面站在域内期间成立；一旦走出精神域、离地或场地散去，两者立即解除。它不减免伤害，也不限制行走。",
   "worldcombat.skill.psychicterrain.description.4": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.psychicterrain.form.0": "聚焦主场：域更小（半径 ×0.82）、更久（×1.25），超能增幅抬到 ×1.45，代价是起手 +3 刻、冷却 ×1.2。",
   "worldcombat.skill.psychicterrain.form.1": "护场：域更宽（半径 ×1.25）、起手 −2 刻、冷却 ×0.9，代价是增幅降到 ×1.15、持续 ×0.85。",
@@ -17,7 +17,6 @@
   "worldcombat.skill.psychicterrain.value.reach": "施放距离",
   "worldcombat.skill.psychicterrain.value.fieldRadius": "精神域半径",
   "worldcombat.skill.psychicterrain.value.fieldTicks": "精神域持续",
-  "worldcombat.skill.psychicterrain.value.markTicks": "离场余量",
   "worldcombat.skill.psychicterrain.value.boost": "超能增幅",
   "worldcombat.skill.psychicterrain.value.density": "纹路密度",
   "worldcombat.skill.psychicterrain.value.surge": "入场合能",
@@ -26,9 +25,8 @@
   "worldcombat.skill.psychicterrain.preference.ai.maxChase": "铺场距离",
   "worldcombat.skill.psychicterrain.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才铺精神域；调小只在贴身时铺，调大愿意提前布置。",
   "worldcombat.skill.psychicterrain.preference.ai.advance": "把场推向对手",
-  "worldcombat.skill.psychicterrain.preference.ai.advance.help": "开启：精神域按在自己与威胁之间，护住交战区。关闭：按在脚下先护住自己。",
+  "worldcombat.skill.psychicterrain.preference.ai.advance.help": "开启：精神域按在自己与威胁之间，稳住交战区。关闭：按在脚下先稳住自己。对手也会站在同一片域里，同样吃到位移削减。",
   "worldcombat.skill.psychicterrain.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.psychicterrain.preference.ai.leaveStation.help": "开启后，驻守中的伙伴会离开原位去铺精神域。",
-  "world_combat.move.psychicterrain.text.ward": "被念场挡下",
-  "effect.world_combat.psychicterrain_ground": "精神护场"
+  "effect.world_combat.psychicterrain_ground": "精神稳定"
 }

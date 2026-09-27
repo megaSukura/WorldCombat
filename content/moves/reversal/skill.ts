@@ -2,16 +2,19 @@
  * 起死回生 / reversal 的出手方式。
  *
  * 念头的形状：站住把余力全提到脚下，身周的伤口亮成一道橙红光（windup，提交前只播预告，血越少越亮）→
- * 沿瞄准方向贴到对手身下（lunge）→ 落地的一刻朝身前掀开一道格斗系的上顶扇面，把扇面内的敌人一起掀开（burst）→ 收势（spent）。
- * 自己越接近倒下，扇面的威力与 reach 越大；扇面里没有敌人时只剩一道空喷（fade）。拼命式在每次打中后按最大生命反噬。
+ * 沿瞄准方向用原生身体扫掠贴到对手身下（lunge，撞到第一个身体或墙就停）→ 落地的一刻朝身前掀开一道
+ * 格斗系的上顶扇面，把扇面内通视的敌人一起掀开（burst）→ 收势（spent）。
+ * 自己越接近倒下，扇面的威力与 reach 越大；扇面里没有敌人时只剩一道空喷（fade）。
+ * 拼命式在每次打中后按最大生命反噬一次。
  *
- * 选取：`kind: "aim"`——瞄准方向可空顶；接近受阻就在实际落点出手，视线不穿墙，不要求提交时存在敌人。
+ * 选取：`kind: "aim"`——瞄准方向可空顶；接近受阻就在实际落点出手，墙与身体拦停，不要求提交时存在敌人。
  * 后方不再有全周圈：伤害与推力只落在身前这道扇面里，免位移的目标照常受主体伤害。
  *
  * 两幕半：brace（站定提力）→ lunge → burst / fade。提交后才触碰世界。
  */
 namespace PokemonSkills {
     const reversalScene = "world_combat:move_reversal";
+    const reversalFistScene = "world_combat:move_reversal_fist";
     const reversalBurstText = "world_combat.move.reversal.text.burst";
     const reversalSpentText = "world_combat.move.reversal.text.spent";
     const reversalFadeText = "world_combat.move.reversal.text.fade";
@@ -85,17 +88,22 @@ namespace PokemonSkills {
             const recoil = p("reversal", "recoil", action);
             const direction = reversalAim(action);
             const scale = burstRadius / 1.2;
+            const scenes = WorldFeedback.actionScenes(reversalScene);
             const start = world.observe(self);
             if (start === null) { done(action); return; }
+            const height = Math.max(0.6, start.height());
+            // 身前扇面的竖直带：跟着施法者的真实身高，站得高顶得高。
+            const band = { below: Math.max(1.0, height * 0.5), above: Math.max(1.6, height * 0.75) };
             const budget = lunge + 0.4;
             let travelled = 0, settled = false;
             let heading = direction;
 
-            WorldFeedback.emit(world, reversalScene, 1, action.origin(),
-                { moment: "press", direction: reversalVector(direction), scale: scale, wound: wound }, 30);
+            // 扑近尾迹归动作拥有：动作结束即随动作清理，不再拖到动作结束后。
+            scenes.show(action, "press", action.origin(),
+                { moment: "press", direction: reversalVector(direction), scale: scale, wound: wound });
             sound(action, "minecraft:entity.evoker.prepare_attack");
 
-            /** 喷发：以落点为心、朝身前掀开一道扇面；扇面内每个敌人独立结算一次伤害，能推的才带位移痕。 */
+            /** 喷发：以落点为心、朝身前掀开一道扇面；扇面内每个**通视可达**的敌人独立结算一次伤害，能推的才带位移痕。 */
             function erupt(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
@@ -103,10 +111,12 @@ namespace PokemonSkills {
                 const body = scope.observe(current.actor());
                 const center = body === null ? current.origin() : body.position();
                 const face = heading.length() < 0.01 ? current.direction() : heading;
-                const region = WorldGeometry.sector(center, face, burstRadius, arc, { below: 1.0, above: 2.6 });
+                const region = WorldGeometry.bodySector(center, face, burstRadius, arc, band);
                 let landed = 0;
-                WorldGeometry.selectEnemies(scope, region, function (other, facts) {
+                WorldGeometry.selectBodies(scope, region, function (other, facts) {
                     if (String(other.ref()) === String(self.ref()) || !scope.valid(other)) return;
+                    // 扇面逐身体可达：真实身体箱挡在前面就不是这一记可以掀到的人。
+                    if (WorldGeometry.blockHit(scope, center, scope.closestPoint(other, center))) return;
                     if (!hurt(current, other, "reversal", power, { damage: damageSpec("reversal", "power"), contact: true })) return;
                     landed++;
                     const outward = facts.position().minus(center);
@@ -117,29 +127,37 @@ namespace PokemonSkills {
                         { moment: moved > 0.001 ? "shove" : "strike", target: String(other.ref()),
                             direction: [away.x(), away.y(), away.z()], moved: Math.round(moved * 10) / 10, scale: scale, wound: wound }, 18);
                 });
+                // 真实前方短掀击：一枚拳/臂沿身前短弧上顶，与扇面同步；低血时更大更亮。
+                if (body !== null) {
+                    const from = center.plus(face.scale(burstRadius * 0.12)).plus(WorldCombat.point(0, height * 0.12, 0));
+                    const to = center.plus(face.scale(burstRadius * 0.62)).plus(WorldCombat.point(0, height * 0.38, 0));
+                    WorldFeedback.emit(scope, reversalFistScene, 1, center,
+                        { path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]], scale: scale, wound: wound,
+                            landed: landed, start: scope.tick(), duration: 4 }, 20);
+                }
                 WorldFeedback.emit(scope, reversalScene, 1, center,
                     { moment: landed > 0 ? "burst" : "fade", count: landed, scale: scale, wound: wound, power: power,
                         direction: reversalVector(face), arc: arc, sparks: Math.max(10, Math.min(60, Math.round(power * 0.4))),
                         path: reversalFan(center, face, burstRadius, arc, 12) }, 30);
                 if (landed > 0) {
                     sound(current, "cobblemon:impact.fighting");
-                    WorldFeedback.text(scope, center.plus(WorldCombat.point(0, 1.3, 0)), reversalBurstText, [landed, Math.round(power)], 26);
+                    WorldFeedback.text(scope, center.plus(WorldCombat.point(0, height + 0.2, 0)), reversalBurstText, [landed, Math.round(power)], 26);
                     if (reckless) {
                         const me = scope.observe(self);
                         if (me !== null) {
                             scope.health(self, -me.maxHealth() * recoil, "world_combat:reversal_recoil");
                             WorldFeedback.emit(scope, reversalScene, 1, me.position(), { moment: "spent", scale: scale, wound: wound }, 18);
-                            WorldFeedback.text(scope, me.position().plus(WorldCombat.point(0, 1.15, 0)), reversalSpentText, [], 22);
+                            WorldFeedback.text(scope, me.position().plus(WorldCombat.point(0, me.height() + 0.1, 0)), reversalSpentText, [], 22);
                         }
                     }
                 } else {
-                    WorldFeedback.text(scope, center.plus(WorldCombat.point(0, 1.2, 0)), reversalFadeText, [], 22);
+                    WorldFeedback.text(scope, center.plus(WorldCombat.point(0, height * 0.9, 0)), reversalFadeText, [], 22);
                     sound(current, "minecraft:entity.player.attack.sweep");
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
-            /** 扑身：贴到扇面 reach 之内就掀；走完预算或撞墙也掀（可能掀空）。 */
+            /** 扑身：原生身体扫掠，撞到第一个身体或墙就停，在落点掀开；走完预算也掀（可能掀空）。 */
             function advance(current: CombatAction): void {
                 const scope = current.world();
                 const origin = current.origin();
@@ -149,10 +167,10 @@ namespace PokemonSkills {
                 if (gap <= burstRadius + 0.15) { erupt(current); return; }
                 const step = Math.min(lungeSpeed, Math.max(0, budget - travelled));
                 if (step <= 0.01) { erupt(current); return; }
-                const hit = current.trace(origin, origin.plus(heading.scale(Math.max(step, radius) + 0.3)), radius);
-                const moved = scope.displace(current.actor(), heading.scale(step));
-                travelled += moved;
-                if (hit.blocked() || moved < p("reversal", "minimumMove", current)) { erupt(current); return; }
+                // moveSweep 在第一个到达的身体或墙处停下：扑不过去，也不会穿过身体。
+                const swept = sweepStep(current, heading.scale(step), radius);
+                travelled += swept.moved;
+                if (swept.hit.blocked() || swept.hit.hitEntity() || swept.moved < p("reversal", "minimumMove", current)) { erupt(current); return; }
                 current.after(1, advance);
             }
 

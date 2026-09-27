@@ -15,7 +15,7 @@ namespace CompanionBehavior {
     const recoverSteady = PokemonSkills.flag("steady", "稳态再生");
     recoverSteady.help = "开启稳态：回复总量 +0.05、再生窗口 ×1.35（每刻更慢），代价是冷却更久；关闭速生：回复略少、窗口 ×0.75、冷却更短。";
     const recoverSafe = PokemonSkills.number("ai.safeDistance", "安全距离", 1, 12, 1);
-    recoverSafe.help = "可见敌人进入这个距离、或正被敌人攻击时，不再优先启动再生（生命低于阈值一半时无视它先保命）；调大要求退得更开，调小更愿意贴着战场修。";
+    recoverSafe.help = "可见敌人进入这个距离、或正被敌人攻击时，不再优先启动再生（生命低于阈值一半时无视它先保命）；调大要求退得更开，调小更愿意贴着战场修。一旦开修会坚持把这程走完，不会立刻转攻掐断。";
 
     PokemonSkills.addPreferences("recover", { steady: false, ai: { healBelow: 0.7, safeDistance: 3 } }, [recoverBelow, recoverSteady, recoverSafe]);
 
@@ -32,17 +32,26 @@ namespace CompanionBehavior {
         return true;
     }
 
+    /** 本程再生还没走完：AI 应当坚持把这次疗程交付完，而不是立刻转攻把它掐断。 */
+    function recoverCourse(context: WorldBehavior.Context): boolean {
+        return status(context, source(context), "regenerating");
+    }
+
     registerUse("recover", {
         protocols: ["world_combat:heal"],
         reach: function () { return 0; },
         ready: function () { return true; },
         available: function (context, item) {
             if (context.facts.mounted) return false;
+            // 疗程进行中：把这次再生继续摆在候选中，让共享顺序持有它直到本程交付完（仍可边走边修）。
+            if (recoverCourse(context)) return true;
             var below = ai<number>(item, "healBelow", 0.7), health = ratio(source(context));
             if (health >= below) return false;
             // 危急时不再等安全窗口；其余时候要有一段能边走边修的短窗口，才不浪费后半段回复。
             return health < below * 0.5 || recoverWindow(context, item);
         },
+        // 进行中的疗程声明为紧急，保持治疗意图；真正更紧急的求生选择仍可按各自优先级插进来。
+        priority: function (context) { return recoverCourse(context) ? 100 : 0; },
         accepts: function (context, _item, target) { return String(target.ref) === String(source(context).ref); }
     });
 }

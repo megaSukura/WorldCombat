@@ -148,7 +148,7 @@ namespace PokemonSkills {
                 recover: Math.round(p("bind", "aftercast", context)),
                 cooldown: Math.round(p("bind", "recharge", context)) + (choke ? 4 : 0),
                 active: skills["bind"].active,
-                range: p("bind", "reach", context) + 0.3
+                range: p("bind", "reach", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -164,27 +164,32 @@ namespace PokemonSkills {
             const reach = Math.max(2.4, p("bind", "reach", action));
             const grip = Math.max(0.3, p("bind", "grip", action));
             const end = origin.plus(direction.scale(reach));
-            const path = [[origin.x(), origin.y(), origin.z()], [end.x(), end.y(), end.z()]];
-            WorldFeedback.emit(world, bindScene, 1, origin,
-                { moment: "lash", path: path, notes: Math.round(p("bind", "notes", action)) }, 14);
             sound(action, "minecraft:block.vine.place");
 
+            // 先量这条线真正到哪里：抓到实体就停在实体，撞墙就停在墙面，空放才到满程。
             const grab = action.trace(origin, end, grip);
+            const contact = grab.position();
+            WorldFeedback.emit(world, bindScene, 1, origin,
+                { moment: "lash", path: [[origin.x(), origin.y(), origin.z()], [contact.x(), contact.y(), contact.z()]],
+                    notes: Math.round(p("bind", "notes", action)) }, 14);
+
             const target = grab.hitEntity() ? grab.target() : null;
             if (target === null || !world.valid(target) || world.friendly(target)) {
-                WorldFeedback.emit(world, bindScene, 1, end, { moment: "whiff" }, 16);
+                WorldFeedback.emit(world, bindScene, 1, contact, { moment: "whiff" }, 16);
                 done(action);
                 return;
             }
             const cinch = p("bind", "cinch", action);
             if (!hurt(action, target, "bind", cinch, { damage: damageSpec("bind", "cinch"), contact: true })) { done(action); return; }
+            // 回拽按真正抓住的对象解体重：站在瞄准点旁边的重目标不会被当成轻的拽。
+            const dragContext = withTarget(factContext(action), target);
             const duration = Math.max(60, Math.round(p("bind", "duration", action)));
             const existing = world.effects(target, bindBond);
             for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
             const body = world.observe(target);
             if (body === null) { done(action); return; }
             const state = { caster: String(actor.ref()), cinch: cinch, leash: Math.max(1.8, p("bind", "leash", action)),
-                drag: Math.max(0, p("bind", "drag", action)), ramp: Math.max(0, p("bind", "ramp", action)),
+                drag: Math.max(0, p("bind", "drag", dragContext)), ramp: Math.max(0, p("bind", "ramp", action)),
                 interval: Math.max(6, Math.round(p("bind", "interval", action))), snap: Math.max(3.0, p("bind", "snap", action)),
                 notes: Math.max(8, Math.round(p("bind", "notes", action))), next: world.tick() + Math.round(p("bind", "interval", action)),
                 duration: duration, victimLease: 0, casterLease: 0, tight: 0, reason: "" };

@@ -4,10 +4,11 @@
  * 一句话：施法者压低整个身体、四足蹬地，随后贴着地面冲出去，身下拖出一条平行的尘带；撞上的瞬间整个撞面
  * 炸开一圈低矮的尘环、翻起土块，目标被顶开——撞击点的尘量按这次冲撞算出的「马力」走。
  * 色相家族：土黄与赭褐（earth／tinydust／large_rock／groundquake／impact_ground）＋白亮冲击核心。
- * 拍子：起（ready 压低扬尘）→ 冲（drive 贴地尘带与速度线）→ 击（impact 尘环与土块）→ 压（press，仅压身式）
- *   ／失（miss）。
+ * 拍子：起（ready 压低扬尘，尘随时间收紧）→ 冲（drive 贴地尘带与速度线）→ 击（impact 尘环与土块）
+ *   → 压（press，仅压身式）／失（miss）。
  * 范围：impact 的尘环半径用 `data.scale`（踏地判定 / 0.45）铺开，画出来的就是正面撞面的宽度。
- * 运动：`drive` 的 trail 沿施法者实际冲过的路线铺开，画面即那条冲刺走廊；命中时土块向外抛、落地沉下。
+ * 运动：`drive` 的 trail 沿施法者实际冲过的路线铺开，画面即那条冲刺走廊；速度线沿 `data.direction`（本次真实朝向）
+ *   对齐，不再固定到世界横向；命中后立即停发 drive，命中时土块向外抛、落地沉下。
  * 数：`impact`／`miss` 的粒子量绑 `data.dust`（物攻与体重换算出机制数），核心强度绑 `data.intensity`（实际威力派生）；
  *   `data.progress` 让冲程中的尘量随前进变密。
  */
@@ -19,15 +20,18 @@ const HighhorsepowerDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 10 },
             emitters: [
                 {
+                    // 蓄势越长，脚边尘越密、向外越收：随时间逐步收紧的前侧轮廓。
                     name: "brace_dust", bind: "source", offset: [0, 0.06, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 18, shape: { kind: "ring", radius: 0.5 }, direction: "outward", speed: [0.05, 0.18],
+                    rate: { curve: [[0, 6], [1, 20]] }, shape: { kind: "ring", radius: 0.5 }, direction: "outward",
+                    speed: { curve: [[0, 0.18], [1, 0.05]] },
                     lifetime: [8, 16], size: [0.09, 0.03], color: 0x9A8258, alpha: [0.5, 0], light: "world", maxParticles: 40
                 },
                 {
                     name: "brace_earth", bind: "source", offset: [0, 0.35, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 10, shape: { kind: "ring", radius: 0.4 }, direction: "inward", speed: [0.03, 0.12],
+                    rate: { curve: [[0, 4], [1, 14]] }, shape: { kind: "ring", radius: 0.4 }, direction: "inward",
+                    speed: { curve: [[0, 0.12], [1, 0.03]] },
                     lifetime: [8, 14], size: [0.13, 0.03], color: 0x8A744C, alpha: [0.5, 0], light: "world", maxParticles: 30
                 }
             ]
@@ -52,9 +56,10 @@ const HighhorsepowerDefinition: ParticleDefinition = {
                     lifetime: [8, 14], size: [0.1, 0.02], color: 0x9A8258, alpha: [0.5, 0], light: "world", maxParticles: 140
                 },
                 {
-                    name: "speed_lines", bind: "source", offset: [0, 0.35, 0], height: 0.35,
+                    // 速度线沿本次真实朝向（data.direction）对齐，不再固定到世界横向。
+                    name: "speed_lines", bind: "source", offset: [0, 0.35, 0], height: 0.35, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 18, shape: { kind: "line", length: 0.9, rotation: [0, 0, 90] }, direction: "shape",
+                    rate: 18, shape: { kind: "line", length: 0.9 }, direction: "shape",
                     speed: [0.02, 0.08],
                     lifetime: [4, 8], size: [0.32, 0.06], color: 0xE8D8B0, alpha: [0.5, 0], light: "full", bloom: 0.2, maxParticles: 70
                 }

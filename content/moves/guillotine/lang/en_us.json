@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.guillotine.summary": "The pincers open wide across a wedge in front and clamp shut: whatever is still in the jaws is torn in one blow. It is the shortest and fastest member - step in and snap - at the cost of the longest recovery, so a missed clamp leaves it standing in place.",
-  "worldcombat.skill.guillotine.description.0": "The jaws reach %1$s blocks across a %2$s-degree wedge. Closing attempts one execution hit against a single foe nearest the centre line. Native immunity and damage rules still apply.",
+  "worldcombat.skill.guillotine.summary": "Two blades close through the locked aim plane. The first body or wall stops the clamp; an enemy takes one finite heavy hit. A finishing cue follows confirmed death.",
+  "worldcombat.skill.guillotine.description.0": "Blades reach %2$s blocks and open %3$s degrees. Their closing edges strike the first contacted enemy once for %1$s HP; native immunity and damage reduction remain active.",
   "worldcombat.skill.guillotine.description.1": "There are %1$s s between the jaws opening and the clamp; every level above the target shortens it, and the target must leave the wedge in that time.",
   "worldcombat.skill.guillotine.description.2": "Recovery takes %1$s seconds, including after a miss.",
   "worldcombat.skill.guillotine.wide.on": "Wide form: jaw angle x1.25 and longer jaws, at the cost of a slower clamp and longer recovery - easier to catch a target that stepped aside.",
@@ -9,8 +9,9 @@
   "worldcombat.skill.guillotine.growth.0": "From level %1$s the jaws reach %2$s blocks.",
   "worldcombat.skill.guillotine.growth.1": "From level %1$s the jaws reach %2$s blocks and open %3$s degrees, with the clamp delayed only %4$s s.",
   "worldcombat.skill.guillotine.use.0": "Finish a target with the shortest wind-up at contact range",
-  "worldcombat.skill.guillotine.use.1": "Clamp the nearest foe inside the wedge ahead",
+  "worldcombat.skill.guillotine.use.1": "Clamp the first reachable foe inside the wedge ahead",
   "worldcombat.skill.guillotine.use.2": "Trade timing for burst, accepting the longest recovery when it misses",
+  "worldcombat.skill.guillotine.value.damage": "Heavy clamp damage",
   "worldcombat.skill.guillotine.value.span": "Jaw reach",
   "worldcombat.skill.guillotine.value.arc": "Jaw angle",
   "worldcombat.skill.guillotine.value.mark": "Clamp delay",
@@ -23,9 +24,8 @@
   "worldcombat.skill.guillotine.preference.wide.help": "On: jaw angle x1.25 and jaws x1.1 longer, at the cost of +5 ticks of clamp delay and +4 ticks of recovery - easier to catch a target that stepped aside, slower and more punishing when it misses. Off (narrow form): clamps sooner and recovers faster, but only catches the small patch straight ahead.",
   "worldcombat.skill.guillotine.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.guillotine.preference.ai.maxChase.help": "The companion only considers guillotine while the threat is within this distance; smaller demands contact range, larger closes in from further away.",
-  "worldcombat.skill.guillotine.preference.ai.executionAbove": "Execution health floor",
-  "worldcombat.skill.guillotine.preference.ai.executionAbove.help": "Below this health ratio the companion stops spending an instant kill on the target; higher keeps it for healthy foes only.",
   "world_combat.move.guillotine.text.kill": "Pincered",
+  "world_combat.move.guillotine.text.hit": "Heavy clamp landed",
   "world_combat.move.guillotine.text.miss": "The jaws snap shut on air",
   "world_combat.move.guillotine.text.resisted": "The target withstood it"
 }

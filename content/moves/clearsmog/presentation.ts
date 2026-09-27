@@ -84,7 +84,7 @@ const ClearsmogDefinition: ParticleDefinition = {
                     name: "floor", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: 3, at: 1, repeats: 3, interval: 4 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
+                    shape: { kind: "circle", radius: 2.2 },
                     direction: "outward", speed: [0.0, 0.03], drag: 0.92,
                     lifetime: [12, 20], size: [0.7, 0.25], sizeMode: "linear",
                     color: 0x9AA88A, alpha: [0.35, 0], light: "world", maxParticles: 20

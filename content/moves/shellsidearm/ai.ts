@@ -5,12 +5,21 @@
  *   存活，在 `ai.maxChase`（默认 18）以内才考虑；更远交给共享接近逻辑。它是本组射程最长、冷却最久的一发，
  *   所以只在真的够得到时出手。
  * 对谁出手：`ai.finishLow`（默认开）打开时残血目标排得更前（一发重炮收尾）；`ai.longShot`（默认开）打开时，
- *   站在射程六成以外的目标再加一档——隔开距离把这一发安稳打出去，避免被反打。
+ *   站在射程六成以外的目标再加一档——隔开距离把这一发安稳打出去，避免被反打；固定钝击形态不能远射，没有这一档。
+ * 自动形态：贴到钝击距离内、且按双方真实物防/特防判出这一发更偏钝击时，给一点加成——这一下更疼，但仍打当前选中的目标，不靠换目标挑软肋。
  * 够不到怎么办：射程交给 `reach`，共享任务负责把身位送进射程；钝击配置会把射程砍半，接近逻辑照此调整。
  * 放完之后：命中处按软肋结算钝击或喷射，按概率留下毒，伙伴交回共享顺序。
- * 优先级：基础 28（在射程内）／8（还要先走近）；`longShot` +8；`finishLow` 且生命低于四成五 +14。
+ * 优先级：基础 28（在射程内）／8（还要先走近）；`longShot` +8（固定钝击除外）；自动近身且偏钝击 +6；`finishLow` 且生命低于四成五 +14。
  */
 namespace PokemonSkills {
+    /** 自动形态的 AI 只读参考：读双方真实物防/特防，判断这一发更偏钝击；读不到实体时按喷射（false）。 */
+    function shellsidearmAiPrefersPhysical(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(CompanionBehavior.source(context).ref), foe = world.actor(target.ref);
+        if (actor === null || foe === null || !world.valid(actor) || !world.valid(foe)) return false;
+        return shellsidearmPrefersPhysical(world, actor, foe);
+    }
+
     CompanionBehavior.registerUse("shellsidearm", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -29,8 +38,13 @@ namespace PokemonSkills {
             const distance = CompanionBehavior.distance(self.point, target.point);
             if (distance > CompanionBehavior.ai<number>(capability, "maxChase", 18)) return 0;
             if (distance > capability.data.range) return 8;
+            const form = capability.data.config && capability.data.config.form !== undefined ? Number(capability.data.config.form) : 0;
             let score = 28;
-            if (CompanionBehavior.ai<boolean>(capability, "longShot", true) && distance >= capability.data.range * 0.6) score += 8;
+            // 固定钝击不能远射：去掉「远射六成」奖励；自动与喷射保留。
+            if (form !== 1 && CompanionBehavior.ai<boolean>(capability, "longShot", true) && distance >= capability.data.range * 0.6) score += 8;
+            // 自动形态考虑真实可近接与已观察防御：贴到钝击距离内、且这一发确实更偏钝击时，这一下更疼，给一点加成。
+            // 不通过替换目标来「事后挑软肋」，只影响已经选中的这个目标的排序。
+            if (form === 0 && distance <= 3 && shellsidearmAiPrefersPhysical(context, target)) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", true) && CompanionBehavior.ratio(target) < 0.45) score += 14;
             return score;
         }
@@ -50,7 +64,7 @@ namespace PokemonSkills {
             help: "开启：残血目标排得更前，用这一发重炮收尾；关闭则所有目标同等对待。"
         }),
         field(pathOf("ai.longShot"), "偏好远射", "boolean", {
-            help: "开启：站在射程六成以外的目标优先级更高，隔开距离把重炮打出去；关闭则无论远近一视同仁，更愿意贴上去打。"
+            help: "开启：站在射程六成以外的目标优先级更高，隔开距离把重炮打出去；关闭则无论远近一视同仁，更愿意贴上去打。固定钝击形态够不到远处，没有这一档。"
         }),
         field(pathOf("ai.leaveStation"), "驻守时允许离位", "boolean", {
             help: "开启后，驻守命令下也会为找到炮击位置离开站位；关闭则只在原地够得到时出手。"

@@ -44,7 +44,7 @@ namespace PokemonSkills {
             return false;
         });
     }
-    /** 只读探针：目标之后沿同一条线还站着至少一个可见敌人，说明这记长贯穿能多钻一个。 */
+    /** 只读探针：目标之后沿同一条线、同一高度带还站着至少一个可见敌人，说明这记长贯穿能多钻一个。 */
     function hyperdrillLinesUp(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         return CompanionBehavior.observedFlag(context, "hyperdrill:line:" + target.ref, function () {
             const self = CompanionBehavior.source(context).point;
@@ -56,6 +56,8 @@ namespace PokemonSkills {
             for (let index = 0; index < nearby.length; index++) {
                 const other = nearby[index];
                 if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+                // 钻头走水平直线：只有落在同一高度带、同一侧线内的目标才算真的在贯穿队列里。
+                if (Math.abs(other.point[1] - target.point[1]) > 2.0) continue;
                 const ox = other.point[0] - self[0], oz = other.point[2] - self[2];
                 const along = ox * fx + oz * fz;
                 const lateral = Math.abs(ox * fz - oz * fx);

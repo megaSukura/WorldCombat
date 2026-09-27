@@ -9,6 +9,19 @@
  * 配置 prolonged（久候／速报）在「更重的延迟重击」与「更快的即时兑现」之间取舍。
  */
 namespace PokemonSkills {
+    // 只读事实：该对象此刻是否已有一条真正挂着的预知预约（读真实 charge 效果，不把可被牛奶清掉的 UI 标记当空档）。
+    CompanionBehavior.registerFact("world_combat:move_futuresight/pending", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
+        if (!access.valid(actor)) return false;
+        const ref = String(actor.ref()), charges = access.effectsOfType(futureSightCharge);
+        for (let i = 0; i < charges.length; i++) {
+            try {
+                const state = JSON.parse(String(charges[i].data()));
+                if (String(state.target) === ref) return true;
+            } catch (error) { }
+        }
+        return false;
+    });
+
     CompanionBehavior.registerUse(futureSightId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -20,7 +33,7 @@ namespace PokemonSkills {
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible
-                && !CompanionBehavior.status(context, target, futureSightStatus);
+                && !CompanionBehavior.fact<boolean>(context, "world_combat:move_futuresight/pending", target);
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

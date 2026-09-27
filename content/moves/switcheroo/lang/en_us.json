@@ -31,6 +31,7 @@
   "world_combat.move.switcheroo.text.swap": "Swapped on the fly",
   "world_combat.move.switcheroo.text.empty": "Slipped past empty-handed",
   "world_combat.move.switcheroo.text.guard": "Its grip held fast",
+  "world_combat.move.switcheroo.text.fail": "Could not swap it away",
   "world_combat.move.switcheroo.text.miss": "Slipped through air",
   "worldcombat.skill.switcheroo.description.additional": "It can be cast with no target as a pure dash and is never refused just for the original target's ability. A target with Sticky Hold or the like only fails the swap when you actually reach its body, and the move is a pass instead; the same holds if the user is embargoed."
 }

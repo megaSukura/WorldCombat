@@ -1,15 +1,13 @@
 /**
  * 精神波 / psywave 的客户端表现。
  *
- * 一句话：施法者周身念力紊乱地跳动、把波压到掌心 → 一道直立的念力波前沿瞄准方向推出去、拖着螺旋碎光穿人 →
+ * 一句话：施法者周身念力紊乱地跳动、把波压到掌心 → 一道念力波前推到瞄准方向、拖着一列可数的环穿人 →
  *   每个被穿到的目标身上炸开一圈随本此强度增减的环。
  * 色相家族：淡紫（0x8E6FE0 主 / 0xB49CF0 亮 / 0xE6DCFF 核心），近白只给穿透核心；无第二个色相。
  * 拍子：起 unstable 0–16t ／ 推 flight 0–70t ／ 中 hit 0–26t ／ 空 miss。
- * 范围：flight 的直立波前环半径与 hit 的贴地环都按 `data.scale`（波宽 / 0.55）铺开；波宽也决定判定。
- * 运动：unstable 上下乱跳，并以环数提前展示本此摇到的强度；flight 绑 projectile 并把环立到运动方向上
- *   （`orient: velocity`）；hit 由内向外炸。
- * 数：`data.rings`（准备期固定下来的环数）驱动 unstable 与 hit 的发射量，`data.intensity`（同一强度）抬高
- *   亮度与尺寸——玩家因此能在出手前和命中后都读出这一发是强是弱。
+ * 数：`data.rings`（准备期固定下来的环数）驱动 unstable 的环、flight 的后列环与 hit 的环数——数量就是
+ *   `data.rings` 本身（有限、稳定），不是每秒速率；`data.tier`（同一强度，0..1）抬高亮度。
+ * 范围：环的世界直径 = 画出的粒径 × `data.scale`（波宽 / 0.55），只乘一次；波宽也决定判定。
  */
 const PsywaveDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -35,10 +33,10 @@ const PsywaveDefinition: ParticleDefinition = {
                     color: 0xE6DCFF, alpha: [0.9, 0], light: "full", maxParticles: 24
                 },
                 {
-                    // 准备期就把本此摇到的环数亮出来：玩家出手前便能读出这一发的强弱。
+                    // 准备期就把本此待发的环数亮出来：数量精确等于 data.rings，玩家出手前便能读出强弱。
                     name: "pulse", bind: "source", offset: [0, 0.1, 0], height: 0.66, orient: "fixed",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: { data: "rings", fallback: 3 }, interval: 3, repeats: 2 },
+                    burst: { count: { data: "rings", fallback: 3 }, interval: 3, repeats: 1 },
                     shape: { kind: "ring", radius: 0.42 },
                     direction: "outward", speed: [0.04, 0.16],
                     lifetime: [8, 16], size: [0.32, 0.8],
@@ -51,13 +49,14 @@ const PsywaveDefinition: ParticleDefinition = {
             exit: { stop: 70, drain: 16 },
             emitters: [
                 {
-                    name: "front", bind: "projectile", fit: "none", orient: "velocity",
+                    // 可数后列环：每刻在弹位放一枚环、共 data.rings 枚，拖着一条数量固定的环列。粒径 × data.scale 只乘一次。
+                    name: "rings", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    rate: { data: "rings", fallback: 4 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.55 } },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [8, 16], size: [0.4, 0.9],
-                    color: 0x8E6FE0, alpha: [0.7, 0], light: "full", maxParticles: 48
+                    burst: { count: 1, interval: 1, repeats: { data: "rings", fallback: 4 } },
+                    shape: { kind: "point" },
+                    direction: "outward", speed: [0.0, 0.03],
+                    lifetime: [12, 20], size: [0.8, 1.1], sizeMode: "linear",
+                    color: 0x8E6FE0, alpha: [{ data: "tier", fallback: 0.6 }, 0], light: "full", maxParticles: 24
                 },
                 {
                     name: "core", bind: "projectile", fit: "none",
@@ -92,11 +91,11 @@ const PsywaveDefinition: ParticleDefinition = {
                 {
                     name: "rings", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: { data: "rings", fallback: 4 }, interval: 2, repeats: 2 },
+                    burst: { count: { data: "rings", fallback: 4 }, interval: 2, repeats: 1 },
                     shape: { kind: "sphere", radius: 0.28 },
                     direction: "outward", speed: [0.08, 0.3], spread: 24,
                     lifetime: [8, 16], size: [0.3, 0.9],
-                    color: 0x8E6FE0, alpha: [0.85, 0], light: "full", maxParticles: 80
+                    color: 0x8E6FE0, alpha: [{ data: "tier", fallback: 0.85 }, 0], light: "full", maxParticles: 80
                 },
                 {
                     name: "glint", bind: "target", offset: [0, 0.1, 0], height: 0.6,
@@ -114,7 +113,17 @@ const PsywaveDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
+                    // 空放/撞墙收在真实末点：留一枚按真实波宽铺开的淡环，说明这一发波前到此为止。
                     name: "fade", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 1 },
+                    shape: { kind: "point" },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [8, 14], size: [1.1, 0.4],
+                    color: 0x7A5CB8, alpha: [0.5, 0], light: "world", maxParticles: 12
+                },
+                {
+                    name: "motes", bind: "point", fit: "none", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
                     burst: { count: 10 },
                     shape: { kind: "sphere", radius: 0.3 },

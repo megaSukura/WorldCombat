@@ -12,9 +12,9 @@
  *       身体每动一步，外半径 `radius`、内半径 `inner×radius` 的中空花裙就在真实位置重判一次：裙内目标永远安全，
  *       裙环上的非友方各吃一次 `bloom` 范围特攻并被花瓣轻推 `push` 格（每圈每人最多一次，墙真截断）。
  *       走完一圈在真实可支撑地面落下 `petals` 块 `minecraft:pink_petals`（`canSurvive` 判定，`terrain` 短租、到期原方块回来）。
- *       两圈之间隔 `gap` 刻。
- *   晕（结束）：舞完给自己挂共享身份 world_combat:status/confusion（载体本单元自己的 effect，时长按首次写入的
- *       `dazeTicks`，反噬不再续时）。
+ *   晕（结束）：从跳出第一圈起，本单元用一个独立 actor 载体（world_combat:move_petaldance/commitment）记下恍惚责任；
+ *       正常收招、主动收手（input-stop）或被打断，都按已发圈在结束时挂共享身份 world_combat:status/confusion
+ *       （载体本单元自己的 *_daze，时长按首次写入的 `dazeTicks`）。首圈之前无成本；正常收招会先兑现再结清载体，不会二次支付。
  *
  * 与同族分开：火之舞是两片翼尖、乱打是原地左右扇扫；花瓣舞是移动中的中空花裙，贴内圈能避、走位能让裙边扫下一圈。
  */
@@ -71,19 +71,49 @@ namespace PokemonSkills {
         } catch (error) { return 0; }
     }
 
-    interface PetalState { left: number; strikes: number; index: number; }
+    interface PetalState { left: number; strikes: number; index: number; commitment: number; dazeTicks: number; fumble: number; }
 
-    function petaldanceSpent(current: CombatAction, state: PetalState): void {
-        const world = current.world(), actor = current.actor(), body = world.observe(actor);
-        const ticks = Math.max(80, Math.round(p(petaldanceId, "dazeTicks", current)));
-        const fumble = Math.round(Math.max(0.05, Math.min(0.9, p(petaldanceId, "fumble", current))) * 100);
-        if (body !== null && CombatStatus.apply(world, actor, "confusion", petaldanceDaze, ticks, fumble, { unique: true })) {
+    /** 按已发圈兑现恍惚：只有状态真的落地才播成功回执（被拒绝就不冒充命中）。 */
+    function petaldancePay(world: CombatWorld, actor: CombatActor, ticks: number, fumble: number, strikes: number): void {
+        const body = world.observe(actor);
+        if (body === null) return;
+        if (CombatStatus.apply(world, actor, "confusion", petaldanceDaze, ticks, fumble, { unique: true })) {
             WorldFeedback.emit(world, petaldanceScene, 1, body.position(),
-                { moment: "spent", target: String(actor.ref()), strikes: state.strikes, fumble: fumble, ticks: ticks, intensity: 1 }, 30);
+                { moment: "spent", target: String(actor.ref()), strikes: strikes, fumble: fumble, ticks: ticks, intensity: 1 }, 30);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), petaldanceDazeText, [], 30);
             world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
         }
     }
+
+    // 舞疲劳责任：首圈起挂在一个独立 actor 载体上，记录已发圈数与这份恍惚的时长/失手率。
+    WorldCombat.effect(petaldanceCommitment, 1, 600, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.instance !== "number" || !isFinite(value.instance) || value.instance <= 0) throw new Error("Invalid petaldance commitment: instance");
+        if (typeof value.strikes !== "number" || !isFinite(value.strikes) || value.strikes < 1) throw new Error("Invalid petaldance commitment: strikes");
+        if (typeof value.ticks !== "number" || !isFinite(value.ticks) || value.ticks < 1) throw new Error("Invalid petaldance commitment: ticks");
+        if (typeof value.fumble !== "number" || !isFinite(value.fumble) || value.fumble < 0) throw new Error("Invalid petaldance commitment: fumble");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    function petaldanceWatch(effect: CombatEffect): void {
+        const world = effect.world(), actor = effect.target();
+        if (!world.valid(actor)) { effect.end(); return; }
+        const state = JSON.parse(String(effect.state()));
+        const active = world.actions();
+        let dancing = false;
+        for (let i = 0; i < active.length; i++) if (active[i].instance() === state.instance) { dancing = true; break; }
+        if (dancing) { effect.schedule("watch", "watch", 10, "{}"); return; }
+        // 舞已经结束（正常收招/主动收手/被打断）却还没结清：按已发圈兑现，然后收掉责任。
+        petaldancePay(world, actor, state.ticks, state.fumble, state.strikes);
+        effect.end();
+    }
+    WorldCombat.effectHandler(petaldanceCommitment, "start", petaldanceWatch);
+    WorldCombat.effectHandler(petaldanceCommitment, "watch", petaldanceWatch);
+    WorldCombat.effectHandler(petaldanceCommitment, "operation:world_combat:petaldance/progress", function (effect) {
+        const input = JSON.parse(String(effect.input())), state = JSON.parse(String(effect.state()));
+        if (typeof input.strikes === "number" && isFinite(input.strikes)) state.strikes = Math.max(state.strikes, input.strikes);
+        effect.state(JSON.stringify(state));
+    });
+    WorldCombat.effectHandler(petaldanceCommitment, "operation:world_combat:petaldance/settle", function (effect) { effect.end(); });
 
     export function petaldanceRing(centre: CombatPoint, inner: number, outer: number): WorldGeometry.BodyRegion {
         return { boundsMin: () => centre.minus(WorldCombat.point(outer, 1.8, outer)),
@@ -123,10 +153,10 @@ namespace PokemonSkills {
         return hits;
     }
 
-    function petaldanceBeat(current: CombatAction, state: PetalState, scenes: WorldFeedback.ActionScenes, done: (action: CombatAction) => void): void {
+    function petaldanceBeat(current: CombatAction, state: PetalState, bands: WorldFeedback.ActionScenes, done: (action: CombatAction) => void): void {
         const world = current.world(), actor = current.actor();
         const self = world.observe(actor);
-        if (self === null) { scenes.finish(current, done); return; }
+        if (self === null) { bands.finish(current, done); return; }
         const radius = Math.max(2.6, p(petaldanceId, "radius", current));
         const innerRatio = Math.max(0.35, Math.min(0.55, p(petaldanceId, "inner", current)));
         const inner = Math.max(0.6, radius * innerRatio);
@@ -142,8 +172,16 @@ namespace PokemonSkills {
         const struck: { [ref: string]: boolean } = Object.create(null);
         let hits = 0;
 
+        // 首圈起登记恍惚责任；后续圈只推进已发圈数。动作被 input-stop/打断也会由载体接手兑现。
+        if (state.commitment === 0) {
+            state.commitment = world.effect(petaldanceCommitment, actor,
+                JSON.stringify({ instance: current.id(), strikes: state.index + 1, ticks: state.dazeTicks, fumble: state.fumble }), 600);
+        } else {
+            world.operation(state.commitment, "world_combat:petaldance/progress", JSON.stringify({ strikes: state.index + 1 }));
+        }
+
         sound(current, state.index === 0 ? "cobblemon:move.magicalleaf.actor_1" : "cobblemon:move.razorleaf.actor_1");
-        scenes.stop(current, "skirt");
+        bands.stop(current, "skirt");
 
         /** 分刻沿弧走一小步，每一步按真实身体位置重判中空花裙；走完一圈落地花瓣。 */
         function step(current: CombatAction, at: number): void {
@@ -151,7 +189,7 @@ namespace PokemonSkills {
             if (body === null) { finish(current); return; }
             const centre = body.position();
             current.face(centre.plus(heading), 12, 12);
-            scenes.show(current, "skirt", centre,
+            bands.show(current, "skirt", centre,
                 { moment: "dance", target: String(actor.ref()), index: state.index, left: state.left, strikes: state.strikes,
                     inner: Math.round(inner * 100) / 100, outer: Math.round(radius * 100) / 100, motes: motes,
                     direction: [heading.x(), 0, heading.z()], scale: scale, intensity: intensity });
@@ -168,7 +206,7 @@ namespace PokemonSkills {
         }
 
         function finish(current: CombatAction): void {
-            scenes.stop(current, "skirt");
+            bands.stop(current, "skirt");
             const settled = current.world().observe(actor);
             const where = settled !== null ? settled.position() : current.origin();
             if (hits > 0) {
@@ -189,10 +227,12 @@ namespace PokemonSkills {
             state.index = state.index + 1;
             if (state.left > 0) {
                 const pause = Math.max(7, Math.round(p(petaldanceId, "gap", current)));
-                current.after(pause, function (next: CombatAction) { petaldanceBeat(next, state, scenes, done); });
+                current.after(pause, function (next: CombatAction) { petaldanceBeat(next, state, bands, done); });
             } else {
-                petaldanceSpent(current, state);
-                scenes.finish(current, done);
+                // 正常收招：先按已发圈兑现，再结清载体，避免它再付一次。
+                petaldancePay(current.world(), actor, state.dazeTicks, state.fumble, state.strikes);
+                if (state.commitment !== 0) { current.world().operation(state.commitment, "world_combat:petaldance/settle", "{}"); state.commitment = 0; }
+                bands.finish(current, done);
             }
         }
 
@@ -204,7 +244,7 @@ namespace PokemonSkills {
         id: petaldanceId,
         cooldownParameter: "recharge",
         name: "Petal Dance",
-        description: "裹着一圈外沿花裙连续舞步移动：花裙外沿扫过的人吃范围特攻伤害并被轻推开，贴近中心的中空里反而安全；每圈在真实可支撑地面落下花瓣。舞完自己陷入恍惚，出手可能被打散。",
+        description: "裹着一圈外沿花裙连续舞步移动：花裙外沿扫过的人吃范围特攻伤害并被轻推开，贴近中心的中空里反而安全；每圈在真实可支撑地面落下花瓣。舞完自己陷入恍惚，出手可能被打散；从第一圈起这笔恍惚就记了账，中途主动收手也躲不掉。",
         uses: ["隔着一段距离用中空花裙外沿削一圈贴过来的敌人", "用特攻处理一堆低特防目标", "走位把花裙边扫到敌人、同时把安全的中空留给队友"],
         kind: "aim",
         range: 5.0,
@@ -223,10 +263,10 @@ namespace PokemonSkills {
                 label: config && config.drift === true ? "花瓣舞·旋舞" : "花瓣舞" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            const context: NumberContext = { pokemon, skill: skills[petaldanceId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
+            const context: NumberContext = { pokemon: pokemon, skill: skills[petaldanceId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p(petaldanceId, "tempo", context)),
-                recover: Math.round(p(petaldanceId, "recover", context)),
+                recover: Math.round(p(petaldanceId, "steady", context)),
                 cooldown: Math.round(p(petaldanceId, "recharge", context)),
                 active: 0,
                 range: p(petaldanceId, "radius", context)
@@ -238,16 +278,18 @@ namespace PokemonSkills {
             return Math.max(3, Math.round(p(petaldanceId, "tempo", action)));
         },
         execute: function (action, move, config, done) {
-            // Releasing aim keeps the committed finite dance and its final direction; Escape still cancels.
+            // Releasing aim keeps the committed finite dance and its final direction; Escape still cancels (and the carrier then pays).
             action.on("world_combat:input-release", function () { });
             action.releaseTarget();
-            const scenes = WorldFeedback.actionScenes(petaldanceScene);
+            const bands = WorldFeedback.actionScenes(petaldanceBandScene);
             const world = action.world(), actor = action.actor();
             if (world.observe(actor) === null) { done(action); return; }
             const strikes = Math.max(2, Math.min(3, Math.round(p(petaldanceId, "strikes", action))));
-            const state: PetalState = { left: strikes, strikes: strikes, index: 0 };
+            const dazeTicks = Math.max(80, Math.round(p(petaldanceId, "dazeTicks", action)));
+            const fumble = Math.round(Math.max(0.05, Math.min(0.9, p(petaldanceId, "fumble", action))) * 100);
+            const state: PetalState = { left: strikes, strikes: strikes, index: 0, commitment: 0, dazeTicks: dazeTicks, fumble: fumble };
             sound(action, "cobblemon:move.razorleaf.actor_2");
-            petaldanceBeat(action, state, scenes, done);
+            petaldanceBeat(action, state, bands, done);
         }
     });
 

@@ -22,10 +22,10 @@ namespace PokemonSkills {
 
     function syrupbombBindData(json: string): string {
         const value = JSON.parse(json);
-        ["interval", "drop", "left"].forEach(function (key) {
+        ["interval", "drop", "left", "coat"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid syrupbomb bind");
         });
-        if (value.interval < 1 || value.drop === 0 || value.left < 0) throw new Error("Invalid syrupbomb bind");
+        if (value.interval < 1 || value.drop === 0 || value.left < 0 || value.coat < 1) throw new Error("Invalid syrupbomb bind");
         return JSON.stringify(value);
     }
 
@@ -43,20 +43,29 @@ namespace PokemonSkills {
 
     WorldCombat.effect(syrupbombBind, 1, 1200, "actor", syrupbombBindData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(syrupbombBind, "start", function (effect) {
-        const data = JSON.parse(effect.state());
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        // 这一层糖衣由绑定持有：它自己申请精确的那一次 carrier（租约），替换/清除糖衣时绑定同步失效。
+        if (!CombatStatus.apply(world, victim, "syrupbomb", syrupbombEffect, Math.max(1, Math.round(data.coat)), 0, { unique: true })) { effect.end(); return; }
+        data.lease = MobEffects.bind(world, victim, syrupbombEffect);
+        if (!data.lease) { effect.end(); return; }
+        effect.state(JSON.stringify(data));
+        const body = world.observe(victim);
+        if (body !== null) WorldFeedback.emit(world, syrupbombScene, 1, body.position(),
+            { moment: "coat", target: String(victim.ref()), drop: 1, pulses: data.left }, 26);
         effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
     });
     WorldCombat.effectHandler(syrupbombBind, "pulse", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(victim) || MobEffects.read(world, victim, syrupbombEffect) === null) { effect.end(); return; }
-        NativeEffects.boost(world, victim, "spe", -data.drop);
+        if (!world.valid(victim) || !MobEffects.present(world, data.lease)) { effect.end(); return; }
+        // 显示真实降级：已到 -6 时这一阵实际掉 0，不假装又降了一级，也不重复播报。
+        const drop = NativeEffects.boost(world, victim, "spe", -data.drop);
         data.left = data.left - 1;
         effect.state(JSON.stringify(data));
         const body = world.observe(victim);
         if (body !== null) {
             WorldFeedback.emit(world, syrupbombScene, 1, body.position(),
-                { moment: "slow", target: String(victim.ref()), drop: data.drop, left: data.left }, 22);
-            world.sound("minecraft:block.honey_block.slide", body.position(), 12, "{}");
+                { moment: "slow", target: String(victim.ref()), drop: drop, left: data.left }, 22);
+            if (drop !== 0) world.sound("minecraft:block.honey_block.slide", body.position(), 12, "{}");
         }
         if (data.left > 0) effect.schedule("pulse", "pulse", Math.max(1, Math.round(data.interval)), "{}");
         else effect.end();
@@ -72,12 +81,17 @@ namespace PokemonSkills {
         for (let i = 0; i < binds.length; i++) world.operation(binds[i].id(), "world_combat:dispel", "{}");
     });
 
-    // 落点粘糖洼：踏进去的敌人被黏住一下；粒子由 scan 按 field.radius 续期。
+    // 落点粘糖洼：只有真正踩在洼上的敌人被黏住一下；表现由 field 托管效果自己持有，洼在粒子就在。
     WorldEffects.fieldRule(syrupbombPool, {
+        accepts: function (world, actor, field) {
+            // 高度不同不算踩上：必须真的着地、脚底落在这块糖面附近。
+            return !world.friendly(actor) && WorldEffects.groundedContact(world, actor, field, 1.2);
+        },
         scan: function (effect, world, field) {
             const scale = (field.radius || 1.6) / 1.6;
-            WorldFeedback.keep(world, "syrupbomb:pool:" + String(effect.id()), syrupbombScene, 1,
-                WorldCombat.point(field.position[0], field.position[1], field.position[2]), { moment: "pool", scale: scale }, 12);
+            // 用托管效果的 presentOn：洼结束的那一刻表现一起收走，不会出现「场还在、画面先没了」。
+            WorldFeedback.onEffect(world, effect.id(), "syrupbomb:pool", syrupbombScene, 1,
+                WorldCombat.point(field.position[0], field.position[1], field.position[2]), { moment: "pool", scale: scale });
         },
         enter: function (world, actor, field) {
             if (world.friendly(actor)) return;
@@ -89,38 +103,53 @@ namespace PokemonSkills {
     });
 
     /**
-     * 把糖洼收在真实可支撑的地面上：撞到方块侧面时先沿方块面法线让开该格，再向下找第一块实心方块；
-     * 直接落地或砸中活体时也从接触点向下找地，避免把水洼画在墙面或半空。
+     * 把糖洼收在真实可支撑的地面上：撞到方块侧面时先沿方块面法线让开该格，再向下找第一块实心方块。
+     * 只有当糖面就在接触点脚边（竖直、水平都靠得住）才算落地；悬空结束的弹找不到支撑时返回 null，
+     * 由调用方散掉，不把糖洼画在半空或凭空补一个假落点。
      */
-    function syrupbombLanding(world: CombatWorld, point: CombatPoint, face: string): CombatPoint {
+    function syrupbombLanding(world: CombatWorld, point: CombatPoint, face: string): CombatPoint | null {
         let x = point.x(), y = point.y(), z = point.z();
         if (face === "north") z -= 0.5;
         else if (face === "south") z += 0.5;
         else if (face === "west") x -= 0.5;
         else if (face === "east") x += 0.5;
         else if (face === "down") y -= 0.5;
-        const ground = WorldGeometry.ground(world, WorldCombat.point(x, y, z), 8);
-        return WorldCombat.point(ground.x(), ground.y(), ground.z());
+        const probe = WorldCombat.point(x, y, z);
+        const ground = WorldGeometry.ground(world, probe, 8);
+        const vertical = Math.abs(ground.y() - point.y());
+        const horizontal = WorldCombat.point(ground.x() - point.x(), 0, ground.z() - point.z()).length();
+        return vertical <= 2.5 && horizontal <= 2.0 ? ground : null;
     }
 
-    /** 爆开：范围内所有非友方被裹上糖浆并各自挂上掉速绑定；落点留下粘糖洼。 */
-    function syrupbombSplash(world: CombatWorld, point: CombatPoint, poolPoint: CombatPoint, blast: number, poolRadius: number, poolTicks: number,
+    /** 没炸到任何实心落点（或悬空结束）时只在真实位置散一下，不含糊地补一个假糖洼。 */
+    function syrupbombFizzle(world: CombatWorld, point: CombatPoint): void {
+        WorldFeedback.emit(world, syrupbombScene, 1, point, { moment: "fizzle" }, 18);
+        WorldFeedback.text(world, point, syrupbombFizzleText, [], 24);
+    }
+
+    /**
+     * 爆开：范围内的非友方被裹上糖浆并各自挂上掉速绑定（绑定自带精确 carrier 租约，负责真正落地与掉速）。
+     * 实心墙挡住爆心与目标连线的敌人吃不到；只要有真实可支撑的落点就留下粘糖洼，全空则只散掉。
+     */
+    function syrupbombSplash(world: CombatWorld, point: CombatPoint, poolPoint: CombatPoint | null, blast: number, poolRadius: number, poolTicks: number,
         coatTicks: number, interval: number, pulses: number, stick: number, power: number): void {
         let coated = 0;
-        WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, blast), function (actor) {
-            if (MobEffects.apply(world, actor, syrupbombEffect, coatTicks, 0) === null) return;
+        WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, blast), function (actor, facts) {
+            if (WorldGeometry.blockHit(world, point, facts.position()) !== null) return;
             const existing = world.effects(actor, syrupbombBind);
             for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
-            world.effect(syrupbombBind, actor, JSON.stringify({ interval: interval, drop: 1, left: pulses }), coatTicks);
+            const id = world.effect(syrupbombBind, actor,
+                JSON.stringify({ interval: interval, drop: 1, left: pulses, coat: coatTicks }), coatTicks);
+            // 绑定 start 同步申请 carrier 并领取租约；领取失败（原生拒绝）就不算裹上，也不播报。
+            if (!world.effects(actor, syrupbombBind).some(function (view) { return view.id() === id; })) return;
             coated++;
-            const at = world.observe(actor);
-            if (at !== null) WorldFeedback.emit(world, syrupbombScene, 1, at.position(),
-                { moment: "coat", target: String(actor.ref()), drop: 1, pulses: pulses }, 26);
         });
         WorldFeedback.emit(world, syrupbombScene, 1, point,
             { moment: "burst", scale: blast / 2.2, radius: blast, coated: coated, intensity: Math.max(0.6, Math.min(2, power / 60)) }, 36);
-        WorldEffects.field(world, syrupbombPool, poolPoint, poolRadius, { stick: stick, drop: 1 }, poolTicks);
-        if (coated > 0) WorldFeedback.text(world, poolPoint.plus(WorldCombat.point(0, 0.8, 0)), syrupbombCoatText, [coated], 28);
+        if (poolPoint !== null) {
+            WorldEffects.field(world, syrupbombPool, poolPoint, poolRadius, { stick: stick, drop: 1 }, poolTicks);
+            if (coated > 0) WorldFeedback.text(world, poolPoint.plus(WorldCombat.point(0, 0.8, 0)), syrupbombCoatText, [coated], 28);
+        }
     }
 
     define({
@@ -155,8 +184,10 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", thick: thick ? 1 : 0, intensity: thick ? 1.3 : 1 }));
             return prepare;
         },
-        indicator: function (config) {
-            return { radius: config && config.thick ? 10 : 8, geometry: "point", style: "syrup", label: config && config.thick ? "糖浆炸弹·浓糖" : "糖浆炸弹" };
+        indicator: function (config, pokemon) {
+            // 指示圈用这一只这一次真的炸开半径，浓糖也走同一棵公式，不写死第二份常数。
+            return { radius: p("syrupbomb", "blast", pokemon), geometry: "point", style: "syrup",
+                label: config && config.thick ? "糖浆炸弹·浓糖" : "糖浆炸弹" };
         },
         execute: function (action, move, config, done) {
             const world = action.world();
@@ -173,37 +204,44 @@ namespace PokemonSkills {
             const pulses = Math.max(1, Math.round(p("syrupbomb", "pulses", action)));
             const stick = Math.max(1, Math.round(p("syrupbomb", "stick", action)));
             let splashed = false;
-            function splash(scope: CombatWorld, point: CombatPoint, face: string): void {
+            // requireSupport：自然结束（没撞到东西）时只有落在真实支撑面上的终点才炸开；
+            // 直接命中实体或方块时以实际接触点为落点，悬空命中（如打中飞行目标）仍裹糖但不出洼。
+            function splash(scope: CombatWorld, point: CombatPoint, face: string, requireSupport: boolean): void {
                 if (splashed) return;
-                splashed = true;
                 const poolPoint = syrupbombLanding(scope, point, face);
+                if (requireSupport && poolPoint === null) { syrupbombFizzle(scope, point); return; }
+                splashed = true;
                 syrupbombSplash(scope, point, poolPoint, blast, poolRadius, poolTicks, coatTicks, interval, pulses, stick, power);
-                scope.sound("minecraft:block.honey_block.break", poolPoint, 16, "{}");
+                if (poolPoint !== null) scope.sound("minecraft:block.honey_block.break", poolPoint, 16, "{}");
             }
             sound(action, "minecraft:entity.experience_bottle.throw");
             // 点投：按真实抛物线飞向落点，落点与发射读同一次瞄准数据。
             const direction = gravity > 0
                 ? (LivingActions.ballistic(action.origin(), action.targetPosition(), speed, gravity) || aim(action))
                 : aim(action);
+            let landed = false;
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, gravity: gravity, lifetime: 120, direction: direction,
                 appearance: { item: "minecraft:honey_bottle", scale: 0.9, glow: true },
                 impact: function (current, hit) {
+                    if (landed) return;
+                    landed = true;
                     const scope = current.world(), struck = hit.target();
                     if (struck !== null && scope.valid(struck)) {
                         impact(current, hit, "syrupbomb", power, { damage: damageSpec("syrupbomb", "burst") });
                     }
                     scenes.stop(current, "lob");
-                    splash(scope, hit.position(), hit.blockFace());
+                    splash(scope, hit.position(), hit.blockFace(), false);
                 }
             }, function (current) {
                 const scope = current.world();
                 if (!splashed) {
-                    WorldFeedback.emit(scope, syrupbombScene, 1, current.targetPosition(), { moment: "fizzle" }, 18);
-                    WorldFeedback.text(scope, current.targetPosition(), syrupbombFizzleText, [], 24);
+                    // 只在弹体自己的真实终点结算：完成回调里能读到它最后的接触/结束点，不用瞄准点或满射程点假造。
+                    const end = scope.projectilePosition(flight);
+                    if (end === null) syrupbombFizzle(scope, current.targetPosition());
+                    else splash(scope, end, "", true);
                 }
                 scenes.stop(current, "lob");
-                splash(scope, current.targetPosition(), "");
                 scenes.finish(current, done);
             });
             scenes.show(action, "lob", action.origin(),

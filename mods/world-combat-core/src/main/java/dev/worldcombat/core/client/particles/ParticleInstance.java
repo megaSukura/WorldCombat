@@ -68,6 +68,23 @@ public final class ParticleInstance {
     private int tint = -1;
     private Vector3d direction;
     private boolean missingBindingReported;
+    private boolean soundTaken;
+
+    public record MomentSound(ParticleDefinition.SoundCue cue, Vector3d position) {}
+
+    /** One local cue per phase entry. Payload refreshes and rendered frames cannot replay it. */
+    public MomentSound takeSound() {
+        if (phase != Phase.RUNNING || soundTaken) return null;
+        soundTaken = true;
+        var moment = definition.moment(momentName);
+        if (moment == null || moment.sound() == null) return null;
+        var cue = moment.sound();
+        var position = new Vector3d(entryPosition);
+        var anchor = bindings.get(cue.bind());
+        if (anchor == null && cue.bind() != ParticleDefinition.Bind.POINT) return null;
+        if (anchor != null && !anchor.resolve(1f, position)) return null;
+        return new MomentSound(cue, position);
+    }
 
     /**
      * @param key             the owning entry key, used for diagnostics and as the default seed
@@ -293,6 +310,7 @@ public final class ParticleInstance {
         emitters.clear();
         momentName = name;
         momentStartTick = NEVER;
+        soundTaken = false;
         createMoment(moment);
     }
 

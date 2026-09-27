@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.aquatail.summary": "借转身把尾巴抡成一道向前压的弧形水墙：浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；命中带着灼伤的目标时，这道水会解除灼伤、熄灭其身上的火。浪是推进的，走出弧面、退到浪头之外，或被墙挡住都能躲开；不选敌人也能朝地面空放。",
+  "worldcombat.skill.aquatail.summary": "借转身把尾巴抡成一道向前压的弧形水墙：发出当刻的方向与中心就定死，浪头从贴身一圈圈推到射程外，拍中的敌人各挨一记接触伤害、被沿背离方向推开，并湿身片刻（移动速度降低 10%）；身上着火或被灼伤的目标都会被这一浪浇熄，带灼伤的目标还会解除灼伤。浪是推进的，走出弧面、退到浪头之外，或被墙挡住都能躲开；不选敌人也能朝地面空放。",
   "worldcombat.skill.aquatail.use.0": "用一片向前压的弧形水墙拍开身前的人",
   "worldcombat.skill.aquatail.use.1": "把贴身的敌人连同身位一起推走",
   "worldcombat.skill.aquatail.use.2": "一浪浇熄对手身上的火与灼伤",
@@ -33,5 +33,5 @@
   "world_combat.move.aquatail.text.douse": "水火相消",
   "world_combat.move.aquatail.text.miss": "水流尾拍空了",
   "effect.world_combat.aquatail_drenched": "水流尾·湿身",
-  "worldcombat.skill.aquatail.description.douse": "命中带着灼伤的目标时，这一浪会解除其灼伤并熄灭它身上的火。"
+  "worldcombat.skill.aquatail.description.douse": "命中时若目标身上正着火，这一浪会浇熄它身上的火；若它还带着灼伤，会一并解除灼伤。"
 }

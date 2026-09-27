@@ -34,7 +34,7 @@ namespace PokemonSkills {
         description: "把夜里晴空的月色披到身上：接住月色时按缺失生命的三分之二左右回复并冷却掉灼伤，白天或阴雨只回一点；无论月色强弱，灼伤都会被熄掉。",
         uses: ["夜里晴空下的强回复", "顺手冷却灼伤", "白天只作小补"],
         kind: "self", range: 0, prepare: 0, active: 0, recover: 10, cooldown: 220, style: "moon",
-        maximumTicks: 300,
+        stationary: true, maximumTicks: 300,
         defaults: {},
         fields: [],
         indicator: function () { return { radius: 1, style: "moon", label: "月光" }; },

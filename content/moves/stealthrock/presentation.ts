@@ -6,6 +6,7 @@
  * 色相家族：岩石灰（0x9E9A90 偏冷的石面）为主、冷白（0xE8E6DE）做落地高光，`sparkle/smallsparkle` 原色做尖端反光。
  * 拍子：起（windup）→ 抬（throw / raise）→ 守（launch 离轨短飞 / hit 命中）→ 碎（shatter 打空撞墙）。
  * 范围：raise 是 `bind:"point"`、`fit:"none"`；6 个悬石轨位由独立 scene 逐帧按真实槽位绘制（见文件末）。
+ *   形状几何按 data.scale（实际半径/2.6）缩放一次，所以形状半径写成参考值 2.6，不再同时绑定真实半径（避免半径又乘一次 scale）。
  * 运动：岩块由 `bind:"projectile"` 跟随真实弹体；命中朝目标下坠、撞墙向外溅开。
  * 数：`data.power`（机制威力）决定命中碎屑数量，`data.stones` 决定抛/抬的石量，`data.scale`（半径/参考 2.6）控制尺寸。
  */
@@ -55,7 +56,7 @@ const StealthRockDefinition: ParticleDefinition = {
                 {
                     name: "ground_ring", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 40 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
+                    burst: { count: 40 }, shape: { kind: "ring", radius: 2.6 },
                     direction: "outward", speed: [0.05, 0.18],
                     lifetime: [10, 20], size: [0.26, 0.6],
                     color: 0xE8E6DE, alpha: [0.6, 0], maxParticles: 80
@@ -64,7 +65,7 @@ const StealthRockDefinition: ParticleDefinition = {
                     name: "rise", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "stones", fallback: 6 }, interval: 3, repeats: 3 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                    shape: { kind: "circle", radius: 2.6 },
                     direction: "up", speed: [0.06, 0.18], spread: 14, spin: 30,
                     lifetime: [14, 26], size: [0.3, 0.06],
                     color: 0x9E9A90, alpha: [0.9, 0], maxParticles: 90
@@ -72,7 +73,7 @@ const StealthRockDefinition: ParticleDefinition = {
                 {
                     name: "dust_cloud", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 44 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                    burst: { count: 44 }, shape: { kind: "circle", radius: 2.6 },
                     direction: "up", speed: [0.03, 0.1],
                     lifetime: [14, 26], size: [0.1, 0.02],
                     color: 0xE8E6DE, alpha: [0.45, 0], maxParticles: 90
@@ -152,7 +153,8 @@ const StealthRockDefinition: ParticleDefinition = {
 
 WorldCombatParticles.scene("world_combat:move_stealthrock", 1, StealthRockDefinition);
 
-// 6 个真实轨位：有石头的轨位画一块石，空轨位只留一圈淡淡的空座。数据来自 field 的 slots（世界坐标 + 占位）。
+// 6 个真实轨位：有石头的轨位画一块原生岩石 sprite，空轨位只留一圈淡淡的空座。数据来自 field 的 slots
+//（世界坐标 + 占位），与 stealthrockLaunch 的发射原点同源，所以看到的那枚就是从它所在轨位飞出的。
 // 绑定在 field 效果上（WorldFeedback.onEffect），随石阵自然到期或被替换一起消失。
 WorldCombatClient.scene("world_combat:move_stealthrock_field", 1, function (frame) {
     const entry: CombatSceneEntry<{ slots: number[][]; radius: number; heavy: number }> = JSON.parse(frame.data());
@@ -161,10 +163,7 @@ WorldCombatClient.scene("world_combat:move_stealthrock_field", 1, function (fram
     for (let i = 0; i < slots.length; i++) {
         const slot = slots[i];
         if (slot[3]) {
-            frame.billboard(slot[0], slot[1], slot[2], 0.022, function (surface) {
-                surface.fill(-6, -7, 12, 14, 0xE0A9A49A);
-                surface.fill(-8, -9, 16, 3, 0xE0E8E6DE);
-            });
+            frame.sprite("minecraft:block/cobblestone", slot[0], slot[1], slot[2], 0.42, (i * 47) % 360, -1, 0, false);
         }
         else {
             frame.ring(slot[0], slot[1], slot[2], 0.12, 0x66807C74);

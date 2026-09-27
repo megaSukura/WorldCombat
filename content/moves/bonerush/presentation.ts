@@ -5,8 +5,8 @@
  *   尘痕（不改动地表）；每一击都比上一击更近落地，最后一击的圈最大。
  * 色相家族：骨白（0xEAE0C8）做骨头与震波，落尘土黄（0xD8C9A6）与暗褐（0x8A7458）做地面；没有第二个色相。
  * 拍子：起 draw（拔骨聚光）→ 掷 throw（骨头弧线飞行）→ 夯 slam（落点震波）→ 裂 crack（尘痕）→ 中 hit → 收 settle。
- * 范围：slam 用 `data.shock` 画贴地的整圈震波，圈的大小就是落点判定半径；crack 用 `data.radius` 铺开尘痕，
- *   玩家一眼看出骨头落在哪、波及多广。
+ * 范围：slam 用 `data.shock` 画贴地的整圈震波（位于 XZ 平面，不再旋转成竖面），圈的大小就是落点判定半径；
+ *   crack 用 `data.radius` 铺开尘痕，玩家一眼看出骨头落在哪、波及多广；震环与尘痕只在真实支撑地面上出现。
  * 运动：throw 由服务端 actionScenes 携带真实投递 ref，碎屑贴着飞行中的骨头拖出真实弧线，撞到接触面就停。
  * 数：`data.dust`（物攻派生）绑定每一击的发射量，`data.intensity`（每击实际威力派生，末击重夯的 × 系数已
  *   算进去）让最后一击的圈更亮更大，`data.linger`（尘痕时长派生）决定尘痕粒子活多久，
@@ -32,7 +32,7 @@ const BonerushDefinition: ParticleDefinition = {
                     name: "foot", bind: "source", offset: [0, 0.05, 0], height: 0, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: 4, interval: 3, repeats: 2 },
-                    shape: { kind: "ring", radius: 0.6, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 0.6 },
                     direction: "outward", speed: [0.03, 0.12], spread: 24, gravity: 0.05, drag: 0.9,
                     lifetime: [8, 14], size: [0.12, 0.02],
                     color: 0x8A7458, alpha: [0.4, 0], light: "world", maxParticles: 180
@@ -61,7 +61,7 @@ const BonerushDefinition: ParticleDefinition = {
                     name: "wave", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: { data: "shock", fallback: 1 }, at: 0 },
-                    shape: { kind: "ring", radius: { data: "shock", fallback: 1.6 }, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: { data: "shock", fallback: 1.6 } },
                     direction: "outward", speed: [0.08, 0.3], spread: 6, drag: 0.9,
                     lifetime: [8, 14], size: [0.5, 0.08], sizeMode: "index",
                     color: 0xEAE0C8, alpha: [0.7, 0], light: "world", bloom: 0.15, maxParticles: 200
@@ -93,7 +93,7 @@ const BonerushDefinition: ParticleDefinition = {
                     name: "seam", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dust", fallback: 12 }, at: 0, repeats: 2, interval: 4 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.2 }, thickness: 1, rotation: [90, 0, 0] },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.2 }, thickness: 1 },
                     direction: "outward", speed: [0.04, 0.18], spread: 40, gravity: 0.05, drag: 0.9,
                     lifetime: { data: "linger", fallback: 80 }, size: [0.12, 0.02],
                     color: 0x8A7458, alpha: [0.55, 0], light: "world", maxParticles: 260
@@ -124,7 +124,7 @@ const BonerushDefinition: ParticleDefinition = {
                     name: "lift", bind: "target", offset: [0, 0.2, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "lifted", fallback: 0 }, at: 0 },
-                    shape: { kind: "ring", radius: 0.24, rotation: [90, 0, 0] }, direction: "up", speed: [0.1, 0.34], spread: 10, gravity: 0.02, drag: 0.9,
+                    shape: { kind: "ring", radius: 0.24 }, direction: "up", speed: [0.1, 0.34], spread: 10, gravity: 0.02, drag: 0.9,
                     lifetime: [7, 12], size: [0.1, 0.02],
                     color: 0xD8C9A6, alpha: [0.5, 0], light: "world", maxParticles: 40
                 }
@@ -138,7 +138,7 @@ const BonerushDefinition: ParticleDefinition = {
                     name: "ring", bind: "source", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: 1.1, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 1.1 },
                     direction: "outward", speed: [0.03, 0.1], drag: 0.9,
                     lifetime: [8, 14], size: [0.18, 0.05],
                     color: 0xD8C9A6, alpha: [0.35, 0], light: "world", maxParticles: 16

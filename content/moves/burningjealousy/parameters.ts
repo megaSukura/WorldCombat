@@ -20,8 +20,11 @@ namespace PokemonSkills {
         return total + MobEffects.levels(world, actor, "beneficial");
     }
 
-    /** 扇面顶点：以 origin 为心、朝 direction 张开 angleDegrees、半径 reach；判定与表现共用。 */
-    export function burningJealousyFan(origin: CombatPoint, direction: CombatPoint, reach: number, angleDegrees: number): CombatPoint[] {
+    /**
+     * 扇面顶点：以 origin 为心、朝 direction 张开 angleDegrees、半径 reach。每条射线用真实墙面截短，
+     * 判定与表现共用同一组端点，墙后画面同样在墙面停下，不会越过墙。
+     */
+    export function burningJealousyFan(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number, angleDegrees: number): CombatPoint[] {
         const forward = WorldCombat.point(direction.x(), 0, direction.z());
         const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
         const half = Math.max(0, Math.min(180, angleDegrees)) / 2 * Math.PI / 180;
@@ -30,7 +33,10 @@ namespace PokemonSkills {
         const vertices: CombatPoint[] = [origin];
         for (let index = 0; index <= steps; index++) {
             const angle = base - half + (2 * half) * (index / steps);
-            vertices.push(origin.plus(WorldCombat.point(Math.cos(angle) * reach, 0, Math.sin(angle) * reach)));
+            const ray = WorldCombat.point(Math.cos(angle), 0, Math.sin(angle));
+            const wanted = origin.plus(ray.scale(reach));
+            const wall = WorldGeometry.blockHit(world, origin, wanted);
+            vertices.push(wall === null ? wanted : wall.position());
         }
         return vertices;
     }

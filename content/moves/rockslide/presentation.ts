@@ -189,3 +189,29 @@ const RockslideDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_rockslide", 1, RockslideDefinition);
+
+/**
+ * 覆盖圈与逐块预落点（自定义客户端场景，不生成粒子或实体）：
+ * 服务端把真实 spread 半径、单块判定半径与已经决定的每块落点交给客户端，这里每帧在锚点周围
+ * 画出那把雨会罩住的那圈，以及每一块的真实预落点小圈——画出来的边界就是实际覆盖，预落点就是
+ * 每块要砸的地面。固定世界点画线，不依赖 `bind:"path"` 的质心移动，因此静止也稳定可见。
+ */
+WorldCombatClient.scene("world_combat:move_rockslide_area", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "area") return;
+    const cx = entry.position[0], cy = entry.position[1], cz = entry.position[2];
+    const spread = Math.max(0.5, Math.min(8, typeof data.spread === "number" ? data.spread : 2.6));
+    const markR = Math.max(0.25, Math.min(3, typeof data.rockRadius === "number" ? data.rockRadius : 1.05));
+    const pulse = 0.45 + 0.2 * Math.sin(frame.serverTick() * 0.25);
+    const rim = ((Math.min(200, Math.round(pulse * 300)) << 24) | 0x8A7A62) | 0;
+    frame.ring(cx, cy + 0.06, cz, spread, rim);
+    const markers: number[][] = Array.isArray(data.markers) ? data.markers : [];
+    const markColor = ((Math.min(220, Math.round((pulse + 0.25) * 300)) << 24) | 0xC8BCA8) | 0;
+    for (let i = 0; i < markers.length && i < 8; i++) {
+        const marker = markers[i];
+        if (!Array.isArray(marker) || marker.length !== 3) continue;
+        frame.ring(Number(marker[0]) || 0, (Number(marker[1]) || 0) + 0.08, Number(marker[2]) || 0, markR, markColor);
+    }
+});

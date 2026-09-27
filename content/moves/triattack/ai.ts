@@ -3,21 +3,32 @@
  *
  * 什么局面下出手：挂在共享的 attack／ranged 位上；带三重攻击的伙伴把它当中距离齐射。
  *   对可见、敌对、存活、在 `ai.maxChase`（默认 13）以内、且中间有通视线的目标出手；更远交给共享接近逻辑。
- * 对谁出手：`ai.preferCluster`（默认开）打开时，目标身边还挤着别的人就抬价——广域式能让三束分头点过去；
+ * 对谁出手：`ai.preferCluster`（默认开）打开、且当前是广域式时，目标身边还挤着别人就抬价——三束能分头点过去，
+ *   邻敌半径读本招实际的 `fanRadius`；集束式三束打同一目标，不吃这项加分。
  *   `ai.seekUnmarked`（默认开）打开时，还没带着三种元素余痕的目标略高，别把余痕机会丢在已经有状态的人身上。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再出手。
  * 放完之后：三束各结算一次，伙伴交回共享顺序继续交战；它是一记压血手段，不负责收尾。
  * 优先级：基础 20（已在射程内）／4（还要先走近）；扎堆 +10，未带元素余痕 +4。
  */
 namespace PokemonSkills {
-    /** 目标身边 3 格内还挤着几个敌人，用来读「扎堆」；只是候选排序的读法，不改变命中判定。 */
-    function triattackCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 广域式实际能罩到的邻敌半径：读本招 fanRadius 参数，读不到时给一个中等兜底。 */
+    function triattackFan(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        try {
+            const access = CompanionBehavior.world(context);
+            const value = PokemonSkills.p(triattackId, "fanRadius",
+                { world: access, actor: access.source(), skill: PokemonSkills.skills[triattackId], detail: { values: capability.data.config || {} } });
+            return Number(value) || 3.5;
+        } catch (error) { return 3.5; }
+    }
+
+    /** 目标身边这个半径内还挤着几个敌人，用来读「扎堆」；只是候选排序的读法，不改变命中判定。 */
+    function triattackCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
         const nearby: CompanionBehavior.Entity[] = <any>context.facts.nearby || [];
         let count = 0;
         for (let index = 0; index < nearby.length && count < 6; index++) {
             const other = nearby[index];
             if (other.friendly || other.health <= 0 || String(other.ref) === String(target.ref)) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.0) count++;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
         }
         return count;
     }
@@ -48,7 +59,10 @@ namespace PokemonSkills {
             const gap = CompanionBehavior.distance(self.point, target.point);
             if (gap > CompanionBehavior.ai<number>(capability, "maxChase", 13)) return 0;
             let value = gap <= capability.data.range ? 20 : 4;
-            if (CompanionBehavior.ai<boolean>(capability, "preferCluster", true) && triattackCluster(context, target) >= 1) value += 10;
+            // 只有广域式才吃「扎堆」加分，且按本招实际 fanRadius 数邻敌；集束式三束打同一目标，不吃这项。
+            const wide = capability.data.config && capability.data.config.wide === true;
+            if (wide && CompanionBehavior.ai<boolean>(capability, "preferCluster", true)
+                && triattackCluster(context, target, triattackFan(context, capability)) >= 1) value += 10;
             if (CompanionBehavior.ai<boolean>(capability, "seekUnmarked", true) && !triattackMarked(context, target)) value += 4;
             return value;
         }

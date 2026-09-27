@@ -27,6 +27,12 @@
   "world_combat.move.reflecttype.text.one": "Reflected into %1$s",
   "world_combat.move.reflecttype.text.pair": "Reflected into %1$s and %2$s",
   "world_combat.move.reflecttype.text.fail": "No type to reflect",
-  "world_combat.move.reflecttype.text.armor": "Armour mirrored",
-  "worldcombat.skill.reflecttype.world": "Against a non-Pokémon, copy its current armour; Mirror All also copies armour toughness and knockback resistance. The copy lasts %1$s, ending on expiry or cleansing. Copied defences can be weaker than your own; later equipment and effects still change the result."
+  "world_combat.move.reflecttype.text.armor": "Armour mirrored (net %1$s)",
+  "world_combat.move.reflecttype.text.armor.pair": "Armour and toughness mirrored (net %1$s / %2$s)",
+  "world_combat.move.reflecttype.text.preview.one": "Will reflect %1$s",
+  "world_combat.move.reflecttype.text.preview.pair": "Will reflect %1$s and %2$s",
+  "world_combat.move.reflecttype.text.preview.armor": "Will borrow armour, net %1$s",
+  "world_combat.move.reflecttype.text.preview.armor.pair": "Will borrow armour and toughness, net %1$s / %2$s",
+  "worldcombat.skill.reflecttype.world": "Against a non-Pokémon, copy its current armour; Mirror All also copies armour toughness. The copy lasts %1$s, ending on expiry or cleansing. Copied defences can be weaker than your own; later equipment and effects still change the result.",
+  "effect.world_combat.reflecttype_alternate": "Reflect Type"
 }

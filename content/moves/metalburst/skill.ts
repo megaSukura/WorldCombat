@@ -5,7 +5,7 @@
  * 把那份应力以 1.5 倍炸在对手身上，迸裂的碎片再削到周围的敌人。
  *
  * 两幕：
- *   起（windup，提交前）：外壳泛起应力纹、火星沿体表乱窜；账越大纹路越密（present brace）。
+ *   起（windup，提交前）：外壳泛起应力纹、火星沿体表乱窜；账越大纹路越密，越接近过期越暗（present brace）。
  *   爆（execute）：以自身为中心炸开，选中且实际落在自身圈内、与本体通视的敌人才吃满额并优先占首名额；
  *       圈内其余敌人按分摊比例各吃一份，墙后的人不挨片；命中反馈由真实伤害回执给出；没有账可讨时空响一声（whiff）。
  *
@@ -45,13 +45,19 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const record = metalburstRecord(action.sense(), action.actor());
             const amount = record === null ? 0 : record.amount;
+            // 有效记录的剩余窗口：越接近过期，起手蓄光越暗，提示这笔账正在消退。
+            const window = Math.max(1, Math.round(p(metalburstId, "window", action)));
+            const left = record === null ? 0 : Math.max(0, Math.round(window - (action.sense().tick() - record.tick)));
+            const fade = Math.max(0, Math.min(1, left / window));
             action.present("metalburst:brace", metalburstScene, 1, action.origin(),
                 JSON.stringify({ moment: "brace", gather: Math.round(10 + Math.min(70, amount * 0.5)),
+                    pulse: Math.round(4 + 16 * fade), fade: fade, left: left, window: window,
                     scale: p(metalburstId, "burstRadius", action) / 1.8, shrapnel: config && config.shrapnel === true, windup: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
+            const record = metalburstRecord(action.sense(), self);
             const refund = Math.round(p(metalburstId, "refund", action));
             const target = action.target();
             metalburstConsume(self);
@@ -68,6 +74,14 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), metalburstWhiffText, [], 24);
                 done(action);
                 return;
+            }
+
+            // 提示这次真正兑现的记录与它剩下的有效时间。
+            if (record !== null) {
+                const window = Math.max(1, Math.round(p(metalburstId, "window", action)));
+                const left = Math.max(0, Math.round(window - (world.tick() - record.tick)));
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), metalburstStoreText,
+                    [Math.round(record.amount), Math.round(left / 2) / 10], 30);
             }
 
             // 圆心始终是自己：aim 只决定是谁在什么方向触发，爆心不跟着瞄准点走。

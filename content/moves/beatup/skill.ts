@@ -112,6 +112,8 @@ namespace PokemonSkills {
 
             WorldFeedback.emit(world, beatupScene, 1, body.position(),
                 { moment: "gather", count: participants.length, total: crowd, scale: scale, widen: widen ? 1 : 0, motes: motes }, lull + 20);
+            // 锁定落点的小标记随本次动作存在，动作结束即消失。
+            action.present("beatup:lock", beatupScene, 1, locked, JSON.stringify({ moment: "lock", scale: scale }));
             if (participants.length > 1) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), beatupMusterText, [participants.length], lull + 20);
             sound(action, "minecraft:entity.player.attack.strong");
 
@@ -128,9 +130,11 @@ namespace PokemonSkills {
                 const member = scope.actor(participants[slot]);
                 const mbody = member !== null && scope.valid(member) ? scope.observe(member) : null;
                 const leader = scope.observe(actor);
+                const isLeader = String(participants[slot]) === String(actor.ref());
                 if (member === null || mbody === null || mbody.health() <= 0 || leader === null ||
-                    mbody.position().minus(leader.position()).length() > rally + 0.5) {
-                    // 轮到自己前倒下、被移走或掉队：跳过它那一下，不假冲。
+                    mbody.position().minus(leader.position()).length() > rally + 0.5 ||
+                    (!isLeader && !scope.friendly(member))) {
+                    // 轮到自己前倒下、被移走、掉队或临时反目：跳过它那一下，不假冲。
                     current.after(gap, volley); return;
                 }
                 const origin = mbody.position();

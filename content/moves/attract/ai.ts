@@ -2,12 +2,13 @@
  * 迷人 / Attract — 伙伴 AI 用途与自己的出手计划。
  *
  * 飞吻不是伤害而是远程软控，所以除了 registerUse 还挂一份自己的目标与优先级：
- *   何时考虑  有 threat、这招就绪、它在 ai.maxChase 之内、还没着迷、视线畅通、宝可梦目标为异性。
- *   对谁出手  当前 threat；焦点目标直接通过。
+ *   何时考虑  有 threat、这招就绪、它在 ai.maxChase 之内、还没着迷、视线畅通。
+ *   对谁出手  当前 threat；焦点目标直接通过。任何可受心智干扰的活体都可参与，不再按生物性别硬拦。
+ *   接近距离  取 min(射程, 这一只当前的羁绊范围)：太远命中也维不住链，不该白费一次 PP。
  *   出手时机  ai.opening = incoming 时只在 threat 正攻击自己/主人（或自己刚受伤）时掷出飞吻。
- *   够不到    由共用任务走到 reach；accepts 不按距离硬拒，会先靠近再掷。
+ *   够不到    由共用任务走到上面这个有效距离；accepts 不按距离硬拒，会先靠近再掷。
  *   放完之后  目标出手变得不可靠、且只在你视线与羁绊范围内维持，随后把伤害交回共用交战计划。
- *   优先级    插在 world_combat:defend 之前；对正在逃跑的目标给 100（越过共用顺序），把它留住。
+ *   优先级    插在 world_combat:defend 之前；只有真正在有效距离内的逃跑目标才给 100，远了不凭空加急。
  * ai.leaveStation：驻守中的伙伴是否愿意离位去掷这个飞吻。
  * ai.runnersOnly：只留正在逃跑的威胁，把它当成留人技能而不是泛用软控。
  */
@@ -24,25 +25,27 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("attract", { ai: { maxChase: 12, opening: "anytime", leaveStation: false, runnersOnly: false } },
         [attractChase, attractOpening, attractLeave, attractRunners]);
 
-    function attractOpposite(first: string, second: string): boolean {
-        const a = String(first).toLowerCase(), b = String(second).toLowerCase();
-        return a === "male" && b === "female" || a === "female" && b === "male" || a === "m" && b === "f" || a === "f" && b === "m";
+    /** 这一只当前的羁绊范围；着迷只在这个距离内维持，接近与出手都受它约束。 */
+    function attractLeash(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const access = world(context);
+        try {
+            return Math.max(1, PokemonSkills.p("attract", "leash", { world: access, actor: access.source(),
+                skill: PokemonSkills.skills["attract"], detail: { values: item.data.config || {} } }));
+        } catch (error) { return 5; }
     }
-    /** Pokemon must be the opposite gender; every other body has no gender and passes. */
-    function attractAllows(context: WorldBehavior.Context, target: Entity): boolean {
-        const access = world(context), other = access.actor(target.ref);
-        if (!other || String(other.domain()) !== "cobblemon") return true;
-        const self = access.source();
-        if (String(self.domain()) !== "cobblemon") return true;
-        return attractOpposite(String(CobblemonCombat.pokemon(self).gender()), String(CobblemonCombat.pokemon(other).gender()));
+
+    /** 有效接近距离：射程与羁绊范围取小，站进去再掷才不会命中即断。 */
+    function attractReach(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const range = typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range : 12;
+        return Math.min(range, attractLeash(context, item));
     }
+
     function attractWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (!threat.visible || threat.friendly || threat.health <= 0) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
         if (status(context, threat, "attract")) return false;
         if (ai<boolean>(item, "runnersOnly", false) && !fleeing(context, threat)) return false;
-        if (!attractAllows(context, threat)) return false;
         if (!world(context).clear(point(self.point), point(threat.point))) return false;
         if (ai<string>(item, "opening", "anytime") !== "incoming") return true;
         const owner = context.facts.owner;
@@ -56,8 +59,14 @@ namespace CompanionBehavior {
 
     registerUse("attract", {
         protocols: ["world_combat:control"],
-        reach: function (_context, item) { return item.data.range; },
-        priority: function (context, _item, target) { return target && fleeing(context, target) ? 100 : 20; },
+        // 有效接近距离不是技能射程本身：超出羁绊范围的飞吻命中也维不住链。
+        reach: function (context, item) { return attractReach(context, item); },
+        priority: function (context, item, target) {
+            if (!target) return 0;
+            if (!fleeing(context, target)) return 20;
+            // 追逃目标只有在真正够得着、且能维链的距离内才越过共用顺序加急。
+            return distance(source(context).point, target.point) <= attractReach(context, item) ? 100 : 20;
+        },
         accepts: function (context, item, target) { return attractWants(context, item, target); }
     });
     registry.goal({ id: "world_combat:move_attract/goal", propose: function (context) {

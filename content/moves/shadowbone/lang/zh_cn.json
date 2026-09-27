@@ -19,8 +19,8 @@
   "worldcombat.skill.shadowbone.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.shadowbone.preference.ai.maxChase.help": "超过这个距离就不掷骨，先走近。越大越会在更远处先手。",
   "worldcombat.skill.shadowbone.preference.ai.spookFirst": "先手慑防",
-  "worldcombat.skill.shadowbone.preference.ai.spookFirst.help": "开启：优先对还没带破防身份的目标掷骨，先挂上慑防；关闭：当普通远程攻击排序。",
+  "worldcombat.skill.shadowbone.preference.ai.spookFirst.help": "开启：按目标当前防御等级判断——这一记还能再压一级时才优先掷骨；已经掉到底或强化被清掉就降权当普通远程攻击。关闭：一律当普通远程攻击排序。",
   "world_combat.move.shadowbone.text.rattle": "被阴气慑住，防御 -%1$s 级",
   "effect.world_combat.shadowbone_spooked": "暗影之骨·慑防",
-  "worldcombat.skill.shadowbone.description.additional": "骨棒砸到地面而没命中活物时，会落在地上变成一根谁都能拾起的骨头；每次施放最多落一份，命中活物不会再掉第二根。"
+  "worldcombat.skill.shadowbone.description.additional": "骨棒撞到方块、或飞尽都没有命中活物时，会在实际落点留下一根谁都能拾起的骨头；每次施放最多落一份，命中活物不会再掉第二根。"
 }

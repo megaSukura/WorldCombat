@@ -32,7 +32,7 @@ namespace PokemonSkills {
 
     addPreferences("payday", {}, [
         field(pathOf("largesse"), "大把撒钱", "boolean", {
-            help: "开启：一次撒出的币数 ×1.5、落地真币 ×1.4，场上与画面都更阔，但单发威力 ×0.82、起手 +2 刻、冷却 +6 刻；关闭：一手重币，出手更快、单发更痛、散钱较少。"
+            help: "开启：金光密度 ×1.5、落地真币 ×1.4，场上与画面都更阔，但单发威力 ×0.82、起手 +2 刻、冷却 +6 刻；关闭：一手重币，出手更快、单发更痛、散钱较少。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 3, max: 22, step: 1,

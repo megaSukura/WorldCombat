@@ -7,10 +7,10 @@
  * 三幕：
  *   起（charge，提交前）：在喉头聚起声线、音符绕身打转，只播预告。
  *   传（join）：提交后先把这句歌的余韵落在传唱半径内的同伴身上（共享身份 world_combat:status/round），
- *       每个接到的同伴身上浮起一串音符、并有一条音符从领唱者移到该同伴，随后挂上一段余韵。
- *   唱（verse → impact / miss）：歌句沿瞄准方向掠到目标身上；目标在歌程内就结算一次声音伤害并炸开一个音符环，
- *       不在就唱空。带着余韵起唱（carried）时，这一句是翻倍的那一句，同时消费掉自己这一份余韵——歌交出去，
- *       施法者不能给自己续余韵，接唱因此必须真的接到伙伴那一句。
+ *       每个接到的同伴身上浮起一串音符并显示还能接的秒数，状态图标在效果栏自己倒计时。
+ *   唱（verse → impact / miss）：歌句瞬时点到目标身上，声纹在施法者与目标两个真实端点同刻亮起；目标在歌程内
+ *       就结算一次声音伤害并炸开一个音符环，不在就唱空。带着余韵起唱（carried）时，这一句是翻倍的那一句，
+ *       同时消费掉自己这一份余韵——歌交出去，施法者不能给自己续余韵，接唱因此必须真的接到伙伴那一句。
  *
  * 与同族分开：虫鸣是一道锥形声波扫一片人；轮唱只点名一个目标，却把力量分给同伴——它是合唱的引子。
  */
@@ -69,7 +69,6 @@ namespace PokemonSkills {
             const answered = carried && MobEffects.consumeTagged(world, actor, StatusVocabulary.tag("round")).length > 0;
             const target = action.target();
             const targetPos = action.targetPosition();
-            const direction = aim(action);
             const scale = Math.max(0.5, Math.min(2.4, splash));
 
             sound(action, "minecraft:block.note_block.chime");
@@ -85,20 +84,16 @@ namespace PokemonSkills {
                 const at = world.observe(other);
                 if (at === null) continue;
                 const atPoint = at.position();
-                // 交接的一枚音符：从领唱者身体中心出发、朝同伴身体中心直飞，距离与飞行时长同步，飞到时正好收掉。
-                const flight = 8;
-                const gap = atPoint.minus(centre).length();
+                // 余韵落到同伴头上：只需亮出「接上了」与剩余可接秒数，状态图标本身在效果栏倒计时。
                 WorldFeedback.emit(world, roundScene, 1, atPoint,
-                    { moment: "join", target: String(other.ref()), notes: Math.max(2, Math.round(notes / 2)), scale: scale,
-                        point: [centre.x(), centre.y(), centre.z()], flight: flight, flightSpeed: Math.max(0.25, gap / flight) }, 24);
-                WorldFeedback.text(world, atPoint.plus(WorldCombat.point(0, 1.2, 0)), roundJoinText, [], 26);
+                    { moment: "join", target: String(other.ref()), notes: Math.max(2, Math.round(notes / 2)) }, 24);
+                WorldFeedback.text(world, atPoint.plus(WorldCombat.point(0, 1.2, 0)), roundJoinText, [Math.round(echo / 20)], 26);
                 world.sound("minecraft:block.note_block.harp", atPoint, 12, "{}");
             }
 
+            // 歌句是瞬时结算的声音：声纹在真实起点（施法者）与真实落点（目标）同刻亮起，不做沿路径的推进。
             WorldFeedback.emit(world, roundScene, 1, centre,
-                { moment: "verse", path: [[centre.x(), centre.y() + 0.7, centre.z()], [targetPos.x(), targetPos.y() + 0.7, targetPos.z()]],
-                    direction: [direction.x(), direction.y(), direction.z()], notes: notes, speed: speed,
-                    splash: splash, scale: scale, answered: answered ? 1 : 0, chorus: chorus,
+                { moment: "verse", notes: notes, speed: speed, answered: answered ? 1 : 0,
                     chorusAlpha: chorus > 0 ? Math.min(1, 0.25 + chorus * 0.12) : 0 }, 28);
 
             // 唱：点名一个目标；声音不被掩体阻挡，只要求它在歌程之内。
@@ -120,7 +115,7 @@ namespace PokemonSkills {
                 }
             }
             if (!landed) {
-                WorldFeedback.emit(world, roundScene, 1, targetPos, { moment: "miss", scale: scale }, 20);
+                WorldFeedback.emit(world, roundScene, 1, targetPos, { moment: "miss" }, 20);
                 WorldFeedback.text(world, targetPos.plus(WorldCombat.point(0, 1.0, 0)), roundMissText, [], 26);
                 world.sound("minecraft:block.note_block.bass", targetPos, 12, "{}");
             }

@@ -3,13 +3,14 @@
  *
  * 什么局面下出手：挂在共享的 attack／ranged 位上。带双光束的伙伴把它当**远程点名**：目标可见、敌对、存活，
  *   在 `ai.maxChase`（默认 15）以内就出手；更远交给共享接近逻辑。射程最长的一招，通常站在远处先手。
- * 两眼线：两道射线从左右眼位分别射出，所以出手前用只读世界 `CompanionBehavior.world(context).clear` 分别
- *   检查两条眼线；只有一只眼看得见目标时不再寄望共鸣，排序降权；两眼都被挡住就不是合适的出手时机。
+ * 两射口线：两道射线从左右射口分别射出，所以出手前用只读世界 `CompanionBehavior.world(context).clear` 分别
+ *   检查两条射口线；只有一只射口看得见目标时不再寄望共鸣，排序降权；两只射口都被挡住就不是合适的出手时机。
+ *   视线探针缺失或查询抛错时按「单眼可用」估，不默认为双眼畅通。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.finishLow`（默认关）打开时残血目标
  *   排得更前，用这两道光收尾。
  * 够不到怎么办：射程交给 `reach`，共享任务负责把身位送进射程。
  * 放完之后：两道光各自结算；只有确实打中同一个目标才触发共鸣，伙伴交回共享顺序。
- * 优先级：基础 22（在射程内）／8（还要先走近）；只有一只眼有视线 −8；`ai.finishLow` 开启且目标生命低于
+ * 优先级：基础 22（在射程内）／8（还要先走近）；只有一只射口有视线 −8；`ai.finishLow` 开启且目标生命低于
  *   四成时 +12。
  */
 namespace CompanionBehavior {
@@ -19,10 +20,10 @@ namespace CompanionBehavior {
         return distance(source(context).point, target.point) <= ai<number>(item, "maxChase", 15);
     }
 
-    /** 两只眼位各自到目标中心有没有清晰视线：返回 0/1/2。探针不可用时视作两眼都通（保持中性）。 */
+    /** 两只射口各自到目标中心有没有清晰视线：返回 0/1/2。探针缺失或查询抛错时按「单眼可用」估，不默认为双眼畅通。 */
     function twinbeamEyes(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): number {
         const world = CompanionBehavior.world(context), self = source(context);
-        if (!world || typeof world.clear !== "function") return 2;
+        if (!world || typeof world.clear !== "function") return 1;
         try {
             const height = self.height || 1.4;
             const eyeHeight = PokemonSkills.p("twinbeam", "eyeHeight", world);
@@ -39,7 +40,7 @@ namespace CompanionBehavior {
                 if (world.clear(from, targetPoint)) clear++;
             }
             return clear;
-        } catch (error) { return 2; }
+        } catch (error) { return 1; }
     }
 
     registerUse("twinbeam", {

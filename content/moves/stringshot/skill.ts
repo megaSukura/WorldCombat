@@ -2,14 +2,16 @@
  * 吐丝 / String Shot — 执行组织。
  *
  * 核心念头：从口边射出一缕会飞的丝，缠住对手的腿脚。它有飞行时间，所以掩体与走位能躲开；
- *   命中活体就缠住（大幅掉速度、短定身），没缠住就黏在它真实撞上的那个表面，留一小片蛛网。
+ *   命中活体就缠住（永久掉一段速度，另有一段短定身），没缠住就黏在它真实撞上的那个表面，留一小片蛛网。
  *
  * 出手：`kind: "aim"`——可朝任意方向、地点或实体射出。LivingActions.projectile 负责飞行与原生碰撞，
  *   撞到第一个身体或方块就停在那里；完整动作用同一份位置与阶段数据判定与呈现。
- * 命中：活体挂共享的 world_combat:string_bound（身份 world_combat:status/silked）并 NativeEffects.boost
- *       大幅下降速度，真正掉速才在缠足模式下叠一段共享的 rooted 定身。
+ * 命中：活体挂共享的 world_combat:string_bound（身份 world_combat:status/silked）标记，并 NativeEffects.boost
+ *       永久下降速度等级（这是能力等级，直到离开战斗或被重置，不随标记到期回退）；缠足模式下另叠一段
+ *       独立的 rooted 定身，真正掉速才出现符号。
  * 落点：`Impact.blockPosition()/blockFace()` 给出原生方块格与表面，在首碰那一格的外侧铺少量蛛网
- *       （terrain 租借，受原生保护与占用限制，到期归还原方块）；放不下就只留一段装饰丝，不在远端目标点凭空铺网。
+ *       （terrain 租借，受原生保护与占用限制，到期归还原方块）；只按 `terrainResult` 真正 placed 的格数
+ *       与法线画网，放不下就只留一段装饰丝，不在远端目标点凭空铺网。
  * 反制：丝有飞行时间、会被掩体挡下；蛛网只作用到走进去的人，绕开即可；它不阻止对方离场。
  */
 namespace PokemonSkills {
@@ -27,7 +29,7 @@ namespace PokemonSkills {
         }
     }
 
-    /** 缠住一个目标：真正掉速才挂身份、定身并给符号。返回实际下降级数。 */
+    /** 缠住一个目标：真正掉速才挂身份、定身并给符号。速度等级是永久降级，标记与定身各自有期限。 */
     function stringshotBind(world: CombatWorld, self: CombatActor, target: CombatActor, drop: number, bindTicks: number, rootTicks: number): number {
         const body = world.observe(target);
         if (body === null) return 0;
@@ -47,11 +49,15 @@ namespace PokemonSkills {
         return applied;
     }
 
-    /** 在首碰方块的表面外侧铺一小片蛛网；只落在空气里，受原生保护与占用限制，放不下返回 0。 */
-    function stringshotWeb(world: CombatWorld, hit: CombatImpact, budget: number, ticks: number): number {
+    /**
+     * 在首碰方块的表面外侧铺一小片蛛网；只落在空气里，受原生保护与占用限制。
+     * 返回真正 placed 的格数与格坐标、表面法线（不再把 terrain 的租约 id 当块数）。
+     */
+    function stringshotWeb(world: CombatWorld, hit: CombatImpact, budget: number, ticks: number): { count: number; cells: number[][]; normal: number[] } {
         const block = hit.blockPosition();
-        if (block === null || !hit.blocked()) return 0;
         const normal = stringshotNormal(hit.blockFace());
+        const axis = [normal.x(), normal.y(), normal.z()];
+        if (block === null || !hit.blocked()) return { count: 0, cells: [], normal: axis };
         const base = WorldCombat.point(Math.floor(block.x()) + normal.x(), Math.floor(block.y()) + normal.y(), Math.floor(block.z()) + normal.z());
         // 贴合表面在面内推开：墙面用「竖直 + 另一条水平」两轴，地面用 x/z。
         const vertical = Math.abs(normal.y()) > 0.5;
@@ -66,15 +72,26 @@ namespace PokemonSkills {
             if (cell === null || cell.id() !== "minecraft:air") continue;
             cells.push({ x: Math.floor(p.x()), y: Math.floor(p.y()), z: Math.floor(p.z()), block: "minecraft:cobweb" });
         }
-        if (!cells.length) return 0;
-        try { return world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(20, Math.round(ticks))); }
-        catch (error) { return 0; }
+        if (!cells.length) return { count: 0, cells: [], normal: axis };
+        try {
+            const result = JSON.parse(world.terrainResult(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(20, Math.round(ticks))));
+            const placed: any[] = Array.isArray(result.placed) ? result.placed : [];
+            const out: number[][] = [];
+            for (let i = 0; i < placed.length; i++) {
+
+                const c = placed[i];
+                if (Array.isArray(c) && c.length >= 3) out.push([Number(c[0]), Number(c[1]), Number(c[2])]);
+            }
+            return { count: out.length, cells: out, normal: axis };
+        } catch (error) {
+            return { count: 0, cells: [], normal: axis };
+        }
     }
 
     define({
         id: stringshotId,
         name: "吐丝",
-        description: "从口中朝任意方向射出一缕会飞的丝：缠住第一个碰到的对手，大幅降低它的速度并短时间定住它的脚步；没缠住就黏在它真实撞上的表面，留一小片蛛网。结网形态把同一根丝打成稍大一点的小网，但不再定身。",
+        description: "从口中朝任意方向射出一缕会飞的丝：缠住第一个碰到的对手，永久降低它一段速度（另有一段短定身）；没缠住就黏在它真实撞上的表面，按真正放下的方块留一小片蛛网。结网形态把同一根丝打成稍大一点的小网，但不再定身。",
         uses: ["拦住冲锋或逃跑的敌人", "封住一条通道或门口", "削弱高速目标"],
         kind: "aim",
         range: 5,
@@ -121,8 +138,8 @@ namespace PokemonSkills {
             const netRadius = Math.max(1.4, Math.min(3.0, p(stringshotId, "netRadius", action)));
             const netTicks = Math.max(100, Math.round(p(stringshotId, "netTicks", action)));
             sound(action, "minecraft:block.cobweb.place");
-            let resolved = false;
-            function resolve(current: CombatAction, hit: CombatImpact | null): void {
+            let resolved = false, strandId = "";
+            function resolve(current: CombatAction, hit: CombatImpact | null, endPoint: CombatPoint): void {
                 if (resolved) return;
                 resolved = true;
                 const scope = current.world();
@@ -131,27 +148,35 @@ namespace PokemonSkills {
                     stringshotBind(scope, self, struck, drop, bindTicks, rootTicks);
                     return;
                 }
-                // 首碰方块：在真实表面外侧铺少量蛛网；没碰到方块（空气／纯实体）只留装饰丝。
+                // 首碰方块：在真实表面外侧铺少量蛛网；只按真正 placed 的格数与法线画网。没碰到方块只留装饰丝。
                 const onBlock = hit !== null && hit.blocked() && hit.blockPosition() !== null;
                 const budget = net ? Math.max(2, Math.round(netRadius)) : 1;
                 const ticks = net ? netTicks : Math.max(40, Math.round(bindTicks * 0.5));
-                const laid = onBlock ? stringshotWeb(scope, hit!, budget, ticks) : 0;
-                const at = onBlock ? hit!.blockPosition()! : hit !== null ? hit.position() : current.targetPosition();
-                const webRadius = laid > 0 ? (net ? netRadius : 1.0) : 0;
+                const web = onBlock ? stringshotWeb(scope, hit!, budget, ticks) : { count: 0, cells: [] as number[][], normal: [0, 1, 0] };
+                const at = onBlock ? hit!.blockPosition()! : (hit !== null ? hit.position() : endPoint);
+                const laid = web.count;
                 WorldFeedback.emit(scope, stringshotScene, 1, at,
                     { moment: laid > 0 ? "net" : "tangle", path: [String(self.ref()), [at.x(), at.y(), at.z()]],
-                        laid: laid, radius: webRadius, threads: 8 + laid * 10, scale: laid > 0 ? (net ? netRadius / 2.0 : 0.6) : 1 }, laid > 0 ? 30 : 22);
+                        laid: laid, threads: 8 + laid * 10, scale: laid > 0 ? (net ? 0.9 : 0.6) : 1 }, laid > 0 ? 30 : 22);
+                if (laid > 0) {
+                    // 真正放下的蛛网格与表面法线：客户端按格画网，范围就是实际 placed 的格数。
+                    WorldFeedback.emit(scope, stringshotNetScene, 1, at,
+                        { cells: web.cells, normal: web.normal, threads: 8 + laid * 10, life: 30, tick: scope.tick() }, 40);
+                }
             }
-            const strand = LivingActions.projectile(action, {
+            const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, lifetime: 60,
                 appearance: { sprite: "cobblemon:generic/cotton", scale: 0.7, tint: 0xEDEDED },
-                impact: function (current, hit) { resolve(current, hit); }
+                impact: function (current, hit) { resolve(current, hit, hit.position()); }
             }, function (current) {
-                resolve(current, null);
+                // 没撞到东西时读真实弹体末点，不用旧瞄准点或满射程点假造终点。
+                const end = current.world().projectilePosition(strandId) || current.targetPosition();
+                resolve(current, null, end);
                 done(current);
             });
+            strandId = flight;
             WorldFeedback.emit(world, stringshotScene, 1, origin,
-                { moment: "strand", projectile: strand, silk: net ? 1 : 0,
+                { moment: "strand", projectile: flight, silk: net ? 1 : 0,
                     target: action.target() === null ? "" : String(action.target()!.ref()) }, 26);
         }
     });

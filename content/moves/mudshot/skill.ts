@@ -29,6 +29,16 @@ namespace PokemonSkills {
         return fallen;
     }
 
+    /** 以 centre 为心、radius 为半径的水平圆顶点，交给 bodyPolygon 得到贴合真实身体箱的竖直圆带。 */
+    function mudshotDisc(centre: CombatPoint, radius: number, sides = 16): CombatPoint[] {
+        const vertices: CombatPoint[] = [];
+        for (let i = 0; i < sides; i++) {
+            const angle = i * Math.PI * 2 / sides;
+            vertices.push(WorldCombat.point(centre.x() + Math.cos(angle) * radius, centre.y(), centre.z() + Math.sin(angle) * radius));
+        }
+        return vertices;
+    }
+
     define({
         id: "mudshot",
         name: "Mud Shot",
@@ -65,7 +75,9 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const body = world.observe(actor);
-            const origin = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.3, 0));
+            // 出手点取真实脚上方的口位：低平泥块从这里解算；再把它交给 flight.origin，发射、预告与解算同取一个点。
+            const origin = body === null ? action.origin()
+                : body.position().minus(WorldCombat.point(0, body.height() / 2 - Math.max(0.2, Math.min(0.6, body.height() * 0.35)), 0));
             const speed = p("mudshot", "velocity", action);
             const gravity = p("mudshot", "gravity", action);
             const radius = p("mudshot", "legRadius", action);
@@ -82,7 +94,7 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.mudbomb.actor");
             let settled = false;
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: action.range(), radius: radius, gravity: gravity,
+                speed: speed, range: action.range(), radius: radius, gravity: gravity, origin: origin,
                 direction: launch === null ? undefined : launch, lifetime: 200,
                 appearance: { sprite: "cobblemon:generic/mud/mudsplash", scale: Math.max(0.6, radius / 0.2) },
                 impact: function (current, hit) {
@@ -95,26 +107,28 @@ namespace PokemonSkills {
                         primary = hitTarget;
                         const landed = impact(current, hit, "mudshot", power, { damage: damageSpec("mudshot", "spray") });
                         if (landed && scope.valid(hitTarget)) {
-                            mudshotCoat(scope, hitTarget, stages, slowTicks);
+                            const fallen = mudshotCoat(scope, hitTarget, stages, slowTicks);
                             const at = scope.observe(hitTarget);
                             if (at !== null) {
                                 WorldFeedback.keep(scope, "mudshot:mire:" + String(hitTarget.ref()), mudshotScene, 1, at.position(),
                                     { moment: "mire", target: String(hitTarget.ref()), stages: stages, coat: coat,
                                         intensity: intensity, tick: slowTicks }, slowTicks);
-                                WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), mudshotMireText, [stages], 30);
+                                // 回执按实际掉速级数报；已到底（掉 0 级）只留糊腿外观，不虚报降速。
+                                if (fallen !== 0)
+                                    WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.1, 0)), mudshotMireText, [Math.abs(fallen)], 30);
                             }
                         }
                     }
-                    // 溅开的泥浆只糊腿、不造成伤害：泼溅圈里其余敌人各自判定通视与真实掉速回执，不再吃伤害、也不误报成功。
+                    // 泼溅按真实身体箱判定（水平圆带 + 竖直段），并各自检查真实通视：墙后的敌人不被糊到，体型大的边角也算得到。
                     let coated = 0;
-                    WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, Math.max(0.6, splash), { below: 1.6, above: 1.4 }),
+                    WorldGeometry.selectBodies(scope, WorldGeometry.bodyPolygon(mudshotDisc(point, Math.max(0.6, splash)), point.y() - 1.6, point.y() + 1.4),
                         function (other, facts) {
                             if (primary !== null && String(other.ref()) === String(primary.ref())) return;
+                            if (facts.friendly()) return;
                             if (!scope.clear(point, facts.position())) return;
-                            if (mudshotCoat(scope, other, stages, Math.round(slowTicks * 0.7)) === 0) return;
+                            mudshotCoat(scope, other, stages, Math.round(slowTicks * 0.7));
                             coated++;
-                            const skin = scope.observe(other);
-                            if (skin !== null) WorldFeedback.emit(scope, mudshotScene, 1, skin.position(),
+                            WorldFeedback.emit(scope, mudshotScene, 1, facts.position(),
                                 { moment: "coated", target: String(other.ref()), coat: Math.round(coat * 0.6),
                                     intensity: Math.max(0.4, intensity * 0.7), scale: scale }, 22);
                         });
@@ -122,8 +136,8 @@ namespace PokemonSkills {
                         { moment: "splash", target: hitTarget === null ? "" : String(hitTarget.ref()), coat: coat, coated: coated,
                             primary: primary === null ? 0 : 1,
                             intensity: primary === null ? intensity * 0.7 : intensity, scale: Math.max(0.6, splash) / 0.9 }, 28);
-                    // 落点只留一道短泥污印：纯画面，不放方块、不构成持续减速区域。
-                    WorldFeedback.emit(scope, mudshotScene, 1, point,
+                    // 落点泥污印只落在真实接触面上：空中命中时投影到其下方最近的实心地面，不再悬在半空；纯画面，不放方块。
+                    WorldFeedback.emit(scope, mudshotScene, 1, WorldGeometry.ground(scope, point, 12),
                         { moment: "slick", radius: Math.max(0.6, splash), tick: stain,
                             scale: Math.max(0.6, splash) / 0.9 }, stain);
                     sound(current, "minecraft:block.mud.break");

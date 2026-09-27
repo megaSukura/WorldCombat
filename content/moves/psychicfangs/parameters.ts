@@ -60,15 +60,15 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("devour", text("worldcombat.skill.psychicfangs.preference.devour")), F.const(1.7), F.const(0.6)))
                 .clamp(0.06, 0.4).round(3),
             "吞壁加成", "每咬碎一层屏障，这一口威力提高的份额（最多计三层）；特攻越高吞得越狠，噬壁式再翻近一倍。"),
-        /** 清理半径：基础 8 格，特攻每比 60 高 1 加 0.02（上限 +1.6）；噬壁 ×1.25；夹 8..11。 */
+        /** 贴合半径：基础 0.5 格，特攻每比 60 高 1 加 0.004（上限 +0.35）；噬壁 ×1.25；夹 0.35..1.1。 */
         wardBreak: formula(
-            F.base(8)
-                .plus(F.stat("specialAttack").minus(60).times(0.02).clamp(0, 1.6))
+            F.base(0.5)
+                .plus(F.stat("specialAttack").minus(60).times(0.004).clamp(0, 0.35))
                 .times(F.when(F.pref("devour", text("worldcombat.skill.psychicfangs.preference.devour")), F.const(1.25), F.const(1)))
-                .clamp(8, 11).round(2),
-            "清理半径", {
+                .clamp(0.35, 1.1).round(2),
+            "贴合半径", {
                 unit: "格",
-                description: "闭合处真实能清除的屏障范围；反射壁、光墙与极光幕一并失效（最多三层），特攻越高清得越远。"
+                description: "闭合处沿牙路还能算作真实贴上的敌方屏障余量；只有这一段牙路真正碰到的敌方反射壁、光墙与极光幕会被吞掉（最多三层），自家与队友的屏保留。"
             }),
         /** 起手：基础 9 刻，速度每比 55 快 1 少 0.045（上限 −1.5）；噬壁 +2；夹 5..14。 */
         tempo: seconds(

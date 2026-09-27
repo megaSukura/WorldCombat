@@ -1,4 +1,6 @@
-/** A small medium cue precedes the called move's own complete presentation. */
+/** A small medium cue precedes the called move's own complete presentation. The server re-emits
+ *  the gather moment and the called-move name the moment the standing medium changes, so the cue
+ *  follows the real environment during the wind-up instead of waiting for release. */
 function naturepowerGather(particle: string, color: number): ParticleMoment {
     return { duration: 22, exit: { stop: 0, drain: 8 }, emitters: [{
         name: "medium", bind: "point", fit: "none", height: 0, offset: [0, .08, 0], particle: particle,

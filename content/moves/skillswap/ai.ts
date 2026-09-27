@@ -20,6 +20,33 @@ namespace CompanionBehavior {
         }
         return best;
     }
+    /** 普通属性按单位归一后再按实际用途分项加权：攻击>移动>护甲>韧性/抗击退，不默认每项等价。 */
+    const skillswapAttributeWeight: { [id: string]: number } = {
+        "minecraft:generic.attack_damage": 1,
+        "minecraft:generic.movement_speed": 0.8,
+        "minecraft:generic.armor": 0.6,
+        "minecraft:generic.armor_toughness": 0.3,
+        "minecraft:generic.knockback_resistance": 0.3
+    };
+    /** Only read published pure defensive facts; event hooks may heal or write states and are never simulated. */
+    function skillswapDefenceFit(access: CombatWorld, actor: CombatActor, ability: string, opponent: CombatActor): number {
+        let score = NativeAbilities.flag(ability, "criticalImmune") ? .15 : 0;
+        const absorbed = NativeAbilities.property<string[]>(ability, "absorbedTypes", []);
+        if (absorbed.length && String(opponent.domain()) === "cobblemon") {
+            const pokemon = CobblemonCombat.pokemon(opponent);
+            let attacks = 0, covered = 0;
+            for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+                const move = pokemon.move(slot);
+                if (!move || move.pp() <= 0 || String(move.category()) === "status") continue;
+                attacks++;
+                if (absorbed.indexOf(String(move.type()).toLowerCase()) >= 0) covered++;
+            }
+            if (attacks) score += .6 * covered / attacks;
+        }
+        if (NativeAbilities.flag(ability, "indirectImmune")
+            && (CombatStatus.has(access, actor, "burn") || CombatStatus.has(access, actor, "poison"))) score += .2;
+        return score;
+    }
     function skillswapValue(context: WorldBehavior.Context, target: Entity): number {
         const cache = context.scratch.skillSwapValues || (context.scratch.skillSwapValues = {});
         if (cache[target.ref] !== undefined) return cache[target.ref];
@@ -28,7 +55,11 @@ namespace CompanionBehavior {
         let value = 0;
         if (domain(context, target) !== "cobblemon") {
             const a = CombatCopies.read(access, own), b = CombatCopies.read(access, other);
-            Object.keys(a).forEach(id => { if (b[id] !== undefined) value += (b[id] - a[id]) / Math.max(.1, Math.abs(a[id]), Math.abs(b[id])); });
+            Object.keys(a).forEach(id => {
+                if (b[id] === undefined) return;
+                const weight = skillswapAttributeWeight[id] === undefined ? 0.3 : skillswapAttributeWeight[id];
+                value += weight * (b[id] - a[id]) / Math.max(.1, Math.abs(a[id]), Math.abs(b[id]));
+            });
             // A friendly exchange is useful only when the presently engaged recipient gains more than its caster.
             if (target.friendly) value = target.attacking && !self.attacking ? -value : 0;
         } else {
@@ -36,7 +67,9 @@ namespace CompanionBehavior {
             const ownBefore = skillswapAttackFit(access, own, mine), ownAfter = skillswapAttackFit(access, own, theirs);
             const theirBefore = skillswapAttackFit(access, other, theirs), theirAfter = skillswapAttackFit(access, other, mine);
             value = (ownAfter - ownBefore) / Math.max(1, ownBefore)
-                + (target.friendly ? 1 : -1) * (theirAfter - theirBefore) / Math.max(1, theirBefore);
+                + (target.friendly ? 1 : -1) * (theirAfter - theirBefore) / Math.max(1, theirBefore)
+                + skillswapDefenceFit(access, own, theirs, other) - skillswapDefenceFit(access, own, mine, other)
+                + (target.friendly ? 1 : -1) * (skillswapDefenceFit(access, other, mine, own) - skillswapDefenceFit(access, other, theirs, own));
         }
         cache[target.ref] = value; return value;
     }

@@ -82,9 +82,13 @@ namespace NativeRepertoire {
         run?: (action: CombatAction, move: CombatPokemonMove, config: any) => void;
         inspect?: (pokemon: CombatPokemon, detail: any, context: Inspection) => any;
         menu?: (context: MenuContext, slot: number) => CompanionMenus.Contribution;
-        indicator?: (config: any, pokemon?: CombatPokemon) => {
+        indicator?: (config: any, pokemon?: CombatPokemon, inspection?: Inspection) => {
             radius: number;
             geometry?: string;
+            /** Aim follows pitch; ground projects the direction to the XZ plane. */
+            orientation?: "aim" | "ground";
+            /** Full opening angle for a cone preview, in degrees. */
+            spread?: number;
             style?: string;
             color?: number;
             label?: string;
@@ -231,8 +235,11 @@ namespace NativeRepertoire {
                 }
                 var runtime = resolved(action);
                 var invocation = NativeLoadout.invocation(action);
-                var prepare = skill.windup ? skill.windup(action, settings, runtime.prepare || 0) : runtime.prepare;
+                var availablePreparation = invocation && invocation.prepareLimit !== undefined ? Math.min(runtime.prepare || 0, invocation.prepareLimit) : runtime.prepare || 0;
+                var prepare = skill.windup ? skill.windup(action, settings, availablePreparation) : availablePreparation;
+                if (invocation && invocation.prepareLimit !== undefined) prepare = Math.min(isFinite(prepare) ? prepare : availablePreparation, invocation.prepareLimit);
                 LivingActions.run(action, {
+                    identity: skill.id,
                     prepare: isFinite(prepare) ? prepare : runtime.prepare, recover: invocation && invocation.recover !== undefined ? invocation.recover : runtime.recover,
                     cooldown: runtime.cooldown,
                     stationary: skill.stationary === undefined ? movement : skill.stationary,
@@ -318,6 +325,9 @@ namespace NativeRepertoire {
                     var prepared = stored(key => request.data(key), "state", skill.id).value;
                     var values = preferences.resolve(skill.id, String(pokemon.id()), store);
                     var attributes = IndividualAttributes.request(request);
+                    var inspection: Inspection = { full: skill.id === focus, attributes: attributes,
+                        world: skill.id === focus && request.world ? request.world() : null, actor: skill.id === focus && request.actor ? request.actor() : null,
+                        state: function (id) { var data = stored(key => request.data(key), "state", id).value; return data ? JSON.parse(String(data)) : {}; } };
                     var runtime = skill.resolve ? skill.resolve(pokemon, values, attributes.world, attributes.actor, attributes) : <any>skill;
                     var detail = { slot: slot, id: skill.id, name: skill.name, nameKey: skill.nameKey || "cobblemon.move." + skill.id, description: skill.description, uses: skill.uses,
                         timing: { prepare: runtime.prepare, active: runtime.active === undefined ? skill.active : runtime.active, recover: runtime.recover }, cooldown: runtime.cooldown,
@@ -325,13 +335,10 @@ namespace NativeRepertoire {
                         ppCost: skill.ppCost ? skill.ppCost(pokemon, move || CobblemonCombat.moveTemplate(skill.id), values, attributes.world, attributes.actor)
                             : NativeLoadout.defaultCost(pokemon, move || CobblemonCombat.moveTemplate(skill.id)),
                         pp: move ? move.pp() : null, maxPp: move ? move.maxPp() : CobblemonCombat.moveTemplate(skill.id).maxPp(), fields: skill.id === focus ? skill.fields : [],
-                        values: values, overrides: preferences.overrides(skill.id, String(pokemon.id()), store), indicator: skill.indicator ? skill.indicator(values, pokemon) : null,
+                        values: values, overrides: preferences.overrides(skill.id, String(pokemon.id()), store), indicator: skill.indicator ? skill.indicator(values, pokemon, inspection) : null,
                         revision: store.read(skill.id, String(pokemon.id())), state: prepared ? JSON.parse(String(prepared)) : {},
                         unavailableReason: movementReason(skill, pokemon, values) };
-                    return skill.inspect ? skill.inspect(pokemon, detail, { full: skill.id === focus, attributes: attributes,
-                        world: skill.id === focus && request.world ? request.world() : null, actor: skill.id === focus && request.actor ? request.actor() : null, state: function (id) {
-                        var data = stored(key => request.data(key), "state", id).value; return data ? JSON.parse(String(data)) : {};
-                    } }) : detail;
+                    return skill.inspect ? skill.inspect(pokemon, detail, inspection) : detail;
                 }
                 var result: any[] = [], requested: any = null, equippedRequest = false;
                 for (var slot = 0; slot < pokemon.moveSlots(); slot++) {

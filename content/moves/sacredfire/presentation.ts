@@ -1,14 +1,12 @@
 /**
  * 神圣之火 / sacredfire 的客户端表现。
  *
- * 一句话：虹彩圣火从脚下升起裹住全身，随后一团虹火从身前飞出、沿瞄准方向逐段推进，撞上实体或方块炸开；
- * 友方被净火碰到时冰壳化开成彩汽，敌人则吃一记火击；圣火式在落点留一片慢慢灭的虹彩余焰。
+ * 一句话：虹彩圣火从脚下升起裹住全身，随后一团虹火从口前飞出、沿瞄准方向逐段推进，撞上实体或方块炸开；
+ * 友方被净火碰到时冰壳化开成彩汽，敌人则吃一记火击。
  * 色相家族：金白（0xFFE0A0）是核心与主色，彩虹来自 `sparkle/shinesparkle_rainbow` 的原色；烟尘收在深褐（0x3A2E2A）。
- * 拍子：起 risen（升火）→ 飞 flight（彩虹尾，身体留原地）→ 击 hit（撞开）／thaw（化冰）／whiff（空爆）
- *   → 焚 flame（余焰，由场地效果托管）与 flamehit → fade。
- * 范围：flight 的 `data.path` 是服务端送出的原点与当刻前沿（与判定同一份头尾点）；
- *   flame／flamehit 的地面环按服务端 `data.radius`（机制余焰半径）画出，圈就是会被烫到的地。
- * 运动：虹火从身前沿路径飞出、撞击向外炸开、余焰贴地闷烧。
+ * 拍子：起 risen（升火）→ 飞 flight（前沿一团虹火 + 当刻一段短尾，身体留原地）→ 击 hit（撞开）／thaw（化冰）／whiff（空爆）→ fade。
+ * 范围：flight 的头用 `data.point`（真实前沿）、尾用 `data.path`（当刻那一段的头尾点，与判定同一份）。
+ * 运动：虹火沿实际路径推进，头始终落在真实前沿，身后只拖当刻一段；撞击向外炸开。
  * 数：火星数绑定 `data.sparks`（物攻与等级换算），强度绑定 `data.intensity`（威力派生），
  *   身量绑定 `data.scale`（判定半径 / 0.7）。
  */
@@ -41,14 +39,7 @@ const SacredfireDefinition: ParticleDefinition = {
             duration: 0,
             emitters: [
                 {
-                    name: "cloak", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    rate: 44, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.04, 0.16], spread: 18,
-                    lifetime: [6, 12], size: [0.28, 0.05],
-                    color: 0xFFE0A0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 120
-                },
-                {
+                    // 只画当刻真实的那一段（头→前沿）：一团虹火的短尾，不再从起点反复铺满整条线。
                     name: "trail", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
                     rate: { data: "sparks", fallback: 24 }, shape: { kind: "polyline" },
@@ -146,51 +137,6 @@ const SacredfireDefinition: ParticleDefinition = {
                     gravity: 0.02, drag: 0.9,
                     lifetime: [10, 18], size: [0.13, 0.02], sizeMode: "index",
                     alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 100
-                }
-            ]
-        },
-        flame: {
-            duration: 0,
-            emitters: [
-                {
-                    name: "bed", bind: "point", fit: "none", offset: [0, 0.04, 0],
-                    particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: { data: "flow", fallback: 40 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2 } },
-                    direction: "up", speed: [0.02, 0.09], spread: 18,
-                    gravity: 0.02, drag: 0.92,
-                    lifetime: [12, 22], size: [0.09, 0.02],
-                    color: 0xFFE0A0, alpha: [0.7, 0], light: "full", maxParticles: 120
-                },
-                {
-                    name: "rainbow", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
-                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 2 } },
-                    direction: "up", speed: [0.01, 0.06], drag: 0.9,
-                    lifetime: [14, 26], size: [0.11, 0.02],
-                    alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 80
-                },
-                {
-                    name: "haze", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 12, shape: { kind: "circle", radius: { data: "radius", fallback: 2 } },
-                    direction: "up", speed: [0.01, 0.05], drag: 0.9,
-                    lifetime: [16, 28], size: [0.32, 0.5],
-                    color: 0x3A2E2A, alpha: [0.25, 0], light: "world", maxParticles: 60
-                }
-            ]
-        },
-        flamehit: {
-            duration: 16,
-            exit: { stop: 6, drain: 12 },
-            emitters: [
-                {
-                    name: "burst", bind: "target", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    burst: { count: 12, at: 1 },
-                    shape: { kind: "sphere", radius: 0.26 },
-                    direction: "up", speed: [0.03, 0.13], spread: 16,
-                    lifetime: [8, 15], size: [0.08, 0.01],
-                    color: 0xFFE0A0, alpha: [0.7, 0], light: "full", maxParticles: 24
                 }
             ]
         },

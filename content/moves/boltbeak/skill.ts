@@ -112,9 +112,10 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        const power = p(boltbeakId, "peck", current);
-                        // 先手加成只按实际碰到的那个目标判断。
-                        const doubled = boltbeakLead(withTarget(factContext(current), victim)) > 0;
+                        // 威力与先手都按实际碰到的那个目标重算，避免 power 读原目标、翻倍读实际目标两份上下文不一致。
+                        const hitContext = withTarget(factContext(current), victim);
+                        const power = p(boltbeakId, "peck", hitContext);
+                        const doubled = boltbeakLead(hitContext) > 0;
                         const count = Math.round(14 + power / 3);
                         const landed = impact(current, hit, boltbeakId, power, { damage: damageSpec(boltbeakId, "peck"), contact: true });
                         // 伤害被拒绝时不冒称先手命中：只在接触点冒一下电失效，照常抽身。
@@ -138,7 +139,17 @@ namespace PokemonSkills {
                 }
                 const moved = swept.moved;
                 travelled += moved;
+                // 喙尖用真实身体前点画，而不是固定在 height 0.7 的中心：按实际碰撞箱沿水平方向取支撑点。
+                const body = scope.observe(current.actor());
+                let front: number[] = [0, 0, 0];
+                if (body !== null) {
+                    const min = body.boundsMin(), max = body.boundsMax();
+                    const hx = (max.x() - min.x()) / 2, hz = (max.z() - min.z()) / 2;
+                    const along = Math.abs(direction.x()) * hx + Math.abs(direction.z()) * hz + 0.06;
+                    front = [direction.x() * along, 0, direction.z() * along];
+                }
                 movementScenes.show(current, "dart", here, { moment: "dart", scale: scale, charge: Math.min(1, travelled / Math.max(0.001, length)),
+                        direction: [direction.x(), direction.y(), direction.z()], front: front,
                         sparks: Math.round(10 + Math.min(1, travelled / Math.max(0.001, length)) * 40) });
                 if (hit.blocked() || moved < minimumMove) { whiff(current); return; }
                 current.after(1, advance);

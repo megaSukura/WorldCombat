@@ -1,10 +1,11 @@
 /**
  * 睡觉 的伙伴 AI：这招唯一的价值是「在安全窗口里回满」，所以 AI 自己判断什么时候算安全。
  *
- * 何时考虑：自身生命低于 ai.healBelow，且还没有睡着。
+ * 何时考虑：自身生命低于 ai.healBelow，且还没有睡着；或者满血却带着一段不会持续掉血的异常，值得用这招清掉。
  * 什么算安全：自己最近 30 刻没有挨打，视野里没有活着的敌人进入 ai.safeDistance，也没有任何可见敌人正在攻击自己。
  *   最后一条覆盖了远处放冷箭的敌人与正在攻击的 Boss：攻击者哪怕在安全距离之外，也说明这一觉会被立刻打醒。
  *   附近有威胁时不硬睡——把位置让给共用计划里的保命与撤退，等拉开距离再回来睡。
+ *   毒/剧毒/烧伤会持续掉血、在睡中把自己打醒，所以它们不计入上面的「清异常」收益；要睡就该先拉开距离。
  * 紧急：生命见底（低于阈值一半）时 priority 置为 110，越过共享顺序先睡下去把命续上。
  * 对谁出手：只有自己（kind self），reach 0。
  * 配置：睡眠深度（shortNap 布尔）在参数层改变时长、回复、加速与冷却。
@@ -39,7 +40,15 @@ namespace CompanionBehavior {
             return ratio(source(context)) < ai<number>(item, "healBelow", 0.6) * 0.5 ? 110 : 0;
         },
         available: function (context, item) {
-            return ratio(source(context)) < ai<number>(item, "healBelow", 0.6) && restSafe(context, item);
+            var self = source(context);
+            if (status(context, self, "sleep")) return false;
+            var needsHeal = ratio(self) < ai<number>(item, "healBelow", 0.6);
+            // 满血但带着不会持续掉血的有害状态时，也把这招当作「清异常」的收益；毒/剧毒/烧伤会打醒自己，不算。
+            var world = CompanionBehavior.world(context), actor = world.source();
+            var dot = status(context, self, "poison") || status(context, self, "toxic") || status(context, self, "burn");
+            var needsCure = CombatStatus.hasHarmful(world, actor) && !dot;
+            if (!needsHeal && !needsCure) return false;
+            return restSafe(context, item);
         },
         accepts: function (context, item, target) { return String(target.ref) === String(source(context).ref); }
     });

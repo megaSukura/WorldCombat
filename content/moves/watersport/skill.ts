@@ -17,7 +17,7 @@ namespace PokemonSkills {
         id: watersportId,
         cooldownParameter: "recharge",
         name: "玩水",
-        description: "在选定的地面铺开一汪水：洼里的活体被泡湿，使出的火属性招式被压，身上的火与灼伤被浇灭，地面上的明火也被一格一格沤熄。对双方一视同仁。",
+        description: "在选定的地面铺开一汪水：洼里的活体被泡湿，使出的火属性招式按所在水洼的系数被压，身上的明火与灼伤被浇灭，地面上的明火也被一格一格沤熄。对双方一视同仁。",
         uses: ["压制火属性对手", "灭火与治愈灼伤", "在火招齐射前先铺湿地面"],
         kind: "point",
         range: 13,

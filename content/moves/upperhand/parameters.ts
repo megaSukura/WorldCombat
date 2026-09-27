@@ -6,7 +6,8 @@
  *
  * 翻译：即时战斗里没有回合先制，本招保留两条可读的抢攻入口：
  *   一、**读到先制招**：任何生物提交招式时（世界事件 `world_combat:committed`），只要该招式原生优先度 > 0 且不是变化招式，
- *       就记下这一刻与招式；快手还击在出手时读到目标最近 `window` 刻内有这样一笔记录，就主动踏进一记掌根打实并把它按停。
+ *       就记下这一刻与这次动作实例；动作一结束（`world_combat:action_ended`）记录随即清除，所以只有**仍在进行**的先制动作
+ *       才是可截击的活动实例。快手还击在 `window` 刻内读到这样一笔记录，就主动踏进一记掌根打实并把它按停。
  *   二、**正面迎掌**：普通原生敌人（原版怪等）没有公开的先制意图，就手动放招架起 `parryWindow` 刻的正面迎掌；
  *       第一次从正面来的**近身接触攻击**（`world_combat:incoming` 的真实 contact 事实）到来时，削掉这一次伤害 `parryCut`、
  *       立刻还一掌，并按需展开横扫。窗口过期只合掌。
@@ -39,9 +40,13 @@ namespace PokemonSkills {
     export const upperhandWhiffText = "world_combat.move.upperhand.text.whiff";
     export const upperhandGuardText = "world_combat.move.upperhand.text.guard";
 
-    /** 目标最近一次「正在出先制招」的记录。 */
-    export interface UpperhandRead { tick: number; move: string; priority: number; }
+    /** 目标最近一次「正在出先制招」的记录：记下动作实例，动作一结束就清掉，只对仍进行的先制动作成立。 */
+    export interface UpperhandRead { tick: number; move: string; priority: number; instance: number; }
     export var upperhandReads: { [ref: string]: UpperhandRead } = Object.create(null);
+    /** 迎掌成功的记档：键是托管 guard 效果 id；动作结束时按 instance 一起清掉，不留失效锚。 */
+    export var upperhandParried: { [effectId: string]: boolean } = Object.create(null);
+    /** 动作实例到它那次迎掌 guard 效果 id 的映射，供 action_ended 清理。 */
+    export var upperhandGuards: { [instance: string]: number } = Object.create(null);
 
     /** 内容 id（world_combat:<move>）到原生招式 id；非本命名空间或非法串返回 ""。 */
     export function upperhandMoveId(content: string): string {
@@ -54,10 +59,10 @@ namespace PokemonSkills {
         try { return Number(CobblemonCombat.moveTemplate(moveId).priority()); }
         catch (error) { return 0; }
     }
-    export function upperhandRemember(world: CombatWorld, actor: CombatActor, moveId: string, priority: number): void {
-        upperhandReads[String(actor.ref())] = { tick: world.tick(), move: moveId, priority: priority };
+    export function upperhandRemember(world: CombatWorld, actor: CombatActor, moveId: string, priority: number, instance: number): void {
+        upperhandReads[String(actor.ref())] = { tick: world.tick(), move: moveId, priority: priority, instance: instance };
     }
-    /** 目标在窗口内是否刚提交过先制攻击招式。 */
+    /** 目标在窗口内是否刚提交过、且这次先制动作仍在进行（结束即被 action_ended 清掉）。 */
     export function upperhandFresh(world: CombatWorld, ref: string, window: number): boolean {
         var record = upperhandReads[ref];
         return record !== undefined && world.tick() - record.tick <= Math.max(1, window);
@@ -102,7 +107,7 @@ namespace PokemonSkills {
         /** 读取窗口：36 刻 +（速度 − 55）× 0.1 [−4,10]；夹 20..64 刻（即 1.0..3.2 秒）。 */
         window: seconds(
             F.base(36).plus(F.stat("speed").minus(55).times(0.1).clamp(-4, 10)).clamp(20, 64).round(0),
-            "读取窗口", "目标在这段时间内提交过先制招式，就还读得到它这一手；留出这段余量，好让正在收招的施法者反应过来。"),
+            "读取窗口", "目标在这段时间内提交过、且仍在进行的先制招式，就还读得到它这一手；动作一结束记录即清除。"),
         /** 掌程：2.4 +（速度 − 55）× 0.01 [−0.25,0.8] +（物攻 − 60）× 0.005 [−0.2,0.5]；夹 2.2..3.8。 */
         reach: formula(
             F.base(2.4).plus(F.stat("speed").minus(55).times(0.01).clamp(-0.25, 0.8))
@@ -196,11 +201,22 @@ namespace PokemonSkills {
         var priority = upperhandPriority(moveId);
         if (!(priority > 0)) return;
         if (upperhandStatus(moveId)) return;
-        upperhandRemember(world, actor, moveId, priority);
+        upperhandRemember(world, actor, moveId, priority, action.id());
+    });
+    // 动作一结束就不再是可截击的活动实例：同步清掉读取记录与该次迎掌记档。
+    WorldCombat.on("world_combat:upperhand/sweep", "world_combat:action_ended", "", function (event: CombatWorldEvent) {
+        var data = JSON.parse(String(event.data())), ref = String(event.actor().ref()), instance = String(data.instance);
+        var record = upperhandReads[ref];
+        if (record !== undefined && String(record.instance) === instance) delete upperhandReads[ref];
+        var guard = upperhandGuards[instance];
+        if (guard !== undefined) { delete upperhandParried[String(guard)]; delete upperhandGuards[instance]; }
+    });
+    WorldCombat.on("world_combat:upperhand/sweep-death", "world_combat:actor_died", "", function (event: CombatWorldEvent) {
+        delete upperhandReads[String(JSON.parse(String(event.data())).victim)];
     });
     /** 变化招式不算攻击招式；模板读不到时保守地当作攻击。 */
     function upperhandStatus(moveId: string): boolean {
-        try { return String(CobblemonCombat.moveTemplate(moveId).category()) === "Status"; }
+        try { return String(CobblemonCombat.moveTemplate(moveId).category()) === "status"; }
         catch (error) { return false; }
     }
 }

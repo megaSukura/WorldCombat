@@ -128,6 +128,16 @@ public final class ParticleDirector {
             double lod = budget.lodFactor(mc.options.particles().get(),
                 instance.distanceToSource(cameraX, cameraY, cameraZ));
             instance.tick(tick, lod, budget, sink);
+            var sound = instance.takeSound();
+            if (sound != null) {
+                var event = net.minecraft.core.registries.BuiltInRegistries.SOUND_EVENT.getOptional(
+                    net.minecraft.resources.ResourceLocation.parse(sound.cue().id()));
+                if (event.isPresent()) {
+                    var at = sound.position();
+                    mc.level.playLocalSound(at.x, at.y, at.z, event.get(), net.minecraft.sounds.SoundSource.NEUTRAL,
+                        (float)sound.cue().volume(), (float)sound.cue().pitch(), false);
+                } else ClientPresentation.reportFailure(instance.key(), "Unknown sound: " + sound.cue().id());
+            }
             if (tick - instance.lastTouched() > STALE_TICKS) {
                 if (instance.phase() != ParticleInstance.Phase.DONE) instance.interrupt();
                 if (instance.phase() == ParticleInstance.Phase.DONE) iterator.remove();

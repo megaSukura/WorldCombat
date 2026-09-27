@@ -14,12 +14,23 @@ namespace PokemonSkills {
         return (dx * (tv[0] - sv[0]) + dy * (tv[1] - sv[1]) + dz * (tv[2] - sv[2])) / length;
     }
 
+    /** 本个体此刻三项实际能拿到的总阶段：与 boost 的真实增量同源（每项最多补到 +6）。 */
+    function filletawayGain(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        var world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        var levels = Math.max(0, Math.round(p("filletaway", "levels",
+            { world: world, actor: world.source(), skill: skills["filletaway"], detail: { values: capability.data.config } })));
+        var gained = 0;
+        ["atk", "spa", "spe"].forEach(function (stat) { gained += Math.max(0, Math.min(levels, 6 - CompanionBehavior.stage(context, self, stat))); });
+        return gained;
+    }
+
     CompanionBehavior.registerUse("filletaway", {
         protocols: ["world_combat:fortify"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
-            if (["atk", "spa", "spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
+            // 三项都已到顶就不再削肉；还剩多少可补由实际阶段决定。
+            if (filletawayGain(context, capability) <= 0) return false;
             var self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             var reserve = CompanionBehavior.ai<number>(capability, "reserveHealth", 0.15);
             var deep = !!(capability.data.config && Number(capability.data.config.depth) > 0.55);
@@ -36,7 +47,9 @@ namespace PokemonSkills {
             return target.ref === CompanionBehavior.source(context).ref;
         },
         priority: function (context, capability, target) {
-            return context.senses["world_combat:threat"] ? 105 : 0;
+            if (!context.senses["world_combat:threat"]) return 0;
+            // 能补到的实际阶段越多越值得先削身；单项已满只补其余两项时权重随之下降。
+            return 100 + Math.min(10, filletawayGain(context, capability));
         }
     });
 

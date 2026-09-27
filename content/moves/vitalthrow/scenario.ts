@@ -4,7 +4,8 @@
  * 一句话：站定等对手先动，等它扑进来的一刻借它的冲劲把它摔出去；摔得慢所以在对手之后，抓的是近身一瞬所以躲不掉。
  *
  * 场面：一只摔跤手对两格外的对手（已经在抓握圈里，让它站定接人）。场地铺平，白天晴天。
- * 断言只取必然事实：这招被提交过、目标受过借力摔伤害。是否接到扑击（借力加成）与暴击写进 note 供读轨迹判断。
+ * 断言只取必然事实：这招被提交过、目标受过借力摔伤害（首次接触的身体就是抓取对象，投力按它的属性结算）。
+ * 是否接到来势（借力加成）、是否真的抛起后落地压制、暴击，是位移与时序结果，写进 note 供读轨迹判断。
  */
 Smoke.scenario("vitalthrow", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -19,7 +20,7 @@ Smoke.scenario("vitalthrow", function (stage) {
         stage.after(100, function () {
             stage.expect(stage.casts("vitalthrow", caster) >= 1, "caster committed vital throw");
             stage.expect(stage.damageTo(foe) > 0, "vital throw dealt damage to the foe");
-            stage.note("whether the throw caught the foe mid-attack (momentum bonus), crit, and flung distance are positional/random", {
+            stage.note("whether the grabbed foe was pressing toward the caster (momentum bonus), whether it was actually lifted and pinned, crit, and flung distance are positional/random", {
                 casts: stage.casts("vitalthrow", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAt: foe.position().map(function (n: number) { return Math.round(n * 10) / 10; }),

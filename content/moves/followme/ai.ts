@@ -33,11 +33,14 @@ namespace CompanionBehavior {
         return found;
     }
 
-    /** 喊话半径内、可能被这声招呼拉住的敌人；读本招自己的 callRadius，读不到就退回中性估计。 */
-    function followMeResponders(context: WorldBehavior.Context): number {
-        const self = source(context);
+    /** 喊话半径内、可能被这声招呼拉住的敌人；读本招自己的 callRadius（含现场配置），读不到就退回中性估计。 */
+    function followMeResponders(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const self = source(context), access = world(context);
         let radius = 8;
-        try { radius = Math.max(3, Math.min(14, PokemonSkills.p("followme", "callRadius", world(context)))); } catch (error) { radius = 8; }
+        try {
+            radius = Math.max(3, Math.min(14, PokemonSkills.p("followme", "callRadius", {
+                world: access, actor: access.source(), skill: PokemonSkills.skills["followme"], detail: { values: item.data.config || {} } })));
+        } catch (error) { radius = 8; }
         let found = 0;
         const nearby = context.facts.nearby as Entity[];
         for (let index = 0; index < nearby.length; index++) {
@@ -66,7 +69,7 @@ namespace CompanionBehavior {
             const crowd = followMeCrowd(context, ai<number>(item, "watch", 8));
             if (!crowd.length) return 0;
             // 没有人可能被拉向自己时，这声招呼没有落点，交给别的行动。
-            if (followMeResponders(context) <= 0) return 10;
+            if (followMeResponders(context, item) <= 0) return 10;
             const below = ai<number>(item, "allyBelow", 0.5);
             for (let index = 0; index < crowd.length; index++) if (ratio(crowd[index]) < below) return 100;
             return 40;

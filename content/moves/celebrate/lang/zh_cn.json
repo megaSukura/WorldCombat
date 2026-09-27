@@ -24,8 +24,6 @@
   "worldcombat.skill.celebrate.preference.ai.safeRange.help": "视野内敌对目标进入这个距离就暂不开庆祝；调小更敢贴身办，调大只在确实脱离接触时铺场。",
   "worldcombat.skill.celebrate.preference.ai.minAllies": "最少同庆",
   "worldcombat.skill.celebrate.preference.ai.minAllies.help": "身边至少这么多友方（含自己）才值得庆祝；调 1 一个人也开，调大只在人多时铺场。",
-  "worldcombat.skill.celebrate.preference.ai.leaveStation": "驻守时允许离位",
-  "worldcombat.skill.celebrate.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去给队友办庆祝。",
   "world_combat.move.celebrate.text.cheer": "庆祝！%1$s 位友方获得一股行进劲",
   "world_combat.move.celebrate.text.mend": "庆祝！%1$s 位友方回补 %2$s",
   "effect.world_combat.celebrate_spirit": "庆祝中"

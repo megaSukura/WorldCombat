@@ -146,3 +146,29 @@ const CraftyShieldDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_craftyshield", 1, CraftyShieldDefinition);
+
+/**
+ * 稳定印片：真实余额是 2–6 枚的小整数，粒子会生灭看不清个数，所以用固定数量的贴图直接画。
+ * 每枚印片绕目标腰际一圈排布，成功拨挡扣一枚就少画一片；余量由服务端 `remaining`/`total` 驱动，位置只跟真实锚点。
+ */
+WorldCombatClient.scene("world_combat:move_craftyshield/marks", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry<{ target?: string; remaining?: number; total?: number; scale?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    const anchor = JSON.parse(frame.anchor(data.target || entry.source));
+    if (!anchor) return;
+    const total = Math.max(0, Math.min(8, Math.round(typeof data.total === "number" ? data.total : 0)));
+    const remaining = Math.max(0, Math.min(total, Math.round(typeof data.remaining === "number" ? data.remaining : 0)));
+    if (total <= 0 || remaining <= 0) return;
+    const scale = typeof data.scale === "number" && data.scale > 0 ? data.scale : 1;
+    const ring = (0.42 + 0.08 * total) * scale;
+    const y = anchor.y + anchor.height * 0.58;
+    const spin = frame.serverTick() * 0.02;
+    const colour = (0xE6 << 24 | 0xC9A0E8) | 0;
+    for (let i = 0; i < total; i++) {
+        if (i >= remaining) continue;
+        const a = spin + i * Math.PI * 2 / total;
+        frame.sprite("cobblemon:particle/generic/sparkle/glowingsparkle",
+            anchor.x + Math.cos(a) * ring, y, anchor.z + Math.sin(a) * ring, 0.24 * scale, 0, colour, i % 2, true);
+    }
+});

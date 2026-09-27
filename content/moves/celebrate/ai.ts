@@ -74,12 +74,10 @@ namespace PokemonSkills {
         }
     });
 
-    addPreferences(celebrateId, { vigor: false, ai: { safeRange: 8, minAllies: 2, leaveStation: false } }, [
+    addPreferences(celebrateId, { vigor: false, ai: { safeRange: 8, minAllies: 2 } }, [
         field(pathOf("ai.safeRange"), "安全距离", "number", { min: 2, max: 24, step: 1,
             help: "视野内敌对目标进入这个距离就暂不开庆祝；调小更敢贴身办，调大只在确实脱离接触时铺场。" }),
         field(pathOf("ai.minAllies"), "最少同庆", "number", { min: 1, max: 6, step: 1,
-            help: "身边至少这么多友方（含自己）才值得庆祝；调 1 一个人也开，调大只在人多时铺场。" }),
-        field(pathOf("ai.leaveStation"), "驻守时允许离位", "boolean", {
-            help: "开启后，收到「驻守」指令时也会离开原位去给队友办庆祝。" })
+            help: "身边至少这么多友方（含自己）才值得庆祝；调 1 一个人也开，调大只在人多时铺场。" })
     ]);
 }

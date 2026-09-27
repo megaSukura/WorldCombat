@@ -6,9 +6,12 @@
  *
  * 两幕（多一抽时整条鞭重新绷一次）：
  *   起（read）：细藤从身体侧面绷起、蓄势，只播预告。
- *   抽（flick → hit… / wall… / miss）：提交后从当刻身体中心沿释放方向绷直一条三维窄线，`clipBlocks` 先按真实
- *       方块裁剪，末端停在墙面或全长处（墙后不穿透）；再按到这条线段的真实三维距离圈出非友方，每人结算一次
- *       `lash` 接触伤害。双抽式在 interval 刻后从当刻原点沿同一释放方向重新绷一次；两记都没中就播落空。
+ *   抽（flick → hit… / wall… / miss）：提交后从当刻身体中心沿释放方向绷直一条三维窄线，先用 `blockHit` 在
+ *       中心与两侧边缘同时采样，取最近的真实墙面把这一整段等宽鞭路截断（墙后不穿透）；判定用
+ *       `bodySegment` 读真实身体箱——胖Boss靠线的那一侧也算在线内，而不是只看身体中心；再对线内非友方每人结算
+ *       一次 `lash` 接触伤害。双抽式在 interval 刻后从当刻原点沿同一释放方向重新绷一次；两记都没中就播落空。
+ *
+ * 表现：细藤本体由自定义场景按真实端点画出「弯→绷直→收回」，粒子只作短寿叶屑陪衬；判定与表现共用同一组端点。
  *
  * 与同族分开：强力鞭打是远而宽的横扫、缠绕是贴身绞缠减速、百万吨重踢是直线单体踢飞；
  * 藤鞭的辨识点是「短促、快、可以连着抽」的一道细亮鞭痕。提交后才触碰世界。
@@ -16,8 +19,33 @@
  */
 namespace PokemonSkills {
     const vinewhipScene = "world_combat:move_vinewhip";
+    const vinewhipLineScene = "world_combat:move_vinewhip_line";
     const vinewhipHitText = "world_combat.move.vinewhip.text.hit";
     const vinewhipMissText = "world_combat.move.vinewhip.text.miss";
+
+    /** origin→end 在 direction 轴上的投影距离，用于把偏移采样得到的墙面换算回鞭路长度。 */
+    function vinewhipAlong(origin: CombatPoint, point: CombatPoint, direction: CombatPoint): number {
+        const delta = point.minus(origin);
+        return delta.x() * direction.x() + delta.y() * direction.y() + delta.z() * direction.z();
+    }
+
+    /**
+     * 从 origin 沿 direction 铺满宽度的整段鞭路遇到的第一处真实墙面；中心与两侧边缘三条平行线同时采样，
+     * 取最近的一处。畅通返回 null（`WorldGeometry.blockHit` 已滤掉 MISS）。
+     */
+    function vinewhipWall(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number, width: number): CombatImpact | null {
+        const side = WorldGeometry.basis(direction).right;
+        const offsets = [0, width, -width];
+        let nearest: CombatImpact | null = null, best = Infinity;
+        for (let i = 0; i < offsets.length; i++) {
+            const from = origin.plus(side.scale(offsets[i]));
+            const hit = WorldGeometry.blockHit(world, from, from.plus(direction.scale(reach)));
+            if (hit === null) continue;
+            const distance = vinewhipAlong(origin, hit.position(), direction);
+            if (distance < best) { best = distance; nearest = hit; }
+        }
+        return nearest;
+    }
 
     define({
         id: "vinewhip",
@@ -56,13 +84,16 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const actorRef = String(action.actor().ref());
             const reach = p("vinewhip", "reach", action);
             const width = p("vinewhip", "width", action);
             const power = p("vinewhip", "lash", action);
             const strokes = Math.max(1, Math.min(2, Math.round(p("vinewhip", "strokes", action))));
             const interval = Math.max(3, Math.round(p("vinewhip", "interval", action)));
             const notes = Math.max(8, Math.round(p("vinewhip", "notes", action)));
-            const direction = aim(action);
+            const leaves = Math.max(4, Math.round(notes * 0.5));
+            // 固定 3D 方向：提交那一刻锁死，逐抽都朝同一方向绷直。
+            const direction = WorldGeometry.basis(aim(action), action.direction()).forward;
             const scale = width / 0.45;
             const intensity = Math.max(0.6, Math.min(2.2, power / 48));
             let settled = false, totalHits = 0;
@@ -71,38 +102,32 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            /** 实际三维窄线区域：某点到线段 origin→end 的最短距离不超过 halfWidth 才算在线上。 */
-            function lineRegion(origin: CombatPoint, end: CombatPoint, halfWidth: number): WorldGeometry.Region {
-                function near(point: CombatPoint): boolean {
-                    return point.minus(WorldGeometry.closestOnSegment(point, origin, end)).length() <= halfWidth;
-                }
-                return {
-                    contains: function (point) { return near(point); },
-                    centre: function () { return origin.plus(end).scale(0.5); },
-                    radius: function () { return origin.minus(end).length() * 0.5 + halfWidth; }
-                };
-            }
-
-            /** 一记抽击：从当刻原点沿释放方向绷直、按墙裁剪，窄线里的非友方各挨一下；不是最后一记就排下一记。 */
+            /** 一记抽击：从当刻身体中心沿固定方向绷直、按等宽真实墙面截断，线内非友方各挨一下；不是最后一记就排下一记。 */
             function lash(current: CombatAction, stroke: number): void {
                 const scope = current.world(), origin = current.origin();
-                const idealEnd = origin.plus(direction.scale(reach));
-                const clip = scope.clipBlocks(origin, idealEnd);
-                const walled = clip !== null && clip.blocked();
-                const end = walled ? clip!.position() : idealEnd;
-                const length = end.minus(origin).length();
-                WorldFeedback.emit(scope, vinewhipScene, 1, end,
-                    { moment: "flick", path: [[origin.x(), origin.y(), origin.z()], [end.x(), end.y(), end.z()]],
-                        direction: [direction.x(), direction.y(), direction.z()], reach: Math.round(length * 10) / 10,
-                        notes: notes, scale: scale, stroke: stroke + 1, intensity: intensity }, 26);
-                if (walled) {
-                    WorldFeedback.emit(scope, vinewhipScene, 1, end,
-                        { moment: "wall", face: clip!.blockFace(), notes: Math.round(notes * 0.5), scale: scale }, 18);
+                const wall = vinewhipWall(scope, origin, direction, reach, width);
+                const length = wall === null ? reach : Math.max(0.1, Math.min(reach, vinewhipAlong(origin, wall.position(), direction)));
+                const end = origin.plus(direction.scale(length));
+                const start = scope.tick();
+                const path = [[origin.x(), origin.y(), origin.z()], [end.x(), end.y(), end.z()]];
+                const vector = [direction.x(), direction.y(), direction.z()];
+                WorldFeedback.emit(scope, vinewhipLineScene, 1, origin,
+                    { moment: "flick", path: path, direction: vector, start: start, stroke: stroke + 1, double: strokes > 1 ? 1 : 0,
+                        reach: Math.round(length * 10) / 10, width: Math.round(width * 100) / 100,
+                        leaves: leaves, notes: notes, scale: scale, intensity: intensity }, 13);
+                WorldFeedback.emit(scope, vinewhipScene, 1, origin,
+                    { moment: "flick", path: path, direction: vector, reach: Math.round(length * 10) / 10,
+                        leaves: leaves, notes: leaves, scale: scale, stroke: stroke + 1, intensity: intensity }, 26);
+                if (wall !== null) {
+                    WorldFeedback.emit(scope, vinewhipScene, 1, wall.position(),
+                        { moment: "wall", face: wall.blockFace(), notes: Math.round(notes * 0.5), scale: scale }, 18);
                 }
                 let hits = 0;
-                if (length > 0.01) {
-                    WorldGeometry.selectEnemies(scope, lineRegion(origin, end, width), function (target, facts) {
+                if (length > 0.05) {
+                    // 判定用真实身体箱：胖Boss靠线的一侧也算在线内；每人每记只结算一次，一记上限 2 个。
+                    WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(origin, end, width), function (target, facts) {
                         if (hits >= 2) return;
+                        if (scope.friendly(target) || String(target.ref()) === actorRef) return;
                         const landed = hurt(current, target, "vinewhip", power, { damage: damageSpec("vinewhip", "lash"), contact: true });
                         if (!landed) return;
                         hits++; totalHits++;

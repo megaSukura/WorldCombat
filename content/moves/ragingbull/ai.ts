@@ -3,21 +3,24 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
  * `ai.crowd`（默认开）按**从自身到目标这条实际冲锋路线**数敌人与光幕，而不是目标身边的一圈：
- * 线敌人或屏走廊会给这一冲更多收获；目标自己带着反射壁、光墙或极光幕时也抬高一档。
+ * 敌人数量按本招真实配置上限收束（猛停式 1、贯穿式 4），屏只数**同一高度的敌方**光幕（友方与楼上的不算），
+ * 且都要求落在可达的同一层纵线上；线敌人、屏走廊或目标自己带着反射壁／光墙／极光幕时抬高一档。
  * 关闭则只按威胁与距离排序。放完之后继续常规交战。
  */
 namespace PokemonSkills {
-    function ragingbullLine(context: WorldBehavior.Context, target: CompanionBehavior.Entity): { enemies: number; screens: number } {
+    function ragingbullLine(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): { enemies: number; screens: number } {
         const self = CompanionBehavior.point(CompanionBehavior.source(context).point);
         const victim = CompanionBehavior.point(target.point);
         const heading = WorldGeometry.flatUnit(victim.minus(self));
-        const span = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+        const span = typeof capability.data.range === "number" && isFinite(capability.data.range)
+            ? capability.data.range : CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
         let enemies = 0;
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0) continue;
-            const delta = CompanionBehavior.point(other.point).minus(self);
+            const at = CompanionBehavior.point(other.point), delta = at.minus(self);
+            if (Math.abs(at.y() - self.y()) > 1.5) continue;
             const along = WorldGeometry.dot(delta, heading);
             if (along < 0 || along > span + 2) continue;
             const flat = WorldCombat.point(delta.x(), 0, delta.z());
@@ -28,8 +31,10 @@ namespace PokemonSkills {
         const world = CompanionBehavior.world(context);
         const zones = WorldEffects.areasWithTag(world, WorldEffects.categories.screen);
         for (let i = 0; i < zones.length; i++) {
-            const at = CompanionBehavior.point(zones[i].position);
-            const delta = at.minus(self);
+            const at = CompanionBehavior.point(zones[i].position), delta = at.minus(self);
+            if (Math.abs(at.y() - self.y()) > 1.5) continue;
+            const owner = zones[i].source ? world.actor(zones[i].source) : null;
+            if (owner !== null && world.friendly(owner)) continue;
             const along = Math.max(0, Math.min(span, WorldGeometry.dot(delta, heading)));
             const closest = self.plus(heading.scale(along));
             const flat = at.minus(closest);
@@ -58,8 +63,11 @@ namespace PokemonSkills {
             const warded = CompanionBehavior.status(context, target, "reflect")
                 || CompanionBehavior.status(context, target, "lightscreen")
                 || CompanionBehavior.status(context, target, "auroraveil");
-            const line = CompanionBehavior.ai<boolean>(capability, "crowd", true) ? ragingbullLine(context, target) : { enemies: 0, screens: 0 };
-            return 20 + (line.enemies >= 2 ? 18 : line.enemies >= 1 ? 8 : 0) + (line.screens >= 1 ? 12 : 0) + (warded ? 10 : 0);
+            const config = capability.data.config || {};
+            const cap = config.trample === true ? 4 : 1;
+            const line = CompanionBehavior.ai<boolean>(capability, "crowd", true) ? ragingbullLine(context, capability, target) : { enemies: 0, screens: 0 };
+            const lined = Math.min(cap, line.enemies);
+            return 20 + (lined >= 2 ? 18 : lined >= 1 ? 8 : 0) + (line.screens >= 1 ? 12 : 0) + (warded ? 10 : 0);
         }
     });
 

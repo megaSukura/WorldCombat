@@ -13,7 +13,13 @@
     "skill.ts",
     "ai.ts"
   ],
+  "startupSources": [
+    "startup.ts"
+  ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "mobEffectIcons": {
+    "world_combat:conversion2_type": "minecraft:mob_effect/resistance"
+  }
 }

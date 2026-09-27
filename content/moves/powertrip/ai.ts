@@ -10,6 +10,26 @@ namespace PokemonSkills {
         return typeof value === "number" ? value : 0;
     }
 
+    /** 猛进式的前路：目标之后、同一条冲撞线上的其他敌人还有几个（最多算两个）。 */
+    function powertripSecondAhead(context: WorldBehavior.Context, self: WorldMethods.Subject, target: WorldMethods.Subject): number {
+        const nearby = (context.facts.nearby || []) as WorldMethods.Subject[];
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 0.1) return 0;
+        const ux = dx / length, uz = dz / length;
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+            const rx = other.point[0] - self.point[0], rz = other.point[2] - self.point[2];
+            const along = rx * ux + rz * uz;
+            if (along <= length + 0.1 || along > length + 2.5) continue;
+            const lateral = Math.abs(rx * -uz + rz * ux);
+            if (lateral <= 0.9) count++;
+        }
+        return Math.min(2, count);
+    }
+
     CompanionBehavior.registerUse(powertripId, {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -27,6 +47,8 @@ namespace PokemonSkills {
             const limit = CompanionBehavior.ai<number>(capability, "maxChase", 10);
             let value = gap <= capability.data.range ? 28 : gap <= limit ? 15 : 4;
             if (CompanionBehavior.ai<boolean>(capability, "boostFirst", true)) value += Math.min(34, powertripBoostNow(context, self) * 4);
+            // 猛进穿堂：目标之后还排着第二个敌人时更值。
+            if (CompanionBehavior.ai<boolean>(capability, "drive", false)) value += powertripSecondAhead(context, self, target) * 6;
             return Math.min(86, value);
         }
     });

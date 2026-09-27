@@ -5,10 +5,11 @@
  * 反震顺着原路回到自己身上；冲空则一头栽地，脚下炸开一圈碎石。
  * 色相家族：岩灰（0xA88E6A）与冷白（0xEAE6DC）；土褐只在贴地碎石里出现，饱和色只在冲击核心一点。
  * 拍子：起 windup（刨地蓄势）→ 击 charge（直线冲刺）→ impact（命中峰值）＋ recoil（反震）／ crash（栽地）。
- * 范围：charge 的冲刺线与石块沿 `data.path` 直线铺开；impact/crash 绑受力点，画的就是砸到哪。
+ * 范围：charge 的冲刺线与石块沿 `data.path` 直线铺开；impact/crash 绑实际接触点与自身，画的就是砸到哪。
  * 运动：速度线沿冲撞方向掠过；命中后石屑沿冲撞方向退去；反震的碎屑从自己身上朝反方向散开。
  * 数：`data.hits`（威力派生）决定命中石屑数，`data.intensity`（威力 / 120）抬高密度与亮度，
- * `data.scale`（判定半径 / 0.55）放大头部与尘环，`data.loss`（冲空实际掉血）驱动栽地那圈的密度。
+ * `data.scale`（判定半径 / 0.55）放大头部与尘环，`data.loss`（本次实际掉血：反震或冲空）驱动对应尘量；
+ * impact 只在服务端确认真的造成伤害时触发，recoil 只在真的自损时触发，栽地只作一小段落地尘。
  */
 const HeadsmashDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -62,7 +63,7 @@ const HeadsmashDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 22 },
             emitters: [
                 {
-                    name: "skull", bind: "target", height: 0.55,
+                    name: "skull", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
                     burst: { count: { data: "hits", fallback: 22 } },
                     shape: { kind: "sphere", radius: 0.34 },
@@ -71,7 +72,7 @@ const HeadsmashDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5
                 },
                 {
-                    name: "shards", bind: "target", height: 0.4,
+                    name: "shards", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: 10 },
                     shape: { kind: "sphere_surface", radius: 0.4 },
@@ -81,7 +82,7 @@ const HeadsmashDefinition: ParticleDefinition = {
                     color: 0xA88E6A, alpha: [0.85, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "grit", bind: "target", offset: [0, 0.08, 0], height: 0,
+                    name: "grit", bind: "point", offset: [0, -0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 30 },
                     shape: { kind: "ring", radius: 0.52 },
@@ -107,7 +108,7 @@ const HeadsmashDefinition: ParticleDefinition = {
                 {
                     name: "strain", bind: "source", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 34 },
+                    burst: { count: { data: "loss", fallback: 12 } },
                     shape: { kind: "ring", radius: 0.44 },
                     direction: "outward", speed: [0.06, 0.22],
                     lifetime: [10, 18], size: [0.07, 0.02],
@@ -116,35 +117,27 @@ const HeadsmashDefinition: ParticleDefinition = {
             ]
         },
         crash: {
-            duration: 30,
-            exit: { stop: 14, drain: 22 },
+            duration: 22,
+            exit: { stop: 9, drain: 16 },
             emitters: [
                 {
-                    name: "faceplant", bind: "source", offset: [0, 0.12, 0], height: 0,
+                    name: "landing", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_ground",
-                    burst: { count: { data: "loss", fallback: 10 } },
-                    shape: { kind: "hemisphere", radius: 0.5, rotation: [180, 0, 0] },
-                    direction: "up", speed: [0.08, 0.3], spread: 18,
-                    lifetime: [9, 16], size: [0.4, 0.06], sizeMode: "index",
+                    burst: { count: { data: "loss", fallback: 8 } },
+                    shape: { kind: "hemisphere", radius: 0.45, rotation: [180, 0, 0] },
+                    direction: "up", speed: [0.08, 0.28], spread: 18,
+                    lifetime: [8, 14], size: [0.36, 0.05], sizeMode: "index",
                     color: 0xE8E0CF, alpha: [1, 0], light: "world", bloom: 0.3
                 },
                 {
-                    name: "rockfall", bind: "source", offset: [0, 0.3, 0], height: 0.25,
-                    particle: "world_combat_core:cobblemon/generic/large_rock",
-                    burst: { count: 12 },
-                    shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "outward", speed: [0.1, 0.32], spin: 14,
-                    gravity: 0.03, drag: 0.9,
-                    lifetime: [14, 26], size: [0.22, 0.05],
-                    color: 0xA88E6A, alpha: [0.8, 0], light: "world", maxParticles: 60
-                },
-                {
-                    name: "tremor", bind: "source", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.7 },
-                    direction: "outward", speed: [0.05, 0.14],
-                    lifetime: [12, 20], size: [0.5, 1.2], sizeMode: "sin",
-                    color: 0x8F8779, alpha: [0.4, 0], light: "world"
+                    name: "dust", bind: "source", offset: [0, 0.04, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 18 },
+                    shape: { kind: "ring", radius: 0.55, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.05, 0.16],
+                    gravity: 0.03, drag: 0.92,
+                    lifetime: [8, 15], size: [0.08, 0.02],
+                    color: 0x9FA8B4, alpha: [0.55, 0], light: "world", maxParticles: 60
                 }
             ]
         }

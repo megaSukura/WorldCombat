@@ -36,5 +36,6 @@
   "world_combat.move.sludgebomb.text.burst": "Caught %1$s",
   "world_combat.move.sludgebomb.text.fuse": "Fuse hisses",
   "world_combat.move.sludgebomb.text.poison": "Poisoned",
-  "world_combat.move.sludgebomb.text.fizz": "Only smoke"
+  "world_combat.move.sludgebomb.text.fizz": "Only smoke",
+  "world_combat.move.sludgebomb.text.scatter": "The shell found no ground and spilled"
 }

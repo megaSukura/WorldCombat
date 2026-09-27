@@ -21,6 +21,7 @@
 namespace PokemonSkills {
     const snarlScene = "world_combat:move_snarl";
     const snarlScolded = "world_combat:snarl_scolded";
+    const snarlLingerMark = "world_combat:move_snarl/scolded_linger";
     const snarlHitText = "world_combat.move.snarl.text.hit";
     const snarlMissText = "world_combat.move.snarl.text.miss";
 
@@ -115,16 +116,18 @@ namespace PokemonSkills {
                     const ref = String(enemy.ref());
                     const fresh = !scolded[ref] && scope.valid(enemy) && MobEffects.read(scope, enemy, snarlScolded) === null;
                     if (fresh) {
-                        // 第一次被这一段喝中：挂被斥身份、掉特攻，并在目标身上放 hush。
+                        // 第一次被这一段喝中：挂被斥身份、掉特攻；只有身份或等级真的落下才报，原生拒绝时不发成功提示。
+                        const carrier = MobEffects.apply(scope, enemy, snarlScolded, hush, 0);
+                        const dropped = NativeEffects.boost(scope, enemy, "spa", -drop);
+                        if (carrier === null && dropped === 0) return;
                         scolded[ref] = true;
-                        MobEffects.apply(scope, enemy, snarlScolded, hush, 0);
-                        NativeEffects.boost(scope, enemy, "spa", -drop);
                         WorldFeedback.emit(scope, snarlScene, 1, facts.position(),
-                            { moment: "hush", target: ref, notes: notes, drop: drop, pulse: index + 1,
+                            { moment: "hush", target: ref, notes: notes, drop: Math.abs(dropped), pulse: index + 1,
                                 intensity: Math.max(0.6, Math.min(2, power / 30)) }, 24);
                         const at = scope.observe(enemy);
-                        if (at !== null)
-                            WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), snarlHitText, [drop], 26);
+                        if (dropped !== 0 && at !== null)
+                            WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), snarlHitText, [Math.abs(dropped)], 26);
+                        if (carrier !== null) snarlLingerEnsure(scope, enemy, hush, dropped);
                     } else {
                         // 已经被骂软的人只继续挨削血，用较轻的 chide，不重复掉特攻。
                         WorldFeedback.emit(scope, snarlScene, 1, facts.position(),
@@ -134,7 +137,8 @@ namespace PokemonSkills {
                 });
                 WorldFeedback.emit(scope, snarlScene, 1, origin,
                     { moment: "bark", path: path, reach: reach, arc: arc, halfArc: arc / 2, notes: notes,
-                        pulse: index + 1, hits: hits, scale: scale, direction: [heading.x(), heading.y(), heading.z()] }, 26);
+                        core: pulses === 1 ? Math.max(16, notes) : 0,
+                        pulse: index + 1, hits: hits, scale: scale, direction: [heading.x(), heading.y(), heading.z()] }, 22);
                 sound(current, index === 0 ? "minecraft:entity.wolf.growl" : "minecraft:entity.wolf.ambient");
                 index++;
                 if (index >= pulses) {
@@ -152,15 +156,40 @@ namespace PokemonSkills {
         }
     });
 
-    // 被斥期间，目标头顶持续飘起暗色音符与下坠的符号。
-    WorldCombat.on("world_combat:move_snarl/linger", "world_combat:mob_effect_tick", "", function (event) {
+    /** 把「被斥」余韵绑在目标真实载体上的托管效果：载体到期、被清除或换人，余韵随 onEffect 一起收。 */
+    function snarlLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, snarlScolded);
+        if (carrier === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "snarl:linger", snarlScene, 1, body.position(),
+            { moment: "linger", target: String(target.ref()) });
+        effect.remaining(carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration())));
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(snarlLingerMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid snarl linger mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(snarlLingerMark, "start", snarlLingerWatch);
+    WorldCombat.effectHandler(snarlLingerMark, "watch", snarlLingerWatch);
+    WorldCombat.effectHandler(snarlLingerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 被斥载体被牛奶／/effect clear 提前拿掉时，立刻撤掉托管余韵，不等下一次巡检。
+    WorldCombat.on("world_combat:move_snarl/linger-release", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== snarlScolded) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 8 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "snarl:" + String(actor.ref()), snarlScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 24);
+        if (!world.valid(actor)) return;
+        world.effects(actor, snarlLingerMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
     });
+
+    function snarlLingerEnsure(world: CombatWorld, target: CombatActor, ticks: number, dropped: number): void {
+        const owner = world.valid(world.source()) ? String(world.source().key()) : "";
+        world.effects(target, snarlLingerMark).forEach(function (view) {
+            if (String(view.source().key()) === owner) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        world.effect(snarlLingerMark, target, JSON.stringify({ dropped: dropped }), Math.max(1, Math.min(2400, ticks)));
+    }
 }

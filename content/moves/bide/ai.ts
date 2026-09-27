@@ -2,8 +2,9 @@
  * 忍耐 / bide 的伙伴 AI 用途。
  *
  * 什么局面下出手：有可见威胁、自己生命高于 ai.minHealth（默认 0.5）、身上还没在忍时进入架势——
- *   它是一段站定挨打的窗口，血量太低时开忍只会白送。威胁正在打自己时 priority 抬到 90（抢在被打前收势），
- *   否则 45。站定期间不能出手，所以只在有敌意的时候才用。
+ *   它是一段站定挨打的窗口，血量太低时开忍只会白送。正被打、最后打你的人又在可返还射程内、余血还站得住时
+ *   优先级最高；打你的人够不到、或自己余血偏低时降档；没人打你时只作普通优先级。站定期间不能出手，所以只在
+ *   有敌意的时候才用。
  * 对谁出手：只有自己（kind self），reach 0；还手自动打向最后打自己的人。
  * 放完之后：忍耐自动在 window 刻后结账，伙伴按共用计划继续交战；AI 不重复开架势。
  * 配置：rooted 布尔决定扎根（更长更重、定身）还是且战（更短、可走位）。
@@ -33,9 +34,14 @@ namespace PokemonSkills {
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
-            // 正被点名时抢先收势；刚挨过一记也说明对手在持续输出，值得开一次账。
-            if (threat.attacking === self.ref) return 90;
-            return self.hurtAgo < 40 ? 65 : 45;
+            const attacked = threat.attacking === self.ref || self.hurtAgo < 40;
+            if (!attacked) return 45;
+            // 值不值得开这一次，看能不能活着站到结账、最后打你的人是否在可返还范围，而不是「正被打就最高」。
+            const health = CompanionBehavior.ratio(self);
+            const world = CompanionBehavior.world(context), actor = world.source();
+            const reach = p(bideId, "releaseReach", { world: world, actor: actor, skill: skills[bideId], detail: { values: capability.data.config } });
+            if (CompanionBehavior.distance(self.point, threat.point) > reach) return 58;
+            return health > 0.6 ? 86 : health > 0.35 ? 70 : 52;
         }
     });
 

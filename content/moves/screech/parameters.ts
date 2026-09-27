@@ -6,7 +6,8 @@
  *
  * 世界化：把「一声尖啸」展开成**一道从嘴前向前推进的薄声前沿**——施法者张口，高频声波沿一条窄道扫出去；
  *   声音不被掩体挡住，前沿每经过一个敌人一次，就把它那层防御松开一次（同一个人只降一次，不叠降）。
- *   这是本组射程最长、唯一能一次扫到多人、且唯一作用于物防的一招。走廊的长度与宽度由 WorldGeometry.lane 判定，
+ *   这是本组射程最长、唯一能一次扫到多人、且唯一作用于物防的一招。走廊的长度与宽度由参数 reach／lane 决定，
+ *   每刻只结算「前一刻到这一刻」的薄片（WorldGeometry.bodyPolygon 的真实实体箱相交），
  *   表现读同一组机制数值，前沿位置与服务端推进距离同步。
  *   与同族分开：假哭是贴脸单体、金属音是回响单体、怪异电波是绕身一圈；刺耳声只做「一条线上的所有人」。
  *
@@ -48,7 +49,7 @@ namespace PokemonSkills {
             }),
         front: seconds(
             F.base(13).minus(F.stat("specialAttack").minus(60).max(0).times(0.04)).clamp(8, 15).round(0),
-            "前沿推进", "声浪从嘴前推到最远处的整段时间；特攻越高，整道前沿扫得越快、越早落到远处的人身上。"),
+            "前沿推进", "声浪从嘴前推到最远处的整段时间；每刻只结算当前薄片，波过之后走进来的人不会被补扫。特攻越高，整道前沿扫得越快、越早落到远处的人身上。"),
         drop: formula(
             F.base(2).plus(F.when(F.stat("specialAttack").gte(110), F.const(1), F.const(0)))
                 .plus(F.when(F.pref("shrill", text("worldcombat.skill.screech.preference.shrill")), F.const(1), F.const(0)))

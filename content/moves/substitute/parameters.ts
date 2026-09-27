@@ -12,6 +12,12 @@
  * 无伤害段：这是造物与保护的 Status 招，不结算伤害。
  */
 namespace PokemonSkills {
+    /** 与成本公式同一棵树的纯数值版本：AI 的可用性/优先级与 ready 读同一笔生命投入。 */
+    export function substituteCostShare(config: any): number {
+        const build = Number(config && config.build);
+        return Math.max(0.12, Math.min(0.4, 0.25 * (isFinite(build) && build > 0 ? build : 1)));
+    }
+
     actionParameters.define("substitute", {
         /** 生命投入：最大生命的比例；配置 build 决定投入多少。 */
         cost: formula(

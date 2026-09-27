@@ -10,7 +10,7 @@
 namespace PokemonSkills {
     function rockthrowLob(item: WorldBehavior.Capability): boolean { return item.data.config && item.data.config.lob === true; }
 
-    /** 按本招现有原生弹道逐刻检查方块；只读预测不替代真正飞行时的碰撞。 */
+    /** 用本招执行时同一套解算与净空：解出身体半径净空、散布容差内仍越过掩体的高弧，才算够得到。 */
     function rockthrowArcClear(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         const key = "rockthrow:arc:" + item.id + ":" + target.point.join(",");
         if (context.scratch[key] !== undefined) return context.scratch[key];
@@ -19,24 +19,8 @@ namespace PokemonSkills {
         if (delta.length() > item.data.range) return context.scratch[key] = false;
         const facts: FactContext = { world: world, actor: world.source(), detail: { values: item.data.config } };
         const speed = Math.max(0.4, p("rockthrow", "velocity", facts)), gravity = Math.max(0, p("rockthrow", "arc", facts));
-        const direction = LivingActions.ballistic(origin, point, speed, gravity);
-        const horizontal = WorldCombat.point(delta.x(), 0, delta.z()), span = horizontal.length();
-        if (direction === null || span < 0.01) return context.scratch[key] = false;
-        const forward = horizontal.unit(), maxTicks = Math.max(24, Math.round((delta.length() + 3) / Math.max(0.3, speed)) + 24);
-        const maxDistance = Math.max(item.data.range, delta.length() + 3);
-        let at = origin, velocity = direction.scale(speed), travelled = 0;
-        for (let tick = 0; tick < maxTicks && travelled <= maxDistance; tick++) {
-            const next = at.plus(velocity), before = at.minus(origin), after = next.minus(origin);
-            const start = before.x() * forward.x() + before.z() * forward.z();
-            const end = after.x() * forward.x() + after.z() * forward.z();
-            const arrived = end >= span, fraction = arrived ? (span - start) / Math.max(0.0001, end - start) : 1;
-            const to = at.plus(velocity.scale(fraction)), clip = world.clipBlocks(at, to);
-            if (clip === null || clip.blocked()) return context.scratch[key] = false;
-            if (arrived) return context.scratch[key] = true;
-            travelled += velocity.length(); at = next;
-            velocity = velocity.scale(0.99).plus(WorldCombat.point(0, -gravity, 0));
-        }
-        return context.scratch[key] = false;
+        const radius = Math.max(0.12, p("rockthrow", "radius", facts)), spread = Math.max(0.5, p("rockthrow", "scatter", facts));
+        return context.scratch[key] = gravity > 0 && PokemonSkills.rockthrowLobArc(world, origin, point, speed, gravity, radius, spread) !== null;
     }
 
     function rockthrowPoint(target: CompanionBehavior.Entity): CompanionBehavior.Entity {

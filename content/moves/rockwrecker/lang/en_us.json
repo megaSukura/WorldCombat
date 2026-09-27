@@ -17,7 +17,7 @@
   "worldcombat.skill.rockwrecker.value.exhaust": "Spent",
   "worldcombat.skill.rockwrecker.value.rubbleTicks": "Debris duration",
   "worldcombat.skill.rockwrecker.preference.crush": "Crush",
-  "worldcombat.skill.rockwrecker.preference.crush.help": "On: hoist a heavier, whole boulder - higher damage, wider shatter, stronger shove, but a slower flight that is easier to dodge and a longer spent window. Off: a lighter stone that flies faster, recovers sooner and shatters a smaller area.",
+  "worldcombat.skill.rockwrecker.preference.crush.help": "On: hoist a heavier, whole boulder - higher damage and a wider shatter, but a slower flight that is easier to dodge and a longer spent window. Off: a lighter stone that flies faster, recovers sooner and shatters a smaller area.",
   "worldcombat.skill.rockwrecker.preference.ai.minRange": "Minimum range",
   "worldcombat.skill.rockwrecker.preference.ai.minRange.help": "Closer than this the companion will not throw - the boulder arcs and is hard to aim point-blank. Higher keeps it at range; at 0 it throws in melee too.",
   "worldcombat.skill.rockwrecker.preference.ai.minHealth": "Health reserve",

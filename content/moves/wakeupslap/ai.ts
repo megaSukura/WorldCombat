@@ -4,7 +4,8 @@
  * 什么局面下出手：近身重掌，对手可见、敌对、活着且在 `ai.maxChase`（默认 7）之内即可；够不到交给共享接近逻辑。
  * 对谁出手：`ai.wake`（默认开）打开时，**正睡着的目标 priority 抬到 54**——那是翻倍的窗口，值得插到普通攻击前面；
  *   没人在睡时它仍是一记普通重掌，压到 9 让位给别的招。
- * 放完接什么：交回共享交战计划；命中会把目标惊醒，这一掌不负责维持睡眠控制。
+ * 放完接什么：交回共享交战计划；命中会把目标惊醒，这一掌不负责维持睡眠控制，
+ *   因此它只对「现在就要兑现」的睡眠给高分，长期睡眠控制仍交给别的招。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse(wakeupslapId, {
@@ -29,9 +30,6 @@ namespace PokemonSkills {
     });
 
     addPreferences(wakeupslapId, {}, [
-        field(pathOf("shock"), "余震", "boolean", {
-            help: "开启：拍击震出一圈余波，把范围内的其他敌人也拍中（按 0.4 比例）并惊醒其中的睡眠者，但本击 ×0.85、冷却多 4 刻。关闭：一记聚掌，本击 ×1.08。"
-        }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 12, step: 1,
             help: "目标离自己这么远以内才压上去；调大愿意主动追上更远的睡眠目标。"

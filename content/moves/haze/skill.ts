@@ -75,15 +75,18 @@ namespace PokemonSkills {
             WorldGeometry.select(world, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 4 }), function (target, facts) {
                 const self = String(target.ref()) === String(actor.ref());
                 if (focused && (self || facts.friendly())) return;
+                // 黑雾墙政策：需要一条无遮挡通路，被实体墙挡住的个体不被穿过——与多数范围技一致。
+                if (!world.clear(centre, facts.position())) return;
                 const removed = hazeErase(world, target);
                 swept++;
+                // 60 刻标记只表示「刚被黑雾扫过」，不是持续减益；真正抹掉了多少由 wiped 回执单独给出。
+                MobEffects.apply(world, target, hazeEffect, hazeMarkTicks, 0);
                 if (removed > 0) {
-                    MobEffects.apply(world, target, hazeEffect, hazeMarkTicks, 0);
                     erased += removed; marked++;
+                    WorldFeedback.emit(world, hazeScene, 1, facts.position(),
+                        { moment: "swept", target: String(target.ref()), erased: removed,
+                            motes: Math.max(6, Math.min(density, 6 + removed * 3)), scale: scale, intensity: 1 }, 24);
                 }
-                WorldFeedback.emit(world, hazeScene, 1, facts.position(),
-                    { moment: "swept", target: String(target.ref()), erased: removed,
-                        motes: Math.max(6, Math.min(density, 6 + removed * 3)), scale: scale, intensity: removed > 0 ? 1 : 0.4 }, 24);
             });
 
             const at = hazeAbove(centre);

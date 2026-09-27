@@ -4,8 +4,8 @@
  * 一句话：施法者把一大团脏垃圾压进身体、炮口聚起碎屑，轰的一声直线射出去；炮弹拖着垃圾点飞，
  *   撞上就炸开一大蓬碎屑、把目标顶得往后滑；撞墙在墙面糊一次污，空飞则在真实轨迹末端散落一地。
  * 色相家族：污泥绿与深绿灰（ooze / mudsplash / mudbubble）为主体，白亮只在炮口与命中强调的那一下。
- * 拍子：起（load 压弹聚屑）→ 轰（blast 炮口爆屑、flight 拖尾）→ 中（hit 炸开 / wall 贴墙 / whiff 空飞散落）。
- * 范围：hit 的炸开按 `data.scale`（弹体判定派生）画出；wall 的污迹贴在 `data.point`（真实墙点），whiff 的落点是真实轨迹末端。
+ * 拍子：起（load 压弹聚屑）→ 轰（blast 炮口爆屑、flight 拖尾）→ 中（hit 炸开 / immune 拒伤只闷一下 / wall 贴墙 / whiff 空飞散落）。
+ * 范围：blast 的炮口点由服务端按真实朝向算好（bind point），wall 的污迹贴 `data.direction`（命中面法线）铺开，whiff 的落点是弹体真实结束点。
  * 运动：炮弹沿服务端算好的直线飞（projectile 绑定尾迹），碎屑受重力向外迸、落地弹跳。
  * 数：`data.chunks`（物攻派生）决定炮口、弹道与命中的碎屑数量，`data.intensity`（威力派生）决定命中的亮度与尺寸。
  * 参照节：视觉语言第二、三、四、五、七、九节。
@@ -42,7 +42,7 @@ const GunkshotDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "muzzle", bind: "source", offset: [0, 0.5, 0.5], height: 0.5,
+                    name: "muzzle", bind: "point", offset: [0, 0, 0], fit: "none",
                     orient: "direction",
                     particle: "world_combat_core:cobblemon/vanilla/big_smoke",
                     burst: { count: 14, at: 1 },
@@ -52,7 +52,7 @@ const GunkshotDefinition: ParticleDefinition = {
                     color: 0x9AA08C, alpha: [0.7, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "debris", bind: "source", offset: [0, 0.5, 0.5], height: 0.5,
+                    name: "debris", bind: "point", offset: [0, 0, 0], fit: "none",
                     orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/mud/mudsplash",
                     burst: { count: { data: "chunks", fallback: 18 }, at: 1 },
@@ -126,7 +126,8 @@ const GunkshotDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "stain", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "stain", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/mud/mudsplash",
                     burst: { count: { data: "chunks", fallback: 18 }, at: 1 },
                     shape: { kind: "circle", radius: 0.55 },
@@ -144,6 +145,32 @@ const GunkshotDefinition: ParticleDefinition = {
                     gravity: 0.08, drag: 0.9,
                     lifetime: [12, 24], size: [0.12, 0.02],
                     color: 0x6E8C3A, alpha: [0.7, 0], light: "world", maxParticles: 18
+                }
+            ]
+        },
+        immune: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "shrug", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/goo/ooze",
+                    burst: { count: { data: "chunks", fallback: 18 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 24,
+                    gravity: 0.08, drag: 0.92,
+                    lifetime: [8, 16], size: [0.13, 0.02],
+                    color: 0x5E7A30, alpha: [0.6, 0], light: "world", maxParticles: 36
+                },
+                {
+                    name: "sputter", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 6, at: 1 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "up", speed: [0.02, 0.08],
+                    drag: 0.9,
+                    lifetime: [8, 14], size: [0.06, 0.01],
+                    color: 0x9AA08C, alpha: [0.4, 0], light: "world", maxParticles: 14
                 }
             ]
         },

@@ -22,11 +22,11 @@ Smoke.scenario("iciclespear", function (stage) {
             stage.expect(stage.casts("iciclespear", caster) > 0, "iciclespear was committed");
             stage.expect(stage.damageTo(foe) > 0, "the parallel icicle rank dealt damage to the foe");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/chill"), "a landed icicle left the shared chill identity on the foe");
-            stage.note("the rank length (2-5 icicles), per-icicle power and the row width follow Attack/Speed/level and the rime choice; the rank is fired in one parallel salvo and the landing leaves only fading ice chips", {
+            stage.note("the rank length (2-5 icicles), per-icicle power and the row width follow Attack/Speed/level and the rime choice; the rank is fired in one parallel salvo, the chill carrier owns the slow, and the landing leaves only fading ice chips", {
                 casts: stage.casts("iciclespear", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 chilled: stage.hadMobEffect(foe, "world_combat:status/chill"),
-                slowed: stage.hasMobEffect(foe, "minecraft:slowness"),
+                chillSlow: Math.round(stage.attribute(foe, "minecraft:generic.movement_speed") * 1000) / 1000,
                 foeAlive: foe.alive()
             });
             stage.done();

@@ -4,9 +4,10 @@
  * 一句话：施法者身边先卷起一道上升气流，随后一堵会走的旋风贴地席卷而过，把途径上的人卷起抛出，
  * 被卷晕的人头顶转起飞鸟。
  * 色相家族：青白（0x9FD8E8）与近白（0xEAF6FA），只在冲击核心一点点偏亮；一个冷色家族贯穿始终。
- * 拍子：起 windup（聚风）→ gather（风眼成立）→ 击 sweep（风墙行进）与 impact（卷入）→ 散 dissipate（风散）。
- * 范围：sweep 的地面环与风墙都用 `data.radius`（机制涡径）画，涡心每刻更新到风真正在的位置，玩家看到环在哪就知道会扫到哪。
- * 运动：风带贴地旋转并随涡心前进，目标身上向外迸风屑、沿风的去向被抛出；晴天时涡心左右摆动，画面与机制同步。
+ * 拍子：起 windup（聚风）→ gather（风眼成立）→ 击 sweep（风墙行进）与 impact（卷入）→ 散 dissipate（在最后风心散开）。
+ * 范围：sweep 的地面环与风墙都用 `data.radius`（机制涡径）按世界尺寸画（fit:world），涡心每刻更新到风真正在的位置，
+ *   玩家看到环在哪就知道会扫到哪；不再让 data.radius 与 data.scale 重复缩放同一形状。
+ * 运动：风带贴地旋转并随涡心前进，目标身上向外迸风屑、沿风向被抛出；晴天时涡心左右摆动，画面与机制同步。
  * 数：`data.spin`（风带数）驱动风带密度，`data.intensity`（风威 / 95）抬高亮度与密度，`data.radius` 决定环与风墙大小，
  * `data.confuse` 决定是否在目标头顶挂出飞鸟，`data.step`/`data.steps` 让行进阶段可读。
  */
@@ -40,7 +41,7 @@ const HurricaneDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "eye", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "eye", bind: "point", fit: "world", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "flow", fallback: 90 },
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 2.6 }, length: 2.4 },
@@ -55,7 +56,7 @@ const HurricaneDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 24 },
             emitters: [
                 {
-                    name: "wall", bind: "point", fit: "none", offset: [0, 0.55, 0],
+                    name: "wall", bind: "point", fit: "world", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "flow", fallback: 110 },
                     shape: { kind: "cylinder", radius: { data: "radius", fallback: 2.6 }, length: 2.6 },
@@ -64,7 +65,7 @@ const HurricaneDefinition: ParticleDefinition = {
                     color: 0x9FD8E8, alpha: [0.32, 0], light: "world", render: "translucent", maxParticles: 240
                 },
                 {
-                    name: "bands", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    name: "bands", bind: "point", fit: "world", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     rate: { data: "flow", fallback: 110 },
                     shape: { kind: "torus", radius: { data: "radius", fallback: 2.6 }, thickness: 0.6 },
@@ -73,7 +74,7 @@ const HurricaneDefinition: ParticleDefinition = {
                     color: 0xEAF6FA, alpha: [0.7, 0], light: "full", maxParticles: 220
                 },
                 {
-                    name: "ground_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "ground_ring", bind: "point", fit: "world", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     rate: 12, shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
                     direction: "outward", speed: [0.0, 0.04],
@@ -81,7 +82,7 @@ const HurricaneDefinition: ParticleDefinition = {
                     color: 0x9FD8E8, alpha: [0.22, 0], light: "world", render: "translucent", maxParticles: 50
                 },
                 {
-                    name: "debris", bind: "point", fit: "none", offset: [0, 0.25, 0],
+                    name: "debris", bind: "point", fit: "world", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "flow", fallback: 110 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
@@ -129,7 +130,7 @@ const HurricaneDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 22 },
             emitters: [
                 {
-                    name: "fade", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "fade", bind: "point", fit: "world", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     burst: { count: { data: "scatter", fallback: 20 } },
                     shape: { kind: "sphere", radius: { data: "radius", fallback: 2.6 } },
@@ -138,7 +139,7 @@ const HurricaneDefinition: ParticleDefinition = {
                     color: 0xBDE4EE, alpha: [0.5, 0], light: "world", maxParticles: 140
                 },
                 {
-                    name: "settle", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "settle", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 1 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
                     direction: "outward", speed: [0.03, 0.08],

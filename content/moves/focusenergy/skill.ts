@@ -58,7 +58,8 @@ namespace PokemonSkills {
         const ratio = focusEnergyRatio(world, mark);
         const motes = Math.max(8, Math.round(Number(mark.motes) || 20));
         const breaths = Math.max(2, Math.round(Number(mark.breaths) || 2));
-        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_focusenergy/breath", focusEnergyScene, 1, body.position(),
+        const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_focusenergy/breath", focusEnergyScene, 1, feet,
             { moment: "deepen", target: String(actor.ref()), motes: motes, breaths: breaths,
                 ratio: Math.round(ratio * 100) / 100, scale: 0.7 + ratio * 0.9,
                 coreSize: 0.05 + ratio * 0.17, coreAlpha: 0.25 + ratio * 0.55,
@@ -66,10 +67,19 @@ namespace PokemonSkills {
         effect.schedule("breathe", "breathe", 20, "{}");
     }
     WorldCombat.effectHandler(focusEnergyMark, "start", function (effect) {
+        const world = effect.world(), actor = effect.target(), mark = JSON.parse(String(effect.state()));
+        const carrier = world.valid(actor) ? MobEffects.read(world, actor, focusEnergyEffect) : null;
+        // 标记只认领 key 相符的那一份吐纳载体：载体被替换/清掉后旧标记自己结束，不会挂到新窗口上。
+        if (carrier === null || String(carrier.key()) !== String(mark.key)) { effect.end(); return; }
+        // 让托管标记真正拥有这颗载体：窗口走完、被驱散或脚本失败都会即时把它收掉。
+        MobEffects.bind(world, actor, focusEnergyEffect, carrier);
         focusEnergyBreath(effect);
-        const mark = JSON.parse(String(effect.state()));
         // 从张口到满气的真实成熟时长由 ramp 决定，到点闪一次满气。
         effect.schedule("full", "full", Math.max(1, Math.round(Number(mark.ramp) || 1)), "{}");
+    });
+    WorldCombat.effectHandler(focusEnergyMark, "end", function (effect) {
+        const world = effect.world(), actor = effect.target();
+        if (world.valid(actor)) delete focusEnergyPulseAt[String(actor.ref())];
     });
     WorldCombat.effectHandler(focusEnergyMark, "breathe", focusEnergyBreath);
     WorldCombat.effectHandler(focusEnergyMark, "full", function (effect) {
@@ -77,7 +87,8 @@ namespace PokemonSkills {
         const body = world.valid(actor) ? world.observe(actor) : null;
         if (body === null) return;
         const mark = JSON.parse(String(effect.state()));
-        WorldFeedback.emit(world, focusEnergyScene, 1, body.position(),
+        const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+        WorldFeedback.emit(world, focusEnergyScene, 1, feet,
             { moment: "full", target: String(actor.ref()), motes: Math.max(8, Math.round(Number(mark.motes) || 20)), ratio: 1, scale: 1.1 }, 26);
         world.sound("minecraft:block.beacon.power_select", body.position(), 12, "{}");
     });
@@ -88,7 +99,9 @@ namespace PokemonSkills {
     // 与磨砺的强制要害、幸运咒语的抚平走同一份共享结算，互不绕过。
     PokemonDamage.metadata.define({
         id: "world_combat:move_focusenergy/edge",
-        applies: function (context) { return !context.preview && !!context.world && !!context.actor; },
+        // 只认真正的直接进攻（原生近战/弹体与脚本伤害招式）；残留、反伤与其它间接结算不借这口气。
+        applies: function (context) { return !context.preview && !!context.world && !!context.actor
+            && DamageSemantics.directOffense(context.metadata); },
         apply: function (context) {
             const data: any = context.metadata, world = <CombatWorld>context.world, actor = <CombatActor>context.actor;
             if (data.category !== "physical" && data.category !== "special") return;
@@ -114,6 +127,8 @@ namespace PokemonSkills {
         if (!victim || !world.valid(actor)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0) || (data.category !== "physical" && data.category !== "special")) return;
+        // 出招气息只跟随真实的直接进攻；反伤等自伤与残留结算不冒充一次出招。
+        if (!DamageSemantics.directOffense(data) || String(actor.key()) === String(victim.key())) return;
         if (!CombatStatus.has(world, actor, focusEnergyStatus)) return;
         const mark = focusEnergyMarkOf(world, actor);
         if (mark === null) return;
@@ -140,7 +155,8 @@ namespace PokemonSkills {
         if (String(data.cause) !== "expired") return;
         const body = world.observe(actor);
         if (body === null) return;
-        WorldFeedback.emit(world, focusEnergyScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 22);
+        const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+        WorldFeedback.emit(world, focusEnergyScene, 1, feet, { moment: "fade", target: String(actor.ref()) }, 22);
         WorldFeedback.text(world, focusEnergyAbove(body.position()), focusEnergyFadeText, [], 22);
     });
 
@@ -181,7 +197,9 @@ namespace PokemonSkills {
             return "";
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:move_focusenergy:inhale", focusEnergyScene, 1, action.origin(),
+            const body = action.sense().observe(action.actor());
+            const point = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            action.present("world_combat:move_focusenergy:inhale", focusEnergyScene, 1, point,
                 JSON.stringify({ moment: "inhale", deep: config && config.deep === true ? 1 : 0 }));
             return prepare;
         },
@@ -197,12 +215,13 @@ namespace PokemonSkills {
             const ripple = Math.max(0.5, p(focusEnergyId, "ripple", action));
             const scale = ripple / focusEnergyReferenceRadius;
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
-            // 载体应用失败就不建标记、不播成功；成功后才写下属于这次实例的标记。
+            // 先收回上一次窗口的旧标记（它拥有旧载体），再挂新的这一份；载体应用失败就不建标记、不播成功。
+            focusEnergyReleaseMark(world, actor);
             const carrier = MobEffects.apply(world, actor, focusEnergyEffect, window, 0);
             if (carrier === null) { done(action); return; }
-            focusEnergyReleaseMark(world, actor);
+            // 标记比载体多留几刻：窗口自然结束时始终是载体先到点，随后由移除回执收回标记并播「散去」。
             world.effect(focusEnergyMark, actor,
-                JSON.stringify({ chance: chance, ramp: ramp, start: world.tick(), motes: motes, breaths: breaths, key: String(carrier.key()) }), window);
+                JSON.stringify({ chance: chance, ramp: ramp, start: world.tick(), motes: motes, breaths: breaths, key: String(carrier.key()) }), window + 4);
             WorldFeedback.emit(world, focusEnergyScene, 1, feet,
                 { moment: "settle", target: String(actor.ref()), motes: motes, breaths: breaths, ratio: 0, deep: deep ? 1 : 0,
                     scale: scale, intensity: Math.max(0.8, Math.min(1.8, chance / 0.4)) }, 34);

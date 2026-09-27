@@ -52,8 +52,19 @@ namespace PokemonSkills {
         windup: function (action: CombatAction, config: any, prepare: number) {
             const body = action.sense().observe(action.actor());
             const scale = body ? (body.width() + body.height()) / 2.3 : 1;
-            action.present("world_combat:move_dragontail:windup", dragontailScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", scale: scale, shards: Math.round(p(dragontailId, "shards", action)) }));
+            const centre = body ? body.position() : action.origin();
+            // 蓄尾位置由朝向计算：尾根拢在瞄准方向背后，起扫那一侧在同一朝向的 −半角方向上。
+            const heading = WorldGeometry.flatUnit(aim(action), action.direction());
+            const base = Math.atan2(heading.z(), heading.x());
+            const half = p(dragontailId, "sweep", action) * Math.PI / 360;
+            const reach = p(dragontailId, "reach", action);
+            const rear = centre.minus(WorldCombat.point(heading.x() * 0.55, 0, heading.z() * 0.55));
+            const leadAngle = base - half;
+            const lead = centre.plus(WorldCombat.point(Math.cos(leadAngle) * reach * 0.6, 0, Math.sin(leadAngle) * reach * 0.6));
+            action.present("world_combat:move_dragontail:windup", dragontailScene, 1, rear,
+                JSON.stringify({ moment: "windup", scale: scale, shards: Math.round(p(dragontailId, "shards", action)),
+                    direction: [Math.cos(leadAngle), 0, Math.sin(leadAngle)],
+                    path: [[rear.x(), rear.y(), rear.z()], [lead.x(), lead.y(), lead.z()]] }));
             return prepare;
         },
         indicator: function (config: any, pokemon?: CombatPokemon) {
@@ -63,7 +74,6 @@ namespace PokemonSkills {
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
             const scenes = WorldFeedback.actionScenes(dragontailScene, 1);
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
-            const centre = body !== null ? body.position() : action.origin();
             if (action.target() !== null) action.releaseTarget();
             const heading = WorldGeometry.flatUnit(aim(action), action.direction());
             const reach = p(dragontailId, "reach", action), sweep = p(dragontailId, "sweep", action);
@@ -74,19 +84,29 @@ namespace PokemonSkills {
             const height = body !== null ? body.height() : 1.4, width = body !== null ? body.width() : 0.9;
             const band = { below: Math.max(0.7, height * 0.55), above: Math.max(0.85, height * 0.6) };
             const half = sweep * Math.PI / 360, base = Math.atan2(heading.z(), heading.x());
-            const gauge = Math.max(0.18, width * 0.35);
             // 尾巴扫的是身体而不是中心点：按体宽给一点接触余量，尾端擦到身体边缘也算命中。
             const contact = Math.max(0.35, width * 0.5);
             const wedge = Math.max(24, sweep / dragontailSteps * 1.3);
             const scale = Math.max(0.6, Math.min(2.2, reach / 3));
             const struck: { [ref: string]: boolean } = Object.create(null);
+            // 扇心跟真实身体：站定后每一步都读当刻身体中心，判定与表现共用同一个心点。
+            let centre = body !== null ? body.position() : action.origin();
             let index = 0, hits = 0, settled = false;
+
+            /** 当刻尾体被方块截断的距离：在身体高度带的上/中/下各投一条 block-only 射线，取最近墙面。 */
+            function clipDistance(scope: CombatWorld, dir: CombatPoint, y: number): number {
+                const from = WorldCombat.point(centre.x(), y, centre.z());
+                const to = WorldCombat.point(centre.x() + dir.x() * reach, y, centre.z() + dir.z() * reach);
+                const hit = WorldGeometry.blockHit(scope, from, to);
+                return hit === null ? reach : Math.max(0, Math.min(reach, hit.position().minus(from).length()));
+            }
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 scenes.finish(current, function (next: CombatAction) {
-                    const scope = next.world(), above = centre.plus(WorldCombat.point(0, 1.3, 0));
+                    const scope = next.world(), at = scope.observe(actor);
+                    const above = (at !== null ? at.position() : centre).plus(WorldCombat.point(0, 1.3, 0));
                     if (hits === 0) WorldFeedback.emit(scope, dragontailScene, 1, centre, { moment: "miss", scale: scale }, 16);
                     WorldFeedback.text(scope, above, hits > 0 ? dragontailHitText : dragontailMissText, hits > 0 ? [hits] : [], 26);
                     done(next);
@@ -94,16 +114,16 @@ namespace PokemonSkills {
             }
 
             function sweepTick(current: CombatAction): void {
-                const scope = current.world();
+                const scope = current.world(), actual = scope.observe(actor);
+                if (actual !== null) centre = actual.position();
                 const t = dragontailSteps <= 1 ? 0 : index / (dragontailSteps - 1);
                 const angle = base - half + 2 * half * t;
                 const dir = WorldCombat.point(Math.cos(angle), 0, Math.sin(angle));
-                const full = centre.plus(WorldCombat.point(dir.x() * reach, 0, dir.z() * reach));
-                // 当刻的尾体从中心伸到尾尖；撞到方块就在接触点截断，墙后的这一段扫不到。
-                const probe = current.trace(centre, full, gauge, false);
-                const clipped = probe.blockPosition() !== null && !probe.hitEntity();
-                const end = clipped ? probe.position() : full;
-                const effective = Math.max(0, end.minus(centre).length());
+                // 当刻尾体从中心伸到尾尖；先用 block-only 裁剪尾长，实体首碰不参与截断，墙后的这一段扫不到。
+                const lowY = centre.y() - Math.max(0.3, height * 0.4), highY = centre.y() + Math.max(0.3, height * 0.4);
+                const effective = Math.min(clipDistance(scope, dir, centre.y()), clipDistance(scope, dir, lowY), clipDistance(scope, dir, highY));
+                const clipped = effective < reach - 1e-6;
+                const end = centre.plus(dir.scale(effective));
                 scenes.show(current, "tail", centre, {
                     moment: "sweep",
                     path: [[centre.x(), centre.y(), centre.z()], [end.x(), end.y(), end.z()]],
@@ -118,6 +138,9 @@ namespace PokemonSkills {
                     if (ref === String(actor.ref()) || struck[ref]) return;
                     const distance = facts.position().minus(centre).length();
                     if (distance > effective + contact) return;
+                    // 逐候选补扇条遮挡：自己那条线上真的有墙就扫不到，别人挡在墙前也不改变。
+                    const point = scope.closestPoint(target, centre);
+                    if (point === null || WorldGeometry.blockHit(scope, centre, point) !== null) return;
                     struck[ref] = true;
                     const heavy = distance >= reach * tip;
                     const landed = hurt(current, target, dragontailId, lash * (heavy ? 1 : share),
@@ -125,8 +148,9 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, dragontailScene, 1, facts.position(),
                         { moment: "impact", target: ref, shards: Math.round(shards * (heavy ? 0.6 : 0.35)),
                             size: heavy ? 0.4 : 0.26, primary: heavy ? 1 : 0 }, 22);
-                    hits++;
+                    // 伤害被拒（守护/免疫）不进抽飞账本，也不送出成功位移或换下。
                     if (!landed || !scope.valid(target)) return;
+                    hits++;
                     const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
                     const pushDir = away.length() < 0.01 ? WorldCombat.point(dir.x(), 0, dir.z()) : away.unit();
                     const moved = dragontailSend(scope, target, pushDir, hurl);

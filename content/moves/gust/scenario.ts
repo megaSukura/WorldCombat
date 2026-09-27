@@ -21,7 +21,7 @@ Smoke.scenario("gust", function (stage) {
     }, function () {
         stage.expect(stage.casts("gust", caster) > 0, "pidgeot committed gust");
         stage.expect(stage.damageTo(foe) > 0, "the wind puff dealt damage to the foe");
-        stage.note("push follows Special Attack and the shove choice; an airborne target is blown 1.8x farther and lifted, but the grounded iron golem only takes the base push", {
+        stage.note("push follows Special Attack and the shove choice and goes through native knockback resistance; this iron golem resists knockback fully, so its actual push reads 0 while the damage still lands", {
             casts: stage.casts("gust", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

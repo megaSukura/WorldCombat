@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.dracometeor.summary": "从高空召下陨石垂直砸向各自固定的落点：每颗对落点半径内的每个敌人各造成一次特殊伤害，目标走出落点就会躲过；屋顶会截住下落的陨石，就在上层撞点炸开。流星式散布多颗，同一敌人可能被多颗砸中。召唤当即付出自身特攻大幅下降的代价。",
+  "worldcombat.skill.dracometeor.summary": "从高空召下陨石垂直砸向各自固定的落点：每颗对落点半径内的每个敌人各造成一次特殊伤害，目标走出落点就会躲过；屋顶会截住下落的陨石，就在上层撞点炸开，爆区不会穿透屋顶伤到下层。流星式散布多颗，同一敌人可能被多颗砸中。召唤当即付出自身特攻大幅下降的代价，本招自己的陨石按召唤时的特攻结算。",
   "worldcombat.skill.dracometeor.use.0": "远距离召下陨石点杀",
   "worldcombat.skill.dracometeor.use.1": "流星式把落点铺成一片、罩住聚在一起的敌人",
   "worldcombat.skill.dracometeor.use.2": "对停留在原地的敌人或大体型 Boss 最有效",
@@ -35,5 +35,5 @@
   "worldcombat.skill.dracometeor.preference.ai.still": "只砸停留目标",
   "worldcombat.skill.dracometeor.preference.ai.still.help": "开启：落点在召唤时固定、不追着人走，所以停在原地的目标排前，跑动中的明显降权；关闭则不论目标动不动都按普通排序。",
   "world_combat.move.dracometeor.text.miss": "陨石落偏了",
-  "worldcombat.skill.dracometeor.description.land": "落点在召唤时一次算定，不再追着目标走；陨石下落途中蹭到敌人就在它身上炸开，否则砸到地面炸开，走出落点半径就躲过那一颗；屋顶会截住陨石，就在上层撞点炸开。"
+  "worldcombat.skill.dracometeor.description.land": "落点在召唤时一次算定，不再追着目标走；陨石下落途中蹭到敌人就在它身上炸开，否则砸到地面炸开，走出落点半径就躲过那一颗；屋顶会截住陨石，就在上层撞点炸开，从接触点被实心屋顶或墙挡住的下层敌人不吃这一圈。一路没碰到任何东西的陨石只在弹体真实末点淡散，不在计划落点凭空补炸。"
 }

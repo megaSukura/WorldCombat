@@ -6,9 +6,10 @@
  * 两幕：
  *   溶（windup 播「溶化」，提交前只观察与预告，打断不花代价）。
  *   流（提交后）：临时防御窗口挂在共享身份 world_combat:status/acidarmor 的
- *     液态窗口（两种形态各自的移动加成见 startup.ts）；当场化掉身上的 rooted 与 partiallytrapped／trapped 束缚；
+ *     液态窗口（两种形态各自的固定移动加成由本文件 fixedAttributes 提供，按载体固定 10%／20%）；
+ *     当场化掉身上的 rooted 与 partiallytrapped／trapped 束缚；
  *     酸池形态在原地留下一滩 world_combat:acid_pool（站进去的非友方中毒），流身形态不留。
- * 结束：液态窗口到期或被清除时，这段防护抬起的等级原样收回；酸池按自己的时长留在世上。
+ * 结束：液态窗口到期或被清除时，这段防护抬起的等级原样收回、流身的滴液一起收；酸池按自己的时长留在世上。
  */
 namespace PokemonSkills {
     const acidarmorScene = "world_combat:move_acidarmor";
@@ -17,6 +18,8 @@ namespace PokemonSkills {
     const acidarmorPoolField = "world_combat:acidarmor_pool";
     const acidarmorFlowText = "world_combat.move.acidarmor.text.flow";
     const acidarmorReformText = "world_combat.move.acidarmor.text.reform";
+    const acidarmorPoolGlide = "world_combat:acidarmor_pool_glide";
+    const acidarmorSlickGlide = "world_combat:acidarmor_slick_glide";
     /** 表现里的参考半径：`data.scale = 实际酸池半径 / 这个数`。 */
     const acidarmorReferenceRadius = 2.0;
 
@@ -30,6 +33,34 @@ namespace PokemonSkills {
             CombatStatus.inflict(world, actor, "poison");
         }
     });
+
+    /** 流身：真实载体窗口一开就把贴身滴液绑在它上面；载体被清除或到期时画面随之收束。 */
+    function acidarmorSlickMark(effect: CombatEffect): void {
+        const world = effect.world(), actor = effect.target(), body = world.observe(actor);
+        if (body === null) return;
+        let residue = 24;
+        try {
+            const values = String(actor.domain()) === "cobblemon" ? config(world, actor, "acidarmor") : skills.acidarmor.defaults;
+            residue = Math.max(20, Math.round(p("acidarmor", "residue", { world: world, actor: actor, detail: { values: values } })));
+        } catch (error) { }
+        WorldFeedback.onEffect(world, effect.id(), "acidarmor:slick:" + String(actor.ref()), acidarmorScene, 1,
+            body.position(), { moment: "slick", actor: String(actor.ref()), residue: residue, scale: 1 });
+    }
+
+    // 固定移速：酸池 +10%／流身 +20%，只按载体存在与否开关，不随防御等级（载体 amplifier）乘算。
+    MobEffects.fixedAttributes(acidarmorPoolGlide, acidarmorPoolEffect,
+        [{ id: "minecraft:generic.movement_speed", amount: 0.10, operation: "add_multiplied_total" }]);
+    MobEffects.fixedAttributes(acidarmorSlickGlide, acidarmorSlickEffect,
+        [{ id: "minecraft:generic.movement_speed", amount: 0.20, operation: "add_multiplied_total" }], acidarmorSlickMark);
+
+    /** 换形态：先结束旧形态的固定移速窗口，再移除它的载体，只收回本招这一层；
+     *  地面酸池是独立的 world_combat:field，按自己的寿命留在世上。 */
+    function acidarmorEndForm(world: CombatWorld, actor: CombatActor, effectId: string, glideId: string): void {
+        const windows = world.effects(actor, glideId);
+        for (let i = 0; i < windows.length; i++) world.operation(windows[i].id(), "world_combat:dispel", "{}");
+        const carrier = MobEffects.read(world, actor, effectId);
+        if (carrier) MobEffects.consume(world, actor, effectId);
+    }
 
     /** 液态让身体从束缚里滑脱：化掉身上的 rooted 与共享身份 partiallytrapped／trapped。 */
     function acidarmorSlip(world: CombatWorld, actor: CombatActor): number {
@@ -86,13 +117,16 @@ namespace PokemonSkills {
             const residue = Math.max(12, Math.round(p("acidarmor", "residue", action)));
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             const effectId = slick ? acidarmorSlickEffect : acidarmorPoolEffect, contribution = "world_combat:move/acidarmor";
+            // 换形态：先结束另一形态自身的载体与属性窗口，本招防御贡献随后原样落到新形态上。
+            acidarmorEndForm(world, actor, slick ? acidarmorPoolEffect : acidarmorSlickEffect,
+                slick ? acidarmorPoolGlide : acidarmorSlickGlide);
             const before = NativeEffects.effectiveStage(world, actor, "def"), previous = MobEffects.read(world, actor, effectId);
             const carrier = MobEffects.apply(world, actor, effectId, window, previous ? previous.amplifier() : 0);
             let levels = 0;
             if (carrier) {
                 NativeEffects.boostWindow(world, actor, { def: gift }, carrier.duration(), contribution, carrier, previous);
                 levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
-                // Preserve the native amplifier used by this form's movement attribute.
+                // 载体显示的等级跟着实际防御级数走；移速另由 fixedAttributes 固定，不受这里影响。
                 if (carrier.amplifier() !== levels) {
                     const shown = MobEffects.apply(world, actor, effectId, window, levels);
                     if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), contribution, shown, carrier);
@@ -104,15 +138,13 @@ namespace PokemonSkills {
                 poolRadius = Math.max(0.8, p("acidarmor", "poolRadius", action));
                 poolTicks = Math.max(80, Math.round(p("acidarmor", "poolTicks", action)));
                 scale = poolRadius / acidarmorReferenceRadius;
-                WorldEffects.field(world, acidarmorPoolField, feet, poolRadius, {}, poolTicks);
-                WorldFeedback.keep(world, "acidarmor:pool:" + String(actor.ref()), acidarmorScene, 1,
+                const field = WorldEffects.field(world, acidarmorPoolField, feet, poolRadius, {}, poolTicks);
+                // 池画面由真实 field 拥有：池开多久画面就留多久，提前收掉或自然到期一起结束。
+                if (field > 0) WorldFeedback.onEffect(world, field, "acidarmor:pool:" + String(actor.ref()), acidarmorScene, 1,
                     feet.plus(WorldCombat.point(0, 0.05, 0)),
-                    { moment: "pool", actor: String(actor.ref()), poolRadius: poolRadius, residue: residue, scale: scale },
-                    Math.min(poolTicks, 220));
-            } else {
-                WorldFeedback.keep(world, "acidarmor:slick:" + String(actor.ref()), acidarmorScene, 1, body.position(),
-                    { moment: "slick", actor: String(actor.ref()), residue: residue, scale: scale }, Math.min(window, 220));
+                    { moment: "pool", actor: String(actor.ref()), poolRadius: poolRadius, residue: residue, scale: scale });
             }
+            // 流身的滴液由 startup 载体经 fixedAttributes 窗口拥有，载体清除或到期即停，不再用独立计时。
             WorldFeedback.emit(world, acidarmorScene, 1, feet,
                 { moment: "flow", actor: String(actor.ref()), levels: levels, residue: residue, poolRadius: poolRadius,
                     freed: freed, slick: slick ? 1 : 0, scale: scale,
@@ -132,6 +164,8 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
         if (MobEffects.read(world, actor, id)) return;
+        // 换形态时另一形态仍在液态中：不发凝回，由新形态继续。
+        if (CombatStatus.has(world, actor, "acidarmor")) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, acidarmorScene, 1, body.position(), { moment: "reform", actor: String(actor.ref()) }, 26);

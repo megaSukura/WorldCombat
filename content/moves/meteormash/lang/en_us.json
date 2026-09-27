@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.meteormash.summary": "Charge into range and drive a meteor punch down: the foe struck head-on takes the heavy hit, other foes in the landing ring are shocked and shoved, and the ground is scorched into a small crater; the recoil may raise the user's Attack by one stage. Comet form charges farther, shakes wider and leaves a bigger crater; heavy-fist form hits harder and casts quicker.",
+  "worldcombat.skill.meteormash.summary": "Charge into range and drive a meteor punch down: the foe struck head-on takes the heavy hit, other visible foes in the landing ring are shocked and shoved, and a real block or the ground only throws chips off its surface; an empty punch never blasts open. The recoil may raise the user's Attack by one stage. Comet form charges farther and shakes wider; heavy-fist form hits harder and casts quicker.",
   "worldcombat.skill.meteormash.use.0": "Name one target at close range with a heavy punch",
   "worldcombat.skill.meteormash.use.1": "Shove the others crowding around the target",
-  "worldcombat.skill.meteormash.use.2": "Leave a scorched crater marking where the punch landed",
+  "worldcombat.skill.meteormash.use.2": "Throw up ground-material chips and a scorch mark at the real contact point",
   "worldcombat.skill.meteormash.description.0": "The meteor punch deals about %1$s physical damage head-on; the user first closes to one arm's length and then drives the punch down within a fixed total reach (approach plus fist no more than %2$s blocks), stopping at the first entity or block it meets.",
-  "worldcombat.skill.meteormash.description.1": "Other foes shaken within %2$s blocks of the landing point each take about %1$s physical damage and are shoved %3$s blocks.",
+  "worldcombat.skill.meteormash.description.1": "Only after a head-on hit (a real entity first contact that settles damage) do other foes shaken within %2$s blocks of the landing point each take about %1$s physical damage and get shoved %3$s blocks; an empty punch, a wall, a friendly or a refused hit triggers no shock ring.",
   "worldcombat.skill.meteormash.description.2": "After striking at least one enemy, it has a %1$s chance to raise the user's Attack by %2$s stage(s).",
   "worldcombat.skill.meteormash.description.3": "The comet form reaches farther and lands and shakes wider, at the cost of a lighter punch and a longer cooldown; the heavy-fist form punches harder and casts quicker. (Currently: %1$s)",
   "worldcombat.skill.meteormash.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

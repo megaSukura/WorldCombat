@@ -30,6 +30,8 @@
 namespace PokemonSkills {
     export const moonblastId = "moonblast";
     export const moonblastScene = "world_combat:move_moonblast";
+    /** 命中点自定义月牙轮廓与有限射线场景（客户端 WorldCombatClient.scene 注册，服务端按 id 触发）。 */
+    export const moonblastCrescentScene = "world_combat:move_moonblast_crescent";
     export const moonblastDropText = "world_combat.move.moonblast.text.drop";
     export const moonblastMissText = "world_combat.move.moonblast.text.miss";
 
@@ -116,7 +118,7 @@ namespace PokemonSkills {
             F.base(1),
             "特攻下降", {
                 unit: "级",
-                description: "被月华压住时目标特攻下降的能力等级；对宝可梦落到原生特攻等级，对其他战斗者落到攻击阶梯。"
+                description: "被月华压住时目标特攻下降的能力等级；对宝可梦落到原生特攻等级，对其他战斗者落到对应特攻的通用阶梯，只削法术输出、不降物攻。"
             }),
         /** 被夺光点：12 + 特攻偏移[−4,14]；夹 6..30。 */
         focusMotes: formula(

@@ -3,7 +3,9 @@
  *
  * 什么局面下出手：挂在共享的 control 位上；带压制的伙伴在没有攻击可用时用它。对还没被压住的目标出手
  * （读共享身份 quash），够不到就先交给共享接近逻辑走近。
- * 对手正冲着自己在打时 priority 抬到 70——这一下最值得用来打断它正在蓄的动作；否则只给 40。
+ * 时机：目标此刻确实在准备一个可中断的动作时 priority 抬到 80（这一下真能打断）；
+ *   attacking() 只表示它的仇恨目标，不当作“正在准备”，只给 55；其余 40。
+ * 目标已被压制（次数或减速还在）时不重放，把次数留给新目标。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("quash", {
@@ -23,7 +25,10 @@ namespace PokemonSkills {
             if (!target || CompanionBehavior.status(context, target, "quash")) return 0;
             var self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            return (target as any).attacking === self.ref ? 70 : 40;
+            // attacking() is only the target's aggro target; a real interruptible preparation is the strong cue.
+            const world = CompanionBehavior.world(context), opponent = world.actor(target.ref);
+            if (opponent !== null && LivingActions.preparing(world, opponent).length > 0) return 80;
+            return target.attacking === self.ref ? 55 : 40;
         }
     });
 

@@ -4,12 +4,12 @@
  * 原生事实：Ice／物理／威力 65／命中 95／PP 15／接触、咬击（bite）；两个独立掷签各 10%：冰冻与畏缩
  *   （Cobblemon 1.8，86 位学习者）。
  *
- * 翻译：把「用藏有冷气的牙齿咬住对手」落成**一口咬住、冷气慢慢渗进关节**——咬合本身不高，命中后寒气延迟一拍
- * 才在伤口里发作，掷出时把目标冻在原地（共享身份 world_combat:status/frozen，宝可梦同步为原生冰冻）。
- * 它的独有部分在**冷脆**：对已经冻住的目标再咬，冰壳让皮肉发脆，这一口会多结算一段 `shatter` 额外伤害——
+ * 翻译：把「用藏有冷气的牙齿咬住对手」落成**一口咬住、冷气当场渗进关节**——咬合本身不高，咬中当刻就掷一次
+ * 寒气把目标冻在原地（共享身份 world_combat:status/frozen，宝可梦同步为原生冰冻）。
+ * 它的独有部分在**冷脆**：对咬中前已经冻住的目标再咬，冰壳让皮肉发脆，这一口会多结算一段 `shatter` 额外伤害——
  * 因此它是本族里唯一"收冻结残局"的牙。咬实的那一下也有几率把目标咬懵（共享身份 world_combat:status/flinch）。
  *
- * 与同族分开：冰冻拳是拳、走"结霜 → 收霜冻结"两段；冰冻牙是牙，直冻并把冻住的目标咬碎，且冷气有渗入延迟。
+ * 与同族分开：冰冻拳是拳、走"结霜 → 收霜冻结"两段；冰冻牙是牙，直冻并把冻住的目标咬碎。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   fang         咬合威力：物攻定咬合力，特攻定寒气；深寒式把每一口摊薄。
@@ -18,7 +18,6 @@
  *   freezeChance 冰冻几率：特攻与等级决定寒气能不能冻住；深寒式更高。
  *   freezeTicks  冰冻时长：特攻与等级；深寒式更久。
  *   shatter      冷脆额外伤害：特攻派生，只对已冻结目标结算；深寒式更重。
- *   frostDelay   寒气渗入延迟：速度决定咬中到结冰之间隔多久。
  *   flinchChance 畏缩几率：速度派生；深寒式略降。
  *   flinchTicks  畏缩持续：固定 9 刻，深寒式 +2。
  *   shards       冰屑数：特攻派生，表现按它发射。
@@ -72,7 +71,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(30).times(0.002).clamp(0, 0.12))
                 .plus(F.when(F.pref("deep", text("worldcombat.skill.icefang.preference.deep")), F.const(0.12), F.const(0)))
                 .clamp(0.12, 0.62).round(3),
-            "冰冻几率", "冷气渗进伤口后把目标冻住的概率（原生 10%）；特攻越高、等级越高越容易冻实，深寒式再抬一档。"),
+            "冰冻几率", "咬中当刻把目标冻住的概率（原生 10%）；特攻越高、等级越高越容易冻实，深寒式再抬一档。"),
         /** 冰冻时长：90 + 特攻偏移[−14,50] + 等级偏移[0,35]；深寒 ×1.4；夹 40..200。 */
         freezeTicks: seconds(
             F.base(90).plus(F.stat("specialAttack").minus(60).times(0.4).clamp(-14, 50))
@@ -89,10 +88,6 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "对已经冻住的目标再咬时，冰壳让皮肉发脆而多结算的一段伤害；特攻派生，深寒式更重。只对被冻住的目标生效。"
             }),
-        /** 寒气渗入延迟：4 − 速度偏移[−2,1.5]；夹 2..7。 */
-        frostDelay: seconds(
-            F.base(4).minus(F.stat("speed").minus(55).times(0.02).clamp(-2, 1.5)).clamp(2, 7).round(0),
-            "寒气渗入延迟", "咬中到冷气发作、判定是否冻住之间隔的时间；速度越快渗得越快。"),
         /** 畏缩几率：0.18 + 速度偏移[−0.05,0.12]；深寒 ×0.85；夹 0.08..0.44。 */
         flinchChance: percent(
             F.base(0.18).plus(F.stat("speed").minus(55).times(0.0011).clamp(-0.05, 0.12))
@@ -143,7 +138,7 @@ namespace PokemonSkills {
 
     describe("icefang", [
         { key: "description.0", values: ["fang","grip"] },
-        { key: "description.1", values: ["freezeChance","freezeTicks","frostDelay"] },
+        { key: "description.1", values: ["freezeChance","freezeTicks"] },
         { key: "description.2", values: ["shatter"] },
         { key: "description.3", values: ["flinchChance","flinchTicks"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },

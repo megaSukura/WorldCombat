@@ -1,60 +1,76 @@
 /**
  * 泼冷水 / chillingwater —— 注册与动作。
  *
- * 核心念头：兜起一团接近冰点的水，迎头泼在对手身上。水浇灭了它的力气（攻击下降），把它浇得湿透
- *   （借共享身份 world_combat:status/soaked），落点地上留下湿冷的水渍。已经湿透的目标被这一泼激得更冷：
- *   伤害更高、掉攻多一级——共享身份回流进这招自己的公式。
+ * 核心念头：兜起一团接近冰点的水，迎头泼在对手身上。水浇灭了它的力气（攻击下降，按实际变化结算），把它浇得湿透
+ *   （借共享身份 world_combat:status/soaked）。已经湿透的目标被这一泼激得更冷：伤害更高、掉攻多一级——
+ *   共享身份回流进这招自己的公式。
  *
  * 自由瞄准（kind: "aim"）：可指向任意阵营实体或一个世界点，碰墙即停。谁实际碰到水团，就按谁当刻的
- *   湿身状态结算这一泼；命中的伤害被拒绝（相性免疫、权限、已被挡下）时不降攻、不加湿身，只当水花落地。
+ *   湿身状态结算这一泼；命中的伤害被拒绝（相性免疫、权限、已被挡下）时不降攻、只当水花落地。
  *
  * 三幕：
  *   起（windup，提交前）：水在头顶兜成一颗冷冽的水团（`action.present` 预告）。
- *   泼（throw → drench）：提交后水团飞向准线；飞行表现绑在真实弹体 id 上，与弹体同行。
- *     命中活物时以**该受击者**为上下文求威力／掉攻级数，实际伤害成立才降攻并把 soaked 挂上去。
- *   渍（glaze）：冰面形态下，按原生 `terrainResult` 真正放下的格结冰（租借，到期原方块回来）；
- *     没放下就不显示冰面、不报成功。到程落空时水花散在弹体真正的末端，不落在选中目标当前位置。
+ *   泼（throw → drench / splash）：提交后水团飞向准线；飞行表现绑在真实弹体 id 上，与弹体同行。
+ *     命中活物时以**该受击者**为上下文求威力／掉攻级数，实际伤害成立才降攻；湿身由一个**属于这次施放的托管效果**
+ *     挂上并维持画面，效果随真实的 soaked 载体存续——载体被驱散或提前清除时，画面同刻收束，不留残留。
+ *   渍（splash）：到程落空时水花散在弹体真正的末端（`world.projectilePosition`），不落在选中目标当前位置。
  *
  * 与同族分开：水之波动是沿直线荡开的水环、万有引力从头顶落下苹果；泼冷水是**单体、必然掉攻、留下湿身**的一泼。
- * 配置 `glaze`（泼水成冰）由公式改威力／射程／湿身、由 resolve 改时序，并在落点留下真冰。
  */
 namespace PokemonSkills {
     const chillingwaterScene = "world_combat:move_chillingwater";
     const chillingwaterSoaked = "world_combat:chillingwater_soaked";
+    const chillingwaterSoakEffect = "world_combat:chillingwater_soak";
     const chillingwaterText = "world_combat.move.chillingwater.text.drench";
-    const chillingwaterGlazeText = "world_combat.move.chillingwater.text.glaze";
+    const chillingwaterSoakText = "world_combat.move.chillingwater.text.soakonly";
 
-    /** 在落点铺一圈冰：逐列找地表，把表层换成冰（租借，到期原方块回来）；返回 terrainResult 真正放下的格数。 */
-    function chillingwaterGlaze(world: CombatWorld, centre: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [], r = Math.ceil(radius);
-        const baseX = Math.floor(centre.x()), baseY = Math.floor(centre.y()), baseZ = Math.floor(centre.z());
-        for (let dx = -r; dx <= r; dx++) for (let dz = -r; dz <= r; dz++) {
-            if (dx * dx + dz * dz > radius * radius) continue;
-            const x = baseX + dx, z = baseZ + dz;
-            for (let dy = 2; dy >= -3; dy--) {
-                const ground = world.block(WorldCombat.point(x, baseY + dy, z));
-                if (ground === null) break;
-                const id = String(ground.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                if (id !== "minecraft:ice" && id !== "minecraft:frosted_ice") cells.push({ x: x, y: baseY + dy, z: z, block: "minecraft:ice" });
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try {
-            const receipt = JSON.parse(String(world.terrainResult(
-                JSON.stringify({ cells: cells, replace: true, linger: true, bestEffort: true }), Math.max(40, Math.round(ticks)))));
-            return Array.isArray(receipt.placed) ? receipt.placed.length : 0;
-        } catch (error) { return 0; }
+    /** 湿身画面绑在这次施放自己的托管效果上：载体被清除/刷新时，托管效果结束，画面同刻收回。 */
+    function chillingwaterSoakVisual(effect: CombatEffect, drops: number, stages: number, bonus: number, scale: number, intensity: number): void {
+        const world = effect.world(), victim = effect.target();
+        const body = world.observe(victim);
+        if (body === null) return;
+        WorldFeedback.onEffect(world, effect.id(), "chillingwater:soak:" + String(victim.ref()), chillingwaterScene, 1, body.position(),
+            { moment: "soak", target: String(victim.ref()), drops: drops, stages: stages, bonus: bonus, scale: scale, intensity: intensity });
     }
+
+    WorldCombat.effect(chillingwaterSoakEffect, 1, 400, "actor", function (json) {
+        const value = JSON.parse(json);
+        ["ticks", "drops", "stages", "bonus", "scale", "intensity"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid chillingwater soak state");
+        });
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+
+    WorldCombat.effectHandler(chillingwaterSoakEffect, "start", function (effect) {
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(victim)) { effect.end(); return; }
+        const carrier = MobEffects.apply(world, victim, chillingwaterSoaked, data.ticks, 0);
+        if (carrier === null) { effect.end(); return; }
+        data.anchor = MobEffects.anchor(carrier);
+        effect.state(JSON.stringify(data));
+        chillingwaterSoakVisual(effect, data.drops, data.stages, data.bonus, data.scale, data.intensity);
+        effect.schedule("hold", "hold", 2, "{}");
+    });
+
+    WorldCombat.effectHandler(chillingwaterSoakEffect, "hold", function (effect) {
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(victim)) { effect.end(); return; }
+        const carrier = MobEffects.read(world, victim, chillingwaterSoaked);
+        // 载体被驱散、被替换（新 revision）或提前清除：这次施放的画面收束，不再跟着一个失效锚。
+        if (carrier === null || !data.anchor || String(carrier.key()) !== String(data.anchor.key)) { effect.end(); return; }
+        effect.remaining(carrier.duration() < 0 ? 400 : Math.max(1, Math.min(400, carrier.duration())));
+        chillingwaterSoakVisual(effect, data.drops, data.stages, data.bonus, data.scale, data.intensity);
+        effect.schedule("hold", "hold", 2, "{}");
+    });
+
+    WorldCombat.effectHandler(chillingwaterSoakEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
         id: "chillingwater",
         cooldownParameter: "wait",
         name: "Chilling Water",
-        description: "兜起一团接近冰点的水迎头泼在对手身上：浇灭它的力气（攻击下降）、把它浇得湿透，落点留下湿冷水渍；冰面形态下还会在落点结起一圈会打滑的冰，但单发更轻、出手更慢。",
-        uses: ["压低对手的物理输出", "把目标浇湿，让后续水冰招能利用这层湿身", "在狭窄地面上结一圈冰，逼对手走位"],
+        description: "兜起一团接近冰点的水迎头泼在对手身上：浇灭它的力气（攻击下降）、把它浇得湿透，落点留下湿冷水渍。已经湿透的目标会被激得更冷，这一泼伤害更高、掉攻多一级。",
+        uses: ["压低对手的物理输出", "把目标浇湿，让后续水冰招能利用这层湿身"],
         kind: "aim",
         range: 11,
         maxRange: 16,
@@ -63,11 +79,11 @@ namespace PokemonSkills {
         recover: 8,
         cooldown: 26,
         style: "chillwater",
-        defaults: { glaze: false, ai: { maxChase: 14 } },
+        defaults: { ai: { maxChase: 14 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: Math.max(0.6, p("chillingwater", "radius", pokemon)), geometry: "circle", style: "chillwater",
-                color: 0x6FC3E8, label: config && config.glaze === true ? "泼水成冰" : "泼冷水" };
+                color: 0x6FC3E8, label: "泼冷水" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["chillingwater"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -81,19 +97,16 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("chillingwater:gather", chillingwaterScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", glaze: config && config.glaze === true }));
+                JSON.stringify({ moment: "windup" }));
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
+            const scenes = WorldFeedback.actionScenes(chillingwaterScene);
             const origin = action.origin();
             const speed = p("chillingwater", "velocity", action);
             const radius = p("chillingwater", "radius", action);
             const chill = Math.max(60, Math.round(p("chillingwater", "chillTicks", action)));
             const drops = Math.max(8, Math.round(p("chillingwater", "drops", action)));
-            const puddleRadius = Math.max(1.0, p("chillingwater", "puddleRadius", action));
-            const puddleTicks = Math.max(40, Math.round(p("chillingwater", "puddleTicks", action)));
-            const glaze = !!(config && config.glaze);
             const scale = Math.max(0.6, Math.min(2.2, radius / 0.22));
             // 视觉强度用无目标的中性上下文，避免把选中目标的湿身状态误当成实际命中结果。
             const baseline = Math.max(0.5, Math.min(2, p("chillingwater", "drench", withTarget(factContext(action), null)) / 50));
@@ -102,24 +115,11 @@ namespace PokemonSkills {
             const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
             let struck = false, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-
-            function settle(current: CombatAction, point: CombatPoint): void {
-                const scope = current.world();
-                if (glaze) {
-                    const placed = chillingwaterGlaze(scope, point, puddleRadius, puddleTicks);
-                    if (placed > 0) {
-                        WorldFeedback.emit(scope, chillingwaterScene, 1, point,
-                            { moment: "glaze", radius: puddleRadius, cells: placed, scale: Math.max(0.6, Math.min(1.8, puddleRadius / 1.6)) }, 26);
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), chillingwaterGlazeText, [], 26);
-                        scope.sound("minecraft:block.glass.place", point, 14, "{}");
-                    }
-                }
-                finish(current);
-            }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             sound(action, "cobblemon:move.watergun.actor");
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: range, radius: radius, lifetime: 180, direction: direction,
                 appearance: { sprite: "cobblemon:generic/water/waterjet", tint: 0x8FD6F5, glow: true, scale: Math.max(0.7, Math.min(1.5, scale)) },
                 impact: function (current: CombatAction, hit: CombatImpact) {
@@ -134,42 +134,43 @@ namespace PokemonSkills {
                         const landed = impact(current, hit, "chillingwater", power, { damage: damageSpec("chillingwater", "drench") });
                         const intensity = Math.max(0.5, Math.min(2, power / 50));
                         if (landed) {
-                            NativeEffects.boost(scope, victim, "atk", -stages);
-                            MobEffects.apply(scope, victim, chillingwaterSoaked, chill, 0);
-                            const at = scope.observe(victim);
-                            WorldFeedback.keep(scope, "chillingwater:soak:" + String(victim.ref()), chillingwaterScene, 1,
-                                at !== null ? at.position() : point,
-                                { moment: "soak", target: String(victim.ref()), drops: drops, stages: stages, bonus: soaked,
-                                    scale: scale, intensity: intensity }, Math.min(chill, 200));
+                            // 降攻反馈取真实变化：免疫或已到底时 boost 返回 0，就不再谎报掉攻。
+                            const drop = NativeEffects.boost(scope, victim, "atk", -stages);
+                            const actual = Math.abs(drop);
+                            scope.effect(chillingwaterSoakEffect, victim,
+                                JSON.stringify({ ticks: chill, drops: drops, stages: Math.max(1, actual), bonus: soaked, scale: scale, intensity: intensity }), chill);
                             WorldFeedback.emit(scope, chillingwaterScene, 1, point,
                                 { moment: "drench", target: String(victim.ref()), drops: drops, stages: stages, bonus: soaked,
                                     scale: scale, intensity: intensity }, 24);
-                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), chillingwaterText, [stages], 30);
+                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)),
+                                actual > 0 ? chillingwaterText : chillingwaterSoakText, actual > 0 ? [actual] : [], 30);
                             scope.sound("cobblemon:impact.water", point, 16, "{}");
                         } else {
                             // 伤害被拒绝：只当冷水打在身上，不降攻、不加湿身、不报成功。
                             WorldFeedback.emit(scope, chillingwaterScene, 1, point,
-                                { moment: "drench", target: String(victim.ref()), drops: drops, bonus: 0, scale: scale, intensity: intensity }, 22);
+                                { moment: "splash", drops: drops, bonus: 0, scale: scale, intensity: intensity }, 22);
                             scope.sound("minecraft:entity.generic.splash", point, 14, "{}");
                         }
                     } else {
                         WorldFeedback.emit(scope, chillingwaterScene, 1, point,
-                            { moment: "drench", drops: drops, bonus: 0, scale: scale, intensity: baseline }, 22);
+                            { moment: "splash", drops: drops, bonus: 0, scale: scale, intensity: baseline }, 22);
                         scope.sound("minecraft:entity.generic.splash", point, 14, "{}");
                     }
-                    settle(current, point);
+                    finish(current);
                 }
             }, function (current: CombatAction) {
                 if (!struck) {
                     // 到程落空：水花散在弹体沿准线真正走到的末端，而不是选中目标当前位置。
-                    WorldFeedback.emit(current.world(), chillingwaterScene, 1, origin.plus(direction.scale(range)),
-                        { moment: "drench", drops: drops, bonus: 0, scale: scale, intensity: baseline }, 20);
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null)
+                        WorldFeedback.emit(current.world(), chillingwaterScene, 1, end,
+                            { moment: "splash", drops: drops, bonus: 0, scale: scale, intensity: baseline }, 20);
                 }
                 finish(current);
             });
-            // 飞行表现绑真实弹体 id，与弹体同行。
-            WorldFeedback.keep(world, "chillingwater:throw:" + action.id(), chillingwaterScene, 1, origin,
-                { moment: "throw", projectile: flight, drops: drops, scale: scale, intensity: baseline }, 120);
+            // 飞行表现绑真实弹体 id，与弹体同行；动作收束时同刻停掉。
+            scenes.show(action, "throw", origin,
+                { moment: "throw", projectile: flight, drops: drops, scale: scale, intensity: baseline });
         }
     });
 }

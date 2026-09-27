@@ -20,5 +20,6 @@
   "worldcombat.skill.weatherball.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.weatherball.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to throw; when off it stays put.",
   "world_combat.move.weatherball.text.sky": "Weather Ball: %1$s",
+  "world_combat.move.weatherball.text.immune": "Weather Ball (%1$s) had no effect",
   "worldcombat.skill.weatherball.description.flight": "The ball flies at about %1$s blocks per tick with a hit radius of about %2$s blocks; with Pierce on it passes through up to 2 targets at x0.75 power each."
 }

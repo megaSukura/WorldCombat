@@ -22,6 +22,14 @@ namespace PokemonSkills {
         return count;
     }
 
+    /** 目标脚下已经压着自己留下的贝壳碎片：同一片地再斩能磨利，值得优先。 */
+    function ceaselessedgeStanding(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const access = CompanionBehavior.world(context), own = String(CompanionBehavior.source(context).ref);
+        const found = WorldEffects.areas(access, ceaselessedgeRule, CompanionBehavior.point(target.point), 1.6);
+        for (let index = 0; index < found.length; index++) if (found[index].source === own) return true;
+        return false;
+    }
+
     CompanionBehavior.registerUse(ceaselessedgeId, {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -42,6 +50,7 @@ namespace PokemonSkills {
             if (gap > CompanionBehavior.ai<number>(capability, "maxChase", 6)) return 0;
             let value = gap <= capability.data.range ? 22 : 4;
             if (CompanionBehavior.ai<boolean>(capability, "preferCluster", true) && ceaselessedgeCluster(context, target) >= 1) value += 12;
+            if (ceaselessedgeStanding(context, target)) value += 6;
             return value;
         }
     });

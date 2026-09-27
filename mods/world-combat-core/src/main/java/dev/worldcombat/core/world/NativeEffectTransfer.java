@@ -28,15 +28,16 @@ public final class NativeEffectTransfer {
         var current = entity.getEffect(id);
         return current == previous && (current == null || data(current).equals(snapshot));
     }
-    private record Stored(MobEffectInstance instance, JsonElement data) {}
+    private record Stored(MobEffectInstance instance, JsonElement data, String key) {}
     private static Map<Holder<MobEffect>,Stored> snapshot(LivingEntity entity) {
         var result=new HashMap<Holder<MobEffect>,Stored>();
-        entity.getActiveEffectsMap().forEach((id,effect)->result.put(id,new Stored(effect,data(effect))));
+        entity.getActiveEffectsMap().forEach((id,effect)->result.put(id,new Stored(effect,data(effect),MinecraftEffectState.capture(entity,effect).key())));
         return result;
     }
     private static boolean unchanged(LivingEntity entity, Map<Holder<MobEffect>,Stored> state) {
         if(entity.getActiveEffectsMap().size()!=state.size())return false;
-        for(var entry:state.entrySet())if(!same(entity,entry.getKey(),entry.getValue().instance,entry.getValue().data))return false;
+        for(var entry:state.entrySet())if(!same(entity,entry.getKey(),entry.getValue().instance,entry.getValue().data)
+            ||!MinecraftEffectState.matches(entity,entry.getValue().instance,entry.getValue().key))return false;
         return true;
     }
     private static boolean dominates(MobEffectInstance old, MobEffectInstance moving) {
@@ -71,6 +72,8 @@ public final class NativeEffectTransfer {
         if(!unchanged(entity,before)||combat.resolve(operator)!=caller||combat.resolve(target)!=entity
             ||!caller.isAlive()||!entity.isAlive()||caller.level()!=entity.level()||caller.distanceToSqr(entity)>64*64)return false;
         entity.getActiveEffectsMap().put(type,next);
+        NativeEffectFacts.removed(entity,old,"removed");
+        NativeEffectFacts.added(entity,next,old);
         PostCommitNotifications.run(combat,"world_combat_core:native_effect_replace",() -> installed(combat,target,entity,type,next),
             () -> { if(old!=null)((NativeEffectAccess)entity).worldcombat$effectRemoved(old); },
             () -> ((NativeEffectAccess)entity).worldcombat$effectAdded(next,caller),
@@ -119,6 +122,8 @@ public final class NativeEffectTransfer {
             ||caller.distanceToSqr(sender)>64*64||caller.distanceToSqr(receiver)>64*64) return false;
         var next=merged(old,incoming);
         sender.getActiveEffectsMap().remove(type); receiver.getActiveEffectsMap().put(targetType,next);
+        NativeEffectFacts.removed(sender,original,"removed");
+        NativeEffectFacts.added(receiver,next,old);
         // No user/mod callback runs between these two storage writes.
         if(old==null) PostCommitNotifications.run(combat,"world_combat_core:native_effect_transfer",() -> installed(combat,to,receiver,targetType,next),
             () -> ((NativeEffectAccess)sender).worldcombat$effectRemoved(original),
@@ -129,5 +134,72 @@ public final class NativeEffectTransfer {
             () -> ((NativeEffectAccess)receiver).worldcombat$effectUpdated(next,true,caller),
             () -> next.onEffectStarted(receiver));
         return true;
+    }
+    private record Change(Holder<MobEffect> from, MobEffectInstance original, Holder<MobEffect> to, MobEffectInstance incoming) {}
+    /** One same-body transaction over an original snapshot. The caller chooses the id mapping; every native
+     * layer keeps its remaining clock, flags and cures. All selected sources leave the candidate map before
+     * any destination is merged, so inverse pairs cannot consume one another's newly produced state. */
+    public static int transform(MinecraftCombat combat, ActorHandle operator, ActorHandle target, String json, ExecutionOrigin origin) {
+        combat.checkThread();
+        var caller=combat.resolve(operator);var entity=combat.resolve(target);
+        if(caller==null||entity==null||caller.level()!=entity.level()||caller.distanceToSqr(entity)>64*64)return 0;
+        var request=JsonParser.parseString(json).getAsJsonObject();
+        if(!request.keySet().equals(Set.of("changes")))throw new IllegalArgumentException("Expected effect transformation changes");
+        var before=snapshot(entity);var changes=new ArrayList<Change>();var sources=new HashSet<Holder<MobEffect>>();
+        for(var element:request.getAsJsonArray("changes")) {
+            var value=element.getAsJsonObject();
+            if(!value.keySet().equals(Set.of("id","key","to")))throw new IllegalArgumentException("Expected source id, key and destination id");
+            var from=BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.parse(value.get("id").getAsString())).orElse(null);
+            var to=BuiltInRegistries.MOB_EFFECT.getHolder(ResourceLocation.parse(value.get("to").getAsString())).orElse(null);
+            if(from==null||to==null)return 0;
+            if(from.equals(to)||!sources.add(from))throw new IllegalArgumentException("Transformation sources must be distinct and change id");
+            var old=before.get(from);
+            if(old==null||!MinecraftEffectState.matches(entity,old.instance,value.get("key").getAsString()))return 0;
+            var converted=old.data.deepCopy().getAsJsonObject();
+            converted.addProperty("id",BuiltInRegistries.MOB_EFFECT.getKey(to.value()).toString());
+            var incoming=MobEffectInstance.CODEC.parse(JsonOps.INSTANCE,converted).getOrThrow();
+            changes.add(new Change(from,old.instance,to,incoming));
+        }
+        if(changes.isEmpty())return 0;
+        var candidate=new HashMap<Holder<MobEffect>,MobEffectInstance>();
+        before.forEach((id,stored)->{if(!sources.contains(id))candidate.put(id,stored.instance);});
+        var outputs=new LinkedHashMap<Holder<MobEffect>,MobEffectInstance>();
+        for(var change:changes) {
+            var old=candidate.get(change.to);
+            if(dominates(old,change.incoming))return 0;
+            var next=merged(old,change.incoming);candidate.put(change.to,next);outputs.put(change.to,next);
+        }
+        for(var change:changes) {
+            if(EventHooks.onEffectRemoved(entity,change.from,null)||!unchanged(entity,before))return 0;
+        }
+        for(var entry:outputs.entrySet()) {
+            var next=entry.getValue();
+            if(!NativeMobEffectGate.permits(entity,next,caller,origin)||!unchanged(entity,before))return 0;
+            var old=before.get(entry.getKey());
+            NeoForge.EVENT_BUS.post(new MobEffectEvent.Added(entity,old==null?null:old.instance,next,caller));
+            if(!unchanged(entity,before))return 0;
+        }
+        if(combat.resolve(operator)!=caller||combat.resolve(target)!=entity||!caller.isAlive()||!entity.isAlive()
+            ||caller.level()!=entity.level()||caller.distanceToSqr(entity)>64*64)return 0;
+        for(var change:changes)entity.getActiveEffectsMap().remove(change.from);
+        outputs.forEach((id,next)->entity.getActiveEffectsMap().put(id,next));
+        // Storage is committed before revision changes, queued script facts, attributes or Mod callbacks.
+        for(var change:changes)NativeEffectFacts.removed(entity,change.original,"removed");
+        outputs.forEach((id,next)->NativeEffectFacts.added(entity,next,before.containsKey(id)?before.get(id).instance:null));
+        for(var change:changes) {
+            var expected=outputs.get(change.from);
+            PostCommitNotifications.run(combat,"world_combat_core:native_effect_transform",
+                ()->installed(combat,target,entity,change.from,expected),
+                ()->((NativeEffectAccess)entity).worldcombat$effectRemoved(change.original));
+        }
+        outputs.forEach((id,next)->{
+            boolean fresh=sources.contains(id)||!before.containsKey(id);
+            if(fresh)PostCommitNotifications.run(combat,"world_combat_core:native_effect_transform",()->installed(combat,target,entity,id,next),
+                ()->((NativeEffectAccess)entity).worldcombat$effectAdded(next,caller),
+                ()->next.onEffectAdded(entity),()->next.onEffectStarted(entity));
+            else PostCommitNotifications.run(combat,"world_combat_core:native_effect_transform",()->installed(combat,target,entity,id,next),
+                ()->((NativeEffectAccess)entity).worldcombat$effectUpdated(next,true,caller),()->next.onEffectStarted(entity));
+        });
+        return changes.size();
     }
 }

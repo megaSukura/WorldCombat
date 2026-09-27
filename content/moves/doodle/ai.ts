@@ -11,23 +11,26 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.focus !== target.ref && distance(self.point, target.point) > ai<number>(item, "maxChase", 15)) return false;
         if (!world(context).clear(point(self.point), point(target.point))) return false;
-        if (domain(context, target) !== "cobblemon") {
-            if (status(context, self, "doodle")) return false;
-            const access = world(context), a = access.actor(self.ref), b = access.actor(target.ref);
-            if (!a || !b) return false;
-            const values = PokemonSkills.copiedNativeTrait(access, b);
-            return Object.keys(values).some(id => { const own = access.attributeValue(a, id); return own !== null && values[id] > own.value() + 0.0001; });
+        const access = world(context), actor = access.actor(self.ref), sample = access.actor(target.ref);
+        if (!actor || !sample) return false;
+        const body = access.observe(actor); if (!body) return false;
+        const params = { world: access, actor: actor, skill: PokemonSkills.skills.doodle, detail: { values: item.data.config } };
+        const native = domain(context, target) !== "cobblemon";
+        const recipients = PokemonSkills.doodleRecipients(access, actor, body.position(),
+            PokemonSkills.p("doodle", "canvas", params), Math.round(PokemonSkills.p("doodle", "squad", params)), native, sample);
+        if (!recipients.length) return false;
+        if (native) {
+            const values = PokemonSkills.copiedNativeTrait(access, sample);
+            return recipients.every(recipient => Object.keys(values).every(id => {
+                const own = access.attributeValue(recipient, id);
+                return own !== null && values[id] > own.value() + .0001;
+            }));
         }
-        const theirs = fact<string>(context, "world_combat:doodle-ability", target);
-        if (theirs === null || !PokemonSkills.doodleCopyable(theirs)) return false;
-        if (fact<string>(context, "world_combat:doodle-ability", self) !== theirs) return true;
-        const nearby = (context.facts.nearby as Entity[]) || [];
-        for (let index = 0; index < nearby.length; index++) {
-            const other = nearby[index];
-            if (!other.friendly || other.health <= 0) continue;
-            if (fact<string>(context, "world_combat:doodle-ability", other) !== theirs) return true;
-        }
-        return false;
+        const theirs = PokemonSkills.doodleAbility(access, sample);
+        const liabilities = ["truant", "slowstart", "defeatist"];
+        if (!PokemonSkills.doodleCopyable(theirs) || liabilities.indexOf(theirs) >= 0) return false;
+        // 同时被覆盖的每一人都要有可确认的负担可除；未知特性之间的取舍留给玩家点选。
+        return recipients.every(recipient => liabilities.indexOf(PokemonSkills.doodleAbility(access, recipient)) >= 0);
     }
 
     registerUse("doodle", {

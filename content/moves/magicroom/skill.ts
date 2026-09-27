@@ -13,7 +13,7 @@ namespace PokemonSkills {
         id: magicRoomId,
         cooldownParameter: "recharge",
         name: "魔法空间",
-        description: "在选定的地面撑开一片静默空间：站在里面的活体，装备提供的属性增益被暂停，宝可梦的携带物效果被封住。装备本身与附魔不会丢失，对双方一视同仁，走出去立刻恢复；第三方自定义槽位与其他模组的主动能力不受影响。",
+        description: "在选定的地面撑开一片静默空间：站在里面的活体，装备提供的属性效果（无论增减）被暂停，宝可梦的携带物效果被封住。装备本身与附魔不会丢失，对双方一视同仁，走出去立刻恢复；第三方自定义槽位与其他模组的主动能力不受影响。",
         uses: ["废掉对手依赖道具的套路", "在道具交换前先让道具失效", "让己方不靠道具的战力占便宜"],
         kind: "point",
         range: 12,
@@ -38,9 +38,14 @@ namespace PokemonSkills {
                 range: p(magicRoomId, "reach", context)
             };
         },
+        ready: action => SurfacePaths.support(action.sense(), action.targetPosition(), 2, 6) ? "" : "no-support",
         windup: function (action, config, prepare) {
-            action.present("world_combat:move_magicroom:windup", magicRoomScene, 1, action.targetPosition(),
+            const ground = SurfacePaths.support(action.sense(), action.targetPosition(), 2, 6);
+            if (!ground) return prepare;
+            action.present("world_combat:move_magicroom:windup", magicRoomScene, 1, ground,
                 JSON.stringify({ moment: "windup", radius: p(magicRoomId, "gagRadius", action), long: config.hush === 1 ? 1 : 0 }));
+            action.present("world_combat:move_magicroom:bounds", magicRoomGridScene, 1, ground,
+                JSON.stringify({ radius: p(magicRoomId, "gagRadius", action), preview: true }));
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -48,7 +53,8 @@ namespace PokemonSkills {
                 color: 0xC8D0E0, label: config && config.hush === 1 ? "长默空间" : "快默空间" };
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), point = action.targetPosition();
+            const world = action.world(), point = SurfacePaths.support(world, action.targetPosition(), 2, 6);
+            if (!point) { done(action); return; }
             const ticks = Math.max(80, Math.round(p(magicRoomId, "gagTicks", action)));
             const radius = p(magicRoomId, "gagRadius", action);
             const density = Math.round(p(magicRoomId, "density", action));

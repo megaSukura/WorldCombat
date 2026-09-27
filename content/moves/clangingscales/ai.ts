@@ -1,7 +1,7 @@
 /**
  * 鳞片噪音 / clangingscales 的伙伴 AI 用途。
  *
- * 什么局面下出手：以自身为中心、空中地面都震的一次性巨响。`ready` 要求身周**真实波及半径 `ringRadius`**
+ * 什么局面下出手：以自身为中心、空中地面都震的一次性巨响。`ready` 要求身周**本个体实际的波及半径 `ringRadius`**
  *   内至少站着 `ai.minFoes`（默认 2）个可见、敌对、高度在带内且与自身通视的敌人——它起手长、会自降防御，
  *   是用来一次震开一圈的，只对一个目标放不划算，也不会让圈外/墙后的敌人凑数。`ai.maxChase` 只是考虑距离。
  * 对谁出手：目标是圈内威胁；不可见、友方或已倒下的不接受。
@@ -12,7 +12,12 @@ namespace PokemonSkills {
     function clangingscalesCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
         const world = CompanionBehavior.world(context);
-        const radius = item.data.range;
+        let radius = typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range : 4.6;
+        // 读本个体当前实际公式，而不是固定设计值：体型/等级/配置都反映在同一半径上。
+        try {
+            radius = Math.max(3.0, p("clangingscales", "ringRadius",
+                { world: world, actor: world.source(), detail: { values: item.data.config } }));
+        } catch (error) { }
         const from = CompanionBehavior.point(self.point);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
@@ -62,9 +67,6 @@ namespace PokemonSkills {
     });
 
     addPreferences("clangingscales", {}, [
-        field(pathOf("echo"), "回响式", "boolean", {
-            help: "开启：主震后隔一小段再荡一圈约 0.8 倍半径、45% 威力的二段声波，覆盖走出去的人；代价是自身防御多降一级、起手 +4 刻、收招 +4 刻、冷却 +8 刻。关闭（单响式）：一次干净利落的巨响，只降原生一级、出手更快。"
-        }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 2, max: 16, step: 1,
             help: "伙伴只在威胁离自己这么远以内时才考虑鳞片噪音；调小只在贴身震，调大愿意先追进去。"

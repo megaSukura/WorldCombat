@@ -25,6 +25,8 @@
   "worldcombat.skill.takedown.preference.runup.help": "出手前的助跑距离。越长撞劲、冲程与自己被弹回的距离越高，但反作用力与起手也一起上去；0 是贴脸就撞，出手最快、反伤最轻。",
   "worldcombat.skill.takedown.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.takedown.preference.ai.maxChase.help": "超过这个距离就不主动猛撞，先走近。越大越早发起，也越容易冲空。",
+  "worldcombat.skill.takedown.preference.ai.minHealth": "保留生命",
+  "worldcombat.skill.takedown.preference.ai.minHealth.help": "自身生命低于这个比例时不再主动猛撞（除非对手已残且自己血量仍高于对方）。越高越珍惜自己，也越少抢收残血。",
   "worldcombat.skill.takedown.preference.ai.preferWeak": "优先残血",
   "worldcombat.skill.takedown.preference.ai.preferWeak.help": "开启：对手生命不高于 35% 时优先用猛撞补刀；关闭：只按共享顺序与其它候选竞价。",
   "world_combat.move.takedown.text.hit": "猛撞",

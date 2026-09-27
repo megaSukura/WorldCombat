@@ -34,5 +34,5 @@
   "world_combat.move.wildcharge.text.recoil": "回路反噬",
   "world_combat.move.wildcharge.text.shock": "灌入麻痹",
   "world_combat.move.wildcharge.text.leak": "湿身漏电",
-  "worldcombat.skill.wildcharge.description.2": "只结算最先撞上的一个目标。冲到底、撞墙或被挡住而没撞到人时，只就地（或墙前）放电、不自伤。目标湿透时这招的威力更高，且那次传导必然灌入麻痹；施放者自己湿透时起冲就在脚下漏电，威力打折、反噬更重。"
+  "worldcombat.skill.wildcharge.description.2": "只结算最先撞上的一个目标；撞到友方或伤害被拒时只在接触处轻接触，不冒充命中，只有真正灌入麻痹才有强导电表现。冲到底、撞墙或被挡住而没撞到人时，只就地（或墙前）放电、不自伤。目标湿透时这招的威力更高，且那次传导必然灌入麻痹；施放者自己湿透时起冲就在脚下漏电（泄散警示），威力打折、反噬更重。"
 }

@@ -6,10 +6,12 @@
  * 色相家族：冷钢灰蓝（0xB8C4D6）与近白高光（0xEDF2FA）为主，中性尘（tinydust）只做余韵。
  * 拍子：起（windup 收翼聚光）→ 展（unfold 两翼展开）→ 掠（glide 滑行残影）→ 缘（wing 两条真实翼缘）
  *   → 击（hit 钢羽火星）→ 挡（wall 翼尖撞墙）→ 磨（harden 升环）→ 空（miss 散羽）。
- * 范围：`wing` 的折线顶点就是服务端当刻一次 `trace` 的肩点与真实首碰点，画到哪就判到哪；`body` 跟随施法者真实位置。
+ * 范围：`wing` 的折线顶点就是服务端当刻一次 `trace` 的肩点与真实首碰点，画到哪就判到哪；左、右两翼各用
+ *   `wingL`/`wingR` 独立 key 绘制，正前方两条翼缘之间的空隙自然可读；`body` 跟随施法者真实位置。
  * 运动：翼缘沿 `data.path` 铺设（`polyline` 在整条边上采样），墙/实体处收束；钢羽被气流带起后受重力下落。
- * 数：`data.feathers`（防御与速度派生）绑定钢羽与火星的数量，`data.scale`（翼缘长度派生）缩放尺寸，
- *   `data.intensity`（本次威力比例）缩放发射量，`data.stages`（实际升防级数）绑定升防光环的数量。
+ * 数：`data.feathers`（防御与速度派生）绑定钢羽与火星的数量，`data.edgeRadius`（翼缘接触半径）绑定翼刃厚度，
+ *   `data.scale`（翼缘长度派生）缩放尺寸，`data.intensity`（本次威力比例）缩放发射量，
+ *   `data.stages`（实际升防级数）绑定升防光环的数量。
  */
 
 const SteelwingDefinition: ParticleDefinition = {
@@ -91,7 +93,7 @@ const SteelwingDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/cut",
                     rate: { data: "feathers", fallback: 12 }, shape: { kind: "polyline" },
                     direction: "away", speed: [0.05, 0.2], drag: 0.9,
-                    lifetime: [5, 10], size: [0.34, 0.06], sizeMode: "index",
+                    lifetime: [5, 10], size: [{ data: "edgeRadius", fallback: 0.34 }, 0.06], sizeMode: "index",
                     color: 0xEDF2FA, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 70
                 },
                 {
@@ -99,7 +101,7 @@ const SteelwingDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/swipe",
                     rate: { data: "feathers", fallback: 12 }, shape: { kind: "polyline" },
                     direction: "away", speed: [0.03, 0.14], drag: 0.9,
-                    lifetime: [6, 12], size: [0.5, 0.12], sizeMode: "index",
+                    lifetime: [6, 12], size: [{ data: "edgeRadius", fallback: 0.34 }, 0.12], sizeMode: "index",
                     color: 0xB8C4D6, alpha: [0.35, 0], light: "full", bloom: 0.2, maxParticles: 90
                 },
                 {

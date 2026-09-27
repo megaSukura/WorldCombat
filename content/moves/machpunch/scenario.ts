@@ -5,8 +5,9 @@
  *
  * 场面：一只只会音速拳的格斗系精灵（Machop，32 级）面对两格外的僵尸；设为夜晚，僵尸不会被日光灼烧，
  *   所以伤害只可能来自这一拳。两者开战，AI 只有这一招可用。
- * 必然事实：本招被提交过；目标受到过伤害（贴着出拳打实）。
- *   起点偏差导致的挥空、暴击与具体落点是站位与概率结果，写进 note 供读轨迹判断。
+ * 必然事实：本招被提交过；目标受到过伤害（贴着出拳打实，一次出拳只结算这一记）。
+ *   拳迹与延后两刻的音爆都是纯表现、不二次伤；起点偏差导致的挥空、暴击与具体落点是站位与概率结果，
+ *   写进 note 供读轨迹判断。
  */
 Smoke.scenario("machpunch", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -20,7 +21,7 @@ Smoke.scenario("machpunch", function (stage) {
     }, function () {
         stage.expect(stage.casts("machpunch", caster) > 0, "mach punch was committed");
         stage.expect(stage.damageTo(foe) > 0, "the instant punch dealt damage");
-        stage.note("the move itself never displaces the user; the recorded travel is the shared task walking into arm's reach. The strike is one instantaneous trace, so misses only happen when the zombie walks out of the short line.", {
+        stage.note("the move itself never displaces the user; the recorded travel is the shared task walking into arm's reach. The strike is one instantaneous trace with a short punch trail, and the two-tick sonic boom only adds visuals, so misses happen only when the zombie walks out of the short line.", {
             casts: stage.casts("machpunch", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             moved: Math.round(stage.travelled(caster) * 10) / 10,

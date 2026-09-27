@@ -4,6 +4,7 @@
  * 一句话：朝身前扇形扫出一记收着力气的横扫，扇面里的目标都只会削血，至少留下 1 HP。
  *
  * 场面：一只只会手下留情的猫鼬斩（40 级）对两只被点住、已被预先打到低血的铁傀儡——这一扫若不留手，两只都会被扫倒。
+ *   本场把作者现在可选的「沉腰」打开，覆盖新暴露的重扫分支（更宽更沉、扫完自 root）。
  * 断言只取必然事实：这招被提交过、两只目标在挨扫后都还活着。扇面实际扫中几只、各自剩多少血写进 note。
  */
 Smoke.scenario("holdback", function (stage) {
@@ -17,21 +18,25 @@ Smoke.scenario("holdback", function (stage) {
     stage.hostile(caster, side);
     stage.command("execute as @e[type=minecraft:iron_golem,distance=..9] run data merge entity @s {NoAI:1b}");
     stage.command("execute as @e[type=minecraft:iron_golem,distance=..9] run damage @s 92 minecraft:generic");
-    stage.until(600, function () {
-        return stage.casts("holdback", caster) >= 1 && stage.damageTo(near) + stage.damageTo(side) > 0;
-    }, function () {
-        stage.expect(stage.casts("holdback", caster) >= 1, "caster committed holdback");
-        stage.expect(stage.damageTo(near) + stage.damageTo(side) > 0, "holdback dealt damage to the fan");
-        stage.expect(near.alive() && side.alive(), "the sparing sweep left both targets standing");
-        // Both golems stand within the real total-angle fan, so one sweep clamps each to the per-hit health floor.
-        stage.expect(near.health() <= 1.01 && side.health() <= 1.01, "the fan spared both targets down to 1 HP");
-        stage.note("both targets are pre-damaged to ~8 HP and stand inside the true fan; each hit is capped by the per-hit native health floor (minimumHealth 1), so neither is knocked out", {
-            casts: stage.casts("holdback", caster),
-            damageNear: Math.round(stage.damageTo(near) * 10) / 10,
-            damageSide: Math.round(stage.damageTo(side) * 10) / 10,
-            nearAlive: near.alive(),
-            sideAlive: side.alive()
-        });
-        stage.done();
-    }, "holdback cast within 30 s");
+    // 偏好要在绑定 announce 之后再写，早于首次 AI 决策，才能让第一刀就是沉腰式。
+    stage.after(1, function () {
+        stage.prefer(caster, "holdback", { heavy: true });
+        stage.until(600, function () {
+            return stage.casts("holdback", caster) >= 1 && stage.damageTo(near) + stage.damageTo(side) > 0;
+        }, function () {
+            stage.expect(stage.casts("holdback", caster) >= 1, "caster committed holdback");
+            stage.expect(stage.damageTo(near) + stage.damageTo(side) > 0, "holdback dealt damage to the fan");
+            stage.expect(near.alive() && side.alive(), "the sparing sweep left both targets standing");
+            // Both golems stand within the real total-angle fan, so one sweep clamps each to the per-hit health floor.
+            stage.expect(near.health() <= 1.01 && side.health() <= 1.01, "the fan spared both targets down to 1 HP");
+            stage.note("heavy (braced) is on: both targets are pre-damaged to ~8 HP and stand inside the true fan; each hit is capped by the per-hit native health floor (minimumHealth 1), so neither is knocked out. The braced sweep also plants the caster (self root) for its brace duration; both the heavier sweep and the light sweep spare.", {
+                casts: stage.casts("holdback", caster),
+                damageNear: Math.round(stage.damageTo(near) * 10) / 10,
+                damageSide: Math.round(stage.damageTo(side) * 10) / 10,
+                nearAlive: near.alive(),
+                sideAlive: side.alive()
+            });
+            stage.done();
+        }, "holdback cast within 30 s");
+    });
 });

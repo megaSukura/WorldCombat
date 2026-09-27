@@ -9,20 +9,23 @@
  *   咬（bite）：提交后朝瞄准方向做一段真实的短 trace；第一个碰到的人或墙就是这一口合上的地方，
  *       命中非友方即结算 fang 接触咬合，命中点炸开火色迸溅与獠牙剪影。空咬、咬到友方或先撞墙都不种火。
  *   灌（sear / scatter / flinch）：按 scorchChance 掷点火，走共享状态的原生免疫；真点着才播 sear 与浮字，
- *       被免疫拒绝则只播 scatter（火在表面四散熄灭）。按 flinchChance 掷畏缩，挂共享身份并投递 interrupt。
+ *       被免疫拒绝则只播 scatter（火在表面四散熄灭）。按 flinchChance 掷畏缩，先经 CombatStatus.allowed 判定
+ *       （共享身份 world_combat:status/flinch 的免疫/策略会拒绝），真正挂上才投递 interrupt。
  *
  * 配置 `sear`（焦焰式）由公式改点火几率／时长与咬合威力，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const firefangScene = "world_combat:move_firefang";
+    const firefangFangScene = "world_combat:move_firefang_fangs";
     const firefangFlinchEffect = "world_combat:firefang_flinch";
     const firefangHitText = "world_combat.move.firefang.text.hit";
     const firefangBurnText = "world_combat.move.firefang.text.burn";
     const firefangFlinchText = "world_combat.move.firefang.text.flinch";
     const firefangMissText = "world_combat.move.firefang.text.miss";
 
+    /** 先走共享状态的允许判定（免疫/策略可拒绝），真挂上身份才投递打断。 */
     function firefangFlinch(world: CombatWorld, target: CombatActor, ticks: number): boolean {
-        if (MobEffects.apply(world, target, firefangFlinchEffect, ticks, 0) === null) return false;
+        if (!CombatStatus.apply(world, target, "flinch", firefangFlinchEffect, ticks, 0, { unique: true })) return false;
         world.deliver(target, "world_combat:interrupt");
         return true;
     }
@@ -103,6 +106,10 @@ namespace PokemonSkills {
                 { damage: damageSpec("firefang", "fang"), contact: true, bite: true });
             WorldFeedback.emit(world, firefangScene, 1, at,
                 { moment: "bite", target: victimRef, embers: embers, scale: scale, intensity: intensity }, 24);
+            // 上下两列獠牙在真实接触点闭合一次：方向与判定同源，牙尖在那一格合上。
+            WorldFeedback.emit(world, firefangFangScene, 1, at,
+                { moment: "close", target: victimRef, scale: scale, intensity: intensity,
+                    direction: [direction.x(), direction.y(), direction.z()], start: world.tick() }, 14);
             sound(action, "cobblemon:impact.fire");
             if (!landed || !world.valid(victim)) { done(action); return; }
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), firefangHitText, [], 22);

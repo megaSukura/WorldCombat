@@ -3,7 +3,7 @@ const InfestationDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         windup: {
-            duration: 10,
+            duration: { data: "charge", fallback: 10 },
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {

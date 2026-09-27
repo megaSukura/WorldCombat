@@ -63,7 +63,8 @@ const FlyDefinition: ParticleDefinition = {
                     color: 0xEAF0FF, alpha: [0.6, 0], light: "full", maxParticles: 140
                 },
                 {
-                    name: "rise_ground", bind: "source", offset: [0, 0.03, 0], height: 0,
+                    // 升尘留在起点：绑 point 用 rise 幕的 message 位置（起跳地面），不再随身体升空。
+                    name: "rise_ground", bind: "point", offset: [0, 0.03, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 20, interval: 3, repeats: 2 }, shape: { kind: "ring", radius: 0.5 },
                     direction: "outward", speed: [0.05, 0.16],
@@ -73,8 +74,9 @@ const FlyDefinition: ParticleDefinition = {
             ]
         },
         // 持：悬停时地面上的准星，加一道淡淡的下落视线；读得出“它会从这儿下来、还有多高”。
+        // duration 覆盖最长悬停（24 刻）以上，悬停再久准星也持续，不中途熄掉。
         mark: {
-            duration: 12,
+            duration: 40,
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {

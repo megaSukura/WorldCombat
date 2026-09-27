@@ -1,17 +1,16 @@
 /**
  * 草之誓约 / grasspledge 的出手方式与场地规则。
  *
- * 核心念头：一纸草之誓约被按进地里，草柱连藤带叶从选定点炸土而出，缠住柱内的敌人；柱脚只留下一圈短寿的
- *   誓约印——它是「这里立过草之誓约」的标记，本身不再拖慢。若落点附近已有火或水的誓约印，两纸誓约彼此应答：
- *   这一击更重，并把脚下**同一圈印**当场扩成火海（草＋火，持续点燃）或湿地（草＋水，持续陷住／拖慢）——
- *   持续控制只在真正共鸣时才出现，组合产物取决于另一元素，与原生一致。
+ * 核心念头：一纸草之誓约被按进地里，草柱连藤带叶从选定点下方的真实地面炸土而出，缠住柱内的敌人；柱脚只留下
+ *   一圈短寿的誓约印——它是「这里立过草之誓约」的标记，本身不再拖慢。若落点附近已有同阵营、尚未参与过组合的
+ *   火或水誓约印，两纸誓约彼此应答：这一击更重，把参与的那圈印消费掉，脚下的草印当场扩成火海（草＋火）或
+ *   湿地（草＋水）。湿地以触地者入场生效并尊重控制拒绝，拒绝过的对象只留拖慢、不再重挂 root。
  *
  * 三幕：
  *   起（windup，提交前）：落点画出一圈藤纹符文，只播预告（可免费打断）。
- *   击（erupt → hit）：提交后草柱炸土而出，柱内每个敌人挨一次 `pillar` 并做一次短控尝试；柱脚盘出一圈短印。
+ *   击（erupt → hit）：提交后草柱从真实地面炸土而出，柱内每个敌人挨一次 `pillar` 并做一次短控尝试；
+ *       根须只围绕真正被缠住的命中者脚部，拒绝时只落叶。
  *   留（scar → seaoffire / wetland）：短印只是共鸣标记；与另一誓约共鸣时，同一印记扩成更广的组合场。
- *
- * 湿地控制走可被原生拒绝的尝试：尝试过一次没落地的对象记进 `field.data.refused`，不再每次扫描重挂 rooted。
  */
 namespace PokemonSkills {
     function grasspledgePoint(field: WorldEffects.Field): CombatPoint {
@@ -21,15 +20,32 @@ namespace PokemonSkills {
         return WorldCombat.point(area.position[0], area.position[1], area.position[2]);
     }
 
-    /** 落点附近的另一元素誓约印：火 → 火海，水 → 湿地；取最近的一个，没有则返回空串。 */
-    function grasspledgeComboAt(world: CombatWorld, point: CombatPoint, detect: number): string {
-        const kinds: string[][] = [["world_combat:field/pledge_fire", "seaoffire"], ["world_combat:field/pledge_water", "wetland"]];
-        let best = "", bestDistance = detect;
-        for (let i = 0; i < kinds.length; i++) {
-            const areas = WorldEffects.areas(world, kinds[i][0]);
+    /** 另一元素誓约印对应的组合产物：火 → 火海，水 → 湿地；都不是则空串。 */
+    export function grasspledgeComboKind(rule: string): string {
+        return rule === "world_combat:field/pledge_fire" ? "seaoffire"
+            : rule === "world_combat:field/pledge_water" ? "wetland" : "";
+    }
+
+    /**
+     * 落点真正能共鸣的另一元素誓约印：存活、同阵营、未被组合消费、留有余时，且从落点到印之间有真实通路
+     * （隔墙不误触）。取最近的一个，没有则返回 null。
+     */
+    export function grasspledgeResonance(world: CombatWorld, caster: CombatActor, point: CombatPoint, detect: number): WorldEffects.Area | null {
+        const rules: string[] = ["world_combat:field/pledge_fire", "world_combat:field/pledge_water"];
+        let best: WorldEffects.Area | null = null, bestDistance = detect;
+        for (let i = 0; i < rules.length; i++) {
+            const areas = WorldEffects.areas(world, rules[i]);
             for (let j = 0; j < areas.length; j++) {
-                const distance = grasspledgeAreaPoint(areas[j]).minus(point).length();
-                if (distance <= bestDistance) { bestDistance = distance; best = kinds[i][1]; }
+                const area = areas[j];
+                if (area.pending || (area.data && area.data.combo) || !(area.remaining > 0)) continue;
+                const owner = world.actor(area.source);
+                if (!owner) continue;
+                if (String(owner.ref()) !== String(caster.ref()) && !world.allied(caster, owner)) continue;
+                const centre = grasspledgeAreaPoint(area);
+                const distance = centre.minus(point).length();
+                if (distance > bestDistance) continue;
+                if (!world.clear(point.plus(WorldCombat.point(0, 0.25, 0)), centre.plus(WorldCombat.point(0, 0.25, 0)))) continue;
+                bestDistance = distance; best = area;
             }
         }
         return best;
@@ -45,12 +61,29 @@ namespace PokemonSkills {
         return false;
     }
 
-    /** 一次可被原生拒绝的控制尝试：rooted 没落地就记进 refused，之后不再重复挂；拖慢照常。 */
-    function grasspledgeRoot(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, rootTicks: number, slowTicks: number): boolean {
+    /** 柱体贴真实支撑：落点先投到下方可达地面，柱顶撞到真实方块就停在接触面，不悬空、不穿墙。 */
+    function grasspledgeColumn(world: CombatWorld, point: CombatPoint, radius: number, height: number): {
+        anchor: CombatPoint; top: CombatPoint; vertices: CombatPoint[]; } {
+        const anchor = WorldGeometry.ground(world, point, Math.max(6, Math.ceil(height)));
+        const wanted = anchor.plus(WorldCombat.point(0, height, 0));
+        const ceiling = WorldGeometry.blockHit(world, anchor.plus(WorldCombat.point(0, 0.05, 0)), wanted);
+        const contact = ceiling ? ceiling.position() : wanted;
+        const top = WorldCombat.point(contact.x(), Math.max(anchor.y() + 0.4, contact.y()), contact.z());
+        const vertices: CombatPoint[] = [];
+        const sides = 12;
+        for (let i = 0; i < sides; i++) {
+            const angle = i * Math.PI * 2 / sides;
+            vertices.push(WorldCombat.point(anchor.x() + Math.cos(angle) * radius, anchor.y(), anchor.z() + Math.sin(angle) * radius));
+        }
+        return { anchor: anchor, top: top, vertices: vertices };
+    }
+
+    /** 一次可被原生拒绝的控制尝试：只有真正触地者才尝试根须，拒绝后记账不再重挂；拖慢照常。 */
+    function grasspledgeRoot(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, rootTicks: number, slowTicks: number, grounded: boolean): boolean {
         const refused = field.data.refused || (field.data.refused = {});
         const ref = String(actor.ref());
         let rooted = false;
-        if (!refused[ref]) {
+        if (grounded && !refused[ref]) {
             const id = WorldEffects.apply(world, actor, "rooted", {}, rootTicks);
             rooted = id > 0 && world.effects(actor, "world_combat:rooted").length > 0;
             if (!rooted) refused[ref] = 1;
@@ -60,11 +93,12 @@ namespace PokemonSkills {
     }
 
     // 誓约印：立誓的标记，本身不拖慢；只有草＋火共鸣的火海持续点燃、草＋水共鸣的湿地持续陷住／拖慢。
-    // 表现绑在印记效果自己身上，随其自然到期或提前驱散一起收。
     WorldEffects.fieldRule(grasspledgeScar, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (field.data.combo !== "wetland" || world.friendly(actor)) return;
-            grasspledgeRoot(world, actor, field, Math.max(16, Math.round(Number(field.data.root) || 30)), Math.max(40, Math.round(Number(field.data.slow) || 60)));
+            const body = world.observe(actor);
+            grasspledgeRoot(world, actor, field, Math.max(16, Math.round(Number(field.data.root) || 30)),
+                Math.max(40, Math.round(Number(field.data.slow) || 60)), !!(body && body.grounded()));
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             const combo = field.data.combo;
@@ -79,9 +113,14 @@ namespace PokemonSkills {
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const combo = field.data.combo;
             const moment = combo === "seaoffire" ? "seaoffire" : combo === "wetland" ? "wetland" : "scar";
+            const radius = field.radius, scale = radius / 1.8;
+            const remaining = Math.max(0, Number(field.remaining) || 0);
+            const life = Math.max(1, Math.round(Number(field.data.life) || remaining || 1));
+            const count = Math.round(Number(field.data.marks) || 12) + (combo ? Math.round(radius * 6) : 0);
             WorldFeedback.onEffect(world, effect.id(), "world_combat:move_grasspledge/pledge", grasspledgeScene, 1, grasspledgePoint(field),
-                { moment: moment, radius: field.radius, scale: field.radius / 1.8,
-                    count: Math.round(Number(field.data.marks) || 12) + (combo ? Math.round(field.radius * 6) : 0) });
+                { moment: moment, radius: radius, scale: scale, count: count, remaining: remaining, life: life });
+            WorldFeedback.onEffect(world, effect.id(), "world_combat:move_grasspledge/field", grasspledgeFieldScene, 1, grasspledgePoint(field),
+                { moment: moment, radius: radius, scale: scale, remaining: remaining, life: life });
         }
     });
 
@@ -89,7 +128,7 @@ namespace PokemonSkills {
         id: grasspledgeId,
         cooldownParameter: "recharge",
         name: "草之誓约",
-        description: "在选定地面立起一纸草之誓约：草柱炸土而出，柱内敌人挨一次伤害并被根须缠住、拖慢，柱脚留下一圈短寿的誓约印（只作共鸣标记，本身不拖慢）。落点附近已有火或水的誓约印时共鸣——这一击更重，同一圈印当场扩成火海（草＋火，持续点燃其中的敌人）或湿地（草＋水，踩进去会被陷住并重度拖慢；对控制免疫的目标只留基础伤害与拖慢）。",
+        description: "在选定地面立起一纸草之誓约：草柱从真实地面炸土而出，柱内敌人挨一次伤害并被根须缠住、拖慢，柱脚留下一圈短寿的誓约印（只作共鸣标记，本身不拖慢）。落点附近已有同阵营、尚未参与过组合的火或水誓约印时共鸣——这一击更重，把参与的那枚印消费掉，同一圈印当场扩成火海（草＋火，持续点燃其中的敌人）或湿地（草＋水，踩进去会被陷住并重度拖慢；对控制免疫的目标只留基础伤害与拖慢）。",
         uses: ["在远处地面立起草柱并做一次短控尝试", "用一圈短印标出可共鸣的地面", "与火／水誓约连成火海或湿地"],
         kind: "point",
         range: 9,
@@ -117,12 +156,13 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const mark = p(grasspledgeId, "markRadius", action);
-            action.present("world_combat:move_grasspledge:mark", grasspledgeScene, 1, action.targetPosition(),
+            const ground = WorldGeometry.ground(action.sense(), action.targetPosition(), 6);
+            action.present("world_combat:move_grasspledge:mark", grasspledgeScene, 1, ground,
                 JSON.stringify({ moment: "mark", radius: mark, scale: mark / 1.8, height: p(grasspledgeId, "pillarHeight", action) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world(), point = action.targetPosition();
+            const world = action.world(), actor = action.actor(), point = action.targetPosition();
             const radius = Math.max(1.0, p(grasspledgeId, "pillarRadius", action));
             const height = Math.max(2.4, p(grasspledgeId, "pillarHeight", action));
             const power = p(grasspledgeId, "pillar", action);
@@ -136,18 +176,28 @@ namespace PokemonSkills {
             const burst = Math.round(p(grasspledgeId, "burst", action));
             const marks = Math.round(p(grasspledgeId, "scarCells", action));
             const cap = Math.max(1, Math.round(p(grasspledgeId, "maxTargets", action)));
-            const combo = grasspledgeComboAt(world, point, detect);
+            // 柱击贴有效支撑：落点先投到真实地面，柱顶被上方方块截断。
+            const column = grasspledgeColumn(world, point, radius, height);
+            const base = column.anchor;
+            const reachHeight = Math.max(0.5, column.top.y() - base.y());
+            const resonance = grasspledgeResonance(world, actor, base, detect);
+            const combo = resonance ? grasspledgeComboKind(resonance.rule) : "";
+            const resonant = combo !== "" && !grasspledgeComboExists(world, base, markRadius * comboScale);
             const scale = markRadius / 1.8;
+            const start = world.tick();
             let hits = 0;
 
             sound(action, "cobblemon:impact.grass");
-            WorldFeedback.emit(world, grasspledgeScene, 1, point,
-                { moment: "erupt", radius: radius, height: height, count: burst }, 40);
+            WorldFeedback.emit(world, grasspledgeScene, 1, base,
+                { moment: "erupt", radius: radius, height: reachHeight, count: burst }, 40);
+            // 草柱主体：真正盘绕上升的藤体，读真实柱半径与高度。
+            WorldFeedback.emit(world, grasspledgeVineScene, 1, base,
+                { moment: "vine", radius: radius, height: reachHeight, count: burst, start: start, duration: 26 }, 28);
 
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, radius, { below: 0.5, above: height }), function (enemy, facts) {
-                if (hits >= cap) return;
+            WorldGeometry.selectBodies(world, WorldGeometry.bodyPolygon(column.vertices, base.y(), column.top.y()), function (enemy, facts) {
+                if (hits >= cap || facts.friendly()) return;
                 // 伤害被拒绝就不算命中：不做控制尝试、不播命中表现。
-                if (!hurt(action, enemy, grasspledgeId, power * (combo === "" ? 1 : comboPower), { damage: damageSpec(grasspledgeId, "pillar") })) return;
+                if (!hurt(action, enemy, grasspledgeId, power * (resonant ? comboPower : 1), { damage: damageSpec(grasspledgeId, "pillar") })) return;
                 hits++;
                 let rooted = false;
                 if (world.valid(enemy)) {
@@ -156,26 +206,31 @@ namespace PokemonSkills {
                 }
                 WorldFeedback.emit(world, grasspledgeScene, 1, facts.position(),
                     { moment: "hit", target: String(enemy.ref()), count: 10, scale: scale, binding: rooted ? 9 : 0 }, 20);
+                // 根须只围绕真正被缠住的命中者脚部；拒绝时这个场景只落几片叶子。
+                WorldFeedback.emit(world, grasspledgeRootScene, 1, facts.position(),
+                    { moment: "bind", target: String(enemy.ref()), binding: rooted ? 1 : 0, count: rooted ? 6 : 3, start: start, duration: 20 }, 22);
             });
 
             // 柱脚先留一圈短寿誓约印：共鸣标记，本身不拖慢；贴地盘根只由粒子表达。
-            const brand = WorldEffects.field(world, grasspledgeScar, point, markRadius,
-                { element: "grass", burn: 60, radius: markRadius, scale: scale, marks: marks, root: root, slow: slow }, markTicks);
+            const brand = WorldEffects.field(world, grasspledgeScar, base, markRadius,
+                { element: "grass", burn: 60, radius: markRadius, scale: scale, marks: marks, root: root, slow: slow, life: markTicks }, markTicks);
 
-            // 与另一誓约共鸣：把同一圈印就地扩成组合场并延长；一次施放只触发一次，已有组合场不再叠。
+            // 与另一誓约共鸣：把同一圈印就地扩成组合场并延长，同时消费参与的那枚印。
             let arena = false;
-            if (combo !== "" && !grasspledgeComboExists(world, point, markRadius * comboScale)) {
+            if (resonant && resonance) {
                 arena = true;
                 const arenaRadius = markRadius * comboScale;
+                const arenaTicks = Math.round(markTicks * 1.6);
                 WorldEffects.update(world, brand, {
-                    data: { combo: combo, burn: 100, radius: arenaRadius, scale: arenaRadius / 1.8, marks: marks, root: root, slow: Math.max(slow, 60) },
-                    radius: arenaRadius, ticks: Math.round(markTicks * 1.6)
+                    data: { combo: combo, burn: 100, radius: arenaRadius, scale: arenaRadius / 1.8, marks: marks, root: root, slow: Math.max(slow, 60), life: arenaTicks },
+                    radius: arenaRadius, ticks: arenaTicks
                 });
-                WorldFeedback.emit(world, grasspledgeScene, 1, point,
+                world.operation(resonance.id, "world_combat:dispel", "{}");
+                WorldFeedback.emit(world, grasspledgeScene, 1, base,
                     { moment: combo === "seaoffire" ? "seaoffire" : "wetland", radius: arenaRadius, scale: arenaRadius / 1.8, count: 60 }, 46);
                 sound(action, combo === "seaoffire" ? "minecraft:block.fire.ambient" : "minecraft:block.wet_grass.break");
             }
-            WorldFeedback.text(world, point.plus(WorldCombat.point(0, height * 0.55, 0)),
+            WorldFeedback.text(world, base.plus(WorldCombat.point(0, reachHeight * 0.55, 0)),
                 hits > 0 ? (arena ? grasspledgeComboText : grasspledgeHitText) : grasspledgeMissText,
                 hits > 0 ? [arena ? (combo === "seaoffire" ? "火海" : "湿地") : hits] : [], 30);
             sound(action, "minecraft:block.moss.break");

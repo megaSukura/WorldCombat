@@ -25,18 +25,30 @@ namespace CompanionBehavior {
         return count;
     }
 
+    /** 这一次实际会摊开的烟云半径：浓／薄与特攻、体型一起算，去重和聚群都用它，而不是写死的近似值。 */
+    function smokescreenCloudRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        const config = item.data.config;
+        const thick = !(config && config.density === "thin");
+        const raw = PokemonSkills.p(PokemonSkills.smokescreenId, "cloudRadius", {
+            world: world, actor: world.source(), skill: PokemonSkills.skills[PokemonSkills.smokescreenId],
+            detail: { values: config }
+        });
+        return Math.max(1.3, Math.min(4.2, Math.round(raw * (thick ? 0.8 : 1.3) * 100) / 100));
+    }
+
     function smokescreenWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", true)) return false;
         if (context.facts.focus !== threat.ref && distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 9)) return false;
         if (status(context, threat, "smoked")) return false;
-        // 目标脚下已经有一片烟云就不重复铺：读共享的场地查询，而不是自己再扫一遍世界。
+        // 目标脚下已经有一片真的罩住它的烟云就不重复铺：按这片云的实际半径与有限高度判定，而不是只看水平距离。
         const areas = WorldEffects.areas(world(context), PokemonSkills.smokescreenField);
         for (let i = 0; i < areas.length; i++) {
-            const dx = areas[i].position[0] - threat.point[0], dz = areas[i].position[2] - threat.point[2];
-            if (Math.sqrt(dx * dx + dz * dz) <= areas[i].radius) return false;
+            const dx = areas[i].position[0] - threat.point[0], dz = areas[i].position[2] - threat.point[2], dy = areas[i].position[1] - threat.point[1];
+            if (Math.sqrt(dx * dx + dz * dz) <= areas[i].radius && Math.abs(dy) <= Math.max(1, areas[i].radius)) return false;
         }
-        return smokescreenCluster(context, threat, 2.4) >= ai<number>(item, "minFoes", 2);
+        return smokescreenCluster(context, threat, smokescreenCloudRadius(context, item)) >= ai<number>(item, "minFoes", 2);
     }
 
     registerUse("smokescreen", {
@@ -46,7 +58,7 @@ namespace CompanionBehavior {
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {
             if (!target || !smokescreenWants(context, item, target)) return 0;
-            const cluster = smokescreenCluster(context, target, 2.4);
+            const cluster = smokescreenCluster(context, target, smokescreenCloudRadius(context, item));
             return Math.min(90, 50 + (cluster - 1) * 8);
         }
     });

@@ -18,7 +18,7 @@
   "worldcombat.skill.eerieimpulse.preference.ai.maxChase": "放电距离",
   "worldcombat.skill.eerieimpulse.preference.ai.maxChase.help": "圈内威胁进入这个距离内才考虑放电；调小只在贴身时放，调大愿意先追进去再放。",
   "worldcombat.skill.eerieimpulse.preference.ai.minFoes": "圈内最少人数",
-  "worldcombat.skill.eerieimpulse.preference.ai.minFoes.help": "身周这么远内至少站着这么多可见、敌对的敌人才放电；调大只被围住时用，调 1 见一个也放。",
+  "worldcombat.skill.eerieimpulse.preference.ai.minFoes.help": "实际电波圈内至少站着这么多值得扰乱的敌人才放电（可见、敌对、有特攻且特攻等级还没封底）；调大只被围住时用，调 1 见一个也放。",
   "worldcombat.skill.eerieimpulse.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.eerieimpulse.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去放电。",
   "world_combat.move.eerieimpulse.text.jam": "怪异电波扰乱 %1$s 个目标（特攻 -%2$s）",

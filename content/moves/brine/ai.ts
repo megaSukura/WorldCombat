@@ -14,6 +14,19 @@ namespace CompanionBehavior {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
     }
 
+    /** 本个体、当前目标下这一记盐卤的真实威力（含残血翻倍），用实际公式核对补刀收益；取不到时返回 0。 */
+    function brineJet(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context);
+        const foe = world.actor(String(target.ref));
+        if (foe === null) return 0;
+        try {
+            const base: PokemonSkills.FactContext = { world: world, actor: world.source(),
+                skill: PokemonSkills.skills[PokemonSkills.brineId], detail: { values: capability.data.config } };
+            const value = PokemonSkills.p(PokemonSkills.brineId, "jet", PokemonSkills.withTarget(base, foe));
+            return typeof value === "number" && isFinite(value) ? value : 0;
+        } catch (error) { return 0; }
+    }
+
     CompanionBehavior.registerUse(PokemonSkills.brineId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -30,8 +43,9 @@ namespace CompanionBehavior {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > Number(capability.data.range)) return 0;
             let score = 14;
-            // 只看目标现在的血：半血以下才翻倍，满血目标不加「将来会残」的分。
-            if (CompanionBehavior.ai<boolean>(capability, "finishWounded", true) && CompanionBehavior.ratio(target) <= 0.5) score += 30;
+            // 只看目标现在的血：半血以下才翻倍，满血目标不加「将来会残」的分；再用本个体实际公式核对翻倍这一支确实成立。
+            if (CompanionBehavior.ai<boolean>(capability, "finishWounded", true) && CompanionBehavior.ratio(target) <= 0.5
+                && brineJet(context, capability, target) > 0) score += 30;
             if (CompanionBehavior.status(context, target, "soaked")) score -= 4;
             return score;
         }

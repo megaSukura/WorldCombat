@@ -24,17 +24,18 @@ namespace PokemonSkills {
     export const stringshotId = "stringshot";
     export const stringshotEffect = "world_combat:string_bound";
     export const stringshotScene = "world_combat:move_stringshot";
+    export const stringshotNetScene = "world_combat:move_stringshot_net";
     export const stringshotSpot = "world_combat:status/silked";
 
     actionParameters.define(stringshotId, {
         speedDrop: formula(F.base(2).plus(F.when(F.body("weight").gte(300), F.const(1), F.const(0))).clamp(2, 3), "速度下降", {
             unit: " 级",
-            description: "被丝缠住者损失的速度等级；体重 300 以上的个体吐出更粗的丝，从 2 级升到 3 级。"
+            description: "被丝缠住者永久损失的速度等级（能力等级，直到离开战斗或被重置，不随标记到期回退）；体重 300 以上的个体吐出更粗的丝，从 2 级升到 3 级。"
         }),
-        bindTicks: seconds(F.base(120).plus(F.body("weight").div(10).times(2)).clamp(120, 260), "缠足时长",
-            "黏腻的丝缠在腿上多久；施法者体重越大缠得越久。"),
+        bindTicks: seconds(F.base(120).plus(F.body("weight").div(10).times(2)).clamp(120, 260), "缠足标记时长",
+            "被丝缠住的标记持续多久（只表示丝还在身上；不决定降速，那个是永久的）；施法者体重越大缠得越久。"),
         rootTicks: seconds(F.base(12).plus(F.level().minus(20).max(0).times(0.2)).clamp(12, 30), "定身时长",
-            "缠足命中的那一下把目标钉在原地多久；等级越高越牢。"),
+            "缠足命中的那一下额外把目标钉在原地多久；与永久降速、标记时长各自独立。"),
         strandSpeed: formula(F.base(1.0).plus(F.stat("speed").minus(60).max(0).times(0.004)).clamp(0.9, 1.6), "吐丝速度", {
             unit: " 格/刻",
             description: "丝飞出去的速度；施法者速度越快，越难被走位躲开。"
@@ -45,7 +46,7 @@ namespace PokemonSkills {
         }),
         netRadius: formula(F.base(1.6).plus(F.body("width").minus(0.9).times(1.2)).clamp(1.4, 3.0), "结网半径", {
             unit: " 格",
-            description: "结网时黏在首碰表面那块小蛛网的最大铺开半径；体型越宽铺得越大。"
+            description: "结网时黏在首碰表面那块蛛网的铺开上限（以真正放下的方块格数为准）；体型越宽铺得越大。"
         }),
         netTicks: seconds(F.base(120).plus(F.level().minus(30).max(0).times(2)).clamp(100, 260), "结网时长",
             "黏在表面的蛛网存在多久；等级越高留得越久。"),
@@ -53,8 +54,8 @@ namespace PokemonSkills {
             unit: " 格",
             description: "丝能打到的最远点；速度越快够得越远。"
         }),
-        tempo: seconds(F.stat("speed").div(9).plus(4).clamp(6, 13), "起手",
-            "把丝蓄到口边需要多久；速度越快越早吐出。")
+        tempo: seconds(F.base(13).minus(F.stat("speed").minus(20).times(0.09)).clamp(6, 13), "起手",
+            "把丝蓄到口边需要多久；速度越快，起手越短。")
     });
     describe(stringshotId, [
         { key: "description.0", values: ["speedDrop","bindTicks","rootTicks"] },

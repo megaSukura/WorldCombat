@@ -1,15 +1,13 @@
 /**
  * 回收利用 / recycle 的客户端表现。
  *
- * 一句话：施法者俯身，四周的碎片与记忆里的那件道具以弧线朝掌心聚拢，收拢环合拢的一刻，那件道具沿一条归巢
- * 弧线飞回手里，掌心落一圈金光。
+ * 一句话：施法者俯身，四周的碎片与记忆里的那件道具以弧线朝掌心聚拢；收拢环合拢的一刻，那件道具的小图沿一条
+ * 归巢弧线落进持有槽，掌心落一圈金光。
  * 色相家族：回收金（sparkle / orb）为主，暖褐（smoke）作余韵；金色只在「锻成」的一小片面积上最亮。
- * 拍子：收（gather 内聚碎屑与收拢环）→ 成（forge 道具飞回与掌心爆发）／空（fizzle 空转尘）。
- * 范围：gather 的地面环半径就是本次 `drawRadius`（服务端按 `data.scale = 半径/参考半径` 传入），玩家一眼知道
- *   取材范围有多大；forge 绑施法者，画出的就是道具归巢的位置。
- * 运动：碎屑由外向掌心内聚，道具贴图沿一条归巢弧线飞回；内聚用 inward、落定用 outward 短促外爆。
- * 数：`data.motes`（等级派生的回收火花数）驱动内聚与爆发粒子量，`data.found`（是否就地取材成功）在找到材料时
- *   额外点亮一圈材料光；两只精灵放同一招画面也不同。
+ * 拍子：收（gather 内聚碎屑）→ 成（forge 道具图归槽与掌心爆发）／空（fizzle 空转尘）。
+ * 范围：gather 是贴身的向内聚合，不再画地面搜索圈；forge 绑施法者，画出的就是道具归巢的落点。
+ * 运动：碎屑由外向掌心内聚，道具图沿归巢弧线落进持有槽；内聚用 inward、落定用 outward 短促外爆。
+ * 数：`data.motes`（等级派生的回收火花数）驱动内聚与爆发粒子量；`data.item`（记忆里那件的真实 id）驱动归槽的小图。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const RecycleDefinition: ParticleDefinition = {
@@ -20,25 +18,16 @@ const RecycleDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 14 },
             emitters: [
                 {
-                    name: "ring", bind: "source", fit: "none", height: 0.06,
-                    particle: "world_combat_core:cobblemon/generic/ring/warblingring",
-                    rate: { data: "motes", fallback: 10 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3 }, arcDegrees: 360 },
-                    direction: "inward", speed: [0.04, 0.14],
-                    lifetime: [8, 16], size: [0.16, 0.02],
-                    color: 0xE8C56A, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 60
-                },
-                {
                     name: "scrap", bind: "source", offset: [0, 0.4, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "motes", fallback: 10 },
-                    shape: { kind: "sphere", radius: 1.0 },
+                    shape: { kind: "sphere", radius: 1.1 },
                     direction: "inward", speed: [0.05, 0.16],
                     lifetime: [6, 13], size: [0.06, 0.01],
                     color: 0xB99B5E, alpha: [0.7, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "memory", bind: "source", offset: [0, 0.6, 0.2], height: 0.3,
+                    name: "memory", bind: "source", offset: [0, 0.6, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: 5, interval: 5, repeats: 3 },
                     shape: { kind: "point" },
@@ -52,15 +41,6 @@ const RecycleDefinition: ParticleDefinition = {
             duration: 30,
             exit: { stop: 14, drain: 18 },
             emitters: [
-                {
-                    name: "homebound", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: { data: "travelMotes", fallback: 0 },
-                    shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.01, 0.05],
-                    lifetime: [5, 11], size: [0.05, 0.01],
-                    color: 0xF0D27A, alpha: [0.8, 0], light: "full", maxParticles: 60
-                },
                 {
                     name: "flash", bind: "source", offset: [0, 0.55, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
@@ -100,3 +80,39 @@ const RecycleDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_recycle", 1, RecycleDefinition);
+
+/**
+ * 归巢的小物品图：`data.item` 是真正回复的那件 id，从其消费记忆处沿一条短弧聚到持有槽（身前、胸口高度）。
+ * 固定数量（每刻一枚），不生成粒子或实体；贴图取物品图集 `item/<path>`。
+ */
+function recycleItemTexture(item: string): string {
+    const split = item.indexOf(":");
+    const namespace = split < 0 ? "minecraft" : item.slice(0, split);
+    const path = split < 0 ? item : item.slice(split + 1);
+    return namespace + ":item/" + path;
+}
+WorldCombatClient.scene("world_combat:move_recycle_item", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "forge" || typeof data.item !== "string" || !data.item) return;
+    const anchor: any = JSON.parse(frame.anchor(entry.source));
+    if (!anchor || typeof anchor.x !== "number" || typeof anchor.yaw !== "number") return;
+    const yaw = Number(anchor.yaw) * Math.PI / 180;
+    const forward = [-Math.sin(yaw), 0, Math.cos(yaw)];
+    const height = Math.max(0.16, Math.min(0.45, Number(anchor.height) * 0.26));
+    const reach = Number(anchor.width) * 0.5 + 0.2;
+    const slotX = Number(anchor.x) + forward[0] * reach;
+    const slotY = Number(anchor.y) + Number(anchor.height) * 0.6;
+    const slotZ = Number(anchor.z) + forward[2] * reach;
+    const start = typeof data.start === "number" ? data.start : frame.serverTick();
+    const duration = typeof data.duration === "number" && data.duration > 0 ? data.duration : 10;
+    const t = Math.max(0, Math.min(1, (frame.serverTick() - start) / duration));
+    const ease = t * t * (3 - 2 * t);
+    const x = Number(anchor.x) + (slotX - Number(anchor.x)) * ease;
+    const y = Number(anchor.y) + Number(anchor.height) * 0.2 + (slotY - Number(anchor.y) - Number(anchor.height) * 0.2) * ease + Math.sin(Math.PI * t) * 0.22;
+    const z = Number(anchor.z) + (slotZ - Number(anchor.z)) * ease;
+    const size = height * (0.65 + 0.35 * ease);
+    const alpha = Math.round(255 * Math.min(1, 0.45 + 0.55 * ease));
+    frame.sprite(recycleItemTexture(data.item), x, y, z, size, 0, (alpha << 24 | 0xFFFFFF) | 0, 0, true);
+});

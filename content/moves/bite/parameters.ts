@@ -64,7 +64,7 @@ namespace PokemonSkills {
                 .clamp(0.12, 1.1).round(2),
             "拽回距离", {
                 unit: "格",
-                description: "咬实后把目标朝施法者拽近多远；越重、物攻越高拽得越远。死咬式拽得最狠——这是它把人留在身前的代价。"
+                description: "咬实后把目标朝施法者拽近的最大距离；越重、物攻越高拽得越远。死咬式拽得最狠——这是它把人留在身前的代价。实际位移走原生受击结算，受抗击退与碰撞限制，推不动的目标只吃伤害。"
             }),
         /** 獠牙判定：基础 0.40 格，碰撞箱每比 1.4 高 1 格加 0.14（上限 +0.28）；夹在 0.3..0.7。 */
         grip: formula(
@@ -93,7 +93,7 @@ namespace PokemonSkills {
             F.base(6).minus(F.stat("speed").minus(55).times(0.015).clamp(-2.5, 1.5))
                 .plus(F.when(F.pref("deep", text("worldcombat.skill.bite.preference.deep")), F.const(2), F.const(0)))
                 .clamp(3, 12).round(0),
-            "收招", "咬完松口、退开半步的收势；死咬式拽得更久，收得更慢。"),
+            "收招", "咬完松口的收势；死咬式拽得更久，收得更慢。"),
         /** 冷却：基础 14 刻，速度每比 55 快 1 减 0.03（下限 −2）；死咬 +6；夹在 8..26。 */
         recharge: seconds(
             F.base(14).minus(F.stat("speed").minus(55).times(0.03).clamp(-4, 2))

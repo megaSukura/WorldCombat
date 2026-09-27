@@ -2,12 +2,14 @@
  * 能量球 / energyball —— 注册与动作。
  *
  * 三幕：
- *   起（gather，提交前）：起手按 `gather` 半径真实取样周围的植被点，每个真实点拉一条稀疏绿线把生机送进球心
- *       （`action.present` 预告）；取样份数与这些点一并存进 `action.data`，飞行用的威力与画出的线读同一份。
+ *   起（gather，提交前）：起手按 `gather` 半径真实取样周围的植被点；每个真实点一条绿线，小点按实际准备进度
+ *       吸向同一个球心（自定义场景 `world_combat:move_energyball_gather` 逐帧推进，不再整段 polyline 同时撒）。
+ *       取样份数与这些点一并存进 `action.data`，飞行用的威力与画出的线读同一份。
  *   飞（travel，提交后）：草能球沿直线飞出，拖一路被抛落的草叶与光点。
- *   绽（burst / bloom / fizzle）：命中活物时结算一次特殊伤害并按概率用共享 `NativeEffects.boost(..., "spd", -1)`
- *       压低目标特防；球在落点绽开成一圈草种，并在地面短暂长出一小片花草（`terrainResult` 的 linger 租约，
- *       `bloomTicks` 后原方块回来），实际放下的格数驱动花粉。空放也照样在落点绽开。
+ *   绽（burst / bloom / fizzle）：命中活物时结算一次特殊伤害，若真把特防压下去才用共享
+ *       `NativeEffects.boost(..., "spd", -1)` 报文字；球在落点绽开成一圈草种，只在真实接触且合法生长面上
+ *       短暂长出一小片花草（`terrainResult` 的 linger 租约，`bloomTicks` 后原方块回来），每株芽按确认格位画出。
+ *       飞尽没碰到东西就消散，不向推算的远处落点生花。
  *
  * 它把「周围的自然」算进威力：起手数周围植被的份数，实际威力 = core + 份数 × verdant。
  * 选取 `kind: "aim"`——方向或世界点都能放，也可瞄实体；墙会截住球，落点只种合法空位。
@@ -17,7 +19,12 @@
 namespace PokemonSkills {
     const energyballScene = "world_combat:move_energyball";
     const energyballSunderText = "world_combat.move.energyball.text.sunder";
+    const energyballGatherText = "world_combat.move.energyball.text.gather";
     const energyballSitesKey = "world_combat:energyball/sites";
+    /** 逐帧画的生机线与吸向球心的小点；按实际采样点与真实准备进度推进。 */
+    const energyballGatherScene = "world_combat:move_energyball_gather";
+    /** 在 terrainResult 确认的每个真实落点画一株芽；没有合法落点就不发射。 */
+    const energyballBloomScene = "world_combat:move_energyball_bloom";
 
     const energyballNatureTags = ["minecraft:leaves", "minecraft:flowers", "minecraft:saplings",
         "minecraft:crops", "minecraft:tall_flowers"];
@@ -92,6 +99,16 @@ namespace PokemonSkills {
         return block.tagged("minecraft:flowers") || block.tagged("minecraft:crops") || block.tagged("minecraft:saplings");
     }
 
+    /** 方块表面的外法线，用来把落点从方块格移到真实接触侧，不穿墙扫到上层。 */
+    function energyballNormal(face: string): CombatPoint {
+        if (face === "down") return WorldCombat.point(0, -1, 0);
+        if (face === "north") return WorldCombat.point(0, 0, -1);
+        if (face === "south") return WorldCombat.point(0, 0, 1);
+        if (face === "west") return WorldCombat.point(-1, 0, 0);
+        if (face === "east") return WorldCombat.point(1, 0, 0);
+        return WorldCombat.point(0, 1, 0);
+    }
+
     /** 落点长出一小片花草：在落点周围找地表上方的空格；返回 `terrainResult` 确认真正放下的格（原生跳过保护/占用）。 */
     function energyballBloom(world: CombatWorld, point: CombatPoint, ticks: number): CombatPoint[] {
         const cells: any[] = [], seen: { [key: string]: boolean } = {};
@@ -114,15 +131,17 @@ namespace PokemonSkills {
                 break;
             }
             if (targetY === null) continue;
+            const state = palette[grown % palette.length];
             const at = world.block(WorldCombat.point(x, targetY, z));
             const support = world.block(WorldCombat.point(x, targetY - 1, z));
             if (at === null || support === null || !isAir(String(at.id()))) continue;
             const supportId = String(support.id());
             if (isAir(supportId) || energyballReplaceableAt(support)) continue;
+            if (!world.canSurvive(WorldCombat.point(x, targetY, z), state)) continue;
             const key = x + "," + targetY + "," + z;
             if (!seen[key]) {
                 seen[key] = true;
-                cells.push({ x: x, y: targetY, z: z, block: palette[grown % palette.length] });
+                cells.push({ x: x, y: targetY, z: z, block: state });
                 grown++;
             }
         }
@@ -141,7 +160,7 @@ namespace PokemonSkills {
     define({
         id: "energyball",
         name: "Energy Ball",
-        description: "朝方向或点把周围植被的生机吸进球心再直线掷出：造成特殊伤害，并可能把目标特防压低 1 级；命中或落地时球在落点绽开，地面短暂长出一小片花草。周围自然越多，这一球越重；墙会截住球。",
+        description: "朝方向或点把周围植被的生机吸进球心再直线掷出：造成特殊伤害，并可能把目标特防压低 1 级；命中或撞上地面时球在落点绽开，仅在能生长的地表短暂长出一小片花草，纯空放不留。周围自然越多，这一球越重；墙会截住球。",
         uses: ["站在草木繁茂处的一记重击", "中距离单体点射并磨掉特防", "在落点留下短暂的花草标记"],
         kind: "aim",
         range: 12,
@@ -169,21 +188,24 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            // 起手做一次真实取样：份数存进 action.data 供飞行算威力，命中的植被点连成画面里的生机线。
+            // 起手做一次真实取样：份数存进 action.data 供飞行算威力；命中的植被点独立上传，
+            // 每个真实点一条生机线，小点按实际准备进度吸向同一个球心（自定义场景逐帧推进）。
             const origin = action.origin();
+            const sense = action.sense();
             const gather = p("energyball", "gather", action);
-            const sample = energyballNatureSites(action.sense(), origin, gather, 90, 8);
-            const path: any[] = [];
-            for (let i = 0; i < sample.points.length; i++) {
-                const site = sample.points[i];
-                path.push([site.x(), site.y(), site.z()]);
-                path.push([origin.x(), origin.y() + 0.45, origin.z()]);
-            }
+            const sample = energyballNatureSites(sense, origin, gather, 90, 8);
             const total = Math.max(1, p("energyball", "core", action) + sample.count * p("energyball", "verdant", action));
+            const scale = Math.max(0.6, Math.min(2.6, total / 90));
+            const sites: number[][] = [];
+            for (let i = 0; i < sample.points.length; i++)
+                sites.push([sample.points[i].x(), sample.points[i].y(), sample.points[i].z()]);
             action.data(energyballSitesKey, JSON.stringify({ count: sample.count }));
+            action.present("energyball:gather:" + action.id(), energyballGatherScene, 1, origin,
+                JSON.stringify({ sites: sites, origin: [origin.x(), origin.y(), origin.z()],
+                    start: sense.tick(), duration: prepare, nature: sample.count, scale: scale }));
             action.present("world_combat:energyball:" + action.id(), energyballScene, 1, origin,
-                JSON.stringify({ moment: "gather", gather: gather, sites: sample.points.length, nature: sample.count, path: path,
-                    scale: Math.max(0.6, Math.min(2.6, total / 90)), deeproot: config && config.deeproot ? 1 : 0 }));
+                JSON.stringify({ moment: "gather", gather: gather, nature: sample.count, scale: scale,
+                    deeproot: config && config.deeproot ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -205,17 +227,26 @@ namespace PokemonSkills {
             const total = Math.max(1, power + nature * verdant);
             const scale = Math.max(0.6, Math.min(2.6, total / 90));
             const intensity = Math.max(0.5, Math.min(2.2, total / 90));
-            let landed = false, settled = false;
+            let settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
+            /** 真在落点长出花草：每株芽按 terrainResult 确认的实际格位画出，只散种子不放芽。 */
             function bloomAt(current: CombatAction, point: CombatPoint): void {
                 const born = energyballBloom(current.world(), point, bloom);
+                if (born.length > 0) {
+                    const placed: number[][] = [];
+                    for (let i = 0; i < born.length; i++) placed.push([born[i].x(), born[i].y(), born[i].z()]);
+                    WorldFeedback.emit(current.world(), energyballBloomScene, 1, point,
+                        { placed: placed, nature: nature, scale: scale }, 30);
+                }
                 WorldFeedback.emit(current.world(), energyballScene, 1, point,
                     { moment: "bloom", seeds: seeds, nature: nature, planted: born.length, scale: scale, intensity: intensity }, 26);
             }
 
             sound(action, "cobblemon:impact.grass");
+            // 起手读数：已采样的生机份数与这一球的实际强度，让玩家看见站位带来的差别。
+            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.5, 0)), energyballGatherText, [nature, Math.round(total)], 26);
 
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, direction: direction,
@@ -226,17 +257,19 @@ namespace PokemonSkills {
                 },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world();
-                    // 打到方块按原生格与表面，打到实体用身体位置；落点、绽开与长花都读同一个点。
-                    const cell = hit.blockPosition();
-                    const point = cell !== null ? cell : hit.position();
+                    // 方块命中用真实接触点沿外法线移出表面，实体命中用身体接触点；落点、绽开与长花都读同一个点。
+                    const point = hit.blockPosition() !== null
+                        ? hit.position().plus(energyballNormal(hit.blockFace()).scale(0.5))
+                        : hit.position();
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const landedHit = impact(current, hit, "energyball", total, { damage: damageSpec("energyball", "core") });
                         if (landedHit && scope.valid(victim) && scope.random() < chance) {
-                            NativeEffects.boost(scope, victim, "spd", -stages);
+                            // 只有真的把特防压下去才报文字：已到底或原生拒绝时不发成功提示。
+                            const applied = NativeEffects.boost(scope, victim, "spd", -stages);
                             const body = scope.observe(victim);
-                            if (body !== null)
-                                WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), energyballSunderText, [stages], 30);
+                            if (applied < 0 && body !== null)
+                                WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), energyballSunderText, [Math.abs(applied)], 30);
                         }
                         WorldFeedback.emit(scope, energyballScene, 1, point,
                             { moment: "burst", target: String(victim.ref()), nature: nature, seeds: seeds, scale: scale, intensity: intensity }, 26);
@@ -244,14 +277,12 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, energyballScene, 1, point,
                             { moment: "fizzle", nature: nature, seeds: seeds, scale: scale }, 22);
                     }
-                    landed = true;
                     scenes.stop(current, "travel");
                     bloomAt(current, point);
                     sound(current, "cobblemon:impact.grass");
                 }
             }, function (current: CombatAction) {
-                // 空放：球飞到射程尽头没碰到任何东西，也在实际落到的地表绽开一小片。
-                if (!landed) bloomAt(current, WorldGeometry.ground(current.world(), origin.plus(direction.scale(current.range())), 6));
+                // 飞尽没碰到任何东西：不在推算的远处落点生花，只让球自然消散。
                 finish(current);
             });
 

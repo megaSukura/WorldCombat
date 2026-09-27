@@ -3,8 +3,10 @@
  *
  * 一句话：喉前聚起一团翻卷的紫色咒念 → 咒念飞出 → 命中在目标身上炸开并抽出几缕记忆丝向上散掉 →
  * 落空时只留一点紫烟。一个紫蓝色相家族（0x9A7BFF / 0xC7B4FF），近白只给打击点。
- * 命中强弱由服务端算出的 `bursts`（伤害占目标最大生命）决定记忆丝数量。
- * 拍子：起（windup）／行（travel）／击（impact）／抽（drain）／空（fizzle）。
+ * 命中强弱由服务端算出的 `bursts`（伤害占目标最大生命）决定记忆丝数量；命中成功时另有一枚短促的
+ *   「雾符」收拢贴在目标头顶，把「诡异」已经挂上读出来。
+ * 拍子：起（windup）／行（travel）／击（impact）／抽（drain）／空（fizzle）；飞行由动作的 scene manager 在
+ *   接触或结束后主动 stop，不会留在原地空转。
  */
 const EerieSpellDefinition: ParticleDefinition = {
     moments: {
@@ -87,6 +89,14 @@ const EerieSpellDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.14], gravity: 0.01,
                     lifetime: [10, 22], size: [0.05, 0.01],
                     color: 0xDCD2FF, alpha: [0.6, 0], light: "full", maxParticles: 90
+                },
+                {
+                    name: "fog_mark", bind: "target", height: 0.82,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8, at: 2 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.06, 0.01],
+                    color: 0x9A7BFF, alpha: [0.75, 0], light: "full", maxParticles: 12
                 }
             ]
         },

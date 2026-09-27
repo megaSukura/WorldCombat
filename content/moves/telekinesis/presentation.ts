@@ -8,7 +8,8 @@
  * 范围：gather/hoist 的念力束绑 `data.path`（施法者与目标两个实体顶点画的 polyline），画的就是「从多远抬起」；
  *   环与压制光绑目标身体，settle/cut 绑目标，negate 打在被免掉的地面伤害落点上。
  * 运动：环从脚下收拢 → 向上抬升并向外张开 → hover 极慢自转 → settle 下落褪去 / cut 碎落。
- * 数：环数绑 `data.rings`（特攻派生），托起强度绑 `data.intensity`（压制程度派生），落环半径绑 `data.scale`。
+ * 数：起浮阶段的环数绑 `data.rings`（特攻派生），稳态只用 `data.steady`（约为环数的三分之一）少量环随真实身体；
+ *   托起强度绑 `data.intensity`（压制程度派生），落环半径绑 `data.scale`。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const TelekinesisDefinition: ParticleDefinition = {
@@ -75,7 +76,7 @@ const TelekinesisDefinition: ParticleDefinition = {
                 {
                     name: "hover_ring", bind: "target", fit: "body", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    rate: { data: "rings", fallback: 4 }, shape: { kind: "ring", radius: 0.4 },
+                    rate: { data: "steady", fallback: 4 }, shape: { kind: "ring", radius: 0.4 },
                     direction: "up", speed: [0.004, 0.014], spin: 12,
                     lifetime: [16, 26], size: [0.1, 0.02], sizeMode: "sin",
                     color: 0x8A5CF0, alpha: [0.3, 0], alphaMode: "sin", light: "world", maxParticles: 40

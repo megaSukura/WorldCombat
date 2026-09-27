@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.accelerock.summary": "把碎岩披到身上，整个身体贴地撞出去：撞实一下把人顶飞，落点扬起一片很快散去的碎石尘。全族最重的一记先制。破阵式改成沿冲刺线一路碾过去。",
-  "worldcombat.skill.accelerock.use.0": "贴地一记最重的石身先手，把目标撞飞",
+  "worldcombat.skill.accelerock.summary": "把碎岩披到身上，整个身体贴地撞出去：撞实一下把人顶飞，落点扬起一片很快散去的碎石尘。撞上第一个就停；破阵式改成沿冲刺线一路碾过去，只有一次都没撞实才算落空。",
+  "worldcombat.skill.accelerock.use.0": "贴地一记石身先手，把目标撞飞",
   "worldcombat.skill.accelerock.use.1": "破阵式撞穿一排贴在一起的敌人",
   "worldcombat.skill.accelerock.use.2": "撞出的碎石尘在落点扬起又很快散去",
   "worldcombat.skill.accelerock.description.0": "石身撞实造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",

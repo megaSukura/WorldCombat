@@ -32,6 +32,7 @@
   "worldcombat.skill.nightdaze.preference.ai.minFoes": "最少人数",
   "worldcombat.skill.nightdaze.preference.ai.minFoes.help": "以自身为心的半径里至少站着这么多敌人时才值得炸。调低更容易出手（哪怕只罩到一个），调高则更挑人堆。",
   "effect.world_combat.nightdaze_shroud": "黑暗笼罩",
-  "world_combat.move.nightdaze.text.shroud": "被黑暗罩住，命中 -%1$s",
+  "world_combat.move.nightdaze.text.shroud": "被黑暗罩住：命中 −%1$s（保留到脱战），物攻临时 −18%%",
+  "world_combat.move.nightdaze.text.aim": "命中 −%1$s",
   "world_combat.move.nightdaze.text.miss": "暗波炸空了"
 }

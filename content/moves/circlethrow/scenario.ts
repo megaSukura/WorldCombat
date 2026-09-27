@@ -16,7 +16,7 @@ Smoke.scenario("circlethrow", function (stage) {
         stage.after(40, function () {
             stage.expect(stage.casts("circlethrow", caster) > 0, "巴投被放出来了");
             stage.expect(stage.damageTo(foe) > 0, "抓摔打到了目标身上");
-            stage.note("巴投只对一个目标、必须贴身且通视；命中后目标沿越肩抛物线被摔到施法者另一侧，撞墙就地落下，落地做一次打断与换人。是否命中（原生命中 90）与暴击不写断言。",
+            stage.note("巴投沿瞄准方向抓第一个真实接触的可抓者（不靠预选），必须贴身且通视；命中后目标沿越肩抛物线被摔到施法者另一侧。完全抗搬只吃伤害、不换人；撞墙在真碰处停下、不换人；只有走完整条弧落地才做一次打断与换人。是否命中（原生命中 90）与暴击不写断言。",
                 { casts: stage.casts("circlethrow", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                     travelled: Math.round(stage.travelled(foe) * 10) / 10, foeAt: foe.position(), casterAt: caster.position() });
             stage.done();

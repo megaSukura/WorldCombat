@@ -2,7 +2,8 @@
  * 森林诅咒：根须只表示那层追加的草属性，不缠住对象；叶纹层与它原有属性的表现并存，直到诅咒褪去。
  * sign（召）→ root／canopy（种，地面根须＋头顶叶冠）→ hold（缠，绑定托管效果的贴身叶纹，与原属性并存）
  *   → lift（散，到期落叶）／empty（空点只卷起几片叶）／fizzle（种不上）。
- * grove 与 scale 控制表现范围；hold 的叶纹随 data.leaves 与 data.grove 变化。
+ * root 的根须落在服务端给出的脚底落点、canopy 的树冠落在体顶，范围只由 data.grove 决定一次
+ * （fit:"world"，scale 仅缩放粒子尺寸）；hold 的叶纹随 data.leaves 与 data.grove 变化。
  */
 const ForestscurseDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -34,7 +35,7 @@ const ForestscurseDefinition: ParticleDefinition = {
             exit: { stop: 18, drain: 18 },
             emitters: [
                 {
-                    name: "sprout", bind: "point", offset: [0, 0.1, 0],
+                    name: "sprout", bind: "point", offset: [0, 0.1, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/grass/sprout",
                     burst: { count: { data: "roots", fallback: 12 } },
                     shape: { kind: "sphere", radius: { data: "grove", fallback: 1.6 } },
@@ -43,7 +44,7 @@ const ForestscurseDefinition: ParticleDefinition = {
                     color: 0x5FA83C, alpha: [0.9, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "impact", bind: "point", offset: [0, 0.2, 0],
+                    name: "impact", bind: "point", offset: [0, 0.2, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass",
                     burst: { count: 3, interval: 2 },
                     shape: { kind: "sphere", radius: { data: "grove", fallback: 1.6 } },
@@ -52,7 +53,7 @@ const ForestscurseDefinition: ParticleDefinition = {
                     color: 0xA8D84C, alpha: [0.85, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "soil", bind: "point", offset: [0, 0.15, 0],
+                    name: "soil", bind: "point", offset: [0, 0.15, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "roots", fallback: 12 }, interval: 2 },
                     shape: { kind: "sphere", radius: { data: "grove", fallback: 1.6 } },
@@ -61,7 +62,7 @@ const ForestscurseDefinition: ParticleDefinition = {
                     color: 0x6B5236, alpha: [0.55, 0], light: "world", maxParticles: 80
                 },
                 {
-                    name: "grove", bind: "point", offset: [0, 0.05, 0], fit: "none",
+                    name: "grove", bind: "point", offset: [0, 0.05, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "grove", fallback: 1.6 }, rotation: [90, 0, 0] },
@@ -76,16 +77,16 @@ const ForestscurseDefinition: ParticleDefinition = {
             exit: { stop: 18, drain: 20 },
             emitters: [
                 {
-                    name: "fall", bind: "point", offset: [0, 2.2, 0], fit: "none",
+                    name: "fall", bind: "point", offset: [0, 0.15, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     rate: { data: "leaves", fallback: 14 },
-                    shape: { kind: "circle", radius: { data: "grove", fallback: 1.6 }, rotation: [90, 0, 0] },
+                    shape: { kind: "circle", radius: { data: "grove", fallback: 1.6 } },
                     direction: "down", speed: [0.02, 0.08], gravity: 0.012, spin: 14, spread: 30,
                     lifetime: [16, 26], size: [0.16, 0.04],
                     color: 0xA8D84C, alpha: [0.85, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "swirl", bind: "point", offset: [0, 1.2, 0], fit: "none",
+                    name: "swirl", bind: "point", offset: [0, 0.1, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
                     rate: 10, shape: { kind: "ring", radius: { data: "grove", fallback: 1.6 } },
                     direction: "outward", speed: [0.03, 0.1], spin: 22,

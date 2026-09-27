@@ -42,7 +42,23 @@ namespace CompanionBehavior {
         return ability !== null && PokemonSkills.simplebeamReceivable(ability);
     }
 
-    /** 给正在交战的伙伴接强化：可见、还没被改写，宝可梦要命中可顶替特性，普通生物直接走翻倍入口。 */
+    /** 目标是否真的有可用强化路线：已经在正向能力等级上，或招式表里带着能改变等级的变化类手段。 */
+    function simplebeamStagePotential(context: WorldBehavior.Context, subject: Entity): boolean {
+        const world = CompanionBehavior.world(context), actor = world.actor(subject.ref);
+        if (actor === null) return false;
+        const stages = NativeEffects.effectiveStages(world, actor);
+        for (const key in stages) if (stages[key] > 0) return true;
+        if (String(actor.domain()) !== "cobblemon") return false;
+        const pokemon = CobblemonCombat.pokemon(actor), layers = NativeModifiers.read(world, actor);
+        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+            const move = pokemon.move(slot); if (move === null) continue;
+            const id = layers.moves && layers.moves[String(slot)] || String(move.id());
+            if (String(CobblemonCombat.moveTemplate(id).category()) === "status") return true;
+        }
+        return false;
+    }
+
+    /** 给可以接强化的伙伴铺垫：可见、还没被改写、有后续等级变化手段；只是正在攻击不算理由。 */
     function simplebeamSupports(context: WorldBehavior.Context, item: WorldBehavior.Capability, ally: Entity): boolean {
         const self = source(context);
         if (!ally || ally.health <= 0 || !ally.friendly || !ally.visible) return false;
@@ -52,7 +68,7 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (distance(self.point, ally.point) > ai<number>(item, "maxChase", 13)) return false;
         if (!world(context).clear(point(self.point), point(ally.point))) return false;
-        if (!(ally.attacking || (typeof ally.hurtAgo === "number" && ally.hurtAgo < 60))) return false;
+        if (!simplebeamStagePotential(context, ally)) return false;
         if (domain(context, ally) !== "cobblemon") return true;
         const ability = fact<string>(context, "world_combat:simplebeam-ability", ally);
         return ability !== null && PokemonSkills.simplebeamReceivable(ability);
@@ -72,7 +88,9 @@ namespace CompanionBehavior {
             if (target.friendly) return simplebeamSupports(context, item, target) ? 46 : 0;
             if (!simplebeamWants(context, item, target)) return 0;
             const ability = fact<string>(context, "world_combat:simplebeam-ability", target);
-            return ability !== null && simplebeamTrouble.indexOf(ability) >= 0 ? 76 : 60;
+            if (ability !== null && simplebeamTrouble.indexOf(ability) >= 0) return 76;
+            // 普通敌不固定高权：只有它确实在走强化路线或带着后续等级变化时，改写才更有价值。
+            return simplebeamStagePotential(context, target) ? 54 : 34;
         }
     });
 }

@@ -1,6 +1,7 @@
 // 诅咒的可执行设计说明：这招按使用者是不是幽灵分成两种形态，所以场面同时放一个幽灵和一个非幽灵施法者。
 // 必然事实：两个施法者都提交过诅咒；幽灵的对手身上出现过共享身份 world_combat:status/curse，
-//   并且被绑定效果扣掉过血；非幽灵施法者身上出现过契约印记 world_combat:curse_pact。
+//   并且被绑定效果扣掉过血；非幽灵施法者身上出现过契约印记 world_combat:curse_pact，
+//   且物攻/防御实际抬高、速度实际压低（由 boost 的真实回执写入共享阶梯）。
 // 幽灵押掉的确切生命、债收了几口、交换等级的具体数值都写进 note。
 Smoke.scenario("curse", function (stage) {
     stage.weather("clear");
@@ -23,10 +24,14 @@ Smoke.scenario("curse", function (stage) {
         stage.expect(stage.hadMobEffect(foeGhost, "world_combat:status/curse"), "the Ghost's foe carried the shared curse identity");
         stage.expect(stage.damageTo(foeGhost) > 0, "the bound debt took health from the foe");
         stage.expect(stage.hadMobEffect(plain, "world_combat:curse_pact"), "the non-Ghost carried the pact mark");
+        var plainStages = stage.stages(plain);
+        stage.expect((plainStages.atk || 0) >= 1 && (plainStages.def || 0) >= 1 && (plainStages.spe || 0) <= -1,
+            "the non-Ghost actually traded Attack and Defence up and Speed down");
         stage.note("幽灵形态押掉最大生命的一个比例（血契 50%%／稳咒 35%%）并把逐段扣血的债挂在对手身上；非幽灵形态押敏捷换物攻/防御/速度的等级交换。每口债份额、债的时长、间隔与交换等级分别随特攻、等级、速度变化；具体数值由完整装配的人工试玩核对。", {
             ghostCasts: stage.casts("curse", ghost), plainCasts: stage.casts("curse", plain),
             ghostDamageTaken: Math.round(stage.damageTo(ghost) * 10) / 10,
             foeDamage: Math.round(stage.damageTo(foeGhost) * 10) / 10,
+            plainAtk: plainStages.atk || 0, plainDef: plainStages.def || 0, plainSpe: plainStages.spe || 0,
             pactEver: stage.hadMobEffect(plain, "world_combat:curse_pact"), tick: stage.tick()
         });
         stage.done();

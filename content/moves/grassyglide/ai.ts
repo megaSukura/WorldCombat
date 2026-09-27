@@ -6,7 +6,8 @@
  * 对谁出手：当前威胁；不可见、友方或已倒下的不接受。
  * 选择偏好：`ai.onGrass`（默认开）时，站在青草场地上的自己多一档分——这一记会瞬发、更远更重，值得优先出；
  *   `ai.finish`（默认开）时残血目标多一档分，用一记先手铲收尾。
- * 优先次序：射程内基础 22；脚下有草 +12（瞬发且更远）；目标残血 +8；已在射程内 +4。
+ * 优先次序：射程内基础 22；脚下有草 +12（瞬发且更远）；目标残血 +8；已在射程内 +4；地面路径被墙挡住 −10
+ *   （贴地滑行撞墙即停，够不到就不硬冲）。
  * 够不到怎么办：射程由 `dash` 决定，共享任务先把身位收进滑行距离再滑。
  * 放完之后：目标被铲开、落点只扬一撮短草，没有青草场地留下来；交回共享交战计划，冷却一好就能再滑。
  * 场地选择：AI 会把「站在已有青草场地上」当成加分理由；本招自己不铺场，所以不会为了造场反复出招。
@@ -38,7 +39,10 @@ namespace PokemonSkills {
                 && CompanionBehavior.status(context, self, "grassyterrain")) score += 12;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.4) score += 8;
             if (CompanionBehavior.distance(self.point, target.point) <= capability.data.range) score += 4;
-            return score;
+            // 贴地滑行撞墙即停：地面路径被挡住时这一滑够不到目标，不给高分。
+            const world = CompanionBehavior.world(context);
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) score -= 10;
+            return Math.max(0, score);
         }
     });
 

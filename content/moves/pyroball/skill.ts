@@ -1,22 +1,21 @@
 /**
  * 火焰球 / pyroball 的出手方式。
  *
- * 核心念头：捡起脚边的小石、点燃它，再像抽射一样把火球踢出去——火球带着焰尾沿一道低弧飞出，命中
+ * 核心念头：捡起脚边的小石、点燃它，再像抽射一样把火球踢出去——火球带着焰尾沿一道**真实低弧**飞出，命中
  * 炸开成一团火与碎石，并可能把目标引燃。原生的 90 命中在这里是「这一脚踢得正不正」：火球出膛带一点
  * 散布，速度快的个体踢得更直，蛮踢式更野；玩家从火球偏没偏就能读出这一脚。
  *
  * 选取：`kind: "aim"`——可点实体、也可点方向或世界点空踢；提交与执行都不要求存在敌人。
- * 火球撞墙或落地时在真实接触点碎开，不在原瞄准点补一次假命中。
+ * 火球撞墙或落地时在真实接触点碎开，不在原瞄准点补一次假命中；脚前被墙挡住时球在阻挡处直接碎掉。
  *
  * 三幕：
  *   起（windup，提交前）：脚边固定着一颗小石球、火苗从石面升起，只播预告。
  *   滚（roll，提交后）：同一颗小石球沿瞄准方向短滚到踢点，画面从脚下把它交代清楚。
- *   飞（flight → burst / scorch / burn）：火球以同一块「烧红的石」外观从踢点低弧飞出，拖着焰尾与
- *       脱落的小火星；命中活物时结算 blast 物理伤害并按概率引燃（共享灼伤默认效果）；落点炸开火与碎石，
- *       地上留下一圈很快淡去的焦痕——它只是短装饰，不代表持续灼烧的地面。
+ *   飞（flight → burst / scorch / burn）：火球以同一块「烧红的石」外观从踢点**沿求出的低弧**飞出，
+ *       拖着焰尾与脱落的小火星；命中活物时结算 blast 物理伤害，只有真的挂上灼伤才播引燃表现；
+ *       落点炸开火与碎石，落在可达地面才留一圈很快淡去的焦痕——它只是短装饰，不代表持续灼烧的地面。
  *
  * 与同族分开：喷火是持续的焰流、喷烟是烟幕；火焰球是**从脚下踢出去的一颗实心火石**，先滚起脚、再走低弧。
- * 配置 `savage` 由 resolve 改时序、由公式改威力／散布／射程，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const pyroballScene = "world_combat:move_pyroball";
@@ -28,8 +27,8 @@ namespace PokemonSkills {
         return WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(), direction.x() * sin + direction.z() * cos);
     }
 
-    /** 落点下方第一块实心方块的顶面位置；给焦痕一个贴地的锚点。 */
-    function pyroballGround(world: CombatWorld, point: CombatPoint): CombatPoint {
+    /** 落点下方第一块实心方块的顶面位置；没有可达地面时返回 null，不给空中终点假造地贴。 */
+    function pyroballGround(world: CombatWorld, point: CombatPoint): CombatPoint | null {
         const x = Math.floor(point.x()), z = Math.floor(point.z()), base = Math.floor(point.y());
         for (let dy = 0; dy <= 5; dy++) {
             const y = base - dy;
@@ -39,14 +38,14 @@ namespace PokemonSkills {
             if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
             return WorldCombat.point(x + 0.5, y + 1.02, z + 0.5);
         }
-        return point;
+        return null;
     }
 
     define({
         id: "pyroball",
         cooldownParameter: "recharge",
         name: "Pyro Ball",
-        description: "点燃脚边的小石，再像抽射一样把火球踢出去：火球带焰尾沿低弧飞出，命中炸开成一团火与碎石，并可能把目标引燃；落点留下一圈很快淡去的焦痕。",
+        description: "点燃脚边的小石，再像抽射一样把火球踢出去：火球带焰尾沿一条求出的低弧飞出，命中炸开成一团火与碎石，并可能把目标引燃；落在可达地面才留一圈很快淡去的焦痕，脚前有墙时球在墙前碎掉。",
         uses: ["中远距离的高威力火球点射", "用一脚抽射压血并可能引燃", "在落点留下焦痕标记这一脚"],
         kind: "aim",
         range: 14,
@@ -99,9 +98,14 @@ namespace PokemonSkills {
             const scorchTicks = Math.max(40, Math.min(120, Math.round(p("pyroball", "scorchTicks", action))));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.26));
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
+            const footDrop = -self.height() * 0.5 + radius;
+            const aimPoint = action.targetPosition();
             const base = aim(action);
+            // 低弧真正求解：从脚前起点以出膛速度打到选点；解不出（够不到）就退回直瞄方向。
+            const foot = self.position().plus(WorldCombat.point(0, footDrop, 0));
+            const solved = LivingActions.ballistic(foot, aimPoint, speed, gravity);
             const angle = (world.random() * 2 - 1) * scatter * Math.PI / 180;
-            const direction = pyroballRotate(base, angle);
+            const direction = pyroballRotate(solved || base, angle);
             const flat = WorldGeometry.flatUnit(direction, action.direction());
             const rollTicks = Math.max(2, Math.min(6, Math.round(7 - (speed - 0.9) * 3)));
             const kickDistance = Math.max(0.3, Math.min(1.2, radius * 2 + 0.35));
@@ -118,8 +122,17 @@ namespace PokemonSkills {
                 const me = scope.observe(actor);
                 if (me === null) { finish(current); return; }
                 // 从脚下踢出：出膛点在脚前，不是嘴边。
-                const foot = me.position().plus(WorldCombat.point(0, -me.height() * 0.5 + radius, 0)).plus(flat.scale(kickDistance));
-                const flight = current.projectile(foot, direction.scale(speed), gravity, radius, current.range(), 200,
+                const launch = me.position().plus(WorldCombat.point(0, -me.height() * 0.5 + radius, 0)).plus(flat.scale(kickDistance));
+                // 身体到球位之间真有墙时，球在阻挡处物理碎掉，不结算伤害、不铺焦痕。
+                const blocked = WorldGeometry.blockHit(scope, me.position(), launch);
+                if (blocked) {
+                    WorldFeedback.emit(scope, pyroballScene, 1, blocked.position(),
+                        { moment: "burst", target: "", sparks: sparks, heat: heat, scale: scale, intensity: intensity }, 24);
+                    sound(current, "cobblemon:impact.fire");
+                    finish(current);
+                    return;
+                }
+                const flight = current.projectile(launch, direction.scale(speed), gravity, radius, current.range(), 200,
                     function (flightAction: CombatAction, hit: CombatImpact) {
                         const scope = flightAction.world();
                         const point = hit.position();
@@ -127,13 +140,13 @@ namespace PokemonSkills {
                         if (target !== null && scope.valid(target) && !scope.friendly(target)) {
                             const landed = impact(flightAction, hit, "pyroball", power,
                                 { damage: damageSpec("pyroball", "blast"), status: "burn", chance: burnChance });
-                            if (landed && scope.valid(target)) {
+                            // 只有真的挂上灼伤才播引燃表现，未引燃不发贴身火标。
+                            if (landed && scope.valid(target) && CombatStatus.has(scope, target, "burn")) {
                                 const body = scope.observe(target);
                                 const at = body !== null ? body.position() : point;
                                 WorldFeedback.emit(scope, pyroballScene, 1, at,
                                     { moment: "burn", target: String(target.ref()), sparks: sparks, heat: heat, intensity: intensity }, 120);
-                                if (CombatStatus.has(scope, target, "burn"))
-                                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), pyroballBurnText, [], 30);
+                                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), pyroballBurnText, [], 30);
                             }
                         }
                         WorldFeedback.emit(scope, pyroballScene, 1, point,
@@ -141,13 +154,15 @@ namespace PokemonSkills {
                                 heat: heat, scale: scale, intensity: intensity }, 30);
                         sound(flightAction, "cobblemon:impact.fire");
                         sound(flightAction, "minecraft:entity.generic.explode");
+                        // 焦痕只落在真实可达地面；空中终点不造地贴。
                         const ground = pyroballGround(scope, point);
-                        // 焦痕只是短暂装饰，很快淡去，不表示地面持续燃烧。
-                        WorldFeedback.emit(scope, pyroballScene, 1, ground,
-                            { moment: "scorch", heat: heat, scorch: scorchTicks, sparks: sparks, intensity: intensity }, scorchTicks);
+                        if (ground !== null) {
+                            WorldFeedback.emit(scope, pyroballScene, 1, ground,
+                                { moment: "scorch", heat: heat, scorch: scorchTicks, sparks: sparks, intensity: intensity }, scorchTicks);
+                        }
                         finish(flightAction);
                     }, function (flightAction: CombatAction) { finish(flightAction); }, JSON.stringify(appearance));
-                WorldFeedback.keep(scope, "pyroball:trail:" + current.id(), pyroballScene, 1, foot,
+                WorldFeedback.keep(scope, "pyroball:trail:" + current.id(), pyroballScene, 1, launch,
                     { moment: "flight", projectile: flight, scale: scale, intensity: intensity }, 120);
             }
 

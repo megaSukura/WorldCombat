@@ -1,7 +1,8 @@
 /**
  * 重力 / gravity 的伙伴 AI 用途与自己的排场计划。
  *
- * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 14）格内，自己还不在重力井里。`ai.airOnly` 打开时只对
+ * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 14）格内，且井会压到的落点（`ai.atFoe` 时的威胁、否则自己）
+ * 还没被现有重力井覆盖。`ai.airOnly` 打开时只对
  * 离地/会飞/浮空的威胁出手（把这一口井留给真正需要压下来的人）；关闭时也当开打前的场地布置。
  * 威胁离地时 priority 抬到 62——这是它唯一不可替代的用途；否则 40，插在 `world_combat:defend` 之前。
  * `ai.atFoe` 决定井压在威胁身上（默认）还是压在自己脚下先护住自己。
@@ -12,10 +13,10 @@ namespace PokemonSkills {
         for (let i = 0; i < items.length; i++) if (items[i].data.move === gravityId) return items[i];
         return null;
     }
-    function gravityInside(context: WorldBehavior.Context): boolean {
-        const access = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+    function gravityCovered(context: WorldBehavior.Context, point: number[]): boolean {
+        const access = CompanionBehavior.world(context);
         const areas = WorldEffects.areas(access, gravityField);
-        for (let i = 0; i < areas.length; i++) if (CompanionBehavior.distance(areas[i].position, self.point) <= areas[i].radius) return true;
+        for (let i = 0; i < areas.length; i++) if (CompanionBehavior.distance(areas[i].position, point) <= areas[i].radius) return true;
         return false;
     }
     function gravityAirborne(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
@@ -30,7 +31,10 @@ namespace PokemonSkills {
         if (context.facts.intent === "hold" && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         if (CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point) > CompanionBehavior.ai<number>(item, "maxChase", 14)) return false;
         if (CompanionBehavior.ai<boolean>(item, "airOnly", false) && !gravityAirborne(context, threat)) return false;
-        return !gravityInside(context);
+        // 井会压在哪里就查哪里是否已有覆盖：对手已被罩住就不必只因自己在圈外重压。
+        const atFoe = CompanionBehavior.ai<boolean>(item, "atFoe", true);
+        const centre = atFoe ? threat.point : CompanionBehavior.source(context).point;
+        return !gravityCovered(context, centre);
     }
 
     CompanionBehavior.registerUse(gravityId, {

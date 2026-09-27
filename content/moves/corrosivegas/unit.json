@@ -13,13 +13,7 @@
     "skill.ts",
     "ai.ts"
   ],
-  "startupSources": [
-    "startup.ts"
-  ],
   "clientSources": [
     "presentation.ts"
-  ],
-  "mobEffectIcons": {
-    "world_combat:corroded": "minecraft:mob_effect/poison"
-  }
+  ]
 }

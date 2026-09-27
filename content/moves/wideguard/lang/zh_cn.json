@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.wideguard.summary": "向身周推出一面横贯的宽光墙，替自己与身边的队友把远程、范围的成片攻击整片卸掉；只立极短的一瞬，挡几下就散，贴身近战穿得过。",
+  "worldcombat.skill.wideguard.summary": "替自己与身边视线可达的队友各撑起一层会磨穿的随身护板，把拍过来的远程、范围攻击整片卸掉；只立极短的一瞬，挡几下就散，贴身近战穿得过。",
   "worldcombat.skill.wideguard.use.0": "挡住对面拍过来的远程齐射",
-  "worldcombat.skill.wideguard.use.1": "在队友被范围招式罩住前抢一拍立墙",
+  "worldcombat.skill.wideguard.use.1": "在队友被范围招式罩住前抢一拍立起护板",
   "worldcombat.skill.wideguard.use.2": "用一次短窗口替全队吃下一轮爆发",
-  "worldcombat.skill.wideguard.description.0": "宽墙为每人卸掉约 %1$s 点非接触伤害，只立约 %2$s 秒。",
-  "worldcombat.skill.wideguard.description.1": "发动瞬间罩住自己与周围 %1$s 格内的队友。",
+  "worldcombat.skill.wideguard.description.0": "每人的护板约卸掉 %1$s 点非接触或范围伤害，只立约 %2$s 秒。",
+  "worldcombat.skill.wideguard.description.1": "发动瞬间罩住自己与周围 %1$s 格内、视线可达的队友；施法者与每名受益者之间会牵出一条短连线。",
   "worldcombat.skill.wideguard.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.wideguard.brace.wide": "广墙：半径更大、磨得更快——罩得广。",
   "worldcombat.skill.wideguard.brace.dense": "厚墙：吸收总量更大、半径更小——罩得紧、更耐打。",
@@ -29,5 +29,5 @@
   "world_combat.move.wideguard.text.block": "宽墙卸力 %1$s（余 %2$s）",
   "world_combat.move.wideguard.text.fall": "宽墙散去",
   "effect.world_combat.wide_guard": "广域防守",
-  "worldcombat.skill.wideguard.description.3": "只挡来自敌人的远程与范围攻击，贴身近战穿得过。施法者与每名被罩住的队友各领一份吸收量，用尽或到时即散；单次伤害超过余量时，多出来的部分照常落下。离开施法者太远、或与施法者之间失去视线时，这份宽墙也会消失。"
+  "worldcombat.skill.wideguard.description.3": "只挡来自敌人的直接攻击里的远程与范围两类，贴身的普通近战穿得过；残留、间接伤害不在此列。施法者与每名被罩住的队友各领一份有限护池，用尽或到时即散；单次伤害超过余量时，多出来的部分照常落下。离施法者太远、与施法者之间失去视线，或这人身上的宽墙身份被清除时，这份护板当刻消失。"
 }

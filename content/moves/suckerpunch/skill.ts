@@ -5,9 +5,11 @@
  * 它是本族最短、最快、最赌时机的一招：没有长收势、没有铺垫，只有「读」和「刺」两个瞬间。
  *
  * 两幕：
- *   读（windup，提交前）：目光一凝、暗色聚到指上；附近有活体处在出手窗就标一条黑线准备，读不到就只是空等（present read / whiff）。
- *   刺（execute）：朝瞄准方向闪身刺出，打中的第一个活体要处在出手窗内才按 `sneak` 结算接触伤害并顶开；
- *       撞到不在出手窗的活体、被方块挡下或一路空放，这一刺落空（PP 照扣，与原作「招式失败」一致）。
+ *   读（windup，提交前）：目光一凝、暗色聚到指上；只有**当前瞄准线**上、闪身距离内够得到、且正处在出手窗的敌人
+ *       才会被标一条黑线准备，读不到就只是空等（present read / whiff）。
+ *   刺（execute）：朝瞄准方向闪身刺出，身体一路拖一条短尾；打中的第一个活体要处在出手窗内才按 `sneak` 结算
+ *       接触伤害并顶开；撞到不在出手窗的活体、被方块挡下或一路空放，这一刺落空（PP 照扣，与原作「招式失败」一致），
+ *       并立即收尾，不在空冲里拖到宿主超时。
  *
  * 与同族分开：快手还击只认「先制招式」并把它打断；突袭只认「任何攻击」的出手窗，抢到就是一下伤害，不打断对方。
  * 选取是 `aim`：可以赌方向空放，第一实体接触后判其资格，方块截断。
@@ -45,18 +47,21 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            const world = action.sense(), target = action.target();
+            const world = action.sense();
             const window = p(suckerpunchId, "window", action);
+            const direction = aim(action);
             const reach = p(suckerpunchId, "blink", action) + 1;
-            const marked = target !== null && suckerpunchArmed(world, target, window)
-                ? target : suckerpunchMark(world, action.origin(), reach, window);
+            const halfWidth = p(suckerpunchId, "collisionRadius", action) + 0.2;
+            const marked = suckerpunchMark(world, action.origin(), direction, reach, halfWidth, window);
             action.present("suckerpunch:read", suckerpunchScene, 1, action.origin(),
                 JSON.stringify({ moment: marked === null ? "whiff" : "read", windup: prepare,
                     target: marked === null ? "" : String(marked.ref()), reach: reach,
+                    direction: [direction.x(), direction.y(), direction.z()],
                     read: config && config.read === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(suckerpunchScene);
             const world = action.world();
             const direction = aim(action);
             const length = p(suckerpunchId, "blink", action);
@@ -66,18 +71,25 @@ namespace PokemonSkills {
             const push = p(suckerpunchId, "push", action);
             const window = p(suckerpunchId, "window", action);
             const count = Math.round(14 + power * 0.22);
-            let travelled = 0;
+            const scale = radius / 0.38;
+            let travelled = 0, settled = false;
+
+            /** 所有结束路径只经由这里收尾：清掉移动表现再 done，未触体的空冲也会及时结束。 */
+            function complete(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scenes.finish(current, done);
+            }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
-                WorldFeedback.emit(scope, suckerpunchScene, 1, at, { moment: "whiff", scale: radius / 0.38 }, 22);
+                WorldFeedback.emit(scope, suckerpunchScene, 1, at, { moment: "whiff", scale: scale }, 22);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), suckerpunchWhiffText, [], 24);
                 scope.sound("minecraft:entity.wind_charge.wind_burst", at, 12, "{}");
             }
 
             sound(action, "cobblemon:move.suckerpunch.target");
-            WorldFeedback.emit(world, suckerpunchScene, 1, action.origin(),
-                { moment: "flash", scale: radius / 0.38, count: Math.round(count * 0.5) }, 14);
+            scenes.show(action, "dash", action.origin(), { moment: "dash", count: count, streak: Math.max(6, Math.round(count * 0.35)), scale: scale });
 
             function advance(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
@@ -94,7 +106,7 @@ namespace PokemonSkills {
                             if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                         }
                         WorldFeedback.emit(scope, suckerpunchScene, 1, hit.position(),
-                            { moment: "strike", target: String(victim.ref()), count: count, scale: radius / 0.38,
+                            { moment: "strike", target: String(victim.ref()), count: count, scale: scale,
                                 power: Math.round(power * 10) / 10 }, 28);
                         scope.sound("cobblemon:impact.dark", hit.position(), 16, "{}");
                         WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.0, 0)), suckerpunchHitText,
@@ -102,13 +114,14 @@ namespace PokemonSkills {
                     } else {
                         whiff(current, hit.position());
                     }
-                    done(current);
+                    complete(current);
                     return;
                 }
                 const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < p(suckerpunchId, "minimumMove", current) || travelled >= length) {
-                    whiff(current, current.origin());
+                    whiff(current, hit.blocked() ? (hit.blockPosition() || here) : here);
+                    complete(current);
                     return;
                 }
                 current.after(1, advance);

@@ -2,14 +2,13 @@
  * 鳞片噪音 / clangingscales 的客户端表现。
  *
  * 一句话：施法者绷紧身体、鳞片竖成一口钟、边缘泛起紫色共鸣光 → 一圈声波从身体炸开、贴着地面向外推去 →
- *   被震中的目标身上炸开龙色共鸣裂痕与碎鳞 → 响完鳞片松开、身上浮起松脱的灰紫鳞屑；回响式先在身上亮一圈
- *   短促预告，隔一小段再从当时身体的新位置荡出第二圈。
+ *   被震中的目标身上炸开龙色共鸣裂痕与碎鳞 → 响完鳞片松开、身上浮起松脱的灰紫鳞屑。一次巨响，没有第二圈。
  * 色相家族：龙紫（impact_dragon / warblingring / glowingsparkle）为主体，纯白声波（sonicboom / ripple）作高频细节，
  *   灰紫鳞屑（spike / tinydust）作余韵。
- * 拍子：起 windup（绷紧、嗡鸣）→ 响 burst（声波炸开）→ 中 hit（共鸣裂痕）→ 预告 ahead（附着身体）→ 回响 echo（第二圈）→ 收 loose（松鳞）。
- * 范围：burst／echo 绑 point、fit world，地面声环半径直接读 `data.radius`（实际波及半径），画出的就是被震到的那一圈；
- *   ahead 绑 source、fit world，预告圈附在施法者身上并随其移动，第二响在 echo 的真实新位置出环。
- * 运动：主震是贴地向外扩张的声环加向上崩起的裂痕；回响是第二圈更淡的声环；松鳞的碎屑向下落。
+ * 拍子：起 windup（绷紧、嗡鸣）→ 响 burst（声波炸开）→ 中 hit（共鸣裂痕）→ 收 loose（松鳞）。
+ * 范围：burst 绑 point、fit world，地面声环半径直接读 `data.radius`（实际波及半径）；球壳也按 `data.radius` 画，
+ *   合起来表示「到身体中心球距 ∩ 高度带」这一圈。
+ * 运动：主震是贴地向外扩张的声环加向上崩起的裂痕；松鳞的碎屑向下落。
  * 数：`data.flow`（半径派生）决定声环密度、`data.rings`（威力派生）决定圈数、`data.marks`（威力派生）决定命中裂痕量，
  *   `data.intensity`（威力 / 110）放大整幕。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -36,20 +35,6 @@ const ClangingScalesDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.5, 0.1],
                     color: 0xE0D8FF, alpha: [0.5, 0], light: "full", maxParticles: 24
-                }
-            ]
-        },
-        ahead: {
-            duration: 0,
-            exit: { stop: 2, drain: 8 },
-            emitters: [
-                {
-                    name: "warn", bind: "source", fit: "world", offset: [0, -0.55, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    rate: 8, shape: { kind: "ring", radius: { data: "radius", fallback: 3.7 }, thickness: 0.05 },
-                    direction: "inward", speed: [0.01, 0.04],
-                    lifetime: [6, 12], size: [0.5, 0.08],
-                    color: 0xE0D8FF, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 18
                 }
             ]
         },
@@ -107,21 +92,6 @@ const ClangingScalesDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.24], gravity: 0.07, drag: 0.92,
                     lifetime: [9, 16], size: [0.13, 0.02], spin: 12,
                     color: 0x9B7BE8, alpha: [0.85, 0], light: "full", maxParticles: 30
-                }
-            ]
-        },
-        echo: {
-            duration: 26,
-            exit: { stop: 12, drain: 18 },
-            emitters: [
-                {
-                    name: "again", bind: "point", fit: "world", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    burst: { count: { data: "flow", fallback: 40 }, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.7 } },
-                    direction: "outward", speed: [0.18, 0.42],
-                    lifetime: [10, 16], size: [0.6, 0.1], sizeMode: "index",
-                    color: 0xCDB6FF, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 60
                 }
             ]
         },

@@ -30,6 +30,8 @@ namespace PokemonSkills {
     export const wringoutScene = "world_combat:move_wringout";
     /** 表现里的参考半径（格）：服务端传 scale = 实际螺旋半径 / 这个值。 */
     export const wringoutReference = 1.2;
+    /** 每段显式携带的段倍率：动态 resolve 用它把公式重算值乘回本段倍率，避免覆盖第二拧的 secondFactor。 */
+    export const wringoutFactorKey = "wringout-factor";
 
     /** 「目标完整度」系数：0.30（残血）～1.0（满血）；未知读作 0.30，预览不虚高。 */
     function wringoutScale(): Formula.Node {
@@ -125,9 +127,20 @@ namespace PokemonSkills {
     defineDamage(wringoutId, "wring", { defenceCoefficient: 0.0046,
         rationale: "绞力绕过正面护甲直取身体，对特防的穿透略强，让「拧满血目标」的差别更可见。" }, {
         contact: true,
-        // 每个目标各自结算：命中时用该目标自己的血量重算绞紧威力，完整度系数落到**这个人**身上。
+        // 每个目标各自结算：命中时用该目标自己的血量重算绞紧威力，完整度系数落到**这个人**身上；
+        // 再把该段显式携带的段倍率乘回去（第一拧 1、第二拧 secondFactor），所以动态重算不会覆盖第二段预乘。
         resolve: function (damage: PokemonDamage.FeatureContext) {
-            return damage.facts ? { power: actionParameters.rules.formulaValue(wringoutId + "/wring", damage.facts) } : undefined;
+            if (!damage.facts) return undefined;
+            const base = actionParameters.rules.formulaValue(wringoutId + "/wring", damage.facts);
+            let factor = 1;
+            const action = damage.action;
+            if (action) {
+                const raw = action.data(wringoutFactorKey);
+                // 动作数据必须是 JSON 对象，段倍率存在其中的 value 字段。
+                const value = raw === null ? NaN : Number(JSON.parse(raw).value);
+                if (isFinite(value) && value > 0) factor = value;
+            }
+            return { power: base * factor };
         }
     });
 

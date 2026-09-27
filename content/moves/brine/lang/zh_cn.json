@@ -3,7 +3,7 @@
   "worldcombat.skill.brine.use.0": "对着已经残血的对手补上翻倍的一记",
   "worldcombat.skill.brine.use.1": "在敌人退到半血以下时追加压力",
   "worldcombat.skill.brine.use.2": "从远处直射，只求收掉一个残血目标",
-  "worldcombat.skill.brine.description.0": "命中目标时造成约 %1$s 点特殊伤害；目标血量在一半或以下时，这一段威力翻倍。",
+  "worldcombat.skill.brine.description.0": "命中目标时造成约 %1$s 点特殊伤害；目标血量在一半或以下时，这一段威力翻倍——翻倍在完好目标的预算封顶之后计算，所以高等级、高压式也照旧一律 2 倍。",
   "worldcombat.skill.brine.description.1": "盐卤最多射到 %1$s 格，出流速度约 %2$s 格/刻，判定半径 %3$s 格；打中实体或方块都只溅开这一处。",
   "worldcombat.skill.brine.description.2": "被直击的目标带着湿透身份约 %1$s；盐水只留这个标记，不额外拖慢脚步。",
   "worldcombat.skill.brine.press.on": "当前高压式：威力 ×1.15、射程 ×1.15、判定更细，但湿身更短、起手多 2 刻、冷却多 4 刻。",

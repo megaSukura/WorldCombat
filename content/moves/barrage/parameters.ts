@@ -7,7 +7,8 @@
  *
  * 翻译：把「投掷圆形物体」落成**远处一发接一发抛出圆球**——施法者站在原地，把手里的圆球一个接一个抛出去，
  *   每个球自己飞、自己撞。它是本族唯一的远程招，也是唯一**带物体飞行**的一串；圆球是圆的，所以它天然会
- *   跟世界互动：平投的球撞上墙会弹一下（`bounce` + `restitution`），高抛的球越过掩体落到目标头上。
+ *   跟世界互动：平投的球撞上墙会弹一下（`bounce` + `restitution`），高抛的球用真实弹道解走出一条越过掩体的弧，
+ *   逐段验墙后才出手，解不出可达高弧就明确失败。玩家按住技能键时每个球按当刻瞄点更新。
  *   命中率 85 由散布翻译（球散得开就会漏）。
  *
  * 数据分散（每项读不同的精灵数据）：
@@ -33,6 +34,9 @@ namespace PokemonSkills {
     export const barrageScene = "world_combat:move_barrage";
     export const barrageTallyText = "world_combat.move.barrage.text.tally";
     export const barrageOutText = "world_combat.move.barrage.text.out";
+    export const barrageNoArcText = "world_combat.move.barrage.text.noarc";
+    /** 这一抛可以等待的最长飞行时间（刻）；高弧解必须落在这一预算内才算可达。执行与 AI 读同一个预算。 */
+    export const barrageFlightTicks = 90;
 
     actionParameters.define(barrageId, {
         /** 单球威力：15 + 物攻偏移[−4,13]×0.14 + 等级(≥20)偏移[0,7]×0.28；高抛 ×0.9 / 平投 ×1.15；夹 8..30。 */

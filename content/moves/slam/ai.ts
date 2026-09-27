@@ -4,7 +4,8 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 5）之内。它是一记慢而重的窄长落痕，
  * 落痕留在扬起时与施法者连成的方向线上，所以 AI 有两条选靶倾向：
  *   `ai.preferStill`（默认开）：不动、被定住、睡眠或冰冻的目标排得更前，正在奔跑的目标降分（大概率砸空）。
- *   `ai.preferLine`（默认开）：目标与施法者连成的窄道上还排着别的敌人时抬分——一记落痕砸穿一整排正合适。
+ *   `ai.preferLine`（默认开）：用本招真实的落痕宽度与出手到砸下的时间（起手 + 砸落）外推目标走位后，
+ *     连线上还排着别的敌人时抬分——一记落痕砸穿一整排正合适。
  * 对谁出手：血太少的目标适当降分——用一记最重的招收残是浪费，留给更便宜的招；焦点目标另加一档。
  * 够不到怎么办：交给共享接近逻辑走到射程内。
  */
@@ -20,10 +21,31 @@ namespace PokemonSkills {
         return Math.sqrt(motion[0] * motion[0] + motion[1] * motion[1] + motion[2] * motion[2]) < 0.05;
     }
 
-    /** 施法者到目标的窄道（宽约 0.9 格）里还排着几个别的敌人——落痕正适合砸这种一字排开。 */
-    function slamLinedUp(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
-        const self = CompanionBehavior.source(context);
-        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+    /** 本招真实的落痕宽度与出手到砸下的时间；公式不可读时退回到保守估计。 */
+    function slamAim(context: WorldBehavior.Context): { width: number; lead: number } {
+        try {
+            const scope = factContext(CompanionBehavior.world(context));
+            const width = p("slam", "width", scope);
+            const lead = p("slam", "tempo", scope) + p("slam", "fallTicks", scope);
+            if (isFinite(width) && width > 0 && isFinite(lead) && lead >= 0) return { width: width, lead: lead };
+        } catch (ignored) { }
+        return { width: 0.9, lead: 15 };
+    }
+
+    /** 目标从锁定到砸下这段时间会横移多远；跑得越快越可能在落下前离开条带。 */
+    function slamDrift(context: WorldBehavior.Context, target: CompanionBehavior.Entity, lead: number): number {
+        const motion = CompanionBehavior.velocity(context, target);
+        if (motion === null) return 0;
+        return Math.sqrt(motion[0] * motion[0] + motion[2] * motion[2]) * lead;
+    }
+
+    /** 用真实落痕宽度与出手时间外推后，施法者到目标方向的窄道里还排着几个别的敌人。 */
+    function slamLinedUp(context: WorldBehavior.Context, capability: WorldBehavior.Capability,
+                         target: CompanionBehavior.Entity, halfWidth: number, lead: number): number {
+        const self = CompanionBehavior.source(context), reach = Number(capability.data.range) || 3;
+        const aimMotion = CompanionBehavior.velocity(context, target) || [0, 0, 0];
+        const dx = target.point[0] + aimMotion[0] * lead - self.point[0];
+        const dz = target.point[2] + aimMotion[2] * lead - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.2) return 0;
         const hx = dx / length, hz = dz / length;
@@ -32,10 +54,11 @@ namespace PokemonSkills {
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-            const along = ox * hx + oz * hz;
-            const side = Math.abs(ox * hz - oz * hx);
-            if (along > 0.3 && along <= capability.data.range + 0.5 && side <= 0.9) count++;
+            const motion = CompanionBehavior.velocity(context, other) || [0, 0, 0];
+            const ox = other.point[0] + motion[0] * lead - self.point[0];
+            const oz = other.point[2] + motion[2] * lead - self.point[2];
+            const along = ox * hx + oz * hz, side = Math.abs(ox * hz - oz * hx);
+            if (along > 0.3 && along <= reach + 0.5 && side <= halfWidth + 0.45) count++;
         }
         return count;
     }
@@ -54,13 +77,15 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !slamValid(target)) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
+            const aim = slamAim(context), halfWidth = aim.width / 2;
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "preferStill", true)) {
                 if (slamStill(context, target)) score += 18;
+                else if (slamDrift(context, target, aim.lead) <= halfWidth + 0.45) score += 6;
                 else score -= 8;
             }
             if (CompanionBehavior.ai<boolean>(capability, "preferLine", true)) {
-                const lined = slamLinedUp(context, capability, target);
+                const lined = slamLinedUp(context, capability, target, halfWidth, aim.lead);
                 if (lined >= 1) score += 16;
                 if (lined >= 2) score += 10;
             }
@@ -83,7 +108,7 @@ namespace PokemonSkills {
             help: "开启：不动、被定住、睡眠或冰冻的目标优先，正在奔跑的目标降分；关闭：只按威胁与距离排序，愿意赌一发预判。"
         }),
         field(pathOf("ai.preferLine"), "优先砸成一线的敌人", "boolean", {
-            help: "开启：目标与施法者连成的窄道里还排着别的敌人时明显优先砸这一记；关闭：只按单点收益排序，不看有没有排成一条线。"
+            help: "开启：用真实落痕宽度和起手到砸下的时间外推走位后，目标连线上还排着别的敌人时明显优先砸这一记；关闭：只按单点收益排序，不看有没有排成一条线。"
         })
     ]);
 }

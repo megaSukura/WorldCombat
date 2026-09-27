@@ -3,18 +3,38 @@
  *
  * 什么局面下出手：对手可见、敌对、活着、在 `ai.maxChase` 之内；朝着目标方向的扇形里至少能罩住 `ai.minFoes`
  * 个敌人（默认 1，即单个目标也放）；自身生命高于 `ai.minHealth`。这是一记有自损的范围招，所以比铁蹄光线
- * 更愿意在贴身混战时用：罩住的人越多越划算。
+ * 更愿意在贴身混战时用：罩住的人越多越划算。**自损按本次实际 `cost` 结清**：AI 先算支付后自己还剩多少，
+ * 支付会把人压到没有余量就不出手；残血对手的例外也只留给「支付后仍留有明显余量、且对手确实残到有击杀把握」。
  * 对谁出手：在所有够得到的敌人里挑「扇形罩住的人最多」的那个（把中心线对准人堆），罩住数相同时挑最近的。
  * 怎么够到：共享接近把身位收进扇形半径以内，再把中心线对准目标方向喷出去。
  * 放完之后：交回共享交战计划；放完抽掉一截血，通常会退开或转用便宜的招。
  */
 namespace PokemonSkills {
-    /** 朝 target 方向的扇形（角度随配置：爆散 55°、束流 28° 半角）里，够得到的可见敌人数量。 */
+    /** 本个体这一发实际要付的最大生命比例；读不到时退回公式中点，作为保守估计。 */
+    function chloroblastCost(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        try {
+            const world = CompanionBehavior.world(context);
+            const value = p(chloroblastId, "cost", { world: world, actor: world.source(), detail: { values: capability.data.config } });
+            if (isFinite(value)) return Math.max(0, Math.min(1, value));
+        } catch (error) { }
+        return 0.5;
+    }
+
+    /** 本个体这一发实际的扇形总张角；读不到时按配置的束／散两档回退。 */
+    function chloroblastAngle(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        try {
+            const world = CompanionBehavior.world(context);
+            const value = p(chloroblastId, "angle", { world: world, actor: world.source(), detail: { values: capability.data.config } });
+            if (isFinite(value) && value > 0) return value;
+        } catch (error) { }
+        return capability.data.config && capability.data.config.burst ? 110 : 56;
+    }
+
+    /** 朝 target 方向、与实际公式同张角的扇形里，够得到的可见敌人数量。 */
     function chloroblastCrowd(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
         const reach = typeof capability.data.range === "number" ? capability.data.range : 7;
-        const wide = !!(capability.data.config && capability.data.config.burst);
-        const halfAngle = (wide ? 55 : 28) * Math.PI / 180;
+        const halfAngle = chloroblastAngle(context, capability) * Math.PI / 360;
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return 1;
@@ -66,7 +86,11 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 9)) return false;
             if (chloroblastCrowd(context, capability, target) < CompanionBehavior.ai<number>(capability, "minFoes", 1)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.4);
-            return CompanionBehavior.ratio(self) >= minHealth || CompanionBehavior.ratio(target) <= 0.3;
+            // 用本次 cost 算支付后余量：付完会死人（或只剩一口气）就不出手，残敌也不值得拿命换。
+            const after = CompanionBehavior.ratio(self) - chloroblastCost(context, capability);
+            if (after <= 0.02) return false;
+            if (CompanionBehavior.ratio(self) >= minHealth) return true;
+            return CompanionBehavior.ratio(target) <= 0.3 && after >= Math.max(0.05, minHealth * 0.5);
         },
         accepts: function (context, capability, target) { return chloroblastValid(target); },
         priority: function (context, capability, target) {

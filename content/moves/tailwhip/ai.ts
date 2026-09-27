@@ -1,8 +1,9 @@
 /**
- * 摇尾巴 的伙伴 AI 用途：这招自己的一套出手计划——把该甩的人放到背后，再左右两扫。
+ * 摇尾巴 的伙伴 AI 用途：这招自己的一套出手计划——把该甩的人放到背后，再从左到右、从右到左两趟扫回。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自己为圆心、尾巴半径内至少站着
- *   ai.minFoes 个看得见、还没被破防的非友方（默认 1）。它铺在身后，所以最适合敌人追在背后时回身一记。
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自己为圆心、朝威胁那一侧的尾巴扇带里至少站着
+ *   ai.minFoes 个看得见、还没被破防的非友方（默认 1）。它铺在身后，所以最适合敌人追在背后时回身一记；
+ *   只数真正落在背扇里、通视的人，不用周围整圈的无关目标撑收益。
  * 对谁出手：当前威胁；已经带着 guardbroken 身份（任何来源）时跳过，避免重复。
  * 朝哪甩：提交方向取“背对威胁”——AI 给出一个背离威胁的朝向点，尾巴因此扫向追兵；接近距离直接取
  *   本个体这次解析出的 capability 射程（item.data.range），不再另写一套公式。接近只到尾巴半径，不冲进人堆中心。
@@ -16,14 +17,26 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 
-    /** 尾巴半径内看得见、未被破防的非友方数量；掩体挡住的（不可见）不计。 */
-    function tailwhipFoes(context: WorldBehavior.Context, centre: number[], radius: number): number {
+    /** 背扇内看得见、通视、未被破防的非友方数量：以背离威胁的朝向为轴，只数身后 120 度、尾巴半径内的人。 */
+    function tailwhipFoes(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): number {
+        const self = source(context), world = CompanionBehavior.world(context);
+        const origin = CompanionBehavior.point(self.point);
+        const axis = CompanionBehavior.point(threat.point).minus(origin);
+        const heading = axis.length() < 0.05 ? null : axis.unit();
+        const radius = item.data.range;
+        const cosine = Math.cos(60 * Math.PI / 180);
         const nearby = context.facts.nearby as Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (distance(other.point, centre) <= radius) count++;
+            if (status(context, other, "guardbroken")) continue;
+            const delta = CompanionBehavior.point(other.point).minus(origin);
+            const distance = delta.length();
+            if (distance > radius) continue;
+            if (heading && distance > 1e-4 && (delta.x() * heading.x() + delta.z() * heading.z()) / distance < cosine - 1e-6) continue;
+            if (!world.clear(origin, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -35,7 +48,7 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
         if (status(context, threat, "guardbroken")) return false;
-        return tailwhipFoes(context, self.point, item.data.range) >= ai<number>(item, "minFoes", 1);
+        return tailwhipFoes(context, item, threat) >= ai<number>(item, "minFoes", 1);
     }
 
     registerUse("tailwhip", {
@@ -57,7 +70,7 @@ namespace CompanionBehavior {
         },
         priority: function (context, item, target) {
             if (!target || !tailwhipWants(context, item, target)) return 0;
-            return Math.min(90, 55 + tailwhipFoes(context, source(context).point, item.data.range) * 6);
+            return Math.min(90, 55 + tailwhipFoes(context, item, target) * 6);
         }
     });
 }

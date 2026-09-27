@@ -6,10 +6,10 @@
  *
  * 翻译：把「使出一记腿技后同时发射 3 箭」落成**两拍**——先一记低扫腿踢开护架，再同时射出 3 支箭。
  * 箭的伤害按支分（每支一段 `volley`，三支都命中≈原生的 90 威力总量），三箭齐发所以可以散开打不同目标；
- * 高暴击落成两处：原生暴击等级已由共享结算读取，另外**只有被这一脚真正踢中护架的目标**会被三箭直接命中要害
+ * 高暴击落成两处：原生暴击等级已由共享结算读取，另外**只有被这一脚真正踢低防御的目标**会被三箭直接命中要害
  * （`critical` 覆写，按目标 ref 对齐）。50% 的降防落在腿技这一段、30% 的畏缩只在第一次命中时掷一次（与原生「一次判定」一致）。
- * 降防用 `NativeEffects.boost(...,"def",-N)` + 共享身份 `world_combat:status/guardbroken`；
- * 畏缩用本单元声明的 `world_combat:status/flinch` 并投递 `world_combat:interrupt`。
+ * 降防用 `NativeEffects.boost(...,"def",-N)` + 共享身份 `world_combat:status/guardbroken`；只有 boost 返回非 0
+ * 才算真的踢开。畏缩用本单元声明的 `world_combat:status/flinch` 并投递 `world_combat:interrupt`。
  *
  * 选取是 aim：方向点或实体都能放。腿只够到 `reach` 的近身长度（判定与画面用同一条真实腿线），远距离不会凭空踢中，
  * 只送三箭；箭会被墙挡住。实际施放射程由 `arrowRange` 决定，`reach` 只描述这一步近身腿技。
@@ -68,7 +68,7 @@ namespace PokemonSkills {
         /** 踢开护架几率：0.5 + 物攻偏移[−0.08,0.15]；夹 0.35..0.7。 */
         guardChance: percent(
             F.base(0.5).plus(F.stat("attack").minus(60).times(0.0012).clamp(-0.08, 0.15)).clamp(0.35, 0.7),
-            "踢开护架几率", "腿技命中时让目标防御下降的几率（原生 50%）；物攻越高踢得越准。"),
+            "踢开护架几率", "腿技命中时让目标防御下降的几率（原生 50%）；物攻越高踢得越准。实际下降以原生结算为准，免疫降防或已到底不算踢开。"),
         /** 踢开等级：本招固定 1 级。 */
         guardStages: formula(
             F.base(1),

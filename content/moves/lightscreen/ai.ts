@@ -31,14 +31,28 @@ namespace PokemonSkills {
     function lightscreenCell(point: number[]): CombatPoint {
         return WorldCombat.point(point[0], point[1], point[2]);
     }
-    /** 已有一面同类幕压在交战中线附近时不再重复：只按最强一面减伤，重复摆幕是浪费。 */
-    function lightscreenAlready(context: WorldBehavior.Context, self: CompanionBehavior.Entity, threat: CompanionBehavior.Entity | null): boolean {
-        const world = CompanionBehavior.world(context);
-        if (threat) {
-            const mid = [(self.point[0] + threat.point[0]) / 2, self.point[1], (self.point[2] + threat.point[2]) / 2];
-            if (WorldEffects.areasAround(world, lightscreenCell(mid), 6, lightscreenMark).length > 0) return true;
+    /** 威胁最近一次真实攻击的类别；没有可靠记忆时返回空串，不据此推断。 */
+    function lightscreenAttackCategory(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): string {
+        const world = CompanionBehavior.world(context), actor = world.actor(threat.ref);
+        const attack = actor === null ? null : DamageSemantics.recentAttack(world, actor, 120);
+        return attack === null ? "" : String(attack.category || "");
+    }
+    /**
+     * 已有一面同类幕是否真挡当前火线：只认友方场主、且幕面矩形被 胁迫者→自己 的真实线段穿过。
+     * 附近站着敌方幕或朝向不对的幕不再算作已有保护，避免把可用的幕白拒掉。
+     */
+    function lightscreenAlready(context: WorldBehavior.Context, self: CompanionBehavior.Entity, threat: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), selfActor = world.actor(self.ref);
+        if (selfActor === null) return false;
+        const areas = WorldEffects.areas(world, lightscreenMark);
+        for (let i = 0; i < areas.length; i++) {
+            const area = areas[i];
+            if (area.pending) continue;
+            const owner = world.actor(area.source);
+            if (owner === null || !world.allied(owner, selfActor)) continue;
+            if (PokemonSkills.lightscreenBlocks(area, threat.point, self.point)) return true;
         }
-        return WorldEffects.areasAround(world, lightscreenCell(self.point), 3, lightscreenMark).length > 0;
+        return false;
     }
     /** 自己与威胁之间偏自己一侧、可站立的前方点；ref 为空表示按 point 施放。 */
     function lightscreenPick(context: WorldBehavior.Context, capability: WorldBehavior.Capability): CompanionBehavior.Entity {
@@ -79,7 +93,14 @@ namespace PokemonSkills {
         },
         accepts: function () { return true; },
         target: function (context, capability) { return lightscreenPick(context, capability); },
-        priority: function (context, capability) { return lightscreenPressured(context, capability) ? 100 : 44; }
+        priority: function (context, capability) {
+            let value = lightscreenPressured(context, capability) ? 100 : 44;
+            const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"];
+            const category = threat ? lightscreenAttackCategory(context, threat) : "";
+            if (category === "special") value += 24;
+            else if (category === "physical") value -= 24;
+            return value;
+        }
     });
 
     const lightscreenAiChase = number("ai.maxChase", "考虑距离", 4, 26, 1);

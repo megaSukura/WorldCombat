@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.nobleroar.summary": "Plant your feet, throw the chest out, and let a low roar push a whole cone of sound forward. Everything in it is cowed: Attack and Sp. Atk drop together, and a narrower bellow presses harder.",
+  "worldcombat.skill.nobleroar.summary": "Plant your feet, throw the chest out, and let a low roar push a whole cone of sound forward. Targets with a clear sound path are cowed: Attack and Sp. Atk drop together. A wide roar covers more ground; a narrow low bellow presses harder.",
   "worldcombat.skill.nobleroar.use.0": "Stop a group charging straight at you",
   "worldcombat.skill.nobleroar.use.1": "Blunt the enemy's output before the first blow",
   "worldcombat.skill.nobleroar.use.2": "Catch a small cluster with one wide blast",
-  "worldcombat.skill.nobleroar.description.0": "Push a cone of sound forward; every enemy caught in it is counted once, losing %1$s stages of Attack and Sp. Atk so its physical and special hits land weaker. The pressure reaches %2$s blocks and opens %3$s degrees, and needs no line of sight.",
+  "worldcombat.skill.nobleroar.description.0": "Push a cone of sound forward; every enemy caught in it is counted once, losing %1$s stages of Attack and Sp. Atk so its physical and special hits land weaker. The pressure reaches %2$s blocks and opens %3$s degrees; a wall that blocks the sound path protects the target, and a target immune to both drops (or already at the floor) is not counted or marked.",
   "worldcombat.skill.nobleroar.description.1": "Cowed targets also carry the \"Cowed\" marker for about %1$s; the marker only shows they were just roared at, while the real drop is the Attack and Sp. Atk stages, which stay until the stat ladder resets after a stretch out of combat.",
   "worldcombat.skill.nobleroar.description.2": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s.",
   "worldcombat.skill.nobleroar.timing": "The telegraph can be interrupted without paying anything; PP and cooldown settle only after commit.",

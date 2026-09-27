@@ -24,18 +24,36 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
-            // 聚群：目标身边还挤着别的敌人时，固定结界更可能一次罩住多人。
+            // 聚群：结界是固定不追的，所以按本招实际 sigil 半径、并只数那些此刻不高速移动（预测仍停在圈里）的敌人。
+            const sigil = hexSigil(context, capability);
             const nearby = (context.facts.nearby || []) as WorldMethods.Subject[];
             let crowd = 0;
             for (let i = 0; i < nearby.length; i++) {
                 const other = nearby[i];
                 if (other.ref === target.ref || other.friendly || other.health <= 0) continue;
-                if (CompanionBehavior.distance(other.point, target.point) <= capability.data.range * 0.5) crowd++;
+                if (CompanionBehavior.distance(other.point, target.point) > sigil) continue;
+                if (hexSpeed(other) > 0.18) continue;
+                crowd++;
             }
             if (CompanionBehavior.ai<boolean>(capability, "blighted", true) && hexBlighted(context, target)) return crowd > 0 ? 60 : 52;
             return crowd > 0 ? 24 : 15;
         }
     });
+
+    /** 本个体这一次真实的结界半径；AI 与出招共用同一条 sigil 公式，不再用半程射程近似。 */
+    function hexSigil(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            return Math.max(1.2, PokemonSkills.p(hexId, "sigil",
+                { world: world, actor: world.source(), skill: skills[hexId], detail: { values: capability.data.config || {} } }));
+        } catch (error) { return 1.5; }
+    }
+
+    /** 观察到的移动速度（格/刻）；没有速度事实时视为静止。 */
+    function hexSpeed(value: WorldMethods.Subject): number {
+        const velocity = value.velocity;
+        return velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]) : 0;
+    }
 
     /** 目标此刻是否带着任意主异常；读共享身份，别的单元施加的也算。 */
     function hexBlighted(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {

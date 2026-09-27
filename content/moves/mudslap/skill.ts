@@ -53,8 +53,10 @@ namespace PokemonSkills {
                 cooldown: 36 + (thick ? 6 : 0), active: 0, range: p("mudslap", "reach", context) };
         },
         windup: function (action, config, prepare) {
+            const thick = !!(config && config.thick);
+            // 厚泥/稀泥两档明确的收泥密度，不再用 0/1 当发射率。
             action.present("mudslap:gather", mudslapScene, 1, action.origin(),
-                JSON.stringify({ moment: "gather", thick: config && config.thick ? 1 : 0 }));
+                JSON.stringify({ moment: "gather", thick: thick ? 1 : 0, density: thick ? 14 : 5 }));
             return prepare;
         },
         indicator: function () { return { radius: 0.5, geometry: "point", style: "mud", color: 0x6E5438, label: "掷泥" }; },
@@ -62,7 +64,8 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const body = world.observe(actor);
-            const origin = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.55, 0));
+            // 出手点取施法者原生碰撞箱中心：始终在身体内部，不会落到头顶之外或薄顶里。
+            const origin = action.origin();
             const speed = p("mudslap", "arcSpeed", action);
             const gravity = p("mudslap", "gravity", action);
             const radius = p("mudslap", "radius", action);
@@ -79,8 +82,9 @@ namespace PokemonSkills {
             const launch = LivingActions.ballistic(origin, action.targetPosition(), speed, gravity);
             sound(action, "cobblemon:move.mudsport.actor");
             let settled = false;
+            // flight.origin 让实际发射点与解算、表现同取身体内部的出手点，弧线不再从脚边另起一条。
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: action.range(), radius: radius, gravity: gravity,
+                speed: speed, range: action.range(), radius: radius, gravity: gravity, origin: origin,
                 direction: launch === null ? undefined : launch, lifetime: 220,
                 appearance: { sprite: "cobblemon:particle/generic/mud/mudbubble", scale: Math.max(0.6, radius / 0.2),
                     homing: targetRef === "" ? undefined : { target: targetRef, turn: steer, delay: 1, range: action.range() } },
@@ -98,11 +102,13 @@ namespace PokemonSkills {
                         const at = currentWorld.observe(target);
                         if (landed && at !== null) {
                             const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
+                            // 回执按实际生效的等级变化报，不按配置值冒充。
+                            const applied = Math.abs(dropped);
                             WorldFeedback.keep(currentWorld, "mudslap:face:" + String(target.ref()), mudslapScene, 1, at.position(),
-                                { moment: "face", target: String(target.ref()), stage: blind, splash: splash, intensity: intensity, tick: mudTicks }, mudTicks);
+                                { moment: "face", target: String(target.ref()), stage: applied, splash: splash, intensity: intensity, tick: mudTicks }, mudTicks);
                             if (dropped !== 0)
                                 WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
-                                    "world_combat.move.mudslap.text.blind", [Math.abs(dropped)], 30);
+                                    "world_combat.move.mudslap.text.blind", [applied], 30);
                         }
                     }
                     // 接触侧泥印：按真实命中点与表面朝向画；方块不受影响，不产生危险泥区。

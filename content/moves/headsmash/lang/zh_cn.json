@@ -25,7 +25,7 @@
   "worldcombat.skill.headsmash.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.headsmash.preference.ai.maxChase.help": "超过这个距离就不主动头撞，先走近。越大越早发起，也越容易冲空后栽在远处。",
   "worldcombat.skill.headsmash.preference.ai.minHealth": "保留生命",
-  "worldcombat.skill.headsmash.preference.ai.minHealth.help": "自身生命低于这个比例时不再主动头撞（除非对手已残）。越高越珍惜自己，也越少抢收残血。",
+  "worldcombat.skill.headsmash.preference.ai.minHealth.help": "自身生命低于这个比例时不再主动头撞；只有对手已残、且自己剩余生命仍多于对手时才会扑上去收尾。越高越珍惜自己，也越少抢收残血。",
   "world_combat.move.headsmash.text.hit": "双刃头锤",
   "world_combat.move.headsmash.text.crash": "冲空自伤 %1$s",
   "worldcombat.skill.headsmash.description.charge": "这是沿瞄准方向的一次直线冲撞，只结算路上第一个撞到的敌人；冲到底、被障碍挡住或推不动都算冲空。"

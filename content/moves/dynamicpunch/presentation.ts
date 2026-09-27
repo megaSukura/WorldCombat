@@ -1,12 +1,13 @@
 /**
  * 爆裂拳 / dynamicpunch 的客户端表现。
  *
- * 一句话：抡圆了全身力气的一记横扫——身前的扇面被速度线整片扫亮，扫中的目标身上炸开赤红的拳击冲击，
- * 头顶随即转起几只混乱的飞鸟。
+ * 一句话：抡圆了全身力气的一记横扫——身前的扇面被速度线整片扫亮，一记拳影从后摆沿弧线扫向目标，
+ * 扫中的目标身上炸开赤红的拳击冲击，真正被震懵的头顶才转起几只混乱的飞鸟。
  * 色相家族：赤红（0xE0523C）与近白（0xF6E3DC）；饱和只出现在冲击与飞鸟的小面积。
- * 拍子：起 windup（后摆蓄力）→ windback（回摆）→ 击 sweep（扇面扫亮）与 impact（命中）→ 收 overextend（挥空失衡）。
+ * 拍子：起 windup（后摆蓄力）→ windback（回摆）→ 击 sweep（扇面扫亮＋拳影横扫）与 impact（命中拳印）
+ *   → daze_start（真的挂上混乱才起的飞鸟）→ 收 overextend（挥空失衡）。
  * 范围：sweep 的扇面用 `data.path`（施法者→弧点，与判定同一组顶点）填成多边形，玩家一眼看出站哪会被扫到。
- * 运动：速度线沿 `data.direction` 指向的扇面掠过；命中的目标向外迸碎片；飞鸟在头顶绕圈。
+ * 运动：拳影由自定义场景沿 sweep 的真实 origin/direction/arc/reach 端点扫过；命中的目标向外迸碎片；飞鸟在头顶绕圈。
  * 数：`data.path` 的弧点密度由弧角决定，`data.intensity`（威力 / 85）抬高亮度与密度，
  * `data.scale`（拳程 / 2.6）放大拳面与尘环，`data.daze`（混乱刻数）驱动飞鸟的持续。
  */
@@ -68,15 +69,6 @@ const DynamicpunchDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.08, 0.26],
                     lifetime: [5, 9], size: [0.2, 0.05],
                     color: 0xF6E3DC, alpha: [0.7, 0], light: "full", maxParticles: 200
-                },
-                {
-                    name: "knuckle", bind: "source", offset: [0, 0.5, 0], height: 0.45,
-                    particle: "world_combat_core:cobblemon/generic/hollowfist",
-                    burst: { count: 4 },
-                    shape: { kind: "point" },
-                    direction: "outward", speed: [0.03, 0.08],
-                    lifetime: [7, 11], size: [0.4, 0.1], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 10
                 }
             ]
         },
@@ -101,9 +93,15 @@ const DynamicpunchDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.2], spread: 8,
                     lifetime: [10, 16], size: [0.34, 0.08],
                     color: 0xE0523C, alpha: [0.6, 0], light: "world"
-                },
+                }
+            ]
+        },
+        daze_start: {
+            duration: 30,
+            exit: { stop: 12, drain: 14 },
+            emitters: [
                 {
-                    name: "daze_start", bind: "target", height: 1.05,
+                    name: "daze_bird", bind: "target", height: 1.05,
                     particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
                     burst: { count: 5, interval: 3, repeats: 2 },
                     shape: { kind: "sphere", radius: 0.3 },
@@ -169,3 +167,46 @@ const DynamicpunchDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_dynamicpunch", 1, DynamicpunchDefinition);
+
+/**
+ * 一记短拳影沿扇面的真实弧线横扫（自定义客户端场景，不生成粒子或额外实体）：
+ * 服务端在 sweep 当刻给出 origin（拳心/身体中心）、`direction`、`arc`、`reach` 与起刻 `start`/`dur`；
+ * 这里用 `serverTick` 把一枚拳形从扇形一侧扫到另一侧，并拖一小段同弧尾线，读成「抡过去的轨迹」。
+ * 固定一个拳形 + 一段尾线，复用原生图集。
+ */
+const DynamicpunchFistSprite = "cobblemon:particle/generic/fist";
+const DynamicpunchFistFrames = 5;
+
+function dynamicpunchFistNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene("world_combat:move_dynamicpunch_fist", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "sweep") return;
+    const direction = Array.isArray(data.direction) ? data.direction : null;
+    if (!direction || direction.length !== 3) return;
+    const origin = entry.position;
+    const reach = Math.max(0.5, dynamicpunchFistNumber(data.reach, 2.6));
+    const arc = Math.max(5, Math.min(360, dynamicpunchFistNumber(data.arc, 120)));
+    const start = dynamicpunchFistNumber(data.start, frame.serverTick());
+    const duration = Math.max(1, dynamicpunchFistNumber(data.dur, 8));
+    const elapsed = frame.serverTick() - start;
+    if (elapsed < 0 || elapsed > duration) return;
+    const progress = elapsed / duration;
+    const base = Math.atan2(direction[0], direction[2]);
+    const half = arc * Math.PI / 360;
+    function tip(at: number): number[] {
+        const angle = base - half + 2 * half * Math.max(0, Math.min(1, at));
+        return [origin[0] + Math.sin(angle) * reach, origin[1] + 0.12, origin[2] + Math.cos(angle) * reach];
+    }
+    const head = tip(progress), tail = tip(progress - 0.18);
+    const scale = Math.max(0.5, Math.min(1.8, dynamicpunchFistNumber(data.scale, 1)));
+    const spriteFrame = Math.max(0, Math.min(DynamicpunchFistFrames - 1, Math.floor(progress * DynamicpunchFistFrames)));
+    frame.sprite(DynamicpunchFistSprite, head[0], head[1], head[2], 0.34 + 0.12 * scale,
+        (progress < 0.5 ? 1 : -1) * 18, ((0xFF << 24) | 0xF6E3DC) | 0, spriteFrame, true);
+    frame.line(tail[0], tail[1], tail[2], head[0], head[1], head[2], ((0xB0 << 24) | 0xE0523C) | 0);
+});
+

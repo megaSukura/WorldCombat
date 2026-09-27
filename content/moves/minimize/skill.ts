@@ -28,8 +28,12 @@ namespace PokemonSkills {
     WorldCombat.on("world_combat:minimize/trample", "world_combat:damage_applied", "", event => {
         const data = JSON.parse(String(event.data())); if (!data.minimizeTrample || !(data.actual > 0)) return;
         const receipt = WorldFeedback.receipt(event); if (!receipt) return;
-        WorldFeedback.emit(event.world(), minimizeScene, 1, receipt.point, { moment: "trample", target: String(receipt.target.ref()) }, 24);
-        WorldFeedback.text(event.world(), receipt.point, "world_combat.move.minimize.text.trample", [], 24);
+        const world = event.world(), target = event.target(), body = target ? world.observe(target) : null;
+        // 只有真正落地挨踩才扬尘；在空中的大体接触用受击碎光，不凭空起地尘。
+        const grounded = body !== null && body.grounded();
+        WorldFeedback.emit(world, minimizeScene, 1, receipt.point,
+            { moment: grounded ? "trample" : "trample_air", target: String(receipt.target.ref()) }, 24);
+        WorldFeedback.text(world, receipt.point, "world_combat.move.minimize.text.trample", [], 24);
     });
     define({
         id: "minimize",
@@ -78,12 +82,15 @@ namespace PokemonSkills {
             if (!BodyScale.shrink(world, actor, small, carrier, "minimize")) {
                 world.removeMobEffect(actor, carrier.id(), carrier.key()); done(action); return;
             }
+            // 用实际闪避增量反馈：窗口被拒时画面不会宣称抬了级。
+            const beforeEvade = NativeEffects.effectiveStage(world, actor, "evasion");
             NativeEffects.boostWindow(world, actor, { evasion: evade }, window, "minimize", carrier);
+            const gainedEvade = Math.max(0, NativeEffects.effectiveStage(world, actor, "evasion") - beforeEvade);
             world.effect(minimizeMark, actor, JSON.stringify({ carrier: MobEffects.anchor(carrier),
                 volume: body.width() * body.width() * body.height(), trample: trample }), window);
             WorldFeedback.emit(world, minimizeScene, 1, body.position(), { moment: "tiny", target: String(actor.ref()),
                 scale: small / 0.6, motes: p("minimize", "motes", action), pulses: p("minimize", "pulses", action) }, 30);
-            WorldFeedback.text(world, body.position(), "world_combat.move.minimize.text.small", [evade, small, Math.round(window / 20)], 32);
+            WorldFeedback.text(world, body.position(), "world_combat.move.minimize.text.small", [gainedEvade, small, Math.round(window / 20)], 32);
             sound(action, "cobblemon:move.minimize.actor"); done(action);
         }
     });

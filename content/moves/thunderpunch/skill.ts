@@ -5,9 +5,10 @@
  * 它是本族唯一的**链式**招：单点爆发不高，却一次点亮多个目标；主目标被电麻，被链到的目标也会麻。
  *
  * 判定用 `action.trace`（拳面 → 沿瞄准方向 `reach`），墙会挡下这一拳；命中后主击先结原 volt 的 70%。
- * 随后进入 `contact` 刻的放电窗：电索两端都用实体引用跟随双方实际位置，只有双方仍在拳程且通视时，
- * 才结余下的 30% 并从**真实目标**向 `chainRange` 内最近的至多 `arcs` 个其他敌人各跳一道电弧。
- * 退开、离场或被打断立即断电，没有后续链；超载不绕过 Boss 位移免疫，也不定住任何一方。
+ * 随后进入 `contact` 刻的放电窗：电索两端都用实体引用跟随双方实际位置，只有双方仍在拳程且通视时才结余下
+ * 的 30%；**补伤真的成功后**，才从真实目标向 `chainRange` 内按距离最近的至多 `arcs` 个其他敌人各跳一道电弧。
+ * 补伤失败、退开、离场或被打断都不放链电；放电与断电各用独立回执，动作收尾不会截断它们的画面。
+ * 超载不绕过 Boss 位移免疫，也不定住任何一方。
  *
  * 配置 `overcharge`（超载式）由 resolve 改时序、由公式改威力／跳距／目标数，提交后才触碰世界。
  */
@@ -83,7 +84,14 @@ namespace PokemonSkills {
             /** 电流从成功放电的真实目标向现预算内最近的邻敌各跳一道；保持原 spark 伤害与麻痹概率。 */
             function chain(current: CombatAction, from: CombatPoint, sourceRef: string): void {
                 const scope = current.world();
-                const candidates = scope.query(from, chainRange, false);
+                // 显式按到真实目标的距离排序，最近的合法邻敌先跳。
+                const candidates = scope.query(from, chainRange, false).slice();
+                candidates.sort(function (a: CombatActor, b: CombatActor): number {
+                    const bodyA = scope.observe(a), bodyB = scope.observe(b);
+                    const gapA = bodyA === null ? Infinity : bodyA.position().minus(from).length();
+                    const gapB = bodyB === null ? Infinity : bodyB.position().minus(from).length();
+                    return gapA - gapB;
+                });
                 let arcs = 0;
                 for (let i = 0; i < candidates.length && arcs < maxArcs; i++) {
                     const other = candidates[i];
@@ -102,19 +110,21 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 放电窗走完：补上余下 30%，并从真实目标起链。 */
+            /** 放电窗走完：补上余下 30%，并从真实目标起链；补伤失败只收尾，不凭空链电。 */
             function discharge(current: CombatAction, struck: CombatActor): void {
                 const scope = current.world();
                 const victimBody = scope.valid(struck) ? scope.observe(struck) : null;
                 if (victimBody === null) { finish(current); return; }
                 const point = victimBody.position();
-                hurt(current, struck, "thunderpunch", power * 0.3,
+                const landed = hurt(current, struck, "thunderpunch", power * 0.3,
                     { damage: damageSpec("thunderpunch", "volt"), contact: true, punch: true });
-                scene.show(current, "discharge", point,
-                    { moment: "discharge", target: String(struck.ref()), bolts: bolts, intensity: intensity });
                 scene.stop(current, "contact");
+                // 放电用独立回执，动作收尾不会截断它。
+                WorldFeedback.emit(scope, thunderpunchScene, 1, point,
+                    { moment: "discharge", target: String(struck.ref()), bolts: bolts, intensity: intensity }, 22);
                 sound(current, "cobblemon:impact.electric");
-                chain(current, point, String(struck.ref()));
+                if (landed) chain(current, point, String(struck.ref()));
+                else finish(current);
             }
 
             /** contact 刻的放电窗：电索两端跟随双方实际位置，退开或失去通视立即断电。 */
@@ -130,7 +140,9 @@ namespace PokemonSkills {
                 const here = me.position(), there = victimBody.position();
                 const keeps = there.minus(here).length() <= reach + 0.35 && scope.clear(here, there);
                 if (!keeps) {
-                    scene.show(current, "contact", there, { moment: "break", target: String(struck.ref()), intensity: intensity });
+                    // 断电也用独立回执，断开瞬间的熄灭不会被动作收尾丢掉。
+                    WorldFeedback.emit(scope, thunderpunchScene, 1, there,
+                        { moment: "break", target: String(struck.ref()), bolts: bolts, intensity: intensity }, 14);
                     scene.stop(current, "contact");
                     finish(current);
                     return;
@@ -154,6 +166,10 @@ namespace PokemonSkills {
                 if (struck === null || String(struck.ref()) === String(actor.ref()) || scope.friendly(struck)) { whiff(current); return; }
                 const point = contact.position();
                 sound(current, "minecraft:item.trident.thunder");
+                // 出拳：沿真实拳程画一记短拳尖轨迹，两端就是拳面与真实接触点。
+                WorldFeedback.emit(scope, thunderpunchScene, 1, point,
+                    { moment: "strike", path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]],
+                        bolts: bolts, intensity: intensity }, 16);
                 WorldFeedback.emit(scope, thunderpunchScene, 1, point,
                     { moment: "hit", target: String(struck.ref()), bolts: bolts, intensity: intensity }, 20);
                 const landed = impact(current, contact, "thunderpunch", power * 0.7,

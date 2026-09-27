@@ -26,5 +26,5 @@
   "world_combat.move.suckerpunch.text.read": "读到了",
   "world_combat.move.suckerpunch.text.hit": "突袭！",
   "world_combat.move.suckerpunch.text.whiff": "读空",
-  "worldcombat.skill.suckerpunch.description.path": "朝瞄准方向闪身，打中的第一个活体不在出手窗内就只空刺一下；被地形挡住、或一路没碰到人，同样落空。可以朝任意方向硬赌空放，空放也照常消费。"
+  "worldcombat.skill.suckerpunch.description.path": "朝瞄准方向闪身，身体一路拖一条短尾；读招标记只落在当前瞄准线上、闪身距离内够得到的敌人身上。打中的第一个活体不在出手窗内就只空刺一下；被地形挡住、或一路没碰到人，同样落空。可以朝任意方向硬赌空放，空放也照常消费。"
 }

@@ -31,5 +31,6 @@
   "worldcombat.skill.seismictoss.growth.1": "从 %1$s 级起钉地时长延长到 %2$s 秒。",
   "world_combat.move.seismictoss.text.hold": "抓住了 %1$s",
   "world_combat.move.seismictoss.text.slam": "砸在地上",
-  "world_combat.move.seismictoss.text.miss": "没抓住"
+  "world_combat.move.seismictoss.text.miss": "没抓住",
+  "world_combat.move.seismictoss.text.slip": "挣脱了"
 }

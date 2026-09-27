@@ -15,16 +15,31 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
     }
 
-    /** 自己实际 blastRadius 内、这一发真能喷到的非友方数量（含给出的目标）。 */
+    /** 本次火柱高度/半径内、爆心一路无实墙的非友方数量（含给出的目标）；不用单一球距，贴合真实几何。 */
     function eruptionCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         var self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[],
-            world = CompanionBehavior.world(context), radius = Math.max(2.4, p("eruption", "blastRadius", world)), count = 0;
+            world = CompanionBehavior.world(context), count = 0;
+        var scope: PokemonSkills.FactContext = { world: world, actor: world.source(), skill: skills["eruption"],
+            detail: { values: capability.data.config } };
+        var radius = Math.max(2.4, p("eruption", "blastRadius", scope));
+        var column = Math.max(0.5, p("eruption", "column", scope));
+        var selfHalf = self.height ? self.height / 2 : 0.7;
+        var base = self.point[1] - selfHalf;
+        var centre = CompanionBehavior.point(self.point);
         for (var i = 0; i < nearby.length; i++) {
             var other = nearby[i];
             if (other.ref === self.ref || other.friendly || other.health <= 0) continue;
-            if (CompanionBehavior.distance(other.point, self.point) <= radius) count++;
+            var dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
+            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+            var half = other.height ? other.height / 2 : 0.7;
+            if (other.point[1] + half < base - 0.5 || other.point[1] - half > self.point[1] + column) continue;
+            if (!world.clear(centre, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
-        if (count === 0 && CompanionBehavior.distance(self.point, target.point) <= radius) count = 1;
+        if (count === 0) {
+            var tx = target.point[0] - self.point[0], tz = target.point[2] - self.point[2];
+            if (Math.sqrt(tx * tx + tz * tz) <= radius && world.clear(centre, CompanionBehavior.point(target.point))) count = 1;
+        }
         return count;
     }
 

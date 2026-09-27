@@ -4,8 +4,8 @@
  * 什么局面下出手：一记原地撒晶放毒的脱缚招。缠在身上的 rooted 世界效果或共享身份 partiallytrapped／trapped／
  *   leechseed 还在时，它立刻出手（priority 112，抢在所有行动前）。没有束缚时，目标是可见、敌对、存活、
  *   且在 `ai.maxChase`（默认 8）格内的敌人——目标还没中毒时最值（priority 46），已经中毒时优先级降到 24。
- * 对谁出手：没有束缚时由共享任务把目标带进 `radius` 内再原地撒晶；`ai.cluster`（默认开）打开时，目标身边
- *   3.5 格内还挤着别的敌人就抬高 priority，一次把毒晶撒向一圈人。
+ * 对谁出手：没有束缚时由共享任务把目标带进 `radius` 内再原地撒晶；`ai.cluster`（默认开）打开时，以**施法者自己**
+ *   为阵心、按本招真实的晶光半径与可见（可命中射线）统计周围还挤着几个敌人，人越多越愿意一次撒向一圈人。
  * 够不到怎么办：交给共享接近逻辑；走不到就先不撒。
  * 放完之后：束缚被甩掉、身周的人沾到毒晶中毒，交回共享交战计划。毒免疫的 Boss 仍会被毒晶砸中吃到基础晶击，
  *   只是挂不上毒（命中层的原生免疫判断），所以不因毒免疫就不出手。
@@ -14,13 +14,18 @@ namespace PokemonSkills {
     function mortalspinBound(context: WorldBehavior.Context): boolean {
         return CompanionBehavior.bound(context, CompanionBehavior.source(context));
     }
-    function mortalspinCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 以施法者为阵心，按本招真实的晶光半径统计可见（可命中射线）的非友方；不再用目标周围 3.5 格的近似。 */
+    function mortalspinCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const actor = world.actor(self.ref);
+        if (!actor) return 0;
+        const radius = p("mortalspin", "radius", { world: world, actor: actor, skill: skills["mortalspin"], detail: { values: capability.data.config || {} } });
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        let count = 1;
+        let count = 0;
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
-            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.5) count++;
+            if (other.friendly || other.health <= 0 || !other.visible) continue;
+            if (CompanionBehavior.distance(self.point, other.point) <= radius) count++;
         }
         return count;
     }
@@ -46,7 +51,7 @@ namespace PokemonSkills {
             if (mortalspinBound(context)) return 112;
             if (!target || target.friendly) return 0;
             let score = CompanionBehavior.poisoned(context, target) ? 24 : 46;
-            if (CompanionBehavior.ai<boolean>(capability, "cluster", true) && mortalspinCluster(context, target) >= 2) score += 12;
+            if (CompanionBehavior.ai<boolean>(capability, "cluster", true) && mortalspinCluster(context, capability) >= 2) score += 12;
             return score;
         }
     });
@@ -60,7 +65,7 @@ namespace PokemonSkills {
             help: "没有束缚时，威胁进入这个距离内才主动旋一记；越大越早旋开并放毒，也越容易空转。"
         }),
         field(pathOf("ai.cluster"), "成片时优先", "boolean", {
-            help: "开启后，目标身边 3.5 格内还挤着别的敌人时优先晶光转转，一次给一圈人上毒；关闭则只按普通攻击节奏出手。"
+            help: "开启后，施法者周围晶光半径内还挤着别的可见敌人时优先晶光转转，一次给一圈人上毒；关闭则只按普通攻击节奏出手。"
         })
     ]);
 }

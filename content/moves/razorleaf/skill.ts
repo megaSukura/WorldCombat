@@ -9,7 +9,8 @@
  *   起（windup，提交前）：叶在身侧排成一列、边缘亮起，只播预告，可被打断。
  *   发（execute → wave × N → hit/miss）：提交时锁定方向；每隔 `gap` 刻甩出新一波叶幕。每波每刻按 `pace`
  *       沿窄带推进一段，对刚扫过的这一小段（判定与表现共用同一段位移）里的每个非友方各结算一次 `leaf`
- *       物理伤害，每个目标每波只吃一次；撞到方块则这一波后段被截断。所有波走完收势。没人被削到只留一阵空叶风。
+ *       物理伤害，每个目标每波只吃一次；幕宽按真实 `spread` 分列取最近实墙截断，叶幕按三维高度带实际铺开。
+ *       所有波走完收势。没人被削到只留一阵空叶风。
  *
  * 选取：`kind: "aim"`——方向或世界点都能瞄，提交后方向不再追随；空放也成立，命中权限仍由命中层判断。
  *
@@ -68,10 +69,33 @@ namespace PokemonSkills {
             if (self === null) { done(action); return; }
             const origin = self.position();
             const heading = WorldGeometry.flatUnit(direction, WorldCombat.point(0, 0, 1));
+            const side = WorldCombat.point(-heading.z(), 0, heading.x());
+            const bandBelow = 1.4, bandAbove = 2.6, baseY = origin.y();
             const scale = Math.max(0.6, Math.min(2.0, reach / razorleafReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 16));
             const directionList = [heading.x(), 0, heading.z()];
             const scenes = WorldFeedback.actionScenes(razorleafScene);
+            // 当刻真实叶幕：以 `end` 为前沿、按真实 spread 铺宽、按判定同一高度带立起的一堵叶墙。
+            function curtain(end: CombatPoint): number[][] {
+                const left = end.minus(side.scale(spread)), right = end.plus(side.scale(spread));
+                return [[left.x(), baseY - bandBelow, left.z()], [right.x(), baseY - bandBelow, right.z()],
+                    [right.x(), baseY + bandAbove, right.z()], [left.x(), baseY + bandAbove, left.z()]];
+            }
+            // 按真实幕宽分列取墙：中心与左右各列平行射线里最近的真实方块接触，整幕停在墙前。
+            function curtainStop(scope: CombatWorld, from: CombatPoint, desired: CombatPoint): { hit: CombatImpact | null; point: CombatPoint } {
+                const columns = [0, spread * 0.5, -spread * 0.5, spread, -spread];
+                let hit: CombatImpact | null = null, best = 0;
+                for (let c = 0; c < columns.length; c++) {
+                    const off = side.scale(columns[c]);
+                    const found = WorldGeometry.blockHit(scope, from.plus(off), desired.plus(off));
+                    if (found === null) continue;
+                    const delta = found.position().minus(from);
+                    const along = delta.x() * heading.x() + delta.z() * heading.z();
+                    if (along < -0.05) continue;
+                    if (hit === null || along < best) { hit = found; best = along; }
+                }
+                return hit === null ? { hit: null, point: desired } : { hit: hit, point: from.plus(heading.scale(Math.max(0, best))) };
+            }
             interface Front { key: string; wave: number; point: CombatPoint; travelled: number; seen: { [ref: string]: boolean }; }
             const fronts: Front[] = [];
             let launched = 0, active = 0, hits = 0, settled = false;
@@ -107,12 +131,11 @@ namespace PokemonSkills {
                     if (remaining <= 0.01) { scenes.stop(current, front.key); active--; fronts.splice(index, 1); index--; continue; }
                     const from = front.point;
                     const desired = from.plus(heading.scale(Math.min(pace, remaining)));
-                    const clip = scope.clipBlocks(from, desired);
-                    const wall = clip !== null && clip.blocked();
-                    const end = wall && clip !== null ? clip.position() : desired;
+                    const clip = curtainStop(scope, from, desired);
+                    const end = clip.point;
                     const span = end.minus(from).length();
                     if (span > 0.01) {
-                        const region = WorldGeometry.bodyLane(from, heading, span, spread, { below: 1.4, above: 2.6 });
+                        const region = WorldGeometry.bodyLane(from, heading, span, spread, { below: bandBelow, above: bandAbove });
                         WorldGeometry.selectBodies(scope, region, function (target, facts) {
                             const ref = String(target.ref());
                             if (scope.friendly(target) || front.seen[ref]) return;
@@ -127,18 +150,20 @@ namespace PokemonSkills {
                     }
                     front.point = end;
                     front.travelled += span;
-                    if (wall || front.travelled >= reach - 0.01) {
+                    const curtainData = {
+                        moment: "sweep", path: curtain(end), direction: directionList, leaves: leaves, leafRadius: leafRadius,
+                        spread: spread, wave: front.wave, waves: waves, scale: scale, intensity: intensity
+                    };
+                    if (clip.hit !== null || front.travelled >= reach - 0.01) {
+                        // 最后接触段也显示：终点那一堵幕独立存活一小段，撞墙/飞尽都看得见。
+                        WorldFeedback.emit(scope, razorleafScene, 1, end, curtainData, 10);
                         scenes.stop(current, front.key);
                         active--;
                         fronts.splice(index, 1);
                         index--;
                         continue;
                     }
-                    scenes.show(current, front.key, front.point, {
-                        moment: "sweep", path: [[from.x(), from.y(), from.z()], [end.x(), end.y(), end.z()]],
-                        direction: directionList, leaves: leaves, leafRadius: leafRadius, spread: spread,
-                        wave: front.wave, waves: waves, scale: scale, intensity: intensity
-                    });
+                    scenes.show(current, front.key, end, curtainData);
                 }
                 if (launched >= waves && active <= 0) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { step(next, elapsed + 1); });

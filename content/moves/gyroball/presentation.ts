@@ -7,7 +7,8 @@
  * 拍子：起（charge 聚屑成轮）→ 滚（roll 掠地）→ 击（hit 崩钢）／空（whiff 空转收势）。
  * 范围：roll 的 `path` 是与服务端 WorldGeometry 同一组四个顶点的走廊，画面铺出的就是会被扫到的那块地。
  * 运动：charge 的屑向里收成轮缘；roll 的钢球沿 `data.direction` 由近及远滚；hit 的屑向外炸开带重力。
- * 数：charge 与 roll 共用同一个 `data.scale`（由 `load` 速度差派生），陀螺体积与粒子大小一致；
+ * 数：绕身的轮缘是独立自定义场景（`world_combat:move_gyroball/shell`），半径读 `data.radius`（实际判定半径），
+ *   转速与亮度读 `data.load`（速度差载荷），所以轮缘尺寸贴合判定、快慢按对手速度变化；
  *   roll 的尘量绑定 `data.grains`，hit 的崩屑量绑定 `data.grains`、亮度绑定 `data.intensity`。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -58,8 +59,8 @@ const GyroballDefinition: ParticleDefinition = {
                 {
                     name: "shell", bind: "source", offset: [0, 0.2, 0], height: 0.25, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
-                    rate: 26, shape: { kind: "sphere", radius: 0.22 }, direction: "outward", speed: [0.02, 0.1], spin: 22,
-                    lifetime: [5, 10], size: { data: "scale", fallback: 1 },
+                    rate: 26, shape: { kind: "sphere", radius: { data: "radius", fallback: 0.22 } }, direction: "outward", speed: [0.02, 0.1], spin: 22,
+                    lifetime: [5, 10], size: { data: "radius", fallback: 0.3 },
                     color: 0xB8C2CC, alpha: [0.75, 0], light: "full", bloom: 0.25, maxParticles: 70
                 },
                 {
@@ -121,3 +122,50 @@ const GyroballDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_gyroball", 1, GyroballDefinition);
+
+/**
+ * 绕身轮缘：固定数量的钢纹贴图绕真实身体中心旋转，半径读服务端实际判定半径，转速与亮度读载荷。
+ * 服务端每刻在真实身体位置重发一份，撞实或停止时停发，因此轮缘始终贴住会被扫到的那一圈。
+ */
+const GyroballShellScene = "world_combat:move_gyroball/shell";
+const GyroballRimSprite = "cobblemon:particle/generic/spinbeam";
+
+function gyroballShellVector(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function gyroballShellNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(GyroballShellScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle || data.active === 0) return;
+    const at = gyroballShellVector(data.at);
+    if (at === null) return;
+    const radius = Math.max(0.35, Math.min(1.0, gyroballShellNumber(data.radius, 0.55)));
+    const load = Math.max(0, Math.min(6, gyroballShellNumber(data.load, 0)));
+    const intensity = Math.max(0.5, Math.min(2.4, gyroballShellNumber(data.intensity, 1)));
+    const tick = frame.serverTick();
+    const speed = gyroballShellNumber(data.spin, 14 + load * 22);
+    const phase = tick * speed * Math.PI / 180;
+    const centreY = at[1] + radius * 0.9;
+    const segments = 8 + Math.round(Math.min(6, load));
+    const bright = Math.max(0.4, Math.min(1, 0.55 + load * 0.06 + (intensity - 1) * 0.15));
+    const alpha = Math.round(215 * bright);
+    const rim = (alpha << 24 | 0xDCE4EC) | 0;
+    const steel = (Math.round(alpha * 0.7) << 24 | 0x9AA2AC) | 0;
+    for (let i = 0; i < segments; i++) {
+        const angle = phase + i * (Math.PI * 2 / segments);
+        const x = at[0] + Math.sin(angle) * radius;
+        const z = at[2] + Math.cos(angle) * radius;
+        frame.line(at[0], centreY, at[2], x, centreY, z, steel);
+        frame.sprite(GyroballRimSprite, x, centreY, z, radius * 0.8, -(angle * 180 / Math.PI) % 360,
+            rim, Math.floor(tick * 0.5 + i) % 8, true);
+    }
+});

@@ -24,11 +24,16 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(lockonMark,"start",function(effect){
         const world=effect.world(),data=JSON.parse(effect.state()),source=effect.target(),body=world.observe(source);
         if(body)WorldFeedback.onEffect(world,effect.id(),"reticle",lockonScene,1,body.position(),{moment:"link",target:String(source.ref()),path:[String(source.ref()),data.target],motes:data.motes,held:data.held});
+        // 目标身上常驻的准星：按真实碰撞箱逐帧勾出，随本层锁定一起结束；控制还在它就不会散。
+        const victim=world.actor(data.target),seen=victim===null?null:world.observe(victim);
+        if(seen)WorldFeedback.onEffect(world,effect.id(),"lockon-reticle",lockonReticleScene,1,seen.position(),
+            {target:data.target,width:seen.width(),height:seen.height(),held:data.held,motes:data.motes});
         effect.schedule("watch","watch",1,"{}");
     });
     WorldCombat.effectHandler(lockonMark,"watch",function(effect){
         const world=effect.world(),data=JSON.parse(effect.state()),target=world.actor(data.target);
-        if(!world.valid(effect.target())||!MobEffects.matches(world,effect.target(),data.focus)||!target||!world.valid(target)){effect.end();return;}
+        // 控制结束（目标不再带着本招的锁定身份）即散焦点，不留空锁窗口。
+        if(!world.valid(effect.target())||!MobEffects.matches(world,effect.target(),data.focus)||!target||!world.valid(target)||!CombatStatus.has(world,target,lockonStatus)){effect.end();return;}
         effect.schedule("watch","watch",1,"{}");
     });
     WorldCombat.effectHandler(lockonMark,"operation:world_combat:dispel",effect=>effect.end());
@@ -50,7 +55,7 @@ namespace PokemonSkills {
         id: lockonId,
         cooldownParameter: "recharge",
         name: "锁定",
-        description: "把准星咬住一个对手，拖慢它的移动（钉死时连飞行一起钉住）；你用物理或特殊伤害命中它时锁即用掉，锁定期走完也会散去。",
+        description: "把准星咬住一个对手，在同一段窗口里拖慢它的移动（钉死时连飞行速度一起归零，不抹掉既有动量）；你用物理或特殊伤害命中它时锁即用掉，窗口走完也会散去。",
         uses: ["在对手要逃开前先钉住它", "把目标拖住，为近身追击争取时间", "把跑得快的目标拖慢下来集火"],
         kind: "enemy",
         range: 9,
@@ -101,32 +106,36 @@ namespace PokemonSkills {
                 return;
             }
             const hold = !!(config && config.hold);
-            const ticks = Math.max(60, Math.round(p(lockonId, "lockTicks", action)));
-            const pin = Math.max(30, Math.round(p(lockonId, "pinTicks", action)));
+            const ticks = Math.max(40, Math.round(p(lockonId, "lockTicks", action)));
             const motes = Math.max(8, Math.round(p(lockonId, "motes", action)));
             lockonReleaseMark(world, actor);
             const control = hold ? lockonClampEffect : lockonTrackEffect;
-            const carrier = MobEffects.apply(world, target, control, pin, 0);
+            const carrier = MobEffects.apply(world, target, control, ticks, 0);
             if (!carrier) {
                 WorldFeedback.emit(world,lockonScene,1,point,{moment:"blocked",target:String(target.ref())},18);
                 done(action); return;
             }
-            const focus = MobEffects.apply(world, actor, lockonFocusEffect, ticks, 0);
-            if (!focus) { done(action); return; }
             const anchor = MobEffects.anchor(carrier);
-            // All owners of this move's shared native icon adopt its native refresh; their clocks remain separate.
+            const focus = MobEffects.apply(world, actor, lockonFocusEffect, ticks, 0);
+            if (!focus) {
+                // 焦点挂不上就不留一个不受控的减速：把刚建立的 carrier 收回。
+                world.removeMobEffect(target, anchor.id, anchor.key);
+                WorldFeedback.emit(world,lockonScene,1,point,{moment:"blocked",target:String(target.ref())},18);
+                done(action); return;
+            }
+            // Every owner of this move's shared native icon adopts the latest carrier revision.
             world.effects(target,lockonGrip).forEach(view => {
                 const old = JSON.parse(String(view.data()));
                 if (old.carrier.id === control) world.operation(view.id(),"world_combat:refresh_carrier",JSON.stringify(anchor));
             });
-            const grip = world.effect(lockonGrip,target,JSON.stringify({carrier:anchor,focus:MobEffects.anchor(focus),source:String(actor.ref())}),pin);
-            world.effect(lockonMark,actor,JSON.stringify({motes:motes,pin:pin,held:hold?1:0,target:String(target.ref()),grip:grip,focus:MobEffects.anchor(focus)}),ticks);
+            const grip = world.effect(lockonGrip,target,JSON.stringify({carrier:anchor,focus:MobEffects.anchor(focus),source:String(actor.ref())}),ticks);
+            world.effect(lockonMark,actor,JSON.stringify({motes:motes,held:hold?1:0,target:String(target.ref()),grip:grip,focus:MobEffects.anchor(focus),carrier:anchor}),ticks);
             sound(action, "minecraft:block.beacon.power_select");
             if (self !== null) {
                 WorldFeedback.emit(world, lockonScene, 1, self.position(),
                     { moment: "lock", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
-                        motes: motes, pin: pin, held: hold ? 1 : 0, scale: Math.max(0.6, Math.min(2, ticks / 180)) }, 32);
-                WorldFeedback.text(world, lockonAbove(self.position()), lockonReadyText, [Math.round(pin / 20)], 30);
+                        motes: motes, held: hold ? 1 : 0, scale: Math.max(0.6, Math.min(2, ticks / 180)) }, 32);
+                WorldFeedback.text(world, lockonAbove(self.position()), lockonReadyText, [Math.round(ticks / 20)], 30);
             }
             done(action);
         }

@@ -19,7 +19,7 @@
   "worldcombat.skill.shadowball.value.shards": "碎影数",
   "worldcombat.skill.shadowball.value.tempo": "起手",
   "worldcombat.skill.shadowball.preference.dense": "凝影形态",
-  "worldcombat.skill.shadowball.preference.dense.help": "开启：影球威力 ×1.12、判定 ×1.15，但飞行 ×0.84、射程 −2 格、冷却 +4 刻，起手多 1 刻，适合贴身硬砸。关闭：更快更远但更轻，适合中距离点射。",
+  "worldcombat.skill.shadowball.preference.dense.help": "开启：影球威力 ×1.12，但飞行 ×0.84、射程 −2 格、起手多 1 刻、冷却 +4 刻，适合贴身硬砸。关闭：更快更远但更轻，适合中距离点射。判定半径不随配置变化。",
   "worldcombat.skill.shadowball.preference.ai.maxChase": "点射距离",
   "worldcombat.skill.shadowball.preference.ai.maxChase.help": "超过这个距离就不主动出手，先走近；越大越愿意在更远处先手掷球。",
   "worldcombat.skill.shadowball.preference.ai.sunderFirst": "先打没被碾过的",

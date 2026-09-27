@@ -1,6 +1,17 @@
-/** Adapt to an opponent’s recent attack: change your types against a Pokémon, or resist an observed native damage type against a non-Pokémon. */
+/**
+ * 纹理２ / conversion2 的执行。
+ *
+ * 读解对象（有时间戳、优先真实元素/类别）：
+ *   - 读取目标最近真正造成直接伤害的一击（DamageSemantics.recentOffense，带 tick、原生 damageType、最终 elementType 与类别）；
+ *   - 更老于 `memory` 的进攻一律不作数（久远招排除）；对宝可梦之外的生物必须有可匹配的原生 damageType。
+ * 两条落地：
+ *   - 对宝可梦：用共享 CombatTypes 在一条真实承载效果（world_combat:conversion2_type）上 replace 成能抵抗该元素的属性；被原生属性锁拒绝时明确失败。
+ *   - 对普通生物：用共享 CombatCopies.resist 针对真实原生 damageType 减伤（专治 50%，顾全 25%；顾全读到物理时同时罩住常见近战/投射）。
+ * 承载与到期：两条路都先挂上可见状态再落地，落地失败就撤掉刚挂上的状态；持续表现挂在真正拥有它的效果上，到期或被清除时一起消失。
+ */
 namespace PokemonSkills {
     const conversion2Scene = "world_combat:move_conversion2";
+    const conversion2TypeEffect = "world_combat:conversion2_type";
     const conversion2Colors: { [type: string]: number } = {
         normal: 0xA8A878, fire: 0xEE8130, water: 0x6390F0, electric: 0xF7D02C, grass: 0x7AC74C,
         ice: 0x96D9D6, fighting: 0xC22E28, poison: 0xA33EA1, ground: 0xE2BF65, flying: 0xA98FF3,
@@ -9,16 +20,28 @@ namespace PokemonSkills {
     };
     export const conversion2Types = ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground",
         "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"];
+    /** 顾全模式在读到物理原生攻击时一并罩住的常见物理伤害类型。 */
+    const conversion2Physical = ["minecraft:mob_attack", "minecraft:mob_attack_no_aggro", "minecraft:player_attack", "minecraft:arrow", "minecraft:trident", "minecraft:sting", "minecraft:ram", "minecraft:mace_smash"];
 
     function conversion2Color(type: string): number { return conversion2Colors[type] || 0xE8E8F0; }
 
-    /** 目标最后使用的那一手的属性；没有最后招式返回 ""。 */
-    export function conversion2Read(world: CombatWorld, target: CombatActor): string {
-        if (String(target.domain()) !== "cobblemon") return "";
-        const state = NativeEffects.read(world, target);
-        if (!state.used) return "";
-        const move = CobblemonCombat.moveTemplate(state.used);
-        return move ? String(move.type()) : "";
+    export interface conversion2Observed { element: string; category: string; native: string; source: string; }
+
+    function conversion2Memory(action: CombatAction): number {
+        return Math.max(40, Math.round(p("conversion2", "memory", action)));
+    }
+    /** Last successful direct hit, including final scripted elemental conversions. */
+    function conversion2Attack(world: CombatWorld, target: CombatActor, maximumAge: number): conversion2Observed | null {
+        const recent = DamageSemantics.recentOffense(world, target, maximumAge);
+        if (recent === null) return null;
+        return { element: String(recent.elementType || ""), category: String(recent.category || ""), native: String(recent.type || ""), source: "attack" };
+    }
+    /** Actual last successful direct offense; no template fallback can erase a dynamically changed element. */
+    export function conversion2Observe(world: CombatWorld, target: CombatActor, maximumAge: number): conversion2Observed | null {
+        const attack = conversion2Attack(world, target, maximumAge);
+        if (String(target.domain()) !== "cobblemon") return attack;
+        if (attack !== null && attack.element && conversion2Types.indexOf(attack.element) >= 0) return attack;
+        return attack;
     }
 
     function conversion2OwnTypes(world: CombatWorld, actor: CombatActor): string[] {
@@ -55,8 +78,8 @@ namespace PokemonSkills {
         id: "conversion2",
         cooldownParameter: "recharge",
         name: "Conversion 2",
-        description: "根据对手最近的攻击调整防护：对宝可梦改变自身属性，对普通生物抵御已观察到的原生伤害类型。",
-        uses: ["接下一记已知属性的招", "把受击面翻到对手打不痛的那一面", "在被压制前临时改抗性"],
+        description: "读对手最近真正出手的那一手，调整自己的防护：对宝可梦把自身属性重织成能抵抗该元素的一型，对普通生物针对已观察到的原生伤害类型减伤。",
+        uses: ["接下一记已知元素的招", "把受击面翻到对手打不痛的那一面", "被压制前临时改抗性，或按原生伤害类型减伤"],
         kind: "enemy",
         range: 9,
         maxRange: 14,
@@ -87,11 +110,13 @@ namespace PokemonSkills {
             if (body === null) return "invalid-target";
             if (body.position().minus(action.origin()).length() > p("conversion2", "reach", action)) return "out-of-range";
             if (!world.clear(action.origin(), body.position())) return "no-line";
-            if (String(target.domain()) !== "cobblemon") return DamageSemantics.recentAttack(world, target, 1200) ? "" : "no-move";
-            const attackType = conversion2Read(world, target);
-            if (!attackType) return "no-move";
+            const observed = conversion2Observe(world, target, conversion2Memory(action));
+            if (observed === null) return "no-offense";
+            if (String(target.domain()) !== "cobblemon") return observed.native ? "" : "no-offense";
+            if (NativeModifiers.typeLocked(world, action.actor())) return "type-locked";
+            if (!observed.element || conversion2Types.indexOf(observed.element) < 0) return "no-type";
             const prefer = config && config.wide === true ? "breadth" : "resist";
-            return conversion2Choose(attackType, conversion2OwnTypes(world, action.actor()), prefer) ? "" : "no-type";
+            return conversion2Choose(observed.element, conversion2OwnTypes(world, action.actor()), prefer) ? "" : "no-type";
         },
         windup: function (action, config, prepare) {
             const target = action.target();
@@ -102,40 +127,86 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), target = action.target();
+            const body = world.observe(actor);
+            if (target === null || !world.valid(target) || body === null || String(target.key()) === String(actor.key())) { done(action); return; }
             const prefer = config && config.wide === true ? "breadth" : "resist";
-            if (target !== null && String(target.domain()) !== "cobblemon") {
-                const last = DamageSemantics.recentAttack(world, target, 1200);
-                if (last) {
-                    const types = config && config.wide === true && last.category === "physical"
-                        ? [last.type, "minecraft:mob_attack", "minecraft:mob_attack_no_aggro", "minecraft:player_attack", "minecraft:arrow", "minecraft:trident", "minecraft:sting", "minecraft:ram", "minecraft:mace_smash"] : [last.type];
-                    CombatCopies.resist(world, actor, types, config && config.wide === true ? 0.75 : 0.5, Math.max(120, Math.round(p("conversion2", "hold", action))), "conversion2");
-                    WorldFeedback.emit(world, conversion2Scene, 1, action.origin(), { moment: "settle", color: 0x8FD8D8, facets: 8, scale: 1 }, 30);
-                    sound(action, "minecraft:block.beacon.power_select");
-                }
+            const wide = !!(config && config.wide);
+            const hold = Math.max(120, Math.round(p("conversion2", "hold", action)));
+            const facets = Math.max(6, Math.round(p("conversion2", "facets", action)));
+            const observed = conversion2Observe(world, target, conversion2Memory(action));
+            const targetRef = String(target.ref());
+            if (observed === null) {
+                WorldFeedback.emit(world, conversion2Scene, 1, body.position(), { moment: "fizzle", facets: facets }, 22);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), "world_combat.move.conversion2.text.fail", [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
                 done(action); return;
             }
-            const attackType = target === null ? "" : conversion2Read(world, target);
-            const chosen = attackType ? conversion2Choose(attackType, conversion2OwnTypes(world, actor), prefer) : null;
-            const facets = Math.max(6, Math.round(p("conversion2", "facets", action)));
-            const body = world.observe(actor);
-            if (chosen === null) {
-                if (body !== null) {
+
+            // 普通生物：按真实原生 damageType 减伤。顾全模式读到物理时一并罩住常见物理伤害类型。
+            if (String(target.domain()) !== "cobblemon") {
+                if (!observed.native) { done(action); return; }
+                const types = wide && observed.category === "physical" ? [observed.native].concat(conversion2Physical) : [observed.native];
+                const layer = CombatCopies.resist(world, actor, types, wide ? 0.75 : 0.5, hold, "conversion2");
+                if (!(layer > 0)) {
                     WorldFeedback.emit(world, conversion2Scene, 1, body.position(), { moment: "fizzle", facets: facets }, 22);
                     WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), "world_combat.move.conversion2.text.fail", [], 28);
+                    sound(action, "minecraft:block.amethyst_block.break");
+                    done(action); return;
                 }
-                sound(action, "minecraft:block.amethyst_block.break");
-                done(action);
-                return;
-            }
-            NativeModifiers.apply(world, actor, { types: [chosen.type] }, Math.max(120, Math.round(p("conversion2", "hold", action))));
-            if (body !== null) {
-                WorldFeedback.emit(world, conversion2Scene, 1, body.position(), {
-                    moment: "settle", type: chosen.type, color: conversion2Color(chosen.type),
-                    facets: facets, scale: chosen.multiplier <= 0 ? 1.2 : 1
-                }, 44);
+                MobEffects.apply(world, actor, conversion2TypeEffect, hold, 0);
+                WorldFeedback.onEffect(world, layer, "weave", conversion2Scene, 1, body.position(),
+                    { moment: "weave", target: String(actor.ref()), source: targetRef, damageType: observed.native, facets: facets });
+                WorldFeedback.emit(world, conversion2Scene, 1, body.position(),
+                    { moment: "settle", target: String(actor.ref()), source: targetRef, damageType: observed.native, physical: observed.category === "physical" ? 1 : 0,
+                        facets: facets, scale: wide ? 0.9 : 1.1 }, 40);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)),
-                    "world_combat.move.conversion2.text.type", [{ key: "cobblemon.type." + chosen.type, fallback: chosen.type }], 44);
+                    "world_combat.move.conversion2.text.native", [wide ? 25 : 50, Math.round(hold / 20)], 40);
+                sound(action, "minecraft:block.beacon.power_select");
+                done(action); return;
             }
+
+            // 宝可梦：把自身属性重织成能抵抗该元素的一型；原生属性锁拒绝时明确失败。
+            if (NativeModifiers.typeLocked(world, actor) || !observed.element || conversion2Types.indexOf(observed.element) < 0) {
+                WorldFeedback.emit(world, conversion2Scene, 1, body.position(), { moment: "fizzle", facets: facets }, 22);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), "world_combat.move.conversion2.text.fail", [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
+                done(action); return;
+            }
+            const chosen = conversion2Choose(observed.element, conversion2OwnTypes(world, actor), prefer);
+            if (chosen === null) {
+                WorldFeedback.emit(world, conversion2Scene, 1, body.position(), { moment: "fizzle", facets: facets }, 22);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), "world_combat.move.conversion2.text.fail", [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
+                done(action); return;
+            }
+            const previous = MobEffects.read(world, actor, conversion2TypeEffect);
+            const carrier = MobEffects.apply(world, actor, conversion2TypeEffect, hold, 0);
+            if (carrier === null) {
+                WorldFeedback.emit(world, conversion2Scene, 1, body.position(), { moment: "fizzle", facets: facets }, 22);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), "world_combat.move.conversion2.text.fail", [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
+                done(action); return;
+            }
+            const layer = CombatTypes.apply(world, actor, { operation: "replace", types: [chosen.type] }, carrier);
+            if (layer <= 0) {
+                if (previous === null || String(previous.key()) !== String(carrier.key()))
+                    world.removeMobEffect(actor, conversion2TypeEffect, carrier.key());
+                WorldFeedback.emit(world, conversion2Scene, 1, body.position(), { moment: "fizzle", facets: facets }, 22);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), "world_combat.move.conversion2.text.fail", [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
+                done(action); return;
+            }
+            WorldFeedback.onEffect(world, layer, "weave", conversion2Scene, 1, body.position(),
+                { moment: "weave", target: String(actor.ref()), source: targetRef, type: chosen.type,
+                    color: conversion2Color(chosen.type), element: observed.element, facets: facets });
+            WorldFeedback.emit(world, conversion2Scene, 1, body.position(), {
+                moment: "settle", target: String(actor.ref()), source: targetRef, type: chosen.type,
+                color: conversion2Color(chosen.type), element: observed.element, facets: facets,
+                scale: chosen.multiplier <= 0 ? 1.2 : 1
+            }, 44);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)),
+                "world_combat.move.conversion2.text.type2",
+                [{ key: "cobblemon.type." + chosen.type, fallback: chosen.type }, Math.round(hold / 20)], 44);
             sound(action, "minecraft:block.beacon.power_select");
             done(action);
         }

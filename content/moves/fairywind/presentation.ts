@@ -102,17 +102,6 @@ const FairywindDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.07, 0.3], spread: 34, spin: 12, drag: 0.9,
                     lifetime: [7, 14], size: [0.16, 0.05], sizeMode: "linear",
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 48
-                },
-                {
-                    // 侧向风羽：沿服务端实际结算的侧甩方向拖出一条风线；推不动时 fling 为 0，风羽也随之收短。
-                    name: "gustwake", bind: "point", fit: "world", offset: [0, 0.6, 0],
-                    orient: "direction", direction: "shape",
-                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    burst: { count: 8, at: 0 },
-                    shape: { kind: "line", length: 0.6 },
-                    speed: [0.02, 0.06], spin: 12,
-                    lifetime: [6, 11], size: [0.2, 0.07], sizeMode: "linear",
-                    color: 0xF0A8D0, alpha: [0.7, 0], light: "full", maxParticles: 20
                 }
             ]
         },
@@ -159,3 +148,36 @@ const FairywindDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_fairywind", 1, FairywindDefinition);
+
+/**
+ * 侧甩起止短路径：服务端每个命中给出该目标被 hitDisplace 前的位置（from）、实际停下的位置（to）与旋向。
+ * 客户端把它画成一条有真实方向与长度的风羽，推不动（移动量为 0）时整段不画；固定对象的自定义绘制，
+ * 不生成粒子或实体。
+ */
+function fairywindWakeClamp(value: number, low: number, high: number): number {
+    return value < low ? low : value > high ? high : value;
+}
+function fairywindWakeColour(alpha: number, rgb: number): number {
+    return ((Math.round(255 * fairywindWakeClamp(alpha, 0, 1)) << 24) | rgb) | 0;
+}
+WorldCombatClient.scene("world_combat:move_fairywind_wake", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle || data.moment !== "wake" || !Array.isArray(data.from) || !Array.isArray(data.to)) return;
+    const from: number[] = data.from, to: number[] = data.to;
+    const dx = to[0] - from[0], dy = to[1] - from[1], dz = to[2] - from[2];
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (!(length > 0.05)) return;
+    const height = 0.6;
+    frame.line(from[0], from[1] + height, from[2], to[0], to[1] + height, to[2], fairywindWakeColour(0.8, 0xF0A8D0));
+    const puffs = 4, spin = frame.serverTick() * 9;
+    for (let index = 0; index <= puffs; index++) {
+        const t = index / puffs;
+        frame.sprite("cobblemon:particle/generic/swirlingwind",
+            from[0] + dx * t, from[1] + height + dy * t, from[2] + dz * t,
+            0.2 + 0.1 * t, (spin + index * 47) % 360,
+            fairywindWakeColour(0.5 + 0.4 * t, 0xF0A8D0), index % 27, true);
+    }
+});
+

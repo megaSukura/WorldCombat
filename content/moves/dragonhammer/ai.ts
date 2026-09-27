@@ -5,7 +5,8 @@
  * 对谁出手：起手慢、只砸一个点，所以优先砸**焦点目标**与**已经受伤的目标**（把这一记重的砸成收尾）。
  *   重锤式偏爱站定/移动慢的目标——垂直弧更容易落在原地；疾锤式偏爱跑得快的近身目标——前抡更快、撞得更远。
  *   `ai.opening` 选「只对没被砸趴的目标」时跳过已经趴着的敌人，把这一锤留给还站着的目标（默认「随时」，被砸慢的目标照吃主伤）。
- * 够不到交给共享接近逻辑；走进抡击范围就抡下去。
+ * 弧线净空：按招式同一套几何量出举锤高点的真实空间——低顶/实墙下抡不起锤时大幅降低推荐，不只看直线距离。
+ * 够不到交给共享接近逻辑；走进抡击范围、且头顶放得下锤，才抡下去。
  */
 namespace CompanionBehavior {
     function dragonhammerWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -19,6 +20,23 @@ namespace CompanionBehavior {
     function dragonhammerMoving(target: CompanionBehavior.Entity): number {
         const velocity = target.velocity || [0, 0, 0];
         return Math.sqrt((velocity[0] || 0) * (velocity[0] || 0) + (velocity[2] || 0) * (velocity[2] || 0));
+    }
+
+    /** 举锤高点是否能容下施法者身体：与招式同一套 reach/wind-up 几何，同一决策帧内缓存。 */
+    function dragonhammerArcClear(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        return CompanionBehavior.observedFlag(context, "dragonhammer:arc:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            const width = self.width === undefined ? 0.9 : self.width, height = self.height === undefined ? 1.4 : self.height;
+            const reach = PokemonSkills.p("dragonhammer", "reach",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills["dragonhammer"], detail: { values: item.data.config } });
+            const dx = target.point[0] - self.point[0], dy = target.point[1] - self.point[1], dz = target.point[2] - self.point[2];
+            const flat = Math.sqrt(dx * dx + dz * dz), length = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+            const lift = Math.max(-0.6, Math.min(0.9, dy / length));
+            const topHeight = Math.max(0.6, height * 0.95 + reach * 0.35 - lift * 0.5);
+            const hx = flat < 1e-6 ? 0 : dx / flat, hz = flat < 1e-6 ? 0 : dz / flat;
+            const probe = WorldCombat.point(self.point[0] + hx * reach * 0.35, self.point[1] + topHeight, self.point[2] + hz * reach * 0.35);
+            return world.freeSpace(probe, width, height);
+        });
     }
 
     registerUse("dragonhammer", {
@@ -46,6 +64,8 @@ namespace CompanionBehavior {
             if (!CompanionBehavior.status(context, target, "knocked_down")) base += 6;
             if (CompanionBehavior.ratio(target) < 0.5) base += 6;
             if (context.facts.focus === target.ref) base += 14;
+            // 低顶/墙下举不起锤：压到普通近战档以下，不朝顶棚浪费这一记。
+            if (!dragonhammerArcClear(context, capability, target)) base -= 14;
             return base;
         }
     });

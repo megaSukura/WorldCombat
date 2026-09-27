@@ -88,8 +88,9 @@ const tormentDefinition: ParticleDefinition = {
             ]
         },
         linger: {
-            duration: 40,
-            exit: { stop: 24, drain: 22 },
+            // 持续到真实标记结束（服务端每 10 刻续一次同 key），不设固定 40 刻。
+            duration: 0,
+            exit: { drain: 22 },
             emitters: [
                 {
                     name: "linger_marks", bind: "target", height: 0.5,
@@ -109,42 +110,27 @@ const tormentDefinition: ParticleDefinition = {
                     lifetime: [12, 20], size: 0.22,
                     color: 0x8E5BD0, alpha: [0.4, 0], light: "full", maxParticles: 40
                 },
-                // 头顶一对节拍：服务端每 10t 翻面，亮的在左/在右交替，另一侧只剩暗点。
+                // 头顶一对节拍：亮侧由服务端按「尚需等待」的剩余时间算出的 rate 驱动，另一侧只剩很淡的底光；
+                // 颜色取「最近被限类别」，让玩家看出正被哪一类重复出手挡住。
                 {
-                    name: "beat_left_lit", bind: "target", offset: [-0.24, 0.05, 0], height: 1.05,
+                    name: "beat_left", bind: "target", offset: [-0.24, 0.05, 0], height: 1.05,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: { data: "litLeft", fallback: 1 }, interval: 10, repeats: 4 },
+                    rate: { data: "leftRate", fallback: 1 },
                     shape: { kind: "point" },
                     direction: "up", speed: [0.0, 0.03],
                     lifetime: [8, 12], size: [0.16, 0.06],
-                    color: 0xFFE79A, alpha: [1, 0.15], light: "full", bloom: 0.4, maxParticles: 8
+                    color: { attribute: "kind", colors: { melee: 0xFF9A6B, ranged: 0x9FE8DC, magic: 0xC59BFF, other: 0xFFE79A }, fallback: 0xFFE79A },
+                    alpha: [1, 0.15], light: "full", bloom: 0.4, maxParticles: 12
                 },
                 {
-                    name: "beat_right_lit", bind: "target", offset: [0.24, 0.05, 0], height: 1.05,
+                    name: "beat_right", bind: "target", offset: [0.24, 0.05, 0], height: 1.05,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: { data: "litRight", fallback: 0 }, interval: 10, repeats: 4 },
+                    rate: { data: "rightRate", fallback: 1 },
                     shape: { kind: "point" },
                     direction: "up", speed: [0.0, 0.03],
                     lifetime: [8, 12], size: [0.16, 0.06],
-                    color: 0xFFE79A, alpha: [1, 0.15], light: "full", bloom: 0.4, maxParticles: 8
-                },
-                {
-                    name: "beat_left_dim", bind: "target", offset: [-0.24, 0.05, 0], height: 1.05,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: { data: "dimLeft", fallback: 0 }, interval: 10, repeats: 4 },
-                    shape: { kind: "point" },
-                    direction: "up", speed: [0.0, 0.02],
-                    lifetime: [8, 12], size: [0.09, 0.04],
-                    color: 0x5B4A86, alpha: [0.7, 0.15], light: "world", maxParticles: 8
-                },
-                {
-                    name: "beat_right_dim", bind: "target", offset: [0.24, 0.05, 0], height: 1.05,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    burst: { count: { data: "dimRight", fallback: 1 }, interval: 10, repeats: 4 },
-                    shape: { kind: "point" },
-                    direction: "up", speed: [0.0, 0.02],
-                    lifetime: [8, 12], size: [0.09, 0.04],
-                    color: 0x5B4A86, alpha: [0.7, 0.15], light: "world", maxParticles: 8
+                    color: { attribute: "kind", colors: { melee: 0xFF9A6B, ranged: 0x9FE8DC, magic: 0xC59BFF, other: 0xFFE79A }, fallback: 0xFFE79A },
+                    alpha: [1, 0.15], light: "full", bloom: 0.4, maxParticles: 12
                 }
             ]
         },

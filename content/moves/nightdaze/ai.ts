@@ -17,13 +17,20 @@ namespace PokemonSkills {
         return nightdazeCrowd(context, CompanionBehavior.source(context), capability.data.range) >= CompanionBehavior.ai<number>(capability, "minFoes", 2);
     }
 
+    /** 与 execute 同一套事实：真实半径内、可见、且与中心通视（墙后不算）的非友方数量。 */
     function nightdazeCrowd(context: WorldBehavior.Context, self: CompanionBehavior.Entity, radius: number): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(self.ref);
+        const body = actor === null ? null : world.observe(actor);
+        const centre = body === null ? CompanionBehavior.point(self.point) : body.position();
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === self.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, self.point) <= radius) count++;
+            if (CompanionBehavior.distance(other.point, self.point) > radius) continue;
+            if (!world.clear(centre, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }

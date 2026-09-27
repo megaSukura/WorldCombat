@@ -3,16 +3,16 @@
  *
  * 一句话：脚下地面被磁化，一圈电弧从地上升起把身体真正托离地面；悬浮期间磁环贴在身体正下方的真实
  * 地表、短电弧顺着真实离地高度连到脚底，落到身上的接触攻击被磁力顶开，贴地的敌人被同极弹走；
- * 磁力耗尽或被切断时电弧收细、身体失托落回。
+ * 磁力耗尽或被切断时电弧收细、身体失托落回，脚底真的回到地表才扬尘。
  *
  * 色相家族：电光黄（0xFFD54A）为主体，近白（0xFFF6D8）做强调电弧，暗黄（0x6B5A12）做脚下影，
  * 被地面招挡下的那一下用白黄闪光。一个效果一个色相家族，第二色相只出现在被弹开的敌人身上（同色更亮）。
  * 层次：聚电（起手，脚底）／起浮环＋上升电弧（身体离地）／地表磁环＋连到脚底的电弧（持续）／
- *       被地面招挡下（目标侧白黄闪）／弹开（敌人侧外放电弧）／收（缓落或失托）。
- * 起击收：gather（聚电）→ lift（离地）→ hover（持续）→ negate／repel（中途事件）→ settle／cut（收）。
- * 数：起浮与电场的粒子量绑定服务端算出的 data.sparks；电场半径绑定 data.field；
- * data.drop 与 data.path 来自当前脚底到真实地表的探针，支撑消失就停画地表磁环与连线；
- * 被弹开的强度（data.power）决定放电弧的爆发量。视觉锚点跟着真实实体脚底／地表，不再额外把粒子抬高。
+ *       被地面招挡下（目标侧白黄闪）／弹开（敌人侧外放电弧）／收（电托消失或硬切）／落地（真实接地点扬尘）。
+ * 起击收：gather（聚电）→ lift（离地）→ hover（持续）→ negate／repel（中途事件）→ settle／cut（电托消失）→ land（真实落地）。
+ * 数：起浮与电场的粒子量绑定服务端算出的 data.sparks；电场半径绑定 data.field，所有按 field 撑开的环都用
+ * fit:"world" 按世界格画一次，不再被体型二次放大；data.drop 与 data.path 来自当前脚底到真实地表的探针，
+ * 支撑消失就停画地表磁环与连线；被弹开的爆发量（data.burst）来自真实位移距离。视觉锚点跟着真实实体脚底／地表。
  */
 const MagnetriseDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -44,7 +44,7 @@ const MagnetriseDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 28 },
             emitters: [
                 {
-                    name: "lift_ring", bind: "source", height: 0.02, offset: [0, 0.02, 0],
+                    name: "lift_ring", bind: "source", fit: "world", height: 0.02, offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 30 }, shape: { kind: "ring", radius: { data: "field", fallback: 0.7 } },
                     direction: "outward", speed: [0.06, 0.16],
@@ -69,7 +69,7 @@ const MagnetriseDefinition: ParticleDefinition = {
                     color: 0xFFD54A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 24
                 },
                 {
-                    name: "lift_dust", bind: "source", height: 0.02,
+                    name: "lift_dust", bind: "source", fit: "world", height: 0.02,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 22 }, shape: { kind: "ring", radius: { data: "field", fallback: 0.7 } },
                     direction: "outward", speed: [0.03, 0.12], drag: 0.94,
@@ -153,18 +153,11 @@ const MagnetriseDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 到期只表示电托消失：身体还在空中，不在这里扬尘。
         settle: {
             duration: 34,
             exit: { stop: 12, drain: 28 },
             emitters: [
-                {
-                    name: "settle_dust", bind: "target", height: 0.02, offset: [0, 0.02, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 24 }, shape: { kind: "ring", radius: { data: "field", fallback: 0.7 } },
-                    direction: "outward", speed: [0.02, 0.1], drag: 0.94,
-                    lifetime: [16, 28], size: [0.07, 0.01],
-                    color: 0x6B5A12, alpha: [0.4, 0], light: "world", maxParticles: 44
-                },
                 {
                     name: "settle_volt", bind: "target", height: 0.15,
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
@@ -175,6 +168,7 @@ const MagnetriseDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 被清除/替换是硬切：电弧一收，身体随即失托。
         cut: {
             duration: 26,
             exit: { stop: 8, drain: 22 },
@@ -186,14 +180,21 @@ const MagnetriseDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.3],
                     lifetime: [6, 12], size: [0.42, 0.06], sizeMode: "index",
                     color: 0xFFE9A0, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 40
-                },
+                }
+            ]
+        },
+        // 只有脚底真的落回地表，才在真实落点扬尘；贴地环取与机制共用的 data.field（世界尺寸）。
+        land: {
+            duration: 26,
+            exit: { stop: 8, drain: 20 },
+            emitters: [
                 {
-                    name: "cut_dust", bind: "target", height: 0.02,
+                    name: "land_dust", bind: "target", fit: "world", height: 0.02, offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 26 }, shape: { kind: "sphere", radius: 0.36 },
-                    direction: "down", speed: [0.05, 0.16], gravity: 0.03, drag: 0.92,
-                    lifetime: [12, 22], size: [0.08, 0.01],
-                    color: 0x6B5A12, alpha: [0.55, 0], light: "world", maxParticles: 48
+                    burst: { count: 24 }, shape: { kind: "ring", radius: { data: "field", fallback: 0.7 } },
+                    direction: "outward", speed: [0.02, 0.1], drag: 0.94,
+                    lifetime: [16, 28], size: [0.07, 0.01],
+                    color: 0x6B5A12, alpha: [0.4, 0], light: "world", maxParticles: 44
                 }
             ]
         }

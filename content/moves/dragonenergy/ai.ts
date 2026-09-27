@@ -4,8 +4,9 @@
  * 什么局面下出手：这是一道前向的 3D 龙息锥，威力随自己血量走，越满越盛，也能沿一条线贯穿。`available` 要求
  * 有可见、敌对、存活且在 `ai.maxChase`（默认 12）格内的目标；献祭式（根配置 `sacrifice`）会真的抽走生命，
  * 所以按当前 `lifeDraw` 算：扣血后仍低于 `ai.sacrificeAbove` 就放弃，避免不知情地把自己抽空。
- * `priority` 在自己血量越满、以及（开了 `ai.line` 时）目标方向**有限锥内**还排着更多可达敌人时抬高——
- * 只数 `coneLength` 以内、张角覆盖到的敌人，不再把无限延长线上的敌人也算作收益。够不到交给共享接近逻辑。
+ * `priority` 在自己血量越满、以及（开了 `ai.line` 时）目标方向**同一个 3D 锥内**还排着更多可达敌人时抬高——
+ * 只数 `coneLength` 以内、同一张角覆盖、且到目标有真实块通视的敌人，所以空中/高台上的敌人与水平排队的敌人
+ * 用同一套判定，不再把水平延长线上的敌人当收益。够不到交给共享接近逻辑。
  */
 namespace PokemonSkills {
     function dragonenergyWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -15,25 +16,28 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
     }
 
-    /** 目标方向、实际锥长与张角内还排着几个可达的非友方（含目标）。 */
+    /** 目标方向、实际锥长与张角内还排着几个可达的非友方（含目标）；同一 3D 锥与真实块通视。 */
     function dragonenergyLine(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
         const length = Math.max(6, p("dragonenergy", "coneLength", world));
         const angle = Math.max(24, Math.min(64, p("dragonenergy", "coneAngle", world)));
-        const tanHalf = Math.tan(angle * Math.PI / 360);
-        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-        const span = Math.sqrt(dx * dx + dz * dz);
+        const cosHalf = Math.cos(angle * Math.PI / 360);
+        const dx = target.point[0] - self.point[0], dy = target.point[1] - self.point[1], dz = target.point[2] - self.point[2];
+        const span = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (span < 0.05) return 1;
-        const ux = dx / span, uz = dz / span;
+        const ux = dx / span, uy = dy / span, uz = dz / span;
+        const mouth = CompanionBehavior.point(self.point);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 1;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-            const along = ox * ux + oz * uz, side = Math.abs(ox * uz - oz * ux);
-            if (along <= 0 || along > length) continue;
-            if (side <= Math.max(0.6, along * tanHalf)) count++;
+            const ox = other.point[0] - self.point[0], oy = other.point[1] - self.point[1], oz = other.point[2] - self.point[2];
+            const distance = Math.sqrt(ox * ox + oy * oy + oz * oz);
+            if (distance < 0.35 || distance > length) continue;
+            if ((ox * ux + oy * uy + oz * uz) / distance < cosHalf) continue;
+            if (WorldGeometry.blockHit(world, mouth, CompanionBehavior.point(other.point)) !== null) continue;
+            count++;
         }
         return count;
     }
@@ -69,7 +73,7 @@ namespace PokemonSkills {
 
     addPreferences("dragonenergy", {}, [
         field(pathOf("sacrifice"), "献祭式", "boolean", {
-            help: "开启：龙息 ×1.3，但施放瞬间抽走最大生命的一部分（血量越低抽得越多），血薄时会把后面几发一起打薄甚至自毙；关闭（守成式）＝不出血、威力较低。"
+            help: "开启：龙息 ×1.3，但施放瞬间按等级抽走最大生命的一部分（与当前血量无关），血薄时可能把自己抽倒，这一喷就不再完成；关闭（守成式）＝不出血、威力较低。"
         }),
         field(pathOf("ai.maxChase"), "接近距离", "number", {
             min: 3, max: 20, step: 1,

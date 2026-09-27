@@ -6,9 +6,12 @@
  *
  * 两幕（提交前只播预告）：
  *   起（gather）：脚下与身侧散落的尖叶被风拢起、绕身打转，只播预告，此时代价未结清。
- *   卷（fly → shred / burst）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付），
+ *   卷（fly → shred / burst）：提交后立刻付反作用力（自身特攻 −insightLoss，中与不中都照付）。
+ *       本发先用 `PokemonDamage.snapshotAttack` 取付代价前的特攻/等级快照，每次 `impact` 带 `attackSnapshot`，
+ *       所以这一次不被自己的降级削弱；紧接真实发出所付的实际降阶量浮字显示（到下限时可能小于参数值）。
  *       风柱沿准线真实卷出；真正卷到的非友方各结算一次 `storm`（每个目标由原生贯穿只碰一次、总伤守单发预算），
- *       到射程尽头一次 burst 散叶。穿叶式撞上第一个敌人即散；卷叶式更慢、能穿过 `carry` 个敌人。
+ *       完成时在 `world.projectilePosition` 的真实弹末点一次 burst 散叶，不回旧命中点、也不假造满射程点。
+ *       穿叶式撞上第一个敌人即散；卷叶式更慢、能穿过 `carry` 个敌人。
  *
  * 与同族分开：过热是身前一张扇形热浪、流星群是从头顶砸下的陨石群、精神突进是隔空内爆；
  *   飞叶风暴是唯一绕着一根轴旋转前进、并沿实际经过的敌人连续旋切的那一记。
@@ -20,6 +23,7 @@
 namespace PokemonSkills {
     const leafstormScene = "world_combat:move_leafstorm";
     const leafstormMissText = "world_combat.move.leafstorm.text.miss";
+    const leafstormSlumpText = "world_combat.move.leafstorm.text.slump";
 
     define({
         id: "leafstorm",
@@ -36,7 +40,7 @@ namespace PokemonSkills {
         cooldown: 38,
         maximumTicks: 360,
         style: "verdant",
-        defaults: { maelstrom: false, ai: { maxChase: 15, line: true } },
+        defaults: { maelstrom: false, ai: { maxChase: 15, line: true, regain: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p("leafstorm", "reach", pokemon) : 11, geometry: "line", style: "verdant",
@@ -64,6 +68,8 @@ namespace PokemonSkills {
             const actor = action.actor();
             const origin = action.origin();
             const maelstrom = !!(config && config.maelstrom);
+            // 付代价前的攻击快照：本发不被自己的特攻下降削弱。
+            const snapshot = PokemonDamage.snapshotAttack(world, actor, "spa");
             const power = p("leafstorm", "storm", action);
             const gust = Math.max(0.3, p("leafstorm", "gust", action));
             const girth = p("leafstorm", "girth", action);
@@ -77,17 +83,31 @@ namespace PokemonSkills {
             const direction = aim(action);
             const spent: { [ref: string]: number } = Object.create(null);
             let cuts = 0, settled = false;
-            let last = origin.plus(direction.scale(reach));
 
-            // 叶子离手：反作用力在提交那一刻付，中与不中都一样。
-            NativeEffects.boost(world, actor, "spa", -insightLoss);
             WorldFeedback.emit(world, leafstormScene, 1, origin,
                 { moment: "gather", maelstrom: maelstrom ? 1 : 0, blades: blades, scale: scale, intensity: intensity }, 20);
             sound(action, "cobblemon:move.leafstorm.actor");
 
-            function finish(current: CombatAction): void {
+            // 叶子离手：紧接真实发出付反作用力，中与不中都一样；用实际降阶量浮字。
+            const applied = NativeEffects.boost(world, actor, "spa", -insightLoss);
+            const self = world.observe(actor);
+            if (applied !== 0 && self !== null)
+                WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.25, 0)), leafstormSlumpText, [Math.abs(applied)], 26);
+
+            function finish(current: CombatAction, end: CombatPoint | null): void {
                 if (settled) return;
                 settled = true;
+                const scope = current.world();
+                // 结束散叶只一处：读真实弹末点，不回旧命中点、也不假造满射程点。
+                if (end !== null) {
+                    WorldFeedback.emit(scope, leafstormScene, 1, end,
+                        { moment: "burst", landed: cuts > 0 ? 1 : 0, blades: blades, radius: girth * 1.6,
+                            scale: scale, intensity: intensity }, 24);
+                    if (cuts === 0) {
+                        WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.2, 0)), leafstormMissText, [], 22);
+                        sound(current, "minecraft:block.grass.break");
+                    }
+                }
                 scenes.finish(current, done);
             }
 
@@ -99,13 +119,13 @@ namespace PokemonSkills {
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world();
                     const at = hit.position();
-                    last = at;
                     const victim = hit.target();
                     if (victim === null || !scope.valid(victim) || scope.friendly(victim)) return;
                     const ref = String(victim.ref());
                     const budget = Math.max(0, power - (spent[ref] || 0));
                     if (budget <= 0) return;
-                    const landed = impact(current, hit, "leafstorm", budget, { damage: damageSpec("leafstorm", "storm") });
+                    const landed = impact(current, hit, "leafstorm", budget,
+                        { damage: damageSpec("leafstorm", "storm"), attackSnapshot: snapshot });
                     if (!landed) return;
                     spent[ref] = (spent[ref] || 0) + budget;
                     cuts++;
@@ -114,16 +134,7 @@ namespace PokemonSkills {
                     sound(current, "cobblemon:move.leafstorm.target");
                 }
             }, function (current: CombatAction) {
-                if (settled) return;
-                const scope = current.world();
-                WorldFeedback.emit(scope, leafstormScene, 1, last,
-                    { moment: "burst", landed: cuts > 0 ? 1 : 0, blades: blades, radius: girth * 1.6,
-                        scale: scale, intensity: intensity }, 24);
-                if (cuts === 0) {
-                    WorldFeedback.text(scope, last.plus(WorldCombat.point(0, 1.2, 0)), leafstormMissText, [], 22);
-                    sound(current, "minecraft:block.grass.break");
-                }
-                finish(current);
+                finish(current, current.world().projectilePosition(flight));
             });
 
             scenes.show(action, "fly", origin,

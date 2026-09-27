@@ -1,15 +1,16 @@
 /**
  * 疾速转轮 / spinout 的出手方式。
  *
- * 核心念头：**过度旋转的甩尾滑旋**——压低重心、双脚摩擦地面冒出火星，前半按释放方向滑出，后半沿玩家选定的
- *   左／右方向甩尾偏转约 `turn` 度；这是唯一会移动的招式，冲势发出后不再追敌。撞实一记重击并把目标撞开，
- *   转势收不住、腿被反噬，速度按实际事实下降 2 级；空冲不付这份代价。
+ * 核心念头：**过度旋转的甩尾滑旋**——压低重心、双脚贴地摩擦冒出火星，前半按释放方向滑出，后半沿玩家选定的
+ *   左／右方向甩尾偏转约 `turn` 度；这是唯一会移动的招式，且要求贴地发动，冲势发出后不再追敌。撞实一记重击并把
+ *   目标按真正接敌者的质量撞开，转势收不住、腿被反噬，速度按实际事实下降 2 级；空冲不付这份代价。
  *
  * 三幕（提交前只播预告）：
- *   起（wind）：压腿、重心往下沉，脚边火星先转起来，只播预告。
+ *   起（wind）：压低重心蓄势，脚边火星与尘土先向里收，只播预告。
  *   旋（charge → spin → impact/miss）：提交后沿释放方向逐刻 `sweepStep` 真实推进；前半直线，后半按配置的
  *       左／右偏好逐刻转弯（由准心侧向／`side` 配置明确决定），身体朝向与短火花都跟着真实弯曲的路径；首碰
- *       实体才结算一次 `spin` 接触伤害并按冲击方向撞开 `knock`，撞墙或冲满则收势、不补伤。
+ *       实体才结算一次 `spin` 接触伤害并按冲击方向撞开 `knock`，撞墙或冲满则收势、不补伤。偏好侧被墙堵死、
+ *       自动改向另一侧时给出明确文字提示。
  *   滞（stagger）：只有撞实才按实际事实降速；空冲只留一路空转的火星。
  *
  * 与同族分开：狂舞挥打是原地转整圈的覆盖、臂锤/冰锤是原地过顶单体重砸；疾速转轮是唯一贴地甩尾滑旋、
@@ -21,13 +22,15 @@ namespace PokemonSkills {
     const spinoutScene = "world_combat:move_spinout";
     const spinoutStaggerText = "world_combat.move.spinout.text.stagger";
     const spinoutMissText = "world_combat.move.spinout.text.miss";
+    const spinoutRedirectText = "world_combat.move.spinout.text.redirect";
 
     define({
         freeMovement: true,
+        requiresGround: true,
         id: "spinout",
         cooldownParameter: "recharge",
         name: "Spin Out",
-        description: "压低重心、双脚磨地冒火星，前半按瞄准方向贴地滑出，后半向选定的左／右一侧甩尾偏转，拖出一道真实弯曲的短轮痕：首碰实体打出一记高额单发并按冲势把它撞开，撞击点磨出一圈痕；转势收不住，自身速度按实际事实大幅下降。冲势发出后不再追敌，撞墙或空冲不收代价。预旋式先原地打转蓄势，冲得更远更重，代价是起手与冷却更长。",
+        description: "压低重心、双脚磨地冒火星，前半按瞄准方向贴地滑出，后半向选定的左／右一侧甩尾偏转，拖出一道真实弯曲的短轮痕：首碰实体打出一记高额单发并按冲势把它撞开，撞击点磨出一圈痕；转势收不住，自身速度按实际事实大幅下降。冲势发出后不再追敌，撞墙或空冲不收代价。蓄势式先压低重心蓄势，冲得更远更重，代价是起手与冷却更长。",
         uses: ["贴地甩尾滑进一个目标，打出高额单发", "用弯曲的冲势把目标撞开、自己转向下一处", "用一次最贵的自我减速换掉关键目标，或空冲做有限侧向机动"],
         kind: "aim",
         range: 3.0,
@@ -72,7 +75,6 @@ namespace PokemonSkills {
             const total = Math.max(1.2, p("spinout", "reach", action));
             const rush = Math.max(0.2, p("spinout", "rush", action));
             const turn = Math.max(10, p("spinout", "turn", action)) * Math.PI / 180;
-            const knock = p("spinout", "knock", action);
             const sparks = Math.max(6, Math.round(p("spinout", "sparks", action)));
             const scuffRadius = Math.max(0.7, p("spinout", "scuffRadius", action));
             const speedLoss = Math.max(0, Math.round(p("spinout", "speedLoss", action)));
@@ -85,19 +87,26 @@ namespace PokemonSkills {
             const forward = WorldGeometry.flatUnit(aim(action), action.direction());
             const left = WorldCombat.point(forward.z(), 0, -forward.x());
 
-            /** 该侧弯道是否真有空间；两侧都挤时仍用偏好侧，由真实 sweepStep 在墙上收势。 */
+            /** 沿完整短弧（前半直线、后半累计偏转）取样，检查每一处都容得下身体——即这一侧真能落脚。 */
             function arcFree(sideSign: number): boolean {
-                const half = turn * 0.5 * sideSign;
-                const dir = forward.scale(Math.cos(half)).plus(left.scale(Math.sin(half)));
-                const probe = centre.plus(dir.scale(straight + (total - straight) * 0.6));
-                const feet = WorldCombat.point(probe.x(), centre.y() - selfHeight / 2, probe.z());
-                return world.freeSpace(feet, selfWidth, selfHeight);
+                const samples = 6;
+                for (let i = 1; i <= samples; i++) {
+                    const t = i / samples, angle = turn * sideSign * (t <= 0.5 ? 0 : (t - 0.5) / 0.5);
+                    const dir = forward.scale(Math.cos(angle)).plus(left.scale(Math.sin(angle)));
+                    const probe = centre.plus(dir.scale(total * t));
+                    const feet = WorldCombat.point(probe.x(), centre.y() - selfHeight / 2, probe.z());
+                    if (!world.freeSpace(feet, selfWidth, selfHeight)) return false;
+                }
+                return true;
             }
             // 左／右偏好由配置明确决定；AI 读同一配置，并在偏好侧没空间时改用另一侧。
             let side = config && config.side === "left" ? 1 : -1;
-            if (!arcFree(side) && arcFree(-side)) side = -side;
+            let redirected = false;
+            if (!arcFree(side) && arcFree(-side)) { side = -side; redirected = true; }
 
-            const path: number[][] = [[centre.x(), centre.y(), centre.z()]];
+            // 轮痕用脚下真实投影：把每个轨迹点的 y 投影到地面，而不是身体中心高度。
+            function footY(point: CombatPoint): number { return WorldGeometry.ground(world, point, 3).y(); }
+            const path: number[][] = [[centre.x(), footY(centre), centre.z()]];
             let travelled = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
@@ -114,6 +123,8 @@ namespace PokemonSkills {
                 const here = at;
                 if (landed && victim !== null) {
                     if (scope.valid(victim)) {
+                        // 撞开距离按真正接敌者的质量现场重算，而不是施放时选中的目标。
+                        const knock = Math.max(0, p("spinout", "knock", withTarget(factContext(current), victim)));
                         const away = WorldCombat.point(dir.x(), 0, dir.z());
                         if (away.length() >= 0.05) scope.hitDisplace(victim, away.unit().scale(knock));
                     }
@@ -146,8 +157,8 @@ namespace PokemonSkills {
                 travelled += swept.moved;
                 const now = current.origin();
                 const last = path[path.length - 1];
-                if (Math.abs(now.x() - last[0]) + Math.abs(now.y() - last[1]) + Math.abs(now.z() - last[2]) > 0.02)
-                    path.push([now.x(), now.y(), now.z()]);
+                if (Math.abs(now.x() - last[0]) + Math.abs(now.z() - last[2]) > 0.02)
+                    path.push([now.x(), footY(now), now.z()]);
                 const look = now.plus(dir.scale(1.5));
                 current.face(look, 45, 45);
                 scenes.show(current, "spin", now,
@@ -172,6 +183,11 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.flamewheel.actor");
             WorldFeedback.emit(world, spinoutScene, 1, action.origin(),
                 { moment: "wind", sparks: sparks, intensity: intensity }, 16);
+            // 偏好侧被墙堵死、自动改向另一侧时明确告诉玩家，否则画面上的弯向会显得随机。
+            if (redirected) {
+                WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.2, 0)), spinoutRedirectText, [], 30);
+                WorldFeedback.emit(world, spinoutScene, 1, centre, { moment: "redirect", intensity: intensity }, 18);
+            }
             advance(action);
         }
     });

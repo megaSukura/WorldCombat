@@ -5,8 +5,9 @@
  * 拽下来——落后的差越大，这一下炸得越亮越密；自己不落后时只在对手身上擦出一撮灰。
  * 色相家族：赤红到暗金（impact_fighting / largering / flat），尘与地环用焦土中性色。
  * 拍子：起（brace 站定收气）→ 示（measure 量尺）→ 击（dash 扑身、equalize 拉平 / flat 空响）→ 收（settle 扬尘）。
- * 范围：量尺画在两个参与者之间，长度就是这一记要拉平的生命差所在；equalize/flat 绑命中点。
- * 运动：量尺两端钉在两人身上随移动紧跟；扑身速度线沿施法者实际方向铺开；拉平时血光从命中点向外爆。
+ * 范围：量尺画在两个参与者之间，长度就是这一记要拉平的生命差所在；dash 的 `data.path` 每刻只有当刻真实移动的那一小段，
+ *   与服务端身体轨迹共用端点；equalize/flat 绑命中点。
+ * 运动：量尺两端钉在两人身上随移动紧跟；扑身线沿真实身体轨迹铺开（不是固定竖线）；拉平时血光从命中点向外爆。
  * 数：equalize 的 burst.count 由服务端按「实际扣血 / 对手最大生命」算好传入（data.count）；
  * 被免疫或护盾完全挡下时服务端改播 blocked（冷灰护壁环，无血光），与真正拉平的赤金爆点分开。
  */
@@ -62,10 +63,10 @@ const EndeavorDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 12 },
             emitters: [
                 {
-                    name: "rush_line", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    name: "rush_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 30, shape: { kind: "line", length: 1.2 },
-                    orient: "direction", direction: "shape", speed: [0.02, 0.08],
+                    rate: 30, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.02, 0.08],
                     lifetime: [4, 8], size: [0.16, 0.05],
                     color: 0xE0603A, alpha: [0.75, 0], light: "full", maxParticles: 160
                 },

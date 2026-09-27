@@ -4,8 +4,9 @@
  *
  * 色相家族：贴图取白色/浅灰，实际色相按个体值算出的 data.type 走共享 type 色表——同一个家族随属性变色。
  * 拍子：charge（只立属性符号，简单）→ flight（真实球弹的尾迹）→ burst（撞到实体的属性爆发）→
- *       shatter（撞到方块的碎裂，碎片朝原生方块面反弹）。
- * 范围：flight 沿投射物画线；burst/shatter 的爆点半径由 ringRadius 读出。
+ *       fizzle（被拒绝时的小溃散）→ shatter（撞到方块的碎裂，碎片沿 data.direction 的原生外法线朝墙外崩开）→
+ *       expire（到程落空在弹体真实末端轻散）。
+ * 范围：flight 沿投射物画线，尾迹间距由 data.trail 的 minDistance 驱动；所有命中反馈落在真实接触点，不加固定抬高。
  * 数：光斑、光点与符号环数量分别由 power/focus 绑定的 data 字段决定，块面方向由 data.direction 驱动。
  */
 const HiddenPowerDefinition: ParticleDefinition = {
@@ -44,7 +45,7 @@ const HiddenPowerDefinition: ParticleDefinition = {
                     name: "trail_glints", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     trail: { minDistance: { data: "trail", fallback: 0.18 } },
-                    rate: { data: "trailRate", fallback: 20 },
+                    rate: 16,
                     direction: "velocity", speed: [0.0, 0.03],
                     lifetime: [8, 14], size: [0.14, 0.02],
                     color: TypeColors.binding("type", 0x9B59FF), alpha: [0.95, 0], light: "full", maxParticles: 200
@@ -64,7 +65,7 @@ const HiddenPowerDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "flash", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "flash", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: { data: "impactCount", fallback: 24 } },
                     shape: { kind: "sphere", radius: 0.3 },
@@ -73,7 +74,7 @@ const HiddenPowerDefinition: ParticleDefinition = {
                     color: TypeColors.binding("type", 0x9B59FF), alpha: [1, 0], light: "full", bloom: 0.5
                 },
                 {
-                    name: "glints", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "glints", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "glintCount", fallback: 20 } },
                     shape: { kind: "sphere_surface", radius: 0.24 },
@@ -83,7 +84,7 @@ const HiddenPowerDefinition: ParticleDefinition = {
                     color: TypeColors.binding("type", 0x9B59FF), alpha: [0.95, 0], light: "full", maxParticles: 160
                 },
                 {
-                    name: "burst_ring", bind: "point", fit: "none", offset: [0, 0.3, 0],
+                    name: "burst_ring", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "ringRadius", fallback: 0.9 } },
@@ -115,6 +116,47 @@ const HiddenPowerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.16], gravity: 0.04, drag: 0.92,
                     lifetime: [10, 18], size: [0.07, 0.02],
                     color: 0x9A9A9A, alpha: [0.5, 0], light: "world", maxParticles: 80
+                }
+            ]
+        },
+        // 被拒绝（相性免疫／友方／权限）：光球在接触点小范围溃散，不报成功。
+        fizzle: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "dim", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
+                    burst: { count: { data: "impactCount", fallback: 8 } },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "shape", speed: [0.03, 0.12],
+                    lifetime: [8, 14], size: [0.22, 0.04], sizeMode: "index",
+                    color: TypeColors.binding("type", 0x9B59FF), alpha: [0.6, 0], light: "full", maxParticles: 24
+                },
+                {
+                    name: "sparks", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "glintCount", fallback: 6 } },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "outward", speed: [0.05, 0.16], gravity: 0.03, drag: 0.9,
+                    lifetime: [8, 14], size: [0.08, 0.02],
+                    color: TypeColors.binding("type", 0x9B59FF), alpha: [0.55, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        // 到程落空：在弹体真正走到的末端轻轻散开。
+        expire: {
+            duration: 16,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "fade", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "glintCount", fallback: 8 } },
+                    shape: { kind: "sphere_surface", radius: 0.18 },
+                    direction: "outward", speed: [0.03, 0.1], gravity: 0.02, drag: 0.92,
+                    lifetime: [10, 16], size: [0.09, 0.01],
+                    color: TypeColors.binding("type", 0x9B59FF), alpha: [0.7, 0], light: "full", maxParticles: 24
                 }
             ]
         }

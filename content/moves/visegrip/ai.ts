@@ -4,9 +4,17 @@
  * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase`（默认 6）以内的贴身距离；更远交给共享接近逻辑。
  * 对谁出手：这一夹对**钳口相对更小的目标**更实，也不容易被打断，所以优先挑体型比自己小的目标；
  *   焦点目标另加一档。`ai.opening` 选「只对受伤目标」时跳过血还多的敌人，把它留给残血收尾。
- * 够不到交给共享接近逻辑；走进钳夹距离就合钳、把人拽近。
+ * 拖拽式：真正的拽移会把自己往后带，所以只读探一次「身后是否有立身空间」；贴墙、无退路时降一档，
+ *   站到友方附近（把人往队友方向带）时抬一档。够不到交给共享接近逻辑；走进钳夹距离就合钳、把人拽近。
  */
 namespace CompanionBehavior {
+    CompanionBehavior.registerFact("world_combat:move_visegrip/backing", function (access, target) {
+        const self = access.observe(access.source()), body = access.observe(target);
+        if (!self || !body) return false;
+        const away = self.position().minus(body.position()), flat = WorldCombat.point(away.x(), 0, away.z());
+        const back = flat.length() < .01 ? self.position() : self.position().plus(flat.unit());
+        return typeof access.freeSpace === "function" ? access.freeSpace(back, self.width(), self.height()) : true;
+    });
     function visegripSmaller(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         const self = CompanionBehavior.source(context);
         const mine = typeof self.height === "number" ? self.height : 1.4;
@@ -41,6 +49,14 @@ namespace CompanionBehavior {
             if (visegripSmaller(context, target)) base += 8;
             if (CompanionBehavior.ratio(target) < 0.55) base += 6;
             if (context.facts.focus === target.ref) base += 12;
+            const haul = !!(capability.data.config && capability.data.config.haul === true);
+            if (haul) {
+                if (CompanionBehavior.fact<boolean>(context, "world_combat:move_visegrip/backing", target) === false) base -= 8;
+                const here = CompanionBehavior.source(context).point;
+                if ((context.facts.nearby as CompanionBehavior.Entity[]).some(function (other) {
+                    return other.friendly && CompanionBehavior.distance(here, other.point) <= 4;
+                })) base += 6;
+            }
             return base;
         }
     });

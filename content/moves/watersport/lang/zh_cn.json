@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.watersport.summary": "在选定的地面铺开一汪水：洼里的活体被泡湿，使出的火属性招式被压，身上的火与灼伤被浇灭，地面上的明火也被一格一格沤熄。对双方一视同仁。",
+  "worldcombat.skill.watersport.summary": "在选定的地面铺开一汪水：洼里的活体被泡湿，使出的火属性招式按所在水洼的系数被压，身上的明火与灼伤被浇灭，地面上的明火也被一格一格沤熄。对双方一视同仁。",
   "worldcombat.skill.watersport.use.0": "压制火属性对手",
   "worldcombat.skill.watersport.use.1": "灭火与治愈灼伤",
   "worldcombat.skill.watersport.use.2": "在火招齐射前先铺湿地面",
   "worldcombat.skill.watersport.description.0": "能在 %1$s 以内的地面泼出水洼。",
   "worldcombat.skill.watersport.description.1": "水洼半径 %1$s 格、持续 %2$s，不分敌我地泡湿站在里面的活体。",
-  "worldcombat.skill.watersport.description.2": "泡湿者使出的火属性招式威力最高只能剩五成（水洼越深压得越低；水洼的压制系数约 %1$s），离开水洼后还湿着 %2$s。",
+  "worldcombat.skill.watersport.description.2": "泡湿者使出的火属性招式威力按本人所在水洼的压制系数被压（越深压得越低，约 %1$s）；离开水洼后余湿仍持续 %2$s，期间继续按同一水洼的系数生效，不会借用别处的更强水洼。",
   "worldcombat.skill.watersport.description.3": "每轮最多熄灭 %1$s 格地面的明火。",
   "worldcombat.skill.watersport.description.4": "铺水要 %1$s，收势 %2$s，冷却 %3$s。漫开／沤湿的取舍见形态说明。",
   "worldcombat.skill.watersport.form.0": "沤湿：水洼半径 ×0.75、时长 ×1.35、火招系数 ×0.85（压得更低），代价是起手 +3 刻、冷却 ×1.15。",
@@ -28,12 +28,12 @@
   "worldcombat.skill.watersport.preference.ai.advance": "把水洼泼向对手",
   "worldcombat.skill.watersport.preference.ai.advance.help": "开启后把水洼按在自己与威胁之间，让交战区泡湿；关闭则按在脚下先护住自己。",
   "worldcombat.skill.watersport.preference.ai.fireOnly": "只在有火时铺水",
-  "worldcombat.skill.watersport.preference.ai.fireOnly.help": "开启时只在有火属性威胁、或附近有活体在燃烧时才铺水；关闭则把水洼当作常备压制。",
+  "worldcombat.skill.watersport.preference.ai.fireOnly.help": "开启时只在有火属性威胁、附近有活体在燃烧、或落点附近有明火时才铺水；关闭则把水洼当作常备压制。",
   "worldcombat.skill.watersport.preference.ai.leaveStation": "离开驻守点",
   "worldcombat.skill.watersport.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去铺水。",
   "world_combat.move.watersport.text.splash": "玩水 %1$s 秒（火招 ×%2$s%%）",
   "world_combat.move.watersport.text.drench": "被水泡湿",
   "world_combat.move.watersport.text.douse": "火被沤熄",
   "effect.world_combat.watersport_soaked": "泡湿",
-  "worldcombat.skill.watersport.description.soak": "站在水洼里的活体会被不断重新泡湿；被泡湿时若带着灼伤，灼伤会被解除、身上的火也会被浇灭。"
+  "worldcombat.skill.watersport.description.soak": "站在水洼里的活体会被不断重新泡湿；被泡湿时，身上的明火会被浇灭、灼伤会被解除（两者各自独立，没有灼伤身份的火也会灭）。"
 }

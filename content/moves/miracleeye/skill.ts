@@ -6,12 +6,13 @@
  *
  * 三幕：
  *   凝神（windup，提交前只观察与预告，可被打断，不花代价）。
- *   看穿（提交后）：目标端挂 world_combat:miracleeye_mark（共享身份 world_combat:status/miracleeye 与伞身份
- *     world_combat:status/identified），一次剥掉它当前的正闪避、把它照亮；记录层 world_combat:miracleeye_record
- *     记下剥掉几级与窗口，并绑定目标环表现。施法者端挂 world_combat:miracleeye_focus，用 NativeEffects.boostWindow
- *     把命中抬 insight 级，绑定到这条真实 MobEffect 上，在自己的窗口里到期。
+ *   看穿（提交后）：目标载体 world_combat:miracleeye_mark（共享身份 world_combat:status/miracleeye 与伞身份
+ *     world_combat:status/identified）先成立；成立后才剥它当前的正闪避、把它照亮。剥闪避是印记载体拥有的
+ *     临时负贡献（NativeEffects.boostWindow），随印记到期或被清除一起收回，只撤本招这一份。记录层
+ *     world_combat:miracleeye_record 记下实际剥掉几级与窗口，并绑定目标环与目标轮廓。施法者端挂
+ *     world_combat:miracleeye_focus，同样用 boostWindow 把命中抬 insight 级，绑定到那条真实 MobEffect 上。
  *   兑现（任何超能伤害落在目标身上）：PokemonDamage.metadata 在结算前读这层身份，把目标属性里的 dark 摘掉。
- *   自散：目标端窗口走完或被牛奶一类效果解掉时，剥掉的闪避原样还回；施法者端的命中在自己的窗口到期时原样收回。
+ *   自散：目标端窗口走完或被牛奶一类效果解掉时，剥掉的闪避随载体收回；施法者端的命中在自己的窗口到期时收回。
  *     任一端结束只 fading 自己那一端。
  *
  * 与同族分开：识破／气味侦测破的是幽灵对一般／格斗的免疫，奇迹之眼破的是恶对超能的免疫，还额外抬施法者命中。
@@ -27,35 +28,32 @@ namespace PokemonSkills {
         });
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    // 目标环绑到记录层这条托管效果上，记录层结束即一起收。
+    // 目标环与目标轮廓都绑到记录层这条托管效果上，记录层结束即一起收。
     WorldCombat.effectHandler(miracleeyeRecordEffect, "start", function (effect) {
         const world = effect.world(), target = effect.target();
         const data = JSON.parse(effect.state());
         const body = world.observe(target);
-        if (body !== null) WorldFeedback.onEffect(world, effect.id(), "hold", miracleeyeScene, 1, body.position(),
+        if (body === null) return;
+        WorldFeedback.onEffect(world, effect.id(), "hold", miracleeyeScene, 1, body.position(),
             { moment: "hold", target: String(target.ref()), motes: Math.max(8, Math.round(Number(data.motes) / 2)), added: data.added });
+        // 明确的目标轮廓：按真实碰撞箱逐帧勾出，直到记录层结束。
+        WorldFeedback.onEffect(world, effect.id(), "outline", miracleeyeEyeScene, 1, body.position(),
+            { role: "target", target: String(target.ref()), width: body.width(), height: body.height(),
+                motes: data.motes, added: data.added });
     });
     WorldCombat.effectHandler(miracleeyeRecordEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    function miracleeyeRecordOf(world: CombatWorld, target: CombatActor): any {
-        const views = world.effects(target, miracleeyeRecordEffect);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
-    }
     function miracleeyeReleaseRecord(world: CombatWorld, target: CombatActor): void {
         const views = world.effects(target, miracleeyeRecordEffect);
         for (let index = 0; index < views.length; index++) world.operation(views[index].id(), "world_combat:dispel", "{}");
     }
-    /** 结算目标端旧记录：把它剥掉的闪避原样还回再释放，避免第二次看穿在同一份闪避上反复扣还放大。 */
-    function miracleeyeSettleRecord(world: CombatWorld, target: CombatActor): void {
-        const record = miracleeyeRecordOf(world, target);
-        if (record !== null && Number(record.taken) > 0) NativeEffects.boost(world, target, "evasion", Math.round(Number(record.taken)));
-        miracleeyeReleaseRecord(world, target);
-    }
-    function miracleeyeStrip(world: CombatWorld, target: CombatActor, request: number): number {
-        const current = Math.max(0, NativeEffects.stage(NativeEffects.read(world, target), "evasion"));
-        const amount = Math.min(current, Math.max(0, Math.round(request)));
-        if (amount > 0) NativeEffects.boost(world, target, "evasion", -amount);
-        return amount;
+    /** 剥闪避做成目标印记载体拥有的临时负贡献：只剥当前的正闪避，随印记到期或被清除一起收回、只撤本招这一份；返回实际剥掉的级数。 */
+    function miracleeyeStrip(world: CombatWorld, target: CombatActor, request: number, carrier: CombatMobEffect, ticks: number): number {
+        const before = Math.max(0, NativeEffects.effectiveStage(world, target, "evasion"));
+        const amount = Math.min(before, Math.max(0, Math.round(request)));
+        if (amount > 0) NativeEffects.boostWindow(world, target, { evasion: -amount }, ticks, "world_combat:move/miracleeye", carrier);
+        const after = Math.max(0, NativeEffects.effectiveStage(world, target, "evasion"));
+        return Math.max(0, before - after);
     }
     /** 施法者端命中：把命中等级做成绑定到真实 MobEffect 的临时窗口；返回实际抬起的级数。 */
     function miracleeyeOpenEye(world: CombatWorld, actor: CombatActor, request: number, ticks: number, motes: number): number {
@@ -88,15 +86,13 @@ namespace PokemonSkills {
         }
     });
 
-    // 目标端窗口走完或被清除：把剥掉的闪避还回目标、清掉记录；自然到期额外播一次褪去。施法者端的命中不在
-    // 这里动，它随自己的 focus 效果到期。
+    // 目标端窗口走完或被清除：剥掉的闪避是印记载体拥有的临时负贡献，随载体一起收回；这里只清附属记录与轮廓，
+    // 自然到期额外播一次褪去。施法者端的命中不在里动，它随自己的 focus 效果到期。
     WorldCombat.on("world_combat:move_miracleeye/end", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== miracleeyeMarkEffect) return;
         const world = event.world(), target = event.actor();
         if (!world.valid(target)) return;
-        const record = miracleeyeRecordOf(world, target);
-        if (record !== null && Number(record.taken) > 0) NativeEffects.boost(world, target, "evasion", Math.round(Number(record.taken)));
         miracleeyeReleaseRecord(world, target);
         if (String(data.cause) !== "expired") return;
         const body = world.observe(target);
@@ -208,14 +204,31 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
+            // 目标载体先成立：印记挂不上就不剥、不照亮、不建附属记录（标记失败不继续）。
+            const carrier = MobEffects.apply(world, target, miracleeyeMarkEffect, window, 0);
+            if (carrier === null) {
+                WorldFeedback.emit(world, miracleeyeScene, 1, point, { moment: "fizzle", target: String(target.ref()) }, 16);
+                WorldFeedback.text(world, miracleeyeAbove(point), miracleeyeEmptyText, [], 24);
+                done(action);
+                return;
+            }
             const gained = openFocus();
             sound(action, "cobblemon:move.psychic.actor");
-            miracleeyeSettleRecord(world, target);
-            const taken = miracleeyeStrip(world, target, strips);
-            MobEffects.apply(world, target, miracleeyeMarkEffect, window, 0);
+            miracleeyeReleaseRecord(world, target);
+            const taken = miracleeyeStrip(world, target, strips, carrier, window);
             MobEffects.apply(world, target, "minecraft:glowing", reveal, 0);
             world.effect(miracleeyeRecordEffect, target,
                 JSON.stringify({ taken: taken, added: gained, motes: motes, window: window, reveal: reveal }), window);
+            // 稳定的眼形在施法者眼前短开合一次（自定义场景）；目标轮廓随记录层持续勾出真实碰撞箱。
+            if (self !== null) {
+                const gaze = point.minus(origin), horiz = WorldCombat.point(gaze.x(), 0, gaze.z());
+                const heading = horiz.length() < 0.01 ? WorldCombat.point(0, 0, 1) : horiz.unit();
+                const right = WorldCombat.point(-heading.z(), 0, heading.x());
+                WorldFeedback.emit(world, miracleeyeEyeScene, 1,
+                    self.position().plus(WorldCombat.point(0, self.height() * 0.72, 0)),
+                    { role: "eye", self: String(actor.ref()), startTick: world.tick(), duration: 22, added: gained, motes: motes,
+                        right: [right.x(), right.y(), right.z()] }, 24);
+            }
             WorldFeedback.emit(world, miracleeyeScene, 1, point,
                 { moment: "read", target: String(target.ref()), path: [String(actor.ref()), String(target.ref())],
                     motes: motes, window: window, reveal: reveal, added: gained, taken: taken,

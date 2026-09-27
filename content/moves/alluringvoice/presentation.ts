@@ -7,8 +7,8 @@
  *
  * 色相家族：天使粉（0xF2A0C8）作主体与声场，近白粉（0xFFEAF4）给命中闪，金粉（0xFFD9A0）只点缀音符号，
  * 余韵用暗粉烟（0x8A4A68）。
- * 拍子：起 charge（14t）→ 首拍 wave（实心短音，30t）+ 击 hit（26t，逐目标）→ 尾拍 tail（更淡更散，36t）
- * → 持 daze／linger（逐刻续期）→ 反噬 fumble。
+ * 拍子：起 charge（14t）→ 首拍 wave（实心短音，22t）+ 击 hit（26t，逐目标）+ hold（低亮锥边，续到尾音）
+ * → 尾拍 tail（更淡更散，36t）→ 持 daze（首拍落鸟）／linger（载体存续的托管飞鸟）→ 反噬 fumble。
  *
  * 范围：wave 与 tail 的发射器都绑 `data.path`（服务端 alluringVoiceFan 生成的锥形顶点），用 polygon／polyline
  * 画出整片声场；两拍共用同一组顶点，玩家一眼知道站在锥形里会被唱到、走出去就躲掉尾音。
@@ -42,10 +42,10 @@ const AlluringVoiceDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 唱：整条声场，顶点就是判定区域。
+        // 唱：整条声场，顶点就是判定区域。首拍亮起后很快淡出，留下后面的 hold 锥边。
         wave: {
-            duration: 30,
-            exit: { stop: 12, drain: 20 },
+            duration: 22,
+            exit: { stop: 8, drain: 16 },
             emitters: [
                 {
                     name: "wave_notes", bind: "path", offset: [0, 0.1, 0],
@@ -79,6 +79,27 @@ const AlluringVoiceDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [18, 30], size: [0.32, 0.5],
                     color: 0x8A4A68, alpha: [0.28, 0], light: "world", maxParticles: 50
+                }
+            ]
+        },
+        // 持锥：首拍淡出到尾音之间，只留一层低亮锥边，提示尾音仍会罩住同一片区域。
+        hold: {
+            emitters: [
+                {
+                    name: "hold_edge", bind: "path", offset: [0, 0.09, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    shape: { kind: "polyline", closed: true }, rate: 26,
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.11, 0.03],
+                    color: 0xF2A0C8, alpha: [0.26, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "hold_lines", bind: "path", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    shape: { kind: "polygon" }, rate: 10,
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [8, 14], size: [0.07, 0.02],
+                    color: 0xFFEAF4, alpha: [0.16, 0], light: "full", maxParticles: 50
                 }
             ]
         },
@@ -160,18 +181,25 @@ const AlluringVoiceDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 持（存续）：低密度的粉点提示错乱还在。
+        // 持（存续）：飞鸟在头顶绕，密度低、让出本体视线，由绑定在载体上的托管效果维持到载体结束。
         linger: {
-            duration: 16,
-            exit: { stop: 5, drain: 12 },
+            exit: { stop: 4, drain: 12 },
             emitters: [
                 {
-                    name: "linger_motes", bind: "target", offset: [0, 0.6, 0], height: 0.45,
+                    name: "linger_bird", bind: "target", offset: [0, 0.75, 0], height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
+                    rate: 5, shape: { kind: "ring", radius: 0.34 },
+                    direction: "outward", speed: [0.01, 0.04],
+                    lifetime: [16, 26], size: [0.18, 0.04],
+                    color: 0xF2A0C8, alpha: [0.42, 0], light: "full", maxParticles: 16
+                },
+                {
+                    name: "linger_mote", bind: "target", offset: [0, 0.6, 0], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 5, shape: { kind: "sphere", radius: 0.42 },
+                    rate: 4, shape: { kind: "sphere", radius: 0.42 },
                     direction: "outward", speed: [0.01, 0.04],
                     lifetime: [12, 22], size: [0.08, 0.02],
-                    color: 0xFFEAF4, alpha: [0.3, 0], light: "full", maxParticles: 16
+                    color: 0xFFEAF4, alpha: [0.26, 0], light: "full", maxParticles: 16
                 }
             ]
         },

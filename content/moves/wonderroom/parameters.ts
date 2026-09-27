@@ -28,6 +28,7 @@ namespace PokemonSkills {
     export const wonderRoomField = "world_combat:field/wonderroom";
     export const wonderRoomSwap = "world_combat:wonderroom_swap";
     export const wonderRoomScene = "world_combat:move_wonderroom";
+    export const wonderRoomExchangeScene = "world_combat:move_wonderroom_exchange";
     export const wonderRoomStatus = "wonderroom";
     export const wonderRoomOpenText = "world_combat.move.wonderroom.text.open";
     export const wonderRoomSwapText = "world_combat.move.wonderroom.text.swap";

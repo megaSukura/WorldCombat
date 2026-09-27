@@ -21,6 +21,7 @@ namespace PokemonSkills {
     export const metalburstScene = "world_combat:move_metalburst";
     export const metalburstHitText = "world_combat.move.metalburst.text.hit";
     export const metalburstWhiffText = "world_combat.move.metalburst.text.whiff";
+    export const metalburstStoreText = "world_combat.move.metalburst.text.store";
 
     export interface MetalburstRecord { amount: number; tick: number; source: string; }
     export var metalburstLedger: { [ref: string]: MetalburstRecord } = Object.create(null);
@@ -154,7 +155,7 @@ namespace PokemonSkills {
         /** 分摊比例：普通 45%，破片式 70%；夹 0.3..0.75。 */
         shareFraction: percent(
             F.when(F.pref("shrapnel", text("worldcombat.skill.metalburst.preference.shrapnel")), F.const(0.7), F.const(0.45)).clamp(0.3, 0.75).round(2),
-            "分摊比例", "站在爆炸里的其他敌人各自吃到的那一份；破片式让碎片分得更远，代价是主目标的那一份更小。"),
+            "分摊比例", "站在爆炸里的其他敌人各自吃到的那一份；破片式让旁人分摊得更多，代价是主目标的那一份更小。"),
         /** 起手：5 刻 − 速度偏移[−1,2] + 破片 2 刻；夹 4..9。 */
         brace: seconds(
             F.base(5).minus(F.stat("speed").minus(55).times(0.02).clamp(-1, 2))

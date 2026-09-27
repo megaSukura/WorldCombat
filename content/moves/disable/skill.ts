@@ -1,7 +1,7 @@
 /** disable：行为、参数与目标条件以本单元实现为准。 */
 namespace PokemonSkills {
     /** 普通攻击的伤害类型归成可读类别，拒绝时按真实来源显示，而不是一律「普通攻击」。 */
-    function disableKind(type: string): string {
+    export function disableKind(type: string): string {
         const value = String(type || "");
         if (value === "minecraft:mob_attack" || value === "minecraft:mob_attack_no_aggro" || value === "minecraft:player_attack"
             || value === "minecraft:sting" || value === "minecraft:ram" || value === "minecraft:mace_smash") return "melee";
@@ -11,9 +11,46 @@ namespace PokemonSkills {
         return "other";
     }
 
+    // 本作脚本动作的真实成功提交：普通生物与魔改 Boss 原先只留下原生伤害类型，这里补上它真正提交的动作身份。
+    // 与原生伤害记忆并列，执行时按较新的一条点名；两条的结算路径不同（动作身份在准入/提交点拦，原生伤害按签名挡）。
+    WorldCombat.effect(disableTrace, 1, 1200, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.move !== "string" || !value.move) throw new Error("Invalid disable trace move");
+        if (typeof value.tick !== "number" || !isFinite(value.tick)) throw new Error("Invalid disable trace tick");
+        if (typeof value.instance !== "number" || !isFinite(value.instance)) throw new Error("Invalid disable trace instance");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(disableTrace, "start", function (effect) { });
+    MoveExecutions.committed.define({ id: "world_combat:move_disable/trace", apply: function (commit) {
+        if (commit.native || commit.action === null) return;
+        if (String(commit.actor.domain()) === "cobblemon") return;
+        try {
+            const content = String(commit.action.content());
+            if (!content) return;
+            commit.world.effects(commit.actor, disableTrace).forEach(function (view) {
+                commit.world.operation(view.id(), "world_combat:dispel", "{}");
+            });
+            commit.world.effect(disableTrace, commit.actor,
+                JSON.stringify({ move: content, tick: commit.world.tick(), instance: commit.action!.id() }), 1200);
+        } catch (error) { }
+    } });
+
+    /** 普通生物最近一次真实提交的本作动作；宝可梦走原生 lastMove，不在这里重复记。 */
+    function disableTraceLast(world: CombatWorld, actor: CombatActor): { move: string; tick: number } | null {
+        const views = world.effects(actor, disableTrace);
+        let best: { move: string; tick: number } | null = null;
+        for (let i = 0; i < views.length; i++) {
+            const value = JSON.parse(String(views[i].data()));
+            if (best === null || value.tick > best.tick) best = { move: String(value.move), tick: value.tick };
+        }
+        return best;
+    }
+
     export function disableLast(world: CombatWorld, actor: CombatActor): { id: string; tick: number; native?: boolean } | null {
         if (String(actor.domain()) === "cobblemon") return NativeEffects.lastMove(world, actor);
+        const script = disableTraceLast(world, actor);
         const last = DamageSemantics.recentAttack(world, actor, 1200);
+        if (script !== null && (last === null || script.tick >= last.tick)) return { id: script.move, tick: script.tick, native: false };
         return last ? { id: last.type, tick: last.tick, native: true } : null;
     }
     /** 明确的时间戳：世界刻 0 也是合法时间，不用 `|| -1000` 把 0 误判成很久以前。 */
@@ -21,6 +58,15 @@ namespace PokemonSkills {
         if (last === null || String(last.id) === "struggle") return false;
         const tick = typeof last.tick === "number" && isFinite(last.tick) ? last.tick : -1000;
         return world.tick() - tick <= memory;
+    }
+
+    /** 被点名对象的可读名：本作招式用自己的名字键，原生招式用 Cobblemon 译名，读不出就退回 id。 */
+    function disableMoveArg(move: string): any {
+        const raw = String(move);
+        const id = raw.indexOf("world_combat:") === 0 ? raw.substring("world_combat:".length) : raw;
+        const skill = skills[id] || skills[raw];
+        if (skill) return { key: skill.nameKey || "cobblemon.move." + id, fallback: skill.name || id };
+        return { key: "cobblemon.move." + id, fallback: id };
     }
 
     /** 机读旁挂：记下被点名的招式、所属载体、时限与画面要用的数。 */
@@ -96,25 +142,34 @@ namespace PokemonSkills {
     }
 
     // 封锁：带着定身身份的活体，在提交被点名的那一手时被顶回去。
+    // 本作脚本动作按当前动作身份在准入/提交点拦下；原生攻击没有提交身份，只能按它真正造成过的伤害签名在命中结算前挡下。
     // 这条贡献走共享动作策略，原生配招、通用动作与玩家共用同一个提交闸门；对任何带身份的活体成立。
-    // 普通攻击按实际最后命中过的 damageType 精确判定，只阻这一种，不偷封所有攻击类别。
     CombatStatus.actions.define({ id: "world_combat:move_disable/policy", apply: function (context) {
         if (!CombatStatus.has(context.world, context.actor, disableStatus)) return;
         const data = disableData(context.world, context.actor);
         if (data === null || !data.move) return;
-        if (context.phase === "damage" && DamageSemantics.read(context.metadata).attack) {
+        const wanted = String(data.move);
+        if (data.native) {
+            if (context.phase !== "damage" || !DamageSemantics.read(context.metadata).attack) return;
             const type = String(context.metadata.damageType || "");
-            if (type === String(data.move)) {
-                context.blocked.disabled = true;
-                context.detail.disabled = { native: true, type: type, kind: disableKind(type) };
-            }
-        } else if (context.move && typeof context.move.id === "function" && String(context.move.id()) === String(data.move)) {
+            if (type !== wanted) return;
             context.blocked.disabled = true;
-            context.detail.disabled = { native: false, move: String(context.move.id()) };
+            context.detail.disabled = { status: "disable", native: true, type: type, kind: disableKind(type) };
+            return;
+        }
+        const action = context.action;
+        if (action !== null && typeof action.content === "function" && String(action.content()) === wanted) {
+            context.blocked.disabled = true;
+            context.detail.disabled = { status: "disable", native: false, move: wanted };
+            return;
+        }
+        if (context.move && typeof context.move.id === "function" && String(context.move.id()) === wanted) {
+            context.blocked.disabled = true;
+            context.detail.disabled = { status: "disable", native: false, move: wanted };
         }
     } });
 
-    // 被判回的那一下要看得见：普通攻击显示真实 damageType 的可读名，宝可梦显示被点名的招式；只闪一次，不加额外惩罚。
+    // 被判回的那一下要看得见：普通攻击显示真实 damageType 的可读名，本作动作与宝可梦显示被点名的招式；只闪一次，不加额外惩罚。
     CombatStatus.rejected.define({ id: "world_combat:move_disable/reject", applies: function (context) {
         return String(context.reason) === "disabled";
     }, apply: function (context) {
@@ -127,8 +182,7 @@ namespace PokemonSkills {
         const kind = typeof details.kind === "string" ? String(details.kind) : "other";
         const move = typeof details.move === "string" ? String(details.move) : "";
         const mark = disableData(world, actor);
-        const arg = native ? { key: "world_combat.move.disable.kind." + kind, fallback: kind }
-            : { key: "cobblemon.move." + move, fallback: move };
+        const arg = native ? { key: "world_combat.move.disable.kind." + kind, fallback: kind } : disableMoveArg(move);
         WorldFeedback.emit(world, disableScene, 1, body.position(),
             { moment: "reject", target: String(actor.ref()), nails: mark === null ? 5 : mark.nails || 5, native: native ? 1 : 0, kind: kind }, 22);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), disableBlockText, [arg], 26);
@@ -138,7 +192,7 @@ namespace PokemonSkills {
         id: disableId,
         cooldownParameter: "recharge",
         name: "定身法",
-        description: "封住目标刚用过的招式。对普通生物和玩家，则按最近命中过人的真实攻击类型封住，例如近战或箭矢；换一种攻击仍能出手。",
+        description: "封住目标刚用过的招式。对普通生物和玩家，则按最近一次真正命中过人的那一下攻击，封住它的确切伤害类型，例如箭矢或某种近战；换一种攻击仍能出手。",
         uses: ["封住对手的主力输出招", "拆掉刚露出的强攻手段", "逼对手换招、打乱它的连招"],
         kind: "enemy",
         range: 8,
@@ -182,6 +236,15 @@ namespace PokemonSkills {
             action.present("world_combat:move_disable:windup", disableScene, 1, action.origin(),
                 JSON.stringify({ moment: "windup", target: target === null ? "" : String(target.ref()),
                     nails: p(disableId, "nails", action), heavy: config && config.heavy === true ? 1 : 0 }));
+            // 准备期就报出此刻会锁的那一项，玩家能提前知道目标刚露的那一手（完成时仍会再读一次真实快照）。
+            const world = action.sense();
+            const last = target !== null && world.valid(target) ? disableLast(world, target) : null;
+            if (last !== null && String(last.id) !== "struggle") {
+                const id = String(last.id), native = !!last.native;
+                action.present("world_combat:move_disable:preview", "world_combat:feedback", 1, action.origin(),
+                    JSON.stringify({ kind: "world-text", start: world.tick(), duration: Math.max(1, prepare), key: disablePreviewText,
+                        args: [native ? { key: "world_combat.move.disable.kind." + disableKind(id), fallback: disableKind(id) } : disableMoveArg(id)] }));
+            }
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -216,9 +279,17 @@ namespace PokemonSkills {
             const carrierKey = carrier === null ? "" : String(carrier.key());
             const casterRef = String(caster.ref());
             disableReleaseOwn(world, target, casterRef);
-            world.effect(disableMark, target, JSON.stringify({ move: moveId, native: nativeMove, kind: kind, max: ticks,
-                nails: nails, caster: casterRef, carrier: carrierKey }), ticks);
-            const power = nativeMove ? 60 : CobblemonCombat.moveTemplate(moveId).power();
+            // 旁挂没挂上就撤掉刚下的载体，不留一枚没有名字的空封印；挂上了才由载体 revision 管着它。
+            let markId = 0;
+            try {
+                markId = world.effect(disableMark, target, JSON.stringify({ move: moveId, native: nativeMove, kind: kind, max: ticks,
+                    nails: nails, caster: casterRef, carrier: carrierKey }), ticks);
+            } catch (error) { markId = 0; }
+            if (!markId) {
+                if (carrier !== null) world.removeMobEffect(target, disableEffect, carrierKey);
+                fizzle("mark-failed", at); return;
+            }
+            const power = nativeMove || moveId.indexOf("world_combat:") === 0 ? 60 : CobblemonCombat.moveTemplate(moveId).power();
             WorldFeedback.emit(world, disableScene, 1, at,
                 { moment: "lock", target: String(target.ref()), nails: nails, count: nails,
                   intensity: 1 + Math.min(1, power / 120), direction: [direction.x(), direction.y(), direction.z()],
@@ -229,7 +300,7 @@ namespace PokemonSkills {
                   reach: Math.max(0.5, Math.min(reach, delta.length() || reach)),
                   direction: [direction.x(), direction.y(), direction.z()] }, 14);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), disableLockText,
-                [nativeMove ? { key: "world_combat.move.disable.kind." + kind, fallback: kind } : { key: "cobblemon.move." + moveId, fallback: moveId }], 36);
+                [nativeMove ? { key: "world_combat.move.disable.kind." + kind, fallback: kind } : disableMoveArg(moveId)], 36);
             world.sound("minecraft:block.anvil.land", at, 14, "{}");
             done(action);
         }

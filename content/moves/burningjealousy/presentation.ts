@@ -1,18 +1,19 @@
 /**
  * 妒火 / burningjealousy 的粒子语言。
  *
- * 一句话：施法者身前的空气先泛起一层妒绿的火星、向张角两侧收拢 → 一整片妒绿的扇面火焰贴着地面铺开，
- * 火舌的高度随被点燃者涨高的级数抬起来 → 正带着强化的目标身上炸开一圈更亮的绿火，被妒火咬住。
+ * 一句话：施法者身前的空气先泛起一层妒绿的火星、向张角两侧收拢 → 一整片妒绿的扇面火焰瞬时贴着地面亮起、
+ * 火舌向上抽进被判定的高度带，被墙截短处画面同样在墙面停下 → 正带着强化、且真的被点燃的目标身上炸开一圈
+ * 更亮的绿火并缠上妒火，没有咬上的目标不显示缠火。
  *
  * 色相家族：妒绿（0x6FD08A）作主体与扇面，米绿（0xEAF7E0）只给强化目标的点火强调，
  * 余韵用暗绿烟（0x2E5A3A）。这个绿就是「嫉妒」的身份，不是普通火招的橙。
- * 拍子：起 charge（12t）→ 喷 wave（30t）→ 击 hit（24t，逐目标）→ 收。
+ * 拍子：起 charge（12t）→ 喷 wave（18t，一次性整片亮起）→ 击 hit（24t，逐目标）→ 收。
  *
- * 范围：wave 的发射器绑 `data.path`（服务端 burningJealousyFan 生成的扇面顶点），用 polygon 填满整片判定区域；
- * 玩家一眼知道站在扇形里会被烧到。
- * 运动：火舌向上抽、边缘向外推；扇形随 path 顶点逐帧固定在世界上。
- * 机制驱动：`data.motes`（特攻派生的火点数）与 `data.intensity` 决定 wave 的密度，`data.best`（命中目标里最高的
- * 正面等级）决定火舌的高度与亮度，`data.ignited`（被点燃数）决定 hit 的强度。
+ * 范围：wave 的发射器绑 `data.path`（服务端 burningJealousyFan 逐射线按真实墙面截短的扇面顶点），
+ * 用 polygon 填满整片判定区域、polyline 描出被墙截短的边界；玩家一眼知道站在扇形里会被烧到。
+ * 运动：火舌向上抽、整片同时亮起，不向外推进；扇形随 path 顶点逐帧固定在世界上。
+ * 机制驱动：`data.motes`（特攻派生的火点数）决定 wave 的密度，`data.intensity`（命中总级数与人数派生）
+ * 决定亮度；逐目标的 `data.gnaw`（灼伤目标的正等级）只在真的咬上时驱动 hit 的缠火。
  */
 const BurningJealousyDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -40,32 +41,31 @@ const BurningJealousyDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 喷：整片扇面火舌，顶点就是判定区域。
+        // 喷：整片扇面火舌同时亮起，顶点就是判定区域；火舌向上抽进被判定的高度带，不向外推进。
         wave: {
-            duration: 30,
-            exit: { stop: 12, drain: 20 },
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
             emitters: [
                 {
                     name: "wave_fill", bind: "path", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/vanilla/flame",
-                    rate: { data: "motes", fallback: 28 }, shape: { kind: "polygon" },
-                    direction: "up", speed: [0.05, 0.2],
-                    lifetime: [8, 16], size: [0.3, 0.06], sizeMode: "sin",
-                    color: 0x6FD08A, alpha: [0.8, 0], light: "full", maxParticles: 260
+                    burst: { count: { data: "motes", fallback: 28 }, at: 1 }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.05, 0.22],
+                    lifetime: [8, 16], size: [0.32, 0.06], sizeMode: "sin",
+                    color: 0x6FD08A, alpha: [0.85, 0], light: "full", maxParticles: 260
                 },
                 {
-                    // Ember height reads data.best: the more the struck targets had raised, the taller the envy flares.
-                    name: "wave_fire", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
+                    name: "wave_body", bind: "path", offset: [0, 1.2, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    burst: { count: 30, interval: 3, repeats: 2 }, shape: { kind: "cylinder", radius: 0.5, length: { data: "rise", fallback: 1.2 } },
-                    direction: "up", speed: [0.08, 0.3],
-                    lifetime: [10, 20], size: [0.26, 0.06],
-                    color: 0xB6F0A0, alpha: [0.7, 0], light: "full", maxParticles: 150
+                    burst: { count: { data: "motes", fallback: 20 }, at: 1 }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.06, 0.24],
+                    lifetime: [8, 16], size: [0.24, 0.05],
+                    color: 0x9BE8A8, alpha: [0.55, 0], light: "full", maxParticles: 180
                 },
                 {
                     name: "wave_edge", bind: "path", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 40, shape: { kind: "polyline" },
+                    burst: { count: 40, at: 1 }, shape: { kind: "polyline" },
                     direction: "up", speed: [0.04, 0.16],
                     lifetime: [6, 12], size: [0.14, 0.03],
                     color: 0xEAF7E0, alpha: [0.75, 0], light: "full", maxParticles: 160

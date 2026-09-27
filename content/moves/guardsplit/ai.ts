@@ -2,13 +2,13 @@
  * 防守平分 / guardsplit —— AI 用途。
  *
  * 什么局面下出手：目标是可见、还活着的活体，在 ai.maxChase（默认 12）格内，且双方身上都没有平分窗口。
- *   值不值得平看守势底子之和（防 + 特防的原始值）：对敌人，对方比自己高出至少 ai.edge 倍（默认 1.15）才出手——
- *   平完两人都落在同一个平均厚度上，差距越大你赚得越多；差距越大排序越靠前。
- *   对伙伴，默认不动；开启 ai.share 后，自己高出伙伴至少 ai.edge 倍时才把自己的厚防分过去，给薄皮伙伴补护甲。
+ *   值不值得平看同一套世界防护之和（实际护甲 + 护甲韧性）：对敌人，对方比自己高出至少 ai.edge 倍（默认 1.15）才出手——
+ *   平完两人都落在同一个平均值上，差距越大你赚得越多；差距越大排序越靠前。
+ *   对伙伴，默认不动；开启 ai.share 后，自己高出伙伴至少 ai.edge 倍时才把自己的厚甲分过去，给薄甲伙伴补防护。
  *   自己反而更厚又不分享时不参与候选（多半会被削薄），交给其他招；只剩本招时也不硬放。
- * 对谁出手：活着的可见目标；敌人按攻击用途拆守势，伙伴按支援用途共享。
+ * 对谁出手：活着的可见目标；敌人按攻击用途拆世界防护，伙伴按支援用途共享。
  * 够不到怎么办：reach 就是本招射程（由特防与体型决定）；共享任务先走近，approach 在无通视时侧移找角度。
- * 放完之后：两人落在同一厚度上并维持一段长窗口，窗口走完各自回到原来的底子；伙伴交回共享顺序。
+ * 放完之后：两人落在同一平均值上并维持一段长窗口，窗口走完各自回到原来的底子；伙伴交回共享顺序。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerFact("world_combat:guardsplit-guard", function (access: CombatWorld, actor: CombatActor): number {
@@ -63,7 +63,7 @@ namespace PokemonSkills {
     const guardsplitChase = number("ai.maxChase", "考虑距离", 3, 24, 1);
     guardsplitChase.help = "伙伴只在威胁离自己这么远以内时才平分；调小只在贴身时平，调大愿意追出去把差距抹掉。";
     const guardsplitEdge = field(pathOf("ai.edge"), "平分下限", "number", { min: 1.0, max: 2.5, step: 0.05,
-        help: "对方的守势底子之和要达到自己的这个倍数才出手；分享给伙伴时同样要求自己高到这个倍数。调高更挑剔，只在差距明显时平。" });
+        help: "对方的实际护甲与韧性之和要达到自己的这个倍数才出手；分享给伙伴时同样要求自己高到这个倍数。调高更挑剔，只在差距明显时平。" });
     const guardsplitStation = flag("ai.leaveStation", "驻守时允许离位");
     guardsplitStation.help = "开启后，收到「驻守」指令时也会离开原位去平分。";
 

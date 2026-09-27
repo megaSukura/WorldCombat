@@ -3,9 +3,11 @@
  *
  * The lead move's type is fixed by the moveset, so the decision is whether that type is worth wearing now. It is
  * compared against a known attacker: the reweave is offered when the body would take less from that type, or when
- * one of the body's own damaging moves gains the same-type bonus. An unknown mod attack has no readable Cobblemon
- * type, so it never invents an advantage and only the own-output gain applies. Offered through the shared
- * `world_combat:fortify` goal; the lead type is read through a decision-scoped probe.
+ * one of the body's own damaging moves gains the same-type bonus. The threat's attack type is the real, finite
+ * native attack memory (`DamageSemantics.recentAttack` elementType) — an actual attack that already landed, not a
+ * guess from the species. An attack with no readable element type never invents an advantage, so only the
+ * own-output gain applies. "Current types" is read through the shared combatant facts so every live temporary
+ * layer counts, matching the server's ready check. Offered through the shared `world_combat:fortify` goal.
  */
 namespace CompanionBehavior {
     function conversionLeadType(world: CombatWorld, actor: CombatActor): string {
@@ -16,14 +18,17 @@ namespace CompanionBehavior {
     CompanionBehavior.registerFact("world_combat:conversion-lead", function (access, actor, _argument) {
         return conversionLeadType(access, actor);
     });
-    /** Last attack type read back from a native individual; "" when it is unknown or not a Pokemon. */
+    /** The attacker's real recent native attack element; "" when no readable attack has landed in the window. */
     CompanionBehavior.registerFact("world_combat:conversion-threat", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return "";
-        var state = NativeEffects.read(access, actor);
-        if (!state.used) return "";
-        var move = CobblemonCombat.moveTemplate(state.used);
-        return move ? String(move.type()) : "";
+        if (!access.valid(actor)) return "";
+        var recent = DamageSemantics.recentAttack(access, actor, 200);
+        return recent && typeof recent.elementType === "string" ? String(recent.elementType) : "";
     });
+    /** Current effective types, including every live shared temporary layer; matches the server's ready check. */
+    function conversionOwnTypes(world: CombatWorld, actor: CombatActor): string[] {
+        if (!world.valid(actor)) return [];
+        return PokemonDamage.combatants.read(world, actor).types;
+    }
 
     var conversionTypeIds = ["normal", "fire", "water", "electric", "grass", "ice", "fighting", "poison", "ground",
         "flying", "psychic", "bug", "rock", "ghost", "dragon", "dark", "steel", "fairy"];
@@ -48,15 +53,17 @@ namespace CompanionBehavior {
     function conversionPlan(context: WorldBehavior.Context): ConversionPlan {
         var self = source(context), scope = world(context), actor = scope.actor(self.ref);
         var result: ConversionPlan = { defence: false, stab: false, known: false };
-        var facts = pokemonFacts(context, self), lead = fact<string>(context, "world_combat:conversion-lead", self) || "";
-        if (!actor || !facts || !facts.types.length || !lead) return result;
+        var lead = fact<string>(context, "world_combat:conversion-lead", self) || "";
+        if (!actor || !lead) return result;
+        var own = conversionOwnTypes(scope, actor);
+        if (!own.length) return result;
         result.stab = conversionStab(scope, actor, lead);
         var threat = context.senses["world_combat:threat"];
         if (!threat) return result;
         var attack = fact<string>(context, "world_combat:conversion-threat", threat) || "";
         if (!conversionKnown(attack)) return result;
         result.known = true;
-        result.defence = CobblemonCombat.typeEffectiveness(attack, lead) < conversionDefence(attack, facts.types);
+        result.defence = CobblemonCombat.typeEffectiveness(attack, lead) < conversionDefence(attack, own);
         return result;
     }
 
@@ -64,10 +71,14 @@ namespace CompanionBehavior {
         protocols: ["world_combat:fortify"],
         available: function (context) {
             if (context.facts.mounted) return false;
-            var self = source(context), facts = pokemonFacts(context, self);
-            if (!facts || !facts.types.length) return false;
+            var self = source(context), scope = world(context), actor = scope.actor(self.ref);
+            if (!actor) return false;
+            var own = conversionOwnTypes(scope, actor);
+            if (!own.length) return false;
             var lead = fact<string>(context, "world_combat:conversion-lead", self);
-            if (!lead || facts.types.indexOf(lead) >= 0) return false;
+            if (!lead) return false;
+            // 已经完全就是那一个单一属性时才不出；双属性含首系仍可收成单型，与执行预检一致。
+            if (own.length === 1 && own[0] === lead) return false;
             var plan = conversionPlan(context);
             return plan.defence || plan.stab;
         },

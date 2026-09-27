@@ -5,10 +5,11 @@
  * 目标脚下收拢一圈金环并崩出一层与"被削去的血量"同量的金屑 → 咬住一小会儿再松口。
  * 色相家族：淡金（0xE8DCA0）与骨白（0xF4EEDC）＋中性尘；饱和金只出现在咬中峰值与量线的小面积。
  * 拍子：起 windup（口边聚光）→ 量 measure（那条量线）→ 扑 pounce → 咬 bite（峰值）／ miss → 削 sever（收口强调）。
- * 范围：measure 的 path 就是施法者到目标的真实连线；bite／sever 绑命中目标，画出的就是这一口咬中的位置与大小。
+ * 范围：measure 的 path 就是施法者到目标的真实连线，gauge_tick 的密度由 data.gauge（目标当前生命比例折算的刻度数）驱动；
+ *   bite／sever 绑真实接触点（data.point），画出的就是这一口咬中的位置与大小，目标被打死也不会丢反馈。
  * 运动：量线由近及远扫过；sever 的金环从外向内收拢、金屑向外崩开，读作"生命被削去一层"。
- * 数：`data.morsels`（咬出伤害派生）决定咬中迸溅量，`data.shards`（实际削去量派生）决定 sever 的崩屑量，
- * `data.intensity`（伤害 / 18）抬高亮度；`data.gap`（量线读数 = 目标当前生命）随载荷送入，供调试读取。
+ * 数：`data.morsels`（咬合量派生）决定咬中迸溅量，`data.shards`（实际削去量派生）决定 sever 的崩屑量，
+ *   `data.intensity`（实际削去量 / 18）抬高亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const SuperfangDefinition: ParticleDefinition = {
@@ -43,7 +44,7 @@ const SuperfangDefinition: ParticleDefinition = {
                 {
                     name: "gauge_tick", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/flat",
-                    rate: 10, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
+                    rate: { data: "gauge", fallback: 6 }, shape: { kind: "ring", radius: 0.34, rotation: [90, 0, 0] },
                     direction: "inward", speed: [0.01, 0.05],
                     lifetime: [6, 10], size: [0.12, 0.03],
                     color: 0xF4EEDC, alpha: [0.6, 0], light: "full", maxParticles: 26
@@ -78,7 +79,7 @@ const SuperfangDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "fang_frames", bind: "target", height: 0.48,
+                    name: "fang_frames", bind: "point", fit: "none", offset: [0, 0.48, 0],
                     particle: "world_combat_core:cobblemon/generic/fang",
                     burst: { count: 5, at: 1 },
                     shape: { kind: "sphere", radius: 0.24 },
@@ -87,7 +88,7 @@ const SuperfangDefinition: ParticleDefinition = {
                     color: 0xF4EEDC, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 22
                 },
                 {
-                    name: "bite_spark", bind: "target", height: 0.42,
+                    name: "bite_spark", bind: "point", fit: "none", offset: [0, 0.42, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: { data: "morsels", fallback: 18 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.32 },
@@ -102,7 +103,7 @@ const SuperfangDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "sever_ring", bind: "target", height: 0.35,
+                    name: "sever_ring", bind: "point", fit: "none", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/flat",
                     burst: { count: 22, at: 0 },
                     shape: { kind: "ring", radius: 0.62, rotation: [90, 0, 0] },
@@ -111,7 +112,7 @@ const SuperfangDefinition: ParticleDefinition = {
                     color: 0xE8DCA0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 },
                 {
-                    name: "sever_shards", bind: "target", height: 0.5,
+                    name: "sever_shards", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: { data: "shards", fallback: 24 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.38 },

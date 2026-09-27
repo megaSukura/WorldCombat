@@ -1,11 +1,11 @@
 /**
  * 青草场地 / grassyterrain 的场地规则与属性结算，对所有战斗者一致。
  *
- * 草地是一条区域规则：每 5 刻扫描半径内、贴地（grounded）的活体，给他们补 `world_combat:grassyterrain_ground`
- * （身份 `world_combat:status/grassyterrain`）。带该身份的活体：草属性招式威力 ×1.3；站在草地上的贴地活体
- * 被草根护着，受到的地震与重踏威力减半——减伤落在「受击者是否站在草地上」，而不是「施法者是否站在草地上」，
- * 所以场外的地震打进场内被卸掉一半，而站在草地里朝场外放的震招不受影响。
- * 站上草地的活体按各自最大生命缓慢回复（对双方一视同仁，所以「趁对手满血时补自己」才有意义）。
+ * 草地是一条区域规则：每 5 刻扫描半径内、与落点同一层且贴地（grounded）的活体，给他们补 `world_combat:grassyterrain_ground`
+ * （身份 `world_combat:status/grassyterrain`，供别的单元按身份读取）。「在场」由 `fieldRule.accepts` 的 groundedContact
+ * 统一限定：楼上平台、腾空者或墙后都不算。本招自己的加成读取实时事实而不是这枚标记的余寿：贴地且真的站在这片草里时，
+ * 草属性招式威力 ×1.3；同样条件下受到的地震与重踏威力减半——减伤落在「受击者是否站在草地上」，所以场外的地震打进场内被卸掉一半，
+ * 而站在草地里朝场外放的震招不受影响。站上草地的活体按各自最大生命缓慢回复（对双方一视同仁）。
  * 开启 blooming 时，草地每 20 刻照料附近一处可生长的植物，用完 growth 次为止。
  * 属性改写放在 `PokemonDamage.metadata`，结算前对任何来源的招式生效。
  */
@@ -14,11 +14,16 @@ namespace PokemonSkills {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
 
-    function grassyTouch(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): boolean {
-        var body = world.observe(actor);
-        if (body === null || !body.grounded()) return false;
+    /** 实时资格：此刻真的站在一片青草里（贴地、同层、无遮挡）。与 fieldRule.accepts 共用同一套判据。 */
+    function grassyCovered(world: CombatWorld, actor: CombatActor): boolean {
+        var areas = WorldEffects.areas(world, grassyField);
+        for (var i = 0; i < areas.length; i++) if (WorldEffects.covers(world, areas[i], actor)) return true;
+        return false;
+    }
+
+    /** 成员刷新：资格已由 fieldRule.accepts（groundedContact）保证，这里只续上共享身份。 */
+    function grassyTouch(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
         MobEffects.apply(world, actor, grassyGround, Math.max(20, Math.round(Number(field.data.mark) || 24)), 0);
-        return true;
     }
 
     function grassyRestore(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
@@ -55,8 +60,12 @@ namespace PokemonSkills {
     }
 
     WorldEffects.fieldRule(grassyField, {
+        // 只把与落点同层、真正接地的活体当作在场：楼上平台或腾空者既不长草、不回血，也不吃地形加成。
+        accepts: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): boolean {
+            return WorldEffects.groundedContact(world, actor, field, 1);
+        },
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (!grassyTouch(world, actor, field)) return;
+            grassyTouch(world, actor, field);
             var body = world.observe(actor);
             if (body === null) return;
             WorldFeedback.emit(world, grassyScene, 1, body.position(), { moment: "root", target: String(actor.ref()) }, 20);
@@ -67,8 +76,9 @@ namespace PokemonSkills {
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             var centre = grassyPoint(field);
-            WorldFeedback.keep(world, "world_combat:move_grassyterrain/field/" + effect.id(), grassyScene, 1, centre,
-                { moment: "field", density: field.data.density || 26, scale: field.radius / 3 }, 20);
+            // 边界与呼吸由场效果本身拥有（onEffect）：自然到期或提前驱散都随之清理，不留脱离生命周期的短尾。
+            WorldFeedback.onEffect(world, effect.id(), "world_combat:move_grassyterrain/field", grassyScene, 1, centre,
+                { moment: "field", density: field.data.density || 26, scale: field.radius / 3 });
             grassyTend(world, field);
         }
     }, { identity: WorldEffects.terrain("grassyterrain"), tags: [WorldEffects.categories.terrain] });
@@ -76,12 +86,11 @@ namespace PokemonSkills {
     PokemonDamage.metadata.define({ id: "world_combat:move_grassyterrain/power", apply: function (context) {
         if (!context.world || !context.actor || !(context.metadata.power > 0)) return;
         var type = String(context.metadata.type).toLowerCase(), move = String(context.metadata.move);
-        if (type === "grass" && CombatStatus.has(context.world, context.actor, "grassyterrain")) context.metadata.power *= 1.3;
+        if (type === "grass" && grassyCovered(context.world, context.actor)) context.metadata.power *= 1.3;
         if (move !== "earthquake" && move !== "bulldoze") return;
         // 减伤跟随受击者：只有站在草地上的贴地目标才被草根卸力，施法者站在草里打场外目标不受影响。
         if (!context.target) return;
-        var body = context.world.observe(context.target);
-        if (body === null || !body.grounded() || !CombatStatus.has(context.world, context.target, "grassyterrain")) return;
+        if (!grassyCovered(context.world, context.target)) return;
         context.metadata.power *= 0.5;
     } });
 }

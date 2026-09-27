@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.horndrill.summary": "Crouch, spin the horn into a drill and bore out along a straight line: the first living thing in the path is run through and finished in one blow. It is the only member that moves: step off the line, or stand behind a wall, and the drill can only bury itself in the ground.",
-  "worldcombat.skill.horndrill.description.0": "Drill %1$s blocks with a %2$s-block contact radius. Stop at the first enemy actually touched and attempt one execution hit. Native immunity and damage rules still apply.",
+  "worldcombat.skill.horndrill.summary": "Crouch, spin the horn into a drill and bore out along a straight line: the first living thing in the path is run through for one bounded heavy strike drawn from this move's own budget. It is the only member that moves: step off the line, or stand behind a wall, and the drill can only bury itself in the ground.",
+  "worldcombat.skill.horndrill.description.0": "Drill %2$s blocks with a %3$s-block contact radius. Stop at the first enemy actually touched and settle one %1$s-point piercing hit. Native immunity and mitigation still apply.",
   "worldcombat.skill.horndrill.description.1": "There are %1$s s of spin-up between locking the path and the charge; every level the user has over the target shortens it and being out-levelled lengthens it, and the target must leave the line in that time.",
   "worldcombat.skill.horndrill.description.2": "Charge speed %1$s blocks/tick; a wall, the end of the run or a target contact stops the charge.",
   "worldcombat.skill.horndrill.wide.on": "Wide form: drill radius x1.35, but a shorter charge, slower spin-up and longer recovery - slower and easier to dodge, yet clipping the edge still catches.",
@@ -8,9 +8,10 @@
   "worldcombat.skill.horndrill.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s from commit.",
   "worldcombat.skill.horndrill.growth.0": "From level %1$s the charge reaches %2$s blocks.",
   "worldcombat.skill.horndrill.growth.1": "From level %1$s the charge reaches %2$s blocks, the drill radius %3$s blocks and the spin-up shortens to %4$s s.",
-  "worldcombat.skill.horndrill.use.0": "Run a target through along a close-range line",
+  "worldcombat.skill.horndrill.use.0": "Run through the first target along a close-range line",
   "worldcombat.skill.horndrill.use.1": "Force a foe to step aside, or stop dead against a wall",
-  "worldcombat.skill.horndrill.use.2": "Finish a stationary target with one bore",
+  "worldcombat.skill.horndrill.use.2": "Land a notable but bounded heavy bore on a stationary target",
+  "worldcombat.skill.horndrill.value.damage": "Piercing damage",
   "worldcombat.skill.horndrill.value.span": "Charge length",
   "worldcombat.skill.horndrill.value.girth": "Drill radius",
   "worldcombat.skill.horndrill.value.thrust": "Charge speed",
@@ -24,9 +25,8 @@
   "worldcombat.skill.horndrill.preference.wide.help": "On: drill radius x1.35 at the cost of a x0.85 charge, +6 ticks of spin-up and +4 ticks of recovery - slower and easier to dodge, yet clipping the edge still catches. Off (narrow form): longer, faster and quicker to recover, but a hair off centre slips past.",
   "worldcombat.skill.horndrill.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.horndrill.preference.ai.maxChase.help": "The companion only considers horn drill while the threat is within this distance; smaller keeps it to close range, larger commits into the charge from further away.",
-  "worldcombat.skill.horndrill.preference.ai.executionAbove": "Execution health floor",
-  "worldcombat.skill.horndrill.preference.ai.executionAbove.help": "Below this health ratio the companion stops spending an instant kill on the target; higher keeps it for healthy foes only.",
   "world_combat.move.horndrill.text.kill": "Bored through",
+  "world_combat.move.horndrill.text.hit": "Heavy bore landed",
   "world_combat.move.horndrill.text.miss": "The drill bites air",
   "world_combat.move.horndrill.text.resisted": "The target withstood it"
 }

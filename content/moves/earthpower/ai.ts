@@ -2,17 +2,25 @@
  * 大地之力 / earthpower —— AI 用途。
  *
  * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格内时列入候选；焦点目标不受距离限制。
- * 对谁出手：只接受站在地上的目标（离地的从地脉上方过去，`accepts` 直接排除）；`ai.stillFirst`（默认开）
- *   打开时，移动慢的目标排前——地脉锁在起手选定的一点，站着不动的最不容易在亮记号时走开；
+ * 对谁出手：只接受脚下有真实碰撞支撑面、且站在地上的目标（无支撑面与离地的都从地脉上方过去，`accepts` 直接排除）；
+ *   `ai.stillFirst`（默认开）打开时，移动慢的目标排前——地脉锁在起手选定的一点，站着不动的最不容易在亮记号时走开；
  *   正在和人对打（被牵制、无暇挪步）的目标也略微优先。真正的提前量在起手的锁点里，之后不再追目标。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再落脉。
- * 放完接什么：交回共享交战计划；裂地是留给战场的痕迹，不改变后续决策。
+ * 放完接什么：交回共享交战计划；留下的只是痕迹，不改变后续决策。
  */
 namespace PokemonSkills {
     function earthpowerStill(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
         const velocity = target.velocity;
         if (!velocity) return true;
         return Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]) < 0.15;
+    }
+
+    /** 目标脚下是否存在可标记的真实碰撞支撑面（原生方块射线；读不到时按可标处理，不阻断）。 */
+    function earthpowerMarkable(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
+        const world = CompanionBehavior.world(context);
+        const at = CompanionBehavior.point(target.point);
+        const hit = world.clipBlocks(at.plus(WorldCombat.point(0, 1.2, 0)), at.minus(WorldCombat.point(0, 6, 0)));
+        return hit === null ? true : hit.blocked();
     }
 
     CompanionBehavior.registerUse("earthpower", {
@@ -25,7 +33,8 @@ namespace PokemonSkills {
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible && target.grounded !== false;
+            return !target.friendly && target.health > 0 && target.visible && target.grounded !== false
+                && earthpowerMarkable(context, target);
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
@@ -40,7 +49,7 @@ namespace PokemonSkills {
 
     addPreferences("earthpower", {}, [
         field(pathOf("fissure"), "裂隙式", "boolean", {
-            help: "开启：爆发半径 ×1.4、裂痕块数 ×1.6、碎土 ×1.3，但威力 ×0.88、冷却 +4 刻，适合一次罩住目标脚边一小片。关闭：更窄更痛的一柱地脉，适合点名单体。"
+            help: "开启：爆发半径 ×1.4、碎土 ×1.3，但威力 ×0.88、冷却 +4 刻，适合一次罩住目标脚边一小片。关闭：更窄更痛的一柱地脉，适合点名单体。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 4, max: 24, step: 1,

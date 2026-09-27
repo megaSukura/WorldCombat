@@ -23,6 +23,11 @@ Smoke.scenario("disarmingvoice", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("disarmingvoice", caster) >= 1, "caster committed disarming voice");
             stage.expect((stage.damageTo(first) + stage.damageTo(second)) > 0, "disarming voice dealt damage to a foe");
+            // 错拍是这招的主体过程：真的受伤的人速度等级真的掉下去。
+            stage.expect(stage.stages(first).spe < 0 || stage.stages(second).spe < 0, "a damaged foe lost a Speed stage");
+            // 清唱不带魅惑：心形与身份只属于安抚形态真的挂上的目标。
+            stage.expect(!stage.hadMobEffect(first, "world_combat:status/charmed")
+                && !stage.hadMobEffect(second, "world_combat:status/charmed"), "a plain cry left no charm");
             stage.note("how many stood inside the field is positional; a plain cry does not charm", {
                 casts: stage.casts("disarmingvoice", caster),
                 first: Math.round(stage.damageTo(first) * 10) / 10,
@@ -51,9 +56,12 @@ Smoke.scenario("disarmingvoice-soothe", function (stage) {
             stage.expect(stage.casts("disarmingvoice", caster) >= 1, "caster committed the soothing cry");
             stage.expect(stage.damageTo(foe) > 0, "the soothing cry dealt damage to the foe");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/charmed"), "the damaged foe was charmed");
+            // 安抚的两个附加过程都挂在真正受伤的目标上：错拍与卸劲都是能力等级下降。
+            stage.expect(stage.stages(foe).spe < 0 && stage.stages(foe).atk < 0, "the charmed foe lost Speed and Attack stages");
             stage.note("the charm only lands because the damage landed; its length is formula-driven", {
                 casts: stage.casts("disarmingvoice", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
+                stages: stage.stages(foe),
                 charmed: stage.hadMobEffect(foe, "world_combat:status/charmed")
             });
             stage.done();

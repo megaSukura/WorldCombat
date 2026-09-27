@@ -17,13 +17,15 @@ namespace CompanionBehavior {
         return Math.max(1, Object.keys(methods).length);
     }
 
-    /** 只读、决策内缓存：目标最近一次出手的身份、距今刻数与性质；没有出手记录返回 null。 */
+    /** 只读、决策内缓存：目标最近一次真正提交的动作身份、距今刻数与多样性；没有提交动作返回 null。 */
     registerFact("world_combat:encore-target", function (access, actor, _argument) {
         if (String(actor.domain()) !== "cobblemon") {
-            const last = DamageSemantics.recentAttack(access, actor, 400);
-            return last ? { id: last.type, since: access.tick() - last.tick,
-                category: last.category || (last.contact ? "physical" : "special"), power: 60, failencore: 0,
-                kind: encoreAttackMethod(last.category || "", !!last.contact), diversity: 1 } : null;
+            // 普通生物/模组生物按它真正提交过的动作内容身份（MoveExecutions.committed）；没提交过动作就没有可重复的东西。
+            const committed = PokemonSkills.encoreCommitted(access, actor);
+            if (committed === null || !committed.content) return null;
+            return { id: committed.content, since: Math.max(0, access.tick() - committed.tick),
+                category: "script", power: 60, failencore: 0, kind: "action",
+                diversity: Math.max(1, committed.diversity) };
         }
         const last = NativeEffects.lastMove(access, actor);
         if (last === null) return null;
@@ -42,7 +44,10 @@ namespace CompanionBehavior {
         if (status(context, target, "encore")) return false;
         const info = encoreInfo(context, target);
         if (!info || info.failencore) return false;
-        return info.since <= ai<number>(capability, "maxAge", 160);
+        if (info.since > ai<number>(capability, "maxAge", 160)) return false;
+        // 只会一种攻击方式的普通生物被点名后几乎没有变化：不投它，别把无变化当控制。
+        if (target.domain !== "cobblemon" && (info.diversity || 0) <= 1) return false;
+        return true;
     }
 
     registerUse("encore", {
@@ -60,9 +65,11 @@ namespace CompanionBehavior {
         priority: function (context, capability, target) {
             if (!target || !encoreWorth(context, capability, target)) return 0;
             const info = encoreInfo(context, target);
+            const diversity = Math.max(1, info.diversity || 1);
+            // 普通生物/模组生物按真正提交的动作身份点名；只会一种动作的对手没有收益，已经在 encoreWorth 里跳过。
+            if (target.domain !== "cobblemon") return 45 + (diversity - 1) * 12;
             let value = info.category === "status" ? 70 : info.power <= 80 ? 45 : 30;
             // 只会一种攻击方式的对手被点名后几乎没有变化：价值压低，但不对它假加惩罚。
-            const diversity = Math.max(1, info.diversity || 1);
             if (diversity <= 1 && info.kind !== "magic") value = Math.min(value, 18);
             else value += (diversity - 1) * 12;
             return value;

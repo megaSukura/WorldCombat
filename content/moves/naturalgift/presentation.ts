@@ -101,6 +101,21 @@ const NaturalGiftDefinition: ParticleDefinition = {
                 }
             ]
         },
+        repel: {
+            // 命中成立但伤害被原生拒绝（免疫／未中）：那口元素在接触点散掉，不报果屑、不报属性。
+            duration: 20,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "disperse", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [6, 12], size: [0.12, 0.02],
+                    color: { data: "tint", fallback: 0x9ED47A }, alpha: [0.6, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
         fizzle: {
             duration: 22,
             exit: { stop: 6, drain: 18 },

@@ -52,7 +52,7 @@ const FierydanceDefinition: ParticleDefinition = {
                 {
                     name: "wing_flame", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    rate: { data: "spin", fallback: 16 }, shape: { kind: "polyline" },
+                    rate: { data: "spin", fallback: 16 }, amount: 2, shape: { kind: "polyline" },
                     direction: "away", speed: [0.05, 0.22], drag: 0.88,
                     lifetime: [5, 11], size: [0.3, 0.06], sizeMode: "index",
                     color: 0xF08030, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 150
@@ -60,7 +60,7 @@ const FierydanceDefinition: ParticleDefinition = {
                 {
                     name: "wing_core", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    rate: { data: "spin", fallback: 16 }, shape: { kind: "polyline" },
+                    rate: { data: "spin", fallback: 16 }, amount: 2, shape: { kind: "polyline" },
                     direction: "away", speed: [0.03, 0.14], drag: 0.9,
                     lifetime: [6, 12], size: [0.36, 0.1], sizeMode: "index",
                     color: 0xFFE8A0, alpha: [0.55, 0], light: "full", bloom: 0.4, maxParticles: 120
@@ -75,11 +75,12 @@ const FierydanceDefinition: ParticleDefinition = {
                     color: 0xFFE8A0, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 80
                 },
                 {
-                    name: "tail", bind: "source", offset: [0, 0.4, 0], height: 0.4, trail: { minDistance: 0.2 },
+                    // 沿当刻真实翼缘再铺一条深色短尾；不用 source+trail（静止连线不会发射）。
+                    name: "tail", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: { data: "spin", fallback: 12 }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "away", speed: [0.04, 0.16], drag: 0.9,
-                    lifetime: [6, 12], size: [0.09, 0.02],
+                    rate: { data: "spin", fallback: 12 }, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.02, 0.1], drag: 0.9,
+                    lifetime: [4, 9], size: [0.09, 0.02],
                     color: 0xC03818, alpha: [0.6, 0], light: "world", maxParticles: 60
                 }
             ]

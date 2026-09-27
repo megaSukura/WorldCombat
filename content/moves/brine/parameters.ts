@@ -12,7 +12,8 @@
  *   并且只对「已经伤到一半以下」的目标翻倍。
  *
  * 数据分散（每个参数读不同的精灵数据）：
- *   jet         盐卤威力：特攻定压力；目标血量 ≤ 一半时 ×2；高压式再 ×1.15；夹 42..190。
+ *   jet         盐卤威力：特攻定压力；高压式 ×1.15／泼洒 ×0.92；完好目标的成长预算夹 42..190；
+ *               目标血量 ≤ 一半时在封顶之后 ×2，所以翻倍始终是 2 倍，不被 190 截断。
  *   reach       射程：特攻越高射得越远，高压式更远。
  *   globSpeed   出流速度：速度决定盐卤离手多急。
  *   nozzle      判定半径：体型高度决定这条细流多粗；高压式收得更细。
@@ -48,16 +49,18 @@ namespace PokemonSkills {
     }
 
     actionParameters.define(brineId, {
-        /** 盐卤威力：65 + 特攻偏移[−14,30]；目标残血 ×2；高压 ×1.15 / 泼洒 ×0.92；夹 42..190。 */
+        /** 盐卤威力：65 + 特攻偏移[−14,30]；高压 ×1.15 / 泼洒 ×0.92；完好目标预算夹 42..190；
+         *  基础封顶后再乘残血 ×2，翻倍不被 190 截断。 */
         jet: formula(
             F.base(65)
                 .plus(F.stat("specialAttack").minus(60).times(0.22).clamp(-14, 30))
-                .times(F.when(brineWoundedNode(), F.const(2), F.const(1)).as(text("worldcombat.skill.brine.value.wounded")))
                 .times(F.when(F.pref("press", text("worldcombat.skill.brine.preference.press")), F.const(1.15), F.const(0.92)))
-                .clamp(42, 190).round(1),
+                .clamp(42, 190)
+                .times(F.when(brineWoundedNode(), F.const(2), F.const(1)).as(text("worldcombat.skill.brine.value.wounded")))
+                .round(1),
             "盐卤威力", {
                 unit: "威力",
-                description: "盐卤打在身上那一下的威力；特攻越高水压越足。**目标血量在一半或以下时翻倍**——每个人各算各的。对手特防、相性与暴击在命中时另算。"
+                description: "盐卤打在身上那一下的威力；特攻越高水压越足。**目标血量在一半或以下时翻倍**——每个人各算各的；翻倍在完好目标预算封顶之后计算，所以高等级、高压式也照旧一律 2 倍。对手特防、相性与暴击在命中时另算。"
             }),
         /** 射程：10 + 特攻偏移[−1,3]；高压 ×1.15；夹 8..18。也是实际射程来源。 */
         reach: formula(

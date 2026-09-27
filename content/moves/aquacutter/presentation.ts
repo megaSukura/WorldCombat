@@ -5,7 +5,8 @@
  * 水花炸开、目标被淋透，暴击时水花更亮更白。
  * 色相家族：青蓝（waterjet／bubble／impact_water）＋近白泡沫（smallbubble／white）。
  * 拍子：起（windup 蓄压）→ 喷（jet 水线飞行、拖尾）→ 切（cut 命中水花）→ 强调（crit）。
- * 范围：`data.scale` 与水线判定半径同源；jet 的 `trail` 正好沿水线飞过的路线铺开，画面即那条笔直的切割线。
+ * 范围：`data.scale` 与水线判定半径同源；jet 的 `trail` 正好沿水线飞过的路线铺开、寿命绑定 `data.life`（真实飞程），
+ *   画面即那条笔直的切割线，弹体飞完全程前不会提前停发。
  * 运动：水线从口边沿 projectile 绑定笔直高速前进，命中处水花向外炸、泡沫上浮，余水慢慢落下。
  * 数：`data.spray`（速度换算的水花量）绑定命中与暴击的水花量；`data.intensity` 决定亮度；`data.hits` 让第几段切割可读。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -34,8 +35,8 @@ const AquacutterDefinition: ParticleDefinition = {
             ]
         },
         jet: {
-            duration: 20,
-            exit: { stop: 5, drain: 12 },
+            duration: { data: "life", fallback: 40 },
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "water_head", bind: "projectile", offset: [0, 0, 0],

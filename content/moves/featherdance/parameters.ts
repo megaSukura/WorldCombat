@@ -17,7 +17,7 @@
  *   strandRadius 0.3 + (身高 − 1.4) × 0.1 格，夹 0.22..0.55；身量越高，判定越宽。
  *   reach        6 + (身高 − 1.4) × 0.8 格，夹 5..9；翅膀越长，撒得越远。
  *   feathers     20 + (特攻 − 50) × 0.5 个，夹 14..56；特攻越高，一次撒出的绒羽越多（画面里的数量）。
- *   tempo        速度 ÷ 9 + 4 刻，夹 6..13；速度越快，起舞越早。
+ *   tempo        13 − (速度 − 50) × 0.07 刻，夹 6..13；速度越快，起舞越早。
  *   recharge     120 + (等级 − 30) × 1.5 刻，夹 110..240；等级越高越熟练。
  */
 namespace PokemonSkills {
@@ -73,7 +73,7 @@ namespace PokemonSkills {
                 description: "一次撒出的绒羽数量；特攻越高越多，画面里的羽毛也按它画出。"
             }),
         tempo: seconds(
-            F.stat("speed").div(9).plus(4).clamp(6, 13),
+            F.base(13).minus(F.stat("speed").minus(50).max(0).times(0.07)).clamp(6, 13).round(0),
             "起手", "起手撒羽需要多久；速度越快越早起舞。"),
         recharge: seconds(
             F.base(120).plus(F.level().minus(30).max(0).times(1.5)).clamp(110, 240),

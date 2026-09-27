@@ -18,7 +18,7 @@
   "worldcombat.skill.eerieimpulse.preference.ai.maxChase": "Discharge distance",
   "worldcombat.skill.eerieimpulse.preference.ai.maxChase.help": "Only consider the field when a threat is within this distance; smaller keeps it to grappling range, larger chases in first.",
   "worldcombat.skill.eerieimpulse.preference.ai.minFoes": "Foes in the ring",
-  "worldcombat.skill.eerieimpulse.preference.ai.minFoes.help": "Only discharge when at least this many visible, hostile enemies stand within the field; larger reserves it for being surrounded, set 1 to fire on sight.",
+  "worldcombat.skill.eerieimpulse.preference.ai.minFoes.help": "Only discharge when at least this many worthwhile enemies stand inside the real field (visible, hostile, using Sp. Atk and not floor-capped); larger reserves it for being surrounded, set 1 to fire on sight.",
   "worldcombat.skill.eerieimpulse.preference.ai.leaveStation": "Leave station to discharge",
   "worldcombat.skill.eerieimpulse.preference.ai.leaveStation.help": "On: the companion will leave a hold position to discharge the field.",
   "world_combat.move.eerieimpulse.text.jam": "Eerie Impulse jammed %1$s targets (Sp. Atk -%2$s)",

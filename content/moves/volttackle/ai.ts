@@ -3,8 +3,8 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 12）格内。它反噬重、蓄电久，所以门槛比轻招高：
  * 自身生命高于 `ai.minHealth`（默认 0.25），或对手已经残到值得一收时才排前面。
- * 对谁出手：`ai.preferCrowd`（默认开）时，目标身边 3 格内挤着越多敌人越优先——命中的电弧会把旁边的人一起电到；
- * 已经麻痹的目标排到最后（这一撞的价值在灌入麻痹与波及）。
+ * 对谁出手：`ai.preferCrowd`（默认开）时，按本招真实放电半径与通视统计目标身边可被波及的敌人数——挤得越多越优先；
+ *   已经麻痹的目标仍可为伤害出手（只少了灌麻痹那部分价值）。
  * 够不到怎么办：先按共享接近逻辑蓄势走近；蓄电期可以被打断，所以别在火力覆盖下起手。
  * 放完之后：目标被顶飞了，接着按共享交战计划追击或拉开。
  */
@@ -13,14 +13,18 @@ namespace PokemonSkills {
         return !target.friendly && target.health > 0 && target.visible;
     }
 
-    /** 目标身边 3 格内的其他敌人数量：放电半径内的旁人也吃电弧。 */
-    function volttackleCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 主击目标身边、落在真实放电半径内且与接触点通视的其他敌人数：这些旁人才会被电弧分到。 */
+    function volttackleCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity, arcRadius: number): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[] || [];
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (!other || other.friendly || other.health <= 0 || other.ref === target.ref) continue;
-            if (CompanionBehavior.distance(target.point, other.point) <= 3.0) count++;
+            if (!other || other.friendly || other.health <= 0 || other.ref === target.ref || other.ref === self.ref) continue;
+            if (CompanionBehavior.distance(target.point, other.point) > arcRadius) continue;
+            // 与主接触点（近似目标身体中心）通视的旁人才吃电弧。
+            if (!world.clear(CompanionBehavior.point(target.point), CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -45,7 +49,12 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point)
                 > CompanionBehavior.ai<number>(capability, "maxChase", 12)) return 0;
             let score = 22;
-            if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true)) score += Math.min(20, volttackleCrowd(context, target) * 9);
+            if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true)) {
+                const world = CompanionBehavior.world(context);
+                // 群价值按本招真实放电半径与通视统计，而不是固定的近似扇角。
+                const arc = p("volttackle", "arc", { world: world, actor: world.source(), skill: skills["volttackle"], detail: { values: capability.data.config } });
+                score += Math.min(20, volttackleCrowd(context, target, arc) * 9);
+            }
             if (!CompanionBehavior.status(context, target, "paralysis")) score += 10;
             if (CompanionBehavior.ratio(target) <= 0.3) score += 8;
             return score;

@@ -18,7 +18,7 @@ Smoke.scenario("toxicthread", function (stage) {
         stage.expect(stage.hadMobEffect(target, "world_combat:status/laced"), "the target carried the shared laced identity");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/poison"), "the target carried the shared poison identity");
         stage.expect(stage.attribute(target, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the target's speed fell along with the Speed drop");
-        stage.note("the thread is a projectile: whether this run hit a moving villager directly, and whether the default pin form held it, are not asserted. The reel form is a configured branch.", {
+        stage.note("the thread is a projectile that ends at its real projectilePosition; the laced mark means the strand is still on the body and the poison check distinguishes a fresh poison from an existing one. Whether this run hit a moving villager directly, and whether the default pin form held it, are not asserted. The reel form is a configured branch and moves through native hitDisplace.", {
             casts: stage.casts("toxicthread"), baseSpeed: baseSpeed,
             speed: stage.attribute(target, "minecraft:generic.movement_speed"),
             travelled: Math.round(stage.travelled(target) * 10) / 10,

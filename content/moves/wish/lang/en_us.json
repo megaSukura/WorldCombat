@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.wish.summary": "Marks a patch of open ground with a wish star; after a delay the star falls back onto that spot and restores a share of maximum health to each friendly combatant inside the landing ring. The star exists on its own, so moving away costs the caster the heal, and if no one needs it the wish is wasted.",
+  "worldcombat.skill.wish.summary": "Marks a patch of open ground with a wish star; after a delay the star falls back onto that spot and restores a share of maximum health to each friendly combatant inside the landing ring and on the same layer. The star exists on its own, so moving away costs the caster the heal, and if no one needs it the wish is wasted.",
   "worldcombat.skill.wish.use.0": "Lay a delayed heal down on a safe landing spot",
   "worldcombat.skill.wish.use.1": "Share the wish: everyone in the landing ring gets 60 percent of their base heal (not split by headcount)",
   "worldcombat.skill.wish.use.2": "Drop the landing spot under an ally so a substitute can catch it",
   "worldcombat.skill.wish.description.0": "Mark open ground within %1$s blocks and send the wish star; it lands %2$s later and restores %3$s of maximum health to each friendly combatant inside the landing ring.",
   "worldcombat.skill.wish.description.1": "The landing ring has a radius of %1$s blocks. With Sharing on, the caster and each friendly combatant inside the ring receive %2$s of their base healing amount.",
-  "worldcombat.skill.wish.stance.share": "Sharing wish: the caster and allies in the landing ring each receive %1$s of their base healing. Whoever stands in the ring receives it; moving away gives the caster nothing.",
-  "worldcombat.skill.wish.stance.self": "Selfish wish: only the caster is healed, must stand inside the landing ring, and receives the full fraction. No ally is healed.",
+  "worldcombat.skill.wish.stance.share": "Sharing wish: the caster and allies in the landing ring and on the same layer each receive %1$s of their base healing. Whoever stands in the ring receives it; moving away gives the caster nothing.",
+  "worldcombat.skill.wish.stance.self": "Selfish wish: only the caster is healed, must stand inside the landing ring and on the same layer, and receives the full fraction. No ally is healed.",
   "worldcombat.skill.wish.timing": "A ground-targeted move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",
   "worldcombat.skill.wish.growth.0": "At level %1$s the cooldown shortens to %2$s s.",
   "worldcombat.skill.wish.growth.1": "At level %1$s the cooldown shortens further to %2$s s.",
@@ -25,5 +25,5 @@
   "world_combat.move.wish.text.rise": "A wish rises",
   "world_combat.move.wish.text.landed": "The wish comes true",
   "world_combat.move.wish.text.wasted": "The wish fizzles",
-  "worldcombat.skill.wish.description.payout": "At payout the landing ring alone decides who is healed: friendly combatants standing inside it are restored by their own maximum health, and a caster who moved away receives nothing. Anyone already at full health or already down is not healed, and if nobody needs it the wish is wasted."
+  "worldcombat.skill.wish.description.payout": "At payout the landing ring alone decides who is healed: friendly combatants standing inside it on the same layer are restored by their own maximum health, and a caster who moved away receives nothing; a spot one level above or below the ring does not count as being in it. Anyone already at full health or already down is not healed, and if nobody needs it the wish is wasted."
 }

@@ -2,15 +2,15 @@
  * 烦恼种子 / worryseed 的客户端表现。
  *
  * 一句话：手心里鼓起一颗种子、身边绕着几颗同样的种子 → 种子脱手拖着细尾迹飞向选中的身体 → 命中处根须破土、
- *         冒出一撮「？」，身上挂起一层还没散去的绿雾；如果这一下把睡着的目标叫醒，头上再亮一次睁眼。
- * 色相家族：种壳绿 0x8FBF4A 作主体，嫩芽黄绿 0xE8FF9B 作高光，闷紫 0x6B5BA8 只出现在「？」与心绪层。
- * 拍子：起 gather 0–12t ／ 飞 toss 40t（沿 projectile 绑定）／ 击 plant 40t ／ 醒 wake 30t ／ 空 miss 24t。
- * 范围：plant 的空土环按 `data.scale`（种子半径比）铺开，画出这颗种子砸到多大一块；
- *   根须沿 `data.roots` 条数从地面向上炸开，就是它真正顶出的那块地。
- * 运动：种子绕手慢转、脱手后沿轨迹飞、命中时根须向上顶、「？」向上飘散、醒来时头顶向外炸开一圈光。
- * 数：种子数绑 `data.seeds`（特攻派生），心绪数绑 `data.worries`（等级派生），根须数绑 `data.roots`
- *   （特攻与体重派生），醒来的光点数绑 `data.glints`（心绪派生）；
- *   深植（`data.worrySize`／`data.worryLife`／`data.worryLifeMax`，都来自同一份「深植」配置）让心绪层更大更久。
+ *         炸开一撮嫩叶，头顶从此长出一枚小顶芽，随真实标记一直挂着；标记被清除/期满时顶芽落下叶片散去。
+ *         如果这一下把睡着的目标叫醒，头上再亮一次睁眼。
+ * 色相家族：种壳绿 0x8FBF4A 作主体，嫩芽黄绿 0xE8FF9B 作高光。
+ * 拍子：起 gather 0–12t ／ 飞 toss 40t（沿 projectile 绑定）／ 击 plant 40t ／ 顶芽 sprout（随标记）／
+ *       醒 wake 30t ／ 落 shed 22t ／ 空 miss 24t。
+ * 范围：plant 的空土环按 `data.scale`（种子半径比）铺开，画出这颗种子砸到多大一块；根须沿 `data.roots` 条数从地面向上炸开。
+ * 运动：种子绕手慢转、脱手后沿轨迹飞、命中时根须向上顶、顶芽在头顶持续飘叶、醒来时头顶向外炸开一圈光、落时叶片下沉。
+ * 数：种子数绑 `data.seeds`（特攻派生），根须数绑 `data.roots`（特攻与体重派生），顶芽叶片数绑 `data.leaves`（等级派生），
+ *   顶芽大小绑 `data.sprout`（深植更大），醒来的光点数绑 `data.glints`（心绪派生）。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const WorryseedSceneDefinition: ParticleDefinition = {
@@ -83,23 +83,50 @@ const WorryseedSceneDefinition: ParticleDefinition = {
                     color: 0xE8FF9B, alpha: [0.55, 0], light: "full", maxParticles: 20
                 },
                 {
-                    name: "worry_marks", bind: "target", fit: "body", offset: [0, 0.75, 0],
-                    particle: "world_combat_core:cobblemon/generic/question",
-                    burst: { count: { data: "worries", fallback: 6 } },
-                    shape: { kind: "box", size: [0.7, 0.9, 0.7] },
-                    direction: "up", speed: [0.03, 0.12], spread: 12, spin: 20,
-                    lifetime: [{ data: "worryLife", fallback: 16 }, { data: "worryLifeMax", fallback: 28 }],
-                    size: [{ data: "worrySize", fallback: 0.2 }, 0.08], sizeMode: "index",
-                    color: 0x6B5BA8, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 90
+                    // 命中时只炸开一撮嫩叶，真正的持续标识交给 sprout：不做长问号噪声。
+                    name: "leaf_burst", bind: "target", fit: "body", offset: [0, 0.7, 0],
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    burst: { count: { data: "roots", fallback: 8 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.4 },
+                    direction: "outward", speed: [0.05, 0.16], spread: 20, spin: 30,
+                    lifetime: [10, 18], size: [{ data: "worrySize", fallback: 0.18 }, 0.03], sizeMode: "index",
+                    color: 0x8FBF4A, alpha: [0.8, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        sprout: {
+            // 无 duration（0 = 由服务端释放 key 时停止）：顶芽随真实标记维持，清除/期满同步收掉。
+            emitters: [
+                {
+                    name: "sprout_leaf", bind: "target", fit: "body", offset: [0, 0.9, 0],
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    rate: 3, shape: { kind: "sphere_surface", radius: 0.22 },
+                    direction: "down", speed: [0.0, 0.04], spin: 24,
+                    lifetime: [12, 22], size: [{ data: "sprout", fallback: 0.18 }, 0.03], sizeMode: "sin",
+                    color: 0x8FBF4A, alpha: [0.7, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "worry_cling", bind: "target", fit: "body", offset: [0, 0.5, 0],
+                    name: "sprout_glint", bind: "target", fit: "body", offset: [0, 0.95, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "leaves", fallback: 6 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.2 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.07, 0.02],
+                    color: 0xE8FF9B, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 20
+                }
+            ]
+        },
+        shed: {
+            duration: 22, exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "falling_leaves", bind: "target", fit: "body", offset: [0, 0.8, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 10,
-                    shape: { kind: "sphere_surface", radius: 0.45 },
-                    direction: "down", speed: [0.0, 0.05], spin: 30,
-                    lifetime: [12, 22], size: [{ data: "worrySize", fallback: 0.2 }, 0.02], sizeMode: "sin",
-                    color: 0x8FBF4A, alpha: [0.65, 0], light: "world", maxParticles: 60
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "down", speed: [0.05, 0.18], spread: 24, gravity: 0.05, drag: 0.9, spin: 30,
+                    lifetime: [10, 18], size: [0.12, 0.03],
+                    color: 0x8FBF4A, alpha: [0.7, 0], light: "world", maxParticles: 40
                 }
             ]
         },

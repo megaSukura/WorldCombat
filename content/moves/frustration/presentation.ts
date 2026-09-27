@@ -5,11 +5,12 @@
  * 只有最后一爪明确把目标抛开（fling 沿抓击方向炸开一线），收势时余恨从身上散开。
  * 色相家族：暗紫栗（obscuringsmoke、impact_dark、slash 染暗）为主，抓痕芯是近白（impact_normal），
  * 速度线用灰紫；没有暖色。
- * 拍子：起（coil 聚恨）→ 行（rush 扑近）→ 击（rake 每爪一下、swipe 抓空）→ 抛（fling 最后一爪抛开）→ 收（spite 余恨 / miss 扑空）。
- * 范围：rake 绑施法者身前、按 `data.side` 左右交替画出每一爪真正抓到的小块；抓空的 swipe 在同一位置留一道更弱的白痕。
- * 运动：刺团从四面收进来；抓痕沿朝目标的方向甩出、很快收住；最后一爪沿顶开方向炸开一线；余恨向四周散开。
- * 数：`data.side`（左右交替）错开每一爪的落点，`data.index`（第几爪）让每爪比上一爪稍亮，`data.last` 标出末爪，
- * `data.moved`（真实推开距离）决定 fling 抛出线的长度，`data.sparks` 决定碎屑量，`data.intensity` 抬高亮度与密度。
+ * 拍子：起（coil 聚恨）→ 行（rush 扑近）→ 击（hit 命中接触点爆一下）→ 抛（fling 最后一爪抛开）→ 收（spite 余恨 / miss 扑空）。
+ * 范围：每爪的短扫段主体交给自定义场景 `world_combat:move_frustration/claw`，用服务端判定同一条世界端点画左右交替的刃线；
+ *   命中的暗色冲击只在真实接触点爆一下，挥空只留刃迹、不撒粒子。
+ * 运动：刺团从四面收进来；每爪刃线在身体前方交替甩出、很快收住；最后一爪沿真实顶开方向炸开一线；余恨向四周散开。
+ * 数：`data.near`／`data.far`（当刻刃段两端）与 `data.hit`（真实接触点）驱动刃线与命中标记；`data.sparks` 决定碎屑量，
+ *   `data.intensity` 抬高亮度；`data.moved`（真实推开距离）决定 fling 抛出线的长度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FrustrationDefinition: ParticleDefinition = {
@@ -61,52 +62,28 @@ const FrustrationDefinition: ParticleDefinition = {
                 }
             ]
         },
-        rake: {
-            duration: 18,
-            exit: { stop: 6, drain: 12 },
-            emitters: [
-                {
-                    name: "claw_cut", bind: "source", offset: [{ data: "sideX", fallback: 0 }, 0.55, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/slash",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "box", size: [0.3, 0.5, 0.3], rotation: [0, 0, { data: "tilt", fallback: 0 }] },
-                    direction: "outward", speed: [0.1, 0.3], spin: 140,
-                    lifetime: [4, 9], size: [0.3, 0.06], sizeMode: "index",
-                    color: 0x7A3B5A, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 24
-                },
-                {
-                    name: "claw_core", bind: "source", offset: [{ data: "sideX", fallback: 0 }, 0.55, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
-                    burst: { count: 10, at: 1 },
-                    shape: { kind: "sphere", radius: 0.28 },
-                    direction: "shape", speed: [0.05, 0.2],
-                    lifetime: [5, 10], size: [0.26, 0.04], sizeMode: "index",
-                    color: 0xF0E6EC, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 30
-                },
-                {
-                    name: "claw_specks", bind: "source", offset: [{ data: "sideX", fallback: 0 }, 0.45, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "sparks", fallback: 12 } },
-                    shape: { kind: "sphere", radius: 0.34 },
-                    direction: "outward", speed: [0.04, 0.16],
-                    gravity: 0.02, drag: 0.92,
-                    lifetime: [7, 14], size: [0.06, 0.02],
-                    color: 0x8E6E82, alpha: [0.6, 0], light: "world", maxParticles: 90
-                }
-            ]
-        },
-        swipe: {
+        hit: {
             duration: 14,
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {
-                    name: "whiff", bind: "source", offset: [{ data: "sideX", fallback: 0 }, 0.5, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/white",
-                    burst: { count: 8 },
-                    shape: { kind: "box", size: [0.28, 0.4, 0.28], rotation: [0, 0, { data: "tilt", fallback: 0 }] },
-                    direction: "outward", speed: [0.06, 0.18], spin: 120,
-                    lifetime: [4, 8], size: [0.12, 0.02],
-                    color: 0xD8CBD4, alpha: [0.35, 0], light: "world", maxParticles: 16
+                    name: "claw_hit", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: { data: "sparks", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.28 },
+                    direction: "outward", speed: [0.06, 0.22], spread: 24,
+                    lifetime: [5, 10], size: [0.24, 0.04], sizeMode: "index",
+                    color: 0xF0E6EC, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 30
+                },
+                {
+                    name: "claw_specks", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "sparks", fallback: 12 } },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "outward", speed: [0.04, 0.16],
+                    gravity: 0.02, drag: 0.92,
+                    lifetime: [7, 14], size: [0.06, 0.02],
+                    color: 0x8E6E82, alpha: [0.6, 0], light: "world", maxParticles: 90
                 }
             ]
         },
@@ -171,3 +148,54 @@ const FrustrationDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_frustration", 1, FrustrationDefinition);
+
+/**
+ * 每一爪的真实刃段：服务端把判定用的同一组世界端点写进 data.near／data.far，客户端只按这组端点画线，不再是绑在
+ * 身上的固定世界偏移。左右交替由服务端的 side 决定，命中时 data.hit 是真实接触点，挥空时只留下渐隐的刃迹。
+ * 只用真实世界端点画线/贴图，没有粒子生灭或额外实体；每爪独立短寿命，替换同一 key 保持一次一对爪。
+ */
+const FrustrationClawScene = "world_combat:move_frustration/claw";
+const FrustrationSlash = "cobblemon:particle/generic/slash";
+const FrustrationCut = "cobblemon:particle/generic/cut";
+
+function frustrationNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+function frustrationTriple(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+
+WorldCombatClient.scene(FrustrationClawScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const near = frustrationTriple(data.near), far = frustrationTriple(data.far);
+    if (near === null || far === null) return;
+    const moment = String(data.moment || "rake");
+    const start = frustrationNumber(data.start, frame.serverTick());
+    const age = Math.max(0, frame.serverTick() - start);
+    const life = moment === "rake" ? 10 : 8;
+    if (!(age < life)) return;
+    const fade = Math.max(0, 1 - age / life);
+    const side = frustrationNumber(data.side, 1);
+    const last = frustrationNumber(data.last, 0) > 0;
+    const base = moment === "rake" ? 235 : 165;
+    const alpha = Math.round(base * fade);
+    const stroke = (alpha << 24 | (last ? 0x9A4A6E : 0x7A3B5A)) | 0;
+    const edge = (Math.round(alpha * 0.5) << 24 | 0xC9A6BC) | 0;
+    const dx = far[0] - near[0], dy = far[1] - near[1], dz = far[2] - near[2];
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+    const hx = -dz / length, hz = dx / length, off = 0.05;
+    frame.line(near[0], near[1], near[2], far[0], far[1], far[2], stroke);
+    frame.line(near[0] + hx * off, near[1], near[2] + hz * off, far[0] + hx * off, far[1], far[2] + hz * off, edge);
+    frame.line(near[0] - hx * off, near[1], near[2] - hz * off, far[0] - hx * off, far[1], far[2] - hz * off, edge);
+    frame.sprite(FrustrationSlash, far[0], far[1], far[2], 0.32 * fade, 0, stroke, side > 0 ? 4 : 5, true);
+    const hit = frustrationTriple(data.hit);
+    if (moment === "rake" && hit !== null) frame.sprite(FrustrationCut, hit[0], hit[1], hit[2], 0.4 * fade, 0, (alpha << 24 | 0xF0E6EC) | 0, 0, true);
+});

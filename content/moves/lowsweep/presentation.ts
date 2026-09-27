@@ -4,9 +4,9 @@
  * 一句话：脚边一沉、压低重心拧腰，随即一道贴地的低弧扫过脚踝——弧面本身的尘光就是被打到的范围，撞中小腿的地方
  * 爆开钝击与脚影，被削到的人腿边尘土一沉。
  * 色相家族：暖土黄（0xE0B060）与米白速度线为主，撞击处暖橙，无饱和色。
- * 拍子：起 pivot（压腿收尘）→ 扫 sweep（低弧成形并划过）→ 击 hit（命中钝击）→ 空 miss（扫空）。
- * 范围：sweep 的多边形面用 `data.path`（与判定同一组顶点）填满，弧线就是被打到的区域。
- * 运动：弧面沿地面低平掠过，速度线沿弧线切线方向扫出；命中是短促外爆加一只下压的脚影。
+ * 拍子：起 pivot（压腿收尘）→ 扫 sweep（逐刻推进的薄扇面，弧尖从一侧扫到另一侧）→ 击 hit（命中钝击）→ 空 miss（扫空）。
+ * 范围：sweep 的多边形面每刻只填当前扫过的那片薄扇面（`data.path` 与判定同一组顶点），弧尖扫过哪里、哪里就被削到。
+ * 运动：扇面沿地面低平掠过，弧尖点（`bind: point`）带着速度线走；命中是短促外爆加一只下压的脚影。
  * 数：弧面密度与命中尘量绑定 `data.spark`（速度与物攻换算），命中强度绑定 `data.intensity`（本击威力 / 55）。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -36,35 +36,36 @@ const LowsweepDefinition: ParticleDefinition = {
             ]
         },
         sweep: {
-            duration: 24,
-            exit: { stop: 12, drain: 14 },
+            duration: 12,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
                     name: "crescent", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "spark", fallback: 14 } },
+                    rate: { data: "density", fallback: 90 },
                     shape: { kind: "polygon" },
-                    direction: "up", speed: [0.02, 0.1],
+                    direction: "up", speed: [0.02, 0.1], spread: 18,
                     lifetime: [7, 13], size: [0.07, 0.01], sizeMode: "index",
-                    color: 0xE0B060, alpha: [0.5, 0], light: "world", maxParticles: 90
+                    color: 0xE0B060, alpha: [0.5, 0], light: "world", maxParticles: 110
                 },
                 {
-                    name: "edge", bind: "path",
+                    name: "blade", bind: "point", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 34, shape: { kind: "polyline" },
-                    direction: "away", speed: [0.03, 0.12],
+                    rate: { data: "density", fallback: 70 },
+                    shape: { kind: "sphere", radius: 0.12 },
+                    direction: "outward", speed: [0.04, 0.16], spread: 60,
                     lifetime: [4, 8], size: [0.18, 0.03],
-                    color: 0xF2EAD2, alpha: [0.55, 0], light: "full", maxParticles: 120
+                    color: 0xF2EAD2, alpha: [0.6, 0], light: "full", maxParticles: 90
                 },
                 {
                     name: "scuff", bind: "source", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "spark", fallback: 10 } },
+                    rate: { data: "spark", fallback: 8 },
                     shape: { kind: "circle", radius: 0.42 },
                     direction: "outward", speed: [0.03, 0.12],
                     gravity: 0.05, drag: 0.93,
                     lifetime: [8, 15], size: [0.09, 0.02], sizeMode: "index",
-                    color: 0x9C8250, alpha: [0.6, 0], light: "world", maxParticles: 80
+                    color: 0x9C8250, alpha: [0.6, 0], light: "world", maxParticles: 70
                 }
             ]
         },

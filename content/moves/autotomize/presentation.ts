@@ -35,7 +35,7 @@ const AutotomizeDefinition: ParticleDefinition = {
                 {
                     name: "shed_shards", bind: "source", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
-                    burst: { count: { data: "parts", fallback: 3 }, interval: 2, repeats: 3 },
+                    burst: { count: { data: "parts", fallback: 3 }, interval: 2, repeats: 1 },
                     shape: { kind: "sphere", radius: 0.45 },
                     direction: "outward", speed: [0.1, 0.35], gravity: 0.06, drag: 0.9, spin: 80,
                     lifetime: [10, 18], size: [0.18, 0.04], sizeMode: "index",

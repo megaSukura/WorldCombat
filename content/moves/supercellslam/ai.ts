@@ -2,10 +2,11 @@
  * 闪电强袭 / supercellslam 的 AI 用途。
  *
  * 什么局面下出手：目标可见、敌对、还活着、在 `ai.maxChase`（默认 10，比其它跳击更远）之内，
- * 且**自身生命比例不低于 `ai.minSelf`**——蓄电落空要按最大生命自伤，血太少时它会主动放弃。
+ * 且**自身生命比例不低于 `ai.minSelf`**——带电下压落空要按最大生命自伤，血太少时它会主动放弃。
  * 对谁出手：满血或高生命的对手更值这一记带电强袭。
- * 放完之后：交给共享顺序继续——命中放电后收招利落，不需要特意后撤。
- * 蓄电等级由玩家配置承担，不由 AI 重复。
+ * 怎么蓄：AI 没有物理松键，同一动作在真实离地后自动有限释放——近敌 6 刻、远敌 12 刻，不等不存在的 keyup。
+ * 净空：头顶放不下这一次起跳就不出手；直视线被挡也不在墙后补目标。
+ * 什么时候不出手：目标正沿远离方向快速移动时，锁死的落点线会扑空，避用；本招不是安全的远程消耗。
  */
 namespace PokemonSkills {
     function supercellslamWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -55,10 +56,6 @@ namespace PokemonSkills {
     });
 
     addPreferences("supercellslam", {}, [
-        field(pathOf("charge"), "蓄电等级", "number", {
-            min: 0, max: 3, step: 1,
-            help: "腾空前蓄几级电：每级强袭威力 ×1.07、电花 +8、下坠更快、落空自伤 +0.01，但起手 +2 刻、冷却 +3 刻、射程 -0.2 格。0 级是快速轻坠。"
-        }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 3, max: 16, step: 1,
             help: "目标在这个距离以内才主动带电下压，否则先走近。比其它跳击更远，适合先手消耗。"

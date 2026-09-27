@@ -7,9 +7,9 @@
  * 色相家族：深黑紫（0x2A2140／0x4A3A78）为主，冷白（0xD8D2E8）只点在两只眼睛的小面积高光上。没有第二个色相。
  * 层次：起势（起手，眼窝聚黑）→ 锁定（一道黑光咬住＋目标脚下黑印＋眼点高光）→ 持守（视线绷紧颤动、黑印脉动）
  *   → 绷断（黑光碎开）／松开（慢慢淡去）／被挡（散点）。层数 3–5 层，各层贴图与运动性格拉开。
- * 范围：目标脚下的 `gaze_mark` 圆环半径按 `data.scale = 目光压强 / 参考 9.0` 缩放，玩家一眼看出目光锁在哪片地面。
+ * 范围：目标脚下的 `gaze_mark` 圆环贴目标身体（`fit: "body"`），随目标碰撞箱缩放，圈住的正是被瞪住的这具身体。
  * 运动：黑光沿 `data.path`（术者→目标）绷成一条微微抖动的大弧；绷断时沿同一条线碎开。
- * 数：`data.strands`（特攻换算的目光道数）绑定 `lash` 的每拍发射量，`data.intensity` 再整体缩放。
+ * 数：`data.strands`（特攻换算的目光道数）绑定 `lash` 的每拍发射量，`data.intensity` 整体缩放，`data.scale`（目光压强）微微放大印记粒子。
  * 参照节：视觉语言第一、二、三、四、五、六、七、九节。
  */
 const MeanlookDefinition: ParticleDefinition = {
@@ -58,7 +58,7 @@ const MeanlookDefinition: ParticleDefinition = {
                     color: 0xD8D2E8, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 90
                 },
                 {
-                    name: "mark", bind: "target", offset: [0, 0.06, 0], fit: "none",
+                    name: "mark", bind: "target", offset: [0, 0.06, 0], fit: "body",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 22 }, shape: { kind: "ring", radius: 0.9 },
                     direction: "outward", speed: [0.02, 0.09],
@@ -96,7 +96,7 @@ const MeanlookDefinition: ParticleDefinition = {
                     color: 0xD8D2E8, alpha: [0.5, 0], alphaMode: "sin", light: "full", maxParticles: 30
                 },
                 {
-                    name: "hold_mark", bind: "target", offset: [0, 0.05, 0], fit: "none",
+                    name: "hold_mark", bind: "target", offset: [0, 0.05, 0], fit: "body",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: 3, shape: { kind: "ring", radius: 0.9 },
                     direction: "outward", speed: [0.0, 0.01],

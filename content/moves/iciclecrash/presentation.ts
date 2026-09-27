@@ -188,6 +188,74 @@ const IciclecrashDefinition: ParticleDefinition = {
                     color: 0xBFE0EA, alpha: [0.5, 0], light: "world", maxParticles: 24
                 }
             ]
+        },
+        /** 首体在空中被直接砸中：同样的碎冰，但没有贴地的霜圈。 */
+        shatter_air: {
+            duration: 28,
+            exit: { stop: 12, drain: 18 },
+            emitters: [
+                {
+                    name: "shatter", bind: "point", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_ice",
+                    burst: { count: { data: "count", fallback: 16 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.1, 0.36], spread: 18,
+                    lifetime: [6, 12], size: [0.4, 0.06], sizeMode: "index",
+                    color: 0xEAFBFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
+                },
+                {
+                    name: "shards", bind: "point", fit: "none", offset: [0, -0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "count", fallback: 16 }, at: 1 },
+                    shape: { kind: "sphere", radius: 0.35 },
+                    direction: "outward", speed: [0.12, 0.46], spread: 34,
+                    gravity: 0.07, drag: 0.94,
+                    lifetime: [12, 22], size: [0.2, 0.04],
+                    color: 0x9FD8E8, alpha: [0.95, 0], light: "world", maxParticles: 120
+                },
+                {
+                    name: "mist", bind: "point", fit: "none", offset: [0, -0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 12, at: 1 },
+                    shape: { kind: "sphere", radius: 0.6 },
+                    direction: "up", speed: [0.01, 0.06],
+                    lifetime: [16, 28], size: [0.24, 0.4],
+                    color: 0xBFE0EA, alpha: [0.28, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
+        /** 自然结束、无接触：只在真实最后位置散一小簇冰屑，不爆裂。 */
+        fizzle: {
+            duration: 18,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "drift", bind: "point", fit: "none", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "sphere", radius: 0.25 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    gravity: 0.02, drag: 0.92,
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0xCFEEF6, alpha: [0.4, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        /** 头顶净空不足：明确取消，只在落点冒一下寒气。 */
+        blocked: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "no_room", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
+                    burst: { count: 14, at: 0 },
+                    shape: { kind: "ring", radius: 0.6 },
+                    direction: "up", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.08, 0.02],
+                    color: 0xBFE8F2, alpha: [0.4, 0], light: "world", maxParticles: 30
+                }
+            ]
         }
     }
 };

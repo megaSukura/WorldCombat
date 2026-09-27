@@ -9,13 +9,18 @@
  */
 namespace PokemonSkills {
     function blastburnCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
-        const radius = Number(capability.data.config && capability.data.config.spread || 2.6) + 1.0;
+        // 用本个体当前配置求出的真实爆散半径，而不是只看配置项 spread；爆点可达者才计入。
+        const world = CompanionBehavior.world(context);
+        const radius = Math.max(1.2, p("blastburn", "radius", world)) + 0.6;
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || !(other.health > 0) || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
+            if (CompanionBehavior.distance(other.point, target.point) > radius) continue;
+            // 被墙挡住的对手不吃这一爆，群体估计也按真实可达者算。
+            if (!world.clear(CompanionBehavior.point(target.point), CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }

@@ -5,8 +5,8 @@
  *   在 `ai.maxChase`（默认 12）以内就出手；更远交给共享接近逻辑。它靠 `reach` 判断要不要先贴近，所以
  *   悬停式会在更远处先手，俯冲式会先走到贴身再冲。
  * 低顶判断：第二拍会把身位向后上方掀起。出手前用只读世界 `CompanionBehavior.world(context).freeSpace`
- *   探一下自身正上方 `rise` 格是否放得下这具身体；顶棚压得太低时不在原地盲升，改走普通接近或换招。
- * 两侧有敌：目标两侧（相对自身→目标方向的左右）都还站着别的敌人时，两翼前后两拍更容易各拍到一个，排序提前。
+ *   以脚底探针探一下自身正上方 `rise` 格是否放得下这具身体；顶棚压得太低时不在原地盲升，改走普通接近或换招。
+ * 前后有敌：身前与身后（沿自身→目标方向的前后）都还站着别的敌人时，两翼前下/后上两拍更容易各拍到一个，排序提前。
  * 对谁出手：`accepts` 只筛阵营、存活与可见（距离归 `approach`）。`ai.finishLow`（默认关）打开时残血目标
  *   排得更前，用这两拍收尾。
  * 放完之后：两拍各自结算、方向相反，伙伴交回共享顺序。
@@ -25,27 +25,32 @@ namespace CompanionBehavior {
         if (!world || typeof (world as any).freeSpace !== "function") return true;
         const self = source(context);
         try {
-            const rise = PokemonSkills.p("dualwingbeat", "rise", world);
-            const probe = CompanionBehavior.point([self.point[0], self.point[1] + Math.max(0.4, rise), self.point[2]]);
-            return world.freeSpace(probe, self.width || 0.9, self.height || 1.4);
+            // 本招的拉升由公式给出：让探针读与执行同一份参数。
+            const rise = PokemonSkills.p("dualwingbeat", "rise",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills["dualwingbeat"], detail: { values: item.data.config } });
+            const height = typeof self.height === "number" && self.height > 0 ? self.height : 1.4;
+            // freeSpace 的探针点是脚底中心，不是身体中心：从脚底再抬升 rise。
+            const feet = self.point[1] - height / 2;
+            const probe = CompanionBehavior.point([self.point[0], feet + Math.max(0.4, rise), self.point[2]]);
+            return world.freeSpace(probe, typeof self.width === "number" && self.width > 0 ? self.width : 0.9, height);
         } catch (error) { return true; }
     }
 
-    /** 目标两侧是否各还站着别的敌人：是则两翼前后两拍更容易各照顾一边。 */
+    /** 前后是否各还站着别的敌人：两翼是前下/后上两拍，前后都有人时更容易各照顾一个。 */
     function dualwingbeatTwoSided(context: WorldBehavior.Context, target: Entity): boolean {
         const self = source(context), nearby = (context.facts.nearby || []) as Entity[];
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2], length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return false;
-        const sideX = -dz / length, sideZ = dx / length;
-        let left = false, right = false;
+        const forwardX = dx / length, forwardZ = dz / length;
+        let front = false, back = false;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
             if (distance(other.point, self.point) > 4) continue;
-            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-            if (ox * sideX + oz * sideZ >= 0) right = true; else left = true;
+            const along = (other.point[0] - self.point[0]) * forwardX + (other.point[2] - self.point[2]) * forwardZ;
+            if (along > 0.4) front = true; else if (along < -0.4) back = true;
         }
-        return left && right;
+        return front && back;
     }
 
     registerUse("dualwingbeat", {

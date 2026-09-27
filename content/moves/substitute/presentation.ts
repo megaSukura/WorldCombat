@@ -10,8 +10,8 @@
  *        absorb 绑在替身身上，画的就是「这一下由它承受」；present 的 shield_link 是本体→替身的那根细线，
  *        link_break／link_restore 用同一组 `data.path` 顶点画断线/接回，承伤与连线读同一组事实。
  * 运动：光从施法者身上挤向落点并向外炸开；成形后本体静止，只有缓慢上浮的余韵；承伤时向内收一圈、再弹开。
- * 数：`data.scale`（替身耐久 / 最大生命 1/4）缩放 form 与 present 的轮廓；`data.intensity`（本次承受 / 最大生命）
- *     抬高 absorb 的亮度与数量——挨得越重，画面越猛。
+ * 数：`data.scale`（替身耐久 / 最大生命 1/4）缩放 form 的轮廓；`data.shell`（当前耐久比例换算）让 present 的
+ *     环随剩余耐久一起收紧变淡；`data.intensity`（本次承受 / 最大生命）抬高 absorb 的亮度与数量——挨得越重，画面越猛。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const SubstituteDefinition: ParticleDefinition = {
@@ -95,9 +95,9 @@ const SubstituteDefinition: ParticleDefinition = {
                 {
                     name: "shield_pulse", bind: "point", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    rate: 2, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 2, shape: { kind: "ring", radius: { data: "shell", fallback: 1 } },
                     direction: "up", speed: [0.005, 0.02],
-                    lifetime: [20, 30], size: [0.3, 0.12], sizeMode: "sin",
+                    lifetime: [20, 30], size: [0.3, { data: "shell", fallback: 1 }], sizeMode: "sin",
                     color: 0x9AA0B0, alpha: [0.22, 0], alphaMode: "sin", light: "full", maxParticles: 12
                 },
                 {
@@ -106,7 +106,7 @@ const SubstituteDefinition: ParticleDefinition = {
                     rate: 4, shape: { kind: "sphere", radius: 0.28 },
                     direction: "up", speed: [0.005, 0.02],
                     lifetime: [18, 28], size: [0.08, 0.02],
-                    color: 0xD9DCE6, alpha: [0.28, 0], light: "full", maxParticles: 14
+                    color: 0xD9DCE6, alpha: [{ data: "durability", fallback: 1 }, 0], light: "full", maxParticles: 14
                 }
             ]
         },

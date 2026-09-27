@@ -86,7 +86,7 @@ namespace PokemonSkills {
 
     describe("nightshade", [
         { key: "description.0", values: ["damage"] },
-        { key: "description.1", values: ["haunt","boltRange","boltSpeed","collisionRadius"] },
+        { key: "description.1", values: ["haunt","boltRange","boltSpeed","collisionRadius","shroud"] },
         { key: "splash.on", values: ["splashRadius","maximumTargets"], when: function (context) { return read(context.detail.values, ["splash"]) === true; } },
         { key: "splash.off", values: [], when: function (context) { return read(context.detail.values, ["splash"]) !== true; } },
         { key: "timing", values: ["range","prepare","recover","pp","cooldown"] },

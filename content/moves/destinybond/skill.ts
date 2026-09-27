@@ -7,7 +7,8 @@
  *   起（windup 只在身上聚起红线预告，提交前可打断，不花代价）→
  *   结（提交后：挂共享身份 world_combat:status/destiny_bond 的真实 MobEffect，留下机读标记带走画面用的线头与半径；
  *       死结取向下同时把自己 rooted 在结上，root 的实例 id 记在标记里，随命线一起收回）。
- *   偿（线被对手的致命一击绷紧时）：每次符合条件的非友方一击都在 damage_incoming 阶段把命线快照附到该次伤害；
+ *   偿（线被对手的致命一击绷紧时）：每次符合条件的一击（真实攻击：原生近战／箭矢／法术攻击，或一次招式伤害）
+ *       都在 damage_incoming 阶段把命线快照附到该次伤害；中毒、灼烧、连锁、反射等间接残伤与环境来源不附。
  *       damage_applied 用最终 after ≤ 0 确认这一击真的把使用者打倒后，才把凶手当前生命交给现一次 world.health，
  *       以它返回的真实伤害与之后的存活分别演出同归／牵伤／抵抗；一次结账后立刻收回命线，不会重复结算。
  * 结束：线走完自己的时间或被清除时松开（lift），使用者不倒时不会白白拖人。
@@ -35,6 +36,11 @@ namespace PokemonSkills {
         destinyDropMark(world, actor);
         destinyDropRoot(world, actor, mark);
     }
+    /** 只有真实攻击才算「亲手把你打倒」：原生近战／箭矢／法术攻击（DamageSemantics.attack），或一次招式伤害（kind: "move"）。
+     *  中毒、灼烧等原生 DOT、连锁／反射等间接脚本伤害、环境来源都保持各自的真实分类，不附命线。 */
+    function destinyStrike(data: any): boolean {
+        return DamageSemantics.read(data).attack || (data.scripted === true && String(data.kind) === "move");
+    }
 
     WorldCombat.effect(destinyMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
@@ -43,9 +49,14 @@ namespace PokemonSkills {
         if (typeof value.max !== "number" || !isFinite(value.max) || value.max < 1) throw new Error("Invalid destiny window");
         if (value.rootId !== undefined && (typeof value.rootId !== "number" || !isFinite(value.rootId) || value.rootId < 0))
             throw new Error("Invalid destiny root");
+        if (!MobEffects.validAnchor(value.carrier)) throw new Error("Invalid destiny carrier");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(destinyMark, "start", function () { });
+    WorldCombat.effectHandler(destinyMark, "start", function (effect) {
+        // 只有申请成功的载体在身才立标记：被原生拒绝（免疫等）时不留无主的锚。
+        const world = effect.world(), actor = effect.target(), data = JSON.parse(effect.state());
+        if (world.observe(actor) === null || !MobEffects.matches(world, actor, data.carrier)) effect.end();
+    });
     WorldCombat.effectHandler(destinyMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
@@ -53,8 +64,8 @@ namespace PokemonSkills {
         id: destinyId,
         cooldownParameter: "recharge",
         name: "同命",
-        description: "当众把一条命线系在自己身上：这段时间里，谁亲手把你打倒，谁就一起倒下。它不护住你，只是把「你来杀我」的代价摆到明面上；已经有命线在身时再施放会失败。",
-        uses: ["残血时把「最后一击」变成对手自己的代价", "逼对手收手，争取喘息或撤退", "临死前把对面的主力一起带走"],
+        description: "当众把一条命线系在自己身上：这段时间里，谁用一次真实的攻击亲手把你打倒，就会被这条线按其当前生命的规模反击一次——通常一起倒下，也可能被护盾、无敌或原生保护挡下。它不护住你；中毒、灼烧等间接残伤或环境致死不会触发。已经有命线在身时再施放会失败。",
+        uses: ["残血时把「最后一击」变成对手自己的代价", "让对手在补刀前犹豫，争取喘息或撤退", "临死前把对面的主力一起带走"],
         kind: "self",
         range: 0,
         prepare: 8,
@@ -63,7 +74,9 @@ namespace PokemonSkills {
         cooldown: 160,
         style: "destinybond",
         defaults: { tight: false, ai: { threshold: 0.3, maxChase: 10, leaveStation: false } },
-        fields: [],
+        fields: [field(pathOf("tight"), "死结", "boolean", {
+            help: "开启死结：命线更久，但整段时间被钉在原地、冷却更长；关闭（松结）：命线更短，但可以自由走位、冷却更短——也更早松开。"
+        })],
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[destinyId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
@@ -80,8 +93,8 @@ namespace PokemonSkills {
             return "";
         },
         windup: function (action, _config, prepare) {
-            action.present("world_combat:move_destinybond/bind", destinyScene, 1, action.origin(),
-                JSON.stringify({ moment: "bind", target: String(action.actor().ref()) }));
+            action.present("world_combat:move_destinybond/gather", destinyScene, 1, action.origin(),
+                JSON.stringify({ moment: "gather", target: String(action.actor().ref()) }));
             return prepare;
         },
         indicator: function () { return { radius: 1, geometry: "circle", style: "destinybond", color: 0xC2354B, label: "同命" }; },
@@ -89,15 +102,18 @@ namespace PokemonSkills {
             const world = action.world(), self = action.actor(), body = world.observe(self);
             if (body === null) { done(action); return; }
             const tight = !!(config && config.tight);
-            destinySettled[String(self.key())] = false;
             const ticks = Math.max(40, Math.round(p(destinyId, "bondTicks", action)));
             const threads = Math.max(4, Math.round(p(destinyId, "threads", action)));
             const radius = Math.max(0.35, p(destinyId, "markRadius", action));
-            MobEffects.apply(world, self, destinyEffect, ticks, 0);
+            // 先申请真实载体，成功才立标记与定身，并把标记精确绑到这一份载体 revision。
+            const carrier = MobEffects.apply(world, self, destinyEffect, ticks, 0);
+            if (carrier === null) { done(action); return; }
+            destinySettled[String(self.key())] = false;
             destinyDropMark(world, self);
             let rootId = 0;
             if (tight) rootId = world.effect("world_combat:rooted", self, "{}", ticks);
-            world.effect(destinyMark, self, JSON.stringify({ threads: threads, radius: radius, max: ticks, tight: tight ? 1 : 0, rootId: rootId }), ticks);
+            world.effect(destinyMark, self, JSON.stringify({ threads: threads, radius: radius, max: ticks, tight: tight ? 1 : 0, rootId: rootId,
+                carrier: MobEffects.anchor(carrier) }), ticks);
             sound(action, "minecraft:entity.warden.heartbeat");
             WorldFeedback.emit(world, destinyScene, 1, body.position(),
                 { moment: "bind", target: String(self.ref()), threads: threads, scale: radius / 0.4, tight: tight ? 1 : 0 }, 32);
@@ -114,7 +130,7 @@ namespace PokemonSkills {
         if (String(source.key()) === String(target.key()) || world.friendly(target)) return;
         if (MobEffects.read(world, target, destinyEffect) === null || destinySettled[String(target.key())]) return;
         const data = JSON.parse(String(event.data()));
-        if (!(data.amount > 0)) return;
+        if (!(data.amount > 0) || !destinyStrike(data)) return;
         const view = destinyMarkView(world, target);
         const mark = view === null ? {} : JSON.parse(String(view.data()));
         data[DESTINY_PENDING] = { threads: mark.threads || 8, radius: mark.radius || 0.4 };
@@ -168,13 +184,16 @@ namespace PokemonSkills {
         if (!world.valid(actor) || world.tick() % 20 !== 0) return;
         const view = destinyMarkView(world, actor);
         if (view === null) return;
+        const mark = JSON.parse(String(view.data()));
+        // 载体被刷新成新的 revision 或已被清掉后，旧标记立即收束，不留失效锚与残留画面。
+        if (!MobEffects.matches(world, actor, mark.carrier)) { destinyTeardown(world, actor, mark); return; }
         const body = world.observe(actor);
         if (body === null) return;
-        const mark = JSON.parse(String(view.data()));
         const surge = Math.max(0, Math.min(1, view.remaining() / Math.max(1, mark.max || 1)));
-        WorldFeedback.keep(world, "world_combat:move_destinybond/state/" + String(actor.ref()), destinyScene, 1, body.position(),
+        // 持续画面绑定在真正的标记效果上：标记被收走，画面随之消失，不会独立多留。
+        WorldFeedback.onEffect(world, view.id(), "state", destinyScene, 1, body.position(),
             { moment: "promise", target: String(actor.ref()), threads: mark.threads || 8, surge: surge,
-                scale: Math.max(0.6, (mark.radius || 0.4) / 0.4) }, 40);
+                scale: Math.max(0.6, (mark.radius || 0.4) / 0.4) });
     });
 
     // 结束：线松开，本招的 root 与标记一起收回。使用者已经倒下时不播（它随死亡一起消失）。

@@ -12,10 +12,12 @@ namespace PokemonSkills {
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             const ratio = (1 + desired) / (1 + state.applied);
             if (desired > state.applied && !world.freeSpace(feet, body.width() * ratio, body.height() * ratio)) {
-                state.maximum = state.applied;
+                // Anchor both the interpolation start and the cap to the volume already in effect,
+                // so the blocked tick can never fall behind applied and shrink before growing again.
+                state.initial = state.applied; state.maximum = state.applied; state.start = world.tick();
                 WorldFeedback.text(world, body.position(), "world_combat.move.growth.text.crowded", [], 28);
             } else if (world.attribute(actor, "minecraft:generic.scale", desired, "add_multiplied_total")) state.applied = desired;
-            else state.maximum = state.applied;
+            else { state.initial = state.applied; state.maximum = state.applied; state.start = world.tick(); }
         }
         effect.state(JSON.stringify(state));
         effect.schedule("shape", "shape", 2, "{}");
@@ -38,7 +40,9 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(growthWindow, "operation:world_combat:refresh", effect => {
         if (String(effect.caller().key()) !== String(effect.source().key())) { effect.reject("growth-not-owned"); return; }
         const request = JSON.parse(effect.input()), state = JSON.parse(effect.state());
-        state.carrier = request.carrier; state.initial = state.applied; state.maximum = request.maximum; state.start = effect.world().tick();
+        // A refresh may only raise the cap: it starts from the size already applied and never shrinks back.
+        state.carrier = request.carrier; state.initial = state.applied; state.maximum = Math.max(state.applied, request.maximum);
+        state.start = effect.world().tick();
         effect.state(JSON.stringify(state)); effect.remaining(request.ticks); growthBodyStep(effect);
     });
     export function growBody(world: CombatWorld, actor: CombatActor, amount: number, ticks: number): void {

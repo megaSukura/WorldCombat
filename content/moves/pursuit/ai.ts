@@ -2,7 +2,7 @@
  * 追打的 AI：短距扑击，专门惩罚正在拉开距离的目标。
  *
  * 局面：有敌对目标、可见、存活，且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑，不越过用户设定的追击距离。
- * 对谁出手：目标被共享感知判为正在逃离时给出高优先（这一扑翻倍），否则按普通近战排序。
+ * 对谁出手：目标相对自己正在拉开距离（与命中结算同一水平点积事实）时给出高优先（这一扑翻倍），否则按普通近战排序。
  * 出手：reach 取本个体 resolve 出的实际扑击距离（`distance` 参数，随速度变化），到距离内再扑。
  */
 namespace PokemonSkills {
@@ -21,11 +21,14 @@ namespace PokemonSkills {
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(item, "maxChase", 6);
         },
-        accepts: function (context, item, target) { return target.health > 0; },
+        accepts: function (context, item, target) { return !target.friendly && target.visible && target.health > 0; },
         priority: function (context, item, target) {
             if (!target) return 0;
-            // 目标正背身撤离时，这一扑翻倍，值得插在普通攻击之前。
-            return CompanionBehavior.fleeing(context, target) ? 60 : 0;
+            // 目标相对自己正在拉开距离时，这一扑翻倍，值得插在普通攻击之前；判据与命中结算同一份水平点积事实。
+            const world = CompanionBehavior.world(context);
+            const self = world.actor(CompanionBehavior.source(context).ref);
+            const other = world.actor(target.ref);
+            return self !== null && other !== null && pursuitRetreating(world, self, other) ? 60 : 0;
         }
     });
 }

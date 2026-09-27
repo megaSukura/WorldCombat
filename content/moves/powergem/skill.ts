@@ -7,9 +7,9 @@
  *
  * 两幕：
  *   起（gather，提交前）：光在身前收成一枚宝石焦点、碎晶向它聚拢，只播预告。
- *   射（beam → hit / fade）：提交后先沿瞄准方向量出这条光实际能射到多远（被方块挡住就止在那里），
- *       这一终点同时是可见光线的终点与命中走廊的长度；走廊与判定同宽，依次贯穿每个非友方，越远威力越淡；
- *       每个实际命中点只崩出一枚碎晶与一记短闪，不留落点爆圈。
+ *   射（beam → hit / fade）：提交后从身体的真实中心沿瞄准方向量出这条光实际能射到多远（blockHit 的接触点裁到真实墙面，
+ *       上下瞄准也照这条三维细线走），同一终点同时是可见光线的终点与判定的长度；判定用真实实体箱的细束，
+ *       依次贯穿每个非友方，越远威力越淡；每个实际命中点只崩出一枚碎晶与一记短闪，不留落点爆圈。
  *
  * 与同族分开：洁净光芒以自身为中心向外铺一圈，奇异之光是一束带混乱的幽光；
  *   力量宝石是一条又细又长、能贯穿、被掩体挡住的光，把一切给射程与穿透。
@@ -63,29 +63,23 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.4, length / 12));
             const intensity = Math.max(0.6, Math.min(2.2, power / 80));
 
-            // 光走直线、被方块挡住：先量出这条光实际能射到多远。
-            let beam = length;
-            const steps = Math.max(1, Math.ceil(length / 0.5));
-            for (let index = 1; index <= steps; index++) {
-                const probe = centre.plus(direction.scale(length * index / steps));
-                if (world.clear(centre, probe)) continue;
-                beam = Math.max(0.5, length * (index - 1) / steps);
-                break;
-            }
-            const end = centre.plus(direction.scale(beam));
+            // 光走直线、被方块挡住：同一实际起点与方向量到底，blockHit 的接触点裁到真实墙面（不再保底穿入近墙）。
+            const wall = WorldGeometry.blockHit(world, centre, centre.plus(direction.scale(length)));
+            const end = wall === null ? centre.plus(direction.scale(length)) : wall.position();
 
             sound(action, "minecraft:block.amethyst_block.chime");
             WorldFeedback.emit(world, powergemScene, 1, centre,
-                { moment: "beam", path: [[centre.x(), centre.y() + 0.7, centre.z()], [end.x(), end.y() + 0.7, end.z()]],
+                { moment: "beam", path: [[centre.x(), centre.y(), centre.z()], [end.x(), end.y(), end.z()]],
                     direction: [direction.x(), direction.y(), direction.z()], shards: shards, width: width,
                     scale: scale, intensity: intensity }, 26);
 
             let hits = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(centre, direction, beam, width, { below: 1.6, above: 2.6 }), function (victim, facts) {
-                if (String(victim.ref()) === String(actor.ref())) return;
+            const selfRef = String(actor.ref());
+            // 判定用真实实体箱、与实际光线同一条三维细束：上下瞄准、矮小或空中目标都按这条线命中。
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(centre, end, width), function (victim, facts) {
+                if (String(victim.ref()) === selfRef || facts.friendly()) return;
                 const point = facts.position();
-                if (!world.clear(centre, point)) return;
-                const distance = point.minus(centre).length();
+                const distance = WorldGeometry.closestOnSegment(point, centre, end).minus(centre).length();
                 const ratio = length <= 0 ? 0 : Math.min(1, distance / length);
                 const strength = 1 - (1 - falloff) * ratio;
                 if (!hurt(action, victim, powergemId, power * strength, { damage: damageSpec(powergemId, "ray") })) return;

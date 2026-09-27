@@ -19,7 +19,7 @@
  *   flinchChance 畏缩几率：体重（越重压得越懵）+ 物攻；宽碾式 ×0.92。
  *   flinchTicks  畏缩持续：等级。
  *   push       推挤距离：体重。
- *   treadCells 压痕块数：体重；宽碾式更长。
+ *   treadCells 压痕上限：体重；宽碾式更长。这是整趟最多压出的块数，遇到不可压地面会更少。
  *   treadTicks 压痕停留：等级。
  *   dirt       土屑点数：物攻派生，表现按它发射。
  *   tempo/recover/recharge 速度与等级决定起手、收招与冷却；宽碾式更费。
@@ -100,14 +100,14 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "被球推着沿滚动方向挪开的距离；越重推得越远，宽碾式推得更开。"
             }),
-        /** 压痕块数：10 + 体重偏移[0,14]；宽碾 ×1.4；夹 6..24。 */
+        /** 压痕上限：10 + 体重偏移[0,14]；宽碾 ×1.4；夹 6..24。 */
         treadCells: formula(
             F.base(10).plus(F.body("weight").minus(60).times(0.12).clamp(0, 14))
                 .times(F.when(F.pref("wide"), F.const(1.4), F.const(1)))
                 .clamp(6, 24).round(0),
-            "压痕块数", {
+            "压痕上限", {
                 unit: "块",
-                description: "滚过之后地面被压出多少块平痕；越重压得越长，宽碾式更长。平痕会自己恢复原样。"
+                description: "滚过之后地面最多被压出多少块平痕；越重压得越多，宽碾式更多。滚到石头等不可压地面或提前收势时会更少，平痕会自己恢复原样。"
             }),
         /** 压痕停留：44 + 等级偏移[0,30] 刻；夹 30..96。 */
         treadTicks: seconds(

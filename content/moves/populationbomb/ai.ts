@@ -2,8 +2,8 @@
  * 鼠数儿 / populationbomb 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 9）格内；更远交给共享接近逻辑。
- *   伙伴从自己身边直线扑出，所以施术者→目标这条线必须通视；狭窄障碍路（隔墙、拐角）不叫长队，
- *   直接让位给别的招。
+ *   伙伴从施术者身边的队列位置直线扑出，所以要复用一条够宽的通道：本体到目标的中心线要通视，
+ *   至少一侧的伙伴站位也要够得到目标；狭窄障碍路（隔墙、拐角）不叫长队，直接让位给别的招。
  * 为什么对残血出手：这是一串**不确定长度的小伤害**——`ai.finishLow`（默认开）下，残血目标的 priority
  *   更高，用这一串去收尾；满血目标只当普通中距离连段。
  * 对谁出手：静止或宽身体目标更不容易被一串直线扑击错过，排得更前；`accepts` 只筛阵营、存活与可见。
@@ -11,10 +11,15 @@
  * 放完之后：伙伴一串扑完自己收场，交回共享交战计划；带着冷却时不会重复叫。
  */
 namespace PokemonSkills {
-    /** 施术者到目标之间是否通视：直线扑击被挡就不叫长队。 */
+    /** 队列通道：伙伴围绕施术者排队，光看本体这条中心线不够——中心线要通，至少一侧的伙伴站位也要够得到目标。 */
     function populationbombCorridor(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): boolean {
-        const world = CompanionBehavior.world(context);
-        return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+        const world = CompanionBehavior.world(context), from = CompanionBehavior.point(self.point), to = CompanionBehavior.point(target.point);
+        if (!world.clear(from, to)) return false;
+        const dx = to.x() - from.x(), dz = to.z() - from.z(), length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 1e-6) return true;
+        const sideX = -dz / length, sideZ = dx / length;
+        return world.clear(WorldCombat.point(from.x() + sideX * 0.9, from.y(), from.z() + sideZ * 0.9), to)
+            || world.clear(WorldCombat.point(from.x() - sideX * 0.9, from.y(), from.z() - sideZ * 0.9), to);
     }
 
     CompanionBehavior.registerUse("populationbomb", {

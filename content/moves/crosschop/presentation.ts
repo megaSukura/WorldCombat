@@ -1,20 +1,20 @@
 /**
  * 十字劈 / crosschop 的客户端表现。
  *
- * 一句话：双臂交叉举过头顶 → 两道劈击从相反斜上方先后砸向同一个点，第一道把架势撞开、第二道顺着交叉点切进去 →
- *   两劈都中时落点亮起一个 X 与一圈骨白火星 → 都落空就只留一道扑空的风。
- * 色相家族：暗红（0xD24B3E 主体、0x8C2F26 暗部）＋骨白（0xF2E8DC）只出现在刃口、命中与 X 上。
- * 拍子：起 windup（交叉举高）→ 劈 guard／seam（两道斜线先后落下）→ 中 cut（正中）＋ cross（X）→ 收 miss。
- * 范围：guard／seam 用与判定同一组 `data.path` 顶点朝落点收束，两道线之间的点就是会被劈到的地方。
- * 运动：两道斜线分别从 `data.side` 的斜上方落向目标，第二道晚 `gap` 刻到；命中后骨白火星向四周迸开。
- * 数：`data.intensity`（每劈威力换算）驱动刃口密度与亮度，`data.scale`（交叉幅度换算）决定 X 与斜线张开多大。
+ * 一句话：双臂交叉举过头顶 → 在同一个竖直挥击面上，第一笔从左上扫到右下、第二笔隔一瞬从右上扫到左下，两笔都穿过
+ *   锁定的交叉点并继续越过 → 两笔的残迹自然叠成一个 X，第二笔正中同一目标时在接触处短闪一下 → 都落空就只留一道扑空的风。
+ * 色相家族：暗红（0xD24B3E 主体、0x8C2F26 暗部）＋骨白（0xF2E8DC）只出现在刃口、命中与第二笔上。
+ * 拍子：起 windup（交叉举高）→ 劈 guard／seam（每刻画当前真实子段，`data.point` 是当刻刀尖）→ 中 cut（正中）→ 收 miss。
+ * 范围：guard／seam 的 `data.path` 每刻只有一小段——上一刀尖到当前刀尖、撞墙就停在墙上；服务端判定与表现读同一组端点。
+ * 运动：刃口沿当刻子段扫过、刀尖跟着 `data.point` 走，上一笔停下后只留很短残迹，两笔先后叠出 X。
+ * 数：`data.intensity`（每劈威力换算）驱动刃口密度与亮度，`data.scale`（交叉幅度换算）决定两笔张开多大。
  */
 const CrossChopDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         windup: {
             duration: { data: "windup", fallback: 8 },
-            exit: { stop: 6, drain: 10 },
+            exit: { stop: { data: "windup", fallback: 8 }, drain: 10 },
             emitters: [
                 {
                     name: "rise", bind: "source", offset: [0, 1.05, 0], height: 0.3,
@@ -47,12 +47,11 @@ const CrossChopDefinition: ParticleDefinition = {
                     color: 0xD24B3E, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 120
                 },
                 {
-                    name: "fist_a", bind: "path", fit: "none",
+                    name: "tip_a", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fist",
-                    shape: { kind: "polyline" },
-                    burst: { count: 5, at: 0 },
+                    rate: 20, shape: { kind: "sphere", radius: 0.2 },
                     direction: "outward", speed: [0.06, 0.22], spin: 8,
-                    lifetime: [7, 13], size: [0.28, 0.06],
+                    lifetime: [6, 11], size: [0.26, 0.06],
                     color: 0xF2E8DC, alpha: [0.8, 0], light: "world", maxParticles: 30
                 }
             ]
@@ -70,12 +69,11 @@ const CrossChopDefinition: ParticleDefinition = {
                     color: 0xF2E8DC, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 150
                 },
                 {
-                    name: "fist_b", bind: "path", fit: "none",
+                    name: "tip_b", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/bigfist",
-                    shape: { kind: "polyline" },
-                    burst: { count: 4, at: 0 },
+                    rate: 18, shape: { kind: "sphere", radius: 0.22 },
                     direction: "outward", speed: [0.08, 0.26],
-                    lifetime: [7, 13], size: [0.32, 0.07],
+                    lifetime: [6, 12], size: [0.3, 0.07],
                     color: 0xD24B3E, alpha: [0.8, 0], light: "world", maxParticles: 24
                 }
             ]
@@ -135,15 +133,6 @@ const CrossChopDefinition: ParticleDefinition = {
             duration: 24,
             exit: { stop: 9, drain: 16 },
             emitters: [
-                {
-                    name: "x_mark", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/swipe",
-                    shape: { kind: "polyline" },
-                    burst: { count: 8, at: 0, repeats: 2, interval: 3 },
-                    direction: "outward", speed: [0.08, 0.3], spread: 14,
-                    lifetime: [6, 11], size: [0.34, 0.06], sizeMode: "index",
-                    color: 0xF2E8DC, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 70
-                },
                 {
                     name: "burst", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/hit",

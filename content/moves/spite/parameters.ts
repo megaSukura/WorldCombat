@@ -1,8 +1,9 @@
 /**
  * 怨恨 / spite —— 参数与机制数值来源。
  *
- * 核心念头：怨恨是慢的记性——它读目标最近一次真正放出的那一手，等自己缠上目标时从那招里抠走 4 点 PP，
- * 并让一份怀恨留在目标身上拖慢它。已出过手的目标当场被抽；还没出过手的目标，这一手抽空，但怀恨照挂。
+ * 核心念头：怨恨是慢的记性——它读目标最近一次真正打出的进攻身份（本作的招式，或原生攻击的伤害类型与
+ * 接触／弹道通路），命中后把这笔「怀恨」挂在目标身上；当目标再用同一手打出一次有效直击时，那一击的伤害被
+ * 削去一份并耗尽这笔怀恨。宝可梦的一层同时从它最后使用的那一招里抠走 4 点 PP，保留 PP 惩罚的特色。
  *
  * 原生事实：Ghost／变化／威力 0／命中 100／PP 10／单体；`onHit` 取 `target.lastMove`，`deductPP(move.id, 4)`，
  * 没有 lastMove 或扣不动就失败。即时化把「必中」换成一枚缓慢的自导怨念弹（命中 100 落成“转得够紧”），
@@ -14,8 +15,9 @@
  *   wispTurn       追踪转向：特攻决定怨念黏不黏人。
  *   collisionRadius 判定半径：碰撞箱高度决定怨念团的大小。
  *   ppCut          削减 PP：固定 4 点，与原生一致；这是本招的身份常量，不随个体变。
+ *   penalty        怀恨削减：匹配的那一手保留的伤害比例固定为设计值；这是本招记恨的份量。
  *   memory         记忆窗口：等级决定怨恨能记住多久以前的出手。
- *   grudgeTicks    怀恨时长：特防支撑怀恨的稳定，等级延长它。
+ *   grudgeTicks    怀恨时长：特防支撑怀恨的稳定，等级延长它，也是这笔预算的窗口。
  *   shards         怨念碎片：特攻决定表现里迸出的碎片数量。
  *   charge/afterglow/recharge 起手／收势／冷却：速度越快，凝聚与恢复越快。
  */
@@ -49,22 +51,25 @@ namespace PokemonSkills {
             F.base(4),
             "削减 PP", {
                 unit: "点",
-                description: "命中时从目标最后使用的那一招扣掉的 PP；原生固定 4 点，是本招的记恨份量。"
+                description: "命中宝可梦时从它最后使用的那一招扣掉的 PP；原生固定 4 点。"
             }),
+        penalty: percent(
+            F.base(0.35),
+            "怀恨削减", "被记住的那一手下一次有效直击削去的伤害比例；35%削减后保留65%。"),
         memory: seconds(
             F.base(120).plus(F.level().minus(30).times(1.6).clamp(0, 96)).clamp(100, 240).round(0),
-            "记忆窗口", "怨恨能记住多久以前的那次出手；超过这个窗口的招式不再被记恨，但怀恨仍会挂上。"),
+            "记忆窗口", "怨恨能记住多久以前的那次出手；超过这个窗口的进攻不再被记恨。"),
         grudgeTicks: seconds(
             F.base(220)
                 .plus(F.level().minus(30).times(3))
                 .plus(F.stat("specialDefence").minus(50).times(1.2).clamp(-40, 90))
                 .clamp(180, 460).round(0),
-            "怀恨时长", "怀恨在目标身上停留多久；特防越高越稳，等级越高越久。"),
+            "怀恨时长", "怀恨在目标身上停留多久；特防越高越稳，等级越高越久。这也是匹配那笔伤害削减的窗口。"),
         shards: formula(
             F.base(8).plus(F.stat("specialAttack").div(45)).clamp(8, 22).round(0),
             "怨念碎片", {
                 unit: "片",
-                description: "命中时画面里迸出的怨念碎片数量；特攻越高越密。"
+                description: "命中与怀恨期间画面里迸出的怨念碎片数量；特攻越高越密。"
             }),
         charge: seconds(
             F.base(9).minus(F.stat("speed").minus(40).times(0.03).clamp(-2, 5)).clamp(5, 13).round(0),
@@ -85,7 +90,7 @@ namespace PokemonSkills {
     describe("spite", [
         { key: "description.0", values: ["reach","boltSpeed","collisionRadius"] },
         { key: "description.1", values: ["ppCut","memory"] },
-        { key: "description.2", values: ["grudgeTicks","wispTurn"] },
+        { key: "description.2", values: ["grudgeTicks","penalty","wispTurn"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.memory", "tier.0.grudgeTicks"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.memory", "tier.1.reach"] }

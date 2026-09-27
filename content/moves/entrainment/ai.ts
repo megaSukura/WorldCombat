@@ -4,9 +4,15 @@ namespace CompanionBehavior {
         return PokemonSkills.entrainmentAbility(access, actor);
     });
 
-    /** 两个可读移动速度；任一方读不出就返回 null（不虚构同步）。 */
+    /** 与执行同一条原生 movement_speed 属性；任一方读不出就返回 null（不虚构同步）。 */
+    registerFact("world_combat:entrainment-speed", function (access, actor, _argument) {
+        return PokemonSkills.entrainmentNativeSpeed(access, actor);
+    });
+
     function entrainmentSpeeds(context: WorldBehavior.Context, target: Entity): { mine: number; theirs: number } | null {
-        const mine = speed(context, source(context)), theirs = speed(context, target);
+        const self = source(context);
+        const mine = fact<number>(context, "world_combat:entrainment-speed", self);
+        const theirs = fact<number>(context, "world_combat:entrainment-speed", target);
         return mine === null || theirs === null ? null : { mine: mine, theirs: theirs };
     }
 
@@ -44,7 +50,8 @@ namespace CompanionBehavior {
         const theirs = fact<string>(context, "world_combat:entrainment-ability", target);
         if (!mine || !theirs || mine === theirs) return false;
         if (!PokemonSkills.entrainmentShareable(mine) || !PokemonSkills.entrainmentReceivable(theirs)) return false;
-        return PokemonSkills.entrainmentWorthOverwriting(mine);
+        // 送好能力给友军仍要比较其原能力：对方自己已经拿着值得保的能力就不覆盖。
+        return PokemonSkills.entrainmentWorthOverwriting(mine) && !PokemonSkills.entrainmentWorthOverwriting(theirs);
     }
 
     function entrainmentWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
@@ -72,7 +79,7 @@ namespace CompanionBehavior {
     const entrainmentStation = PokemonSkills.flag("ai.leaveStation", "驻守时允许离位");
     entrainmentStation.help = "开启后，驻守中的伙伴也会离位去改对手特性或同步伙伴；关闭则只在原地够得到时出手。";
     const entrainmentSnap = PokemonSkills.flag("snap", "紧拍");
-    entrainmentSnap.help = "开启＝紧拍：步速拉得更近（同步比例 ×1.3）、维持 ×0.7、冷却 +12 刻，逼对手立刻跟拍；关闭＝缓拍：拉得松些（×0.75）、维持 ×1.3、冷却 -8 刻，压得更久但贴得没那么死。贴近程度与持续时间互相取舍。";
+    entrainmentSnap.help = "开启＝紧拍：起手更快（起舞时间 ×0.82），步速拉得更近（同步比例 ×1.3）、维持 ×0.7、冷却 +12 刻，逼对手立刻跟拍；关闭＝缓拍：起手稍慢，拉得松些（×0.75）、维持 ×1.3、冷却 -8 刻，压得更久但贴得没那么死。贴近程度、持续时间与起手快慢互相取舍，能力分支也吃到更快的起手。";
 
     PokemonSkills.addPreferences("entrainment", { snap: false, ai: { maxChase: 13, leaveStation: false } },
         [entrainmentSnap, entrainmentChase, entrainmentStation]);

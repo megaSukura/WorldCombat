@@ -3,6 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，在 `ai.maxChase` 之内，且自己相对对手的体重比达到 `ai.minRatio`（默认 0＝总是可以）。
  * 对谁出手：**优先压得过、且还没着火的**目标——火是这招的另一半，压上去才不浪费；`ai.opening` 开启时跳过已经带灼烧的目标。
+ * 怎么排序：按整段真实低扑滑行的线路评分——沿线还能压到更多、且压得过的人时更值得选这条线（距离取本个体公式）。
  * 够不到怎么办：距离交给 `reach`，共享任务把身位收进射程。
  * 放完接什么：交回共享交战计划；被点着的目标交给别的招继续烫。
  */
@@ -17,6 +18,34 @@ namespace PokemonSkills {
         if (typeof target.width === "number" && typeof target.height === "number")
             return target.width * target.width * target.height * 1000;
         return 0;
+    }
+
+    /** 本个体当前配置下整段低扑滑行的总距离；与出手公式同源，用来沿真实线路数敌人。 */
+    function heatcrashSlideLength(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return p("heatcrash", "slideLength", { world: world, actor: world.source(), skill: skills["heatcrash"], detail: { values: capability.data.config } });
+    }
+
+    /** 沿施法者到目标的实际方向、在整段滑行距离内、靠近线路的敌人；返回命中数与他们相对施法者的重量优势。 */
+    function heatcrashPath(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: WorldMethods.Subject): { count: number; heavier: number } {
+        const self = CompanionBehavior.source(context);
+        const length = Math.max(0.5, heatcrashSlideLength(context, capability));
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const span = Math.sqrt(dx * dx + dz * dz) || 1, ux = dx / span, uz = dz / span;
+        const nearby = (context.facts.nearby || []) as WorldMethods.Subject[];
+        const selfMass = heatcrashMassOf(context, self);
+        let count = 0, heavier = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
+            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            const along = ox * ux + oz * uz;
+            if (along < -0.5 || along > length) continue;
+            if (Math.abs(ox * uz - oz * ux) > 1.8) continue;
+            count++;
+            if (selfMass > 0 && selfMass / Math.max(1, heatcrashMassOf(context, other)) >= 2) heavier++;
+        }
+        return { count: count, heavier: heavier };
     }
 
     CompanionBehavior.registerUse("heatcrash", {
@@ -49,6 +78,10 @@ namespace PokemonSkills {
             const burning = CompanionBehavior.status(context, target, "burn");
             if (!burning) score += 22;
             else if (!CompanionBehavior.ai<boolean>(capability, "opening", true)) score += 4;
+            // 完整线路与各敌重量：沿线还能压到更多、且压得过的人时，更值得选这条线。
+            const path = heatcrashPath(context, capability, target);
+            if (path.count >= 2) score += Math.min(18, path.count * 5);
+            if (path.heavier >= 2) score += Math.min(12, path.heavier * 4);
             return score;
         }
     });

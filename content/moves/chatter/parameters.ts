@@ -33,6 +33,8 @@ namespace PokemonSkills {
     export const chatterRecoilText = "world_combat.move.chatter.text.recoil";
     /** 反噬基数（最大生命比例）；被这一串叫懵的目标打中别人时按攻击放大。 */
     export const chatterRecoilFraction = 0.05;
+    /** 混乱存续的托管表现：绑在真实载体的生命周期上，载体一收，乱鸟同时停。 */
+    export const chatterLingerMark = "world_combat:move_chatter/confusion_linger";
 
     actionParameters.define(chatterId, {
         /** 单声威力：基础 20，特攻每比 60 多 1 加 0.07（夹 -5..10），等级每比 30 高 1 加 0.12（夹 0..4）；尖啸 ×0.92；夹在 12..40。 */

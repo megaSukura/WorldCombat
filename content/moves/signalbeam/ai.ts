@@ -40,6 +40,19 @@ namespace PokemonSkills {
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
         },
+        // 收焦是 AI 决策：开启“优先照扎堆”且目标身边真的还挤着别的敌人时，把交点向身前收，让两束更早交叉后扫向两侧；
+        // 这里提交纯点瞄准，手动玩家的瞄点在 execute 里原样保留，不会被 AI 策略改写。
+        target: function (context, capability, target) {
+            if (!CompanionBehavior.ai<boolean>(capability, "crowd", true)) return target;
+            if (signalbeamCrowd(context, target) <= 0) return target;
+            const self = CompanionBehavior.source(context);
+            const dx = target.point[0] - self.point[0], dy = target.point[1] - self.point[1], dz = target.point[2] - self.point[2];
+            const gap = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (gap <= 0.8) return target;
+            const pull = gap * 0.7;
+            return { ref: "", point: [self.point[0] + dx / gap * pull, self.point[1] + dy / gap * pull, self.point[2] + dz / gap * pull],
+                visible: target.visible, hurtAgo: target.hurtAgo };
+        },
         priority: function (context, capability, target) {
             if (!target || !signalbeamWants(context, capability, target)) return 0;
             let score = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 21 : 0;

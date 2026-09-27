@@ -1,13 +1,16 @@
 /**
  * 青草搅拌器 / leaftornado 的客户端表现。
  *
- * 一句话：一圈锋利的叶片在目标脚下立起、绕着它旋转切割，叶屑被卷到脸上，几秒后四散。
+ * 一句话：一圈锋利的叶片在真实地面落点立起、绕着它旋转切割，叶屑被卷到脸上，整段时长走完后四散。
  * 色相家族：黄绿（0x7CC24E）到嫩绿（0xA8D86A），叶屑收在近白的浅黄绿。
- * 拍子：起 gather（叶片从脚边升起）→ 击 spin（旋风成立持续切割）与 cut（每拍命中）→ 收 disperse（叶片四散）。
- * 范围：spin 的旋风环、地面环与叶片生成环都用 `data.radius`（机制半径）画，玩家看到环就知道旋风罩多大。
+ * 拍子：起 gather（叶片从脚边升起）→ 立 open（地面圈与升叶）→ 旋 spin（旋风成立、全程持续切割）与 cut（每拍命中）
+ *       → 收 disperse（叶片四散）；落点不可达用 miss。
+ * 拥有：spin 由服务端 `WorldFeedback.onEffect` 绑在真实的托管区域效果上，区域一拍一拍切到时长结束才释放，画面与伤害同一段寿命。
+ * 范围：open/spin/disperse 的圈与叶片生成环都用 `data.radius`（机制半径）画，玩家看到环就知道旋风罩多大。
  * 运动：叶片绕落点旋转翻卷（spin + 环状生成），被切中的目标身上向外迸叶屑。
  * 数：叶片生成率绑定 `data.flow`（半径换算），每拍叶片数绑定 `data.blades`（特攻与等级换算），
- *     致盲那一下额外的叶屑数绑定 `data.flecks`（由 blades 派生），强度绑定 `data.intensity`（每拍威力 / 15）。
+ *     整段切割的叶片批次用 `data.repeats`（时长换算）；致盲那一下额外的叶屑数绑定 `data.flecks`（由 blades 派生），
+ *     强度绑定 `data.intensity`（每拍威力 / 15）。
  */
 const LeaftornadoDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -34,9 +37,31 @@ const LeaftornadoDefinition: ParticleDefinition = {
                 }
             ]
         },
+        open: {
+            duration: 18,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "land", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
+                    direction: "outward", speed: [0.08, 0.3],
+                    lifetime: [8, 14], size: [0.3, 0.6], sizeMode: "sin",
+                    color: 0x7CC24E, alpha: [0.8, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "rise", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
+                    burst: { count: { data: "blades", fallback: 12 } },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
+                    direction: "up", speed: [0.1, 0.3], spin: 24, gravity: 0.01, drag: 0.96,
+                    lifetime: [10, 20], size: [0.14, 0.03],
+                    color: 0x8CC85A, alpha: [0.85, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
         spin: {
-            duration: 0,
-            exit: { stop: 8, drain: 26 },
+            exit: { drain: 26 },
             emitters: [
                 {
                     name: "churn", bind: "point", fit: "none", offset: [0, 0.15, 0],
@@ -50,7 +75,7 @@ const LeaftornadoDefinition: ParticleDefinition = {
                 {
                     name: "blades", bind: "point", fit: "none", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    burst: { count: { data: "blades", fallback: 12 }, interval: 5, repeats: 9 },
+                    burst: { count: { data: "blades", fallback: 12 }, interval: 5, repeats: { data: "repeats", fallback: 9 } },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 } },
                     direction: "shape", speed: [0.08, 0.28], spin: 32,
                     gravity: 0.002, drag: 0.97,
@@ -115,6 +140,20 @@ const LeaftornadoDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [10, 16], size: [0.3, 0.7],
                     color: 0x7CC24E, alpha: [0.5, 0], light: "full"
+                }
+            ]
+        },
+        miss: {
+            duration: 16,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "dud", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
+                    burst: { count: 10 }, shape: { kind: "ring", radius: 0.32 },
+                    direction: "outward", speed: [0.02, 0.1], spin: 8, gravity: 0.03, drag: 0.92,
+                    lifetime: [8, 14], size: [0.08, 0.01],
+                    color: 0x9AA06A, alpha: [0.5, 0], light: "world", maxParticles: 30
                 }
             ]
         },

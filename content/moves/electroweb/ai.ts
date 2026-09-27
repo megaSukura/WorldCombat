@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：一张抛出去留在场上的网。`available` 要求目标可见、敌对、存活、贴地（飞高的敌人不推荐，
  * 网铺在地面咬不到）、在 `ai.maxChase`（默认 11）以内，且身上还没有 `netted` 身份（再布一张是浪费）。
- * `ai.minFoes` 让威胁身边至少挤着这么多敌人才值得布网；`ai.lead` 给移动中的目标一点提前量，把网撒在它
+ * `ai.minFoes` 让威胁身边至少挤着这么多敌人才值得布网（按本次网面半径与同一落面脚高统计，另一层楼不算）；`ai.lead` 给移动中的目标一点提前量，把网撒在它
  * 要经过的位置。
  * 对谁出手：当前威胁；成群、还在移动的优先，慢而厚重、会赖在网里的 Boss 脚下也值得先铺。
  * 够不到怎么办：交给共享接近逻辑；kind 为 point，AI 会把网抛向目标（或提前量）所在的位置。
@@ -19,13 +19,18 @@ namespace PokemonSkills {
         return !CompanionBehavior.status(context, target, "netted");
     }
 
-    function electrowebCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    function electrowebCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        // 用本次实际网面半径和脚高统计，而不是固定 3 格；网铺的是一块落面，另一层楼不算罩住。
+        const radius = p("electroweb", "netRadius", CompanionBehavior.world(context));
+        const targetFeet = target.point[1] - (typeof target.height === "number" && target.height > 0 ? target.height : 1.4) / 2;
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 1;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.0) count++;
+            if (other.grounded === false) continue;
+            if (Math.abs((other.point[1] - (typeof other.height === "number" && other.height > 0 ? other.height : 1.4) / 2) - targetFeet) > 1.5) continue;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
         }
         return count;
     }
@@ -54,7 +59,7 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !electrowebWants(context, capability, target)) return 0;
             let base = 22;
-            if (electrowebCluster(context, target) >= CompanionBehavior.ai<number>(capability, "minFoes", 2)) base += 24;
+            if (electrowebCluster(context, capability, target) >= CompanionBehavior.ai<number>(capability, "minFoes", 2)) base += 24;
             const speed = target.velocity ? Math.sqrt(target.velocity[0] * target.velocity[0] + target.velocity[2] * target.velocity[2]) : 0;
             if (speed > 0.08) base += 10;
             const mass = CompanionBehavior.mass(context, target);

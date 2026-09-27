@@ -55,7 +55,7 @@ namespace PokemonSkills {
                 .clamp(36, 110).round(1),
             "震威", {
                 unit: "威力",
-                description: "落点周围的敌人被震开那一下的基础威力；攻击越高震得越狠，陨星式把震面铺得更开。"
+                description: "正面砸中后，落点周围的敌人被震开那一下的基础威力；空拳、撞墙、友方或被拒都不触发这圈群震。攻击越高震得越狠，陨星式把震面铺得更开。"
             }),
         reach: formula(
             F.base(4.5).plus(F.stat("speed").minus(60).times(0.03).clamp(-0.8, 1.6))

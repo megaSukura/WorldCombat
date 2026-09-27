@@ -12,7 +12,7 @@ namespace PokemonSkills {
             F.base(200).plus(F.level().times(2).as("经验")).plus(F.stat("defence").times(0.6).as("防御"))
                 .times(F.when(F.pref("rush", text("worldcombat.skill.noretreat.preference.rush")), F.const(0.5), F.const(1)))
                 .clamp(160, 440).round(0),
-            "立誓时长", "把自己钉在原地多久；等级与防御越高站得越久，疾战式只站一半。时长走完或被打倒才拔脚。"),
+            "立誓时长", "脚下阵界维持多久；等级与防御越高越久，疾战式更短且受公式下限限制。期间可在阵界内移动和出招，到期、外力带出边界或被清除状态时结束。"),
         surge: formula(
             F.base(14).plus(F.stat("attack").times(0.15).as("物攻")).clamp(12, 34).round(0),
             "力量迸发", {

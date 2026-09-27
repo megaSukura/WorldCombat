@@ -1,11 +1,11 @@
 /**
  * 起草 / trailblaze 的客户端表现。
  *
- * 一句话：脚边草叶先向内收拢，随即沿一条抬起的草绿弧线窜出去，路上拖着碎叶与速度线，命中的地方炸开一整片
+ * 一句话：脚边草叶先向内收拢，随即沿身体真实走过的短弧窜出去，每刻在这一段上撒碎叶与尘，命中的地方炸开一整片
  * 草系撞击。色相家族：草绿（leaf / smallleaf / impact_grass，0x8CC63F 与 0x6FA83A），强调处近白。
- * 拍子：起（crouch 收叶）→ 窜（launch 弧线与草屑）→ 行（wake 拖尾）→ 击（hit）→ 提（boost）→ 落（land）。
- * 范围：launch 的弧线与 wake 的拖尾就是判定走过的同一条线，玩家看得出站在这条线上会被切到。
- * 运动：弧线由服务端给出的三元 path 抬起中点画出；身体沿地面掠过时，草屑沿同一条线向后抛。
+ * 拍子：起（crouch 收叶）→ 窜（launch 起跳）→ 行（wake 逐刻真实子段）→ 击（hit）→ 提（boost）→ 落（land）。
+ * 范围：wake 的 path 就是身体这一 tick 真实走过的两端，判定与表现共用端点；短弧由这些真实子段连成，不是预画的两折线。
+ * 运动：身体沿低弧掠过时，草屑与尘沿同一条真实子段向后抛。
  * 数：草屑数量绑定 `data.veil`（速度派生）、尺度绑定 `data.scale`（窜跃距离派生）、命中强弱绑定 `data.intensity`（威力派生）；
  *   草丛借势（`data.bloom`）为 0 时不额外爆草，起跳点有草木才多这一片。
  */
@@ -37,14 +37,6 @@ const TrailblazeDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "arc", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    shape: { kind: "polyline" }, rate: { data: "veil", fallback: 18 },
-                    direction: "shape", speed: [0.03, 0.12], spread: 18,
-                    lifetime: [5, 10], size: [0.22, 0.06], sizeMode: "index",
-                    color: 0x8CC63F, alpha: [0.85, 0], light: "world", maxParticles: 120
-                },
-                {
                     name: "cover", bind: "source", offset: [0, 0.1, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     burst: { count: { data: "bloom", fallback: 0 } }, shape: { kind: "sphere", radius: 0.6 },
@@ -62,18 +54,26 @@ const TrailblazeDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 行：服务端每刻把身体真实走过的子段端点放进 path，短弧由这一串真实子段连成，而不是预画的两折线。
         wake: {
-            exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    // 身后的短尾：按移动距离沿历史落点撒叶，身体一停尾迹就收住。
-                    name: "trail", bind: "source", offset: [0, 0.2, 0], height: 0.2,
+                    name: "trace", bind: "path", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    trail: { minDistance: 0.35 },
-                    rate: { data: "veil", fallback: 18 }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "away", speed: [0.02, 0.08], gravity: 0.03, drag: 0.95,
-                    spin: 30, lifetime: [7, 13], size: [0.14, 0.03],
-                    color: 0x8CC63F, alpha: [0.5, 0], light: "world", maxParticles: 60
+                    shape: { kind: "polyline" },
+                    rate: { data: "veil", fallback: 18 }, direction: "shape", speed: [0.02, 0.08], spread: 14,
+                    gravity: 0.03, drag: 0.95, spin: 30,
+                    lifetime: [7, 13], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0x8CC63F, alpha: [0.6, 0], light: "world", maxParticles: 90
+                },
+                {
+                    name: "dust", bind: "path", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    shape: { kind: "polyline" },
+                    rate: { data: "veil", fallback: 18 }, direction: "shape", speed: [0.02, 0.07],
+                    gravity: 0.03, drag: 0.95,
+                    lifetime: [7, 12], size: [0.07, 0.02],
+                    color: 0xBFD8A0, alpha: [0.4, 0], light: "world", maxParticles: 60
                 }
             ]
         },

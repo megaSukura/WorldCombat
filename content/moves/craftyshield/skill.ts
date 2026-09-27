@@ -14,6 +14,7 @@
  */
 namespace PokemonSkills {
     const craftyShieldScene = "world_combat:move_craftyshield";
+    const craftyShieldMarksScene = "world_combat:move_craftyshield/marks";
     const craftyShieldEffect = "world_combat:crafty_shield";
     const craftyShieldMark = "world_combat:crafty_mark";
     const craftyShieldStatus = "craftyshield";
@@ -22,15 +23,32 @@ namespace PokemonSkills {
     const craftyShieldFallText = "world_combat.move.craftyshield.text.fall";
     /** 表现里的参考半径：`data.scale = 实际遮蔽半径 / 这个数`。 */
     const craftyShieldReferenceRadius = 3.2;
-    /** 被拒回的变化招式：提交点只读，先记在这里，等目标身上身份下一次 tick（可写作用域）再播画面并扣次数。
-     *  同一手（同一 action 实例）可能触发多次提交回调，按实例去重，避免一招被扣多次。 */
-    const craftyHexes: { [ref: string]: { at: number; move: string; instances: number[] } } = Object.create(null);
+    /** 被拒回的变化招式／有害状态：提交点与原生施加门只读，先记在这里，等目标身上身份下一次 tick（可写作用域）
+     *  再一次性扣掉实际保留的枚数。同一执行身份（action 实例或原生现场 origin）只保留一次，避免一招多扣；
+     *  保留数不超过当时真实余量，同刻超出余额的尝试直接放过，不出现「多拒少扣」。 */
+    const craftyHexes: { [ref: string]: { at: number; move: string; reserved: number; identities: string[] } } = Object.create(null);
     /** 观察到的敌方变化招式出手：攻击者 ref -> 最近一次 category=status 出手的 tick。AI 的「已见敌用状态干扰」判据。 */
     const craftyStatusSeen: { [ref: string]: number } = Object.create(null);
     /** 攻击者在 maxAge 刻内是否真的出手过变化招式。 */
     export function craftyShieldStatusSeen(ref: string, tick: number, maxAge: number): boolean {
         const at = craftyStatusSeen[ref];
         return at !== undefined && tick - at <= maxAge;
+    }
+
+    /** 当前还留着、未被在飞递解占用的印数：原生余量减去同刻已保留但未结算的份额。 */
+    function craftyReserved(ref: string): number {
+        const pending = craftyHexes[ref];
+        return pending ? pending.reserved : 0;
+    }
+    /** 递解一次有害到达：余量够就按执行身份保留一枚并返回 true（调用方据此拒绝），否则放过。 */
+    function craftyReserve(world: CombatWorld, target: CombatActor, identity: string, move: string): boolean {
+        const ref = String(target.ref()), pending = craftyHexes[ref];
+        if (pending && pending.identities.indexOf(identity) >= 0) return true;
+        const carrier = MobEffects.read(world, target, craftyShieldEffect);
+        if (carrier === null || carrier.amplifier() - craftyReserved(ref) <= 0) return false;
+        if (pending === undefined) craftyHexes[ref] = { at: world.tick(), move: move, reserved: 1, identities: [identity] };
+        else { pending.reserved += 1; pending.move = move; pending.identities.push(identity); }
+        return true;
     }
 
     function craftyShieldMarkOf(world: CombatWorld, actor: CombatActor): any {
@@ -44,12 +62,24 @@ namespace PokemonSkills {
 
     WorldCombat.effect(craftyShieldMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
-        ["glyphs", "scale", "charges"].forEach(function (key) {
+        ["glyphs", "scale", "charges", "radius"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid crafty shield mark: " + key);
         });
         if (typeof value.caster !== "string") throw new Error("Invalid crafty shield source");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
+    /** 每片符阵的一帧表现：贴地的符阵环 + 贴身的法印片。印片数量按当前真实余量画，扣一枚就少一片，全部挂在承载标记上。 */
+    function craftyShieldPublish(world: CombatWorld, effectId: number, actor: CombatActor, body: CombatObservation,
+        mark: any, remaining: number, total: number): void {
+        const ref = String(actor.ref()), totalSafe = Math.max(1, total), left = Math.max(0, Math.min(totalSafe, remaining));
+        WorldFeedback.onEffect(world, effectId, "world_combat:move_craftyshield/hold/" + ref, craftyShieldScene, 1, body.position(),
+            { moment: "hold", target: ref, glyphs: Math.max(8, Math.round(mark ? mark.glyphs : 22)), remaining: left, total: totalSafe,
+                scale: mark ? mark.scale : 1, radius: mark ? mark.radius : craftyShieldReferenceRadius,
+                intensity: Math.max(0.2, Math.min(1.5, left / totalSafe + 0.3)) });
+        WorldFeedback.onEffect(world, effectId, "world_combat:move_craftyshield/marks/" + ref, craftyShieldMarksScene, 1, body.position(),
+            { target: ref, remaining: left, total: totalSafe, scale: mark ? mark.scale : 1,
+                radius: mark ? mark.radius : craftyShieldReferenceRadius });
+    }
     /** 符阵持续画面绑在承载它的这枚标记效果上：标记由本来源创建，随它到期、被驱散或收阵一起清理。
      *  余量越低符阵越淡，剩余法印数就是画面强度；带身份的 MobEffect 一旦消失，标记也收。 */
     function craftyShieldHoldWatch(effect: CombatEffect): void {
@@ -59,11 +89,7 @@ namespace PokemonSkills {
         const body = world.observe(target);
         if (carrier === null || body === null) { effect.end(); return; }
         const mark: any = JSON.parse(effect.state()), total = Math.max(1, Math.round(mark.charges) || 1);
-        const remaining = Math.max(0, carrier.amplifier());
-        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_craftyshield/hold/" + String(target.ref()),
-            craftyShieldScene, 1, body.position(), { moment: "hold", target: String(target.ref()),
-                glyphs: Math.max(8, Math.round(mark.glyphs)), remaining: remaining, total: total,
-                intensity: Math.max(0.2, Math.min(1.5, remaining / total + 0.3)) });
+        craftyShieldPublish(world, effect.id(), target, body, mark, Math.max(0, carrier.amplifier()), total);
         effect.schedule("watch", "watch", 15, "{}");
     }
     WorldCombat.effectHandler(craftyShieldMark, "start", craftyShieldHoldWatch);
@@ -80,7 +106,8 @@ namespace PokemonSkills {
     });
 
     // 提交点：敌方变化招式瞄上带身份的目标时整条顶回。priority 不限——变化招式无论先制与否都挡；
-    // 伤害招式不是 category=status，不进这条。提交点是只读作用域，这里只拒绝并记下这一手。
+    // 伤害招式不是 category=status，不进这条。提交点是只读作用域，先按当时真实余量保留一枚、
+    // 同一 action 实例只保留一次；余量已被同刻其它尝试占满时放过这一手，不出现「多拒少扣」。
     WorldCombat.on("world_combat:move_craftyshield/hex", "world_combat:before_commit", "", function (event: CombatWorldEvent) {
         const action = event.action(); if (action === null) return;
         const move = NativeLoadout.executing(action); if (move === null) return;
@@ -90,15 +117,27 @@ namespace PokemonSkills {
         if (String(event.actor().key()) === String(target.key())) return;
         if (world.friendly(target)) return;
         if (!CombatStatus.has(world, target, craftyShieldStatus)) return;
+        if (!craftyReserve(world, target, "action:" + action.id(), String(move.id()))) return;
         event.reject("craftyshield");
-        // 一次真实被拒的出手记一笔；同一 action 实例的多个提交回调只算一次，避免同一招重复扣。
-        const ref = String(target.ref()), instance = action.id(), pending = craftyHexes[ref];
-        if (pending === undefined) craftyHexes[ref] = { at: world.tick(), move: String(move.id()), instances: [instance] };
-        else if (pending.instances.indexOf(instance) < 0) { pending.instances.push(instance); pending.move = String(move.id()); }
     });
 
-    // 兑现点：目标身上身份每 tick 收到一次可写事件。把记下的每一次真实被拒出手各扣一枚法印；
-    // 同一招多个回调已按实例去重。扣到 0 就收阵；否则按剩余枚数重挂身份，持续画面由承载标记自己续。
+    // 通用有害到达意图：任何有真实来源的坏效果落在带身份的活体上（变化招式的副作用、普通药水、场地控制等），
+    // 与提交点共用同一份保留账；来源是自身或己方时放过。提交点只管招式本体，这里补上不经过招式的直接施加。
+    WorldCombat.on("world_combat:move_craftyshield/ward", "world_combat:mob_effect_incoming", "", function (event: CombatWorldEvent) {
+        const data: any = JSON.parse(String(event.data())), target = event.target(), world = event.world();
+        if (target === null || data === null) return;
+        if (!data.sourceActor || String(data.sourceActor) === String(target.ref())) return;
+        if (String(data.category) !== "harmful") return;
+        if (Array.isArray(data.tags) && data.tags.indexOf("world_combat:status/identity_only") >= 0) return;
+        if (!CombatStatus.has(world, target, craftyShieldStatus)) return;
+        if (world.friendly(target)) return;
+        const identity = "origin:" + (world.originInstance() || String(data.sourceEntity || data.sourceActor) + "/" + String(data.id));
+        if (!craftyReserve(world, target, identity, String(data.id))) return;
+        event.reject("craftyshield");
+    });
+
+    // 兑现点：目标身上身份每 tick 收到一次可写事件。按保留账一次扣足实际枚数（MobEffects.set 真降强度，
+    // 不用 apply 的高强度叠加掩盖）；扣到 0 就收阵，否则按剩余枚数重挂身份并立刻刷新印片画面。
     WorldCombat.on("world_combat:move_craftyshield/weave", "world_combat:mob_effect_tick", "", function (event: CombatWorldEvent) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== craftyShieldEffect) return;
@@ -109,17 +148,18 @@ namespace PokemonSkills {
         if (pending === undefined) return;
         delete craftyHexes[ref];
         const before = Math.max(0, effect.amplifier());
-        const spent = Math.min(before, Math.max(1, pending.instances.length));
+        const spent = Math.min(before, Math.max(1, pending.reserved));
         const remaining = before - spent;
         const body = world.observe(actor);
         const mark = craftyShieldMarkOf(world, actor);
+        const total = Math.max(1, Math.round(mark ? mark.charges : 1));
         if (body !== null && world.tick() - pending.at <= 20) {
             // 一次拨挡消一枚：只让一枚法印的粒子闪开，并亮出扣完后的余量。
-            const perSeal = Math.max(3, Math.round((mark ? mark.glyphs : 22) / Math.max(1, Math.round(mark ? mark.charges : 1))));
+            const perSeal = Math.max(3, Math.round((mark ? mark.glyphs : 22) / total));
             WorldFeedback.emit(world, craftyShieldScene, 1, body.position(),
-                { moment: "deflect", target: ref, glyphs: perSeal, remaining: remaining,
-                    total: Math.max(1, Math.round(mark ? mark.charges : 1)), move: pending.move }, 22);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), craftyShieldDeflectText, [remaining, Math.max(1, Math.round(mark ? mark.charges : 1))], 24);
+                { moment: "deflect", target: ref, glyphs: perSeal, remaining: remaining, total: total,
+                    scale: mark ? mark.scale : 1, move: pending.move }, 22);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), craftyShieldDeflectText, [remaining, total], 24);
             world.sound("minecraft:entity.illusioner.mirror_move", body.position(), 12, "{}");
         }
         if (remaining <= 0) {
@@ -131,15 +171,22 @@ namespace PokemonSkills {
             }
             return;
         }
-        MobEffects.apply(world, actor, craftyShieldEffect, Math.max(20, effect.duration()), remaining);
+        MobEffects.set(world, actor, craftyShieldEffect, Math.max(20, effect.duration()), remaining);
+        if (body !== null) {
+            const views = world.effects(actor, craftyShieldMark);
+            if (views.length) craftyShieldPublish(world, views[0].id(), actor, body, mark, remaining, total);
+        }
     });
 
     // 收：身份到期或被清除时清掉标记、整阵收拢。走完自己的时间与被外力解除是两条岔路，画面不同。
+    // 扣印用 MobEffects.set 替换会走一次原生 Remove 前置事件；若下一刻身份仍在，说明是被替换而非结束，
+    // 不能据此收阵，否则一扣印就整阵散掉。
     WorldCombat.on("world_combat:move_craftyshield/fall", "world_combat:mob_effect_removed", "", function (event: CombatWorldEvent) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== craftyShieldEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        if (MobEffects.read(world, actor, craftyShieldEffect) !== null) return;
         delete craftyHexes[String(actor.ref())];
         const mark = craftyShieldMarkOf(world, actor);
         if (mark !== null) craftyShieldReleaseMark(world, actor);
@@ -160,7 +207,7 @@ namespace PokemonSkills {
         charges: number, glyphs: number, scale: number): number {
         const body = world.observe(caster);
         if (body === null) return 0;
-        const marker = { glyphs: glyphs, scale: scale, charges: charges, caster: String(caster.ref()) };
+        const marker = { glyphs: glyphs, scale: scale, charges: charges, radius: radius, caster: String(caster.ref()) };
         function protect(actor: CombatActor): boolean {
             if (MobEffects.apply(world, actor, craftyShieldEffect, ticks, charges) === null) return false;
             craftyShieldReleaseMark(world, actor);

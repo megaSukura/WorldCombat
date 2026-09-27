@@ -10,9 +10,9 @@
  * 放完之后：扇形里的敌人命中一起下降、并带着 murky，伙伴交回共享顺序继续交战。
  */
 namespace PokemonSkills {
-    /** 泥浪只沿地面推：目标过高就够不到，AI 不再把它当候选。 */
+    /** 泥浪只沿地面推：目标高出浪头竖直带就够不到，AI 不再把它当候选（与判定的 above 1.8 一致）。 */
     function muddywaterReachHeight(self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): boolean {
-        return Math.abs(target.point[1] - self.point[1]) <= 2.0;
+        return Math.abs(target.point[1] - self.point[1]) <= 1.8;
     }
 
     function muddywaterWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -24,11 +24,15 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 以当前威胁方向为准，扇面里看得见的非友方数量；命中判定仍走招式自己的张角与形状。 */
-    function muddywaterInCone(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity, angleDegrees: number): number {
+    /** 以当前威胁方向为准，用本个体真实的扇面张角、射程与覆盖人数估一条线上能糊到几个。 */
+    function muddywaterInCone(context: WorldBehavior.Context, self: CompanionBehavior.Entity, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context);
+        const span = Math.max(20, p(muddywaterId, "span", world));
+        const reach = Math.max(1, p(muddywaterId, "reach", world));
+        const cap = Math.max(1, Math.round(p(muddywaterId, "maxTargets", world)));
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz) || 1;
-        const hx = dx / length, hz = dz / length, cosHalf = Math.cos(angleDegrees * Math.PI / 360);
+        const hx = dx / length, hz = dz / length, cosHalf = Math.cos(span * Math.PI / 360);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
@@ -37,11 +41,11 @@ namespace PokemonSkills {
             if (!muddywaterReachHeight(self, other)) continue;
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const gap = Math.sqrt(ox * ox + oz * oz);
-            if (gap > 16) continue;
+            if (gap > reach) continue;
             if (gap > 0.001 && (ox / gap * hx + oz / gap * hz) < cosHalf) continue;
             count++;
         }
-        return count;
+        return Math.min(cap, count);
     }
 
     CompanionBehavior.registerUse(muddywaterId, {
@@ -62,7 +66,7 @@ namespace PokemonSkills {
             let score = 17;
             if (CompanionBehavior.distance(self.point, target.point) <= capability.data.range) score += 4;
             if (target.grounded === true) score += 3;
-            if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true) && muddywaterInCone(context, self, target, 70) >= 2) score += 10;
+            if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true) && muddywaterInCone(context, self, target) >= 2) score += 10;
             if (CompanionBehavior.status(context, target, "aim_impaired")) score -= 7;
             return score;
         }

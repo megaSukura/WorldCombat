@@ -6,7 +6,7 @@
   "worldcombat.skill.thundercage.use.3": "在狭窄处锁住一个关键目标",
   "worldcombat.skill.thundercage.description.0": "电击命中造成约 %1$s 点特殊伤害，并在目标四周立起一圈电栅。",
   "worldcombat.skill.thundercage.description.1": "电笼持续 %1$s，笼内每 %2$s 劈一道电、造成约 %3$s 点特殊伤害；每趟电击有 %4$s 概率把目标电到麻痹，麻痹期间移动速度减半、行动有 25%% 概率失败，持续约 40 秒。",
-  "worldcombat.skill.thundercage.description.2": "笼半径 %1$s 格、高 %2$s 格：在笼内走位不会触边，只有跨过侧壁的那一次会被电弧弹回并挨一记电击；越出笼顶或凭原生抗推冲出都直接脱身。射程 %3$s 格，电矢速度 %4$s 格每刻。",
+  "worldcombat.skill.thundercage.description.2": "笼半径 %1$s 格、高 %2$s 格，立在目标脚下：在笼内走位不会触边，只有跨过侧壁的那一次会被电弧弹回并挨一记电击；整个身体升过顶沿（或落到笼底之下）即脱身，凭原生抗推冲出侧壁也直接脱身。射程 %3$s 格，电矢速度 %4$s 格每刻。",
   "worldcombat.skill.thundercage.option.on": "开启广笼式：笼半径 ×1.35、持续 ×1.15、冷却 +8，但初击 ×0.9、电击 ×0.85，关得更宽更久。",
   "worldcombat.skill.thundercage.option.off": "关闭广笼式（紧笼式）：笼子更小更紧、冷却更短，初击与电击满值，电得更重。",
   "worldcombat.skill.thundercage.timing": "可对 %1$s 格内的目标施放，准备 %2$s 后消耗 %4$s PP 发动；结束后收招 %3$s，提交起冷却 %5$s。",

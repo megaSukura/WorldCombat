@@ -12,7 +12,8 @@
  *   strike／wide 的爆环半径用 `data.scale`（判定半径 / 0.4）给出。
  * 运动：alert 的光由外向内收；ready 的掌纹朝向由 `data.direction` 决定；fold 的线折向 `data.direction`；
  *   sweep 的掌风沿扇面掠过；strike 的碎片由内向外炸，眩晕鸟在目标头顶绕圈。
- * 数：`data.count`（掌根威力派生）决定命中碎片数，`data.power` 抬高亮度；数量与机制里的数一致。
+ * 数：`data.count`（掌根威力派生）决定命中碎片数，`data.reel`（按停是否真的生效）决定眩晕鸟数量；
+ *   免疫畏缩时只剩掌击、不放眩晕鸟，原生拒绝伤害时连成功击都不播。`ready` 的正面扇区半径绑 `data.radius`（真实掌程）。
  */
 const UpperhandDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -47,7 +48,7 @@ const UpperhandDefinition: ParticleDefinition = {
                 {
                     name: "ward", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    shape: { kind: "sector", radius: 1.5, angleDegrees: { data: "arc", fallback: 130 } },
+                    shape: { kind: "sector", radius: { data: "radius", fallback: 1.5 }, angleDegrees: { data: "arc", fallback: 130 } },
                     fit: "world", orient: "heading", direction: "shape",
                     rate: 26, speed: [0.01, 0.04],
                     lifetime: [4, 8], size: [0.16, 0.02], sizeMode: "index",
@@ -154,7 +155,7 @@ const UpperhandDefinition: ParticleDefinition = {
                 {
                     name: "reel", bind: "target", height: 1.05,
                     particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
-                    burst: { count: 4, interval: 3, repeats: 2 },
+                    burst: { count: { data: "reel", fallback: 0 }, interval: 3, repeats: 2 },
                     shape: { kind: "sphere", radius: 0.28 },
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [14, 22], size: [0.2, 0.05],
@@ -187,7 +188,7 @@ const UpperhandDefinition: ParticleDefinition = {
                 {
                     name: "reel", bind: "target", height: 1.0,
                     particle: "world_combat_core:cobblemon/generic/status/confusion_bird",
-                    burst: { count: 3, interval: 3, repeats: 2 },
+                    burst: { count: { data: "reel", fallback: 0 }, interval: 3, repeats: 2 },
                     shape: { kind: "sphere", radius: 0.26 },
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [14, 22], size: [0.18, 0.04],

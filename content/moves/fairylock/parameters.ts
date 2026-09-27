@@ -4,6 +4,7 @@ namespace PokemonSkills {
     export const fairyScene = "world_combat:move_fairylock";
     export const fairySeal = "world_combat:fairy_lock";
     export const fairyNet = "world_combat:fairy_lock_net";
+    export const fairyPostsScene = "world_combat:move_fairylock/posts";
     export const fairySealText = "world_combat.move.fairylock.text.seal";
     export const fairyReleaseText = "world_combat.move.fairylock.text.release";
     export const fairyCaughtText = "world_combat.move.fairylock.text.caught";
@@ -15,7 +16,7 @@ namespace PokemonSkills {
                 .clamp(4, 8).round(1),
             "封印半径", {
                 unit: " 格",
-                description: "光栅围住多大一圈；圈内每个活体（含术者）都会被钉住。等级与身板越大越广，深锁式收窄。"
+                description: "光栅围住多大一圈；圈内每个活体（含术者）都能正常走位，只在靠近边缘时被牵制、限制外撤。等级与身板越大越广，深锁式收窄。"
             }),
         sealTicks: seconds(
             F.base(60).plus(F.stat("specialDefence").times(1.0).as("特防"))

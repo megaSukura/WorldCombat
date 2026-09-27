@@ -8,10 +8,14 @@
  * 放完之后：交回共享交战计划；它是站定的连发招，掷完不改变站位。
  */
 namespace PokemonSkills {
-    /** 瞄准方向上、射程内还排着几个敌人（供直线加分）。 */
+    /** 瞄准方向上、真实幕宽（spread）内、且当前视线可达的敌人有几个；供直线加分，只读、不改变命中。 */
     function razorleafLine(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const world = CompanionBehavior.world(context), config = capability.data.config || {};
         const reach = Number(capability.data.range) || 0;
+        const spread = world
+            ? Math.max(0.6, p(razorleafId, "spread", { world: world, actor: world.source(), detail: { values: config }, skill: skills[razorleafId] }))
+            : 1.1;
         const ax = target.point[0] - self.point[0], az = target.point[2] - self.point[2];
         const length = Math.sqrt(ax * ax + az * az);
         if (length < 0.5) return 1;
@@ -23,7 +27,10 @@ namespace PokemonSkills {
             const dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
             const along = dx * ux + dz * uz;
             if (along < 0 || along > reach + 1) continue;
-            if (Math.abs(dx * uz - dz * ux) <= 1.4) count++;
+            const half = spread + (typeof other.width === "number" ? other.width * 0.5 : 0);
+            if (Math.abs(dx * uz - dz * ux) > half) continue;
+            // 限制可达目标：叶幕走直线，被墙/掩体挡住的另一侧不算。
+            if (!world || world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) count++;
         }
         return count;
     }

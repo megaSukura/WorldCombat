@@ -5,7 +5,7 @@
   "worldcombat.skill.thunderpunch.use.2": "Spread paralysis across several targets quickly",
   "worldcombat.skill.thunderpunch.description.0": "The punch along the aim direction deals about %1$s contact and punch damage with a %2$s block fist radius; after the hit it must hold for a %3$s contact window, and only if both are still in reach with clear sight is the remaining third of the damage settled.",
   "worldcombat.skill.thunderpunch.description.1": "The target hit directly by the punch has a %1$s chance to be left paralyzed (half movement speed, a 25%% chance for its actions to fail) for about 40 s.",
-  "worldcombat.skill.thunderpunch.description.2": "After a successful discharge, the current jumps from the real target to up to %2$s more foes within %1$s blocks, each taking about %3$s damage with a %4$s paralysis chance; a target without line of sight or one that has left is not chained.",
+  "worldcombat.skill.thunderpunch.description.2": "After the second hit lands, the current jumps from the real target, nearest first, to up to %2$s more foes within %1$s blocks, each taking about %3$s damage with a %4$s paralysis chance; if the second hit fails, sight is blocked or a target has left, nothing is chained.",
   "worldcombat.skill.thunderpunch.overcharge.on": "Overcharge: the current jumps farther, can chain to a third target and paralyzes more on the jump, but the punch is lighter, the main paralysis lower and the cooldown longer.",
   "worldcombat.skill.thunderpunch.overcharge.off": "Focused: a heavier punch and more concentrated paralysis, but the current chains a shorter distance.",
   "worldcombat.skill.thunderpunch.timing": "Range %1$s blocks; wind-up %2$s s, recovery %3$s s, costing %4$s PP, cooldown %5$s s.",

@@ -3,6 +3,7 @@
  *
  * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、它还没被任何「晃眼/糊眼」类状态罩住，
  *   并且身边至少站着 ai.dense 个看得见的敌人时才值得炸光——散射本来就该打在人多的地方。
+ *   聚光（tight）本来就是窄而深的一束，只为身边一个近威胁也值得用，此时只要够到那一个就炸。
  * 对谁出手：当前威胁；已经带着共享身份 aim_impaired 的目标跳过，不浪费一次冷却。
  * 够不到怎么办：reach 以闪光半径为准，超出先走近；这是以自身为圆心的招，站得越靠人群越好。
  * 放完之后：一圈敌人的命中一起下降，伙伴交回共享顺序继续交战。
@@ -32,7 +33,9 @@ namespace CompanionBehavior {
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 8)) return false;
         if (status(context, threat, "aim_impaired")) return false;
-        return flashCrowd(context, self, item.data.range) >= ai<number>(item, "dense", 2);
+        const tight = !!(item.data.config && item.data.config.form === "tight");
+        const needed = tight ? 1 : ai<number>(item, "dense", 2);
+        return flashCrowd(context, self, item.data.range) >= needed;
     }
 
     registerUse("flash", {

@@ -56,16 +56,19 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const radius = p(extrasensoryId, "radius", action);
             const motes = Math.max(10, Math.round(p(extrasensoryId, "motes", action)));
+            const delay = Math.max(4, Math.round(p(extrasensoryId, "delay", action)));
             const scale = Math.max(0.6, Math.min(2.0, radius / extrasensoryReference));
+            // 幻影要活到合拢那一刻：覆盖起手加伏笔全程，再留一点余量；中途被打断由动作收回。
             action.present("extrasensory:mark", extrasensoryScene, 1, action.targetPosition(),
-                JSON.stringify({ moment: "mark", radius: radius, motes: motes, scale: scale,
-                    delay: Math.round(p(extrasensoryId, "delay", action)), premonition: config && config.premonition === true }));
+                JSON.stringify({ moment: "mark", radius: radius, motes: motes, scale: scale, markTicks: prepare + delay + 6,
+                    delay: delay, premonition: config && config.premonition === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
             const point = action.targetPosition();
+            const prepare = Math.max(0, Math.round(p(extrasensoryId, "tempo", action)));
             const power = p(extrasensoryId, "crush", action);
             const radius = p(extrasensoryId, "radius", action);
             const delay = Math.max(4, Math.round(p(extrasensoryId, "delay", action)));
@@ -78,15 +81,15 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            // 重发同一 key：把起手幻影换成合拢前仍在的同一道幻影（点击者读的是它）。
+            // 重发同一 key 的同一道幻影：延长到覆盖剩余伏笔，点击者读到的仍是它；到点由 snap 独立回执一次。
             action.present("extrasensory:mark", extrasensoryScene, 1, point,
-                JSON.stringify({ moment: "mark", radius: radius, motes: motes, scale: scale, delay: delay }));
+                JSON.stringify({ moment: "mark", radius: radius, motes: motes, scale: scale, markTicks: prepare + delay + 6,
+                    delay: delay }));
             sound(action, "minecraft:entity.illusioner.cast_spell");
 
             action.after(delay, function (current: CombatAction) {
                 const scope = current.world();
-                current.present("extrasensory:mark", extrasensoryScene, 1, point,
-                    JSON.stringify({ moment: "snap", radius: radius, motes: motes, scale: scale, intensity: intensity }));
+                // 合拢只回执一次：动作持有的幻影随动作结束收回，独立发一道 snap 让观感在动作收尾后仍看得清。
                 WorldFeedback.emit(scope, extrasensoryScene, 1, point,
                     { moment: "snap", radius: radius, motes: motes, scale: scale, intensity: intensity }, 26);
                 sound(current, "cobblemon:impact.psychic");

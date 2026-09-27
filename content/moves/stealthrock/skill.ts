@@ -7,11 +7,13 @@
  *
  * 三幕：
  *   起（windup，提交前）：脚边碎石浮起的预告。
- *   抬（raise→settle）：提交后碎石飞向落点，散成半径 fieldRadius 的悬浮石阵（WorldEffects.field，
- *       规则 `world_combat:hazard/stealthrock` 由本单元注册）；同一片地上再放会先收回旧阵、重新计数。
+ *   抬（raise→settle）：提交后碎石飞向落点，先按接触面退到墙外、校验六槽净空，再散成半径 fieldRadius 的
+ *       悬浮石阵（WorldEffects.field，规则 `world_combat:hazard/stealthrock` 由本单元注册）；六槽放不下
+ *       （贴墙/低顶）就这次不成场。同一片地上再放会先收回旧阵、重新计数。
  *   守（launch／hit／shatter）：石阵存续 stoneTicks。非友方首次进入（或离开后再进入、且该敌警戒冷却到时、
- *       石阵还有空位）时，最近的一枚悬石离轨，用 `world.projectile` 发射一枚真实飞行的岩块；命名回调
- *       挂在共享的 `world_combat:field` 定义上，只有真的命中实体才按 `fall` 结算，打空或撞墙只留碎屑。
+ *       石阵还有空位）时，按近到远找**第一枚真正飞得出去**的悬石离轨，用 `world.projectile` 发射一枚真实
+ *       飞行的岩块；最近那枚被墙挡住就改试下一枚，不会因为一枚被挡而放过整个石阵。命名回调挂在共享的
+ *       `world_combat:field` 定义上，只有真的命中实体才按 `fall` 结算，打空或撞墙只留碎屑。
  *       发出的空位过 stoneInterval 补回一枚，最多 6 枚；沉岩式只响应贴地目标。
  *
  * 反制：绕开石阵、等它到期（stoneTicks）；把目标引到实墙后让岩块撞墙；站住不动只挨进入那一下。
@@ -50,15 +52,57 @@ namespace PokemonSkills {
         return out;
     }
 
-    /** 找离目标最近的一枚现有悬石；一枚都没有时返回 -1（容量有限）。 */
-    function stealthrockChooseSlot(position: number[], radius: number, slots: number[], target: CombatPoint): number {
-        let best = -1, nearest = Infinity;
-        for (let i = 0; slots && i < stealthrockStones; i++) {
-            if (!slots[i]) continue;
-            const distance = stealthrockSlotPoint(position, radius, i).minus(target).length();
-            if (distance < nearest) { nearest = distance; best = i; }
+    /** 现有悬石按离目标由近到远排序；一枚都没有时返回空表（容量有限）。 */
+    function stealthrockSlotOrder(position: number[], radius: number, slots: number[], target: CombatPoint): number[] {
+        const out: number[] = [];
+        for (let i = 0; i < stealthrockStones; i++) { if (slots && slots[i]) out.push(i); }
+        out.sort(function (a, b) {
+            return stealthrockSlotPoint(position, radius, a).minus(target).length()
+                - stealthrockSlotPoint(position, radius, b).minus(target).length();
+        });
+        return out;
+    }
+
+    /** 方块面的外法线方向，用来把石阵从接触的墙/顶外侧退开。 */
+    function stealthrockFaceNormal(face: string): CombatPoint {
+        switch (face) {
+            case "up": return WorldCombat.point(0, 1, 0);
+            case "down": return WorldCombat.point(0, -1, 0);
+            case "north": return WorldCombat.point(0, 0, -1);
+            case "south": return WorldCombat.point(0, 0, 1);
+            case "west": return WorldCombat.point(-1, 0, 0);
+            case "east": return WorldCombat.point(1, 0, 0);
+            default: return WorldCombat.point(0, 0, 0);
         }
-        return best;
+    }
+
+    /** 六个轨位那一格是否都不是实心方块：贴墙或低顶时会有轨位落在方块里。 */
+    function stealthrockSlotsClear(world: CombatWorld, position: number[], radius: number): boolean {
+        for (let i = 0; i < stealthrockStones; i++) {
+            const slot = stealthrockSlotPoint(position, radius, i);
+            if (!world.clear(slot, WorldCombat.point(slot.x(), slot.y() + 0.2, slot.z()))) return false;
+        }
+        return true;
+    }
+
+    /**
+     * 成场落点：从接触面外侧退开一段，再落到下方真实承载面；逐个备选点校验六槽净空，全部失败返回 null。
+     * 这样石阵不会嵌进墙里或悬在低顶中，飞石也有地方离轨。
+     */
+    function stealthrockSite(world: CombatWorld, hit: CombatImpact, radius: number): CombatPoint | null {
+        const surface = hit.position(), normal = stealthrockFaceNormal(hit.blockFace());
+        const candidates: CombatPoint[] = [];
+        if (normal.length() > 0.01) candidates.push(surface.plus(normal.scale(0.6)));
+        candidates.push(surface);
+        for (let i = 0; i < candidates.length; i++) {
+            const support = WorldGeometry.blockHit(world, candidates[i].plus(WorldCombat.point(0, 0.5, 0)),
+                candidates[i].minus(WorldCombat.point(0, 4, 0)));
+            const base = support !== null
+                ? WorldCombat.point(candidates[i].x(), support.position().y(), candidates[i].z()) : candidates[i];
+            const position = [base.x(), base.y(), base.z()];
+            if (stealthrockSlotsClear(world, position, radius)) return base;
+        }
+        return null;
     }
 
     /** 从 slot 发射一枚真实飞行的岩块：隔墙不放；发出后该轨位留空并按 stoneInterval 复位。 */
@@ -102,11 +146,14 @@ namespace PokemonSkills {
         if (Number(field.data.heavy) && !body.grounded()) return;
         const now = world.tick(), next = field.data.next || (field.data.next = {});
         if (now < (next[ref] || 0)) return;
-        const slot = stealthrockChooseSlot(field.position, field.radius, field.data.slots, body.position());
-        if (slot < 0) return;
-        if (!stealthrockLaunch(world, actor, field, body, slot)) return;
-        armed[ref] = false;
-        next[ref] = now + Math.max(10, Math.round(Number(field.data.alert) || 40));
+        // 由近到远找第一枚真正飞得出去的悬石：最近那枚被墙挡住就改试下一枚。
+        const order = stealthrockSlotOrder(field.position, field.radius, field.data.slots, body.position());
+        for (let i = 0; i < order.length; i++) {
+            if (!stealthrockLaunch(world, actor, field, body, order[i])) continue;
+            armed[ref] = false;
+            next[ref] = now + Math.max(10, Math.round(Number(field.data.alert) || 40));
+            return;
+        }
     }
 
     // 命名弹体回调挂在共享 field 定义上：效果作用域以施法者为源，命中走同一份真实伤害结算。
@@ -233,7 +280,12 @@ namespace PokemonSkills {
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.28, gravity: 0.02, lifetime: 110,
                 appearance: { item: "minecraft:cobblestone", scale: 0.85 },
-                impact: function (current, hit) { raise(current, hit.position()); }
+                impact: function (current, hit) {
+                    // 成场前先退到接触面外、校验六槽净空；放不下（贴墙/低顶）就这次不成场。
+                    const site = stealthrockSite(current.world(), hit, radius);
+                    if (site === null) { raised = true; done(current); return; }
+                    raise(current, site);
+                }
             }, function (current) {
                 // 抛石没落地就不布阵：布阵位置取真实投掷终点，而不是最初选定的目标点。
                 // complete 在命中后也会触发，必须让已经收招的动作只结束一次。

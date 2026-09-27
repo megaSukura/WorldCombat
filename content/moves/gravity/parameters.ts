@@ -17,7 +17,8 @@
  *              越重越大的身体压出越宽的重力井。
  *   wellTicks  井持续：基础 300 刻 + 等级 ×2，再乘压法系数，夹 200..560。
  *   pull       拽落速度：基础 0.32 格/刻 + 体重 ÷700 +（攻击超过 60）×0.0015，再乘压法系数，夹 0.15..0.9。
- *   pinTicks   贴地余量：基础 30 刻 + 速度 ×0.4，夹 20..80；离开井后仍被压住、浮空身份仍被拔的时长。
+ *   pinTicks   离场坠压：基础 30 刻 + 速度 ×0.4，夹 20..80；离开井后继续把离地身体向下压的时长，落地或到时即止。
+ *              只改竖直速度、保留目标原有的横向移动。
  *   density    重力尘密度：基础 22 + 特攻 ÷8，再乘压法系数，夹 12..56；直接驱动粒子数量。
  *   shock      落点冲击：基础 8 + 特攻 ÷14，夹 5..20；踩进井里时身上崩出的尘点。
  * 配置 crush 在「小而深、拽得狠、压得久的重压」和「大而浅、起手与冷却都更短的广域」之间取舍。
@@ -26,6 +27,7 @@ namespace PokemonSkills {
     export const gravityId = "gravity";
     export const gravityField = "world_combat:field/gravity";
     export const gravityWell = "world_combat:gravity_well";
+    export const gravityPress = "world_combat:move_gravity/press";
     export const gravityScene = "world_combat:move_gravity";
     export const gravityStatus = "gravity";
     export const gravityFallText = "world_combat.move.gravity.text.fall";
@@ -54,7 +56,7 @@ namespace PokemonSkills {
                 .clamp(0.15, 0.9).round(3),
             "拽落速度", { unit: " 格/刻", description: "井里离地活体每刻被向下拽的速度；体重与攻击越大越狠，重压 ×1.4、广域 ×0.75。" }),
         pinTicks: seconds(F.base(30).plus(F.stat("speed").times(0.4)).clamp(20, 80),
-            "贴地余量", "离开重力井后仍被压住、浮空身份仍被拔的时长；速度越快余势散得越慢。"),
+            "离场坠压", "离开重力井后仍把离地的身体向下压的时长，只改竖直速度、保留横向移动；落地或到时即止，速度越快余势越久。"),
         density: formula(
             F.base(22).plus(F.stat("specialAttack").div(8))
                 .times(F.when(F.pref("crush"), F.const(0.9), F.const(1.2))).clamp(12, 56).round(),

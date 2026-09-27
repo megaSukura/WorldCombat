@@ -4,33 +4,37 @@
  * 念头：一边可爱地撒娇一边蹭近，趁对手被分了神把它的持有物卷走；每一记落地都让对手攻势软一拍。
  * 两幕：
  *   起（windup，提交前）：心形光点在头顶飘起，指尖向内聚粉光——预告这份撒娇。
- *   贴（execute，提交后）：缓缓蹭过去，撞上活体的一刻结算接触伤害；落地即让目标攻击 −1 级（有礼时 −2），
- *       若自己空手，把它手里的道具换进自己手里——道具贴图沿一条归巢弧线飞回施法者。
- *       自己手上有物或对手空手时，只当一记会降攻的普通打击。
+ *   贴（execute，提交后）：缓缓蹭过去，撞上活体的一刻结算接触伤害；落地即让目标攻击按实际等级下降（有礼时 −2），
+ *       命中时再验一次自己是否空手、接收槽是否仍空，用原子转移把道具换进手里——真实取物与降攻各自回执。
+ *       自己手上有物（含途中获得）或对手空手时，只当一记会降攻的普通打击。
  * 与同为“偷取”的小偷分开：本招走一般属性、更慢更软、不退反贴，用持续的降攻换手；小偷走恶属性、更快更重、可退可压。
- * 道具交换走统一原生装备事务（`equipmentExchange`），宝可梦携带物与原版生物/玩家的主副手同一契约；
- * 被查封（embargo）者不参与转手；不复制、不凭空生成。
+ * 道具交换走统一原生装备事务（`equipmentExchange`，`firstEmpty` 前置条件）；宝可梦携带物与原版生物/玩家主副手同一契约；
+ * 被查封（embargo）者不参与转手；不复制、不凭空生成。物品回执由效果自有的客户端图形承载，不再依赖动作弹。
  */
 namespace PokemonSkills {
     const covetScene = "world_combat:move_covet";
+    const covetFlowScene = "world_combat:move_covet_flow";
     const covetStealText = "world_combat.move.covet.text.steal";
     const covetCharmText = "world_combat.move.covet.text.charm";
     const covetStrikeText = "world_combat.move.covet.text.strike";
     const covetFullText = "world_combat.move.covet.text.full";
     const covetMissText = "world_combat.move.covet.text.miss";
 
-    /** 得手后让道具贴图从目标手里沿一条归巢弧线飞回施法者（道具此刻已经在手里，这只是画面）。 */
-    function covetArc(current: CombatAction, target: CombatActor, itemId: string): void {
-        var world = current.world(), actor = current.actor();
-        var theirs = world.observe(target), mine = world.observe(actor);
-        if (theirs === null || mine === null) return;
-        var origin = theirs.position().plus(WorldCombat.point(0, theirs.height() * 0.6, 0));
-        var delta = mine.position().plus(WorldCombat.point(0, mine.height() * 0.6, 0)).minus(origin);
-        var velocity = (delta.length() < 0.05 ? aim(current) : delta.unit()).scale(0.9);
-        var flight = current.projectile(origin, velocity, 0, 0.18, 14, 26,
-            function () { }, function () { },
-            JSON.stringify({ item: itemId, scale: 1, glow: true, pierce: 1, homing: { target: String(actor.ref()), turn: 80 } }));
-        WorldFeedback.emit(world, covetScene, 1, origin, { moment: "steal", projectile: flight, item: itemId, scale: 1 }, 30);
+    /** 贴上那只手：从身体沿真实接触段短伸再收回，固定一枚贴图，不生成粒子或实体。 */
+    function covetHand(current: CombatAction, point: CombatPoint): void {
+        var scope = current.world(), body = scope.observe(current.actor());
+        var from = body === null ? current.origin() : body.position();
+        WorldFeedback.emit(scope, covetFlowScene, 1, point,
+            { moment: "reach", from: [from.x(), from.y() + 0.35, from.z()], at: [point.x(), point.y() + 0.1, point.z()],
+                start: scope.tick(), dur: 10 }, 16);
+    }
+
+    /** 得手后的物品回执：道具此刻已经在手里，这里只把一枚物品贴图从真实接触点送回施法者，独立于动作弹。 */
+    function covetHome(current: CombatAction, point: CombatPoint, itemId: string): void {
+        var scope = current.world();
+        WorldFeedback.emit(scope, covetFlowScene, 1, point,
+            { moment: "homeward", item: itemId, target: String(current.actor().ref()),
+                from: [point.x(), point.y() + 0.3, point.z()], start: scope.tick(), dur: 18 }, 30);
     }
 
     function covetGlide(action: CombatAction, done: (current: CombatAction) => void): void {
@@ -53,33 +57,40 @@ namespace PokemonSkills {
                 var target = hit.target();
                 if (target === null || scope.friendly(target)) { movementScenes.finish(current, done); return; }
                 var point = hit.position();
+                covetHand(current, point);
                 var before = scope.observe(target), maximum = before ? Math.max(1, before.maxHealth()) : 1;
                 var landed = impact(current, hit, "covet", p("covet", "charm", current), { damage: damageSpec("covet", "charm"), contact: true });
-                var stolen = false, itemId = "";
-                if (landed && scope.valid(target) && emptyHanded && !NativeItems.sealed(scope, actor) && !NativeItems.sealed(scope, target)) {
-                    var theirs = covetHeldOf(scope, target);
-                    if (theirs !== null && NativeItems.exchangeHeld(scope, actor, target).ok) {
-                        stolen = true; itemId = theirs.id;
-                    }
-                }
                 var after = scope.valid(target) ? scope.observe(target) : null;
                 var dealt = before ? before.health() - (after ? after.health() : 0) : 0;
                 var intensity = Math.max(1, Math.min(3, 1 + dealt / maximum * 4));
+                // 降攻按实际提交的等级数回执：目标已到下限或免疫时不再谎报「攻势 -x」。
+                var dropped = landed && scope.valid(target) ? NativeEffects.boost(scope, target, "atk", -soften) : 0;
+                var stolen = false, itemId = "";
+                // 命中时重新验空手，并要求接收槽仍空；原子转移由原生 CAS 保障，途中获物则退回普通打击。
+                if (landed && after !== null && after.health() > 0 && !NativeItems.sealed(scope, actor) && !NativeItems.sealed(scope, target)) {
+                    var theirs = covetHeldOf(scope, target);
+                    if (theirs !== null && NativeItems.exchangeHeld(scope, actor, target, 1, { firstEmpty: true }).ok) {
+                        stolen = true; itemId = theirs.id;
+                    }
+                }
                 if (landed && scope.valid(target)) {
-                    NativeEffects.boost(scope, target, "atk", -soften);
                     WorldFeedback.emit(scope, covetScene, 1, point, { moment: "charm", target: String(target.ref()),
-                        soft: soften, scale: scale, hearts: Math.round(hearts * (0.7 + intensity * 0.2)) }, 28);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), covetCharmText, [soften], 26);
+                        soft: Math.max(1, Math.abs(dropped)), scale: scale, hearts: Math.round(hearts * (0.7 + intensity * 0.2)) }, 28);
+                    if (dropped !== 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), covetCharmText, [Math.abs(dropped)], 26);
                     scope.hitDisplace(target, direction.scale(push));
                 }
                 sound(current, "cobblemon:impact.normal");
                 if (stolen) {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), covetStealText, [], 30);
                     sound(current, "minecraft:entity.allay.item_taken");
-                    covetArc(current, target, itemId);
+                    WorldFeedback.emit(scope, covetScene, 1, point, { moment: "steal", target: String(target.ref()),
+                        item: itemId, hearts: Math.round(hearts), scale: scale }, 30);
+                    covetHome(current, point, itemId);
                 } else if (landed) {
+                    // 取物回执与降攻回执分开：这里只说明这一贴有没有拿到东西。
+                    var nowEmpty = covetHeldOf(scope, actor) === null;
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)),
-                        emptyHanded ? covetStrikeText : covetFullText, [], 26);
+                        nowEmpty ? covetStrikeText : covetFullText, [], 26);
                 }
                 movementScenes.finish(current, done);
                 return;

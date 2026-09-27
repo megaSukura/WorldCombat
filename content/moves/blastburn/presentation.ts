@@ -6,7 +6,8 @@
  * 色相家族：橙红到亮黄（flame/ember 原色、impact_fire 亮帧），烟灰与炭黑作余韵；与终极冲击的中性白灰、
  * 流星突击的翠绿在色相上分开。
  * 拍子：起（windup 0–10t，火焰收拢成球）→ 击（launch → track → blast）→ 收（exhale 起、pant 维持整段力竭）。
- * 范围：blast 的火柱与烟绑真实首碰点，柱高 = `data.column`、柱径随 `data.scale`；被墙挡住时贴原生方块面起柱。
+ * 范围：blast 的火柱与烟绑真实首碰点；柱高 = `data.column`，核心柱径 = `data.columnRadius`（由真实爆散半径派生，
+ *   不再是固定值），径向爆散与地面冲击环按真实 `data.radius` 铺满（画出的圈就是爆散半径）；被墙挡住时贴原生方块面起柱。
  * 运动：热球沿低弧飞向落点（track 的 core_ball 描出球的完整轮廓），落地向上抽起、余烟随后慢慢升。
  * 数：`data.count`（由爆炸威力派生）决定火柱与核心的粒子量；`data.smoke`（由爆散半径派生）决定余烟量；
  * `data.intensity`（威力 / 150）决定亮度与密度；`data.seconds` 与 `data.puffs`（力竭秒数）决定喘息的密度。
@@ -86,23 +87,33 @@ const BlastburnDefinition: ParticleDefinition = {
             exit: { stop: 20, drain: 24 },
             emitters: [
                 {
-                    // 一次向上的火柱：以真实首碰点为底，柱高就是这一爆抽起的高度。
+                    // 一次向上的火柱：以真实首碰点为底，柱高就是这一爆抽起的高度，柱径由真实爆散半径派生。
                     name: "fire_column", bind: "point", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
                     burst: { count: { data: "count", fallback: 120 }, at: 0 },
-                    shape: { kind: "cylinder", radius: 0.7, length: { data: "column", fallback: 2.6 } },
+                    shape: { kind: "cylinder", radius: { data: "columnRadius", fallback: 0.7 }, length: { data: "column", fallback: 2.6 } },
                     orient: "fixed", direction: "up", fit: "world",
                     speed: [0.08, 0.3], lifetime: [10, 20], size: [0.24, 0.05], sizeMode: "index",
                     color: 0xFF8A2A, alpha: [0.9, 0], gravity: -0.02, drag: 0.94, light: "full", maxParticles: 260
                 },
                 {
-                    name: "impact_core", bind: "point", height: 0.3,
+                    name: "impact_core", bind: "point", height: 0.3, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
                     burst: { count: 18, at: 0 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: { data: "radius", fallback: 2.6 } },
                     direction: "shape", speed: [0.06, 0.3],
                     lifetime: [7, 13], size: [0.5, 0.05], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.7
+                },
+                {
+                    // 地面冲击环：半径就是真实爆散半径，让玩家一眼读出这一爆炸到哪。
+                    name: "blast_ring", bind: "point", offset: [0, 0.06, 0], fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 22, at: 0 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.6 }, thickness: 0.55 },
+                    direction: "outward", speed: [0.06, 0.22],
+                    lifetime: [8, 16], size: [0.32, 0.5], sizeMode: "index",
+                    color: 0xFFB13A, alpha: [0.85, 0], light: "full", bloom: 0.55, maxParticles: 90
                 },
                 {
                     // 随后少量烟：火柱歇下去后从落点慢慢升起，不铺成一大片。

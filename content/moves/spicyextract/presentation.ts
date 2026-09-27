@@ -43,7 +43,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                 {
                     name: "spice_core", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass",
-                    burst: { count: { data: "drops", fallback: 80 } }, shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1.4 } },
+                    burst: { count: { data: "drops", fallback: 80 } }, shape: { kind: "sphere_surface", radius: 1.6 },
                     direction: "outward", speed: [0.08, 0.34],
                     lifetime: [8, 15], size: [0.34, 0.04], sizeMode: "index",
                     color: 0xE2531B, alpha: [0.95, 0], light: "full", bloom: 0.3
@@ -51,7 +51,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                 {
                     name: "spice_splash", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_grass_white",
-                    burst: { count: 46 }, shape: { kind: "ring", radius: { data: "scale", fallback: 1.4 } },
+                    burst: { count: 46 }, shape: { kind: "ring", radius: 1.6 },
                     direction: "outward", speed: [0.1, 0.4], spread: 20,
                     lifetime: [7, 13], size: [0.28, 0.03], sizeMode: "index",
                     color: 0xF3D98A, alpha: [0.9, 0], light: "full", bloom: 0.25
@@ -59,7 +59,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                 {
                     name: "spice_cloud", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: 26 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 1.4 } },
+                    burst: { count: 26 }, shape: { kind: "sphere", radius: 1.6 },
                     direction: "outward", speed: [0.03, 0.12], drag: 0.9,
                     lifetime: [20, 34], size: [0.4, 0.7],
                     color: 0x8E1B1B, alpha: [0.35, 0], light: "world", maxParticles: 50
@@ -67,7 +67,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                 {
                     name: "spice_grains", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 36 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 1.2 } },
+                    burst: { count: 36 }, shape: { kind: "sphere", radius: 1.6 },
                     direction: "outward", speed: [0.05, 0.2], gravity: 0.012, drag: 0.96,
                     lifetime: [12, 24], size: [0.06, 0.01],
                     color: 0xE2A24B, alpha: [0.7, 0], light: "full", maxParticles: 56
@@ -124,7 +124,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                 {
                     name: "haze_edge", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    rate: 4, shape: { kind: "ring", radius: { data: "scale", fallback: 1.6 }, thickness: 0.12 },
+                    rate: 4, shape: { kind: "ring", radius: 1.6, thickness: 0.12 },
                     direction: "inward", speed: [0.008, 0.025],
                     lifetime: [18, 28], size: [0.18, 0.28], sizeMode: "sin",
                     color: 0xD94F2B, alpha: [0.35, 0], light: "full", maxParticles: 22
@@ -132,7 +132,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                 {
                     name: "haze_mist", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 5, shape: { kind: "circle", radius: { data: "scale", fallback: 1.6 }, thickness: 0.5 },
+                    rate: 5, shape: { kind: "circle", radius: 1.6, thickness: 0.5 },
                     direction: "up", speed: [0.005, 0.025], spin: 6,
                     lifetime: [30, 52], size: [0.32, 0.56],
                     color: 0x7A1A1A, alpha: [0.1, 0], light: "world", maxParticles: 34
@@ -141,7 +141,7 @@ const SpicyExtractDefinition: ParticleDefinition = {
                     name: "haze_pulse", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "drops", fallback: 40 }, interval: 20, repeats: 6 },
-                    shape: { kind: "circle", radius: { data: "scale", fallback: 1.6 } },
+                    shape: { kind: "circle", radius: 1.6 },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [18, 30], size: [0.06, 0.01],
                     color: 0xE2A24B, alpha: [0.25, 0], light: "full", maxParticles: 60

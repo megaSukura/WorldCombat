@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.bittermalice.summary": "Sends out the resentment it holds as a hand that flies to the target and closes on it: the hit deals special damage and lowers its Attack. The lower the user's health, the heavier the blow; lingering mode doubles it against an afflicted target, while grudge mode is unconditionally heavier with a deeper Attack drop and devours the target's status.",
+  "worldcombat.skill.bittermalice.summary": "Sends out the resentment it holds as a hand that flies to the target and closes on it: the hit deals special damage and lowers its Attack. The lower the user's health, the heavier the blow; lingering mode raises it to x1.6 against an afflicted target, while grudge mode is x1.35 with a deeper Attack drop whether or not the target carries a status, and devours that status.",
   "worldcombat.skill.bittermalice.use.0": "Cut a ranged target's physical output",
   "worldcombat.skill.bittermalice.use.1": "Turn low health into the heaviest grudge strike",
   "worldcombat.skill.bittermalice.use.2": "Finish an afflicted foe (grudge mode also strips its affliction)",
@@ -7,8 +7,8 @@
   "worldcombat.skill.bittermalice.description.1": "Releases the grudge within %1$s blocks; it flies at %2$s blocks per tick along the aimed direction, homing on a target when one is chosen, with a %3$s block collision radius; an empty cast flies to its end and fades.",
   "worldcombat.skill.bittermalice.description.2": "A hit lowers the target’s Attack by %1$s stages.",
   "worldcombat.skill.bittermalice.description.3": "The lower the user's health, the deeper the grudge and the heavier the blow.",
-  "worldcombat.skill.bittermalice.grudge.on": "Grudge: this strike is unconditionally raised to x1.35 power with a 2-stage Attack drop on hit, and its cast is slower; if the target carries a major status (burn/paralysis/poison/frozen/sleep), the hit first devours one of them, curing the target.",
-  "worldcombat.skill.bittermalice.grudge.off": "Lingering: the target keeps its status, and takes x1.6 power while afflicted, but only a 1-stage Attack drop.",
+  "worldcombat.skill.bittermalice.grudge.on": "Grudge: whether or not the target carries a status, this strike is x1.35 power with a 2-stage Attack drop on hit, at the cost of a slower cast (cooldown +6 ticks); if the target is carrying a major status (burn/paralysis/poison/frozen/sleep), the hit first devours one of them, curing the target.",
+  "worldcombat.skill.bittermalice.grudge.off": "Lingering: the target keeps its status and takes x1.6 power while afflicted, but only a 1-stage Attack drop; with no status it stays at base power.",
   "worldcombat.skill.bittermalice.timing": "Castable within %1$s blocks; after a %2$s wind-up it recovers for %3$s, spends %4$s PP, and goes on cooldown for %5$s.",
   "worldcombat.skill.bittermalice.growth.0": "From level %1$s the grudge rises to %2$s power.",
   "worldcombat.skill.bittermalice.growth.1": "From level %1$s the grudge rises again to %2$s power and the reach grows to %3$s blocks.",
@@ -20,10 +20,10 @@
   "worldcombat.skill.bittermalice.value.stages": "Attack drop",
   "worldcombat.skill.bittermalice.value.motes": "Grudge motes",
   "worldcombat.skill.bittermalice.value.tempo": "Wind-up",
-  "worldcombat.skill.bittermalice.value.recover": "Recovery",
+  "worldcombat.skill.bittermalice.value.aftercast": "Recovery",
   "worldcombat.skill.bittermalice.value.recharge": "Cooldown",
   "worldcombat.skill.bittermalice.preference.grudge": "Grudge mode",
-  "worldcombat.skill.bittermalice.preference.grudge.help": "On: this strike is unconditionally x1.35 power with a 2-stage Attack drop, and its cast is slower; if the target carries a major status (burn/paralysis/poison/frozen/sleep), the hit first devours one of them, curing the target. Off (lingering): the target keeps its status and takes x1.6 power while afflicted, but only a 1-stage Attack drop.",
+  "worldcombat.skill.bittermalice.preference.grudge.help": "On: whether or not the target carries a status, this strike is x1.35 power with a 2-stage Attack drop, at the cost of a slower cast (cooldown +6 ticks); if the target is carrying a major status (burn/paralysis/poison/frozen/sleep), the hit first devours one of them, curing the target. Off (lingering): the target keeps its status and takes x1.6 power while afflicted, but only a 1-stage Attack drop.",
   "worldcombat.skill.bittermalice.preference.ai.maxChase": "Engagement distance",
   "worldcombat.skill.bittermalice.preference.ai.maxChase.help": "The companion only releases the grudge once the target is within this distance; larger values fire earlier and are easier to sidestep in flight.",
   "worldcombat.skill.bittermalice.preference.ai.afflicted": "Prefer afflicted targets",
@@ -34,5 +34,6 @@
   "worldcombat.skill.bittermalice.preference.ai.devour.help": "Grudge mode only. On: prefer targets carrying a major status and devour it for x1.35 power and a 2-stage Attack drop. Off: avoid afflicted targets so the status stays for an ally's payoff (only pick unafflicted foes). Lingering mode ignores this option.",
   "world_combat.move.bittermalice.text.grasp": "Attack -%1$s",
   "world_combat.move.bittermalice.text.devour": "Devoured status - Attack -%1$s",
+  "world_combat.move.bittermalice.text.devourOnly": "Devoured status",
   "world_combat.move.bittermalice.text.miss": "Bitter Malice fades"
 }

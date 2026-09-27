@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.spiritbreak.summary": "Step in with a heavy palm. Its short forward window can break one hostile projectile that native interception allows. The first body contacted takes the original strike, Special Attack reduction and native shove; unsupported special shots continue normally.",
+  "worldcombat.skill.spiritbreak.summary": "Step in with a heavy palm. The 1-block window in front of the palm can break one hostile projectile that native interception allows while the palm is out; the brief recovery after the final empty palm no longer intercepts. The first body contacted takes the original strike, Special Attack reduction and native shove; unsupported special shots continue normally.",
   "worldcombat.skill.spiritbreak.use.0": "Pin a special attacker in place",
   "worldcombat.skill.spiritbreak.use.1": "Knock a foe out of formation and break its Sp. Atk",
   "worldcombat.skill.spiritbreak.use.2": "Meet one interceptable shot before delivering the palm",
   "worldcombat.skill.spiritbreak.description.0": "Step along your aim and strike the first enemy body contacted for about %1$s physical power.",
   "worldcombat.skill.spiritbreak.description.1": "On hit the target's Sp. Atk falls %1$s stage(s).",
-  "worldcombat.skill.spiritbreak.description.2": "Use half of the original %1$s-block momentum budget at %2$s blocks per tick, then a close palm. A landed strike applies up to %3$s blocks of native received push; minimum body-sweep half-width %4$s blocks. The palm can legally intercept only one shot.",
+  "worldcombat.skill.spiritbreak.description.2": "Use half of the original %1$s-block momentum budget at %2$s blocks per tick, then a close palm. A landed strike applies up to %3$s blocks of native received push; minimum body-sweep half-width %4$s blocks. The 1-block window in front of the palm can legally intercept one shot while the palm is out; the brief recovery after the final empty palm no longer intercepts.",
   "worldcombat.skill.spiritbreak.shatter.on": "Currently the shatter form: a harder hit, 2 stages of Sp. Atk loss and a longer shove, but a shorter charge with a longer wind-up and cooldown.",
   "worldcombat.skill.spiritbreak.shatter.off": "Currently the quick charge: 1 stage of Sp. Atk loss, further reach and a faster cast.",
   "worldcombat.skill.spiritbreak.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

@@ -37,7 +37,7 @@ Smoke.scenario("matchagotcha", function (stage) {
             stage.expect(stage.casts("matchagotcha", caster) > 0, "刷刷茶炮被放出来了");
             stage.expect(stage.damageTo(foe) > 0, "茶炮泼到了目标，造成了伤害");
             stage.expect(caster.health() > baseline + 2, "施法者从这一炮里回复了生命");
-            stage.note("命中率、暴击与灼伤（原生 20%）不写死；回血走共享伤害载荷的 drain。射程、溅射半径、灼伤概率与持续由特攻、速度、身高公式决定。",
+            stage.note("命中率、暴击与灼伤（原生 20%）不写死；回血走共享伤害载荷的 drain。飞行完成读 projectilePosition 而非原选点，圈内逐体视线同时决定伤害与解冻。射程、溅射半径、灼伤概率与持续由特攻、速度、身高公式决定。",
                 { casts: stage.casts("matchagotcha", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                   burned: stage.hadMobEffect(foe, "world_combat:status/burn"),
                   woundedHealth: Math.round(baseline * 10) / 10, casterHealth: Math.round(caster.health() * 10) / 10 });

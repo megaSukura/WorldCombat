@@ -89,6 +89,7 @@ const world = { source: () => source, tick: () => tick, random: () => { rolls++;
   operation(id, _operation, data) { actors[id - 1].state = JSON.parse(data); return true; },
   health(a, delta) { const old = a.health; a.health = Math.min(a.maximum, Math.max(0, old + delta)); if (!a.health) a.alive = false; return a.health - old; },
   mobEffects: a => [...a.markers.values()], mobEffect: (a, id) => a.markers.get(id) || null,
+  matchesMobEffect(a, id, key) { const value = this.valid(a) && this.mobEffect(a, id); return !!value && String(value.key()) === key; },
   removeMobEffect(a, id, key) { return a.markers.get(id)?.key() === key && a.markers.delete(id); },
   marker(a, id, duration, amplifier) {
     const names = carrierTags.get(id) || [], key = String(++sequence);
@@ -527,8 +528,22 @@ check('guard filtering sees source and full metadata; callbacks can end exhauste
   payload = '{"amount":8,"kind":"fixture_hit","direct":true,"type":"fixture_type"}'; handlers.get('world_combat:guard/intercept')(scope);
   assert.equal(JSON.parse(payload).amount, 3); assert.equal(guarded, 1); assert(ended); assert.equal(pending, 1);
 });
+check('guard lifecycle callbacks operate on the same instance and preserve unrelated resources', () => {
+  const resources=new Set([41,42]); let state=JSON.stringify({rule:'fixture:lifecycle'});
+  G.register('fixture:lifecycle',{
+    start(effect,data){ data.resource=41; effect.state(JSON.stringify(data)); },
+    end(effect,data){ resources.delete(data.resource); }
+  });
+  const effect={listen(){},schedule(){},state(value){if(value!==undefined)state=value;return state;}};
+  handlers.get('world_combat:guard/start')(effect);
+  assert.equal(JSON.parse(state).resource,41);
+  handlers.get('world_combat:guard/end')(effect);
+  assert.deepEqual([...resources],[42]);
+});
 check('shared hit hooks and actual-damage drain/recoil cover every actor domain and zero-hit paths', () => {
   const seen = [], received = [];
+  const recoils = [];
+  N.recoilApplied.define({id:'fixture:recoil-receipt',apply:receipt=>recoils.push(receipt.amount)});
   N.appliedRules.define({ id: 'fixture:applied', apply: hit => seen.push(hit.source) });
   N.incomingRules.define({ id: 'fixture:incoming', apply: hit => { received.push(hit.source); hit.data.amount *= .5; } });
   for (const from of [source, enemy]) {
@@ -543,6 +558,7 @@ check('shared hit hooks and actual-damage drain/recoil cover every actor domain 
   context.NativeAbilities.define('fixture_resistance', { recoilImmune: true }); source.ability = 'fixture_resistance'; source.health = 50;
   N.applied({ world: () => world, actor: () => source, target: () => friend, data: () => '{"actual":8,"recoil":0.25}' });
   assert.equal(source.health, 50);
+  assert.deepEqual(recoils,[2,2]); N.recoilApplied.remove('fixture:recoil-receipt');
   N.appliedRules.remove('fixture:applied'); N.incomingRules.remove('fixture:incoming');
 });
 check('defender hit callbacks still run when settlement exhausts the attacker', () => {
@@ -635,6 +651,19 @@ check('fieldRule declares identity and tags, and membership binds one member mar
   W.membership('fixture:member_zone', 'fixture:member_mark', { ticks: 30, amplifier: 1 });
   assert(W.hasFieldRule('fixture:member_zone'));
 });
+check('surface qualification shares live field eligibility and rejects other floors, air and pending fields', () => {
+  W.fieldRule('fixture:surface', { accepts:(access,actor,field)=>W.groundedContact(access,actor,field,1) });
+  const area={id:70,source:'fixture',rule:'fixture:surface',identity:'fixture',tags:[],position:[0,0,0],radius:4,pending:false,remaining:10,data:{}};
+  let feet=0,grounded=true,clear=true;
+  const access={observe:()=>({position:()=>point(0,feet+1,0),boundsMin:()=>point(-.5,feet,-.5),grounded:()=>grounded}),clear:()=>clear};
+  assert(W.covers(access,area,source));
+  feet=3;assert(!W.covers(access,area,source),'another loaded floor is not this surface');
+  feet=0;grounded=false;assert(!W.covers(access,area,source));
+  grounded=true;clear=false;assert(!W.covers(access,area,source));
+  clear=true;assert(!W.covers(access,{...area,pending:true},source));
+  assert(W.surfaceTouches(area,point(4.5,0,0),.5));
+  assert(!W.surfaceTouches(area,point(4.5,3,0),.5));
+});
 check('portable fields preserve state and remaining clock while old members leave before new entry', () => {
   const calls = [], stored = [];
   W.fieldRule('fixture:portable', { enter: (scope, actor, field) => calls.push(['enter', scope.source().ref(), field.id]),
@@ -726,5 +755,96 @@ check('declared preparation clocks advance only their own live uncommitted phase
   other.cancel(); assert.equal(A.preparing(control, source).length, 0, 'Cancellation removes only its own visible clock');
   current.advance(); current.advance(); assert.equal(settled, 1); assert.equal(later, 0);
   const waiting = action(); assert.equal(A.advancePreparation(control, source, waiting.id(), 2), 0, 'Undeclared input waits cannot be advanced'); waiting.cancel();
+});
+check('explicit inline prepayment pays once, retains preparation and cancellation cost, and defaults stay deferred', () => {
+  const catalogue = context.NativeRepertoire.create({ namespace: 'fixture' });
+  let executions = 0, receipts = 0, commits = 0;
+  template('paid_payload');
+  catalogue.define({ id: 'paid_payload', name: 'Synthetic', description: '', uses: [], kind: 'enemy', range: 8,
+    defaults: {}, fields: [], style: '', prepare: 2, recover: 1, cooldown: 99,
+    execute: (current, _move, _config, done) => { executions++; done(current); } });
+  listeners.set('fixture:count_paid', { topic: 'world_combat:committed', after: '', handler: () => commits++ });
+  source.move = templates.get('entry');
+  const current = action(); L.prepare(current, 'entry');
+  L.call(current, 'paid_payload', { commitment: 'call', cooldown: 17, onPaid: () => receipts++ });
+  assert.equal(source.pp, 5); assert.equal(current.cooldown, 17); assert.equal(receipts, 1); assert.equal(executions, 0);
+  current.advance(); assert.equal(executions, 0); current.advance(); assert.equal(executions, 1);
+  assert.equal(commits, 1); assert.equal(source.pp, 5); assert.equal(current.cooldown, 17);
+  assert.throws(() => L.view(current).commit(17), /already committed/);
+  current.advance(); assert(!current.open);
+  const cancelled = action(); L.prepare(cancelled, 'entry');
+  L.call(cancelled, 'paid_payload', { commitment: 'call', cooldown: 17 });
+  cancelled.emit('world_combat:input-stop'); cancelled.advance(); cancelled.advance();
+  assert(!cancelled.open); assert.equal(executions, 1); assert.equal(source.pp, 4); assert.equal(commits, 2);
+  assert.equal(A.preparing(world, source).some(value => value.instance === cancelled.id()), false);
+  const ordinary = action(); L.prepare(ordinary, 'entry'); L.call(ordinary, 'paid_payload');
+  assert.equal(source.pp, 4); assert(!ordinary.committed); ordinary.cancel(); assert.equal(source.pp, 4);
+  listeners.delete('fixture:count_paid');
+});
+check('prepaid callee validates current target, loadout, availability, restrictions and ready without repayment', () => {
+  let executed = 0, readyReason = '';
+  const catalogue = context.NativeRepertoire.create({ namespace: 'fixture' }); template('checked_payload');
+  catalogue.define({ id: 'checked_payload', name: 'Synthetic', description: '', uses: [], kind: 'enemy', range: 8,
+    defaults: {}, fields: [], style: '', prepare: 1, recover: 0, cooldown: 3,
+    ready: () => readyReason, execute: (current, _move, _config, done) => { executed++; done(current); } });
+  for (const fault of ['target', 'range', 'relation', 'slot', 'availability', 'restriction', 'ready']) {
+    source.pp = 6; source.move = templates.get('entry'); enemy.alive = true; enemy.x = 3; enemy.friendly = false;
+    readyReason = ''; source.markers.clear(); L.availableWhen('checked_payload', () => '');
+    const current = action(); L.prepare(current, 'entry'); L.call(current, 'checked_payload', { commitment: 'call', cooldown: 17 });
+    if (fault === 'target') enemy.alive = false;
+    if (fault === 'range') enemy.x = 20;
+    if (fault === 'relation') enemy.friendly = true;
+    if (fault === 'slot') source.move = templates.get('recipient_route');
+    if (fault === 'availability') L.availableWhen('checked_payload', () => 'not-grounded');
+    if (fault === 'restriction') world.marker(source, 'fixture:fixed', 20, 0);
+    if (fault === 'ready') readyReason = 'no-space';
+    assert.throws(() => current.advance(), /rejected:/, fault); current.cancel();
+    assert.equal(source.pp, 5, fault); assert.equal(current.cooldown, 17, fault); assert.equal(executed, 0, fault);
+  }
+  source.move = templates.get('entry'); enemy.alive = true; enemy.x = 3; enemy.friendly = false; source.markers.clear();
+  L.availableWhen('checked_payload', () => ''); readyReason = 'initial-refusal'; let paid = false;
+  const refused = action(); L.prepare(refused, 'entry');
+  assert.throws(() => L.call(refused, 'checked_payload', { commitment: 'call', cooldown: 17, onPaid: () => paid = true }), /initial-refusal/);
+  assert(paid, 'Established interception receipt remains true even when the callee cannot start');
+  assert.equal(source.pp, 4); refused.cancel(); readyReason = '';
+});
+check('early payment refuses failed transactions, pays zero-prepare callees once and explicitly bounds nested retargeting', () => {
+  source.move = templates.get('entry'); let paid = false;
+  const refusal = action(); L.prepare(refusal, 'entry'); source.pp = 0;
+  assert.throws(() => L.call(refusal, 'recipient_route', { commitment: 'call', cooldown: 19, onPaid: () => paid = true }));
+  assert.equal(paid, false); assert.equal(refusal.committed, false); refusal.cancel();
+  source.pp = 6; const immediate = action(); L.prepare(immediate, 'entry');
+  register('instant_payload', 'enemy', current => current.commit(200));
+  L.call(immediate, 'instant_payload', { commitment: 'call', cooldown: 19 });
+  assert.equal(source.pp, 5); assert.equal(immediate.cooldown, 19);
+  assert.equal(L.select(immediate, ['point_route']), null);
+  assert.throws(() => L.call(immediate, 'point_route'), /paid-invocation/);
+  immediate.cancel();
+  const invalid = action(); L.prepare(invalid, 'entry');
+  assert.throws(() => L.call(invalid, 'point_route', { commitment: 'call' }), /explicit cooldown/);
+  assert.equal(source.pp, 5); invalid.cancel();
+});
+check('interrupt requests count observed ends and respect a refusing listener without forcing cancellation', () => {
+  const scope={deliver:(actor,signal)=>{assert.equal(signal,'world_combat:interrupt');return true;}};
+  assert.equal(A.requestInterrupt(scope,source),0);
+  scope.deliver=(actor,signal)=>{emit('world_combat:action_ended',friend,null,{instance:70});emit('world_combat:action_ended',actor,null,{instance:71});emit('world_combat:action_ended',actor,null,{instance:71});return true;};
+  assert.equal(A.requestInterrupt(scope,source),1);
+  emit('world_combat:action_ended',source,null,{instance:72});
+  scope.deliver=()=>true;assert.equal(A.requestInterrupt(scope,source),0);
+});
+check('inline preparation limit preserves real recipe identity, late ready validation and one payment', () => {
+  const catalogue=context.NativeRepertoire.create({namespace:'fixture'}); template('bounded_prepare');
+  let observed=-1, executions=0, refuse=false;
+  catalogue.define({id:'bounded_prepare',name:'Synthetic',description:'',uses:[],kind:'enemy',range:8,defaults:{},fields:[],style:'',
+    prepare:12,recover:0,cooldown:4,windup:(_action,_config,ticks)=>{observed=ticks;return 20;},ready:()=>refuse?'late-refusal':'',
+    execute:(current,_move,_config,done)=>{executions++;done(current);}});
+  source.move=templates.get('entry');source.pp=6;enemy.alive=true;enemy.x=3;enemy.friendly=false;
+  const current=action();L.prepare(current,'entry');L.call(current,'bounded_prepare',{prepareLimit:2,cooldown:19});
+  assert.equal(observed,2,'Windup receives the real shortened duration');
+  const clock=A.preparing(world,source).find(value=>value.instance===current.id());
+  assert.equal(clock.identity,'bounded_prepare');assert.equal(clock.remaining,2);assert(clock.sequence>0);
+  current.advance();assert.equal(executions,0);current.advance();assert.equal(executions,1);assert.equal(source.pp,5);assert.equal(current.cooldown,19);
+  const late=action();L.prepare(late,'entry');L.call(late,'bounded_prepare',{prepareLimit:1,cooldown:19});refuse=true;
+  assert.throws(()=>late.advance(),/late-refusal/);late.cancel();assert.equal(executions,1);assert.equal(source.pp,5);
 });
 console.log(`PASS actions/effects: ${count} neutral mechanism scenarios`);

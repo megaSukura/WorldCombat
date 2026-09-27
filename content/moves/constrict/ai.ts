@@ -4,8 +4,8 @@
  * 什么局面下出手：有可见威胁、在 `ai.maxChase` 之内。这一招伤害很低，价值在控住目标，所以 AI 只在有意义时用它：
  * `ai.preferRunners`（默认开）让正在快速移动或逃跑的目标排得更前——先缠住跑得快的那个；
  * 已经带着 trapped 身份的目标会被跳过（缠住的人再缠一次没有意义）。
- * 攀缠式把施法者按住去维持连接，所以只在附近确有能接着输出的队友、且自己血线还站得住时才用；
- * 绞缠式没有这个前置。
+ * 攀缠式把施法者按住去维持连接，所以只在附近确有、且到目标有真实视线、能接着输出的队友、且自己血线还站得住时才用；
+ * 隔墙的远友不算支援。绞缠式没有这个前置。
  * 对谁出手：当前威胁；正在攻击自己的目标略优先（缠住它再脱离）。
  * 够不到怎么办：`reach` 就是本招射程，不够就先走近。
  * 断藤后连接消失，AI 回到共享交战计划，不保留任何长锁。
@@ -15,22 +15,21 @@ namespace PokemonSkills {
         return !target.friendly && target.health > 0 && target.visible;
     }
 
-    /** 附近是否有还能接着输出的队友；攀缠式靠它才有意义。就近距探测一次，读关系用世界入口。 */
-    function constrictHasAllies(context: WorldBehavior.Context): boolean {
+    /** 附近是否真有一名能接手攻击的队友：同域可见、活着，且到目标有真实视线，隔墙的远友不算支援。 */
+    function constrictHasAllies(context: WorldBehavior.Context, target: CompanionBehavior.Entity | null): boolean {
         const self = CompanionBehavior.source(context);
-        const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (other.ref === self.ref || other.health <= 0 || !other.friendly) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= 10) return true;
-        }
         const world = CompanionBehavior.world(context);
         const actors = world.query(CompanionBehavior.point(self.point), 10, false);
         for (let i = 0; i < actors.length; i++) {
             const other = actors[i];
             if (String(other.ref()) === String(self.ref) || !world.friendly(other)) continue;
             const view = world.observe(other);
-            if (view !== null && view.health() > 0) return true;
+            if (view === null || view.health() <= 0 || !view.visible()) continue;
+            if (target === null) return true;
+            if (!world.clear(view.position(), CompanionBehavior.point(target.point))) continue;
+            const at = view.position();
+            if (CompanionBehavior.distance([at.x(), at.y(), at.z()], target.point) > 10) continue;
+            return true;
         }
         return false;
     }
@@ -41,8 +40,8 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (capability.data && capability.data.config && capability.data.config.latch === true) {
-                // 攀缠式按住自己换连接，只在有队友接手且自己不会立刻倒下时使用。
-                if (!constrictHasAllies(context)) return false;
+                // 攀缠式按住自己换连接，只在有能真正接手攻击的队友且自己不会立刻倒下时使用。
+                if (!constrictHasAllies(context, target)) return false;
                 if (CompanionBehavior.ratio(CompanionBehavior.source(context)) < 0.3) return false;
             }
             if (!target) return true;

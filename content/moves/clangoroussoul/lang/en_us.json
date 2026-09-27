@@ -19,5 +19,6 @@
   "worldcombat.skill.clangoroussoul.preference.ai.maxChase.help": "Beyond this distance the threat no longer justifies dancing first; larger values stack stats from further away.",
   "world_combat.move.clangoroussoul.text.beat": "Beat %1$s / %2$s",
   "world_combat.move.clangoroussoul.text.climax": "Full chant · all stats raised",
-  "world_combat.move.clangoroussoul.text.weak": "Too little HP to keep dancing"
+  "world_combat.move.clangoroussoul.text.weak": "Too little HP to keep dancing",
+  "world_combat.move.clangoroussoul.text.raise": "+%1$s stages across %2$s stats this beat"
 }

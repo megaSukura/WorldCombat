@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.acidspray.summary": "在身前喷出一道短而宽的酸雾：楔形里的每个敌人各挨一次特殊伤害、特防立刻下降 2 级，喷完即散，不驻留也不继续掉防。自由方向近喷，也能直接点实体；空喷照喷。聚焦喷口更窄更远，宽喷一次罩住一片。",
+  "worldcombat.skill.acidspray.summary": "从身体前部朝瞄准方向喷出一道短而宽的酸雾：楔形里的每个敌人各挨一次特殊伤害、特防立刻下降 2 级，被墙挡住的目标淋不到；喷完即散，不驻留也不继续掉防。自由方向近喷，也能直接点实体；空喷照喷。聚焦喷口更窄更远，宽喷一次罩住一片。",
   "worldcombat.skill.acidspray.use.0": "贴脸一次淋掉身前一群对手的两级特防",
   "worldcombat.skill.acidspray.use.1": "用最便宜的出手反复磨特防",
   "worldcombat.skill.acidspray.use.2": "在窄口把想挤过来的对手连人带路一起喷酸",
@@ -20,6 +20,6 @@
   "worldcombat.skill.acidspray.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.acidspray.preference.ai.maxChase.help": "超过这个距离就不主动靠近，先在射程外待命；越大越愿意先朝目标接近再喷。",
   "worldcombat.skill.acidspray.preference.ai.crowd": "先削没掉防的",
-  "worldcombat.skill.acidspray.preference.ai.crowd.help": "开启后，射程内特防还没被削过的敌人越多越优先喷雾，替队伍后续特殊招打开防线；关闭则只按普通攻击排序。",
+  "worldcombat.skill.acidspray.preference.ai.crowd.help": "开启后，瞄准方向前方的楔形里特防还没被削过的敌人越多越优先喷雾，替队伍后续特殊招打开防线；关闭则只按普通攻击排序。",
   "world_combat.move.acidspray.text.sunder": "特防 -%1$s"
 }

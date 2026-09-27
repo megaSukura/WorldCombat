@@ -47,7 +47,7 @@ const FlashDefinition: ParticleDefinition = {
                     color: 0xFFF3C8, alpha: [0.9, 0], light: "full", bloom: 0.6, maxParticles: 6
                 },
                 {
-                    name: "flare_ring", bind: "point", height: 0.05,
+                    name: "flare_ring", bind: "point", height: 0.05, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 44 }, shape: { kind: "ring", radius: { data: "radius", fallback: 6 } },
                     direction: "outward", speed: [0.06, 0.18],
@@ -63,7 +63,7 @@ const FlashDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 160
                 },
                 {
-                    name: "flare_dust", bind: "point", height: 0.08,
+                    name: "flare_dust", bind: "point", height: 0.08, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 70, shape: { kind: "ring", radius: { data: "radius", fallback: 6 } },
                     direction: "up", speed: [0.02, 0.06],
@@ -102,7 +102,8 @@ const FlashDefinition: ParticleDefinition = {
             ]
         },
         linger: {
-            duration: { data: "tick", fallback: 60 },
+            // 0 = 随服务端的 keep 续期；被晃眼状态被驱散 / 自然结束时那一刻停止，不再自己 60 刻后哑掉。
+            duration: 0,
             exit: { drain: 24 },
             emitters: [
                 {

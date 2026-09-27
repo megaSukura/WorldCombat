@@ -10,10 +10,17 @@
   },
   "sources": [
     "parameters.ts",
+    "departure.ts",
     "skill.ts",
     "ai.ts"
   ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:mistyexplosion_haze": "minecraft:mob_effect/blindness"
+  }
 }

@@ -3,10 +3,9 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 8）格内；更远交给共享接近逻辑。
  * 对谁出手：`ai.finishFrozen`（默认开）打开时，已经冻住的目标排得最前——这一口会咬碎冰壳多结算一段；
- *   对又冻又残的目标再抬一档。没有冻结目标时把它当**延迟控制**的起手，优先给值得锁住的人。
- *   它不与"立即唤醒/解冻"的招式混用：寒气在 `frostDelay` 后才发作，交回共享交战计划时让伙伴别紧接着唤醒同一个目标。
+ *   对又冻又残的目标再抬一档。没有冻结目标时把它当**近身直冻**的起手，优先给值得锁住的人。
  * 够不到怎么办：牙很短，reach 之内才动手，不够先贴近。
- * 放完之后：等寒气渗入的那一拍结算，交回共享交战计划。
+ * 放完之后：冻结在咬中当刻就掷出，交回共享交战计划。
  */
 namespace PokemonSkills {
     function icefangWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {

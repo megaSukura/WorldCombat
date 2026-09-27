@@ -20,15 +20,22 @@ const EsperwingDefinition: ParticleDefinition = {
                 {
                     name: "gather", bind: "source", offset: [0, 0.8, -0.25], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
-                    rate: 12, shape: { kind: "ring", radius: 0.6 }, direction: "inward", speed: [0.03, 0.1],
+                    rate: 12, shape: { kind: "sphere", radius: 0.35 }, direction: "inward", speed: [0.03, 0.1],
                     lifetime: [8, 14], size: [0.16, 0.04],
-                    color: 0xE8A8F0, alpha: [0.6, 0], light: "full", bloom: 0.4, maxParticles: 34
+                    color: 0xE8A8F0, alpha: [0.6, 0], light: "full", bloom: 0.4, maxParticles: 24
+                },
+                {
+                    name: "fan", bind: "path", offset: [0, 0.55, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
+                    shape: { kind: "polygon" }, rate: { data: "motes", fallback: 26 }, direction: "shape", speed: [0.02, 0.08],
+                    lifetime: [8, 14], size: [0.22, 0.05],
+                    color: 0xE8A8F0, alpha: [0.22, 0], light: "full", maxParticles: 90
                 }
             ]
         },
         wing: {
-            duration: 24,
-            exit: { stop: 6, drain: 12 },
+            duration: 12,
+            exit: { stop: 5, drain: 10 },
             emitters: [
                 {
                     name: "wing_fill", bind: "path", offset: [0, 0.55, 0],
@@ -41,7 +48,8 @@ const EsperwingDefinition: ParticleDefinition = {
                     name: "wing_edge", bind: "path", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     shape: { kind: "polyline" },
-                    rate: 26, direction: "shape", speed: [0.05, 0.16], spread: 6,
+                    burst: { count: { data: "motes", fallback: 22 }, at: 0 },
+                    direction: "shape", speed: [0.08, 0.2], spread: 6,
                     lifetime: [5, 10], size: [0.32, 0.06], sizeMode: "index",
                     color: 0xFFD8F8, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 100
                 }
@@ -74,19 +82,12 @@ const EsperwingDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "aura_wings", bind: "path", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
-                    shape: { kind: "polygon" }, rate: { data: "motes", fallback: 24 }, direction: "shape", speed: [0.04, 0.14],
-                    lifetime: [7, 13], size: [0.26, 0.05],
-                    color: 0xE8A8F0, alpha: [0.4, 0], light: "full", maxParticles: 120
-                },
-                {
-                    name: "aura_edge", bind: "path", offset: [0, 0.6, 0],
+                    name: "tuck", bind: "source", offset: [0, 1.0, -0.15], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    shape: { kind: "polyline" },
-                    rate: 24, direction: "shape", speed: [0.05, 0.16], spread: 6,
-                    lifetime: [5, 10], size: [0.32, 0.06], sizeMode: "index",
-                    color: 0xFFD8F8, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 100
+                    burst: { count: { data: "motes", fallback: 10 }, at: 0 },
+                    shape: { kind: "arc", radius: 0.42, arcDegrees: 150 }, direction: "inward", speed: [0.02, 0.09],
+                    lifetime: [6, 12], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0xFFD8F8, alpha: [0.8, 0], light: "full", bloom: 0.45, maxParticles: 40
                 },
                 {
                     name: "ring", bind: "source", offset: [0, 0.1, 0], height: 0,

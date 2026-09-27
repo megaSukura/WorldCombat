@@ -54,29 +54,33 @@ namespace PokemonSkills {
                 const hit=action.trace(shoulder,end,.18);paths.push([[shoulder.x(),shoulder.y(),shoulder.z()],[hit.position().x(),hit.position().y(),hit.position().z()]]);
                 if(hit.hitEntity()&&(!contact||hit.position().minus(here).length()<contact.position().minus(here).length()))contact=hit;
             });
-            paths.forEach((path,index)=>scenes.show(action,"claw"+index,here,{moment:"close",path:path}));
+            // The two claw tips share the real contact point (or their real end point); a staggered start reads as closing, not a static V.
+            paths.forEach((path,index)=>scenes.show(action,"claw"+index,here,{moment:"close",path:path,start:index*2}));
             const target:CombatActor|null=contact?(contact as CombatImpact).target():null;
-            if(!target||!world.valid(target)||world.friendly(target)){WorldFeedback.emit(world,visegripScene,1,end,{moment:"miss",scale:1},12);scenes.finish(action,done);return;}
+            if(!target||!world.valid(target)||world.friendly(target)){WorldFeedback.emit(world,visegripScene,1,end,{moment:"miss",scale:1},12);done(action);return;}
             const context:NumberContext={pokemon:CobblemonCombat.pokemon(self),skill:skills["visegrip"],detail:{values:config},world:world,actor:self,target:{world:world,actor:target}};
             const power=p("visegrip","squeeze",context),drag=p("visegrip","drag",context),motes=p("visegrip","motes",context);
-            if(!hurt(action,target,"visegrip",power,{damage:damageSpec("visegrip","squeeze"),contact:true})){scenes.finish(action,done);return;}
-            const victim=world.observe(target);if(!victim){scenes.finish(action,done);return;}
+            if(!hurt(action,target,"visegrip",power,{damage:damageSpec("visegrip","squeeze"),contact:true})){done(action);return;}
+            const victim=world.observe(target);if(!victim){done(action);return;}
             WorldFeedback.emit(world,visegripScene,1,victim.position(),{moment:"clamp",target:String(target.ref()),motes:motes,drag:drag,scale:1,intensity:power/42},12);
-            // A real received pull establishes that this body accepts this grip; native refusal leaves the single hit intact.
+            // A real received pull establishes that this body accepts this grip; native refusal leaves the single strike and shows rejection, not a miss.
             if(world.hitDisplace(target,flat.scale(-.05))<.005 || !CombatStatus.apply(world,target,"rooted",visegripHold,6,0)){
-                WorldFeedback.emit(world,visegripScene,1,victim.position(),{moment:"miss",target:String(target.ref()),scale:1},8);scenes.finish(action,done);return;
+                WorldFeedback.emit(world,visegripScene,1,victim.position(),{moment:"resist",target:String(target.ref()),scale:1},10);done(action);return;
             }
-            const carrier=world.mobEffect(target,visegripHold);if(!carrier){scenes.finish(action,done);return;}
+            const carrier=world.mobEffect(target,visegripHold);if(!carrier){done(action);return;}
             world.effect(visegripLease,target,JSON.stringify(MobEffects.anchor(carrier)),7);
             action.releaseTarget();let age=0,spent=.05;
             function hold(current:CombatAction):void{
                 const scope=current.world(),facts=scope.valid(target!)?scope.observe(target!):null;
                 if(!facts||!MobEffects.matches(scope,target!,MobEffects.anchor(carrier!))||facts.position().minus(current.origin()).length()>reach+.25||!scope.clear(current.origin(),facts.position())){scenes.finish(current,done);return;}
                 if(config&&config.haul&&spent<drag){
-                    const step=Math.min(.15,(drag-spent)/(6-age));scope.displace(self,flat.scale(-step));
+                    // Spread the whole drag budget over the remaining legal pull ticks; a wall behind the body or a refused pull stops the haul.
+                    const step=Math.max(0,(drag-spent)/Math.max(1,6-age));
+                    const backed=step>0?scope.displace(self,flat.scale(-step)):step;
+                    if(step>0&&backed<step*.5){scenes.finish(current,done);return;}
                     const toward=current.origin().minus(facts.position()),horizontal=WorldCombat.point(toward.x(),0,toward.z());
                     const accepted=horizontal.length()>.01?scope.hitDisplace(target!,horizontal.unit().scale(step)):0;
-                    spent+=accepted;if(accepted<.005){scenes.finish(current,done);return;}
+                    spent+=accepted;if(step>0&&accepted<step*.5){scenes.finish(current,done);return;}
                 }
                 scenes.show(current,"held",facts.position(),{moment:"hold",target:String(target!.ref()),path:[String(self.ref()),String(target!.ref())]});
                 if(++age>=6){WorldFeedback.emit(scope,visegripScene,1,facts.position(),{moment:"release",target:String(target!.ref())},8);scenes.finish(current,done);return;}

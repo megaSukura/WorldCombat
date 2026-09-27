@@ -4,18 +4,20 @@
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 9）之内；更远交给共享接近逻辑。
  * 对谁出手：这是一片贴近身前的弧形水墙。`ai.pointBlank`（默认开）打开时，越贴到脸上的目标优先级越高——
  *   把顶着自己的人连同身位一起推开，正是它最值的用法；面前弧面里挤着多人时再抬价，一次拍开一排。
+ *   数人时只数**真正拍得到**的：在本个体真实浪张角内、落在判定的竖直带里、且与浪根之间没有墙挡住。
  *   关闭 pointBlank 时仍按身前多敌抬价，只是不再因贴身额外加价。
  * 够不到怎么办：尾长交给 `reach`，共享任务把身位收进弧面之后再抡。
  * 放完接什么：交回共享交战计划；被拍中的人带着湿身身份、也被推离，接下来由共享顺序决定追击还是脱离。
  */
 namespace PokemonSkills {
-    /** 以目标方向为中线，数一数弧面里还挤着几个非友方（含目标），按本个体真实的浪张角。 */
+    /** 以目标方向为中线，数一数弧面里还挤着几个非友方（含目标），按本个体真实的浪张角，并查与实际判定一致的遮挡与高度。 */
     function aquatailFront(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const world = CompanionBehavior.world(context), origin = CompanionBehavior.point(self.point);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2], length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1e-6) return 1;
         const ux = dx / length, uz = dz / length, range = capability.data.range;
-        const arc = p(aquatailId, "arc", CompanionBehavior.world(context));
+        const arc = p(aquatailId, "arc", world);
         const cosHalf = Math.cos(Math.min(180, Math.max(5, arc)) * Math.PI / 360);
         let count = 0;
         for (let index = 0; index < nearby.length; index++) {
@@ -24,7 +26,11 @@ namespace PokemonSkills {
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const distance = Math.sqrt(ox * ox + oz * oz);
             if (distance > range || distance < 1e-6) continue;
-            if ((ox / distance) * ux + (oz / distance) * uz >= cosHalf - 1e-12) count++;
+            if ((ox / distance) * ux + (oz / distance) * uz < cosHalf - 1e-12) continue;
+            // 与判定相同的竖直带（below 1.8 / above 2.6），以及同样的浪根通视。
+            if (other.point[1] < self.point[1] - 1.8 || other.point[1] > self.point[1] + 2.6) continue;
+            if (!world.clear(origin, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }

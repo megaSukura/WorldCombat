@@ -5,7 +5,8 @@
  */
 namespace NativeMinecraftStatus {
     var storage = "world_combat:native-minecraft-status";
-    interface Link { entity: string; mirror: string; native: string; nativeKey: string; effect: string; effectId: string; owned: boolean; suppressed: boolean; }
+    interface Link { entity: string; mirror: string; native: string; nativeKey: string; effect: string; effectId: string;
+        amplifier?: number; infinite?: boolean; owned: boolean; suppressed: boolean; }
     interface Mirror { name: string; natives: string[]; nativeOf(effect: CombatMobEffect): string; nameOf(native: string): string; }
     function simple(name: string): Mirror {
         return { name: name, natives: ["cobblemon:" + name], nativeOf: function () { return name; }, nameOf: function () { return name; } };
@@ -36,8 +37,7 @@ namespace NativeMinecraftStatus {
         var effect = world.mobEffect(actor, CombatStatus.majors[mirror.name].effect);
         return effect !== null && effect.tagged(CombatStatus.tag(mirror.name)) ? effect : null;
     }
-    // Captures across the beginning/end of one entity tick differ by one duration tick.
-    // All other vanilla fields, hidden effect stacks and NeoForge cures must remain identical.
+    // Persisted association records compare structurally; the native application token remains opaque.
     function equivalent(a: any, b: any, field?: string): boolean {
         if (a === b) return true;
         if (field === "duration" && typeof a === "number" && typeof b === "number") return a >= 0 && b >= 0 && Math.abs(a - b) <= 1;
@@ -46,7 +46,7 @@ namespace NativeMinecraftStatus {
         return keys.every(function (key) { return Object.prototype.hasOwnProperty.call(b, key) && equivalent(a[key], b[key], key); });
     }
     function matches(a: string, b: string): boolean {
-        try { return equivalent(JSON.parse(a), JSON.parse(b)); } catch (_) { return false; }
+        return a === b;
     }
     function save(world: CombatWorld, actor: CombatActor, old: string | null, value: Link | null): void {
         if (old !== null && value !== null && equivalent(JSON.parse(old), value)) return;
@@ -56,7 +56,9 @@ namespace NativeMinecraftStatus {
     function remember(world: CombatWorld, actor: CombatActor, old: string | null, mirror: Mirror, pokemon: CombatPokemon, effect: CombatMobEffect | null,
         owned: boolean, suppressed: boolean): void {
         save(world, actor, old, { entity: String(actor.ref()), mirror: mirror.name, native: String(pokemon.status()), nativeKey: String(pokemon.statusKey()),
-            effect: effect === null ? "" : String(effect.key()), effectId: effect === null ? "" : String(effect.id()), owned: owned, suppressed: suppressed });
+            effect: effect === null ? "" : String(effect.key()), effectId: effect === null ? "" : String(effect.id()),
+            amplifier: effect === null ? undefined : effect.amplifier(), infinite: effect === null ? undefined : effect.duration() === -1,
+            owned: owned, suppressed: suppressed });
     }
     var inherent: { [name: string]: string[] } = { burn: ["fire"], poison: ["poison", "steel"], toxic: ["poison", "steel"], paralysis: ["electric"], frozen: ["ice"], sleep: [] };
     function immune(world: CombatWorld, actor: CombatActor, pokemon: CombatPokemon, state: NativeEffects.State, name: string): boolean {
@@ -106,9 +108,8 @@ namespace NativeMinecraftStatus {
                 var definition = CombatStatus.majors[name], amplifier = definition.amplifier;
                 // Recall/re-entry can reconstruct the foreign strength, while the native timer accounts for time in the party.
                 if (link && link.effect && link.mirror === mirror.name) {
-                    var previous = JSON.parse(link.effect);
-                    if (typeof previous.amplifier === "number") amplifier = Math.max(amplifier, previous.amplifier);
-                    if (previous.duration === -1) duration = -1;
+                    if (typeof link.amplifier === "number") amplifier = Math.max(amplifier, link.amplifier);
+                    if (link.infinite === true) duration = -1;
                 }
                 world.marker(actor, definition.effect, duration === -1 ? -1 : Math.min(1728000, duration), amplifier);
                 effect = effectOf(world, actor, mirror);

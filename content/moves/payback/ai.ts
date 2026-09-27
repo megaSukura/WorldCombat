@@ -2,16 +2,17 @@
  * 以牙还牙 / payback 的 AI 用途。
  *
  * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
- * `ai.punish`（默认开）打开时，目标刚打过自己、或正朝自己出手的那一刻 priority 抬到 55——
+ * `ai.punish`（默认开）打开时，目标真正出手打过自己、或自己最近被它击中的那一刻 priority 抬到 55——
  *   这正是翻倍窗口，值得插在普通攻击前面；空闲时它按普通近战 14 排序。
  * 放完接什么：交回共享交战计划；它是一记迎击，不负责追击。
  */
 namespace PokemonSkills {
     function paybackPunishable(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        const self = CompanionBehavior.source(context);
-        if (typeof self.hurtAgo === "number" && self.hurtAgo <= 60
-            && typeof self.lastAttacker === "string" && self.lastAttacker === target.ref) return true;
-        return typeof target.attacking === "string" && target.attacking === self.ref;
+        const world = CompanionBehavior.world(context);
+        const opponent = world.actor(target.ref);
+        if (opponent === null) return false;
+        // 与执行同源：本招实际反算窗口 + 真正的对手出手/最近受击事实；仇恨字段不算出手。
+        return paybackReckoning(withTarget({ world: world, actor: world.source() }, opponent)) > 0;
     }
 
     CompanionBehavior.registerUse(paybackId, {
@@ -43,7 +44,7 @@ namespace PokemonSkills {
             help: "威胁离自己这么远以内才迎上去回击；调大愿意主动靠近被惩罚的对象。"
         }),
         field(pathOf("ai.punish"), "惩罚先手", "boolean", {
-            help: "开启后，刚打过自己或正朝自己出手的目标会被优先回击（正是翻倍窗口）；关闭则按普通近战排序。"
+            help: "开启后，刚真正打过自己或最近被它击中的目标会被优先回击（正是翻倍窗口）；关闭则按普通近战排序。"
         })
     ]);
 }

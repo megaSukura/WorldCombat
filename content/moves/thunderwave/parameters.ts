@@ -14,7 +14,7 @@
  *   reach        实际射程：等级（经验越足放电越远）＋ 特攻（电流越强打得到越远）。
  *   lockTicks    麻痹时长：特攻决定电击的穿透力，电得越透麻得越久。
  *   shockRadius  命中判定半径：碰撞箱高度（大个子更容易被电到）。
- *   arcs         电弧条数：特攻（电流越足分叉越多）＋ 等级台阶；它同时是画面里电弧的数量。
+ *   sparkDensity 火花密度：特攻（电流越足越密）＋ 等级台阶；它同时是画面里沿线火花与分叉的数量。
  *   joltSpeed    放电火花：速度（快个体放电更急），它是画面里火花炸开的密度。
  *   tempo        起手：速度（越快越早放完）。
  *   recharge     冷却：等级（越熟练回得越快）。
@@ -52,12 +52,12 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "直线电击的横向判定半径；大个子更容易被电到。"
             }),
-        /** 电弧条数：4 + 特攻偏移[0,10]；夹 4..20；等级台阶再抬。 */
-        arcs: formula(
+        /** 火花密度：4 + 特攻偏移[0,10]；夹 4..20；等级台阶再抬。它是沿线火花与分叉的采样疏密，不是完整电弧条数。 */
+        sparkDensity: formula(
             F.base(4).plus(F.stat("specialAttack").minus(60).times(0.08).clamp(0, 10)).clamp(4, 20).round(0),
-            "电弧条数", {
-                unit: "条",
-                description: "电流放出来时分叉的电弧数量；特攻越高越密，也是画面里电弧的数量。"
+            "火花密度", {
+                unit: "档",
+                description: "电流放出来时沿线撒出的火花与分叉疏密；特攻越高越密，也是画面里电火花与分叉的数量。"
             }),
         /** 放电火花：2.0 + 速度偏移[−0.6,1.6]；夹 1.4..4.2。 */
         joltSpeed: formula(
@@ -81,8 +81,8 @@ namespace PokemonSkills {
     });
 
     stages(thunderwaveId, [
-        { level: 40, values: { arcs: 12 } },
-        { level: 55, values: { arcs: 15, lockTicks: 280 } }
+        { level: 40, values: { sparkDensity: 12 } },
+        { level: 55, values: { sparkDensity: 15, lockTicks: 280 } }
     ]);
 
     describe(thunderwaveId, [

@@ -1,131 +1,145 @@
-/**
- * 盘蜷 / coil 的出手方式。
- *
- * 核心念头：把身体一圈圈盘紧，能量环从外向里收拢；收到底后猛地一撑，攻击、防御与命中率一起抬起来。
- *   它是本族里最慢、也最完整的一支：窗口最长，把身位钉住，也把命中率一并拉正。
- *
- * 三幕：
- *   起势（windup，提交前）：压低重心、把身体盘起来，紫气从脚边聚拢；可被打断，打断不消耗任何东西。
- *   盘紧（提交后）：先只播盘绕与收紧，不立即给等级——三项实际提升留到盘定一撑的那一瞬才写入。
- *   撑定（收势）：盘到底后猛地一撑，攻击、防御与命中能力等级一起抬起（原生各 +1，配置「盘紧」防御 +2），
- *     挂上共享身份 world_combat:status/coil 的盘势窗口。等级由 boostWindow 拥有并绑在这层盘势载体上：
- *     窗口到期、被清除或再次刷新时只会撤去本招实际贡献；盘定前被终止则什么也不偷得。
- *
- * 与同族分开：磨爪是快而廉价的随手一蹭（只抬攻与命中）；盘蜷是慢而完整的架势——抬三项、窗口最长、起手最慢。
- */
 namespace PokemonSkills {
-    const coilScene = "world_combat:move_coil";
-    const coilBrace = "world_combat:coil_brace";
-    const coilContribution = "world_combat:move/coil";
-    const coilText = "world_combat.move.coil.text.braced";
-    const coilFadeText = "world_combat.move.coil.text.faded";
-    /** 表现里的参考半径：`data.scale = 实际盘绕半径 / 这个数`。 */
-    const coilReference = 1.0;
+    const coilScene = "world_combat:move_coil", coilBrace = "world_combat:coil_brace";
+    const coilHold = "world_combat:move_coil/hold";
+    interface CoilHold { budget: number; carrier: MobEffects.Anchor; factor: number; }
+    WorldCombat.effect(coilHold, 1, 80, "actor", json => json, EffectProtocols.unchanged);
+    function coilWatch(effect: CombatEffect): void {
+        const world = effect.world(), actor = effect.target(), value: CoilHold = JSON.parse(effect.state());
+        const budget = DamageBudgets.read(world, { actor, id: value.budget });
+        if (!budget || budget.remaining === 0 || !MobEffects.matches(world, actor, value.carrier)) { effect.end(); return; }
+        const body = world.observe(actor);
+        if (!body) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "coil:armed", coilScene, 1, body.position(),
+            { moment: "armed", actor: String(actor.ref()), factor: value.factor });
+        effect.schedule("watch", "watch", 1, "{}");
+    }
+    WorldCombat.effectHandler(coilHold, "start", coilWatch);
+    WorldCombat.effectHandler(coilHold, "watch", coilWatch);
+    WorldCombat.effectHandler(coilHold, "operation:world_combat:dispel", effect => effect.end());
 
-    define({
-        id: "coil",
-        cooldownParameter: "wait",
-        name: "盘蜷",
-        description: "把身体一圈圈盘紧、集中精神，然后猛地一撑，把攻击、防御与命中率一起抬高。它是这一族里最慢也最完整的一支，盘势维持一段最长的可见窗口；窗口走完或被清除时，这次抬起的等级按实际提高的级数收回。",
-        uses: ["开打前盘一圈，把攻/防/命中一起垫起来", "硬顶一轮物理爆发前把三项钉住", "把被削掉的命中等级重新盘正"],
-        kind: "self",
-        range: 1,
-        maxRange: 1,
-        prepare: 9,
-        active: 1,
-        recover: 6,
-        cooldown: 95,
-        style: "coil",
-        stationary: true,
-        defaults: { tight: false, ai: { maxChase: 16, minGap: 4 } },
-        fields: [flag("tight", "盘紧")],
-        indicator: function (config, pokemon) {
-            return { radius: p("coil", "ring", pokemon), geometry: "area", style: "coil", color: 0x8A6FD8,
-                label: config && config.tight === true ? "盘蜷 · 盘紧" : "盘蜷 · 松盘" };
-        },
-        resolve: function (pokemon, config, world, actor, attributes) {
-            const context: NumberContext = { pokemon, skill: skills["coil"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
-            return {
-                prepare: Math.round(p("coil", "tempo", context)),
-                recover: Math.round(p("coil", "aftercast", context)),
-                cooldown: Math.round(p("coil", "wait", context)),
-                active: 1,
-                range: 1
-            };
-        },
-        windup: function (action, config, prepare) {
-            action.present("world_combat:move_coil:draw", coilScene, 1, action.origin(),
-                JSON.stringify({ moment: "draw", tight: config && config.tight === true ? 1 : 0 }));
-            return prepare;
-        },
-        execute: function (action, _move, _config, done) {
-            const world = action.world(), actor = action.actor(), body = world.observe(actor);
-            if (body === null) { done(action); return; }
-            const rise = Math.max(1, Math.min(2, Math.round(p("coil", "rise", action))));
-            const guard = Math.max(1, Math.min(2, Math.round(p("coil", "guard", action))));
-            const focus = Math.max(1, Math.min(2, Math.round(p("coil", "focus", action))));
-            const window = Math.max(120, Math.round(p("coil", "brace", action)));
-            const coils = Math.max(8, Math.round(p("coil", "coils", action)));
-            const ring = Math.max(0.6, p("coil", "ring", action));
-            const scale = ring / coilReference;
-            const beat = Math.max(4, Math.min(12, Math.round(14 - coils / 4)));
-            let settled = false, humBound = false;
-
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-            // 盘定一撑：攻击、防御、命中此刻才真正写入载体窗口，盘定前被打断则什么也不给。
-            function settle(current: CombatAction): void {
-                const scope = current.world(), here = scope.observe(actor);
-                if (here === null) { finish(current); return; }
-                const before = NativeEffects.effectiveStages(scope, actor);
-                // 盘势载体拥有这三项贡献：刷新先按 previous 结束同招旧窗口，只续上本招自己那一份。
-                const previous = MobEffects.read(scope, actor, coilBrace);
-                const carrier = MobEffects.apply(scope, actor, coilBrace, window, previous ? previous.amplifier() : 0);
-                let windowId = 0, gainedRise = 0, gainedGuard = 0, gainedFocus = 0;
-                if (carrier) {
-                    windowId = NativeEffects.boostWindow(scope, actor, { atk: rise, def: guard, accuracy: focus },
-                        carrier.duration(), coilContribution, carrier, previous);
-                    const raised = NativeEffects.effectiveStages(scope, actor);
-                    gainedRise = Math.max(0, (raised.atk || 0) - (before.atk || 0));
-                    gainedGuard = Math.max(0, (raised.def || 0) - (before.def || 0));
-                    gainedFocus = Math.max(0, (raised.accuracy || 0) - (before.accuracy || 0));
-                }
-                const gain = gainedRise + gainedGuard + gainedFocus;
-                if (!windowId) MobEffects.consume(scope, actor, coilBrace);
-                WorldFeedback.emit(scope, coilScene, 1, here.position(),
-                    { moment: "rise", actor: String(actor.ref()), coils: coils, ring: ring, scale: scale,
-                        rise: gainedRise, guard: gainedGuard, focus: gainedFocus, gain: gain,
-                        intensity: Math.max(0.8, Math.min(2, gain / 2 + coils / 24)) }, 32);
-                if (windowId && !humBound) {
-                    humBound = true;
-                    // 盘势螺纹绑在真正的盘势窗口上，结束或被清除会同步收回。
-                    WorldFeedback.onEffect(scope, windowId, "world_combat:move_coil/hold", coilScene, 1, here.position(),
-                        { moment: "hum", actor: String(actor.ref()), coils: Math.max(6, Math.round(coils / 3)), ring: ring, scale: scale });
-                }
-                WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), coilText,
-                    [gainedRise, gainedGuard, gainedFocus], 32);
-                scope.sound("minecraft:block.beacon.power_select", here.position(), 16, "{}");
-                finish(current);
-            }
-            // 盘绕阶段：从脚边向身体一圈圈收紧的低螺旋，此刻还没有任何等级。
-            WorldFeedback.emit(world, coilScene, 1, body.position(),
-                { moment: "coil", actor: String(actor.ref()), coils: coils, ring: ring, scale: scale,
-                    intensity: Math.max(0.7, Math.min(1.8, coils / 18)) }, 26);
-            world.sound("cobblemon:move.minimize.actor", body.position(), 16, "{}");
-            action.after(beat, settle);
+    function coilContact(world: CombatWorld, source: CombatActor, target: CombatActor, data: any): boolean {
+        if (String(source.ref()) === String(target.ref()) || !world.valid(source) || !world.valid(target)
+            || !DamageSemantics.directOffense(data) || data.category !== "physical" || data.contact !== true || data.directProjectile) return false;
+        const a = world.observe(source), b = world.observe(target), origin = data.sourcePosition;
+        if (!a || !b || !Array.isArray(origin) || origin.length !== 3) return false;
+        const amin = a.boundsMin(), amax = a.boundsMax(), bmin = b.boundsMin(), bmax = b.boundsMax();
+        const dx = Math.max(0, amin.x() - bmax.x(), bmin.x() - amax.x());
+        const dy = Math.max(0, amin.y() - bmax.y(), bmin.y() - amax.y());
+        const dz = Math.max(0, amin.z() - bmax.z(), bmin.z() - amax.z());
+        if (dx * dx + dy * dy + dz * dz > .55 * .55) return false;
+        const at = WorldCombat.point(origin[0], origin[1], origin[2]);
+        if (world.closestPoint(source, at).minus(at).length() > .55) return false;
+        const contact = world.closestPoint(target, a.position());
+        return WorldGeometry.blockHit(world, a.position(), contact) === null;
+    }
+    DamageBudgets.modifiers.define({ id: "world_combat:coil/strike", apply: context => {
+        if (!(context.data.amount > 0) || !coilContact(context.world, context.source, context.target, context.data)) return;
+        const marks = context.world.effects(context.source, coilHold);
+        for (const mark of marks) {
+            const value: CoilHold = JSON.parse(mark.data());
+            if (!MobEffects.matches(context.world, context.source, value.carrier)) continue;
+            const claims = DamageBudgets.reserve(context, [{ actor: context.source, id: value.budget }]);
+            if (!claims) continue;
+            context.data.amount *= value.factor;
+            context.data.coilFactor = value.factor;
+            return;
+        }
+    } });
+    WorldCombat.on("world_combat:coil/spend", "world_combat:damage_settled", DamageBudgets.settledHook, event => {
+        const world = event.world(), actor = event.actor(), data = JSON.parse(event.data());
+        for (const result of DamageBudgets.results(data)) {
+            if (!result.committed || !result.payload || result.payload.move !== "coil" || !world.valid(actor)
+                || result.actor !== String(actor.ref())) continue;
+            const carrier: MobEffects.Anchor = result.payload.carrier;
+            world.removeMobEffect(actor, carrier.id, carrier.key);
+            world.effects(actor, coilHold).forEach(view => {
+                if (JSON.parse(view.data()).budget === result.id) world.operation(view.id(), "world_combat:dispel", "{}");
+            });
+            const body = world.observe(actor);
+            if (body) WorldFeedback.emit(world, coilScene, 1, body.position(),
+                { moment: "spend", actor: String(actor.ref()), start: world.tick(), duration: 9 }, 9);
         }
     });
+    WorldCombat.on("world_combat:coil/clear", "world_combat:mob_effect_removed", "", event => {
+        const data = JSON.parse(event.data()), world = event.world(), actor = event.actor();
+        if (String(data.id) !== coilBrace || !world.valid(actor)) return;
+        world.effects(actor, coilHold).forEach(view => {
+            const value: CoilHold = JSON.parse(view.data());
+            if (!MobEffects.matches(world, actor, value.carrier)) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+    });
 
-    // 盘势窗口走完或被清除：等级由载体窗口自行收回，这里只收尾表现。
-    WorldCombat.on("world_combat:move_coil/fade", "world_combat:mob_effect_removed", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== coilBrace) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        // 刷新／替换时旧载体被移除而新载体仍在：不是真的结束。
-        if (MobEffects.read(world, actor, coilBrace)) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.emit(world, coilScene, 1, body.position(), { moment: "fade", actor: String(actor.ref()) }, 24);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), coilFadeText, [], 24);
+    define({
+        id: "coil", cooldownParameter: "wait", name: "盘蜷",
+        description: "短暂盘紧后沿瞄准方向弹步，遇到身体、墙或断崖就停。随后携带一份盘劲：下一次真正贴身的物理接触命中得到加成；四秒内未用即散。",
+        uses: ["弹步接近后接一次近身攻击", "盘紧牺牲步距换更重的一击", "把盘劲留给真正打中的一次接触"],
+        kind: "aim", range: 6, maxRange: 6, prepare: 9, active: 1, recover: 6, cooldown: 95,
+        style: "coil", stationary: true, defaults: { tight: false, ai: { maxChase: 6, minGap: 2 } },
+        fields: [flag("tight", "盘紧")],
+        indicator: (config, pokemon) => ({ radius: pokemon ? p("coil", "stride", pokemon) : 3,
+            geometry: "line", style: "coil", color: 0x8A6FD8, label: config && config.tight ? "盘蜷 · 短重步" : "盘蜷 · 弹步" }),
+        resolve: (pokemon, config, world, actor, attributes) => {
+            const context: NumberContext = { pokemon, skill: skills["coil"], detail: { values: config }, world, actor, attributes };
+            return { prepare: p("coil", "tempo", context), recover: p("coil", "aftercast", context),
+                cooldown: p("coil", "wait", context), active: 1, range: 6 };
+        },
+        ready: action => {
+            const world = action.sense(), body = world.observe(action.actor());
+            if (!body || !body.grounded()) return "needs-ground";
+            return MobEffects.read(world, action.actor(), coilBrace) ? "already-coiled" : "";
+        },
+        windup: (action, config, prepare) => {
+            action.present(coilScene + "/prepare", coilScene, 1, action.origin(), JSON.stringify({
+                moment: "prepare", actor: String(action.actor().ref()), start: action.sense().tick(), duration: prepare, tight: !!(config && config.tight) }));
+            return prepare;
+        },
+        execute: (action, _move, _config, done) => {
+            const world = action.world(), actor = action.actor(), body = world.observe(actor);
+            if (!body) { done(action); return; }
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction()), distance = p("coil", "stride", action);
+            const factor = p("coil", "spring", action), scenes = WorldFeedback.actionScenes(coilScene);
+            const origin = body.position(), path = [LivingActions.coordinates(origin)];
+            let spent = 0, finished = false;
+            action.releaseTarget();
+            function finish(current: CombatAction): void {
+                if (finished) return;
+                finished = true;
+                const scope = current.world(), here = scope.observe(actor);
+                if (here) {
+                    WorldFeedback.emit(scope, coilScene, 1, here.position(), { moment: "trail", path,
+                        start: scope.tick(), duration: 8 }, 8);
+                    const carrier = MobEffects.apply(scope, actor, coilBrace, 80, 0);
+                    if (carrier) {
+                        const anchor = MobEffects.anchor(carrier);
+                        const budget = DamageBudgets.open(scope, actor, 80, { anchor, payload: { move: "coil", carrier: anchor, factor } });
+                        if (budget) {
+                            scope.effect(coilHold, actor, JSON.stringify({ budget: budget.id, carrier: anchor, factor }), 80);
+                            WorldFeedback.text(scope, here.position(), "world_combat.move.coil.text.braced", [factor], 24);
+                        } else scope.removeMobEffect(actor, coilBrace, carrier.key());
+                    }
+                }
+                scenes.finish(current, done);
+            }
+            function step(current: CombatAction): void {
+                LivingActions.posture(current, { stationary: true });
+                const scope = current.world(), here = scope.observe(actor);
+                if (!here) { finish(current); return; }
+                const delta = direction.scale(Math.min(.55, distance - spent));
+                if (delta.length() < .01) { finish(current); return; }
+                const nextFeet = WorldCombat.point(here.position().x(), here.boundsMin().y(), here.position().z()).plus(delta);
+                if (WorldGeometry.blockHit(scope, nextFeet.plus(WorldCombat.point(0, .15, 0)), nextFeet.minus(WorldCombat.point(0, .55, 0))) === null) {
+                    finish(current); return;
+                }
+                const sweep = sweepStep(current, delta, 0);
+                spent += sweep.moved;
+                path.push(LivingActions.coordinates(current.origin()));
+                scenes.show(current, "spring", current.origin(), { moment: "spring", actor: String(actor.ref()), path });
+                current.face(current.origin().plus(direction), 180, 90);
+                if (sweep.hit.blocked() || sweep.hit.hitEntity() || sweep.moved < .01 || spent >= distance - .01) finish(current);
+                else current.after(1, step);
+            }
+            sound(action, "cobblemon:move.minimize.actor");
+            step(action);
+        }
     });
 }

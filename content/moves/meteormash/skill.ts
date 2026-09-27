@@ -92,14 +92,27 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
-            /** 落拳收束：真实接触点结算主伤、一圈副伤与表现；空拳只拖星尾。 */
+            /** 方块面 → 世界法线；石屑沿真实接触面喷出。 */
+            function meteormashNormal(face: string): CombatPoint {
+                if (face === "up") return WorldCombat.point(0, 1, 0);
+                if (face === "down") return WorldCombat.point(0, -1, 0);
+                if (face === "north") return WorldCombat.point(0, 0, -1);
+                if (face === "south") return WorldCombat.point(0, 0, 1);
+                if (face === "west") return WorldCombat.point(-1, 0, 0);
+                if (face === "east") return WorldCombat.point(1, 0, 0);
+                return WorldCombat.point(0, 1, 0);
+            }
+
+            /** 落拳收束：真实接触点结算主伤；只有真正砸中敌人才触发一圈副伤，且只有真实方块／地表接触才迸石屑。 */
             function strike(current: CombatAction, contact: CombatImpact | null, tip: CombatPoint): void {
                 const scope = current.world();
                 scenes.stop(current, "smash");
-                let land = tip, face = "", main = false;
+                let land = tip, face = "", normal = WorldCombat.point(0, 1, 0), materialPoint: CombatPoint | null = null;
+                let main = false;
                 if (contact !== null && contact.hitEntity()) {
                     const victim = contact.target(), facts = victim === null ? null : scope.observe(victim);
-                    land = facts === null ? contact.position() : facts.position();
+                    // 接触世界点保真：实体命中就用真实接触点，不用身体中心。
+                    land = contact.position();
                     if (victim !== null && facts !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         main = impact(current, contact, "meteormash", power,
                             { damage: damageSpec("meteormash", "impact"), contact: true, punch: true });
@@ -111,30 +124,47 @@ namespace PokemonSkills {
                         }
                     }
                 } else if (contact !== null && contact.blocked()) {
-                    const cell = contact.blockPosition();
-                    land = cell === null ? contact.position() : cell;
+                    land = contact.position();
                     face = contact.blockFace();
+                    normal = meteormashNormal(face);
+                    materialPoint = contact.blockPosition();
+                    if (materialPoint === null)
+                        materialPoint = WorldCombat.point(Math.floor(land.x() - normal.x() * 0.5), Math.floor(land.y() - normal.y() * 0.5), Math.floor(land.z() - normal.z() * 0.5));
                 }
                 let hits = main ? 1 : 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(land, 0, crashRadius, { below: 2, above: 3 }), function (enemy, facts) {
-                    if (String(enemy.ref()) === String(actor.ref())) return;
-                    if (directRef !== "" && String(enemy.ref()) === directRef) return;
-                    const point = facts.position();
-                    if (!scope.clear(land, point)) return;
-                    if (!hurt(current, enemy, "meteormash", shock, { damage: damageSpec("meteormash", "shock") })) return;
-                    hits++;
-                    const away = point.minus(land);
-                    if (scope.valid(enemy) && away.length() > 0.05)
-                        scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
-                    WorldFeedback.emit(scope, meteormashScene, 1, point,
-                        { moment: "hit", target: String(enemy.ref()), flare: flare, scale: scale,
-                          intensity: Math.max(0.5, Math.min(2.4, shock / 60)) }, 22);
-                });
-                if (contact !== null) {
-                    const ground = scope.block(land);
+                // 空拳、撞墙、友方或被拒都不触发群震：只有正面砸中（main）才震开落点一圈。
+                if (main) {
+                    WorldGeometry.selectEnemies(scope, WorldGeometry.ring(land, 0, crashRadius, { below: 2, above: 3 }), function (enemy, facts) {
+                        if (String(enemy.ref()) === String(actor.ref())) return;
+                        if (directRef !== "" && String(enemy.ref()) === directRef) return;
+                        const point = facts.position();
+                        if (!scope.clear(land, point)) return;
+                        if (!hurt(current, enemy, "meteormash", shock, { damage: damageSpec("meteormash", "shock") })) return;
+                        hits++;
+                        const away = point.minus(land);
+                        if (scope.valid(enemy) && away.length() > 0.05)
+                            scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
+                        WorldFeedback.emit(scope, meteormashScene, 1, point,
+                            { moment: "hit", target: String(enemy.ref()), flare: flare, scale: scale,
+                              intensity: Math.max(0.5, Math.min(2.4, shock / 60)) }, 22);
+                    });
+                }
+                // 石屑只有真实方块材质接触才出现：撞墙用接触面；实体接触（含被拒/友方）找落点下方的真实地表，空中打人只有能量冲击。
+                if (materialPoint === null && contact !== null && (contact.blocked() || contact.hitEntity())) {
+                    const under = WorldGeometry.ground(scope, land, 2);
+                    if (under.minus(land).length() > 0.01) {
+                        land = under;
+                        face = "up";
+                        normal = WorldCombat.point(0, 1, 0);
+                        materialPoint = WorldCombat.point(Math.floor(under.x()), Math.floor(under.y()) - 1, Math.floor(under.z()));
+                    }
+                }
+                if (materialPoint !== null) {
+                    const ground = scope.block(materialPoint);
                     WorldFeedback.emit(scope, meteormashScene, 1, land,
                         { moment: "crash", flare: flare, hits: hits, block: ground === null ? "" : String(ground.id()), face: face,
-                          scorch: scorch, scorchTicks: scorchTicks, scale: scale,
+                          crash: crashRadius, scorch: scorch, scorchTicks: scorchTicks, scale: scale,
+                          direction: [normal.x(), normal.y(), normal.z()],
                           intensity: hits > 0 ? Math.max(0.7, intensity) : 0.8 }, 34);
                     sound(current, "minecraft:entity.generic.explode");
                     sound(current, "minecraft:item.mace.smash_ground");
@@ -157,9 +187,11 @@ namespace PokemonSkills {
                     if (contact === null) {
                         WorldFeedback.emit(scope, meteormashScene, 1, land, { moment: "miss", flare: flare, scale: scale }, 20);
                         WorldFeedback.text(scope, land.plus(WorldCombat.point(0, 0.9, 0)), meteormashMissText, [], 22);
-                    } else {
+                    } else if (!contact.hitEntity()) {
+                        // 撞墙：只扬尘、不伤墙后的人，也不报「砸空」以外的连震。
                         WorldFeedback.text(scope, land.plus(WorldCombat.point(0, 1.1, 0)), meteormashMissText, [], 22);
                     }
+                    // 命中友方或被拒：只留物理接触碎屑，既不结算伤害也不报「砸空」。
                 }
                 finish(current);
             }
@@ -182,7 +214,10 @@ namespace PokemonSkills {
                 scenes.stop(current, "charge");
                 if (self === null) { finish(current); return; }
                 const base = self.position(), height = self.height();
-                const upStart = base.plus(heading.scale(0.15)).plus(WorldCombat.point(0, height * 0.75, 0));
+                let upStart = base.plus(heading.scale(0.15)).plus(WorldCombat.point(0, height * 0.75, 0));
+                // 举拳起点先查身体到拳位的遮挡：头顶有方块就把拳收在真实接触面，不用穿进墙里的假拳位。
+                const overhead = WorldGeometry.blockHit(scope, base, upStart);
+                if (overhead !== null) upStart = overhead.position();
                 const downEnd = base.plus(heading.scale(forward)).plus(WorldCombat.point(0, -height * 0.35, 0));
                 smashAt(current, 0, upStart, upStart, downEnd);
             }

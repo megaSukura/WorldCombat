@@ -75,7 +75,8 @@ const SmogDefinition: ParticleDefinition = {
                     color: 0x6E8C3A, alpha: [0.32, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "front", bind: "point", fit: "none", offset: [0, 0.95, 0], orient: "direction",
+                    name: "front", bind: "point", fit: "none", orient: "direction",
+                    offset: [{ data: "frontX", fallback: 0 }, { data: "frontY", fallback: 0 }, { data: "frontZ", fallback: 0 }],
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     rate: 10, shape: { kind: "hemisphere", radius: 1.45, thickness: 0.2 },
                     direction: "outward", speed: [0.04, 0.15], spread: 20,
@@ -100,19 +101,21 @@ const SmogDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "splat", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "splat", bind: "point", fit: "none",
+                    offset: [{ data: "backX", fallback: 0 }, { data: "backY", fallback: 0 }, { data: "backZ", fallback: 0 }],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: { data: "puffs", fallback: 14 }, at: 1 },
-                    shape: { kind: "sphere", radius: 0.55 },
+                    shape: { kind: "sphere", radius: 0.45 },
                     direction: "outward", speed: [0.02, 0.12], spread: 60, drag: 0.88,
                     lifetime: [10, 22], size: [0.4, 0.05],
                     color: 0x6E8C3A, alpha: [0.5, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "beads", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    name: "beads", bind: "point", fit: "none",
+                    offset: [{ data: "backX", fallback: 0 }, { data: "backY", fallback: 0 }, { data: "backZ", fallback: 0 }],
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: 8, at: 1 },
-                    shape: { kind: "sphere", radius: 0.4 },
+                    shape: { kind: "sphere", radius: 0.35 },
                     direction: "outward", speed: [0.03, 0.14], spread: 40,
                     lifetime: [8, 16], size: [0.1, 0.02],
                     color: 0xA879D0, alpha: [0.5, 0], light: "full", maxParticles: 20

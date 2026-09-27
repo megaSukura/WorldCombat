@@ -4,7 +4,8 @@
  * 场面：一只只会吹捧的扒手猫与一只敌人僵尸相隔 10 格开战。僵尸会走近并近战，必然打到扒手猫；
  * 吹捧的特攻礼物与陶醉都会落在僵尸身上。没有墙，保证视线相通。目标不被钉住，会继续移动接近。
  * 必然事实：本招被提交过；僵尸被挂上共享身份 world_combat:status/confusion；礼物让它的共享特攻等级升高；
- * 它仍在移动（travelled > 0），说明没有定身。原版近战的走神挥空与陶醉时长写进 note。
+ * 它仍在移动（travelled > 0），说明没有定身。礼物浮字显示的等级差来自这次 NativeEffects.boost 的实际返回。
+ * 原版近战的走神挥空与普通攻击命中的陶醉表现（world_combat:damage_applied 回执）写进 note，不在此断言。
  */
 Smoke.scenario("flatter", function (stage) {
     var caster = stage.pokemon({ species: "Purrloin", level: 34, moves: ["flatter"], at: [0, 0, 0] });

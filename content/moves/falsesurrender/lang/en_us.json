@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.falsesurrender.summary": "The user bows low as if conceding to draw the foe's attention away, then lets its disheveled hair lash out from that lowest point tick by tick: the tip only settles after it truly touches a body, and a wall in the way stops it at the surface. The less the foe is watching the user, the harder it lands, at the cost of the user being unable to move while bowed.",
-  "worldcombat.skill.falsesurrender.description.0": "The hair lash deals about %1$s damage, plus %2$s when the target is not attacking the user (the feint worked). Defence, type matchup and crit are settled on the hit.",
+  "worldcombat.skill.falsesurrender.summary": "The user bows low as if conceding, exposing itself, then lets its disheveled hair lash out from that lowest point tick by tick: the tip only settles after it truly touches a body, and a wall in the way stops it at the surface. A foe that is not attacking the user is struck harder, at the cost of the user being unable to move while bowed.",
+  "worldcombat.skill.falsesurrender.description.0": "The hair lash deals about %1$s damage, plus %2$s while the target is not attacking the user. Defence, type matchup and crit are settled on the hit.",
   "worldcombat.skill.falsesurrender.description.1": "The hair reaches a target within %1$s blocks, lashing out at %2$s blocks/tick with a %3$s block tip radius; the tip only settles a body it truly touches, and stops at a wall or an ally in the way.",
   "worldcombat.skill.falsesurrender.description.2": "The bow takes %1$s s, during which the user cannot move; a hit drives the target back up to %2$s blocks.",
   "worldcombat.skill.falsesurrender.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
@@ -8,7 +8,7 @@
   "worldcombat.skill.falsesurrender.growth.1": "At level %1$s: lash power %2$s and ambush bonus %3$s.",
   "worldcombat.skill.falsesurrender.use.0": "Bow to feign surrender, then lash low",
   "worldcombat.skill.falsesurrender.use.1": "Land a heavier stab on a foe that is not watching",
-  "worldcombat.skill.falsesurrender.use.2": "Come in under the guard from a low angle",
+  "worldcombat.skill.falsesurrender.use.2": "Expose yourself bowing to land a heavier blow on an unwary foe",
   "worldcombat.skill.falsesurrender.value.lash": "Lash power",
   "worldcombat.skill.falsesurrender.value.hairReach": "Hair reach",
   "worldcombat.skill.falsesurrender.value.lashSpeed": "Lash speed",

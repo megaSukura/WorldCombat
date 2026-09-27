@@ -61,7 +61,8 @@ const SkydropDefinition: ParticleDefinition = {
             ]
         },
         hold: {
-            duration: 60,
+            // Held open until the server switches to fall/land, so a high throw never outlives a fixed 60-tick hold.
+            duration: 0,
             exit: { stop: 16, drain: 18 },
             emitters: [
                 {

@@ -6,6 +6,8 @@
   "worldcombat.skill.bugbite.description.0": "咬合造成约 %1$s 的虫属性接触伤害，判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.bugbite.description.1": "沿瞄准方向扑咬最多 %1$s 格、每刻 %2$s 格；命中把目标顶开约 %3$s 格。",
   "worldcombat.skill.bugbite.description.2": "咬下的树果会从对手手里被取走；你咀嚼 %1$s 秒后按 %2$s 倍吸收树果的效果：回复与果中尖刺的反噬都乘这个倍数，解除异常与提升能力等级则按树果原本的档位生效。",
+  "worldcombat.skill.bugbite.description.interrupt": "咀嚼期间若被打断，已经咬下的这颗果就吃不到，效果落空。",
+  "worldcombat.skill.bugbite.description.kill": "若这一咬直接击倒目标，果子随目标一起倒下，来不及咬取。",
   "worldcombat.skill.bugbite.devour.on": "开启狼吞：咀嚼更久、吸收 ×1.25、能力等级提升多 1 级，代价是本击 ×0.9。",
   "worldcombat.skill.bugbite.devour.off": "关闭狼吞：吸收 ×0.8、本击 ×1.08，咬得更重但吸收较浅。",
   "worldcombat.skill.bugbite.timing": "可向 %1$s 格内施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

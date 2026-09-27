@@ -18,7 +18,15 @@ public final class NativeEquipmentSuppressionChecks {
         try {
             entity.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE)); entity.tick();
             require(armor.getValue() > inherent, "Equipment modifier was never applied");
+            var before = com.google.gson.JsonParser.parseString(combat.equipmentModifiers(actor, actor)).getAsJsonArray();
+            require(!before.isEmpty() && java.util.stream.StreamSupport.stream(before.spliterator(), false)
+                .anyMatch(row -> row.getAsJsonObject().get("attribute").getAsString().equals("minecraft:generic.armor")
+                    && row.getAsJsonObject().get("active").getAsBoolean()), "Equipment facts omitted live declared armor");
             require(combat.suppressEquipment(-922001, actor) == 1 && armor.getValue() == inherent, "Equipment suppression erased inherent armor or retained chestplate");
+            var hidden = com.google.gson.JsonParser.parseString(combat.equipmentModifiers(actor, actor)).getAsJsonArray();
+            require(hidden.size() == before.size() && java.util.stream.StreamSupport.stream(hidden.spliterator(), false)
+                .noneMatch(row -> row.getAsJsonObject().get("active").getAsBoolean()), "Equipment facts treated suppressed declarations as active");
+            require(armor.getValue() == inherent, "Reading equipment facts mutated attributes");
             combat.suppressEquipment(-922002, actor); combat.release(-922001,"checks:one-left");
             require(armor.getValue() == inherent, "Ending one overlapping suppression restored equipment early");
             entity.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE)); entity.tick(); combat.suppressEquipment(-922002,actor);

@@ -5,9 +5,10 @@
  * 被扫到的敌人身上炸开一丛虫，虫群留在它们身上继续爬，把它们拖慢。
  * 色相家族：虫系的黄绿（0x9FB13A / 0xC7D855）为主，近白（0xF2F7D0）只给击点，尘收在灰绿。
  * 拍子：起 brace（拢住）→ 涌 burst（起点一圈）+ wave（前缘一圈圈推出去，半径每刻更新）→ 击 hit（每人身上一丛虫）→ 散 settle。
- * 范围：wave 的地圈半径直接绑服务端的 `data.radius`（真实扩散半径，随前缘逐刻变大），玩家看到的圈就是会被扫到的地。
- * 运动：虫群沿地圈由内向外爬，虫点在圈上向外扩散；击中的虫从目标身上向内收、再散开。
- * 数：`data.radius` 决定地圈大小，`data.motes`（特攻派生）决定虫群密度，`data.intensity`（本次威力派生）抬高击点亮暗。
+ * 范围：wave/settle 的贴地尘沿服务端下发的 `data.path`（真实已达前缘顶点）铺开，不再用整圆；障碍前的缺口照实断开。
+ * 运动：虫群沿真实前缘由内向外爬，虫点在前缘上扬起；击中的虫从目标身上向内收、再散开。
+ * 数：`data.path` 画出真实前缘，`data.motes`（特攻派生）决定虫群密度，`data.intensity`（本次威力派生）抬高击点亮暗。
+ * 缠身 cling 阶段 `duration: 0` 常驻，由载体的 lease 结束随效果清理，不再固定 30 刻。
  */
 const StrugglebugDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -72,11 +73,11 @@ const StrugglebugDefinition: ParticleDefinition = {
                     color: 0xC7D855, alpha: [0.45, 0], light: "world", maxParticles: 150
                 },
                 {
-                    name: "ground", bind: "point", fit: "none", offset: [0, 0.03, 0],
+                    name: "ground", bind: "path", fit: "none", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 40,
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 }, thickness: 0.9 },
-                    direction: "outward", speed: [0.04, 0.16],
+                    shape: { kind: "polyline", closed: true },
+                    direction: "up", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.05, 0.01],
                     color: 0xEAF0B0, alpha: [0.35, 0], light: "world", maxParticles: 140
                 }
@@ -116,8 +117,8 @@ const StrugglebugDefinition: ParticleDefinition = {
             ]
         },
         cling: {
-            duration: 30,
-            exit: { stop: 10, drain: 20 },
+            duration: 0,
+            exit: { drain: 20 },
             emitters: [
                 {
                     name: "carrier", bind: "target", offset: [0, 0.07, 0], height: 0.15,
@@ -144,10 +145,10 @@ const StrugglebugDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "fade", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    name: "fade", bind: "path", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 40,
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 }, thickness: 0.6 },
+                    shape: { kind: "polyline", closed: true },
                     direction: "up", speed: [0.02, 0.1],
                     lifetime: [12, 22], size: [0.06, 0.01],
                     color: 0x8FA030, alpha: [0.3, 0], light: "world", maxParticles: 120

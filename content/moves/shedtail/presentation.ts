@@ -116,21 +116,25 @@ const ShedTailDefinition: ParticleDefinition = {
                 }
             ]
         },
-        lure: {
-            exit: { drain: 24 },
+        link: {
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "lure_link", bind: "path", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
-                    rate: 10, shape: { kind: "polyline" }, direction: "shape", speed: [0.0, 0.03],
-                    trail: { minDistance: 0.24 },
+                    rate: 12, shape: { kind: "polyline" }, direction: "shape", speed: [0.0, 0.03],
                     lifetime: [12, 18], size: [0.1, 0.02], sizeMode: "index",
                     color: 0xE0705A, alpha: [0.7, 0], light: "full", maxParticles: 80
-                },
+                }
+            ]
+        },
+        lure: {
+            exit: { drain: 24 },
+            emitters: [
                 {
-                    name: "lure_ring", bind: "point", offset: [0, 0.04, 0],
+                    name: "lure_ring", bind: "point", fit: "none", offset: [0, -0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    rate: 3, shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    rate: 3, shape: { kind: "ring", radius: { data: "radius", fallback: 8 } },
                     direction: "inward", speed: [0.02, 0.07],
                     lifetime: [16, 24], size: [0.42, 0.14], sizeMode: "sin",
                     color: 0xB0503C, alpha: [0.32, 0], light: "full", maxParticles: 16

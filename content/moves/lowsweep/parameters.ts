@@ -12,9 +12,9 @@
  *   cut         扫踢威力：物攻定腿劲、速度定扫击的干脆；旋身扫把力道摊到更大的弧上所以单点更轻。
  *   sweepArc    扫击张角：速度决定弧线多开；旋身扫扩得更大，是「一次削到几个人」的来源。
  *   reach       扫击半径：速度与体型高度决定腿够多远。
- *   slowStages  掉速等级：读**目标当前移动速度**——越快被削得越深（1..3 级）。
+ *   slowStages  掉速等级：读**目标此刻的实际水平速度**（动作链 `actor.pace`，不是基础移动属性）——越快被削得越深（1..3 级）。
  *   hobbleTicks 腿伤时长：等级与施法者速度决定 hobbled 身份挂多久。
- *   rootTicks   别腿时长：只有被削到两级以上、或旋身扫时才把腿别住一瞬。
+ *   rootTicks   别腿时长：读到目标此刻确实在快速水平移动、或旋身扫时，才把腿别住一瞬。
  *   spark       火星/尘点数量：速度与物攻驱动，表现按它发射。
  *   pivot       起手：速度决定拧腰多快。
  * 配置 whirl（旋身扫）双向取舍：开＝弧线更开、能把高速目标的腿别住更久，但单点更轻、收招与冷却更久；
@@ -52,25 +52,25 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "低扫能够到多远的小腿；速度与身板决定腿的长度。它同时是本招的射程基准。"
             }),
-        /** 掉速等级：1 + 目标移动速度 ≥ 0.11 + 目标移动速度 ≥ 0.16；夹 1..3。 */
+        /** 掉速等级：1 + 目标水平速度 ≥ 0.11 + 目标水平速度 ≥ 0.16；夹 1..3。 */
         slowStages: formula(
-            F.base(1).plus(F.target("actor.movementSpeed").gte(0.11)).plus(F.target("actor.movementSpeed").gte(0.16))
+            F.base(1).plus(F.target("actor.pace").gte(0.11)).plus(F.target("actor.pace").gte(0.16))
                 .clamp(1, 3).round(0),
             "掉速等级", {
                 unit: "级",
-                description: "被削中小腿后下降的速度能力等级；**目标当时移动得越快，重心越难收回，掉得越多**（对其他战斗者落到移动速度属性）。"
+                description: "被削中小腿后下降的速度能力等级；**目标命中这一刻实际移动得越快，重心越难收回，掉得越多**（对其他战斗者落到移动速度属性）。"
             }),
         /** 腿伤时长：45 + 等级(≥25)偏移[0,30] + 速度偏移[−15,20]；夹 35..140。 */
         hobbleTicks: seconds(
             F.base(45).plus(F.level().minus(25).times(0.9).clamp(0, 30))
                 .plus(F.stat("speed").minus(55).times(0.6).clamp(-15, 20)).clamp(35, 140).round(0),
             "腿伤时长", "hobbled 身份挂多久；等级与施法者速度越高削得越久。"),
-        /** 别腿时长：0 + （目标移动速度 ≥ 0.16 时 6）+ 旋身 4；夹 0..14。 */
+        /** 别腿时长：0 + （目标水平速度 ≥ 0.16 时 6）+ 旋身 4；夹 0..14。 */
         rootTicks: seconds(
-            F.base(0).plus(F.target("actor.movementSpeed").gte(0.16).times(F.const(6)))
+            F.base(0).plus(F.target("actor.pace").gte(0.16).times(F.const(6)))
                 .plus(F.when(F.pref("whirl", text("worldcombat.skill.lowsweep.preference.whirl")), F.const(4), F.const(0)))
                 .clamp(0, 14).round(0),
-            "别腿时长", "被削到重心难收的目标，小腿会被别住一瞬（rooted）；只有掉两级以上或旋身扫时才发生。"),
+            "别腿时长", "目标命中这一刻确实在快速水平移动时，小腿才会被别住一瞬（rooted）；旋身扫对这一条件更宽松。"),
         /** 尘点数量：12 + 速度偏移[−3,12] + 物攻偏移[−2,8]；夹 10..40。 */
         spark: formula(
             F.base(12).plus(F.stat("speed").minus(55).times(0.3).clamp(-3, 12))
@@ -83,6 +83,22 @@ namespace PokemonSkills {
         pivot: seconds(
             F.base(6).minus(F.stat("speed").minus(55).times(0.03).clamp(-1, 3)).clamp(3, 8).round(0),
             "起手", "压低重心、拧腰起势的时间；速度越快越短。")
+    });
+
+    /**
+     * 纯事实 `actor.pace`：作用域内这名战斗者此刻的水平速度（velocity 的水平分量，块/刻）。
+     * 公式用 `F.target("actor.pace")` 在命中目标上读它，因此「正在跑」看的是真实运动而不是移动速度属性。
+     * 不在现场（详情预览、无目标）时返回 undefined，掉速与别腿停在基础值。
+     */
+    defineFacts("lowsweep", function (context: FactContext): Formula.Facts {
+        return { read: function (id: string): Formula.Fact {
+            if (id !== "actor.pace") return undefined;
+            if (!context.world || !context.actor || !context.world.valid(context.actor)) return undefined;
+            const body = context.world.observe(context.actor);
+            if (body === null) return undefined;
+            const motion = body.velocity();
+            return Math.sqrt(motion.x() * motion.x() + motion.z() * motion.z());
+        } };
     });
 
     defineDamage("lowsweep", "cut", {}, { contact: true });

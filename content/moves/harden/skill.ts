@@ -8,11 +8,15 @@
  *   硬（提交后）：NativeEffects.boostWindow 写入公共能力阶梯，窗口归属这层壳载体本身
  *     （到期／被打裂／被清除只收回本次实际贡献）；挂上共享身份 world_combat:status/harden 的晶壳窗口；
  *     同时给一层按比例削伤的 GuardEffects 池（每击磨掉一部分），但单次攻击达到最大生命的 crack 比例时晶壳一次打裂。
+ * 载体口径：等级窗口与削伤池都绑定「最后一次应用」的壳载体锚，先确定最终 carrier 再交给两者；没有 carrier 时不建孤立护层。
+ *   碎壳比较的是**原始来伤** incoming.amount，削掉的量只作受击反馈，所以声明多少阈值就是多少，不会被削伤比例放大。
  * 结束：晶壳被打裂、被清除或到期时，GuardEffects 池结束、窗口随载体收回、等级一并收回。
  *   每条 guard 记下自己那层壳载体的锚点，壳一走这条池自己结束——重放只维护一份壳。
  */
 namespace PokemonSkills {
     const hardenScene = "world_combat:move_harden";
+    const hardenShellScene = "world_combat:move_harden_shell";
+    const hardenCrackScene = "world_combat:move_harden_crack";
     const hardenShell = "world_combat:harden_shell";
     const hardenRule = "world_combat:harden";
     const hardenContribution = "world_combat:move/harden";
@@ -25,8 +29,27 @@ namespace PokemonSkills {
         return Math.max(min, Math.min(max, value));
     }
 
-    /** 真实的来袭接触侧：原生 sourcePosition；缺省时退回来源身体位置；都没有就不给方向，不捏造坐标。 */
+    /**
+     * 真实的来袭接触侧：有真实弹体轨迹时取最后一段落点；否则用原生来源点求被击者真实 AABB 表面。
+     * 来源只决定入射方向，绝不把来源点本身当作受击面；没有可读来源时返回 null，只画受保护者局部中性裂纹。
+     */
     function hardenContact(world: CombatWorld, target: CombatActor, incoming: GuardEffects.Incoming): CombatPoint | null {
+        const data = incoming.data;
+        if (data && data.directProjectile === true) {
+            const path = Array.isArray(data.projectilePath) ? data.projectilePath : [];
+            for (let index = path.length - 1; index >= 0; index--) {
+                const to = path[index] ? path[index].to : null;
+                if (Array.isArray(to) && to.length === 3
+                    && typeof to[0] === "number" && typeof to[1] === "number" && typeof to[2] === "number")
+                    return WorldCombat.point(to[0], to[1], to[2]);
+            }
+        }
+        const from = hardenSourcePoint(world, incoming);
+        return from === null ? null : world.closestPoint(target, from);
+    }
+
+    /** 来袭来源点：原生 sourcePosition，缺省时退回来源身体位置；都没有就不给方向，不捏造坐标。 */
+    function hardenSourcePoint(world: CombatWorld, incoming: GuardEffects.Incoming): CombatPoint | null {
         const source = incoming.data ? incoming.data.sourcePosition : null;
         if (Array.isArray(source) && source.length === 3
             && typeof source[0] === "number" && typeof source[1] === "number" && typeof source[2] === "number")
@@ -45,8 +68,9 @@ namespace PokemonSkills {
             if (custom.carrier && !MobEffects.matches(world, effect.target(), custom.carrier)) { effect.end(); return; }
             const facets = Math.max(6, Math.round(Number(custom.facets) || 14));
             const scale = Math.max(0.4, Number(custom.scale) || 1);
-            WorldFeedback.onEffect(world, effect.id(), "harden:shell:" + effect.id(), hardenScene, 1, body.position(),
-                { moment: "shell", actor: String(effect.target().ref()), facets: facets, scale: scale });
+            const radius = Math.max(0.4, Number(custom.radius) || scale * hardenReferenceRadius);
+            WorldFeedback.onEffect(world, effect.id(), "harden:shell:" + effect.id(), hardenShellScene, 1, body.position(),
+                { actor: String(effect.target().ref()), facets: facets, scale: scale, radius: radius });
         },
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number, incoming: GuardEffects.Incoming): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -55,21 +79,23 @@ namespace PokemonSkills {
             const crack = hardenClamp(Number(custom.crack) || 0.16, 0.05, 0.5);
             const facets = Math.max(6, Math.round(Number(custom.facets) || 14));
             const scale = Math.max(0.4, Number(custom.scale) || 1);
+            const radius = Math.max(0.4, Number(custom.radius) || scale * hardenReferenceRadius);
             const threshold = Math.max(1, body.maxHealth() * crack);
-            // 越接近碎裂阈值，这一击越深：同一受击面崩落更多、更大的碎晶；不写任何持久耐久条。
-            const depth = hardenClamp(amount / threshold, 0, 1);
-            const heavy = amount >= threshold;
+            // 阈值按原始来伤比较：声明多少就是多少，不被这一层削掉的比例放大。削掉的量只作受击反馈。
+            const incomingAmount = Math.max(0, Number(incoming.amount) || 0);
+            const depth = hardenClamp(incomingAmount / threshold, 0, 1);
+            const heavy = incomingAmount >= threshold;
             const contact = hardenContact(world, target, incoming);
             const data: any = { moment: "crack", actor: String(target.ref()), blocked: Math.round(amount * 10) / 10,
                 heavy: heavy ? 1 : 0, depth: Math.round(depth * 100) / 100,
-                shards: Math.max(4, Math.round(facets * (0.3 + 0.7 * depth))),
-                shardSize: Math.round((0.14 + 0.18 * depth) * 100) / 100,
-                facets: facets, scale: scale };
+                facets: facets, scale: scale, radius: radius };
             if (contact !== null) {
+                data.point = [contact.x(), contact.y(), contact.z()];
                 const away = contact.minus(body.position());
                 if (away.length() > 0.01) { const unit = away.unit(); data.direction = [unit.x(), unit.y(), unit.z()]; }
             }
-            WorldFeedback.emit(world, hardenScene, 1, body.position(), data, 20);
+            // 每一下都在真实来袭接触侧留一道局部短裂纹与裂光；只有达到真实阈值的那一击才碎片剥落（见 shatter）。
+            WorldFeedback.emit(world, hardenCrackScene, 1, body.position(), data, 20);
             // 小击只局部轻响；达到阈值的那一击在同一受击面裂开整壳。
             world.sound(heavy ? "minecraft:block.amethyst_block.break" : "minecraft:block.amethyst_block.resonate",
                 body.position(), heavy ? 14 : 10, "{}");
@@ -139,18 +165,23 @@ namespace PokemonSkills {
             const before = NativeEffects.effectiveStage(world, actor, "def");
             const previous = MobEffects.read(world, actor, hardenShell);
             const carrier = MobEffects.apply(world, actor, hardenShell, window, previous ? previous.amplifier() : 0);
-            let levels = 0;
-            if (carrier) {
-                NativeEffects.boostWindow(world, actor, { def: gift }, carrier.duration(), hardenContribution, carrier, previous);
-                levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
-                if (carrier.amplifier() !== levels) {
-                    const shown = MobEffects.apply(world, actor, hardenShell, window, levels);
-                    if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), hardenContribution, shown, carrier);
-                }
+            // 没有载体就不建孤立护层，也不播成功回执：施法者此刻不再可写。
+            if (!carrier) { done(action); return; }
+            NativeEffects.boostWindow(world, actor, { def: gift }, carrier.duration(), hardenContribution, carrier, previous);
+            const levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
+            // 等级展示需要把壳的 amplifier 调到本次实际抬起的级数：这会落地成一次新载体，
+            // 于是先确定这最后一次应用的 carrier，再把同一锚同时交给等级窗口与护层，避免护层仍指向失效的旧 revision。
+            let active = carrier;
+            if (active.amplifier() !== levels) {
+                const shown = MobEffects.apply(world, actor, hardenShell, window, levels);
+                if (shown) { NativeEffects.boostWindow(world, actor, {}, shown.duration(), hardenContribution, shown, carrier); active = shown; }
             }
-            GuardEffects.apply(world, actor, { rule: hardenRule, mode: "pool", capacity: 1000000000, fraction: temper,
-                minimumHealth: 0, charges: 0, linkRange: 0, crack: crack, facets: facets, scale: scale,
-                carrier: carrier ? MobEffects.anchor(carrier) : undefined } as any, window);
+            const guardId = GuardEffects.apply(world, actor, { rule: hardenRule, mode: "pool", capacity: 1000000000, fraction: temper,
+                minimumHealth: 0, charges: 0, linkRange: 0, crack: crack, facets: facets, scale: scale, radius: shell,
+                carrier: MobEffects.anchor(active) } as any, active.duration());
+            // 晶壳持续读数的表现绑在真实护层上，随它存续、随它收。
+            if (guardId) WorldFeedback.onEffect(world, guardId, "harden:shell:" + guardId, hardenShellScene, 1, body.position(),
+                { actor: String(actor.ref()), facets: facets, scale: scale, radius: shell });
             WorldFeedback.emit(world, hardenScene, 1, body.position(),
                 { moment: "crystal", actor: String(actor.ref()), levels: levels, temper: temper, crack: crack,
                     facets: facets, scale: scale, intensity: Math.max(0.8, Math.min(2, facets / 18)) }, 30);

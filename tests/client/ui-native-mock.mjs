@@ -33,18 +33,20 @@ export function uiNativeMock(extra={}) {
   const UiText={component:json=>new NativeText(parse(JSON.parse(json))),plain:json=>parse(JSON.parse(json)).map(run=>run.text).join(''),locale:()=>locale};
   class Widget{
     constructor(){this.children=[];this.layout={};this.properties=this.layout;this.classes=[];this.visible=true;}
-    lss(name,value){this.layout[name]=value;if(name==='display')this.visible=value!=='none';return this;}addChild(child){this.children.push(child);return this;}
+    lss(name,value){this.layout[name]=value;if(name==='display')this.visible=value!=='none';return this;}addChild(child){this.children.push(child);child.parent=this;return this;}
     addClass(name){this.classes.push(name);return this;}
     setText(value){this.text=plain(value);return this;}setDocument(json){this.runs=UiText.component(json).runs;this.text=this.runs.map(run=>run.text).join('');return this;}
-    getStyle(){return this;}getTextStyle(){return this;}getButtonStyle(){return this;}textColor(){return this;}textWrap(){return this;}adaptiveHeight(){return this;}
-    backgroundTexture(){return this;}baseTexture(){return this;}hoverTexture(){return this;}pressedTexture(){return this;}
+    getStyle(){return this;}getTextStyle(){return this;}getButtonStyle(){return this;}textColor(){return this;}textWrap(){return this;}adaptiveHeight(){return this;}textAlignHorizontal(){return this;}textStyle(consumer){consumer(this);return this;}
+    backgroundTexture(value){this.background=value;return this;}baseTexture(){return this;}hoverTexture(){return this;}pressedTexture(){return this;}
     setOnClick(callback){this.click=callback;return this;}appendTooltipsString(value){this.tooltip=plain(value);return this;}
     ['tooltips(com.lowdragmc.lowdraglib2.gui.ui.data.Tooltips)'](values){this.tooltip=values.map(plain).join('\n');return this;}
   }
-  class ScrollerView extends Widget{constructor(){super();this.viewContainer=new Widget();this.addChild(this.viewContainer);}['viewContainer(java.util.function.Consumer)'](consumer){consumer(this.viewContainer);return this;}getScrollerViewStyle(){return this;}mode(){return this;}addScrollViewChild(child){this.viewContainer.addChild(child);return this;}}
+  class ScrollerView extends Widget{constructor(){super();this.viewContainer=new Widget();this.addChild(this.viewContainer);this.normalized=0;}['viewContainer(java.util.function.Consumer)'](consumer){consumer(this.viewContainer);return this;}['verticalScroller(java.util.function.Consumer)'](consumer){consumer(this);return this;}getNormalizedValue(){return this.normalized;}setNormalizedValue(value){this.normalized=value;return this;}getScrollerViewStyle(){return this;}mode(){return this;}addScrollViewChild(child){this.viewContainer.addChild(child);return this;}}
+  const width=value=>Array.from(plain(value)).reduce((sum,char)=>sum+(char.charCodeAt(0)>255?9:6),0);
+  const font={width,plainSubstrByWidth(value,limit){let result='';for(const char of String(value)){if(width(result+char)>limit)break;result+=char;}return result;}};
   const classes={UiText,UiPreferences:{read:key=>preferences.get(key)||'{}',write:(key,value)=>preferences.set(key,value)},UIElement:Widget,Button:Widget,Label:Widget,RichTextLabel:Widget,ScrollerView,ScrollerMode:{VERTICAL:'vertical'},
-    UI:{of:value=>value},ModularUI:{of:value=>value},TextWrap:{WRAP:'wrap'},ArrayList:class extends Array{add(value){this.push(value);}},Tooltips:{'of(java.util.List)':value=>value},ClientCallbacks:{runnable:(_id,run)=>({run})},
-    SDFRectTexture:{of:()=>({setRadius(){return this;},setStroke(){return this;},setBorderColor(){return this;},draw(){}})},Component:{literal:value=>new NativeText([{text:plain(value)}]),translatable:key=>UiText.component(JSON.stringify({key}))}};
+    UI:{of:value=>value},ModularUI:{of:value=>value},TextWrap:{WRAP:'wrap'},Horizontal:{LEFT:'left',CENTER:'center',RIGHT:'right'},Minecraft:{getInstance:()=>({font})},ArrayList:class extends Array{add(value){this.push(value);}},Tooltips:{'of(java.util.List)':value=>value},ClientCallbacks:{runnable:(_id,run)=>({run})},
+    SDFRectTexture:{of:color=>({color,setRadius(){return this;},setStroke(){return this;},setBorderColor(){return this;},draw(){}})},Component:{literal:value=>new NativeText([{text:plain(value)}]),translatable:key=>UiText.component(JSON.stringify({key}))}};
   return {classes,UiText,Widget,preferences,parse,setLocale:value=>{locale=value;},t:key=>UiText.plain(JSON.stringify({key:'worldcombat.ui.'+key}))};
 }
 export function widgets(root){return[root,...(root?.children||[]).flatMap(widgets)];}

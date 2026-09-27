@@ -23,10 +23,10 @@ const RevivalBlessingDefinition: ParticleDefinition = {
                 {
                     name: "column", bind: "point", fit: "none", offset: [0, 0.0, 0],
                     particle: "world_combat_core:cobblemon/generic/lightbeam",
-                    burst: { count: { data: "beams", fallback: 6 } },
+                    rate: { data: "beams", fallback: 6 }, amount: 3,
                     shape: { kind: "cylinder", radius: 0.22, length: 3.2 }, direction: "up", speed: [0.0, 0.04],
                     lifetime: [20, 30], size: [0.3, 0.9], sizeMode: "index",
-                    color: 0xFFFBE8, alpha: [0.7, 0], light: "full", bloom: 0.5, maxParticles: 40
+                    color: 0xFFFBE8, alpha: [0.7, 0], light: "full", bloom: 0.5, maxParticles: 48
                 },
                 {
                     name: "rise", bind: "point", fit: "none", offset: [0, 0.2, 0],
@@ -46,30 +46,16 @@ const RevivalBlessingDefinition: ParticleDefinition = {
                 }
             ]
         },
-        anoint: {
-            duration: 22,
-            exit: { stop: 6, drain: 14 },
-            emitters: [
-                {
-                    name: "bless", bind: "target", offset: [0, 0.3, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    burst: { count: 6 }, shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.03, 0.14], drag: 0.92,
-                    lifetime: [12, 20], size: [0.14, 0.03],
-                    color: 0xFFE98A, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 48
-                }
-            ]
-        },
         pray: {
             duration: 30,
             exit: { stop: 8, drain: 16 },
             emitters: [
                 {
-                    name: "fold", bind: "source", offset: [0, 0.04, 0], height: 0, fit: "body",
-                    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
-                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.8 },
-                    direction: "outward", speed: [0.05, 0.1],
-                    lifetime: [24, 34], size: [2.0, 0.5], sizeMode: "index",
+                    name: "fold", bind: "source", height: 0.65, fit: "body",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 16 }, shape: { kind: "sphere_surface", radius: 0.24 },
+                    direction: "up", speed: [0.01, 0.04],
+                    lifetime: [18, 28], size: [0.1, 0.02], sizeMode: "index",
                     color: 0xFFE98A, alpha: [0.5, 0], light: "full", maxParticles: 32
                 }
             ]

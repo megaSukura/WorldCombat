@@ -44,10 +44,12 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const record = mirrorcoatRecord(action.sense(), action.actor());
             const amount = record === null ? 0 : record.amount;
-            const panes = p(mirrorcoatId, "mirrorRadius", action);
+            const mirror = p(mirrorcoatId, "mirrorRadius", action);
+            const facing = action.direction();
             action.present("mirrorcoat:mirror", mirrorcoatScene, 1, action.origin(),
                 JSON.stringify({ moment: "mirror", target: String(action.target() === null ? "" : action.target()!.ref()),
-                    panes: Math.round(10 + Math.min(70, amount * 0.6)), scale: panes / 0.7,
+                    direction: [facing.x(), facing.y(), facing.z()],
+                    panes: Math.round(10 + Math.min(70, amount * 0.6)), scale: mirror / 0.7,
                     polish: config && config.polish === true, windup: prepare }));
             return prepare;
         },
@@ -70,6 +72,7 @@ namespace PokemonSkills {
             // aim 契约：有实体就沿目标锁定，只有空点/目标离场就照瞄准方向直射，不强制存在敌人。
             const direction = aim(action);
             const scale = radius / 0.34;
+            const panes = Math.round(10 + Math.min(70, refund * 0.3));
             let settled = false;
 
             sound(action, "minecraft:entity.illusioner.prepare_mirror");
@@ -100,6 +103,9 @@ namespace PokemonSkills {
                 done(current);
             });
             WorldFeedback.emit(world, mirrorcoatScene, 1, action.origin(), { moment: "muzzle", scale: scale }, 18);
+            // 光束脱手后镜面在自己身前碎收，别让立起的镜一直挂着。
+            WorldFeedback.emit(world, mirrorcoatScene, 1, action.origin(),
+                { moment: "collapse", scale: scale, panes: panes, direction: [direction.x(), direction.y(), direction.z()] }, 18);
             WorldFeedback.keep(world, "mirrorcoat:flight:" + action.id(), mirrorcoatScene, 1, action.origin(),
                 { moment: "flight", projectile: projectile, scale: scale }, flight.lifetime! + 10);
         }

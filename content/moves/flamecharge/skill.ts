@@ -6,9 +6,9 @@
  *
  * 两幕：
  *   起（flare，提交前）：火焰从四周收拢包住全身，火星向内卷。
- *   冲（rush → hit → boost）：提交后逐刻沿瞄准方向直线冲锋，身周拖着火与火星（火衣只覆盖真正奔跑的这段）；
- *       撞中且真的造成伤害才把人带开、才有一次火撞反馈与提速；贯穿式继续撞穿并沿路点到后面的人
- *       （第一个真正命中的吃满额、之后各吃贯穿占比），一路无人则火焰收熄。
+ *   冲（rush → hit → boost）：提交后逐刻沿瞄准方向直线冲锋，火衣与 trail 绑在真实身体上（以身体移动为火壳中心）；
+ *       撞中且真的造成伤害才把人带开、才有一次火撞反馈与提速（提速用 boost 实际增量，被上限拒绝就只显示命中）；
+ *       贯穿式继续撞穿并沿路点到后面的人（第一个真正命中的吃满额、之后各吃贯穿占比），一路无人则火焰收熄。
  *
  * 选取：kind 为 aim，可点选方向或实体、也可向空处空放；冲锋是直线，遇到墙就终止，贯穿不会自动转弯。
  *
@@ -21,14 +21,22 @@ namespace PokemonSkills {
     const flamechargeHasteText = "world_combat.move.flamecharge.text.haste";
     const flamechargeFizzleText = "world_combat.move.flamecharge.text.fizzle";
 
-    function flamechargeHasteNow(current: CombatAction, stages: number): void {
+    /**
+     * 把冲锋的动量转成一次速度提升。返回实际提高的级数：被上限或策略拒绝就是 0，
+     * 此时不冒称提速、不发光、不浮字。背向短流由 `data.back`（冲锋方向的反向）定向。
+     */
+    function flamechargeHasteNow(current: CombatAction, stages: number, direction: CombatPoint): number {
         const world = current.world(), self = current.actor();
-        NativeEffects.boost(world, self, "spe", stages);
+        const gained = Math.max(0, NativeEffects.boost(world, self, "spe", stages));
+        if (gained <= 0) return 0;
         const body = world.observe(self);
-        if (body === null) return;
-        WorldFeedback.emit(world, flamechargeScene, 1, body.position(), { moment: "boost", stages: stages }, 30);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), flamechargeHasteText, [stages], 34);
+        if (body === null) return gained;
+        const back = WorldCombat.point(-direction.x(), direction.y() * 0.2, -direction.z());
+        WorldFeedback.emit(world, flamechargeScene, 1, body.position(),
+            { moment: "boost", stages: gained, count: Math.max(8, gained * 10), direction: [back.x(), back.y(), back.z()] }, 30);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), flamechargeHasteText, [gained], 34);
         world.sound("minecraft:block.fire.extinguish", body.position(), 14, "{}");
+        return gained;
     }
 
     define({
@@ -108,7 +116,8 @@ namespace PokemonSkills {
                     { moment: "hit", target: ref, heat: heat, scale: scale, intensity: Math.max(0.6, Math.min(2.4, amount / 55)) }, 28);
                 sound(current, "cobblemon:move.flamecharge.target");
                 if (scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
-                if (!boosted) { boosted = true; flamechargeHasteNow(current, haste); }
+                // 首次成功伤害后只尝试一次提速；实际增量由 boost 回执决定，被上限拒绝就只显示命中。
+                if (!boosted) { boosted = true; flamechargeHasteNow(current, haste, direction); }
             }
 
             function advance(current: CombatAction): void {
@@ -136,7 +145,7 @@ namespace PokemonSkills {
                     finish(current);
                     return;
                 }
-                movementScenes.show(current, "wake", here, { moment: "wake", heat: heat, scale: scale });
+                // 余焰由 rush 里绑 source 的 trail 随真实身体移动拖出，不再逐刻在离散点发 wake。
                 current.after(1, advance);
             }
             advance(action);

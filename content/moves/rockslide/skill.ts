@@ -6,10 +6,11 @@
  *
  * 三幕：
  *   起（windup，提交前）：低头、在脚边卷起一圈石屑，并在选定地面亮出这把雨会罩住的那圈（实际 spread 半径）。
- *   击（throw → launch → hit）：提交后逐块抛岩石，每块沿抛物线飞行（看得见、能躲），落在选定的那片地
- *       里自己的一小块上；接触到地就在实际接触点炸开落点尘，接触点那一小圈里的敌人各挨一记
- *       （同一目标一次施放最多两记），第一次挨砸掷畏缩。每块石头各有自己的弧线与尾迹，落地即停尾迹。
- *   收（settle）：全部落定后报出砸中几人；不翻动地面。
+ *   击（throw → launch → hit）：提交后逐块抛岩石，每块沿抛物线飞行（看得见、能躲）。落点按真实地表支撑
+ *       投出（`SurfacePaths.support`），所以石头落在实际地面上，而不是悬在空中；接触到地就在实际接触点炸开
+ *       落点尘，只波及同侧可达的敌人（被墙挡住的另一侧不吃），同一目标一次施放最多两记，第一次挨砸掷畏缩。
+ *       每块石头各有自己的弧线与尾迹，落地即停尾迹；覆盖圈与逐块预落点由固定轮廓随时可见。
+ *   收（settle）：全部落定后报出砸中几人；不翻动地面。飞尽只收尾，不在远处遥爆。
  *
  * 配置 `scatter`（散布式）由 resolve 改时序、由公式改块数与单块威力：开启＝广而轻，关闭＝窄而重。
  *
@@ -18,6 +19,8 @@
  */
 namespace PokemonSkills {
     const rockslideScene = "world_combat:move_rockslide";
+    /** 固定覆盖轮廓与逐块预落点（自定义客户端场景，随动作创建/清理）。 */
+    const rockslideAreaScene = "world_combat:move_rockslide_area";
     const rockslideFlinchEffect = "world_combat:rockslide_flinch";
     const rockslideFlinchText = "world_combat.move.rockslide.text.flinch";
     const rockslideHitText = "world_combat.move.rockslide.text.hit";
@@ -32,7 +35,7 @@ namespace PokemonSkills {
     define({
         id: "rockslide",
         name: "Rock Slide",
-        description: "把身前地面上的岩石一块块沿弧线甩向选定的一片地：落点周围的敌人挨砸，同一目标最多吃两记，被砸实的可能畏缩；散布式罩得更开，集中式每块更重。",
+        description: "把身前地面上的岩石一块块沿弧线甩向选定的一片地：落点按真实地表支撑投出，周围的敌人挨砸，同一目标最多吃两记，被砸实的可能畏缩；撞墙只波及同侧可达的人，覆盖圈与每块预落点都看得见。散布式罩得更开，集中式每块更重。",
         uses: ["覆盖一片地面", "同时压住几个挤在一起的敌人", "把小范围的敌人砸懵"],
         kind: "point",
         range: 9,
@@ -48,7 +51,7 @@ namespace PokemonSkills {
             return { radius: p("rockslide", "spread", pokemon), geometry: "area", style: "rock", label: config && config.scatter === true ? "散布岩崩" : "集中岩崩" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            var context: NumberContext = { pokemon, skill: skills["rockslide"], detail: { values: config }, world: world || null, actor: actor || null, attributes: attributes };
+            var context: NumberContext = { pokemon: pokemon, skill: skills["rockslide"], detail: { values: config }, world: world || null, actor: actor || null, attributes: attributes };
             var scatter = !!(config && config.scatter);
             return {
                 prepare: p("rockslide", "prepare", context) + (scatter ? 2 : 0),
@@ -60,10 +63,14 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const centre = action.targetPosition();
+            const spread = p("rockslide", "spread", action);
+            const rockRadius = p("rockslide", "rockRadius", action);
             action.present("rockslide:windup", rockslideScene, 1, action.origin(),
                 JSON.stringify({ moment: "windup", scatter: config && config.scatter === true,
-                    point: [centre.x(), centre.y(), centre.z()],
-                    scale: p("rockslide", "spread", action) / 2.6 }));
+                    point: [centre.x(), centre.y(), centre.z()], scale: spread / 2.6 }));
+            // 提交前就用同一份真实半径亮出会罩住的那圈（自定义轮廓，不随质心移动而失效）。
+            action.present("rockslide:area", rockslideAreaScene, 1, centre,
+                JSON.stringify({ moment: "area", spread: spread, rockRadius: rockRadius, markers: [] }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -83,26 +90,42 @@ namespace PokemonSkills {
             const gravity = 0.045;
             const flightRange = Math.max(6, centre.minus(origin).length() + 5);
             const scale = spread / 2.6;
+            const markers: number[][] = [];
             let thrown = 0, pending = 0, settled = false, strikes = 0;
             const hits: { [ref: string]: number } = {};
             const flinched: { [ref: string]: boolean } = {};
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                scenes.stop(current);
+                done(current);
+            }
+            function stopRock(current: CombatAction, index: number): void { scenes.stop(current, "rock/" + index); }
+            function refreshArea(current: CombatAction): void {
+                // 同一 key 更新同一份固定轮廓：准备期就亮起，发射时按每块真实预落点续画，随动作一起清理。
+                current.present("rockslide:area", rockslideAreaScene, 1, centre,
+                    JSON.stringify({ moment: "area", spread: spread, rockRadius: rockRadius, markers: markers }));
+            }
+
             sound(action, "cobblemon:move.rockthrow.actor");
             WorldFeedback.emit(world, rockslideScene, 1, origin, { moment: "throw", spread: spread, count: count }, 24);
 
-            /** 每块岩石在真实接触点炸开落点尘，并把它那一小圈里的敌人各结算一次（同一目标有上限）。 */
-            function landed(current: CombatAction, point: CombatPoint, index: number): void {
+            /** 一次落点结算：直接命中的目标走真实 Impact 回执（每股独立 strike 身份，重复回执去重），
+             * 周围一小圈用 hurt；墙后的另一侧不吃。同一目标用 hitCap 计次。 */
+            function landed(current: CombatAction, hit: CombatImpact, index: number): void {
                 const scope = current.world();
-                scenes.stop(current, "rock/" + index);
+                const point = hit.position();
+                stopRock(current, index);
                 const scaleHit = rockRadius / 1.05;
                 const intensity = Math.max(0.5, Math.min(2, power / 50));
                 WorldFeedback.emit(scope, rockslideScene, 1, point,
-                    { moment: "hit", scale: scaleHit, count: Math.round(10 + power * 0.3), intensity: intensity }, 22);
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, rockRadius, { below: 1, above: 4 }), function (enemy, facts) {
+                    { moment: "hit", scale: scaleHit, count: Math.round(10 + power * 0.3), intensity: intensity, blocked: hit.blocked() ? 1 : 0 }, 22);
+
+                /** 记一次结算并做畏缩：只有伤害真的落地才计数与播命中提示。 */
+                function settleHit(enemy: CombatActor, facts: CombatObservation, landedHit: boolean): void {
                     const ref = String(enemy.ref());
-                    if ((hits[ref] || 0) >= hitCap) return;
-                    if (!hurt(current, enemy, "rockslide", power, { damage: damageSpec("rockslide", "rockfall") })) return;
+                    if (!landedHit) return;
                     hits[ref] = (hits[ref] || 0) + 1; strikes++;
                     WorldFeedback.emit(scope, rockslideScene, 1, facts.position(),
                         { moment: "strike", target: ref, scale: scaleHit, intensity: intensity }, 22);
@@ -111,6 +134,26 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, rockslideScene, 1, facts.position(), { moment: "flinch", target: ref }, 24);
                         WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.1, 0)), rockslideFlinchText, [], 26);
                     }
+                }
+
+                // 主接触：被这块石头直接砸到的活体，用实际 Impact 与每股 strike 身份结算，避免重复回执。
+                const direct = hit.hitEntity() ? hit.target() : null;
+                let directRef = "";
+                if (direct !== null && scope.valid(direct) && !scope.friendly(direct)) {
+                    directRef = String(direct.ref());
+                    if ((hits[directRef] || 0) < hitCap) {
+                        const facts = scope.observe(direct);
+                        const landedHit = impact(current, hit, "rockslide", power, { damage: damageSpec("rockslide", "rockfall") }, "rock." + index);
+                        if (facts !== null) settleHit(direct, facts, landedHit);
+                    }
+                }
+                // 溅射：接触点周围一小圈、且与本块同侧可达的敌人各结算一次；已经直接命中的不重复。
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, rockRadius, { below: 1, above: 4 }), function (enemy, facts) {
+                    const ref = String(enemy.ref());
+                    if (ref === directRef) return;
+                    if ((hits[ref] || 0) >= hitCap) return;
+                    if (!scope.clear(point, facts.position())) return;
+                    settleHit(enemy, facts, hurt(current, enemy, "rockslide", power, { damage: damageSpec("rockslide", "rockfall") }));
                 });
             }
 
@@ -118,14 +161,18 @@ namespace PokemonSkills {
                 if (index >= count) return;
                 const scope = current.world();
                 const angle = scope.random() * Math.PI * 2, distance = Math.sqrt(scope.random()) * spread;
-                const target = centre.plus(WorldCombat.point(Math.cos(angle) * distance, 0, Math.sin(angle) * distance));
+                const wanted = centre.plus(WorldCombat.point(Math.cos(angle) * distance, 0, Math.sin(angle) * distance));
+                // 投到实际支撑：横向偏移后落到真实地表，不悬空；找不到支撑就退回原请求点。
+                const support = SurfacePaths.support(scope, wanted, 1.5, 4);
+                const target = support || wanted;
+                markers.push([target.x(), target.y(), target.z()]);
                 const direction = LivingActions.ballistic(origin, target, speed, gravity) || aim(current);
                 const key = "rock/" + index;
                 pending++;
                 const flight = current.projectile(origin, direction.scale(speed), gravity, rockRadius * 0.7, flightRange, 120,
-                    function (inner, hit) { landed(inner, hit.position(), index); },
+                    function (inner, hit) { landed(inner, hit, index); },
                     function (inner) {
-                        scenes.stop(inner, key);
+                        stopRock(inner, index);
                         pending--;
                         if (thrown >= count && pending <= 0) {
                             rockslideSettle(inner);
@@ -136,6 +183,7 @@ namespace PokemonSkills {
                 thrown++;
                 scenes.show(current, key, origin,
                     { moment: "launch", projectile: flight, direction: [direction.x(), direction.y(), direction.z()], rate: Math.round(24 + speed * 30) });
+                refreshArea(current);
                 sound(current, "minecraft:block.stone.break");
                 if (thrown >= count) return;
                 current.after(interval, function (next) { throwOne(next, index + 1); });

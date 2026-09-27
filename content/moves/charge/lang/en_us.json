@@ -26,7 +26,7 @@
   "worldcombat.skill.charge.preference.ai.leaveStation": "Leave the station",
   "worldcombat.skill.charge.preference.ai.leaveStation.help": "On, a companion holding its station will step out to charge.",
   "effect.world_combat.charge_up": "Charged",
-  "world_combat.move.charge.text.ready": "Charged",
+  "world_combat.move.charge.text.ready": "Charged (Sp. Def +%1$s)",
   "world_combat.move.charge.text.spent": "Discharge",
   "world_combat.move.charge.text.fade": "Charge faded"
 }

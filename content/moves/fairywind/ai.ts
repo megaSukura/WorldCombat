@@ -3,30 +3,44 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 13）格之内；更远交给共享接近逻辑。
  *   这是便宜、回得快的一条线，偏好从稍远处先手。
- * 对谁出手：`ai.through`（默认开）打开时，瞄准方向后方还排着别的敌人就把它抬到优先——一穿一串才是它的价值；
- *   关闭则只按普通远程攻击排序。
+ * 对谁出手：`ai.through`（默认开）打开时，数「自身 → 目标」这条真实三维通道里、射程内、未被墙挡住、
+ *   真实风团半径能罩住的非友方（受贯穿预算封顶）；≥2 就抬价——一穿一串才是它的价值。关闭则只看单目标。
  * 够不到怎么办：reach 就是本招射程，不够先走近；风会继续走，排成一线的人躲不掉。
  * 放完之后：一发即散，交回共享交战计划等冷却再刮下一阵。
  */
 namespace PokemonSkills {
-    /** 瞄准方向上、射程内还排着几个敌人（供贯穿加分）。 */
+    /** 本招当前实际参数（含广旋式与成长）；读不到就退回行动携带的射程。 */
+    function fairywindScope(context: WorldBehavior.Context, capability: WorldBehavior.Capability): NumberContext {
+        const world = CompanionBehavior.world(context);
+        return <NumberContext>{ world: world, actor: world.source(), skill: skills[fairywindId], detail: { values: capability.data.config } };
+    }
+    function fairywindNumber(scope: NumberContext, key: string, fallback: number): number {
+        try { const value = p(fairywindId, key, scope); return isFinite(value) ? value : fallback; } catch (error) { return fallback; }
+    }
+    /** 瞄准方向真实三维通道里、真实风团能罩住的非友方数（含目标本身），受贯穿预算封顶。 */
     function fairywindLined(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
-        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        const reach = Number(capability.data.range) || 0;
-        const ax = target.point[0] - self.point[0], az = target.point[2] - self.point[2];
-        const length = Math.sqrt(ax * ax + az * az);
-        if (length < 0.5) return 1;
-        const ux = ax / length, uz = az / length;
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
+        const scope = fairywindScope(context, capability);
+        const reach = Math.max(1, fairywindNumber(scope, "reach", Number(capability.data.range) || 9));
+        const radius = Math.max(0.2, fairywindNumber(scope, "radius", 0.3));
+        const cap = Math.max(0, Math.round(fairywindNumber(scope, "pierce", 1)));
+        const origin = CompanionBehavior.point(self.point);
+        const toward = CompanionBehavior.point(target.point).minus(origin);
+        const frame = WorldGeometry.basis(toward, WorldCombat.point(0, 0, 1));
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly || !(other.health > 0) || !other.visible || other.ref === self.ref) continue;
-            const dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
-            const along = dx * ux + dz * uz;
-            if (along < 0 || along > reach + 1) continue;
-            if (Math.abs(dx * uz - dz * ux) <= 1.2) count++;
+            if (other.ref === self.ref || other.friendly || !(other.health > 0) || !other.visible) continue;
+            const at = CompanionBehavior.point(other.point), delta = at.minus(origin);
+            const along = delta.x() * frame.forward.x() + delta.y() * frame.forward.y() + delta.z() * frame.forward.z();
+            if (along < -0.2 || along > reach) continue;
+            const lateral = Math.abs(delta.x() * frame.right.x() + delta.y() * frame.right.y() + delta.z() * frame.right.z());
+            if (lateral > radius + 0.8) continue;
+            if (!world.clear(origin, at)) continue;
+            count++;
         }
-        return count;
+        return Math.min(count, cap + 1);
     }
 
     CompanionBehavior.registerUse(fairywindId, {
@@ -61,7 +75,7 @@ namespace PokemonSkills {
             help: "超过这个距离就不主动刮风，先走近；越大越愿意从更远处先手。"
         }),
         field(pathOf("ai.through"), "穿一串", "boolean", {
-            help: "开启：瞄准方向后方还排着别的敌人时优先刮风，一阵风穿一串；关闭：不数直线，当普通远程攻击排序。"
+            help: "开启：数「自身到目标」这条三维通道里、射程内、未被墙挡住、真实风团能罩住的非友方（受贯穿上限封顶）；有两个以上就优先刮风穿过去。关闭：不数通道，当普通远程攻击排序。"
         })
     ]);
 }

@@ -15,9 +15,8 @@ Smoke.scenario("rototiller", function (stage) {
     var foe = stage.mob({ type: "minecraft:zombie", at: [7, 0, 0] });
     stage.team("field", [caster, ally]);
     // 只让僵尸盯住施法者：再一次 hostile 会把它的目标改到草伙伴身上，施法者就没有眼前的威胁。
-    stage.hostile(caster, foe);
-    // 让草伙伴留在翻好的土上，验证增益随场地而不是随动作存活。
-    stage.noai(ally);
+    // Let native physics settle the spawned body before freezing its AI; then start the encounter.
+    stage.after(20, function () { stage.noai(ally); stage.hostile(caster, foe); });
 
     stage.until(600, function () {
         return stage.casts("rototiller", caster) > 0 && stage.hadMobEffect(ally, "world_combat:status/plowed");

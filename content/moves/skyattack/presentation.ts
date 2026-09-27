@@ -1,14 +1,14 @@
 /**
  * 神鸟猛击 / skyattack 的客户端表现。
  *
- * 一句话：施法者停在地上把光收进身体、周身起风（蓄），随后腾空（腾），拖着一条向下的光柱砸向同一个点（坠），
- *   落点炸开一圈冲击环与碎光，被压中的人头顶冒出金星（懵）。
+ * 一句话：施法者停在地上把光收进身体、周身起风（蓄），随后腾空（腾），拖着一条沿真实运动方向的光柱斜冲同一落点（冲），
+ *   空中撞到实体时迸开飞行撞击，只有真正碰地才炸开一圈地面冲击环与碎光；被压中的人头顶冒出金星（懵）。
  * 色相家族：暖白金光（0xFFE8A8 主体、0xFFF6DC 高光）＋淡天蓝（0xBFD9EF）做风与速度线；没有第二个色相。
- * 拍子：起 charge（聚光，由少到多）→ 腾 rise（上升速度线）→ 坠 fall（向下光柱，`ratio` 越接近 1 越亮）→
- *   击 strike（命中迸光）／落 land（冲击环）→ 懵 flinch。
- * 范围：fall 在 `data.point`（起跳那刻锁死的落点）上持续泛出标记环，land 的地面环用 `data.scale`（落点半径换算）铺开，
- *   画出来的就是这一砸覆盖的地；站出环外或落点在坠落途中被走开就压不到。
- * 运动：唯一有形状的运动是垂直方向——rise 向上、fall 向下拖着光柱、strike 在命中点爆开；一眼看出是从天而降。
+ * 拍子：起 charge（聚光，由少到多）→ 腾 rise（上升速度线）→ 冲 fall（尾迹沿身体真实运动方向，`ratio` 越接近 1 越亮）→
+ *   击 strike（空中命中迸光）／落 land（真正碰地时的地面环）→ 懵 flinch。
+ * 范围：fall 在 `data.point`（起跳那刻锁死的落点）上持续泛出**水平**标记环，半径绑定 `data.radius`（落点半径），
+ *   画出来的就是这一砸覆盖的地；站出环外或落点在冲刺途中被走开就压不到。
+ * 运动：fall 的尾迹形状随本体真实速度转向（`orient: "velocity"`），一眼看出是沿斜线冲来，而不是固定竖直下落。
  * 数：`data.orbs`（蓄势派生）绑定聚光量，`data.shock`（物攻派生）绑定冲击环与碎光数量，与机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -67,7 +67,7 @@ const SkyAttackDefinition: ParticleDefinition = {
                     name: "column", bind: "source", offset: [0, 0.4, 0], height: 0.2, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/glowing_dots_cyan",
                     rate: 40, shape: { kind: "line", length: 1.2 },
-                    direction: "down", speed: [0.05, 0.2],
+                    orient: "velocity", direction: "shape", speed: [0.05, 0.2],
                     lifetime: [5, 10], size: [0.12, 0.02], sizeMode: "index",
                     color: 0xFFF6DC, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 120
                 },
@@ -75,16 +75,16 @@ const SkyAttackDefinition: ParticleDefinition = {
                     name: "trail", bind: "source", offset: [0, 0.2, 0], height: 0.2, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 30, shape: { kind: "line", length: 0.9 },
-                    direction: "down", speed: [0.03, 0.12],
+                    orient: "velocity", direction: "shape", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.06, 0.01],
                     color: 0xBFD9EF, alpha: [0.5, 0], light: "world", maxParticles: 80
                 },
                 {
-                    // 固定落点标记：data.point 是起跳那刻锁死的落点，随下降反复泛起，站在圈里才会被砸到。
+                    // 固定落点标记：data.point 是起跳那刻锁死的落点，随下降反复泛起，水平环、半径与落点半径一致。
                     name: "mark", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, interval: 8, repeats: 3 },
-                    shape: { kind: "ring", radius: 0.7, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.1 } },
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [10, 16], size: [0.5, 0.12], sizeMode: "index",
                     color: 0xFFE8A8, alpha: [0.55, 0], light: "world", maxParticles: 6
@@ -138,7 +138,7 @@ const SkyAttackDefinition: ParticleDefinition = {
                     name: "shockring", bind: "point", fit: "none", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 0 },
-                    shape: { kind: "ring", radius: 1.1, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.1 } },
                     direction: "outward", speed: [0.12, 0.34],
                     lifetime: [8, 15], size: [0.9, 0.3], sizeMode: "index",
                     color: 0xFFF6DC, alpha: [0.85, 0], render: "translucent", light: "world", maxParticles: 8

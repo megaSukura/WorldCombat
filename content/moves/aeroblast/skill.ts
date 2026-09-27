@@ -6,11 +6,12 @@
  *
  * 幕：
  *   起（windup，提交前）：空气在口边旋起、越拧越紧，只播预告，可被打断。
- *   射（beam × beats）：提交时锁定方向，之后不再弯曲追人；每一拍从身前沿该方向做一次真实 `trace`，
- *       射线在**第一个活体或挡墙处**截断——命中活体则结算 `blast / beats` 并沿射线推开 `push / beats`（合计不增），
- *       命中方块则这一拍在墙面收束。三拍各只伤沿线首个可见敌人；空束照常耗尽，不产生圆形溅射。
+ *   射（beam × beats）：提交时锁定方向，之后不再弯曲追人；每一拍先从身体到枪口核一次遮挡，枪口贴墙就退回
+ *       真实墙面，再从该点沿方向做一次真实 `trace`，射线在**第一个活体或挡墙处**截断——命中活体则结算
+ *       `blast / beats` 并沿射线推开 `push / beats`（合计不增），命中方块则这一拍在墙面收束。三拍各只伤沿线首个
+ *       可见敌人；空束照常耗尽。每拍的画面用一条短促的旋转截面细束画到该拍真实端点，尾流短于拍隙，不糊成常亮束。
  *
- * 选取：`kind: "aim"`——方向或世界点都能瞄，提交后可空放；命中权限仍由命中层判断。
+ * 选取：`kind: "enemy"`——开火后方向锁定；提交后可空放；命中权限仍由命中层判断。
  *
  * 高暴击沿用原生 critRatio 2 的共享结算；暴击命中时由本单元监听器在命中点补一记更亮的白色涡光。
  */
@@ -19,8 +20,8 @@ namespace PokemonSkills {
         id: aeroblastId,
         cooldownParameter: "recharge",
         name: "Aeroblast",
-        description: "把空气拧成一束细涡流，朝锁定方向短促地压出三拍；每一拍沿射线只咬住第一个可见敌人、把它沿弹道推开，挡墙即截束，不再炸开圆形气环。容易击中要害。蓄力式增强威力与射程，速射式缩短准备时间。",
-        uses: ["把空气拧成一支涡流锥笔直射出去", "命中处炸成气环、把主目标冲开", "远距离打击单个目标"],
+        description: "把空气拧成一束细涡流，朝锁定方向短促地压出三拍；每一拍沿射线只咬住第一个可见敌人、把它沿弹道推开，挡墙即截束。容易击中要害。蓄力式增强威力与射程，速射式缩短准备时间。",
+        uses: ["把空气拧成一束细涡流，朝锁定方向压出三拍", "每拍沿射线只咬住第一个可见敌人、撞墙即截束", "远距离打击单个目标"],
         kind: "enemy",
         range: 16,
         maxRange: 22,
@@ -84,9 +85,13 @@ namespace PokemonSkills {
                 if (settled) return;
                 const scope = current.world();
                 const body = scope.observe(action.actor());
+                const bodyPoint = body === null ? current.origin() : body.position();
                 // 射线从身体前缘之外起步，避免把自己当成首个接触；起点随体型外移。
                 const muzzle = body === null ? 0.6 : Math.min(1.4, body.width() * 0.5 + 0.25);
-                const from = current.origin().plus(direction.scale(muzzle));
+                let from = bodyPoint.plus(direction.scale(muzzle));
+                // 每拍从身体到枪口先核遮挡：贴墙时枪口退回真实墙面，光束不从墙里起步。
+                const nearWall = WorldGeometry.blockHit(scope, bodyPoint, from);
+                if (nearWall !== null) from = nearWall.position();
                 const ray = from.plus(direction.scale(Math.max(0.3, reach - muzzle)));
                 // 真实射线：在第一个活体或挡墙处截断，判定与画出的长度读同一个落点。
                 const contact = current.trace(from, ray, radius, false);
@@ -104,11 +109,13 @@ namespace PokemonSkills {
                     }
                 }
                 const span = point.minus(from).length();
-                WorldFeedback.emit(scope, aeroblastScene, 1, from,
+                // 这一拍的涡流细束：真起点到真端点，寿命短于拍隙（pulse），拍完即灭，不糊成常亮束。
+                const life = Math.max(1, pulse - 1);
+                WorldFeedback.emit(scope, aeroblastVortexScene, 1, from,
                     { moment: "flight", path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]],
                         direction: directionList, length: span, radius: radius, spiral: spiral,
                         scale: scale, intensity: intensity, pulse: index + 1, beats: beats,
-                        landed: landed ? 1 : 0 }, pulse + 14);
+                        landed: landed ? 1 : 0, start: scope.tick(), life: life }, life);
                 if (landed) {
                     WorldFeedback.emit(scope, aeroblastScene, 1, point,
                         { moment: "burst", target: victim !== null ? String(victim.ref()) : "", radius: radius, spiral: spiral,
@@ -132,7 +139,7 @@ namespace PokemonSkills {
         }
     });
 
-    // 要害：共享结算判定为暴击后，在命中点补一记更亮的白色气环与浮字（暴击率来自原生 critRatio 2）。
+    // 要害：共享结算判定为暴击后，在命中点补一记更亮的白色涡光与浮字（暴击率来自原生 critRatio 2）。
     WorldCombat.on("world_combat:move_aeroblast/vital", "world_combat:damage_applied", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.move) !== aeroblastId || data.critical !== true || !(data.actual > 0)) return;

@@ -23,7 +23,7 @@
   "worldcombat.skill.rollout.value.window": "连滚窗口",
   "worldcombat.skill.rollout.value.grains": "碎石点数",
   "worldcombat.skill.rollout.value.tempo": "起手",
-  "worldcombat.skill.rollout.value.recover": "收招",
+  "worldcombat.skill.rollout.value.aftercast": "收招",
   "worldcombat.skill.rollout.value.recharge": "冷却",
   "worldcombat.skill.rollout.value.stage": "连滚层数",
   "worldcombat.skill.rollout.preference.heavy": "重滚式",

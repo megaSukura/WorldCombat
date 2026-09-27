@@ -1,12 +1,12 @@
 /**
  * 飞水手里剑 / watershuriken 的客户端表现。
  *
- * 一句话：水先在掌中旋成一枚发亮的水盘，随后按真实固定节拍一枚接一枚把旋转水星甩出去，数枚可以同时在空中；
- *   每枚命中都炸开一圈水花与气泡；甩完、且最后一枚也飞完才收势。
+ * 一句话：水先在掌中旋成一枚发亮的水盘，随后按真实固定节拍一枚接一枚把水星甩出去，数枚可以同时在空中；
+ *   每枚命中都炸开一圈水花与气泡；甩完、且最后一枚也飞完才收势。炮口随当刻朝向摆到口边，水花与尾迹自身带旋。
  * 色相家族：水蓝与青白（0x4FB8E8 / 0xBFE8F8），近白（0xF0FBFF）只给水星核心；没有第二组饱和色。
  * 拍子：起 gather（旋水成盘）→ 掷 volley（水星离手，按固定 gap）／飞 fly（各枚水星各自尾迹）→ 中 hit（水花迸溅）→ 收 settle（最后飞行结束、合掌收势）。
  * 范围：hit 的水花环半径由 `data.scale`（判定半径 / 0.35）给出，玩家看出每一枚水星切中多大一圈。
- * 运动：fly 绑每一枚水星投射物、沿飞行方向拖出尾迹；hit 的水花从落点向外炸开、受重力。
+ * 运动：volley 的炮口由 `data.direction` 与 `data.muzzleX/muzzleZ` 摆到朝向前方；fly 绑每一枚水星投射物、沿飞行方向拖出尾迹。
  * 数：hit 与 volley 的水花数量绑定 `data.sparks`（特攻换算），亮度绑定 `data.intensity`（单枚威力换算），
  *   水星数量绑定 `data.stars`（数据决定的枚数）——散式画面上就是更密的一串。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -41,7 +41,7 @@ const WatershurikenDefinition: ParticleDefinition = {
             exit: { stop: 2, drain: 8 },
             emitters: [
                 {
-                    name: "launch", bind: "source", offset: [0, 0.6, 0.35], height: 0.6, orient: "direction",
+                    name: "launch", bind: "source", offset: [{ data: "muzzleX", fallback: 0 }, 0.6, { data: "muzzleZ", fallback: 0.35 }], height: 0.6, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/star",
                     burst: { count: 3, at: 0 },
                     shape: { kind: "line", length: 0.5 },
@@ -59,7 +59,7 @@ const WatershurikenDefinition: ParticleDefinition = {
                     name: "trail", bind: "projectile", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
                     trail: { minDistance: 0.3 }, rate: 40, shape: { kind: "sphere", radius: 0.12 },
-                    direction: "shape", speed: [0.01, 0.05],
+                    direction: "shape", speed: [0.01, 0.05], spin: 16,
                     lifetime: [5, 9], size: [0.1, 0.02],
                     color: 0xBFE8F8, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }

@@ -1,4 +1,8 @@
-/** 胃液的酸弹尾迹、目标腐蚀与落点溅射表现。 */
+/**
+ * 胃液的酸弹尾迹、目标腐蚀与落点溅射表现。
+ * 薄/浓膜由 coat 的厚度与滴落率（filmRate／dripRate）承担，浓酸另加一层厚渣；splash 的半径写固定参考值，
+ * 让服务端传的 data.scale（实际半径／参考半径）只缩一次。所有活体的酸膜都由同一组表现绘制。
+ */
 const GastroacidSceneDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -54,7 +58,7 @@ const GastroacidSceneDefinition: ParticleDefinition = {
                     name: "acid_burst", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
                     burst: { count: { data: "drops", fallback: 16 } },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.1, 0.38], spread: 26,
                     gravity: 0.035, drag: 0.9,
                     lifetime: [8, 16], size: [0.17, 0.03], sizeMode: "index",
@@ -84,7 +88,7 @@ const GastroacidSceneDefinition: ParticleDefinition = {
                     name: "splash_ring", bind: "point", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 0.6 } },
+                    shape: { kind: "ring", radius: 0.6 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [10, 16], size: [0.3, 0.7], sizeMode: "sin",
                     color: 0xE8FF9B, alpha: [0.55, 0], light: "full", maxParticles: 20
@@ -121,13 +125,25 @@ const GastroacidSceneDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.14],
                     lifetime: [12, 20], size: [0.32, 0.8], sizeMode: "sin",
                     color: 0x9BE049, alpha: [0.6, 0], light: "full", maxParticles: 18
+                },
+                {
+                    name: "corrode_thick", bind: "target", fit: "body", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
+                    burst: { count: { data: "thickDrops", fallback: 0 }, interval: 4, repeats: 3 },
+                    shape: { kind: "box", size: [0.9, 1.5, 0.9] },
+                    direction: "down", speed: [0.0, 0.08], gravity: 0.03, drag: 0.92,
+                    lifetime: [14, 24], size: [0.24, 0.06],
+                    color: 0x3A4A22, alpha: [0.9, 0.1], light: "world", maxParticles: 120
                 }
             ]
         },
         coat: { emitters: [
             { name: "film", bind: "target", fit: "body", height: .5, particle: "world_combat_core:cobblemon/generic/goo/ooze",
-                rate: 3, shape: { kind: "sphere_surface", radius: .4 }, direction: "down", speed: .015,
-                lifetime: 10, size: [.12, .06], color: 0x9BE049, alpha: [.25, 0], light: "world" }
+                rate: { data: "filmRate", fallback: 4 }, shape: { kind: "sphere_surface", radius: .4 }, direction: "down", speed: .015,
+                lifetime: 10, size: [.12, .06], color: 0x9BE049, alpha: [.25, 0], light: "world", maxParticles: 90 },
+            { name: "drip", bind: "target", fit: "body", height: .45, particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
+                rate: { data: "dripRate", fallback: 2 }, shape: { kind: "box", size: [.7, 1.0, .7] }, direction: "down", speed: [0.0, .05],
+                gravity: .03, drag: .93, lifetime: [8, 16], size: [.08, .02], color: 0xE8FF9B, alpha: [.7, 0], light: "full", maxParticles: 70 }
         ] },
         sting: { duration: 12, emitters: [
             { name: "acid_tick", bind: "target", fit: "body", height: .5, particle: "world_combat_core:cobblemon/generic/goo/acidsplash",

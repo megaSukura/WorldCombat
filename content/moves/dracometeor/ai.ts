@@ -5,7 +5,8 @@
  * 对谁出手：`ai.still`（默认开）打开时，停在原地不动的目标排前——陨石落点提交后不再追人，跑动中的敌人会白砸；
  *   身边挤着更多敌人的目标也排前（流星式把落点铺成一片），血厚的大块头同样加分。
  *   目标贴得太近（小于 `ai.minRange`，默认 5 格）时排后，留着距离再砸更能发挥射程。
- * 够不到怎么办：reach 就是本招射程，不够就靠近；落点正上方有屋顶挡住时降权，收益会大打折扣。
+ * 够不到怎么办：reach 就是本招射程，不够就靠近；落点正上方到本招**实际召唤高度**（按公式取的 `fall`）之间
+ *   有屋顶挡住时降权，收益会大打折扣。群聚判定用的是本招的总体覆盖半径 `spread + impactRadius`。
  * 放完之后：一记高威力特殊龙并把落点铺开；交回共享交战计划。
  */
 namespace PokemonSkills {
@@ -16,21 +17,32 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 17);
     }
 
-    function dracometeorCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    function dracometeorCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
         const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 4) count++;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
         }
         return count;
     }
 
-    /** 目标正上方一段高度内是否被屋顶挡住（下落弹体会在上层炸）。 */
-    function dracometeorUnderRoof(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+    /** 本个体当前的实际召唤高度与总体覆盖半径（spread + impactRadius）；读不到原生个体时退回定义参考值。 */
+    function dracometeorValues(context: WorldBehavior.Context, capability: WorldBehavior.Capability): { fall: number; coverage: number } {
+        const access = CompanionBehavior.world(context);
+        const values = { world: access, actor: access.source(), skill: PokemonSkills.skills["dracometeor"], detail: { values: capability.data.config || {} } };
+        try {
+            const impact = Math.max(1.0, PokemonSkills.p("dracometeor", "impactRadius", values));
+            const spread = Math.max(0, PokemonSkills.p("dracometeor", "spread", values));
+            return { fall: Math.max(8, PokemonSkills.p("dracometeor", "fall", values)), coverage: spread + impact };
+        } catch (error) { return { fall: 20, coverage: 4 }; }
+    }
+
+    /** 目标正上方到本招实际召唤高度之间是否被屋顶挡住（下落弹体会在上层炸）。 */
+    function dracometeorUnderRoof(context: WorldBehavior.Context, rise: number, target: CompanionBehavior.Entity): boolean {
         const world = CompanionBehavior.world(context), point = CompanionBehavior.point(target.point);
-        const hit = world.clipBlocks(point.plus(CompanionBehavior.point([0, 1, 0])), point.plus(CompanionBehavior.point([0, 12, 0])));
+        const hit = world.clipBlocks(point.plus(CompanionBehavior.point([0, 1, 0])), point.plus(CompanionBehavior.point([0, rise, 0])));
         return hit !== null && hit.blocked();
     }
 
@@ -48,11 +60,12 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !dracometeorWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
+            const values = dracometeorValues(context, capability);
             const distance = CompanionBehavior.distance(self.point, target.point);
             let score = 24;
             if (distance <= capability.data.range) score += 6;
             if (distance < CompanionBehavior.ai<number>(capability, "minRange", 5)) score -= 8;
-            if (CompanionBehavior.ai<boolean>(capability, "spread", true) && dracometeorCluster(context, target) > 0) score += 8;
+            if (CompanionBehavior.ai<boolean>(capability, "spread", true) && dracometeorCluster(context, target, values.coverage) > 0) score += 8;
             if ((context.facts.specialAttack || 0) >= (context.facts.attack || 0)) score += 4;
             if (CompanionBehavior.ratio(target) > 0.6 || (target.height || 0) >= 2.0) score += 4;
             if (CompanionBehavior.ai<boolean>(capability, "still", true)) {
@@ -61,7 +74,7 @@ namespace PokemonSkills {
                     Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]) > 0.03;
                 score += moving ? -10 : 6;
             }
-            if (dracometeorUnderRoof(context, target)) score -= 12;
+            if (dracometeorUnderRoof(context, values.fall, target)) score -= 12;
             return score;
         }
     });

@@ -12,32 +12,98 @@ namespace PokemonSkills {
     const matBlockPlane = "world_combat:matblock_plane";
     WorldCombat.effect(matBlockPlane, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
     WorldCombat.effectHandler(matBlockPlane, "start", effect => effect.schedule("watch", "watch", 8, "{}"));
+    // 席观察只认「本次席 id」的成员池：在席罩范围内逐个查 guard 的 state.sheet，后来同 rule 的新 guard 不会算进来。
     WorldCombat.effectHandler(matBlockPlane, "watch", function (effect) {
         const world = effect.world(), data = JSON.parse(effect.state());
-        if (!data.members.some(function (ref: string) { const actor = world.actor(ref); return actor && world.valid(actor) && GuardEffects.has(world, actor, matBlockRule); })) { effect.end(); return; }
+        const body = world.observe(effect.target());
+        if (body === null) { effect.end(); return; }
+        const reach = Math.max(Number(data.radius) || matBlockReferenceRadius, Number(data.linkRange) || 0);
+        const actors = world.query(body.position(), Math.max(1.6, reach), false);
+        let alive = false;
+        for (let i = 0; i < actors.length && !alive; i++) {
+            const guards = world.effects(actors[i], "world_combat:guard");
+            for (let g = 0; g < guards.length; g++) {
+                let state: any;
+                try { state = JSON.parse(String(guards[g].data())); } catch (error) { continue; }
+                if (state.rule === matBlockRule && state.sheet === effect.id()) { alive = true; break; }
+            }
+        }
+        if (!alive) { effect.end(); return; }
         effect.schedule("watch", "watch", 8, "{}");
     });
-    function matBlockCrosses(world: CombatWorld, target: CombatActor, data: any, source: any): boolean {
-        if (!Array.isArray(source) || source.length !== 3) return false;
-        const body = world.observe(target); if (!body) return false;
-        const p = data.plane, d = data.direction, to = body.position();
-        const front = (source[0] - p[0]) * d[0] + (source[2] - p[2]) * d[2];
-        const back = (to.x() - p[0]) * d[0] + (to.z() - p[2]) * d[2];
-        if (front <= 0 || back > 0 || back < -data.depth) return false;
-        const t = front / (front - back), x = source[0] + (to.x() - source[0]) * t - p[0];
-        const z = source[2] + (to.z() - source[2]) * t - p[2], y = source[1] + (to.y() - source[1]) * t;
-        return Math.abs(x * -d[2] + z * d[0]) <= data.radius && y >= p[1] && y <= p[1] + data.height;
+    function matBlockTuple(value: any): CombatPoint | null {
+        if (!Array.isArray(value) || value.length !== 3) return null;
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        return isFinite(x) && isFinite(y) && isFinite(z) ? WorldCombat.point(x, y, z) : null;
+    }
+    /** 段从席面正面（+法线）真实穿到背面（−法线）、交点在席面半宽 x 高内；返回真实交点。 */
+    function matBlockFace(state: any, from: CombatPoint, to: CombatPoint): CombatPoint | null {
+        const p = state.plane, d = state.direction;
+        if (!Array.isArray(p) || p.length !== 3 || !Array.isArray(d) || d.length < 3) return null;
+        const nx = Number(d[0]), nz = Number(d[2]), length = Math.sqrt(nx * nx + nz * nz);
+        if (!(length > 1e-6)) return null;
+        const ux = nx / length, uz = nz / length, radius = Number(state.radius), height = Number(state.height);
+        if (!(radius > 0) || !(height > 0)) return null;
+        const px = Number(p[0]), py = Number(p[1]), pz = Number(p[2]);
+        const fa = (from.x() - px) * ux + (from.z() - pz) * uz, fb = (to.x() - px) * ux + (to.z() - pz) * uz;
+        if (!(fa > 0) || fb > 0) return null;
+        const t = fa / (fa - fb);
+        if (!(t >= 0 && t <= 1)) return null;
+        const ix = from.x() + (to.x() - from.x()) * t, iy = from.y() + (to.y() - from.y()) * t, iz = from.z() + (to.z() - from.z()) * t;
+        if (Math.abs((ix - px) * (-uz) + (iz - pz) * ux) > radius) return null;
+        if (iy < py || iy > py + height) return null;
+        return WorldCombat.point(ix, iy, iz);
+    }
+    /** 一处席是否被这次来袭真实穿过：投射物读截至接触的真实弹道段（同 sourceEntity、不早于席创建刻），
+     * 非投射物用已知 sourcePosition 到目标身体点；没有真实来源就不假称穿过。返回真实交点或 null。 */
+    function matBlockCrossing(world: CombatWorld, target: CombatActor, state: any, data: any): CombatPoint | null {
+        const body = world.observe(target);
+        if (body === null) return null;
+        const to = body.position();
+        if (data.directProjectile === true) {
+            const created = Number(state.created) || 0, source = String(data.sourceEntity || "");
+            const path = Array.isArray(data.projectilePath) ? data.projectilePath : [];
+            for (let i = 0; i < path.length; i++) {
+                const segment = path[i];
+                if (!segment || typeof segment.tick !== "number" || segment.tick < created) continue;
+                if (source && String(segment.ownerEntity || "") !== source) continue;
+                const from = matBlockTuple(segment.from), end = matBlockTuple(segment.to);
+                if (from === null || end === null) continue;
+                const hit = matBlockFace(state, from, end);
+                if (hit !== null) return hit;
+            }
+            return null;
+        }
+        const source = matBlockTuple(data.sourcePosition);
+        return source === null ? null : matBlockFace(state, source, to);
     }
     GuardEffects.register(matBlockRule, {
         accepts: function (effect: CombatEffect, state: GuardEffects.State, incoming: GuardEffects.Incoming): boolean {
-            const world = effect.world();
-            if (!incoming.source || String(incoming.source.ref()) === String(effect.target().ref())) return false;
+            const world = effect.world(), target = effect.target(), data: any = incoming.data || {};
+            if (!incoming.source || String(incoming.source.ref()) === String(target.ref())) return false;
             if (world.friendly(incoming.source)) return false;
-            return (DamageSemantics.read(incoming.data).attack || String(incoming.data.kind) === "move")
-                && matBlockCrosses(world, effect.target(), state, incoming.data.sourcePosition);
+            // 只认真实进攻招式；residual/indirect（旧毒场、残留伤害）由 directOffense 排掉。
+            if (!DamageSemantics.directOffense(data)) return false;
+            const body = world.observe(target);
+            if (body === null) return false;
+            const custom: any = state, p = custom.plane, d = custom.direction;
+            if (!Array.isArray(p) || p.length !== 3 || !Array.isArray(d) || d.length < 3) return false;
+            const nx = Number(d[0]), nz = Number(d[2]), length = Math.sqrt(nx * nx + nz * nz);
+            if (!(length > 1e-6)) return false;
+            const ux = nx / length, uz = nz / length;
+            // 目标必须仍在席面背侧深度内。
+            const back = (body.position().x() - Number(p[0])) * ux + (body.position().z() - Number(p[2])) * uz;
+            if (back > 0 || back < -Number(custom.depth)) return false;
+            const hit = matBlockCrossing(world, target, custom, data);
+            if (hit === null) return false;
+            (incoming as any).point = hit;
+            return true;
         },
-        pulse: function (effect, state) {
-            if (MobEffects.read(effect.world(), effect.target(), matBlockEffect) === null) effect.end();
+        pulse: function (effect: CombatEffect, state: GuardEffects.State): void {
+            const world = effect.world(), target = effect.target(), custom: any = state;
+            if (MobEffects.read(world, target, matBlockEffect) === null) { effect.end(); return; }
+            // 绑定本次载体锚：重施/换载体后旧池不是当前实例，自己结束，不会留席。
+            if (custom.carrier && !MobEffects.matches(world, target, custom.carrier)) effect.end();
         },
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number, incoming: GuardEffects.Incoming): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -48,15 +114,14 @@ namespace PokemonSkills {
                 remaining: Math.round(Math.max(0, state.capacity) * 10) / 10, slats: custom.slats, fibers: custom.fibers,
                 scale: custom.scale, flexed: flexed,
                 intensity: Math.max(0.6, Math.min(2, amount / Math.max(1, body.maxHealth() * 0.12))) };
-            const attacker = incoming.source ? world.observe(incoming.source) : null;
-            if (attacker !== null) {
-                const away = body.position().minus(attacker.position());
-                if (away.length() > 0.01) { const direction = away.unit(); data.direction = [direction.x(), direction.y(), direction.z()]; }
-            }
-            WorldFeedback.emit(world, matBlockScene, 1, body.position(), data, 22);
+            if (Array.isArray(custom.direction)) data.direction = [Number(custom.direction[0]) || 0, 0, Number(custom.direction[2]) || 0];
+            // 命中反馈落在真实交点（投射物弹道/来源与席面的交点），没有交点才退回身体中心。
+            const contact: CombatPoint | undefined = (incoming as any).point;
+            const at = contact || body.position();
+            WorldFeedback.emit(world, matBlockScene, 1, at, data, 22);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), matBlockBlockText,
                 [data.blocked, data.remaining], 24);
-            world.sound("minecraft:block.grass.place", body.position(), 12, "{}");
+            world.sound("minecraft:block.grass.place", at, 12, "{}");
             if (state.capacity <= 0) MobEffects.consume(world, target, matBlockEffect);
         }
     });
@@ -75,30 +140,40 @@ namespace PokemonSkills {
         const body = world.observe(caster);
         if (body === null) return 0;
         const plane = body.position().plus(direction.scale(body.width() / 2 + .3)).plus(WorldCombat.point(0, -body.height() / 2, 0));
-        const data: any = { plane: [plane.x(), plane.y(), plane.z()], direction: [direction.x(), 0, direction.z()],
-            radius: radius, depth: radius * 2, height: Math.max(2.5, body.height() * 1.5) };
-        const members: string[] = [];
-        function protect(actor: CombatActor): boolean {
-            if (MobEffects.apply(world, actor, matBlockEffect, ticks, 0) === null) return false;
-            GuardEffects.apply(world, actor, { plane: data.plane, direction: data.direction, radius: data.radius, depth: data.depth, height: data.height, rule: matBlockRule, mode: "pool", capacity: capacity, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: linkRange, initial: capacity, slats: slats, fibers: fibers, scale: scale } as any, ticks);
-            members.push(String(actor.ref()));
-            return true;
+        const created = world.tick();
+        const geometry = { plane: [plane.x(), plane.y(), plane.z()], direction: [direction.x(), 0, direction.z()],
+            radius: radius, depth: radius * 2, height: Math.max(2.5, body.height() * 1.5), created: created };
+        // 先立席载体拿到本次席 id：guard 的 state.sheet 绑定它，观察只认本席的池，重施会换新 id。
+        const sheet = world.effect(matBlockPlane, caster, JSON.stringify({ radius: radius, linkRange: linkRange }), ticks);
+        if (!sheet) return 0;
+        let reached = 0;
+        function protect(actor: CombatActor): void {
+            const carrier = MobEffects.apply(world, actor, matBlockEffect, ticks, 0);
+            if (carrier === null) return;
+            const anchor = MobEffects.anchor(carrier);
+            const guard = GuardEffects.apply(world, actor, { plane: geometry.plane, direction: geometry.direction, radius: geometry.radius,
+                depth: geometry.depth, height: geometry.height, rule: matBlockRule, mode: "pool", capacity: capacity, fraction: 1,
+                minimumHealth: 0, charges: 0, linkRange: linkRange, initial: capacity, slats: slats, fibers: fibers, scale: scale,
+                created: created, carrier: anchor, sheet: sheet } as any, ticks);
+            // 池真正建成才算覆盖：没成就收回载体，载体与池同寿。
+            if (!guard) { world.removeMobEffect(actor, matBlockEffect, anchor.key); return; }
+            reached++;
         }
-        let reached = protect(caster) ? 1 : 0;
+        protect(caster);
         const actors = world.query(body.position(), radius, false);
         for (let i = 0; i < actors.length; i++) {
             const other = actors[i];
             if (String(other.key()) === String(caster.key())) continue;
             if (!world.friendly(other) || world.observe(other) === null) continue;
-            if (protect(other)) reached++;
+            protect(other);
         }
-        if (members.length) {
-            const sheet = world.effect(matBlockPlane, caster, JSON.stringify({ members: members }), ticks);
-            const side = WorldCombat.point(-direction.z(), 0, direction.x()).scale(radius), up = WorldCombat.point(0, data.height, 0);
+        if (reached > 0) {
+            const side = WorldCombat.point(-direction.z(), 0, direction.x()).scale(radius), up = WorldCombat.point(0, geometry.height, 0);
             const corners = [plane.minus(side), plane.plus(side), plane.plus(side).plus(up), plane.minus(side).plus(up), plane.minus(side)];
             WorldFeedback.onEffect(world, sheet, "matblock:sheet:" + sheet, matBlockScene, 1, plane,
-                { moment: "hold", path: corners.map(p => [p.x(), p.y(), p.z()]), slats: slats });
+                { moment: "hold", path: corners.map(p => [p.x(), p.y(), p.z()]), slats: slats, scale: scale });
+        } else {
+            world.operation(sheet, "world_combat:dispel", "{}");
         }
         return reached;
     }

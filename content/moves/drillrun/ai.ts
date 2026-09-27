@@ -2,8 +2,8 @@
  * 直冲钻 / drillrun 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 7）格内；更远交给共享接近逻辑。
- * `ai.line`（默认开）实际改变候选排序：开启时，若身前冲刺走廊上排着两个以上敌人，把它抬到优先——
- * 一钻贯穿一串才是它的价值；只有单个目标时按普通中近程接触招排序。关闭则不数直线，当单点钻击排。
+ * `ai.line`（默认开）实际改变候选排序：开启时，若身前冲刺走廊上排着两个以上敌人（同一高度带且彼此之间无实墙遮挡），
+ * 把它抬到优先——一钻贯穿一串才是它的价值；只有单个目标时按普通中近程接触招排序。关闭则不数直线，当单点钻击排。
  * 放完之后：交回共享交战计划；它与目标拉开一点身位（钻穿后停在目标另一侧），由共享顺序决定接着打还是走位。
  */
 namespace PokemonSkills {
@@ -42,7 +42,12 @@ namespace PokemonSkills {
                 if (along < 0 || along > charge) continue;
                 const lateral = Math.abs(dx * direction[2] - dz * direction[0]);
                 const half = radius + (typeof other.width === "number" ? other.width / 2 : 0.45);
-                if (lateral <= half) inLine++;
+                if (lateral > half) continue;
+                // 实际高度：与自身身体差太多的高/低目标不在贴地冲程上。
+                if (Math.abs(other.point[1] - self.point[1]) > Math.max(1.5, radius + (typeof other.height === "number" ? other.height / 2 : 0.7))) continue;
+                // 实际视线：自身到目标之间真有墙就不算能一钻带到。
+                if (WorldGeometry.blockHit(world, WorldCombat.point(self.point[0], self.point[1], self.point[2]), CompanionBehavior.point(other.point)) !== null) continue;
+                inLine++;
             }
             return inLine >= 2 ? 40 : 24;
         }

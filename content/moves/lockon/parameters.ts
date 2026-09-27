@@ -1,7 +1,8 @@
-/** Lock and control clocks remain independent; each caster spends only its own lock. */
+/** One lock clock: the reticle, the native control and each caster's spend window share the same life. */
 namespace PokemonSkills {
     export const lockonId = "lockon";
     export const lockonScene = "world_combat:move_lockon";
+    export const lockonReticleScene = "world_combat:move_lockon_reticle";
     export const lockonFocusEffect = "world_combat:lockon_focus";
     export const lockonTrackEffect = "world_combat:lockon_track";
     export const lockonClampEffect = "world_combat:lockon_clamp";
@@ -13,15 +14,10 @@ namespace PokemonSkills {
 
     actionParameters.define(lockonId, {
         lockTicks: seconds(
-            F.base(140).plus(F.level().times(2)).plus(F.stat("attack").times(0.3))
-                .times(F.when(F.pref("hold", text("worldcombat.skill.lockon.preference.hold")), F.const(1.5), F.const(0.8)))
-                .clamp(90, 360).round(0),
-            "锁定期", "准星咬住对手多久；等级与物攻延长它，钉死明显更长；兑现或走完即散。"),
-        pinTicks: seconds(
             F.base(60).plus(F.level().times(1.2))
                 .times(F.when(F.pref("hold", text("worldcombat.skill.lockon.preference.hold")), F.const(1.4), F.const(0.8)))
                 .clamp(40, 200).round(0),
-            "咬住时长", "目标被拖住多久；等级越高越久，钉死更长。"),
+            "锁定期", "准星咬住并拖住对手多久；等级越高越久，钉死更长；兑现或走完即散。"),
         motes: formula(
             F.base(14).plus(F.stat("attack").times(0.1))
                 .times(F.when(F.pref("hold", text("worldcombat.skill.lockon.preference.hold")), F.const(1.15), F.const(1)))
@@ -52,7 +48,7 @@ namespace PokemonSkills {
     });
 
     describe(lockonId, [
-        { key: "description.0", values: ["lockTicks","pinTicks"] },
+        { key: "description.0", values: ["lockTicks"] },
         { key: "description.1", values: [] },
         { key: "hold.on", values: ["tempo","recharge"], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },

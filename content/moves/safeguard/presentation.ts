@@ -35,7 +35,7 @@ const SafeguardDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 32 },
             emitters: [
                 {
-                    name: "ward_ring", bind: "source", height: 0.05, offset: [0, 0.04, 0],
+                    name: "ward_ring", bind: "source", fit: "world", height: 0.05, offset: [0, 0.04, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 34 }, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
                     direction: "outward", speed: [0.05, 0.16],
@@ -51,7 +51,7 @@ const SafeguardDefinition: ParticleDefinition = {
                     color: 0x9FE8B0, alpha: [0.8, 0], light: "full", bloom: 0.25, maxParticles: 90
                 },
                 {
-                    name: "ward_dust", bind: "source", height: 0.02,
+                    name: "ward_dust", bind: "source", fit: "world", height: 0.02,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 20 }, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
                     direction: "outward", speed: [0.02, 0.1], drag: 0.94,
@@ -93,7 +93,7 @@ const SafeguardDefinition: ParticleDefinition = {
             exit: { drain: 30 },
             emitters: [
                 {
-                    name: "edge_dust", bind: "source", height: 0.04, fit: "none",
+                    name: "edge_dust", bind: "source", height: 0.04, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: 2.5, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
                     direction: "up", speed: [0.0, 0.02],
@@ -101,7 +101,7 @@ const SafeguardDefinition: ParticleDefinition = {
                     color: 0x8FBFA4, alpha: [0.22, 0], light: "world", maxParticles: 26
                 },
                 {
-                    name: "edge_gate", bind: "source", height: 0.0, fit: "none",
+                    name: "edge_gate", bind: "source", height: 0.0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 3, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
                     direction: "up", speed: [0.005, 0.03],
@@ -173,7 +173,7 @@ const SafeguardDefinition: ParticleDefinition = {
                     color: 0x9FE8B0, alpha: [0.35, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "fade_ring", bind: "target", height: 0.04,
+                    name: "fade_ring", bind: "target", fit: "world", height: 0.04,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 16 }, shape: { kind: "ring", radius: { data: "field", fallback: 3.2 } },
                     direction: "outward", speed: [0.02, 0.08], drag: 0.94,

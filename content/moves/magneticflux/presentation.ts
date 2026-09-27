@@ -8,8 +8,10 @@
  *   一个色相家族用明暗分两极，不引入第二个色相。
  * 层次：起（向内绞的磁力线）／立（外荡磁环＋磁场底）／持（磁场边界）／咬（伙伴身上的极光层）／收（磁力散去）。
  * 起击收：charge（起）→ pulse（击）→ field（持，随磁场续期）→ link／held（被咬住的人）→ fade（收）。
- * 范围：pulse 与 field 的磁环绑 `data.scale`（实际磁场半径 / 3.4），画面里的环就是会被咬住的范围。
- * 运动：磁力线由体内向心绞紧再向外荡；磁环一圈圈扩散；护层贴着伙伴向上缠绕。
+ * 范围：pulse 与 field 的磁环绑 `data.scale`（实际磁场半径 / 3.4），画面里的环就是会被咬住的范围；
+ *   每片磁场用自己的 field 段 key 续期，多场并存时互不抢画面。
+ * 运动：磁力线由体内向心绞紧再向外荡；磁环一圈圈扩散；护层贴着伙伴向上缠绕；held 还按 `data.path`
+ *   （场心到受益人）画一条明确的磁力线。
  * 数：磁力线数绑 `data.arcs`（特攻派生），护层强度绑 `data.motes`（同源），范围与尺寸绑 `data.scale`（特攻与体型派生）。
  */
 const MagneticFluxDefinition: ParticleDefinition = {
@@ -110,6 +112,15 @@ const MagneticFluxDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.008, 0.024], spin: 12,
                     lifetime: [14, 24], size: [0.08, 0.02],
                     color: 0x4FC3E8, alpha: [0.3, 0], light: "full", bloom: 0.2, maxParticles: 18
+                },
+                {
+                    // 从场心连到受益人身上的明确磁力线：path 的前一个顶点是场心、后一个是人。
+                    name: "held_filament", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    rate: 6, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.01, 0.04], spin: 18,
+                    lifetime: [8, 14], size: [0.07, 0.02],
+                    color: 0xE8F6FF, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 24
                 }
             ]
         },

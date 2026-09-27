@@ -1,18 +1,18 @@
 /**
  * 撕裂爪 / crushclaw 的出手方式。
  *
- * 核心念头：踏前一步，双爪在身前划出一个交叉，一记把护甲撕开。它比碎岩重、比铁尾快，撕中时撕甲几率全族最高；
- * 而且它主动利用别人开出的缺口——目标已经带着破防身份时，这一撕掀得更深。
+ * 核心念头：踏前一步，单爪前伸够到第一个接触，再就着接触点向外一拉，把护甲撕开。它比碎岩重、比铁尾快，
+ *   撕中时撕甲几率全族最高；而且它主动利用别人开出的缺口——目标已经带着破防身份时，这一撕掀得更深。
  *
  * 三幕：
- *   起（windup，提交前）：双爪交叉抬起，爪尖聚起冷光。
- *   击（slash → tear）：提交后朝瞄准方向踏前一步，**位移之后**再在身前一条矩形走廊里撕过；走廊沿中线探到第一处
- *       真实阻挡，只在当前可及的范围内判定。走廊内、且从身体通视的敌人各挨一记接触斩击，按撕甲几率降防并挂上
- *       撕开标记；命中处画出交叉的两道爪痕。
- *   收：走廊里没人就撕空（miss），只留一道划过的爪风。
+ *   起（windup，提交前）：爪尖聚起冷光。
+ *   击（slash → tear）：提交后朝瞄准方向短踏一步，然后沿同一条刀路探出爪尖；刀路只取**真正的第一个接触**
+ *       （前排的身体、同伴或实墙都会截住它），第一个接触是非友方活体时才结算一记 `slash` 接触伤害，
+ *       就着接触点向外拉出抓撕刃路；按撕甲几率降防并挂上撕开标记，命中处崩出碎甲。
+ *   收：没够到活体就撕空（miss），只留一道划过的爪风，不补十字。
  *
- * 选取为 aim：方向、点或任意阵营实体都能放，路被挡住时抓线不会留在预定前方，友方不受伤。
- * 与同族分开：碎岩是贴脸连点，铁尾是慢而重的下砸，暗影之骨是远程骨投；撕裂爪是踏前的一记交叉撕抓。
+ * 选取为 aim：方向、点或任意阵营实体都能放，路被挡住时爪尖停在接触处，友方不受伤。
+ * 与同族分开：碎岩是贴脸连点先开初甲，铁尾是慢而重的下砸；撕裂爪是踏前单爪够到再外拉的一记，专撕别人开出的缺口。
  * 共享身份 world_combat:status/guardbroken 由 startup.ts 声明；本招还消费它来加深撕口。
  */
 namespace PokemonSkills {
@@ -21,34 +21,16 @@ namespace PokemonSkills {
     const crushclawTearText = "world_combat.move.crushclaw.text.tear";
     const crushclawMissText = "world_combat.move.crushclaw.text.miss";
 
-    /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的矩形走廊四个角；判定与表现共用。 */
-    function crushclawLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): CombatPoint[] {
-        var forward = WorldCombat.point(direction.x(), 0, direction.z());
-        var heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        var side = WorldCombat.point(-heading.z(), 0, heading.x());
-        var end = origin.plus(heading.scale(reach));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))];
-    }
-    function crushclawPath(vertices: CombatPoint[]): number[][] {
-        return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
-    }
-    /** 命中点上的两道交叉爪痕（X），返回两条线段的世界顶点。 */
-    function crushclawCross(point: CombatPoint, direction: CombatPoint, half: number, v: number): CombatPoint[][] {
-        var side = WorldCombat.point(-direction.z(), 0, direction.x());
-        var up = WorldCombat.point(0, 1, 0);
-        var h = half * 1.1;
-        return [
-            [point.plus(side.scale(-h)).plus(up.scale(-v)), point.plus(side.scale(h)).plus(up.scale(v))],
-            [point.plus(side.scale(-h)).plus(up.scale(v)), point.plus(side.scale(h)).plus(up.scale(-v))]
-        ];
+    function crushclawPath(points: CombatPoint[]): number[][] {
+        return points.map(function (point) { return [point.x(), point.y(), point.z()]; });
     }
 
     define({
         freeMovement: true,
         id: "crushclaw",
         name: "Crush Claw",
-        description: "踏前一步，双爪在身前划出交叉，把走廊里的对手撕开：撕中时最有可能让目标防御下降一级，目标已经带着破防身份时还会多降一级；比碎岩重、比铁尾快。",
-        uses: ["踏前交叉撕甲", "对已经被砸开的目标掀得更深", "在中近距离一记换取防御下降"],
+        description: "踏前一步，单爪前伸够到第一个接触后向外一拉，把对手的护甲撕开：撕中时最有可能让目标防御下降一级，目标已经带着破防身份时还会多降一级。刀路只打真正碰到的第一个非友方，前排的身体和墙会先截住它；比碎岩重、比铁尾快。",
+        uses: ["踏前单爪够到再外拉撕甲", "对已经被砸开的目标掀得更深", "在中近距离一记换取防御下降"],
         kind: "aim",
         range: 3.0,
         maxRange: 4.0,
@@ -63,7 +45,7 @@ namespace PokemonSkills {
             return { radius: p("crushclaw", "lunge", pokemon), geometry: "line", style: "slash", color: 0xC05A5A, label: "撕裂爪" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            var context: NumberContext = { pokemon: pokemon, skill: skills["crushclaw"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
+            var context: NumberContext = { pokemon, skill: skills["crushclaw"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
             return {
                 prepare: p("crushclaw", "prepare", context),
                 recover: p("crushclaw", "recover", context),
@@ -79,82 +61,72 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
+            const self = world.observe(actor);
+            if (self === null) { done(action); return; }
+            const start = self.position();
             const direction = aim(action);
-            const lunge = p("crushclaw", "lunge", action);
-            const reach = lunge;
-            const half = p("crushclaw", "width", action);
+            // 公开射程：踏步 + 爪尖合计不超过它（原容差保留在 resolve 里）。
+            const total = Math.max(1.8, p("crushclaw", "lunge", action));
+            const half = Math.max(0.24, p("crushclaw", "width", action));
             const power = p("crushclaw", "slash", action);
             const chance = p("crushclaw", "tearChance", action);
             const stages = Math.max(1, Math.round(p("crushclaw", "tearStages", action)));
             const deepen = Math.max(0, Math.round(p("crushclaw", "deepen", action)));
             const tearTicks = Math.max(40, Math.round(p("crushclaw", "tearTicks", action)));
             const notes = Math.max(10, Math.round(power * 1.1));
-
-            // 踏前一步：朝瞄准方向推进一小段，最多停在判定的边缘，避免冲过头；脚被挡住就停在真实位置。
-            const self = world.observe(actor);
-            if (self !== null && lunge > 0.05) {
-                const victim = action.target();
-                const victimBody = victim !== null && world.valid(victim) && !world.friendly(victim) ? world.observe(victim) : null;
-                const delta = victimBody !== null ? victimBody.position().minus(self.position()) : direction.scale(lunge);
-                const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-                const step = Math.min(lunge, Math.max(0, flat - half - 0.4));
-                if (step > 0.05) world.displace(actor, direction.scale(step));
-            }
-            // 位移之后重新取源位置：脚步被挡时，抓线不会留在预定的前方。
-            const moved = world.observe(actor);
-            const origin = moved === null ? action.origin() : moved.position();
-
-            // 当前可及走廊：沿走廊中线探到第一处真实阻挡，把长度收到接触面前，判定与表现共用同一组顶点。
             const heading = WorldGeometry.flatUnit(direction);
-            const forward = origin.plus(heading.scale(reach));
-            const probe = action.trace(origin.plus(WorldCombat.point(0, 0.6, 0)), forward.plus(WorldCombat.point(0, 0.6, 0)),
-                Math.max(0.2, half * 0.4));
-            let span = reach;
-            if (probe.blocked() && !probe.hitEntity()) {
-                const hitCell = probe.blockPosition();
-                const stop = hitCell !== null ? hitCell : probe.position();
-                span = Math.max(0.3, Math.min(reach, stop.minus(origin).length() - 0.15));
-            }
-            const vertices = crushclawLane(origin, direction, span, half);
-            const region = WorldGeometry.polygon(vertices, { below: 1.6, above: 3 });
-            let strike: CombatPoint = origin.plus(heading.scale(span)), hits = 0, torn = 0;
-            WorldGeometry.selectEnemies(world, region, function (victim, facts) {
-                // 墙后的目标这一抓够不到：只有从身体到它真实通视才会被撕到。
-                if (!world.clear(origin, facts.position())) return;
-                const landed = hurt(action, victim, "crushclaw", power, { damage: damageSpec("crushclaw", "slash"), contact: true, slice: true });
-                if (!landed) return;
-                if (hits === 0) strike = facts.position();
-                hits++;
-                if (world.random() >= chance) return;
-                const amount = stages + (CombatStatus.has(world, victim, "guardbroken") ? deepen : 0);
-                // 护甲真的被撕开（未被免疫）才留撕口与标记。
-                if (NativeEffects.boost(world, victim, "def", -amount) === 0) return;
-                if (MobEffects.apply(world, victim, crushclawMark, tearTicks, 0) === null) return;
-                torn++;
-                WorldFeedback.emit(world, crushclawScene, 1, facts.position(),
-                    { moment: "tear", target: String(victim.ref()), stages: amount, scale: 1 }, 26);
-                WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), crushclawTearText, [amount], 30);
-            });
+            const side = WorldCombat.point(-heading.z(), 0, heading.x());
 
-            const point = strike;
-            WorldFeedback.emit(world, crushclawScene, 1, point,
-                { moment: "slash", path: crushclawPath(vertices), notes: notes, hits: hits, torn: torn,
-                    scale: half / 0.55, direction: [direction.x(), direction.y(), direction.z()] }, 26);
-            const cross = crushclawCross(point, direction, half, 0.75);
-            WorldFeedback.emit(world, crushclawScene, 1, point,
-                { moment: "cross", path: [[cross[0][0].x(), cross[0][0].y(), cross[0][0].z()], [cross[0][1].x(), cross[0][1].y(), cross[0][1].z()]],
-                    scale: half / 0.55 }, 22);
-            WorldFeedback.emit(world, crushclawScene, 1, point,
-                { moment: "cross", path: [[cross[1][0].x(), cross[1][0].y(), cross[1][0].z()], [cross[1][1].x(), cross[1][1].y(), cross[1][1].z()]],
-                    scale: half / 0.55 }, 22);
+            // 短踏一步，最多停在接触前；脚被挡住就停在真实位置。爪尖仍从原射程端点探出，总触达不双算。
+            let step = total * 0.45;
+            const handled = action.target();
+            if (handled !== null && world.valid(handled) && !world.friendly(handled)) {
+                const body = world.observe(handled);
+                if (body !== null) step = Math.min(step, Math.max(0, body.position().minus(start).length() - half - 0.4));
+            }
+            if (step > 0.05) world.displace(actor, heading.scale(step));
+            const moved = world.observe(actor);
+            const base = moved === null ? start : moved.position();
+            const tip = start.plus(direction.scale(total));
+
+            // 权威判定：刀路的第一接触（含友方身体与实墙）就是爪尖真实停下的地方。
+            const contact = action.trace(base, tip, half, true);
+            const at = contact.position();
+            const lander = contact.hitEntity() ? contact.target() : null;
+            const victim = lander !== null && world.valid(lander) && String(lander.ref()) !== String(actor.ref()) && !world.friendly(lander) ? lander : null;
+            const pulled = at.plus(side.scale(half * 1.6)).plus(heading.scale(0.25));
+            let hits = 0, torn = 0;
+            let landed = false;
+            if (victim !== null)
+                landed = hurt(action, victim, "crushclaw", power, { damage: damageSpec("crushclaw", "slash"), contact: true, slice: true });
+            if (landed && victim !== null) {
+                hits = 1;
+                WorldFeedback.emit(world, crushclawScene, 1, at,
+                    { moment: "slash", target: String(victim.ref()), path: crushclawPath([base, at, pulled]),
+                        notes: notes, hits: hits, torn: 0, scale: half / 0.55,
+                        direction: [direction.x(), direction.y(), direction.z()] }, 26);
+                if (world.random() < chance) {
+                    const amount = stages + (CombatStatus.has(world, victim, "guardbroken") ? deepen : 0);
+                    // 护甲真的被撕开（未被免疫）才留撕口与标记。
+                    if (NativeEffects.boost(world, victim, "def", -amount) !== 0
+                        && MobEffects.apply(world, victim, crushclawMark, tearTicks, 0) !== null) {
+                        torn = 1;
+                        WorldFeedback.emit(world, crushclawScene, 1, at,
+                            { moment: "tear", target: String(victim.ref()), stages: amount, scale: 1 }, 26);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), crushclawTearText, [amount], 30);
+                    }
+                }
+            } else {
+                // 友方身体或实墙先截住刀路：爪尖停在接触点，不结算伤害，也不声称命中，更不补十字。
+                WorldFeedback.emit(world, crushclawScene, 1, at,
+                    { moment: "miss", path: crushclawPath([base, at]), hits: 0, scale: half / 0.55,
+                        blocked: contact.blocked() && lander === null ? 1 : 0,
+                        direction: [direction.x(), direction.y(), direction.z()] }, 22);
+                if (!contact.blocked() && lander === null)
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.0, 0)), crushclawMissText, [], 24);
+            }
             sound(action, "minecraft:entity.player.attack.sweep");
             sound(action, "cobblemon:move.dragonclaw.target");
-            if (hits === 0) {
-                WorldFeedback.emit(world, crushclawScene, 1, point,
-                    { moment: "miss", path: crushclawPath(vertices), scale: half / 0.55,
-                        direction: [direction.x(), direction.y(), direction.z()] }, 22);
-                WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.0, 0)), crushclawMissText, [], 24);
-            }
             done(action);
         }
     });

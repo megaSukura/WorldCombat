@@ -2,13 +2,14 @@
  * 巨声 / hypervoice 的出手方式。
  *
  * 核心念头：这是一声朝前压出去的整片声墙。施法者扎住脚、吸满一口气，把一声咆哮朝瞄准方向推出去，
- *   锥内每个活体被同一堵声墙轰中并被直直推回去。它几乎不看远近（本族边缘保留最高），也不看掩体、
- *   不看地面——声墙就是它的形状。代价是吼完要喘很久，且没有附带状态。
+ *   锥内每个活体被同一堵声墙轰中，并被沿背离施放者的水平方向推开（水平向外，不随瞄准抬升；空中目标一样
+ *   被水平推出）。它几乎不看远近（本族边缘保留最高），也不看掩体、不看地面——声墙就是它的形状。
+ *   代价是吼完要喘很久，且没有附带状态。
  *
  * 三幕：
  *   蓄（windup，提交前）：气与尘往喉口收、脚下尘环向内合拢的预告；起手可被打断。
  *   吼（wave → hit）：提交后声墙整片扫出；锥内每个敌人按边缘保留（很高）衰减后各挨一次 `blast`，
- *       并沿声墙前进方向被推开 `push`；命中处炸开一蓬尘点。
+ *       并沿背离施放者的水平方向被推开 `push`（水平向外，不是沿声墙轴线）；命中处炸开一蓬尘点。
  *   散（余波）：声墙推到尽头后就散了，不再造成伤害。
  *
  * 与同族分开：爆音波是自己为心的整圈炸、虫鸣是近强远弱的锥、魅惑之声是必定命中的整圈声场；
@@ -33,23 +34,11 @@ namespace PokemonSkills {
         return (delta.x() * axis.x() + delta.y() * axis.y() + delta.z() * axis.z()) / distance >= cosHalf - 1e-9;
     }
 
-    /** 扇面地面的有序顶点：原点 + 从瞄准方向左右各半个张角间采样的弧点；保留给落点提示用。 */
-    function hypervoiceFan(origin: CombatPoint, direction: CombatPoint, reach: number, arcDegrees: number, samples: number): number[][] {
-        const half = Math.min(180, Math.max(10, arcDegrees)) * Math.PI / 360;
-        const base = Math.atan2(direction.x(), direction.z());
-        const points: number[][] = [[origin.x(), origin.y() + 0.06, origin.z()]];
-        for (let i = 0; i <= samples; i++) {
-            const angle = base - half + 2 * half * i / samples;
-            points.push([origin.x() + Math.sin(angle) * reach, origin.y() + 0.06, origin.z() + Math.cos(angle) * reach]);
-        }
-        return points;
-    }
-
     define({
         id: "hypervoice",
         cooldownParameter: "recharge",
         name: "Hyper Voice",
-        description: "扎住脚，把一声咆哮朝瞄准方向整片压出去：锥内每个敌人被同一堵声墙轰中，几乎不分远近，并被直直推回去。可朝任意方向、地面点或敌人发声，也可以吼空；它不看掩体、不看地面，也没有附加状态——只是最响、最宽的一声。聚声更窄更远更重。",
+        description: "扎住脚，把一声咆哮朝瞄准方向整片压出去：锥内每个敌人被同一堵声墙轰中，几乎不分远近，并被沿背离自己的水平方向推开。可朝任意方向、地面点或敌人发声，也可以吼空；它不看掩体、不看地面，也没有附加状态——只是最响、最宽的一声。聚声更窄更远更重。",
         uses: ["一次扫到瞄准方向上一大片敌人", "把冲上来的对手整片推回去", "隔着矮墙仍能震到对手", "用一次长喘换最宽的一声"],
         kind: "aim",
         range: 7.2,
@@ -62,8 +51,9 @@ namespace PokemonSkills {
         defaults: { focused: false, ai: { maxChase: 9, minFoes: 1 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("hypervoice", "reach", pokemon), geometry: "cone", style: "shout",
-                color: 0xE0E4F0, label: config && config.focused === true ? "巨声·聚声" : "巨声·散声" };
+            // 预览锥面用与判定同一个实际张角与射程，玩家看到的边界就是会被轰到的边界；方向随瞄准俯仰。
+            return { radius: p("hypervoice", "reach", pokemon), geometry: "cone", spread: p("hypervoice", "arc", pokemon),
+                style: "shout", color: 0xE0E4F0, label: config && config.focused === true ? "巨声·聚声" : "巨声·散声" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["hypervoice"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -122,7 +112,7 @@ namespace PokemonSkills {
             });
 
             WorldFeedback.emit(world, hypervoiceScene, 1, centre,
-                { moment: "wave", direction: [axis.x(), axis.y(), axis.z()], path: hypervoiceFan(centre, axis, reach, half * 2, 14),
+                { moment: "wave", direction: [axis.x(), axis.y(), axis.z()],
                     arc: arc, half: half, reach: reach, flow: flow, marks: marks, hits: dealt,
                     intensity: Math.max(0.7, Math.min(2.4, power / 95)) }, 30);
             if (dealt === 0) WorldFeedback.emit(world, hypervoiceScene, 1, centre,

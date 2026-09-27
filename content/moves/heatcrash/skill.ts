@@ -8,17 +8,20 @@
  * 输入：`kind: "aim"`——方向、点或实体都行；提交时不要求存在敌人，落点/方向会吸附到近地。
  *
  * 过程（提交后）：
- *   扑（pounce）：沿瞄准方向低低腾起几刻——一道低弧。
- *   滑（slide）：触地后贴地向前滑 `slideLength`；每刻对贴身处一圈内的敌人各结算一次 `crush`（每目标只一次），
- *       命中后按体重比掷明火与灼伤：明火只有 `ignite` 回执为真才呈现，灼伤只有真被施加才成立；能被推开的才推。
- *   停（stop）：撞墙或滑出台沿（失去支撑）即止步；滑过处只留一道很快熄灭的火擦痕，不造成尾场伤害。
+ *   扑（pounce）：沿瞄准方向低低腾起几刻——一道低弧；这段前移与下面的滑行共用同一个距离预算。
+ *   滑（slide）：触地后贴地向前滑，直到总前进量达到 `slideLength`；每段对实际扫过胶囊内的敌人各结算一次 `crush`
+ *       （每目标只一次），终点补判也在内。命中后按体重比掷明火与灼烧：明火只要不是免疫火就会亮起，
+ *       灼烧才是按概率施加的状态；能被推开的才推，推力走 `hitDisplace`（保留原生抗击退与事件）。
+ *   停（stop）：撞墙或滑出台沿（失去支撑）即止步；滑过处只留一道随实际参数时长熄灭的火擦痕，不造成尾场伤害。
  *
+ * 灼烧的持续表现绑在目标真实载体上（托管监视效果 + onEffect）：载体被提前驱散或换新时同刻收回，不留残影。
  * 伤害按每个目标各自的体重比分别求值。提交后才触碰世界。
  */
 namespace PokemonSkills {
     const heatcrashScene = "world_combat:move_heatcrash";
     const heatcrashHitText = "world_combat.move.heatcrash.text.hit";
     const heatcrashMissText = "world_combat.move.heatcrash.text.miss";
+    const heatcrashBurnMark = "world_combat:heatcrash_burn";
     /** 低扑的小弧高度（格）。 */
     const heatcrashPounceHop = 0.6;
 
@@ -28,6 +31,40 @@ namespace PokemonSkills {
             detail: { values: values }, world: world, actor: action.actor(), target: { world: world, actor: target } };
         return p("heatcrash", "crush", context);
     }
+
+    /** 灼烧视觉绑在目标真实载体上：载体在就维持、到期或提前驱散就收回，并跟随最新一次载体刷新。 */
+    function heatcrashBurnWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        if (!world.valid(target)) { effect.end(); return; }
+        const body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        const carrier = CombatStatus.representative(world, target, "burn", true);
+        if (carrier === null) { effect.end(); return; }
+        const state = JSON.parse(String(effect.state()));
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        WorldFeedback.onEffect(world, effect.id(), "heatcrash:burn:" + String(target.ref()), heatcrashScene, 1, body.position(),
+            { moment: "burn", target: String(target.ref()), embers: state.embers, burnTicks: remaining });
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+
+    WorldCombat.effect(heatcrashBurnMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid heat crash burn mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(heatcrashBurnMark, "start", heatcrashBurnWatch);
+    WorldCombat.effectHandler(heatcrashBurnMark, "watch", heatcrashBurnWatch);
+    WorldCombat.effectHandler(heatcrashBurnMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 目标身上的灼烧被牛奶／/effect clear 提前拿掉时，立刻撤掉本招的灼烧表现，不等下一次巡检。
+    WorldCombat.on("world_combat:heatcrash/burn-release", "world_combat:mob_effect_removed", "", function (event) {
+        const carrier = CombatStatus.defaultCarrier("burn");
+        const data = JSON.parse(String(event.data()));
+        if (!carrier || String(data.id) !== carrier.effect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor) || CombatStatus.has(world, actor, "burn")) return;
+        world.effects(actor, heatcrashBurnMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
 
     define({
         freeMovement: true,
@@ -83,7 +120,8 @@ namespace PokemonSkills {
             const scale = radius / 1.8;
             const flatDelta = WorldCombat.point(plan.x() - origin.x(), 0, plan.z() - origin.z());
             const distance = flatDelta.length();
-            const heading = distance < 1e-6 ? aim(action) : flatDelta.unit();
+            // 只有方向可用时也沿水平方向滑；竖直瞄准不把这一扑带离地面。
+            const heading = WorldGeometry.flatUnit(flatDelta, aim(action));
             const directionData = [heading.x(), heading.y(), heading.z()];
             const rise = Math.max(1, Math.floor(pounce / 2));
             const upPerTick = heatcrashPounceHop / rise;
@@ -126,16 +164,31 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, heatcrashScene, 1, facts.position(),
                     { moment: "impact", target: ref, intensity: Math.max(0.6, Math.min(2.4, power / 90)), direction: directionData }, 30);
                 if (!scope.valid(target)) return true;
-                // 只有真的点得着（ignite 回执为真）才呈现明火；免疫火的生物只被压。
+                // 明火只要不是免疫火就会亮起；灼烧才是按概率施加的状态。两者各自按真实回执呈现。
                 const lit = scope.ignite(target, igniteTicks);
                 const burned = scope.random() < chance ? CombatStatus.inflict(scope, target, "burn", burnTicks) : false;
-                if (lit || burned)
+                if (lit)
                     WorldFeedback.emit(scope, heatcrashScene, 1, facts.position(),
                         { moment: "burn", target: ref, embers: Math.round(20 + power * 0.12), burnTicks: igniteTicks }, igniteTicks + 20);
+                if (burned && scope.valid(target))
+                    scope.effect(heatcrashBurnMark, target, JSON.stringify({ embers: Math.round(20 + power * 0.12), caster: String(current.actor().ref()) }), burnTicks + 40);
                 const away = facts.position().minus(at);
-                if (away.length() >= 0.05 && scope.displace(target, away.unit().scale(shove)) > 0.05)
+                if (away.length() >= 0.05 && scope.hitDisplace(target, away.unit().scale(shove)) > 0.05)
                     WorldFeedback.emit(scope, heatcrashScene, 1, facts.position(), { moment: "shove", target: ref }, 18);
                 return true;
+            }
+
+            /** 逐实际接触段压击：从 from 到 to（含终点）的胶囊内每个敌人各吃一次，不穿墙、不跳段。 */
+            function pressAlong(current: CombatAction, from: CombatPoint, to: CombatPoint): void {
+                const scope = current.world();
+                const found: CombatActor[] = [];
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(from, to, radius), function (target, facts) {
+                    if (facts.friendly()) return;
+                    found.push(target);
+                });
+                const body = scope.observe(current.actor());
+                const at = body === null ? to : body.position();
+                for (let index = 0; index < found.length; index++) pressTarget(current, found[index], at);
             }
 
             function slideStep(current: CombatAction): void {
@@ -147,19 +200,23 @@ namespace PokemonSkills {
                 if (remaining <= 0.02) { finish(current); return; }
                 const step = Math.min(slideSpeed, remaining);
                 const delta = heading.scale(step);
-                // 撞墙检测用权威射线；贴地掠过的人用同一圈的几何查询，避免重复结算。
+                // 撞墙检测用权威射线；压击用实际扫过的段（含撞墙点/终点），避免末步漏判。
                 const probe = current.trace(here, here.plus(delta), sweepRadius, true);
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(here, 0, radius, { below: 1.4, above: 1.8 }),
-                    function (target) { pressTarget(current, target, here); });
-                if (probe.blocked()) { finish(current); return; }
+                if (probe.blocked()) {
+                    pressAlong(current, here, probe.position());
+                    finish(current);
+                    return;
+                }
                 const moved = scope.displace(current.actor(), delta);
-                traveled += moved;
                 const after = scope.observe(current.actor());
+                const arrival = after === null ? here.plus(delta) : after.position();
+                pressAlong(current, here, arrival);
+                traveled += moved;
                 // 火擦痕只画在实际贴地滑过的地面；空中不画焦土。
                 if (after !== null && after.grounded()) {
                     const ground = WorldGeometry.ground(scope, after.position(), 3);
                     WorldFeedback.emit(scope, heatcrashScene, 1, ground,
-                        { moment: "scorch", scale: traceWidth / 0.45, width: traceWidth, direction: directionData }, traceTicks);
+                        { moment: "scorch", scale: traceWidth / 0.45, width: traceWidth, traceTicks: traceTicks, direction: directionData }, traceTicks);
                 }
                 if (moved < 0.03 || traveled >= slideLength) { finish(current); return; }
                 // 滑出台沿、失去脚下支撑就止步。
@@ -173,18 +230,19 @@ namespace PokemonSkills {
                 if (body === null) { finish(current); return; }
                 const here = body.position();
                 const vertical = elapsed < rise ? WorldCombat.point(0, upPerTick, 0) : WorldCombat.point(0, -downPerTick, 0);
-                const forward = Math.min(slideSpeed, slideLength) * 0.6;
+                const forward = Math.min(slideSpeed, Math.max(0, slideLength - traveled)) * 0.6;
                 const swept = sweepStep(current, heading.scale(forward).plus(vertical), sweepRadius);
-                if (swept.hit.hitEntity()) {
-                    const target = swept.hit.target();
-                    if (target !== null && !scope.friendly(target)) pressTarget(current, target, here);
-                }
+                const after = scope.observe(current.actor());
+                const arrival = after === null ? here.plus(forward > 0 ? heading.scale(forward) : vertical) : after.position();
+                // 跳段前移计入同一距离预算，并沿实际扫过的段压击；终点也在段内。
+                traveled += WorldCombat.point(arrival.x() - here.x(), 0, arrival.z() - here.z()).length();
+                pressAlong(current, here, arrival);
                 elapsed++;
                 if (elapsed >= pounce) {
-                    const after = scope.observe(current.actor());
+                    const settled = scope.observe(current.actor());
                     scenes.stop(current, "pounce");
-                    if (after === null || !after.grounded()) { finish(current); return; }
-                    scenes.show(current, "slide", after.position(), { moment: "slide", scale: scale, direction: directionData, width: traceWidth });
+                    if (settled === null || !settled.grounded()) { finish(current); return; }
+                    scenes.show(current, "slide", settled.position(), { moment: "slide", scale: scale, direction: directionData, width: traceWidth });
                     current.after(1, slideStep);
                     return;
                 }

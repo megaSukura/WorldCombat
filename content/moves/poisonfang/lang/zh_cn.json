@@ -4,7 +4,7 @@
   "worldcombat.skill.poisonfang.use.1": "把已经中毒的目标加深成剧毒",
   "worldcombat.skill.poisonfang.use.2": "给厚血目标挂上持久的掉血",
   "worldcombat.skill.poisonfang.description.0": "朝瞄准方向短咬一口，最先碰到的人或墙就是接触点：咬中非友方造成约 %1$s 的接触+咬合伤害，獠牙判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.poisonfang.description.1": "咬中后隔 %1$s，毒液在伤口里渗开：有 %2$s 概率加重为剧毒（否则普通中毒），毒持续 %3$s；若毒液渗开时目标已中毒，则必定加重为剧毒。渗开的那一刻目标必须仍在口边且通视，否则毒滴落空、不注毒。",
+  "worldcombat.skill.poisonfang.description.1": "咬中后隔 %1$s，毒液在伤口里渗开：有 %2$s 概率加重为剧毒（否则普通中毒），毒持续 %3$s；若毒液渗开时目标已中毒，则必定加重为剧毒。渗开的那一刻目标必须仍在口边且通视，否则毒滴落空、不注毒；毒被免疫拒绝时只在接触处散滴，不向目标扩散。",
   "worldcombat.skill.poisonfang.venom.on": "浓毒式：剧毒几率更高、毒液更久，但咬合更轻、注毒更慢、冷却更久。",
   "worldcombat.skill.poisonfang.venom.off": "快毒式：咬得更重、毒渗得更快，但更难加重为剧毒。",
   "worldcombat.skill.poisonfang.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、冷却 %4$s 秒，耗 %5$s PP。",

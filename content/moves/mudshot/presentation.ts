@@ -5,9 +5,9 @@
  * 泥浆顺着泼溅糊上附近人的腿脚，落点地上留下一片湿泥。
  * 色相家族：湿泥的棕（0x6E5438）与浅褐（0x9A7B54），余韵收在近白的细尘。
  * 拍子：起 gather（抓泥收拢）→ 飞 streak（平飞拖泥）→ 泼 splash（泥花贴地炸开）→ 糊 mire / coated（腿脚挂泥）→ 收 slick（地上一道短污痕）。
- * 范围：splash 的地环与 slick 的污痕按 `data.scale`（泼溅半径 / 0.9）铺开，就是真正被糊到的地面范围；slick 只是一道痕迹，不铺持续减速场。
- * 运动：泥块沿低弧平飞（服务端 ballistic 方向）；命中处泥点低平向外抛，腿脚上的泥向下滴。
- * 数：splash 的泥点数绑定 `data.coat`（特攻与等级换算），mire 的泥迹密度绑定 `data.stages`（掉速等级），
+ * 范围：splash 的地环与 slick 的污痕按 `data.scale`（泼溅半径 / 0.9）铺开，就是真正被糊到的地面范围；slick 只是一道痕迹，不铺持续减速场，且落在地面真实接触面上。
+ * 运动：泥块沿低弧平飞（服务端 ballistic 方向，起点与 flight.origin 同取口位）；命中处泥点低平向外抛，腿脚上的泥向下滴。
+ * 数：splash 的泥点数绑定 `data.coat`（特攻与等级换算），mire 的泥迹密度绑定 `data.stages`（掉速等级）并按 `data.tick` 持续整个糊腿时长，
  *   强度绑定 `data.intensity`（本击威力 / 50），阔泼时点更多、范围更开。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -117,7 +117,7 @@ const MudshotDefinition: ParticleDefinition = {
         },
         mire: {
             duration: { data: "tick", fallback: 60 },
-            exit: { stop: 14, drain: 22 },
+            exit: { stop: { data: "tick", fallback: 60 }, drain: 22 },
             emitters: [
                 {
                     name: "legs", bind: "target", offset: [0, 0.22, 0], height: 0.22,

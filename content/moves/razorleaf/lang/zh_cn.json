@@ -14,7 +14,7 @@
   "worldcombat.skill.razorleaf.value.waves": "波数",
   "worldcombat.skill.razorleaf.value.reach": "射程",
   "worldcombat.skill.razorleaf.value.spread": "窄带半宽",
-  "worldcombat.skill.razorleaf.value.leafRadius": "单片叶判定",
+  "worldcombat.skill.razorleaf.value.leafRadius": "单片叶厚度",
   "worldcombat.skill.razorleaf.value.leaves": "每波叶片量",
   "worldcombat.skill.razorleaf.value.gap": "波间隔",
   "worldcombat.skill.razorleaf.value.pace": "叶幕推进",

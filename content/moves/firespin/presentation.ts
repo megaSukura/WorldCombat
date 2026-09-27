@@ -5,11 +5,11 @@
  * 火柱不断往目标身上舔火、把地面烤出焦痕；目标湿透时火柱「嗤」地化成一团白汽熄灭。
  * 色相家族：橙红（0xE86A2A）为主、亮黄（0xFFD060）做火舌高光、近白（0xFFF0C0）只在中心；焦痕用暗褐。
  * 拍子：起（charge 聚火）→ 掷（cast 火种）→ 驻（wrap 立柱 / column 回旋 / lick 舔火）→ 收（release / douse）；碰墙走 scatter。
- * 范围：column 是 `bind: "target"`，用 `data.radius` 画横截面、`data.height` 画柱高——目标站在哪，那圈火就跟到哪。
- * 运动：火柱沿局部 +Y 上升并自转，`spiral` 用只留边缘的圆环随柱身盘旋上升，火舌向外甩后被拽回；
- *   lick 只在服务端确认这一下真的造成伤害时才短亮，未命中不出现。
- * 数：`data.flow`（火柱半径派生）决定火柱密度，`data.count`（灼烧威力派生）决定舔火那下的火舌量，
- *   `data.intensity`（威力 / 24）抬高亮度，`data.pulses`（已舔次数）让火柱越烧越旺，`data.scale`（半径 / 0.85）控制粒子尺寸。
+ * 范围：持续火柱由自定义场景 world_combat:move_firespin/column 逐帧绕目标重画——目标是活体，用 frame.anchor 读
+ *   它插值后的脚底位置与身高，radius／height 直接是 world 方块单位，只缩一次；地面焦痕只在服务端确认有真实支撑时落下。
+ * 运动：火柱由相位随 serverTick 推进的螺旋采样组成，每枚火舌带着切向短迹逐刻绕体上升——是真的绕身旋转，不是原地抖纹理；
+ *   体侧另有一圈贴身的火，说明柱是包着目标而非独立圆柱。lick 只在服务端确认这一下真的造成伤害时才短亮，未命中不出现。
+ * 数：`data.flow`（火柱半径派生）决定螺旋采样数，`data.pulses`（已舔次数）让火柱越烧越旺；数量保留在内部，玩家不可见。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const FirespinDefinition: ParticleDefinition = {
@@ -71,55 +71,6 @@ const FirespinDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.07, 0.24], spread: 18,
                     lifetime: [7, 12], size: [0.36, 0.05], sizeMode: "index",
                     color: 0xFFF0C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 70
-                },
-                {
-                    name: "sear", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/scorch/floorscorch",
-                    burst: { count: 1, at: 2 },
-                    shape: { kind: "point" },
-                    lifetime: [30, 40], size: [0.7, 0.9],
-                    color: 0x4A3226, alpha: [0.5, 0], light: "world", alwaysRender: true
-                }
-            ]
-        },
-        column: {
-            exit: { drain: 24 },
-            emitters: [
-                {
-                    name: "vortex", bind: "target", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    rate: { data: "flow", fallback: 60 }, shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.85 }, length: { data: "height", fallback: 2.2 } },
-                    direction: "up", speed: [0.03, 0.12], spread: 10, spin: 18,
-                    gravity: -0.01, drag: 0.94,
-                    lifetime: [8, 16], size: [0.2, 0.04],
-                    color: 0xE86A2A, alpha: [0.4, 0], light: "full", bloom: 0.25, maxParticles: 260
-                },
-                {
-                    name: "tongues", bind: "target", offset: [0, 0.1, 0], height: 0.1, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: { data: "flow", fallback: 60 }, shape: { kind: "ring", radius: { data: "radius", fallback: 0.85 } },
-                    direction: "outward", speed: [0.04, 0.16], spin: 14,
-                    lifetime: [8, 14], size: [0.16, 0.03],
-                    color: 0xFFD060, alpha: [0.5, 0], light: "full", bloom: 0.2, maxParticles: 180
-                },
-                {
-                    name: "ash", bind: "target", offset: [0, 0.5, 0], height: 0.3, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 16, shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.85 }, length: { data: "height", fallback: 2.2 } },
-                    direction: "up", speed: [0.01, 0.06], spread: 20,
-                    gravity: 0.03, drag: 0.93,
-                    lifetime: [12, 20], size: [0.06, 0.01],
-                    color: 0x6E5546, alpha: [0.4, 0], light: "world", maxParticles: 90
-                },
-                {
-                    name: "spiral", bind: "target", offset: [0, 0, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: { data: "flow", fallback: 60 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 0.85 }, thickness: 1 },
-                    direction: "up", speed: [0.05, 0.16], spin: 28,
-                    gravity: -0.008, drag: 0.95,
-                    lifetime: [10, 18], size: [0.09, 0.02],
-                    color: 0xFFD060, alpha: [0.55, 0], light: "full", maxParticles: 180
                 }
             ]
         },
@@ -225,3 +176,75 @@ const FirespinDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_firespin", 1, FirespinDefinition);
+
+/**
+ * 持续火柱：逐帧按目标真实身体重画一圈相位推进的绕体螺旋。
+ * 位置来自 frame.anchor(data.target) 的插值脚底/身高，所以目标移动、换体型时火柱跟着走；
+ * radius／height 已经是 world 方块单位，直接用一次。地面焦痕只在服务端确认有真实支撑（data.ground）时落下，
+ * 空中只包体。每帧固定采样数，数量不对外显示。
+ */
+const FirespinColumnScene = "world_combat:move_firespin/column";
+const FirespinFlameSprite = "cobblemon:particle/generic/fire/flame";
+const FirespinWispSprite = "cobblemon:particle/generic/fire/wisp";
+const FirespinScorchSprite = "cobblemon:particle/generic/scorch/floorscorch";
+
+function firespinColumnNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+function firespinColumnGround(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+
+WorldCombatClient.scene(FirespinColumnScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const target = typeof data.target === "string" ? data.target : "";
+    if (!target) return;
+    const anchorJson = frame.anchor(target);
+    const anchor: any = anchorJson ? JSON.parse(anchorJson) : null;
+    if (!anchor) return;
+    const cx = Number(anchor.x), feet = Number(anchor.y), cz = Number(anchor.z);
+    if (!isFinite(cx) || !isFinite(feet) || !isFinite(cz)) return;
+    const radius = Math.max(0.4, Math.min(2.6, firespinColumnNumber(data.radius, 0.85)));
+    const height = Math.max(1.0, Math.min(4.6, firespinColumnNumber(data.height, 2.2)));
+    const bodyHeight = Math.max(0.6, Math.min(3.2, firespinColumnNumber(anchor.height, height)));
+    const flow = Math.max(12, Math.min(160, firespinColumnNumber(data.flow, 60)));
+    const pulses = Math.max(0, Math.round(firespinColumnNumber(data.pulses, 0)));
+    const segments = Math.max(6, Math.min(18, Math.round(flow / 8)));
+    const t = frame.serverTick();
+    const phase = t * 0.16;
+    const rise = (t * 0.09) % 1;
+    const frameIndex = Math.floor(t * 0.5);
+    const ember = ((200 + Math.min(55, pulses * 4)) << 24 | 0xE86A2A) | 0;
+    const tongue = ((205 + Math.min(50, pulses * 4)) << 24 | 0xFFD060) | 0;
+    const streak = (150 << 24 | 0xE86A2A) | 0;
+    for (let i = 0; i < segments; i++) {
+        const angle = phase + i * (Math.PI * 2 / segments);
+        const y = feet - 0.1 + (((i / segments) + rise) % 1) * height;
+        const x = cx + Math.cos(angle) * radius;
+        const z = cz + Math.sin(angle) * radius;
+        const prev = angle - 0.55;
+        frame.line(cx + Math.cos(prev) * radius, y, cz + Math.sin(prev) * radius, x, y, z, streak);
+        frame.sprite(i % 2 === 0 ? FirespinFlameSprite : FirespinWispSprite, x, y, z,
+            Math.max(0.12, Math.min(0.42, radius * 0.42)), -((angle * 180) / Math.PI) % 360,
+            i % 2 === 0 ? ember : tongue, frameIndex, true);
+    }
+    const ringSegments = Math.max(4, Math.floor(segments / 2));
+    for (let j = 0; j < ringSegments; j++) {
+        const angle = phase * 1.4 + j * (Math.PI * 2 / ringSegments);
+        frame.sprite(FirespinFlameSprite, cx + Math.cos(angle) * radius * 0.72, feet + bodyHeight * 0.45,
+            cz + Math.sin(angle) * radius * 0.72, Math.max(0.1, Math.min(0.32, radius * 0.32)),
+            -((angle * 180) / Math.PI) % 360, ember, frameIndex, true);
+    }
+    const ground = firespinColumnGround(data.ground);
+    if (ground !== null && ground[1] <= feet + 0.7) {
+        frame.sprite(FirespinScorchSprite, ground[0], ground[1] + 0.02, ground[2],
+            Math.max(0.6, Math.min(2.2, radius * 1.6)), 0, (150 << 24 | 0x4A3226) | 0, 0, false);
+    }
+});

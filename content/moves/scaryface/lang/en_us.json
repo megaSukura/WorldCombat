@@ -17,7 +17,7 @@
   "worldcombat.skill.scaryface.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.scaryface.preference.ai.maxChase.help": "The companion only considers glaring while a threat is within this many blocks; smaller keeps it at point-blank, larger starts sooner.",
   "worldcombat.skill.scaryface.preference.ai.leaveStation": "Leave station",
-  "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "When on, the companion may leave its post to glare under a Hold order.",
+  "worldcombat.skill.scaryface.preference.ai.leaveStation.help": "When on, the companion may leave its post to glare under a Hold order; when off it only glares at threats already inside its range.",
   "world_combat.move.scaryface.text.gaze": "Terrified (Speed -%1$s)",
   "world_combat.move.scaryface.text.blocked": "Line of sight blocked; the scare misses",
   "effect.world_combat.scary_face_terror": "Terrified",

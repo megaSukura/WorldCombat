@@ -2,19 +2,18 @@
  * 攀岩 / rockclimb 的客户端表现。
  *
  * 一句话：施法者低头蹬地、脚下尘土向内一收 → 整个身体划一道低拱的土线扑出去、身后拖一层碎土 →
- * 落地砸出一圈贴地的尘环与飞溅的土块；被撞晕的人头顶冒星，出手被打散时还踉跄半步。
+ * 真实砸中敌人时在接触点掀起贴地尘环与飞溅的土块；被撞晕的人头顶冒星，出手被打散时还踉跄半步。
  * 色相家族：土棕（0x9A6B3F 主 / 0x5E4426 暗 / 0xD9C4A0 亮），近白只给落地冲击核心。
- * 拍子：起 crouch（收土）→ 行 leap/air（扑跃带土线）→ 击 slam（落地尘环）→ 果 daze（星星）
- *   → 踉跄 stumble → 收 crater（土痕）→ 续 linger（低密度余韵）。
- * 范围：crater 的尘环与土块半径直接绑定 `data.radius`（实际落地范围），画出的就是判定砸到的圈。
- * 运动：crouch 向内收；air 沿扑跃方向拖土屑；slam 的尘环贴地外推、土块先上后落。
- * 数：`data.motes`（物攻与等级派生）决定扑跃尾迹与落地土屑密度，`data.cells`（蹬翻格数）决定土痕层点数。
+ * 拍子：起 crouch（收土）→ 行 route（实走扑跃线）→ 击 slam（接触尘环，仅真实伤害后）→ 果 daze（星星）→ 续 linger（低密度余韵）。
+ * 范围：slam 的尘环半径直接绑定 `data.radius`（本招算出的接触碎屑范围）；route 的扑跃线绑 `data.path`。
+ * 运动：crouch 向内收；route 沿实际移动端点连线拖土屑；slam 的尘环贴地外推、土块先上后落。
+ * 数：`data.motes`（物攻与等级派生）决定扑跃尾迹与落地土屑密度，`data.cells`（爪痕细节）决定壁面爪屑层点数。
  */
 const RockclimbDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         route:{emitters:[{name:"body_route",bind:"path",fit:"world",particle:"world_combat_core:cobblemon/generic/tinydust",rate:16,shape:{kind:"polyline"},lifetime:[3,6],size:[.06,.01],color:0x9A6B3F,alpha:[.5,.1]}]},
-        grip:{duration:14,emitters:[{name:"wall_claws",bind:"point",fit:"world",particle:"world_combat_core:cobblemon/generic/spike",burst:{count:2},shape:{kind:"sphere",radius:.1},lifetime:[5,12],size:[.12,.02],color:0x9A6B3F,alpha:[.7,0]}]},
+        grip:{duration:14,emitters:[{name:"wall_claws",bind:"point",fit:"world",particle:"world_combat_core:cobblemon/generic/spike",burst:{count:{data:"cells",fallback:2}},shape:{kind:"sphere",radius:.1},lifetime:[5,12],size:[.12,.02],color:0x9A6B3F,alpha:[.7,0]}]},
         crouch: {
             duration: 20,
             exit: { stop: 9, drain: 14 },
@@ -34,35 +33,6 @@ const RockclimbDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.07],
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0x9A6B3F, alpha: [0.6, 0], light: "world", maxParticles: 24
-                }
-            ]
-        },
-        leap: {
-            duration: 16,
-            exit: { stop: 8, drain: 14 },
-            emitters: [
-                {
-                    name: "kick", bind: "source", offset: [0, 0.05, 0], height: 0.2,
-                    particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
-                    burst: { count: { data: "motes", fallback: 16 } },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.06, 0.2], spread: 40, gravity: 0.05,
-                    lifetime: [8, 16], size: [0.14, 0.02],
-                    color: 0x9A6B3F, alpha: [0.8, 0], light: "world", maxParticles: 60
-                }
-            ]
-        },
-        air: {
-            exit: { stop: 20, drain: 10 },
-            emitters: [
-                {
-                    name: "wake", bind: "source", height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    trail: { minDistance: 0.3 }, rate: { data: "motes", fallback: 10 },
-                    shape: { kind: "sphere", radius: 0.2 },
-                    direction: "away", speed: [0.0, 0.04], spread: 30,
-                    lifetime: [6, 12], size: [0.09, 0.01],
-                    color: 0xD9C4A0, alpha: [0.5, 0], light: "world", maxParticles: 70
                 }
             ]
         },
@@ -87,13 +57,7 @@ const RockclimbDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2], spread: 45, gravity: 0.06,
                     lifetime: [8, 16], size: [0.14, 0.02],
                     color: 0x9A6B3F, alpha: [0.85, 0], light: "world", maxParticles: 70
-                }
-            ]
-        },
-        crater: {
-            duration: 30,
-            exit: { stop: 14, drain: 20 },
-            emitters: [
+                },
                 {
                     name: "ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
@@ -102,15 +66,6 @@ const RockclimbDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.18], gravity: 0,
                     lifetime: [10, 18], size: [0.3, 0.6],
                     color: 0x9A6B3F, alpha: [0.6, 0], light: "world", maxParticles: 8
-                },
-                {
-                    name: "scuff", bind: "point", fit: "none", offset: [0, 0.04, 0],
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "cells", fallback: 6 } },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.0 } },
-                    direction: "up", speed: [0.02, 0.07], gravity: 0.03,
-                    lifetime: [10, 18], size: [0.1, 0.02],
-                    color: 0xD9C4A0, alpha: [0.5, 0], light: "world", maxParticles: 50
                 }
             ]
         },
@@ -125,36 +80,6 @@ const RockclimbDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [16, 24], size: [0.2, 0.09], sizeMode: "sin",
                     color: 0xD9C4A0, alpha: [0.7, 0], light: "full", maxParticles: 20
-                }
-            ]
-        },
-        stumble: {
-            duration: 20,
-            exit: { stop: 8, drain: 14 },
-            emitters: [
-                {
-                    name: "dust", bind: "target", offset: [0, 0.02, 0], height: 0.15,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: 10 },
-                    shape: { kind: "sphere", radius: 0.24 },
-                    direction: "outward", speed: [0.04, 0.14], gravity: 0.04,
-                    lifetime: [8, 14], size: [0.09, 0.01],
-                    color: 0x9A6B3F, alpha: [0.6, 0], light: "world", maxParticles: 30
-                }
-            ]
-        },
-        miss: {
-            duration: 22,
-            exit: { stop: 9, drain: 16 },
-            emitters: [
-                {
-                    name: "spray", bind: "point", fit: "none", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
-                    burst: { count: { data: "motes", fallback: 12 } },
-                    shape: { kind: "sphere", radius: 0.3 },
-                    direction: "outward", speed: [0.05, 0.16], gravity: 0.05,
-                    lifetime: [8, 16], size: [0.13, 0.02],
-                    color: 0x9A6B3F, alpha: [0.7, 0], light: "world", maxParticles: 50
                 }
             ]
         },

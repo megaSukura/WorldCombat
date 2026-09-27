@@ -1,6 +1,9 @@
 /** LDLib2-backed building blocks; all labels, data and content assets are supplied by callers. */
 namespace UiSurfaces {
     export type Text = string | number | boolean | { key: string; args?: any[]; fallback?: string };
+    export const palette = { panel: 0xf01b242b, raised: 0xee29343d, border: 0xff52626b,
+        text: 0xfff2f1e9, muted: 0xffb5bcb9, accent: 0xff81d4bd, hover: 0xff354a50,
+        pressed: 0xff42635f, warning: 0xffe8c77b, danger: 0xffef9890 };
     let types: any = null, nativeHost: any = null, screenOwner: any = null, minecraft: any = null, tooltipTypes: any = null, callbacks: any = null, richType: any = null, textType: any = null;
     function host(): any { return nativeHost || (nativeHost = Java.loadClass("dev.worldcombat.core.client.NativeUiHost")); }
     function native(): any {
@@ -39,6 +42,25 @@ namespace UiSurfaces {
     function texts(): any { return textType || (textType = Java.loadClass("dev.worldcombat.core.client.UiText")); }
     export function text(value: any): any { return texts().component(JSON.stringify(value == null ? "" : value)); }
     export function plain(value: any): string { return String(text(value).getString()); }
+    export function measure(value: any): number {
+        minecraft = minecraft || Java.loadClass("net.minecraft.client.Minecraft");
+        return Number(minecraft.getInstance().font.width(plain(value)));
+    }
+    /** Compact labels retain their full text in caller-provided tooltips/readouts. */
+    export function fit(value: any, width: number): string {
+        const full=plain(value); if(measure(full)<=width)return full;
+        minecraft = minecraft || Java.loadClass("net.minecraft.client.Minecraft");
+        const suffix="…",room=Math.max(0,width-measure(suffix));
+        if(width<measure(suffix))return "";
+        let prefix=String(minecraft.getInstance().font.plainSubstrByWidth(full,room));
+        if(prefix.length&&/[\uD800-\uDBFF]/.test(prefix.charAt(prefix.length-1)))prefix=prefix.slice(0,-1);
+        return prefix+suffix;
+    }
+    export function align(widget: any, alignment: "left"|"center"|"right"): any {
+        const horizontal=Java.loadClass("com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal");
+        const apply=(style:any)=>style.textAlignHorizontal(horizontal[alignment.toUpperCase()]);
+        if(typeof widget.textStyle==="function")widget.textStyle(apply);else apply(widget.getTextStyle()); return widget;
+    }
     export function t(key: string, ...args: any[]): string { return plain({key,args}); }
     export function locale(): string { return String(texts().locale()); }
     /** ARGB literals are unsigned JavaScript numbers; every Java color parameter is a signed int. */
@@ -59,7 +81,7 @@ namespace UiSurfaces {
     export function surface(element: any, color: number, radius: number): any { element.getStyle().backgroundTexture(native().Rect.of(intColor(color)).setRadius(radius)); return element; }
     export function element(x: number, y: number, width: number, height: number): any { return place(new (native().Element)(), x, y, width, height); }
     export function root(): any { return element(0, 0, Host.width(), Host.height()); }
-    export function panel(element: any): any { element.addClass("panel_bg").lss("padding-all",0).lss("gap-all",0); return element; }
+    export function panel(element: any): any { element.lss("padding-all",0).lss("gap-all",0); return surface(element,palette.panel,2); }
     export function scroll(parent: any, x: number, y: number, width: number, height: number): any {
         const view=place(new (native().Scroller)(),x,y,width,height);view.getScrollerViewStyle().mode(native().ScrollerMode.VERTICAL);parent.addChild(view);return view;
     }
@@ -69,15 +91,26 @@ namespace UiSurfaces {
         view["viewContainer(java.util.function.Consumer)"]((element:any)=>{content=element;});
         return content;
     }
-    export function label(parent: any, value: any, x: number, y: number, width: number, color = 0xff333333): any {
+    export function scrollPosition(view:any):number {
+        let value=0; view["verticalScroller(java.util.function.Consumer)"]((bar:any)=>{value=Number(bar.getNormalizedValue());});
+        return isFinite(value)?Math.max(0,Math.min(1,value)):0;
+    }
+    export function restoreScroll(view:any,value:number):void {
+        view["verticalScroller(java.util.function.Consumer)"]((bar:any)=>bar.setNormalizedValue(Math.max(0,Math.min(1,value))));
+    }
+    export function label(parent: any, value: any, x: number, y: number, width: number, color = palette.text): any {
         const widget = place(new (native().Label)(), x, y, width, 14); widget.setText(text(value)); widget.getTextStyle().textColor(intColor(color)); parent.addChild(widget); return widget;
     }
     export function rich(parent: any, x: number, y: number, width: number, height: number): any {
         richType = richType || Java.loadClass("dev.worldcombat.core.client.RichTextLabel");
-        const widget = place(new richType(), x, y, width, height); widget.getTextStyle().textColor(intColor(0xff333333)); parent.addChild(widget); return widget;
+        const widget = place(new richType(), x, y, width, height); widget.getTextStyle().textColor(intColor(palette.text)); parent.addChild(widget); return widget;
     }
     export function button(parent: any, value: any, x: number, y: number, width: number, height: number, click: () => void): any {
         const widget = place(new (native().Button)(), x, y, width, height); widget.setText(text(value));
+        widget.getButtonStyle().baseTexture(native().Rect.of(intColor(palette.raised)).setRadius(2))
+            .hoverTexture(native().Rect.of(intColor(palette.hover)).setRadius(2))
+            .pressedTexture(native().Rect.of(intColor(palette.pressed)).setRadius(2));
+        widget.textStyle((style:any)=>style.textColor(intColor(palette.text)));
         callbacks = callbacks || Java.loadClass("dev.worldcombat.core.client.ClientCallbacks");
         const guarded = callbacks.runnable("script-ui/button/" + plain(value), () => click());
         widget.setOnClick((_event: any) => guarded.run()); parent.addChild(widget); return widget;

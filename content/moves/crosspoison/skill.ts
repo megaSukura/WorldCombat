@@ -6,7 +6,7 @@
  *
  * 两幕：
  *   起（windup，提交前）：两片毒刃在身前左右分开、刃口滴毒，只播预告。
- *   剪（execute → slit / cut / seal / venom / miss）：提交后两刃同时合拢，各自沿对角线做一次真实检测：
+ *   剪（execute → slit / cut / venom / miss）：提交后两刃同时合拢，各自沿对角线做一次真实检测：
  *       被两条刃共同覆盖（交点，即准心的正中目标）结算 `slit`、按 `sealChance` 中毒；
  *       只被一条刃擦到结算 `slit × share`、按 `poisonChance` 中毒。每个目标至多结算一次毒。
  *       任一条刃撞上墙体就缩短到墙面，线条后面的目标划不到；两刃之间那条窄线由 `spread` 决定。
@@ -36,18 +36,18 @@ namespace PokemonSkills {
         return [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]];
     }
 
-    /** 把一条刃的两端裁到最先撞到的方块面：墙分别截住两道刃，后面的目标划不到。 */
+    /** 把一条刃的两端裁到最先撞到的墙接触点：墙分别截住两道刃，后面的目标划不到。 */
     function crosspoisonClip(world: CombatWorld, a: CombatPoint, b: CombatPoint): CombatPoint[] {
         let near = a, far = b;
         const forward = world.clipBlocks(a, b);
         if (forward !== null && forward.blocked()) {
-            const face = forward.blockPosition(), span = b.minus(a).length();
-            if (face !== null && face.minus(a).length() < span - 1e-6) far = face;
+            const face = forward.position(), span = b.minus(a).length();
+            if (face.minus(a).length() < span - 1e-6) far = face;
         }
         const backward = world.clipBlocks(far, near);
         if (backward !== null && backward.blocked()) {
-            const face = backward.blockPosition(), span = far.minus(near).length();
-            if (face !== null && face.minus(near).length() < span - 1e-6) near = face;
+            const face = backward.position(), span = far.minus(near).length();
+            if (face.minus(near).length() < span - 1e-6) near = face;
         }
         return [near, far];
     }
@@ -95,8 +95,6 @@ namespace PokemonSkills {
             const body = world.observe(actor);
             const origin = body === null ? action.origin() : body.position();
             const heading = aim(action);
-            const target = action.target();
-            const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
             const reach = Math.max(2.0, action.range());
             const slit = p("crosspoison", "slit", action);
             const spread = p("crosspoison", "spread", action);
@@ -107,23 +105,29 @@ namespace PokemonSkills {
             const drops = Math.max(8, Math.round(p("crosspoison", "drops", action)));
             const scale = Math.max(0.6, Math.min(1.8, spread / 0.7));
             const intensity = Math.max(0.6, Math.min(2.2, slit / 70));
-            const centre = targetBody !== null ? targetBody.position() : origin.plus(heading.scale(reach));
-            const lateral = WorldCombat.point(-heading.z(), 0, heading.x());
-            const up = WorldCombat.point(0, 1, 0);
+            const frame = WorldGeometry.basis(heading);
+            const lateral = frame.right, up = frame.up;
+            // 提交时以本体可达瞄点锁中心：瞄点在射程内取该点、超出取射程点，再从本体裁到第一堵真实墙；整把 X 不隔墙生成、也不落在退远目标处。
+            const aimed = action.targetPosition().minus(origin), aimedSpan = aimed.length();
+            let centre = aimedSpan > 1e-4 ? origin.plus(aimed.unit().scale(Math.min(reach, aimedSpan))) : origin.plus(heading.scale(reach));
+            const inwardWall = WorldGeometry.blockHit(world, origin, centre);
+            if (inwardWall !== null) centre = inwardWall.position();
             const gauge = Math.max(0.2, Math.min(0.6, spread * 0.45));
             // 两条交叉的刃，同刻各检测一次；各自被墙截断后仍保留交叉点。
             const clipped = [
                 crosspoisonClip(world, crosspoisonBlade(centre, lateral, up, spread, true)[0], crosspoisonBlade(centre, lateral, up, spread, true)[1]),
                 crosspoisonClip(world, crosspoisonBlade(centre, lateral, up, spread, false)[0], crosspoisonBlade(centre, lateral, up, spread, false)[1])
             ];
-            const covers: { [ref: string]: { actor: CombatActor; count: number } } = Object.create(null);
+            const covers: { [ref: string]: { actor: CombatActor; count: number; point: CombatPoint } } = Object.create(null);
 
             function cover(from: CombatPoint, to: CombatPoint): void {
                 if (from.minus(to).length() < 1e-6) return;
-                WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(from, to, gauge), function (victim: CombatActor) {
+                WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(from, to, gauge), function (victim: CombatActor, facts: CombatObservation) {
                     const ref = String(victim.ref());
                     if (ref === String(actor.ref()) || world.friendly(victim)) return;
-                    if (!covers[ref]) covers[ref] = { actor: victim, count: 0 };
+                    // 实际接触视线：本体到目标被真实墙挡住就划不到；接触位置在覆盖时记下。
+                    if (WorldGeometry.blockHit(world, origin, facts.position()) !== null) return;
+                    if (!covers[ref]) covers[ref] = { actor: victim, count: 0, point: facts.position() };
                     covers[ref].count++;
                 });
             }
@@ -140,25 +144,24 @@ namespace PokemonSkills {
             cover(clipped[1][0], clipped[1][1]);
 
             const refs = Object.keys(covers);
-            let hits = 0, sealed = 0, poisoned = 0;
+            let hits = 0;
             for (let index = 0; index < refs.length; index++) {
                 const entry = covers[refs[index]], victim = entry.actor, both = entry.count >= 2;
                 const powerValue = both ? slit : slit * share;
-                const landed = hurt(action, victim, "crosspoison", powerValue,
-                    { damage: damageSpec("crosspoison", "slit"), contact: true });
+                if (!hurt(action, victim, "crosspoison", powerValue,
+                    { damage: damageSpec("crosspoison", "slit"), contact: true })) continue;
+                // 成功伤害先记 hits 与原接触位置；斩杀也算命中，存活只约束后续施毒。
+                hits++;
                 const now = world.observe(victim);
-                const at = now === null ? centre : now.position();
+                const at = now === null ? entry.point : now.position();
                 WorldFeedback.emit(world, crosspoisonScene, 1, at,
                     { moment: "cut", target: String(victim.ref()), drops: drops, scale: scale, both: both ? 1 : 0,
                         intensity: Math.max(0.5, Math.min(2.2, powerValue / 70)) }, 20);
-                if (!landed || !world.valid(victim)) continue;
-                hits++;
-                if (both) sealed++;
                 world.sound("cobblemon:impact.poison", at, 14, "{}");
+                if (!world.valid(victim)) continue;
                 // 每个目标只结算一次毒：共同覆盖走交点毒率，单刃擦到走擦边毒率。
                 const chanceValue = both ? sealChance : chance;
                 if (world.random() < chanceValue && CombatStatus.inflict(world, victim, "poison", venomTicks, 0, { secondary: true })) {
-                    poisoned++;
                     WorldFeedback.emit(world, crosspoisonScene, 1, at,
                         { moment: "venom", target: String(victim.ref()), drops: drops, scale: scale, both: both ? 1 : 0 }, 20);
                     WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), crosspoisonVenomText, [], 22);
@@ -167,10 +170,6 @@ namespace PokemonSkills {
                 }
             }
 
-            // 只有真正有目标被两条刃共同覆盖，才补上 X 成形的收束一幕。
-            if (sealed > 0) WorldFeedback.emit(world, crosspoisonScene, 1, centre,
-                { moment: "seal", path: crosspoisonSegment(clipped[0][0], clipped[0][1]), drops: drops, scale: scale,
-                    intensity: intensity, struck: sealed, venom: poisoned }, 20);
             if (hits === 0) {
                 WorldFeedback.emit(world, crosspoisonScene, 1, centre, { moment: "miss", scale: scale }, 16);
                 WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.0, 0)), crosspoisonMissText, [], 20);

@@ -37,6 +37,15 @@ namespace CompanionBehavior {
         return !!world(context).clear(point(self.point), point(threat.point));
     }
 
+    /** 这层读是否真能补上命中：自己命中还没到本招承诺的等级，或目标带闪避、正在横移/拉开。 */
+    function mindreaderAimNeeded(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        const focus = Math.max(1, Math.round(PokemonSkills.p("mindreader", "focus", { world: world, actor: world.source(), detail: { values: item.data.config } })));
+        const accuracy = CompanionBehavior.stage(context, source(context), "accuracy");
+        const evasion = CompanionBehavior.stage(context, threat, "evasion");
+        return accuracy < focus || evasion > 0;
+    }
+
     registerUse("mindreader", {
         protocols: ["world_combat:control"],
         reach: function (_context, item) { return item.data.range; },
@@ -45,9 +54,14 @@ namespace CompanionBehavior {
         priority: function (context, item, target) {
             if (!target || !mindreaderWants(context, item, target)) return 0;
             const self = source(context), owner = context.facts.owner;
-            if (fleeing(context, target)) return 86;
-            if (mindreaderStrafing(context, target)) return 84;
-            return target.attacking === self.ref || !!owner && target.attacking === owner.ref ? 80 : 74;
+            const moving = fleeing(context, target) || mindreaderStrafing(context, target);
+            const hunting = target.attacking === self.ref || !!owner && target.attacking === owner.ref;
+            // 移动中的目标最值得先看清走向；趋势信息用得上。
+            if (moving) return 86;
+            // 命中还没到位、或目标在闪避时，读是为必须命中的追击铺路。
+            if (mindreaderAimNeeded(context, item, target)) return hunting ? 80 : 78;
+            // 命中已足、目标不闪避也不移动：这层读只是常规浪费，降到常规顺序。
+            return 0;
         }
     });
 }

@@ -29,7 +29,7 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 16,
         style: "jet",
-        defaults: { hammer: false, ai: { maxChase: 6, preserveBurn: true, preferDry: true, finish: true, cureAllies: true } },
+        defaults: { hammer: false, helpFriends: true, ai: { maxChase: 6, preserveBurn: true, preferDry: true, finish: true, cureAllies: true } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: (pokemon ? p(jetpunchId, "reach", pokemon) : 2.8) + 0.4, geometry: "line", style: "jet", color: 0x3FA8E0,
@@ -55,7 +55,8 @@ namespace PokemonSkills {
             const actor = action.actor();
             const selected = action.target();
             const direction = aim(action);
-            const reach = Math.max(1.6, p(jetpunchId, "reach", action));
+            // 指示、友方距离与拳程统一取同一个实际射程（resolve 已含 +0.4）。
+            const reach = Math.max(1.6, action.range());
             const radius = p(jetpunchId, "burst", action);
             const power = p(jetpunchId, "torrent", action);
             const drive = p(jetpunchId, "drive", action);
@@ -67,41 +68,45 @@ namespace PokemonSkills {
             const end = origin.plus(direction.scale(reach));
             const hammer = config && config.hammer === true;
 
+            const friend = selected !== null && world.valid(selected) && world.friendly(selected)
+                && String(selected.ref()) !== String(actor.ref());
+            const friendBody = friend ? world.observe(selected!) : null;
+            const friendAt = friend ? (friendBody !== null ? friendBody.position() : action.targetPosition()) : null;
+            // 拳线裁到真实首碰：命中实体/墙体就用实际接触点，平地空击才到满拳程；友方则画到真实友方点。
+            const hit = friend ? null : action.trace(origin, end, radius);
+            let span = reach;
+            if (friendAt !== null) span = Math.max(0.2, Math.min(reach, friendAt.minus(origin).length()));
+            else if (hit !== null && (hit.hitEntity() || hit.blocked())) span = Math.max(0.2, hit.position().minus(origin).length());
+
             sound(action, "cobblemon:move.watergun.actor");
             WorldFeedback.emit(world, jetpunchScene, 1, origin,
-                { moment: "thrust", spray: spray, scale: scale, intensity: intensity, reach: reach,
+                { moment: "thrust", spray: spray, scale: scale, intensity: intensity, reach: span,
                     direction: [direction.x(), direction.y(), direction.z()], hammer: hammer ? 1 : 0 }, 20);
 
-            // 明确选中一个友方：只走无伤支援，把对方身上的火浇熄，不造成伤害。
-            if (selected !== null && world.valid(selected) && world.friendly(selected) && String(selected.ref()) !== String(actor.ref())) {
-                const body = world.observe(selected);
-                const at = body !== null ? body.position() : action.targetPosition();
-                if (at.minus(origin).length() > reach + 0.6 || !world.clear(origin, at)) {
-                    WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "whiff", target: String(selected.ref()), spray: spray, scale: scale }, 18);
+            // 明确选中一个友方：只走无伤支援，同时浇熄原生火焰和灼伤身份，不造成伤害。
+            if (friend && friendAt !== null) {
+                if (friendAt.minus(origin).length() > reach + 0.6 || !world.clear(origin, friendAt)) {
+                    WorldFeedback.emit(world, jetpunchScene, 1, friendAt, { moment: "whiff", target: String(selected!.ref()), spray: spray, scale: scale }, 18);
                     done(action);
                     return;
                 }
-                if (CombatStatus.has(world, selected, "burn")) {
-                    const cured = CombatStatus.cure(world, selected, "burn");
-                    const out = world.ignite(selected, 0);
-                    if (cured || out) {
-                        WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "douse", target: String(selected.ref()), aid: 1, scale: scale }, 26);
-                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.25, 0)), jetpunchDouseText, [], 24);
-                        world.sound("minecraft:block.fire.extinguish", at, 14, "{}");
-                    } else {
-                        WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "whiff", target: String(selected.ref()), spray: spray, scale: scale }, 18);
-                    }
+                const aflame = jetpunchAflame(world, selected!);
+                const cured = aflame && CombatStatus.cure(world, selected!, "burn");
+                const out = aflame && world.ignite(selected!, 0);
+                if (aflame && (cured || out)) {
+                    WorldFeedback.emit(world, jetpunchScene, 1, friendAt, { moment: "douse", target: String(selected!.ref()), aid: 1, scale: scale }, 26);
+                    WorldFeedback.text(world, friendAt.plus(WorldCombat.point(0, 1.25, 0)), jetpunchDouseText, [], 24);
+                    world.sound("minecraft:block.fire.extinguish", friendAt, 14, "{}");
                 } else {
                     // 干着的同伴：只溅一片水花，不挂状态、不造成伤害。
-                    WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "whiff", target: String(selected.ref()), spray: spray, scale: scale }, 18);
+                    WorldFeedback.emit(world, jetpunchScene, 1, friendAt, { moment: "whiff", target: String(selected!.ref()), spray: spray, scale: scale }, 18);
                 }
                 done(action);
                 return;
             }
 
-            const hit = action.trace(origin, end, radius);
-            const victim = hit.target();
-            if (hit.hitEntity() && victim !== null && world.valid(victim) && !world.friendly(victim)) {
+            const victim = hit !== null ? hit.target() : null;
+            if (hit !== null && victim !== null && hit.hitEntity() && world.valid(victim) && !world.friendly(victim)) {
                 const landed = impact(action, hit, jetpunchId, power,
                     { damage: damageSpec(jetpunchId, "torrent"), contact: true, punch: true });
                 const at = hit.position();
@@ -113,7 +118,7 @@ namespace PokemonSkills {
                     const away = at.minus(origin);
                     if (away.length() > 0.05) world.hitDisplace(victim, away.unit().scale(drive));
                     WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), jetpunchHitText, [Math.round(power)], 22);
-                    if (CombatStatus.has(world, victim, "burn")) {
+                    if (jetpunchAflame(world, victim)) {
                         CombatStatus.cure(world, victim, "burn");
                         if (world.valid(victim)) world.ignite(victim, 0);
                         WorldFeedback.emit(world, jetpunchScene, 1, at, { moment: "douse", target: String(victim.ref()), scale: scale }, 26);
@@ -124,9 +129,11 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            WorldFeedback.emit(world, jetpunchScene, 1, end, { moment: "whiff", spray: spray, scale: scale }, 18);
-            WorldFeedback.text(world, end.plus(WorldCombat.point(0, 1.0, 0)), jetpunchMissText, [], 20);
-            world.sound("minecraft:entity.generic.splash", end, 12, "{}");
+            // 一路无人在射程线上：拳线在真实墙体/首碰处截断，落空不画到满拳程末端。
+            const stop = hit !== null && hit.blocked() ? hit.position() : end;
+            WorldFeedback.emit(world, jetpunchScene, 1, stop, { moment: "whiff", spray: spray, scale: scale }, 18);
+            WorldFeedback.text(world, stop.plus(WorldCombat.point(0, 1.0, 0)), jetpunchMissText, [], 20);
+            world.sound("minecraft:entity.generic.splash", stop, 12, "{}");
             done(action);
         }
     });

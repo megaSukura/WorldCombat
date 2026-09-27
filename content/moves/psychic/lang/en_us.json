@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.psychic.summary": "Seize the aimed enemy with telekinesis: root it in place, deal special damage on the grab and possibly lower its Sp. Def by 1 stage; during a short manipulation window, hold the skill key to steer the telekinetic anchor around the target so it is dragged after the anchor; if it is still held when the window ends, crush it once.",
+  "worldcombat.skill.psychic.summary": "Seize the aimed enemy with telekinesis: root it in place, deal special damage on the grab and possibly lower its Sp. Def by 1 stage; during a short manipulation window, hold the skill key to steer the telekinetic anchor around the target so it is dragged after the anchor; letting go, losing sight or being interrupted releases the root, and if it is still held when the window ends, crush it once.",
   "worldcombat.skill.psychic.use.0": "Pick out one high-threat target at mid range",
   "worldcombat.skill.psychic.use.1": "Pin a charging enemy in place",
   "worldcombat.skill.psychic.use.2": "Drag a target away from an ally, a doorway or the middle of a corridor",
   "worldcombat.skill.psychic.description.0": "A landed grab deals about %1$s special damage; as long as the grab holds and the target stays in range with clear sight, it takes about %2$s more when the window ends.",
-  "worldcombat.skill.psychic.description.1": "The telekinesis pins the target in place, unable to move, for %1$s; over the following %3$s manipulation window, holding the skill key steers the telekinetic anchor within %2$s blocks of the initial spot, and the target is pushed toward it — up to %2$s blocks of total movement (bigger bodies resist). Without manual aim it is dragged toward the caster. If it is still held when the window ends, the crush lands.",
+  "worldcombat.skill.psychic.description.1": "The telekinesis pins the target in place for up to %1$s; letting go, losing sight, the target leaving range or an interruption releases it early. Over the following %3$s manipulation window, holding the skill key steers the telekinetic anchor within %2$s blocks of the initial spot, and the target is pushed toward it — up to %2$s blocks of total movement (bigger bodies resist). Without manual aim the anchor faces away from the caster, shoving the target aside instead of pulling it closer. If it is still held when the window ends, the crush lands.",
   "worldcombat.skill.psychic.description.2": "A landed grab has a %1$s chance to lower the target's Sp. Def by %2$s stage(s).",
   "worldcombat.skill.psychic.hold.on": "Coiling grip: longer root, larger manipulation budget, heavier crush and a more reliable Sp. Def drop, at the cost of slightly lighter grab, shorter reach and longer wind-up and cooldown.",
   "worldcombat.skill.psychic.hold.off": "Point grip: a longer, faster, heavier grab, at the cost of a shorter root, a smaller manipulation budget, a lighter crush and a rarer Sp. Def drop.",
@@ -34,5 +34,5 @@
   "world_combat.move.psychic.text.grip": "Seized",
   "world_combat.move.psychic.text.sunder": "Sp. Def -%1$s",
   "world_combat.move.psychic.text.squeeze": "Crushed",
-  "worldcombat.skill.psychic.description.failure": "If the grab does not land, it neither pins the target nor opens a manipulation window, and no crush follows; losing sight or the target leaving the grip range makes the caster let go, so the crush does not land either. The crush depends only on whether this grab landed, not on the target accepting the root."
+  "worldcombat.skill.psychic.description.failure": "If the grab does not land, it opens no manipulation window and no crush follows; losing sight, the target leaving range or the grab being interrupted makes the caster let go, so the crush does not land either. The crush depends only on whether this grab landed, not on the target accepting the root; a target immune to control is not pretended to be held — the grab and the window-end crush still settle normally."
 }

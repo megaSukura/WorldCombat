@@ -2,13 +2,13 @@
  * 放电 / discharge 的客户端表现。
  *
  * 一句话：施法者身上攒起细碎火花，电光自身上同时迸出；每一次真正的命中都牵出一条从自己连到该目标的电弧，
- * 被电的人身上缠上一簇电花；广域式过一会儿重新检查圈内，再对各目标牵出较弱的余电，电花噼啪残留一阵。
+ * 被电的人身上缠上一簇电花；有实际命中时电弧在圈内噼啪残留一阵。
  * 色相家族：电黄与近白（electricity_white / electricity_yellow / bolt / impact_electric / glowingsparkle_yellow）为主体，
  * 冷白只做电心的强调。
- * 拍子：起（charge 攒电）→ 击（flash 自身迸发、hit 逐目标连线、echo 重新连线的余电）→ 散（crackle 噼啪残留）。
- * 范围：flash 是自身迸发，不带地面圈；hit/echo 的电弧沿服务端给出的 `data.path` 画出，路径首尾就是施法者与实际目标。
+ * 拍子：起（charge 攒电）→ 击（flash 自身迸发、hit 逐目标连线）→ 散（crackle 噼啪残留）。
+ * 范围：flash 是自身迸发；hit 的电弧沿服务端给出的 `data.path` 画出，路径首尾就是施法者与实际目标。
  * 数：`data.arcs`（特攻与等级派生）决定每道电弧的股数，`data.count`（威力派生）决定命中火花量。
- * 空放时只播 flash 的自身短火花，不牵任何弧、不铺圈。
+ * 空放时只播 flash 的自身短火花，不牵任何弧。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const DischargeDefinition: ParticleDefinition = {
@@ -67,28 +67,6 @@ const DischargeDefinition: ParticleDefinition = {
                     gravity: 0.04, drag: 0.9,
                     lifetime: [8, 16], size: [0.06, 0.01],
                     color: 0xFFF0A0, alpha: [0.8, 0], light: "full", maxParticles: 70
-                }
-            ]
-        },
-        echo: {
-            duration: 22,
-            exit: { stop: 8, drain: 16 },
-            emitters: [
-                {
-                    name: "bolts", bind: "path", offset: [0, 0.2, 0],
-                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    burst: { count: { data: "arcs", fallback: 4 }, at: 1 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.4, 0.9], spread: 12,
-                    lifetime: [4, 7], size: [0.24, 0.04], sizeMode: "index",
-                    color: 0xFFE96A, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 30
-                },
-                {
-                    name: "bolt_detail", bind: "path", offset: [0, 0.2, 0],
-                    particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
-                    burst: { count: { data: "arcs", fallback: 4 }, at: 1 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.03, 0.12], spread: [10, 30],
-                    lifetime: [7, 12], size: [0.06, 0.02],
-                    color: 0xFFF3C4, alpha: [0.8, 0], light: "full", maxParticles: 30
                 }
             ]
         },

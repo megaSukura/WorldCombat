@@ -4,7 +4,7 @@
   "worldcombat.skill.extrasensory.use.1": "Hold a sleeping or rooted target in place",
   "worldcombat.skill.extrasensory.use.2": "Grip a small cluster of foes at once",
   "worldcombat.skill.extrasensory.description.0": "The force closes on the chosen spot: every enemy inside takes one hit for about %1$s special damage, over a %2$s-block closing radius.",
-  "worldcombat.skill.extrasensory.description.1": "The force lands within %1$s blocks; the mirage lingers %2$s before closing, so anyone who steps out of the patch before then avoids it.",
+  "worldcombat.skill.extrasensory.description.1": "The force lands within %1$s blocks; the mirage lingers %2$s before closing, so anyone who steps out of the patch before then avoids it. The grip is unseeable psychic force, not a physical splash: thin cover between does not change it; and if the cast is interrupted before it closes, the mirage and the force disperse together, leaving no delayed blast behind.",
   "worldcombat.skill.extrasensory.description.2": "Each gripped target has a %1$s chance to flinch for %2$s: it first tries to interrupt the target's interruptible action, and while flinching the target cannot start new moves or make ordinary attacks.",
   "worldcombat.skill.extrasensory.description.3": "With Ambush form on: the mirage lingers longer and the grip is wider and heavier, but the cooldown is longer; off (immediate form): it closes faster with a smaller, lighter grip.",
   "worldcombat.skill.extrasensory.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

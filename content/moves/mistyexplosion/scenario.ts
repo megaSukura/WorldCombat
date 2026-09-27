@@ -1,44 +1,44 @@
-/**
- * 薄雾炸裂 / mistyexplosion 的可执行设计说明。
- *
- * 场面：一只会薄雾炸裂的妖精（Clefairy）站在三只低等级对手中间——逼出「一次罩住一圈」的局面，
- *   让 AI 的 `ai.minFoes`（默认 2）条件成立。三只对手只会「跃起」、不还手，确保施法者在引爆前不会被提前打空。
- *
- * 断言只取必然事实：这招被提交过；至少一个目标挨到伤害；**使用者倒下**（原生 selfdestruct:"always"）；
- *   被罩住的目标被致盲（只有伤害真的落地才会致盲）。命中几个、暴击、残雾视效范围与「薄雾加成」
- *   （需要薄雾场地，单招场景里无法合法制造）写进 note。
- */
+/** Native delivery and denied payment are exercised beside each other; no visual test is implied. */
 Smoke.scenario("mistyexplosion", function (stage) {
-    stage.fill([-10, -1, -8], [10, -1, 8], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "Clefairy", level: 40, moves: ["mistyexplosion"], at: [0, 0, 0] });
-    var foeA = stage.pokemon({ species: "Rattata", level: 25, moves: ["splash"], at: [2.2, 0, 0] });
-    var foeB = stage.pokemon({ species: "Rattata", level: 25, moves: ["splash"], at: [1.8, 0, 1.8] });
-    var foeC = stage.pokemon({ species: "Rattata", level: 25, moves: ["splash"], at: [1.8, 0, -1.8] });
-    stage.hostile(caster, foeA);
-    stage.hostile(caster, foeB);
-    stage.hostile(caster, foeC);
-    stage.until(900, function () {
-        return stage.casts("mistyexplosion", caster) > 0 && (stage.damageTo(foeA) > 0 || stage.damageTo(foeB) > 0 || stage.damageTo(foeC) > 0);
-    }, function () {
-        stage.after(16, function () {
-            stage.expect(stage.casts("mistyexplosion", caster) > 0, "clefairy committed mistyexplosion");
-            stage.expect(stage.damageTo(foeA) > 0 || stage.damageTo(foeB) > 0 || stage.damageTo(foeC) > 0, "the mist bloom dealt damage inside the ring");
-            stage.expect(!caster.alive(), "the user fainted even though the move was used (selfdestruct: always)");
-            stage.expect(stage.hadMobEffect(foeA, "minecraft:blindness") || stage.hadMobEffect(foeB, "minecraft:blindness") || stage.hadMobEffect(foeC, "minecraft:blindness"),
-                "the mist blinded at least one caught target");
-            stage.note("原生 selfdestruct:\"always\"——有没有炸到使用者都倒下；命中几个、暴击、残雾视效范围与时长随局面变化，雾不再拖慢目标。薄雾加成需要脚下已有薄雾场地，单招场景里无法合法制造，故不在此断言", {
-                casts: stage.casts("mistyexplosion", caster),
-                foeADamage: Math.round(stage.damageTo(foeA) * 10) / 10,
-                foeBDamage: Math.round(stage.damageTo(foeB) * 10) / 10,
-                foeCDamage: Math.round(stage.damageTo(foeC) * 10) / 10,
-                casterAlive: caster.alive(),
-                blindedA: stage.hadMobEffect(foeA, "minecraft:blindness"),
-                blindedB: stage.hadMobEffect(foeB, "minecraft:blindness"),
-                blindedC: stage.hadMobEffect(foeC, "minecraft:blindness")
-            });
+    stage.time("night"); stage.weather("clear");
+    stage.fill([-7, -1, -7], [25, -1, 7], "minecraft:dirt");
+    const caster = stage.pokemon({ species: "clefairy", level: 40, moves: ["mistyexplosion"], at: [0, 0, 0] });
+    const refused = stage.pokemon({ species: "clefairy", level: 40, moves: ["mistyexplosion"], at: [18, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:zombie", at: [1.8, 0, 0] });
+    const refusedFoe = stage.mob({ type: "minecraft:zombie", at: [19.8, 0, 0] });
+    stage.noai(foe, refusedFoe);
+    [foe, refusedFoe].forEach(target => {
+        const uuid = target.ref.split("/")[0];
+        stage.command("attribute " + uuid + " minecraft:generic.max_health base set 200");
+        stage.command("data merge entity " + uuid + " {Health:200.0f}");
+    });
+    const ally = stage.mob({ type: "minecraft:villager", at: [0, 0, 2] });
+    const refusedAlly = stage.mob({ type: "minecraft:villager", at: [18, 0, 2] });
+    stage.noai(ally, refusedAlly);
+    stage.team("mist_paid", [caster, ally]); stage.team("mist_refused", [refused, refusedAlly]);
+    stage.after(20, function () {
+    stage.hurt(caster, caster.health() * .8, "minecraft:magic", { source: foe });
+    stage.hurt(refused, refused.health() * .8, "minecraft:magic", { source: refusedFoe });
+    stage.command("data merge entity " + refused.ref.split("/")[0] + " {Invulnerable:1b}");
+    stage.provoke(caster, foe); stage.provoke(refused, refusedFoe);
+    stage.until(900, () => stage.casts("mistyexplosion", caster) > 0 && !caster.alive()
+        && stage.damageTo(foe) > 0 && stage.casts("mistyexplosion", refused) > 0, function () {
+        stage.after(45, function () {
+            stage.expect(!caster.alive(), "a complete sacrifice was confirmed");
+            stage.expect(stage.damageTo(foe) > 0, "the independent source delivered the blast after death");
+            stage.expect(refused.alive(), "native invulnerability refused the health payment");
+            stage.expect(stage.damageTo(refusedFoe) === 0, "denied payment granted no blast damage");
+            stage.note("The blast uses the original legal recipient snapshot; native death, not source unavailability, activates it.",
+                { paidCasts: stage.casts("mistyexplosion", caster), refusedCasts: stage.casts("mistyexplosion", refused),
+                    damage: stage.damageTo(foe), deniedDamage: stage.damageTo(refusedFoe) });
+        stage.expect(stage.hadMobEffect(foe, "world_combat:mistyexplosion_haze"), "a damaged ordinary mob received the aim carrier");
+        stage.expect((stage.stages(foe).accuracy || 0) < 0, "the confirmed blast owns a real Accuracy reduction");
+        stage.expect(!stage.hadMobEffect(refusedFoe, "world_combat:mistyexplosion_haze"), "refused payment grants no aim impairment");
+        stage.after(160, function () {
+            stage.expect((stage.stages(foe).accuracy || 0) === 0, "the Accuracy contribution expires with its carrier");
             stage.done();
         });
-    }, "mistyexplosion blooms and the user faints within 45 s");
+        });
+    }, "confirmed blast and refused payment both resolve");
+    });
 });

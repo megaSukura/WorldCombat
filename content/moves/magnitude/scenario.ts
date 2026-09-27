@@ -8,9 +8,9 @@
  * 地上的人都吃」的场面。铁傀儡血厚，用来核对这条跨对象的效果，也保证它们一直留在震幅圈里，
  * 让必然事实（至少一个挨到伤害）稳定成立；给施法者满击退抗性，保证它一直在着地状态能发动。
  *
- * 断言只取必然事实：这招被放过、至少一只站在地上的敌人挨到伤害。
- * 掷出的震级、预震到落震之间隔了多久、上颠与踉跄多远、有没有抖断动作、暴击写进 note 供读轨迹判断——
- * 「先读出震级再落震」「威力随震级变化」与「够大就打断」正是这招的设计事实。
+ * 断言只取必然事实：这招被放过、至少一只站在地上的敌人挨到伤害、整场不改变地面方块。
+ * 掷出的震级、预震到落震之间隔了多久、上颠与踉跄多远、有没有真的抖断动作、暴击写进 note 供读轨迹判断——
+ * 「先读出震级再落震」「威力随震级变化」与「有真实动作才计打断」正是这招的设计事实。
  */
 Smoke.scenario("magnitude", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -29,7 +29,8 @@ Smoke.scenario("magnitude", function (stage) {
         stage.after(12, function () {
             stage.expect(stage.casts("magnitude", caster) >= 1, "golem committed magnitude");
             stage.expect(stage.damageTo(heavyA) > 0 || stage.damageTo(heavyB) > 0, "the quake dealt damage to a grounded foe");
-            stage.note("提交时先掷震级并亮出数字、预震约 6 刻后才落震结算（原生 5/10/20/30/20/10/5 分布，深源式整体 +1），实际威力按震级缩放；上颠很小、踉跄一点点；震级 ≥ fracture 时被打到的目标动作被中断（本场景无法直接观测，留待试玩）。暴击与命中几个随局面变化", {
+            stage.expect(stage.changedBlocks().length === 0, "the quake left the ground blocks untouched");
+            stage.note("提交时先掷震级并亮出数字、预震约 6 刻后才落震结算（原生 5/10/20/30/20/10/5 分布，深源式整体 +1），实际威力按震级缩放；上颠很小、踉跄一点点；只有与施法者同层连续实地的目标被震；震级 ≥ fracture 时向目标派送一次普通中断请求，只有拿回真实动作结束回执才计断招（铁傀儡没有本作动作，本场景预期不报断招，留待试玩核对真人动作）。暴击与命中几个随局面变化", {
                 casts: stage.casts("magnitude", caster),
                 heavyADamage: Math.round(stage.damageTo(heavyA) * 10) / 10,
                 heavyBDamage: Math.round(stage.damageTo(heavyB) * 10) / 10,

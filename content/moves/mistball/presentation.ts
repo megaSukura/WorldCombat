@@ -31,6 +31,15 @@ const MistballDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.09], spin: 6,
                     lifetime: [8, 16], size: [0.1, 0.02],
                     color: 0xFFFFFF, alpha: [0.8, 0], light: "world", maxParticles: 40
+                },
+                {
+                    // 真实可达弧的预告：沿服务端解出的弹道顶点画一条淡线，可达才出现，长度就是它真正会走的弧。
+                    name: "charge_arc", bind: "path", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "motes", fallback: 20 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.01, 0.05], spread: 6,
+                    lifetime: [8, 14], size: [0.06, 0.015],
+                    color: 0xD8D2EE, alpha: [0.3, 0], light: "world", maxParticles: 90
                 }
             ]
         },
@@ -105,8 +114,9 @@ const MistballDefinition: ParticleDefinition = {
             ]
         },
         cling: {
-            duration: 30,
-            exit: { stop: 12, drain: 22 },
+            // duration 0：随承载 downcast 的托管效果一起存在，减速多久雾就贴多久，不用固定 30 刻空转。
+            duration: 0,
+            exit: { stop: 0, drain: 22 },
             emitters: [
                 {
                     name: "wrap", bind: "target", offset: [0, 0.4, 0], height: 0.5,

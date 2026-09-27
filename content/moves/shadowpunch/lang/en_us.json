@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.shadowpunch.summary": "The user stands still while a shadow runs from its feet into the target's shadow and a fist rises out of the target's own shadow; because the fist starts where the target stands, it cannot be anticipated, so it never misses. Grounding grabs and drags the target toward the user.",
+  "worldcombat.skill.shadowpunch.summary": "The user stands still while a shadow sinks into the target's shadow and a fist rises out of the target's own shadow; because the fist starts where the target stands, it cannot be anticipated, so it never misses. The shadow is bodiless and ordinary walls do not stop it, but the fist strikes only the one locked target. Grounding grabs and drags the target toward the user.",
   "worldcombat.skill.shadowpunch.use.0": "Raise a fist out of the target's own shadow",
   "worldcombat.skill.shadowpunch.use.1": "Hit a distant target without moving",
   "worldcombat.skill.shadowpunch.use.2": "Grab and drag a target with the shadow",
   "worldcombat.skill.shadowpunch.description.0": "A contact punch rising out of the target's shadow for about %1$s physical damage; the target's Defence, type match-up and criticals settle on the hit.",
-  "worldcombat.skill.shadowpunch.description.1": "The shadow creeps along the ground from the user's feet into a target shadow within %1$s blocks at %2$s blocks/tick, and the fist only rises once it arrives; if the target is gone by then, the punch hits only empty air.",
+  "worldcombat.skill.shadowpunch.description.1": "The shadow can sink into a target shadow within %1$s blocks (a creep of about %2$s blocks/tick), then a fist rises from the target's foot shadow and only settles once it reaches the body; if the target is gone or has run out of reach, the punch hits only empty air.",
   "worldcombat.skill.shadowpunch.hold.on": "Grounding: on a hit the fist grabs the target and drags it %1$s blocks toward the user, but the punch is about 15%% lighter.",
   "worldcombat.skill.shadowpunch.hold.off": "Ambush: no drag, a pure contact punch about 18% heavier.",
   "worldcombat.skill.shadowpunch.timing": "Cast on an enemy within %1$s blocks; after a %2$s s wind-up it costs %4$s PP to launch, then %3$s s recovery and %5$s s cooldown.",
@@ -13,7 +13,7 @@
   "worldcombat.skill.shadowpunch.value.shadow": "Punch power",
   "worldcombat.skill.shadowpunch.value.reach": "Reach",
   "worldcombat.skill.shadowpunch.value.seep": "Creep speed",
-  "worldcombat.skill.shadowpunch.value.fist": "Collision radius",
+  "worldcombat.skill.shadowpunch.value.fist": "Fist scale",
   "worldcombat.skill.shadowpunch.value.rise": "Rise height",
   "worldcombat.skill.shadowpunch.value.drag": "Drag distance",
   "worldcombat.skill.shadowpunch.value.tempo": "Windup",
@@ -24,7 +24,7 @@
   "worldcombat.skill.shadowpunch.preference.ai.maxChase": "Engage range",
   "worldcombat.skill.shadowpunch.preference.ai.maxChase.help": "The user only punches at targets within this distance; larger values reach further.",
   "worldcombat.skill.shadowpunch.preference.ai.grounding": "Prefer grounded targets",
-  "worldcombat.skill.shadowpunch.preference.ai.grounding.help": "On: an airborne enemy is a lower priority, because the shadow crawls along the ground; off: ignore whether the target is on the ground.",
+  "worldcombat.skill.shadowpunch.preference.ai.grounding.help": "On: an airborne enemy is a lower priority, because the shadow has no ground shadow to cling to; off: airborne targets are considered equally.",
   "world_combat.move.shadowpunch.text.fizzle": "Shadow falls empty",
   "world_combat.move.shadowpunch.text.hit": "Shadow fist"
 }

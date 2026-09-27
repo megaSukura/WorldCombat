@@ -94,38 +94,45 @@ namespace PokemonSkills {
                     { moment: "settle", shots: shots, drops: drops }, 24);
                 done(current);
             }
-            function onShot(current: CombatAction, hit: CombatImpact): void {
+            /** 每股有独立的不可变编号，回调据此携带自己的伤害段身份。 */
+            function onShot(current: CombatAction, hit: CombatImpact, shot: number): void {
                 const currentWorld = current.world();
                 const target = hit.target();
                 const point = hit.position();
+                let landed = false;
                 if (target !== null && currentWorld.valid(target) && !currentWorld.friendly(target)) {
-                    impact(current, hit, "octazooka", power, { damage: damageSpec("octazooka", "jet") });
-                    const at = currentWorld.observe(target);
-                    if (at !== null) {
-                        // 整次施放最多成功降一次命中；只有真的降下来才在脸上罩墨。
-                        if (!blinded && currentWorld.random() < chance) {
-                            const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
-                            if (dropped !== 0) {
-                                blinded = true;
-                                WorldFeedback.keep(currentWorld, "octazooka:face:" + String(target.ref()), octazookaScene, 1, at.position(),
-                                    { moment: "face", target: String(target.ref()), stage: blind, drops: drops, intensity: intensity }, 70);
-                                WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
-                                    "world_combat.move.octazooka.text.blind", [Math.abs(dropped)], 30);
-                            }
+                    landed = impact(current, hit, "octazooka", power,
+                        { damage: damageSpec("octazooka", "jet") }, "jet" + shot);
+                    const at = landed ? currentWorld.observe(target) : null;
+                    // 整次施放最多成功降一次命中；只有真的打伤、且真的降下来，才在脸上罩墨。
+                    if (at !== null && !blinded && currentWorld.random() < chance) {
+                        const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
+                        if (dropped !== 0) {
+                            blinded = true;
+                            WorldFeedback.keep(currentWorld, "octazooka:face:" + String(target.ref()), octazookaScene, 1, at.position(),
+                                { moment: "face", target: String(target.ref()), stage: blind, drops: drops, intensity: intensity }, 70);
+                            WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
+                                "world_combat.move.octazooka.text.blind", [Math.abs(dropped)], 30);
                         }
                     }
                 }
-                // 首碰方块留一小块装饰墨；它不是持续伤害，也不画危险圈。
+                // 首碰方块只留一块短墨滴余韵；它不是持续伤害，也不画危险圈。
                 const cell = hit.blockPosition();
                 if (!stained && cell !== null) {
                     stained = true;
                     WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
-                        { moment: "stain", drops: drops, direction: octazookaNormal(hit.blockFace()), surface: 1 }, stainTicks);
+                        { moment: "stain", drops: drops, direction: octazookaNormal(hit.blockFace()), surface: 1, stain: stainTicks }, stainTicks);
                 }
-                WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
-                    { moment: "splash", target: target === null ? "" : String(target.ref()), drops: drops,
-                        intensity: intensity, scale: scale }, 24);
-                sound(current, "minecraft:entity.generic.splash");
+                if (landed) {
+                    WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
+                        { moment: "splash", target: target === null ? "" : String(target.ref()), drops: drops,
+                            intensity: intensity, scale: scale }, 24);
+                    sound(current, "minecraft:entity.generic.splash");
+                } else if (target !== null) {
+                    // 接触了却没造成伤害（友方、免伤或被去重）：只溅一小团冷墨，不冒充受击。
+                    WorldFeedback.emit(currentWorld, octazookaScene, 1, point,
+                        { moment: "dud", target: String(target.ref()), drops: drops, scale: scale }, 18);
+                }
             }
             function onComplete(current: CombatAction): void {
                 outstanding--;
@@ -133,12 +140,12 @@ namespace PokemonSkills {
             }
             function fire(current: CombatAction): void {
                 if (settled || fired >= shots) return;
+                const shot = fired + 1;
                 fired++;
                 outstanding++;
                 const currentWorld = current.world();
-                const currentBody = currentWorld.observe(current.actor());
-                const from = currentBody === null ? current.origin()
-                    : currentBody.position().plus(WorldCombat.point(0, currentBody.height() * 0.6, 0));
+                // 弹体从实际动作起点起飞：不再抬到身体中心之上，避免窄顶隔顶发弹。
+                const from = current.origin();
                 // 合法当前输入：有真实目标就朝它并保留原有限转向；否则用提交的瞄准方向。
                 const live = targetRef === "" ? null : currentWorld.actor(targetRef);
                 const liveBody = live !== null && currentWorld.valid(live) ? currentWorld.observe(live) : null;
@@ -150,10 +157,11 @@ namespace PokemonSkills {
                 if (live !== null && currentWorld.valid(live))
                     appearance.homing = { target: targetRef, turn: steer, delay: 1, range: current.range() };
                 const flight = LivingActions.projectile(current, {
-                    speed: velocity, range: current.range(), radius: radius, lifetime: 160,
+                    // 弹体从与表现相同的炮口点起飞：发射口、瞄准几何与真实起点统一。
+                    speed: velocity, range: current.range(), radius: radius, lifetime: 160, origin: from,
                     direction: octazookaJitter(base, spread, currentWorld),
                     appearance: appearance,
-                    impact: onShot
+                    impact: function (inner: CombatAction, hit: CombatImpact) { onShot(inner, hit, shot); }
                 }, onComplete);
                 WorldFeedback.emit(currentWorld, octazookaScene, 1, from,
                     { moment: "jet", projectile: flight, shot: fired, shots: shots, drops: drops,

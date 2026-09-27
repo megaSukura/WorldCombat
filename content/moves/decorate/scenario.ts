@@ -3,9 +3,10 @@
  *
  * 场面：一只只会装饰的霜奶仙（Alcremie）与一只僵尸队友（同队）在 3 格外；再往前 2 格是一只敌对僵尸。
  * 队友僵尸立刻去咬敌人（因此是共享观测里的「交战中」伙伴），AI 会走近到射程内，把装饰作为真实投射物送过去。
- * 必然事实：本招被提交过；缎带真正到达后，队友身上出现过共享身份 world_combat:status/decorated，物攻属性被抬高过。
+ * 必然事实：本招被提交过；缎带真正到达后，队友身上出现过共享身份 world_combat:status/decorated，
+ *   且物攻与特攻各被抬高（共享阶梯显示 ≥2 级、原生物攻属性同步上升）。提升挂在这份装饰载体上。
  * 送了几件装饰、飞了多久、AI 是先送还是先挨打，随站位变化，写进 note 供读轨迹判断；
- * 被墙或别的身体挡下、或队友离场则不会加攻，这一支由代码路径与人工试玩覆盖。
+ * 被墙或别的身体挡下、或队友离场则不会加攻（只有命中原目标才结账），这一支由代码路径与人工试玩覆盖。
  */
 Smoke.scenario("decorate", function (stage) {
     stage.fill([-10, -1, -8], [14, -1, 8], "minecraft:stone");
@@ -22,9 +23,12 @@ Smoke.scenario("decorate", function (stage) {
         stage.expect(stage.casts("decorate", caster) > 0, "decorate was committed");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/decorated"), "the ally carried the shared decorated identity");
         stage.expect(stage.attribute(ally, "minecraft:generic.attack_damage") > attack0 + 0.001, "the ally's Attack rose");
+        const worn = stage.stages(ally);
+        stage.expect((worn.atk || 0) >= 2 && (worn.spa || 0) >= 2, "the decoration owned both offence stages");
         stage.note("decorate observations", {
             casts: stage.casts("decorate", caster),
             allyAttack: [attack0, stage.attribute(ally, "minecraft:generic.attack_damage")],
+            allyStages: worn,
             allyDecorated: stage.hadMobEffect(ally, "world_combat:status/decorated"),
             casterHealth: Math.round(caster.health() * 10) / 10,
             hurtBack: Math.round(stage.damageTo(caster) * 10) / 10

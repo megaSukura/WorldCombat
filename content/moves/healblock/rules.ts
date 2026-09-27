@@ -17,8 +17,10 @@ namespace PokemonSkills {
 
     function healBlockFeedback(world: CombatWorld, actor: CombatActor, amount: number): void {
         const body = world.observe(actor); if (!body) return;
+        // 收紧的镇环数量按这一次真正被挡回去的回量派生，不用装饰性固定层数冒充多层机制。
+        const knots = Math.max(1, Math.min(4, Math.round(amount / 4)));
         WorldFeedback.emit(world, healBlockScene, 1, body.position(), { moment: "block", target: String(actor.ref()),
-            amount: amount, motes: Math.max(6, Math.min(32, Math.round(amount * 4))), intensity: Math.max(.6, Math.min(2, amount / body.maxHealth() * 12)) }, 18);
+            amount: amount, knots: knots, motes: Math.max(6, Math.min(32, Math.round(amount * 4))), intensity: Math.max(.6, Math.min(2, amount / body.maxHealth() * 12)) }, 18);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), healBlockTextDenied, [], 22);
     }
     // Native heal(), including other mods. A phase/maximum-health change is not a healing event.
@@ -37,13 +39,13 @@ namespace PokemonSkills {
         const amount = context.amount; context.amount = 0;
         if (amount > 0) healBlockFeedback(context.world, context.actor, amount);
     } });
-    export function healBlockArm(world: CombatWorld, target: CombatActor, ticks: number): boolean {
+    export function healBlockArm(world: CombatWorld, target: CombatActor, ticks: number, rings: number): boolean {
         if (!CombatStatus.apply(world, target, healBlockStatus, healBlockEffect, ticks, 0, { unique: true })) return false;
         const carrier = MobEffects.read(world, target, healBlockEffect), body = world.observe(target);
         if (carrier && body) {
             const effect = world.effect(healBlockVisual, target, JSON.stringify({ carrier: MobEffects.anchor(carrier) }), ticks);
             WorldFeedback.onEffect(world, effect, "healblock:hold:" + String(target.ref()), healBlockScene, 1, body.position(),
-                { moment: "hold", target: String(target.ref()), rings: 10 });
+                { moment: "hold", target: String(target.ref()), rings: Math.max(6, Math.round(rings)) });
         }
         return true;
     }

@@ -2,9 +2,11 @@
  * 自由落体 / skydrop 的伙伴 AI 用途。
  *
  * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase`（默认 8）之内，并且**拎得动**——
- * 通过只读探针读目标的原生体重，超过 `ai.maxWeight`（默认 300kg）就放弃，免得白费一次出手。
+ * 通过只读探针读目标的原生体重，超过 `ai.maxWeight`（默认 300kg）就放弃，免得白费一次出手；
+ * 同时用真实格挡探针估算头顶净空，顶棚低到拎不离地就不出手。
  * 它是单体重控：`ai.preferIsolated` 打开时，目标身边没有别的敌人时会明显抬高 priority——把它从人群里
- * 摘出去一段时间最值；被围住时让位给普通攻击。目标是自己关注的对象时也略高。
+ * 摘出去一段时间最值；被围住时让位给普通攻击。升空前再数一遍 12 格内能顺视线打到它的外敌，
+ * 火线越多扣分越多——两具身体悬空时正是最挨打的窗口。目标是自己关注的对象时也略高。
  * 够不到交给共享接近逻辑（抓取距离很短，必须贴到身边）。
  */
 namespace CompanionBehavior {
@@ -13,6 +15,27 @@ namespace CompanionBehavior {
         const access=world(context),self=source(context),actor=access.actor(self.ref),victim=access.actor(target.ref);if(!actor||!victim)return false;
         const capacity=PokemonSkills.p("skydrop","liftCap",{world:access,actor:actor,skill:PokemonSkills.skills["skydrop"],detail:{values:{}}});
         return PokemonSkills.skydropEligible(access,actor,victim,Math.min(capacity,ai<number>(item,"maxWeight",300)),ai<number>(item,"maxChase",8));
+    }
+
+    /** 顶棚估算：头顶可用净空明显低于本次升程时，摔得更轻也更容易白抓，排序上扣分。 */
+    function skydropCeiling(context:WorldBehavior.Context,item:WorldBehavior.Capability,target:Entity):boolean{
+        const access=world(context),actor=access.actor(source(context).ref),victim=access.actor(target.ref);if(!actor||!victim)return false;
+        const body=access.observe(victim);if(!body)return false;
+        const altitude=PokemonSkills.p("skydrop","altitude",{world:access,actor:actor,skill:PokemonSkills.skills["skydrop"],detail:{values:{}}});
+        const head=body.boundsMax();
+        return WorldGeometry.blockHit(access,head,head.plus(point([0,Math.max(0.8,altitude*0.5),0])))!==null;
+    }
+
+    /** 目标被拎上天时，有多少别的敌人能顺着无遮挡的视线打到它（空窗期的外敌火线）。 */
+    function skydropExposure(context:WorldBehavior.Context,access:CombatWorld,target:Entity):number{
+        const nearby:Entity[]=context.facts.nearby||[];let count=0;
+        for(let i=0;i<nearby.length;i++){
+            const other=nearby[i];
+            if(other.ref===target.ref||other.friendly||other.health<=0||!other.visible)continue;
+            if(distance(other.point,target.point)>12)continue;
+            if(access.clear(point(target.point),point(other.point)))count++;
+        }
+        return count;
     }
 
     /** 目标身边 4 格内还站着几个别的活敌。 */
@@ -45,6 +68,10 @@ namespace CompanionBehavior {
             let base = 26;
             if (ai<boolean>(item, "preferIsolated", true) && skydropCrowd(context, target) === 0) base += 12;
             if (context.facts.focus === target.ref) base += 8;
+            // Several enemies with a clear line punish the airborne window; fewer lines make the isolation play worth it.
+            base -= Math.min(16, skydropExposure(context, world(context), target) * 4);
+            // A ceiling that caps the lift makes the slam lighter; rank it below a clean open-air grab.
+            if (skydropCeiling(context, item, target)) base -= 14;
             return base;
         }
     });

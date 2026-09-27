@@ -1,22 +1,23 @@
 /**
  * 巴投 / circlethrow —— 注册与动作。
  *
- * 核心念头：贴身抓住一个对手，越肩把它摔到自己背后。抓取要求实际近距身体接触与通视；命中成功后才进入抛投，
- *   抛线每刻按目标实际当前位置短步推进，途中撞天花板／墙就地落下收束，不追赶越墙的计划点。落地只在原地做一次
- *   允许的动作打断，并尝试原生 partyForceOut；抗搬运者吃抓摔伤害但不播放越肩飞行。本招不再持续清目标。
+ * 核心念头：贴身抓住一个对手，越肩把它摔到自己背后。抓取不靠预选，而是沿瞄准方向做一次真实身体／方块
+ *   trace：撞到的第一个可抓活体就是受体，被墙或空处挡住就抓空。命中成功后才进入抛投，抛线每刻按目标实际
+ *   当前位置短步推进，途中撞天花板／墙就在真碰处落下收束，不追赶越墙的计划点。
+ *   完全抗搬（初推位移为 0）只吃抓摔伤害、不播越肩飞行、不打断也不强换；只有真的被搬到合法落点才做一次打断与换出。
  * 两幕：
- *   起（windup，提交前）：压低下盘、双手拢起抓握的褐光，预告这一次贴身。
- *   抓与摔（execute，提交后）：先判定抓取——目标在 grip 内、且到它的连线无遮挡才抓住，否则空手收回。
- *       抓住后先结算 slam，命中成功才把人沿一条越肩抛物线带过头顶，落到背离来向的一侧。每一拍用
- *       `hitDisplace` 按实际当前位置补一小步：撞墙／抗位移就就地落下，落点用实际身体位置；落地做一次打断与换人。
- * 反制：只对一个目标、必须贴身；对手在你出手瞬间横移出抓取距离就抓空；摔的飞行会被地形挡住。
+ *   起（windup，提交前）：压低下盘、双手在身前拢起抓握的褐光，预告这一次贴身。
+ *   抓与摔（execute，提交后）：trace 抓住第一个真实接触的可抓者，否则空手收回。抓住后先结算 slam，
+ *       命中成功才把人沿一条越肩抛物线带过头顶，落到背离来向的一侧。每一拍用 `hitDisplace` 按真实位移推进：
+ *       初推为 0 就地挣脱、撞墙在真碰处 bump，正常走完整条弧才是 land 并做一次打断与换人。
+ * 反制：只对一个目标、必须贴身；出手瞬间横移出抓取距离就抓空；摔的飞行会被地形挡住。
  */
 namespace PokemonSkills {
     define({
         id: circlethrowId,
         cooldownParameter: "recharge",
         name: "巴投",
-        description: "贴身抓住一个对手，先吃一记格斗属性接触伤害，再把它越肩摔到自己背后：抛线沿实际位置逐刻推进，撞墙就地落下。落地做一次动作打断，有后备的对手被真正换下；抗搬运者只吃伤害、不被摔飞。可以朝空处伸手抓空。",
+        description: "沿瞄准方向贴身抓取第一个真实接触的对手，先吃一记格斗属性接触伤害，再把它越肩摔到自己背后：抛线沿实际位置逐刻推进，撞墙就在真碰处落下。完全抗搬的目标只吃伤害、不被摔飞，也不会被打断或换下；只有真的被搬到合法落点才做一次打断与强制换下。可以朝空处伸手抓空。",
         uses: ["把一个扑上来的对手摔到背后", "贴身反击、把对手从自己面前清走", "把厚实目标摔出近身圈并打上一击"],
         kind: "aim",
         range: 2.8,
@@ -36,8 +37,15 @@ namespace PokemonSkills {
         windup: function (action: CombatAction, config: any, prepare: number) {
             const body = action.sense().observe(action.actor());
             const scale = body ? (body.width() + body.height()) / 2.3 : 1;
-            action.present("world_combat:move_circlethrow:windup", circlethrowScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", scale: scale, rings: Math.round(p(circlethrowId, "rings", action)) }));
+            // 手源按面向落在身前：把真实瞄准的水平朝向转成一个世界点交给 bind:"point"。
+            const raw = aim(action);
+            let heading = WorldCombat.point(raw.x(), 0, raw.z());
+            if (heading.length() < 0.01) heading = WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            if (heading.length() < 0.01) heading = WorldCombat.point(0, 0, 1);
+            const hand = action.origin().plus(heading.unit().scale(0.45));
+            action.present("world_combat:move_circlethrow:windup", circlethrowScene, 1, hand,
+                JSON.stringify({ moment: "windup", scale: scale, rings: Math.round(p(circlethrowId, "rings", action)),
+                    point: [hand.x(), hand.y(), hand.z()] }));
             return prepare;
         },
         indicator: function (config: any, pokemon?: CombatPokemon) {
@@ -46,8 +54,6 @@ namespace PokemonSkills {
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
             const world = action.world(), actor = action.actor();
-            const selected = action.target();
-            const grabbed: CombatActor | null = selected !== null && world.valid(selected) ? selected : null;
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const centre = self.position();
@@ -57,77 +63,105 @@ namespace PokemonSkills {
             const rings = Math.round(p(circlethrowId, "rings", action));
             const scale = (self.width() + self.height()) / 2.3;
             const scenes = WorldFeedback.actionScenes(circlethrowScene, 1);
+            const contact = Math.max(0.4, self.width() * 0.6);
 
+            // 真实瞄准：朝向预选目标或瞄准点，水平化后作为抓取射线方向（允许朝空处伸手）。
+            const raw = aim(action);
+            let heading = WorldCombat.point(raw.x(), 0, raw.z());
+            if (heading.length() < 0.01) heading = WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            if (heading.length() < 0.01) heading = WorldCombat.point(0, 0, 1);
+            heading = heading.unit();
+
+            // 抓取不靠预选：从自身身体前缘之外沿方向做一次真实 trace，第一个可抓的活体接触才是受体；
+            // 撞墙或空处则抓空。起点外移避免把自己的身体当成首个接触。
+            const from = centre.plus(heading.scale(Math.max(0.4, self.width() * 0.5 + 0.25)));
+            const probe = action.trace(from, centre.plus(heading.scale(grip + contact + self.width())), contact, false);
+            const candidate = probe.hitEntity() ? probe.target() : null;
+            const grabbed: CombatActor | null = candidate !== null && world.valid(candidate)
+                && String(candidate.ref()) !== String(actor.ref()) && !world.friendly(candidate) ? candidate : null;
             if (grabbed === null) {
-                WorldFeedback.emit(world, circlethrowScene, 1, centre.plus(WorldCombat.point(0, 0.4, 0)), { moment: "miss", scale: scale }, 16);
+                WorldFeedback.emit(world, circlethrowScene, 1, from, { moment: "miss", scale: scale }, 16);
                 WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), circlethrowMissText, [], 24);
                 done(action);
                 return;
             }
-
             const victim = world.observe(grabbed);
             if (victim === null) { done(action); return; }
-            const from = victim.position();
-            const distance = from.minus(centre).length();
-            // 抓取判定：实际近距身体接触 + 通视。够不到或被方块挡住就抓空。
-            if (distance > grip + 0.35 || !world.clear(centre, from)) {
-                WorldFeedback.emit(world, circlethrowScene, 1, from, { moment: "miss", scale: scale }, 16);
-                WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), circlethrowMissText, [], 24);
+            const grabbedAt = probe.position();
+            if (grabbedAt.minus(centre).length() > grip + contact || !world.clear(centre, grabbedAt)) {
+                WorldFeedback.emit(world, circlethrowScene, 1, grabbedAt, { moment: "miss", scale: scale }, 16);
+                WorldFeedback.text(world, grabbedAt.plus(WorldCombat.point(0, 1.2, 0)), circlethrowMissText, [], 24);
                 done(action);
                 return;
             }
-            let heading = WorldCombat.point(from.x() - centre.x(), 0, from.z() - centre.z());
-            if (heading.length() < 0.01) heading = WorldCombat.point(action.direction().x(), 0, action.direction().z());
-            if (heading.length() < 0.01) heading = WorldCombat.point(0, 0, 1);
-            heading = heading.unit();
-            const over = WorldCombat.point(-heading.x(), 0, -heading.z());
-            const ideal = WorldCombat.point(centre.x() + over.x() * fling, from.y(), centre.z() + over.z() * fling);
-            action.face(from, 20, 20);
+            let headingTo = WorldCombat.point(grabbedAt.x() - centre.x(), 0, grabbedAt.z() - centre.z());
+            if (headingTo.length() < 0.01) headingTo = heading;
+            headingTo = headingTo.unit();
+            const over = WorldCombat.point(-headingTo.x(), 0, -headingTo.z());
+            const fromPoint = victim.position();
+            const ideal = WorldCombat.point(centre.x() + over.x() * fling, fromPoint.y(), centre.z() + over.z() * fling);
+            action.face(fromPoint, 20, 20);
 
             // 抓住：贴身扣住，先结算摔击；命中成功才进入抛投。
-            WorldFeedback.emit(world, circlethrowScene, 1, from, { moment: "grip", target: String(grabbed.ref()), rings: rings, scale: scale }, 20);
-            world.sound("minecraft:entity.player.attack.strong", from, 16, "{}");
+            WorldFeedback.emit(world, circlethrowScene, 1, grabbedAt, { moment: "grip", target: String(grabbed.ref()), rings: rings, scale: scale }, 20);
+            world.sound("minecraft:entity.player.attack.strong", grabbedAt, 16, "{}");
             const landed = hurt(action, grabbed, circlethrowId, slam, { damage: damageSpec(circlethrowId, "slam"), contact: true });
             if (!landed) {
-                WorldFeedback.emit(world, circlethrowScene, 1, from, { moment: "miss", scale: scale }, 16);
-                WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), circlethrowMissText, [], 24);
+                WorldFeedback.emit(world, circlethrowScene, 1, grabbedAt, { moment: "miss", scale: scale }, 16);
+                WorldFeedback.text(world, grabbedAt.plus(WorldCombat.point(0, 1.2, 0)), circlethrowMissText, [], 24);
                 done(action);
                 return;
             }
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.5, 0)), circlethrowThrowText, [], 24);
-            scenes.show(action, "throw", from, { moment: "throw", target: String(grabbed.ref()), rings: rings, scale: scale, phase: 0 });
+            scenes.show(action, "throw", fromPoint, { moment: "throw", target: String(grabbed.ref()), rings: rings, scale: scale, phase: 0 });
             let step = 0, finished = false;
 
-            function land(current: CombatAction, blocked: boolean): void {
+            /** mode: land 走完整条弧、bump 撞墙、resist 完全抗搬（初推为 0）。 */
+            function finish(current: CombatAction, mode: string, at: CombatPoint | null): void {
                 if (finished) return;
                 finished = true;
                 const scope = current.world(), after = scope.observe(grabbed!);
                 scenes.stop(current, "throw");
-                if (after !== null) {
-                    const at = after.position();
-                    WorldFeedback.emit(scope, circlethrowScene, 1, at,
-                        { moment: blocked ? "bump" : "land", target: String(grabbed!.ref()), rings: rings, scale: scale }, 22);
-                    scope.sound("minecraft:entity.player.attack.strong", at, 16, "{}");
-                    scope.interrupt(grabbed!, "world_combat:circlethrow");
-                    if (partyForceOut(scope, grabbed!, partyFeet(after)) !== null)
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), circlethrowSwitchText, [], 24);
+                const spot = at !== null ? at : (after !== null ? after.position() : null);
+                if (spot !== null) {
+                    if (mode === "land") {
+                        WorldFeedback.emit(scope, circlethrowScene, 1, spot,
+                            { moment: "land", target: String(grabbed!.ref()), rings: rings, scale: scale }, 22);
+                        scope.sound("minecraft:entity.player.attack.strong", spot, 16, "{}");
+                        // 只有真的被搬到落点（身体仍在）才做一次打断与换人。
+                        if (after !== null) {
+                            scope.interrupt(grabbed!, "world_combat:circlethrow");
+                            if (partyForceOut(scope, grabbed!, partyFeet(after)) !== null)
+                                WorldFeedback.text(scope, spot.plus(WorldCombat.point(0, 1.1, 0)), circlethrowSwitchText, [], 24);
+                        }
+                    } else if (mode === "bump") {
+                        WorldFeedback.emit(scope, circlethrowScene, 1, spot,
+                            { moment: "bump", target: String(grabbed!.ref()), rings: rings, scale: scale }, 22);
+                        scope.sound("minecraft:block.stone.hit", spot, 12, "{}");
+                    } else {
+                        WorldFeedback.emit(scope, circlethrowScene, 1, spot,
+                            { moment: "resist", target: String(grabbed!.ref()), rings: rings, scale: scale }, 22);
+                    }
                 }
                 scenes.finish(current, done);
             }
 
             function fly(current: CombatAction): void {
                 const scope = current.world(), now = scope.observe(grabbed!);
-                if (now === null) { land(current, false); return; }
+                if (now === null) { finish(current, "land", null); return; }
                 step++;
                 const t = Math.min(1, step / air);
-                const desired = from.plus(ideal.minus(from).scale(t)).plus(WorldCombat.point(0, arc * 4 * t * (1 - t), 0));
+                const desired = fromPoint.plus(ideal.minus(fromPoint).scale(t)).plus(WorldCombat.point(0, arc * 4 * t * (1 - t), 0));
                 const delta = desired.minus(now.position());
                 const applied = scope.hitDisplace(grabbed!, delta);
-                const blocked = applied < delta.length() - 0.05;
+                // 初推为 0：完全抗搬，只留下这一记抓摔伤害，不播飞行、不打断、不换人。
+                if (step === 1 && !(applied > 0.01)) { finish(current, "resist", now.position()); return; }
+                const wall = WorldGeometry.blockHit(scope, now.position(), desired);
+                if (wall !== null && applied < delta.length() - 0.05) { finish(current, "bump", wall.position()); return; }
                 const at = scope.observe(grabbed!);
                 if (at !== null) scenes.show(current, "throw", at.position(),
                     { moment: "throw", target: String(grabbed!.ref()), rings: rings, scale: scale, phase: Math.round(t * 100) / 100 });
-                if (blocked || step >= air) { land(current, blocked && step < air); return; }
+                if (step >= air) { finish(current, "land", at !== null ? at.position() : null); return; }
                 current.after(1, function (next: CombatAction) { fly(next); });
             }
 

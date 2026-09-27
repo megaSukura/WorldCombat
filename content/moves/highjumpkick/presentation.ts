@@ -4,9 +4,9 @@
  * 一句话：施法者压腿蓄力后几乎笔直拔上高空，顶点短暂悬停时在正下方地面亮出落点环，随即膝头朝下砸进环心，
  * 砸实的一刻炸开深红近白的格斗冲击与一圈碎石；砸偏则是膝盖硬磕地面。
  * 色相家族：深红（0xE25C4A）与近白（0xFFF0E8）为主体，落尘用中性 tinydust。
- * 拍子：起 windup（压腿）→ 拔 leap（竖直气柱）→ 停 apex（顶点落点环）→ 坠 dive（直坠线）→ 击 impact ／ 失 crash。
- * 范围：apex 的落点环按 `data.hitRadius` 铺在 `data.point` 上，把这一膝会砸到的位置画给对手看；dive 的竖直下降线
- *   沿 `bind:"path"` 从当前位置连到落点。
+ * 拍子：起 windup（压腿）→ 拔 leap（竖直速度线）→ 停 apex（顶点落点环，持续到坠击）→ 坠 dive（直坠线）→ 击 impact ／ 失 crash。
+ * 范围：apex 的落点环按 `data.hitRadius`（真实半径，不再被 scale 二次放大）铺在 `data.point` 上，一路留到坠击；leap / dive
+ *   每刻只发本体真实走过的一小段，画的是已经飞过的短尾迹；起跳扬尘改成一发留在起跳地面。
  * 运动：leap 是笔直向上的速度线，apex 是头顶收束、脚下落点环一明一暗，dive 是沿 `data.direction` 的竖直冲刺。
  * 数：`data.count`（膝劲派生）决定命中迸发量，`data.dust`（体重与物攻派生）决定扬尘密度，
  *   `data.intensity`（膝劲 / 130）抬高亮度，`data.scale`（膝击判定 / 0.7）放大尘环。
@@ -37,21 +37,21 @@ const HighjumpkickDefinition: ParticleDefinition = {
             ]
         },
         leap: {
-            duration: 26,
+            duration: 0,
             exit: { stop: 10, drain: 12 },
             emitters: [
                 {
-                    name: "column", bind: "source", height: 0.0, orient: "velocity",
-                    particle: "world_combat_core:cobblemon/generic/lightbeam",
-                    rate: 34, shape: { kind: "line", length: { data: "height", fallback: 3.6 } },
+                    name: "lift", bind: "source", height: 0.35, orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    rate: 30, shape: { kind: "line", length: { data: "height", fallback: 3.6 } },
                     direction: "up", speed: [0.07, 0.24], spread: 6,
-                    lifetime: [7, 12], size: [0.15, 0.03],
-                    color: 0xFFE0D6, alpha: [0.6, 0], light: "full", maxParticles: 70
+                    lifetime: [7, 12], size: [0.17, 0.04],
+                    color: 0xFFE0D6, alpha: [0.6, 0], light: "full", maxParticles: 80
                 },
                 {
                     name: "rise", bind: "source", height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "dust", fallback: 16 }, shape: { kind: "ring", radius: 0.46 },
+                    burst: { count: { data: "dust", fallback: 16 }, at: 0 }, shape: { kind: "ring", radius: 0.46 },
                     direction: "outward", speed: [0.05, 0.16], spread: 16,
                     lifetime: [8, 15], size: [0.1, 0.02], sizeMode: "index",
                     color: 0xB08A78, alpha: [0.5, 0], gravity: 0.04, drag: 0.92, light: "world", maxParticles: 90
@@ -59,7 +59,7 @@ const HighjumpkickDefinition: ParticleDefinition = {
             ]
         },
         apex: {
-            duration: 14,
+            duration: 0,
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
@@ -71,7 +71,7 @@ const HighjumpkickDefinition: ParticleDefinition = {
                     color: 0xE25C4A, alpha: [0.6, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "aim", bind: "point", offset: [0, 0.08, 0], fit: "none",
+                    name: "aim", bind: "point", offset: [0, 0.08, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     rate: 26, shape: { kind: "ring", radius: { data: "hitRadius", fallback: 0.7 } },
                     direction: "outward", speed: [0.04, 0.14], spread: 6,
@@ -81,7 +81,7 @@ const HighjumpkickDefinition: ParticleDefinition = {
             ]
         },
         dive: {
-            duration: 18,
+            duration: 0,
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {

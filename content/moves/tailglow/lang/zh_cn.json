@@ -4,7 +4,7 @@
   "worldcombat.skill.tailglow.use.1": "在对手够不到时入定，赶在接战前落定",
   "worldcombat.skill.tailglow.use.2": "被追急了先凝神反打，赌对手来不及打散",
   "worldcombat.skill.tailglow.description.0": "凝神把特攻提高 %1$s 级。",
-  "worldcombat.skill.tailglow.description.1": "凝神窗口持续 %1$s；窗口自然走完淡去时，这次凝神抬起的特攻一并收回。",
+  "worldcombat.skill.tailglow.description.1": "凝神窗口持续 %1$s；特攻在入定完成的那一刻一次给出，窗口自然走完淡去时，这次凝神抬起的特攻一并收回，只撤本招自己这一份。",
   "worldcombat.skill.tailglow.description.2": "窗口里单次实际挨到最大生命 %1$s 或更多的伤害，光就被打散、特攻提前收回。",
   "worldcombat.skill.tailglow.steady.on": "静心：凝神窗口 ×1.25、走神阈值 ×1.6（更经得起擦碰），代价是起式 +3 刻、冷却 +14 刻。",
   "worldcombat.skill.tailglow.steady.off": "急促：起手更快、冷却更短，但窗口更短、光更容易被打散。",

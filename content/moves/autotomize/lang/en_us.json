@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.autotomize.summary": "The user pries off useless shell pieces and flings them away: it becomes much lighter and sharply faster. Inside the light window gravity is reduced, so it jumps higher and falls more slowly - that is how being light shows in the world, and standing still it still rests on the ground. The shed pieces scatter and vanish moments later; they are not pickable resources, and they do not grow back.",
+  "worldcombat.skill.autotomize.summary": "The user pries off useless shell pieces and flings them away: it becomes much lighter and sharply faster. Inside the light window gravity is reduced, so it jumps higher and falls more slowly - that is how being light shows in the world, and standing still it still rests on the ground. The shed pieces are only decoration that scatters for a moment and dissolves after landing; they are not pickable resources.",
   "worldcombat.skill.autotomize.use.0": "Shed once before a fight to raise Speed",
   "worldcombat.skill.autotomize.use.1": "Speed up while chased, then choose to pursue or flee",
   "worldcombat.skill.autotomize.use.2": "Jump higher during the light window to cross small height steps",

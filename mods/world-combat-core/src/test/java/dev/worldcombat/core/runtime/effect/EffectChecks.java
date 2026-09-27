@@ -231,6 +231,19 @@ public final class EffectChecks {
             f.runtime.actionEnded(1); f.runtime.tick(); f.runtime.tick();
             require(f.runtime.stats().active() == 0 && f.runtime.stats().timers() == 0, "Action-bound effects leaked");
         });
+        scenario("surviving derived effects retain their exact execution origin", () -> {
+            var f = new Fixture();
+            f.effect("checks:linked", "action", e -> {}); f.effect(EFFECT, "actor", e -> {}); f.ready();
+            var origin = new ExecutionOrigin("action:1", f.actor, 1);
+            f.runtime.create("checks:linked", f.actor, f.actor, null, 1, "{}", 100, origin);
+            long derived = f.runtime.create(EFFECT, f.actor, f.actor, null, 1, "{}", 100, origin);
+            f.runtime.create(EFFECT, f.actor, f.actor, null, 2, "{}", 100, new ExecutionOrigin("action:2", f.actor, 2));
+            require(f.runtime.countOrigin(origin) == 2, "Origin count lost linked or derived effects");
+            f.runtime.actionEnded(1);
+            require(f.runtime.countOrigin(origin) == 1, "Action end did not distinguish surviving derived effects");
+            f.runtime.dismiss(derived);
+            require(f.runtime.countOrigin(origin) == 0 && f.runtime.countOrigin(null) == 0, "Ended origin leaked or included unrelated effects");
+        });
         scenario("event provenance and bounded recursion", () -> {
             var f = new Fixture(); f.event(); long[] root = {0};
             f.effect(EFFECT, "actor", e -> e.listen(EVENT, "checks:first", "loop"));

@@ -4,7 +4,7 @@
   "worldcombat.skill.metronome.use.1": "Perform one random move",
   "worldcombat.skill.metronome.description.0": "After wagging for %1$s it borrows and performs one random move from every implemented move that can be borrowed (Metronome itself and other callers are not in the pool).",
   "worldcombat.skill.metronome.description.1": "The stirred move can reach %1$s blocks; wagging again costs %2$s.",
-  "worldcombat.skill.metronome.description.2": "Current bias: %1$s. Near draws only from moves with range 6 or less, far only from moves with range 10 or more; when no candidate is usable it falls back to the full pool.",
+  "worldcombat.skill.metronome.description.2": "Current bias: %1$s. Near draws only from moves whose individual resolved range is 6 or less, far only from moves at 10 or more; when no candidate is usable it falls back to the full pool.",
   "worldcombat.skill.metronome.preference.bias": "Metronome bias",
   "worldcombat.skill.metronome.preference.bias.help": "Full spectrum keeps any move; near draws only from close-range moves; far draws only from long-range moves. A bias narrows the pool, and falls back to the full pool when nothing fits.",
   "worldcombat.skill.metronome.preference.bias.none": "Full spectrum",
@@ -14,7 +14,7 @@
   "worldcombat.skill.metronome.value.span": "Stir reach",
   "worldcombat.skill.metronome.value.recharge": "Wag again",
   "worldcombat.skill.metronome.value.hues": "Candidate sparks",
-  "worldcombat.skill.metronome.description.3": "The borrowed move uses Metronome's own cooldown and does not additionally spend the borrowed move's PP; an attack move can only come up when an enemy is in range, otherwise only self or ally moves can be drawn.",
+  "worldcombat.skill.metronome.description.3": "The borrowed move uses Metronome's own cooldown and does not additionally spend the borrowed move's PP; an enemy move locks onto the nearest visible foe in range, an ally move lands on the most wounded partner (the user included), and point/aim moves take their spot from the user's heading.",
   "worldcombat.skill.metronome.description.4": "The draw settles on one move only: its name floats up and collapses into a single type symbol, then that move acts immediately; there is no re-roll and no stacking.",
   "world_combat.move.metronome.text.draw": "Metronome used %1$s"
 }

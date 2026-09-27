@@ -31,17 +31,30 @@ namespace CompanionBehavior {
         return count;
     }
 
-    /** 侧边放得下换位的一步才方便绕抓；用只读的 freeSpace 探针探左右各一步。 */
-    function furyswipesSideSpace(context: WorldBehavior.Context, target: Entity): boolean {
+    /** 侧移/前压那一步放得下才方便按本招过程绕抓：用真实脚位与公式 step 探路，扑抓式只看前方，游走式看左右两侧。 */
+    function furyswipesStepSpace(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
         const access = world(context), self = source(context);
+        const width = self.width || 0.9, height = self.height || 1.4;
+        const feet = self.point[1] - height / 2;
+        let step = 0.9;
+        try {
+            step = Math.max(0.2, PokemonSkills.p("furyswipes", "step", { world: access, actor: access.source(),
+                skill: PokemonSkills.skills["furyswipes"], detail: { values: item.data.config || {} } }));
+        } catch (ignored) { }
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1e-6) return true;
-        const sideX = -dz / length, sideZ = dx / length, step = 0.9;
-        const first = point([self.point[0] + sideX * step, self.point[1], self.point[2] + sideZ * step]);
-        const second = point([self.point[0] - sideX * step, self.point[1], self.point[2] - sideZ * step]);
-        try { return access.freeSpace(first, self.width || 0.9, self.height || 1.4) || access.freeSpace(second, self.width || 0.9, self.height || 1.4); }
-        catch (error) { return true; }
+        const fx = dx / length, fz = dz / length;
+        // 扑抓式朝目标前压，只需前方一步；游走式左右换位，任一侧放得下即可。
+        const pounce = !!(item.data.config && item.data.config.pounce === true);
+        const probes = pounce ? [[fx, fz]] : [[-fz, fx], [fz, -fx]];
+        try {
+            for (let i = 0; i < probes.length; i++) {
+                const probe = point([self.point[0] + probes[i][0] * step, feet, self.point[2] + probes[i][1] * step]);
+                if (access.freeSpace(probe, width, height)) return true;
+            }
+            return false;
+        } catch (error) { return true; }
     }
 
     registerUse("furyswipes", {
@@ -60,8 +73,8 @@ namespace CompanionBehavior {
             let score = 18;
             if (distance <= item.data.range) score += 8;
             if (ai<boolean>(item, "finish", true) && ratio(target) < 0.4) score += 8;
-            // 侧边站得下才好左右换位绕抓；站不下就降权。
-            score += furyswipesSideSpace(context, target) ? 6 : -4;
+            // 换位/前压那一步放得下才好按本招过程抓；放不下就降权。
+            score += furyswipesStepSpace(context, item, target) ? 6 : -4;
             // 被杂兵围住时这一趟绕不开，让扫尾拍打接手。
             if (furyswipesCrowd(context, target) >= 2) score -= 8;
             return score;

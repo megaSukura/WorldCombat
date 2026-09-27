@@ -35,6 +35,15 @@ const TrickDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.03, 0.1],
                     lifetime: [5, 11], size: [0.05, 0.01],
                     color: 0x9B6FD0, alpha: [0.5, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "hint", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
+                    shape: { kind: "polyline", closed: false },
+                    rate: { data: "motes", fallback: 14 },
+                    direction: "shape", speed: [0.01, 0.04],
+                    lifetime: [6, 12], size: [0.09, 0.02],
+                    color: 0xC77DFF, alpha: [0.4, 0], light: "full", bloom: 0.3, maxParticles: 50
                 }
             ]
         },
@@ -68,30 +77,6 @@ const TrickDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.01, 0.04],
                     lifetime: 12, size: [0.26, 0.05],
                     color: 0xD9B8FF, alpha: [0.75, 0], light: "full", maxParticles: 30
-                }
-            ]
-        },
-        trade: {
-            duration: 34,
-            exit: { stop: 18, drain: 18 },
-            emitters: [
-                {
-                    name: "carry", bind: "projectile", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/orb/scalingshaded",
-                    rate: { data: "motes", fallback: 14 },
-                    shape: { kind: "sphere", radius: 0.18 },
-                    direction: "away", speed: [0.01, 0.06],
-                    lifetime: [6, 13], size: [0.12, 0.02],
-                    color: 0xE9DDF4, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 70
-                },
-                {
-                    name: "wake", bind: "projectile", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "motes", fallback: 14 },
-                    shape: { kind: "sphere", radius: 0.12 },
-                    direction: "away", speed: [0.02, 0.08],
-                    lifetime: [8, 16], size: [0.05, 0.01],
-                    color: 0xB98FE6, alpha: [0.6, 0], light: "world", maxParticles: 80
                 }
             ]
         },
@@ -129,4 +114,62 @@ const TrickDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_trick", 1, TrickDefinition);
+
+/**
+ * 戏法换装已由原子事务即时完成；这里只把两件真实物品沿施法者—目标的实际短路径做纯视觉对飞：
+ * 从身体外沿发射、沿直线到位后结束，不生成实体、不参与碰撞，因此不会被源体或遮挡提前打断。
+ * 两端位置逐帧读 `frame.anchor`（插值脚点/体型），物品贴图由物品 id 映射到图集。
+ */
+WorldCombatClient.scene("world_combat:move_trick_arc", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry<{ mine?: string; theirs?: string; source?: string; target?: string; start?: number; dur?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data;
+    if (!data) return;
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const duration = typeof data.dur === "number" && data.dur > 0 ? data.dur : 12;
+    const elapsed = frame.serverTick() - start;
+    if (elapsed < 0 || elapsed > duration) return;
+    const progress = Math.max(0, Math.min(1, elapsed / duration));
+    const ease = progress * progress * (3 - 2 * progress);
+    const from = trickAnchor(frame, entry.source);
+    const to = trickAnchor(frame, data.target);
+    if (from === null || to === null) return;
+    const fromEdge = trickOutside(from, to), toEdge = trickOutside(to, from);
+    if (data.mine) trickCarry(frame, data.mine, fromEdge, toEdge, ease, progress);
+    if (data.theirs) trickCarry(frame, data.theirs, toEdge, fromEdge, ease, progress);
+});
+
+interface TrickAnchor { x: number; y: number; z: number; width: number; height: number; }
+function trickAnchor(frame: CombatClientFrame, ref: any): TrickAnchor | null {
+    const parsed = ref ? JSON.parse(frame.anchor(String(ref))) : null;
+    if (!parsed) return null;
+    const x = Number(parsed.x), y = Number(parsed.y), z = Number(parsed.z);
+    if (!isFinite(x) || !isFinite(y) || !isFinite(z)) return null;
+    return { x: x, y: y, z: z, width: typeof parsed.width === "number" ? parsed.width : 0.9,
+        height: typeof parsed.height === "number" ? parsed.height : 1.4 };
+}
+/** 从身体外沿起步：沿朝向挪出至少半个身位，物品不在源体内部出现。 */
+function trickOutside(from: TrickAnchor, to: TrickAnchor): TrickAnchor {
+    const dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (length < 0.01) return from;
+    const step = Math.max(0.4, from.width * 0.5 + 0.15);
+    return { x: from.x + dx / length * step, y: from.y + dy / length * step, z: from.z + dz / length * step,
+        width: from.width, height: from.height };
+}
+function trickCarry(frame: CombatClientFrame, item: any, from: TrickAnchor, to: TrickAnchor, ease: number, progress: number): void {
+    const x = from.x + (to.x - from.x) * ease;
+    const y = from.y + (to.y - from.y) * ease + from.height * 0.5 + Math.sin(progress * Math.PI) * 0.35;
+    const z = from.z + (to.z - from.z) * ease;
+    const alpha = Math.max(0, Math.min(255, Math.round(240 * (1 - progress * 0.3))));
+    frame.sprite(trickItemSprite(item), x, y, z, 0.32, progress * 360, (alpha << 24) | 0xE9DDF4, 0, true);
+}
+/** 物品注册 id 到原版物品图集贴图 id：`cobblemon:oran_berry` -> `cobblemon:item/oran_berry`。 */
+function trickItemSprite(id: any): string {
+    const value = String(id || "");
+    if (!value) return "cobblemon:particle/generic/sparkle/glowingsparkle_yellow";
+    const split = value.indexOf(":");
+    return split < 0 ? "minecraft:item/" + value : value.slice(0, split) + ":item/" + value.slice(split + 1);
+}
+
 

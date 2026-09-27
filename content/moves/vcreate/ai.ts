@@ -3,7 +3,8 @@
  *
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 10）格内；更远交给共享接近逻辑。
  * 对谁出手：`ai.opener`（默认开）打开时，自身生命还在六成以上、且目标也还硬朗时抬优先——这是一记三降级的
- *   舍身撞击，趁自己还撑得住、趁目标还值得换的时候用；关闭则只按普通近身接触招排序。
+ *   舍身撞击，趁自己还撑得住、趁目标还值得换的时候用；目标残血时再抬一档，用这一击结束威胁。三项能力都已触底
+ *   （防/特防/速度都在低位）时这一击不再付出真实代价，不算真正的舍身赌博，降分处理。
  * 够不到怎么办：reach 就是本招射程，不够先交给共享任务走近；跑过头会把自己的机动性赔进去，别在追不上时用。
  * 放完之后：三段降级已经背上，交回共享交战计划，多半转入防守或走位。
  */
@@ -29,7 +30,13 @@ namespace PokemonSkills {
                 if (CompanionBehavior.ratio(self) > 0.6) score += 8;
                 if (CompanionBehavior.ratio(target) > 0.6) score += 4;
             }
-            return score;
+            // 能收掉目标时这才是把三降换成结束威胁的窗口。
+            if (CompanionBehavior.ratio(target) <= 0.35) score += 6;
+            // 三项都已触底时这一击不再付出真实代价，不是本招的「舍身赌博」，不额外抬价。
+            if (CompanionBehavior.stage(context, self, "def") <= -4
+                && CompanionBehavior.stage(context, self, "spd") <= -4
+                && CompanionBehavior.stage(context, self, "spe") <= -4) score -= 12;
+            return Math.max(0, score);
         }
     });
 

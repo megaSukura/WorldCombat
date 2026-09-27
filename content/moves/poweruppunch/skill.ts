@@ -107,15 +107,18 @@ namespace PokemonSkills {
             const forward = flat.length() < 1e-6 ? aim(action) : flat.unit();
             const from = body.position();
             action.face(from.plus(forward), 24, 24);
-            WorldFeedback.emit(world, poweruppunchScene, 1, from.plus(WorldCombat.point(0, body.height() * 0.55, 0)),
-                { moment: "jab", direction: [forward.x(), forward.y(), forward.z()], reach: reach,
-                    sparks: sparks, scale: scale, intensity: intensity, charge: charge ? 1 : 0 }, 20);
             sound(action, "minecraft:entity.player.attack.sweep");
 
             // 真实首碰：短拳沿方向探出；友方身体也纳入接触（伤害许可仍由命中层独立决定），墙同样挡拳。
             const strike = action.trace(from, from.plus(forward.scale(reach)), radius, true);
+            const contact = strike.position();
+            // 拳尖从身前到真实接触点一记直进：判定与表现共用同一端点，遇墙停在墙面。
+            WorldFeedback.emit(world, poweruppunchScene, 1, from,
+                { moment: "jab", path: [[from.x(), from.y(), from.z()], [contact.x(), contact.y(), contact.z()]],
+                    direction: [forward.x(), forward.y(), forward.z()], reach: reach,
+                    sparks: sparks, scale: scale, intensity: intensity, charge: charge ? 1 : 0 }, 20);
             if (!strike.hitEntity()) {
-                WorldFeedback.emit(world, poweruppunchScene, 1, from.plus(forward.scale(reach * 0.7)),
+                WorldFeedback.emit(world, poweruppunchScene, 1, contact,
                     { moment: "whiff", sparks: Math.round(sparks * 0.5), scale: scale }, 18);
                 WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), poweruppunchMissText, [], 20);
                 done(action);
@@ -127,14 +130,14 @@ namespace PokemonSkills {
             const landed = impact(action, strike, "poweruppunch", jab,
                 { damage: damageSpec("poweruppunch", "jab"), contact: true, punch: true }, "jab");
             if (!landed) {
-                WorldFeedback.emit(world, poweruppunchScene, 1, point,
+                WorldFeedback.emit(world, poweruppunchScene, 1, contact,
                     { moment: "whiff", sparks: Math.round(sparks * 0.5), scale: scale }, 18);
                 WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), poweruppunchMissText, [], 20);
                 done(action);
                 return;
             }
-            // 命中回执已成立：即使目标倒下也把这一拳算作有效热身。
-            if (victim !== null && world.valid(victim)) world.displace(victim, forward.scale(knock));
+            // 命中回执已成立：即使目标倒下也把这一拳算作有效热身。推距走 hitDisplace，保留原生抗击退与事件。
+            if (victim !== null && world.valid(victim)) world.hitDisplace(victim, forward.scale(knock));
 
             const previous = MobEffects.read(world, actor, poweruppunchHardened);
             const previousKey = previous !== null ? String(previous.key()) : "";
@@ -153,11 +156,13 @@ namespace PokemonSkills {
 
             const after = world.observe(actor);
             const fist = after === null ? from : after.position();
+            // 目标只发撞击。
             WorldFeedback.emit(world, poweruppunchScene, 1, point,
-                { moment: peaked ? "peak" : "harden", target: String(victim !== null && world.valid(victim) ? victim.ref() : ""),
+                { moment: "hit", target: String(victim !== null && world.valid(victim) ? victim.ref() : ""),
                     gained: gained, total: owned, sparks: sparks, scale: scale, intensity: intensity, charge: charge ? 1 : 0 }, 24);
+            // 自身只发增长标识：不再把绑定自身的粒子在命中点与身上各发一遍。
             WorldFeedback.emit(world, poweruppunchScene, 1, fist.plus(WorldCombat.point(0, after === null ? 1 : after.height() * 0.6, 0)),
-                { moment: peaked ? "peak" : "harden", target: String(actor.ref()), gained: gained, total: owned,
+                { moment: peaked ? "peak" : "grow", target: String(actor.ref()), gained: gained, total: owned,
                     sparks: sparks, scale: scale, intensity: intensity }, 28);
             // 只续期而没涨级时不冒升级数字；真的涨了级才浮字。
             if (gained > 0 || peaked) {

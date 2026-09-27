@@ -5,7 +5,7 @@
   "worldcombat.skill.hydropump.use.2": "第一次命中先湿透，再让别的招（如加农水炮）来加成",
   "worldcombat.skill.hydropump.description.0": "水柱锁定准线持续 6 刻，正前方第一个有效敌人只受一次 %1$s 点特殊伤害，不会每刻重复结算。",
   "worldcombat.skill.hydropump.description.1": "水柱判定 %1$s 格，能轰到 %2$s 格内；整柱方向在释放那一刻确定，准线附近有 ±%3$s 的散射，特攻越高瞄得越稳。",
-  "worldcombat.skill.hydropump.description.2": "命中后把该目标沿水柱方向顶开合计约 %1$s 格（分摊到 6 刻逐刻推动，实际位移受阻挡限制），并使其湿透约 %2$s；湿透期间移动速度降低 12%，效果到期即解除。",
+  "worldcombat.skill.hydropump.description.2": "命中后把该目标沿水柱方向顶开合计约 %1$s 格（分摊到 6 刻逐刻推动、受原生抗击退与碰撞限制）；只有它仍是水柱的首要受阻目标时才继续推，离开准线或被墙挡住即停止，不追身。目标同时湿透约 %2$s，湿透期间移动速度降低 12%，效果到期即解除。",
   "worldcombat.skill.hydropump.description.3": "漫灌式会在水柱真实受阻（撞墙或身体）的那一点向 %2$s 格内、且与端点通视的其余敌人各溅一次约 %1$s 点回溅，被溅到并实际掉血者才被推开、湿透（时间约为主线目标的七成）；冲压式不产生回溅。",
   "worldcombat.skill.hydropump.deluge.on": "漫灌式：回溅半径 ×1.5、回溅威力 ×1.2、湿身 ×1.25、散射 ×1.4；代价是洪流威力 ×0.82、流速 ×0.9、射程 −2 格、起手 +3 刻、冷却 +6 刻。",
   "worldcombat.skill.hydropump.deluge.off": "冲压式：洪流威力 ×1.08、推距 ×1.15、准线更紧、流速 ×1.05；代价是回溅半径 ×0.85，且不产生回溅。",

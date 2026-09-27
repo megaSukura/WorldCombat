@@ -2,7 +2,7 @@
  * 踢倒 / lowkick 的 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，在 `ai.maxChase` 之内，体量达到 `ai.minMass`（默认 0＝总是可以）。
- * 对谁出手：**只对双脚着地的目标**（扫不到腾空者的腿），且优先重的目标；已经带着 `tripped` 身份的目标跳过。
+ * 对谁出手：优先重、双脚着地的目标；腾空者会被降权（扫不到腿、只有半伤且不绊倒），已经带着 `tripped` 身份的目标跳过。
  * 够不到怎么办：距离交给 `reach`，共享任务贴身；这是一记贴身快踢，不负责远程。
  * 放完接什么：交回共享交战计划；`ai.finish` 开启时，残血目标会让它抢先补这一脚。
  */
@@ -15,6 +15,12 @@ namespace PokemonSkills {
         if (typeof target.width === "number" && typeof target.height === "number")
             return target.width * target.width * target.height * 1000;
         return 0;
+    }
+
+    /** 扫堂式开关是顶层配置项 reap，不在 ai 子树里。 */
+    function lowkickReap(capability: WorldBehavior.Capability): boolean {
+        const config = capability.data.config;
+        return !!(config && config.reap);
     }
 
     CompanionBehavior.registerUse("lowkick", {
@@ -41,17 +47,31 @@ namespace PokemonSkills {
             if (target.grounded === false) score -= 18;
             if (CompanionBehavior.status(context, target, "tripped")) score -= 14;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.3) score += 30;
-            // 扫堂式只有真的有人落在这一脚的侧前方腿弧里才值得偏好；背后的人带不到。
-            if (CompanionBehavior.ai<boolean>(capability, "reap", false)) {
+            // 扫堂式只有真的有人落在这一脚的实际侧前方腿弧里才值得偏好；背后、隔墙、高度差太大的都带不到。
+            if (lowkickReap(capability)) {
+                const world = CompanionBehavior.world(context);
+                let range = 1.7, arc = 150;
+                try {
+                    range = Math.max(0.5, p("lowkick", "followRange",
+                        { world: world, actor: world.source(), detail: { values: capability.data.config } }));
+                    arc = Math.max(0, p("lowkick", "followArc",
+                        { world: world, actor: world.source(), detail: { values: capability.data.config } }));
+                } catch (error) { }
                 const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-                const length = Math.sqrt(dx * dx + dz * dz) || 1;
+                const heading = Math.sqrt(dx * dx + dz * dz) || 1;
+                const cosHalf = Math.cos(Math.min(360, arc) * Math.PI / 360);
                 const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
                     const ox = other.point[0] - target.point[0], oz = other.point[2] - target.point[2];
-                    if (Math.sqrt(ox * ox + oz * oz) > 1.7) continue;
-                    if ((ox * dx + oz * dz) / length < -0.2) continue;
+                    const gap = Math.sqrt(ox * ox + oz * oz);
+                    if (gap > range || gap < 1e-4) continue;
+                    // 与扫堂腿弧相同的竖直带：接触点下方 1.2、上方 1.6。
+                    if (Math.abs(other.point[1] - target.point[1]) > 1.6) continue;
+                    if ((ox * dx + oz * dz) / (gap * heading) < cosHalf - 1e-6) continue;
+                    if (!world.clear(WorldCombat.point(target.point[0], target.point[1], target.point[2]),
+                        WorldCombat.point(other.point[0], other.point[1], other.point[2]))) continue;
                     score += 12;
                     break;
                 }

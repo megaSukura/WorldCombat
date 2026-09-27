@@ -6,7 +6,8 @@
  * 拍子：起（charge 聚电）→ 飞（flight 电团掠出）→ 击（burst 炸电）／空（fade 散电）。
  * 范围：这一招只作用在电团飞过的一条直线上；flight 各层绑 `projectile` 锚点沿弹道铺开，画面即那条弹道。
  * 运动：charge 的电花向里收成一颗球；flight 的核沿 projectile 高速直行、电弧留在身后（trail）；burst 向外炸。
- * 数：`data.sparks`（特攻与载荷派生）决定电花与电弧量，`data.scale`（速度差载荷派生）决定电团体积，
+ * 数：`data.sparks`（特攻与载荷派生）决定电花与电弧量，`data.scale`（速度差载荷派生）决定电团体积；
+ *   引擎已对每个发射器统一乘一次 `data.scale`，所以 size 只写基准值，避免载荷被平方。
  *   `data.intensity`（威力派生）抬高命中亮度——发射用预计目标载荷，burst 用命中时的实际载荷。
  *   flight 是没有固定寿命的持续段（duration 0），由动作在命中、撞方块或飞满射程时 stop/finish。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -22,14 +23,14 @@ const ElectroballDefinition: ParticleDefinition = {
                     name: "gather", bind: "source", offset: [0, 0.9, 0], height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     rate: 16, shape: { kind: "sphere", radius: 0.42 }, direction: "inward", speed: [0.03, 0.16], spin: 12,
-                    lifetime: [5, 11], size: { data: "scale", fallback: 1 },
+                    lifetime: [5, 11], size: 0.16,
                     color: 0xFFE14D, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 40
                 },
                 {
                     name: "core", bind: "source", offset: [0, 0.9, 0], height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
                     rate: 10, shape: { kind: "sphere", radius: 0.2 },
-                    lifetime: [6, 12], size: { data: "scale", fallback: 1 },
+                    lifetime: [6, 12], size: 0.14,
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 24
                 }
             ]
@@ -42,7 +43,7 @@ const ElectroballDefinition: ParticleDefinition = {
                     name: "orb", bind: "projectile", offset: [0, 0, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
                     rate: 30, shape: { kind: "sphere", radius: 0.16 }, direction: "velocity", speed: [0.02, 0.1], spin: 16,
-                    lifetime: [5, 10], size: { data: "scale", fallback: 1 },
+                    lifetime: [5, 10], size: 0.18,
                     color: 0xFFE14D, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 70
                 },
                 {

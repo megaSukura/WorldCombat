@@ -16,7 +16,7 @@ Smoke.scenario("metalsound", function (stage) {
         stage.expect(stage.casts("metalsound", caster) > 0, "metalsound was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/grating"), "the target carried the shared grating identity");
         stage.expect((stage.stages(target).spd || 0) <= -2, "the staged scrapes dropped the shared Sp. Def two steps");
-        stage.note("metalsound landed; the resonance window, cover and how many scrapes completed are not part of this run", {
+        stage.note("metalsound landed; each successful scrape adds one temporary Sp. Def stage held by the shared grating carrier, so the drop is read while the resonance is alive; the resonance window, cover, stand-still and how many scrapes completed are not part of this run", {
             casts: stage.casts("metalsound", caster), stages: stage.stages(target),
             casterHp: caster.health(), targetHp: target.health()
         });

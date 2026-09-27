@@ -1,10 +1,11 @@
 /**
- * 顺风 的伙伴 AI 用途：这是这招自己的一套出手计划——把整队托快，而不是只给自己叠加。
+ * 顺风 的伙伴 AI 用途：这是这招自己的一套出手计划——把整队托快，必要也只给自己起风。
  *
- * 什么局面有意义：场上有看得见的威胁；自己身上还没有同一份风；身边 `reach` 以内至少有一位伙伴（不然单托自己不值一次 PP 15）。
- * 什么时候最想出手：威胁还在 ai.minGap 之外（还没贴身）时 priority 100 抢在共享交战次序前先把全队拉快；
+ * 什么局面有意义：场上有看得见的威胁；自己身上还没有同一份风；威胁在 ai.maxChase 以内（近到贴身下限内就先应对）。
+ *   身边的伙伴只是顺势被托住，不再是起风的前提——独自追击或撤退时给自己起风同样成立。
+ * 什么时候最想出手：威胁还在 ai.minGap 之外（还没贴身）时 priority 100 抢在共享交战次序前先把自己（与身边队友）拉快；
  *   已经贴身（小于 minGap）就让位给普通攻击，不为起风站着挨打。
- * 对谁出手：以自身为锚起风，身边同伴顺势被托住；共享的 partner 观测只用来确认「附近确实有人要托」。
+ * 对谁出手：以自身为锚起风，身边同伴顺势被托住；共享的 partner 观测只用来确认附近确实有人可托。
  * 放完之后：速度已写进公共能力阶梯；风速窗口内不重复起风，窗口走完才重新考虑。
  */
 namespace CompanionBehavior {
@@ -16,17 +17,6 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("tailwind", { gale: 1, ai: { maxChase: 12, minGap: 3 } },
         [tailwindChase, tailwindGap]);
 
-    /** 身边 reach 以内有几位活着的伙伴（含自己不算）。 */
-    function tailwindCompany(context: WorldBehavior.Context, radius: number): boolean {
-        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (other.friendly && other.health > 0 && other.ref !== self.ref
-                && CompanionBehavior.distance(other.point, self.point) <= radius) return true;
-        }
-        return false;
-    }
-
     CompanionBehavior.registerUse("tailwind", {
         protocols: ["world_combat:bolster"],
         reach: function (_context, capability) { return capability.data.range; },
@@ -34,8 +24,6 @@ namespace CompanionBehavior {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "tailwind")) return false;
-            const radius = capability.data.range;
-            if (!tailwindCompany(context, radius)) return false;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return false;
             return CompanionBehavior.distance(self.point, threat.point) <= CompanionBehavior.ai<number>(capability, "maxChase", 12);

@@ -67,7 +67,7 @@ namespace PokemonSkills {
                 recover: Math.round(p("absorb", "aftercast", context)),
                 cooldown: Math.round(p("absorb", "recharge", context)),
                 active: 1,
-                range: p("absorb", "reach", context) + 0.3
+                range: p("absorb", "reach", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -102,9 +102,15 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.absorb.actor");
 
             if (victim !== null && world.valid(victim)) {
+                // 回执取实际治疗量：共享 damage 在命中结算时按实际伤害把 drain 转回，只有真抽回来才画回流、才亮自身。
+                const before = world.observe(actor);
+                const beforeHealth = before === null ? 0 : before.health();
                 const landed = impact(action, hit, "absorb", power,
                     { damage: damageSpec("absorb", "sip"), drain: share });
-                if (landed) {
+                const after = landed ? world.observe(actor) : null;
+                const healed = after === null ? 0 : Math.max(0, after.health() - beforeHealth);
+                if (healed > 0) {
+                    const motes = Math.max(6, Math.round(healed * 8));
                     const at = world.observe(victim);
                     const point = at === null ? contact : at.position();
                     const flow = origin.minus(point);
@@ -115,7 +121,7 @@ namespace PokemonSkills {
                             direction: [inward.x(), inward.y(), inward.z()], span: run, motes: motes, scale: scale }, 26);
                     sound(action, "cobblemon:move.absorb.target");
                     WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.05, 0)), absorbHitText, [], 22);
-                    WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), absorbSapText, [Math.round(share * 100)], 22);
+                    WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), absorbSapText, [Math.round(healed * 10) / 10], 22);
                 }
             } else if (lander !== null) {
                 // 友方（或自己）先挡住藤尖：停在身体上，不结算敌方伤害。

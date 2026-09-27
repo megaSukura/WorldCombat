@@ -3,25 +3,35 @@
  *
  * 什么局面有意义：有威胁、在 ai.maxChase（默认 14）内、还没贴身，而且这次交换真的把你换到需要的形态：
  *   攻高防低、血量又低时换成守势硬扛；防高攻低、血量健康时换成攻势输出。两项差距太小（未达 ai.minEdge）
- *   或方向不对时都不换——单纯差距大并不值得削弱自己。
+ *   或方向不对时都不换——单纯差距大并不值得削弱自己。普通生物把 AttackDamage 与 Armor/2 放在同一尺度比较，
+ *   零项也能判断交换是否带来正向收益；推荐对任意生物成立，不只看宝可梦。
  * 什么时候最想出手：满足方向与血量条件时 priority 100；低血转守时 priority 104，抢在共享交战次序前先扛住。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
- * 放完之后：数值已经换过来，窗口内不再重复；窗口走完自动换回，再看局面。
+ * 放完之后：数值已经换过来，窗口内不再重复（任何另一攻防倒转身份还在时也不起手）；窗口走完自动换回，再看局面。
  * 配置 hold（维持）改变窗口与冷却；ai.low 决定多低算「低血」，ai.minEdge 决定差距多小就不值得换。
  */
 namespace PokemonSkills {
     /**
      * 只读、决策内缓存：这次交换会把攻防倒向哪一边。2 = 低血且攻高防低，转守势；
      * 1 = 健康且防高攻低，转攻势；0 = 换了会削弱自己，不做。argument 传 {low, edge}。
+     * 宝可梦读培养攻防；普通生物读 AttackDamage 与 Armor/2，零项仍参与比较。
      */
     CompanionBehavior.registerFact("world_combat:move_powershift/intent", function (access, actor, argument) {
-        if (String(actor.domain()) !== "cobblemon" || !access.valid(actor)) return 0;
-        const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(access, actor);
-        const attack = NativeEffects.stat(pokemon, state, "atk"), defence = NativeEffects.stat(pokemon, state, "def");
+        if (!access.valid(actor)) return 0;
+        let attack: number, defence: number;
+        if (String(actor.domain()) === "cobblemon") {
+            const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(access, actor);
+            attack = NativeEffects.stat(pokemon, state, "atk"); defence = NativeEffects.stat(pokemon, state, "def");
+        } else {
+            const offence = access.attributeValue(actor, "minecraft:generic.attack_damage", true);
+            const armour = access.attributeValue(actor, "minecraft:generic.armor", true);
+            if (offence === null || armour === null) return 0;
+            attack = offence.value(); defence = armour.value() / 2;
+        }
         if (!isFinite(attack) || !isFinite(defence)) return 0;
         const low = argument && typeof argument.low === "number" ? argument.low : 0.6;
         const edge = argument && typeof argument.edge === "number" ? argument.edge : 1.05;
-        const high = Math.max(attack, defence), small = Math.max(1, Math.min(attack, defence));
+        const high = Math.max(attack, defence), small = Math.max(0.0001, Math.min(attack, defence));
         if (high / small < edge) return 0;
         const body = access.observe(actor);
         const ratio = body ? body.health() / Math.max(1, body.maxHealth()) : 1;
@@ -37,7 +47,8 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context), threat = context.senses["world_combat:threat"];
             if (!threat) return false;
-            if (CompanionBehavior.status(context, self, "powershift")) return false;
+            // 本窗内重施、或另一招／第三方的攻防倒转身份仍在时都不起手，交给 ready／execute 的互斥核验。
+            if (CompanionBehavior.status(context, self, "attack_defence_inversion")) return false;
             if (CompanionBehavior.distance(self.point, threat.point) > CompanionBehavior.ai<number>(capability, "maxChase", 14)) return false;
             if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 3)) return false;
             return powershiftIntent(context, capability) > 0;
@@ -46,7 +57,7 @@ namespace PokemonSkills {
         approachTarget: function (context) { return CompanionBehavior.source(context); },
         priority: function (context, capability, _target) {
             const self = CompanionBehavior.source(context);
-            if (CompanionBehavior.status(context, self, "powershift")) return 0;
+            if (CompanionBehavior.status(context, self, "attack_defence_inversion")) return 0;
             return powershiftIntent(context, capability) === 2 ? 104 : powershiftIntent(context, capability) > 0 ? 100 : 0;
         }
     });
@@ -69,7 +80,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.minEdge"), "最小差距", "number", {
             min: 1.0, max: 2.0, step: 0.05,
-            help: "攻防差距（大值 / 小值）小于它就不转换；调高只在高攻或高防的极端个体上才换，避免无意义的来回。"
+            help: "攻防差距（大值 / 小值，按同一尺度）小于它就不转换；调高只在高攻或高防的极端个体上才换，避免无意义的来回。"
         }),
         field(pathOf("ai.low"), "低血阈值", "number", {
             min: 0.2, max: 0.9, step: 0.05,

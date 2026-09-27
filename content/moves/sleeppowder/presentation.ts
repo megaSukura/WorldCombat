@@ -69,7 +69,7 @@ const SleepPowderDefinition: ParticleDefinition = {
                     name: "bloom_ring", bind: "point", fit: "none", offset: [0, 0.04, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 14 },
-                    shape: { kind: "ring", radius: 2.4, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 2.4 },
                     direction: "outward", speed: [0.04, 0.14],
                     lifetime: [10, 16], size: [0.2, 0.07],
                     color: 0xE8D9FF, alpha: [0.55, 0], light: "world", maxParticles: 28
@@ -92,7 +92,7 @@ const SleepPowderDefinition: ParticleDefinition = {
                     // 薄云边界：一圈低频外扩的环，让玩家看清云实际覆盖到哪。
                     name: "edge", bind: "point", fit: "none", offset: [0, 0.07, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    rate: 3, shape: { kind: "ring", radius: 2.4, rotation: [90, 0, 0] },
+                    rate: 3, shape: { kind: "ring", radius: 2.4 },
                     direction: "outward", speed: [0.0, 0.012],
                     lifetime: [30, 46], size: [0.18, 0.05], alpha: [0.28, 0],
                     color: 0xE8D9FF, light: "world", maxParticles: 12

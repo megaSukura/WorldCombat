@@ -34,7 +34,8 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("supersonic", {
         protocols: ["world_combat:control"],
-        reach: function (_context, item) { return item.data.config && item.data.config.band === "deep" ? item.data.range * 0.7 : item.data.range; },
+        // 走位距离直接用已经按形态缩放过的最终 range，不再二次乘形态系数。
+        reach: function (_context, item) { return item.data.range; },
         available: function (context, item, purpose, target) { return target === null ? true : supersonicWants(context, item, target); },
         accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
         priority: function (context, item, target) {

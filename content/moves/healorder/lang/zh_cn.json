@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.healorder.summary": "召唤一队手下围着自己引导，片刻后每只把一份治疗交给自己；被打掉的手下少交一份。全部幸存时回复最大生命的一半左右。",
+  "worldcombat.skill.healorder.summary": "召唤一队手下围着自己引导，片刻后每只回到自己身边、且到本人通视时才把一份治疗交给自己；走散或被墙隔开、到点仍未归的手下不送血，被打掉的手下少交一份并当场散落。全部幸存时回复最大生命的一半左右。",
   "worldcombat.skill.healorder.use.0": "快速续上一条命",
   "worldcombat.skill.healorder.use.1": "用可被击杀的手下把治疗拖成一个窗口",
   "worldcombat.skill.healorder.use.2": "在受击间隙里集体疗伤",
   "worldcombat.skill.healorder.description.0": "召唤 %2$s 只手下围着自己引导；引导结束时每只幸存的手下各交付一份治疗，全部幸存时共回复最大生命的 %1$s，每被打掉一只就少交一份。",
-  "worldcombat.skill.healorder.description.1": "引导 %1$s；手下环绕半径 %2$s、每只生命 %3$s，会跟着你移动，期间可被攻击、逐只击杀以减少交付；自身未满血时才能发动。",
+  "worldcombat.skill.healorder.description.1": "引导 %1$s；手下环绕半径 %2$s、每只生命 %3$s，会跟着你移动，期间可被攻击、逐只击杀以减少交付。到点只有真的回到你身边、且中间没有方块遮挡才交付；被墙隔开或没跟上的那只会散去而不远程送血。自身未满血时才能发动。",
   "worldcombat.skill.healorder.stance.elite": "精锐手下：数量降到约六成但每只更耐打，单个阵亡会损失更大份额，适合怕被一口气清光的场合。",
   "worldcombat.skill.healorder.stance.swarm": "虫群手下：数量多、每只更脆，被清掉一两只损失较小，但更容易被范围攻击削减总量。",
   "worldcombat.skill.healorder.timing": "自身招式，准备 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",

@@ -1,6 +1,29 @@
 /** Explicit, bounded descriptions of replayable native attacks; content owns when to copy and its multiplier. */
 namespace NativeAttackProjection {
-    export interface Replay { kind: "contact" | "projectile"; fact: DamageSemantics.RecentAttack; speed: number; range: number; gravity: number; radius: number; appearance: LivingActions.ProjectileAppearance; }
+    export interface Budget { amount: number; category: string; type: string; tick: number; contact: boolean; }
+    export interface Replay { kind: "contact" | "projectile"; fact: Budget; basis?: "damage" | "start"; speed: number; range: number; gravity: number; radius: number; appearance: LivingActions.ProjectileAppearance; }
+    export interface StartDescription { start: CombatNativeAttackStart; range: number; replay: Replay | null; }
+    export const starts = new WorldContributions.Registry<StartDescription>();
+    starts.define({ id: "world_combat:native_projection/starts", apply: context => {
+        const start = context.start;
+        if (!(start.baseDamage > 0) || !isFinite(start.baseDamage) || !(context.range > 0)) return;
+        const fact: Budget = { amount: start.baseDamage, category: start.category, type: start.damageType, tick: start.tick, contact: start.kind === "contact" };
+        if (start.kind === "contact" && ["minecraft:mob_melee", "minecraft:player_melee"].indexOf(start.profile) >= 0) {
+            context.replay = { kind: "contact", fact: fact, basis: "start", speed: 0, range: 1.5, gravity: 0, radius: .3, appearance: {} }; return;
+        }
+        const profiles = ["minecraft:arrow", "minecraft:spectral_arrow", "minecraft:trident", "minecraft:small_fireball", "minecraft:fireball"];
+        if (start.kind !== "projectile" || profiles.indexOf(start.profile) < 0 || !(start.speed! > 0) || !isFinite(start.speed!)) return;
+        const fire = start.profile.indexOf("fireball") >= 0;
+        context.replay = { kind: "projectile", fact: fact, basis: "start", speed: start.speed!, range: context.range,
+            gravity: Math.max(0, start.gravity || 0), radius: Math.max(.1, start.radius || .2),
+            appearance: { item: fire ? undefined : start.profile === "minecraft:trident" ? "minecraft:trident" : "minecraft:arrow",
+                sprite: fire ? "world_combat_core:cobblemon/generic/fire/wisp" : undefined, scale: .35, glow: true,
+                acceleration: start.acceleration, drag: start.drag, waterDrag: start.waterDrag } };
+    } });
+    /** Registered launch/contact budgets omit future criticals, target-dependent enchantments and native explosions. */
+    export function fromStart(start: CombatNativeAttackStart, range: number): Replay | null {
+        return starts.apply({ start: start, range: range, replay: null }).replay;
+    }
     export interface Description { fact: DamageSemantics.RecentAttack; replay: Replay | null; }
     export const descriptions = new WorldContributions.Registry<Description>();
     const melee = ["minecraft:mob_attack", "minecraft:mob_attack_no_aggro", "minecraft:player_attack", "minecraft:sting", "minecraft:ram", "minecraft:mace_smash"];

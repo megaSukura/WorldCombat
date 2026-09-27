@@ -4,7 +4,7 @@
   "worldcombat.skill.defensecurl.use.1": "With the roll set to charge in, use the impact to close the gap",
   "worldcombat.skill.defensecurl.use.2": "Raise Defense with a cheap short window before trading",
   "worldcombat.skill.defensecurl.description.0": "While curled, Defense is raised by %1$s stage; after about %2$s the ball opens and that stage is withdrawn, and clearing it early withdraws it at once.",
-  "worldcombat.skill.defensecurl.description.1": "While the ball holds, a hostile hit rolls you about %1$s blocks along the chosen direction; one roller rolls at most once every %2$s, so a multi-hit attack does not push you on every part.",
+  "worldcombat.skill.defensecurl.description.1": "While the ball holds, a hostile direct hit rolls you about %1$s blocks along the chosen direction over 2-4 ticks, stopping at a wall; one roller rolls at most once every %2$s, so a multi-hit attack does not push you on every part.",
   "worldcombat.skill.defensecurl.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.defensecurl.roll.away": "Roll away: each hit rolls you away from the attacker, trading position and distance.",
   "worldcombat.skill.defensecurl.roll.into": "Charge in: each hit rolls you toward the attacker, staying inside its reach.",

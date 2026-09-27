@@ -4,9 +4,9 @@
  * 原生事实（Cobblemon 1.8 / Showdown）：Normal、变化、威力 0、命中 必中、PP 20、优先度 +5、目标 adjacentAlly；
  *   被帮助者获得 volatile helpinghand，本回合招式基础威力 ×1.5（重复施加会再乘 1.5）。
  *
- * 世界化：把「借出去的力气」翻成一次短暂的托举——施法者伸手把光送进伙伴身上，伙伴的**下一次命中**因此更重，
+ * 世界化：把「借出去的力气」翻成一次短暂的托举——施法者伸手把光送进伙伴身上，伙伴的**下一次造成直接伤害的命中**因此更重，
  *   用掉即散；没有出手则会随时间自行褪去。原生的 +5 优先度落成很短的起手（3~9 刻）。
- *   任何活着的伙伴都能被帮助，但只有宝可梦会在招式层面把这份力用出去。
+ *   零伤害、被护盾/免疫挡下、持续与间接伤害都不消耗这份力；宝可梦招式、原版生物近战、玩家挥击走同一条直接命中判定。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   reach       托举距离：基础 4 格 + 速度/90，夹 4..6；越快的个体手伸得越远。
@@ -21,9 +21,8 @@
 namespace PokemonSkills {
     export const helpinghandId = "helpinghand";
     export const helpinghandEffect = "world_combat:helping_hand";
-    export const helpinghandMark = "world_combat:helpinghand_mark";
+    export const helpinghandHold = "world_combat:move_helpinghand/hold";
     export const helpinghandScene = "world_combat:move_helpinghand";
-    export const helpinghandStatus = "helpinghand";
     export const helpinghandReadyText = "world_combat.move.helpinghand.text.ready";
     export const helpinghandStrikeText = "world_combat.move.helpinghand.text.strike";
     export const helpinghandFadeText = "world_combat.move.helpinghand.text.fade";

@@ -7,9 +7,11 @@
  * 三幕（提交前只播预告）：
  *   起（ready）：屈膝沉肩，双拳在身前收拢、脚边尘被吸起，只播预告（`windup`），此时代价未结清。
  *   打（guard → hit）：提交后立刻把自身防御 −guardLoss、特防 −poiseLoss 写进公共能力阶梯并播「弃守」闪光——
- *       弃守是提交那一刻付的，之后无论中与不中都照付。随后逐击朝当前朝向短扫并打出一记 `blow`（=总威力 / 次数）
- *       接触伤害；横扫式还在每击把正面 arc 度、reach 内的其他敌人以 share 保留一起扫到。每击间隔 gap。
- *       目标走开就这一拳落空、不追伤，整串照打完后收招；空点/方向也能空打全串。
+ *       弃守是提交那一刻付的，之后无论中与不中都照付。随后逐击**先朝目标垫合法的一步**，再按身前 `reach` 格的
+ *       真实短击几何碰撞（墙阻拳、隔墙打不到）结算一记 `blow`（=总威力 / 次数）接触伤害；点/方向空瞄也打身前
+ *       短击段里最近的敌人，空处才空打。横扫式每击扫出与当拳朝向一致的正面扇面。每击间隔 gap。
+ *       总推距只在最后一记命中兑现一次，不会第一拳就把人顶出后续拳距、也不逐拳重复预算。
+ *       目标走开或隔墙这一拳落空、不追伤，整串照打完后收招；空点/方向也能空打全串。
  *   散（slump）：重心散掉，身上浮起脱力灰气并浮字提示降级；落空只留下扑空的尘。
  *
  * 与同族分开：蛮力是一记最重的单发加撞飞、留坑；突飞猛扑是长程直线犁地；铠农炮在远处；画龙点睛从天而降。
@@ -102,7 +104,11 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.4, blow / 40));
             // 提交时锁定的朝向：没有活体目标时，每一拳都沿它短扫。
             const committed = WorldGeometry.flatUnit(aim(action), action.direction());
+            // 拳路是身前 reach 格的一条窄段；半径按本招实际触及缩放，短击就该短。
+            const punchRadius = Math.max(0.32, reach * 0.24);
             const up = WorldCombat.point(0, 1.35, 0);
+            // 整串连打是持续过程：横扫面由动作自己的 scene manager 拥有，收势时 stop/finish。
+            const scenes = WorldFeedback.actionScenes(closecombatScene);
             let index = 0, struck = 0, whiffed = 0, settled = false;
 
             // 弃守是提交那一刻付的：先写降级，无论中与不中都照付。
@@ -126,7 +132,7 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, self.position().plus(up), closecombatSlumpText, [guardLoss, poiseLoss], 28);
                 }
                 sound(current, "cobblemon:move.closecombat.actor_2");
-                done(current);
+                scenes.finish(current, done);
             }
 
             function step(current: CombatAction): void {
@@ -136,45 +142,78 @@ namespace PokemonSkills {
                 const self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
                 const origin = self.position();
-                const victim = targetRef.length > 0 ? scope.actor(targetRef) : null;
-                const victimBody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                // 每拳重新按当前朝向短扫：有活体目标就朝它当前的身体，否则沿提交时锁定的朝向。
+                const target = targetRef.length > 0 ? scope.actor(targetRef) : null;
+                let victimBody = target !== null && scope.valid(target) ? scope.observe(target) : null;
+
+                // 第一拍：先垫合法的一步，朝目标靠进但不冲过短击距离；位移受原生碰撞限制。
                 let heading = victimBody !== null ? victimBody.position().minus(origin) : committed;
                 if (heading.length() < 0.05) heading = committed;
-                if (victimBody !== null) current.face(victimBody.position(), 25, 25);
-                else current.face(origin.plus(committed), 25, 25);
+                const stride = heading.unit();
+                if (victimBody !== null) {
+                    const gap = origin.minus(victimBody.position()).length();
+                    const forward = Math.min(advance, Math.max(0, gap - 0.45));
+                    if (forward > 0.03) scope.displace(actor, stride.scale(forward));
+                }
+                const moved = scope.observe(actor);
+                const from = moved === null ? origin : moved.position();
 
-                if (victimBody !== null && origin.minus(victimBody.position()).length() <= reach + 1.0) {
-                    const landed = hurt(current, victim!, closecombatId, blow, { damage: damageSpec(closecombatId, "flurry"), contact: true });
+                if (victimBody !== null) current.face(victimBody.position(), 25, 25);
+                else current.face(from.plus(committed), 25, 25);
+
+                // 第二拍：按真实短击几何碰撞——身前 reach 格的一条窄段；墙阻拳，隔墙打不到。
+                const region = WorldGeometry.bodySegment(from, from.plus(stride.scale(reach)), punchRadius);
+                let victim: CombatActor | null = null;
+                let contact = from.plus(stride.scale(reach));
+                if (target !== null && victimBody !== null && scope.valid(target)
+                    && region.intersects(victimBody.boundsMin(), victimBody.boundsMax()) && scope.clear(from, victimBody.position())) {
+                    victim = target; contact = victimBody.position();
+                }
+                if (victim === null) {
+                    // 点/方向空瞄：仍打身前短击段里最近的一个敌人；空处没有敌人就空打。
+                    const found: { actor: CombatActor; facts: CombatObservation; distance: number }[] = [];
+                    WorldGeometry.selectBodies(scope, region, function (other, facts) {
+                        if (String(other.ref()) === String(actor.ref())) return;
+                        if (facts.friendly()) return;
+                        if (!scope.clear(from, facts.position())) return;
+                        found.push({ actor: other, facts: facts, distance: facts.position().minus(from).length() });
+                    });
+                    found.sort(function (first, second) { return first.distance - second.distance; });
+                    if (found.length > 0) { victim = found[0].actor; victimBody = found[0].facts; contact = found[0].facts.position(); }
+                }
+
+                if (victim !== null && victimBody !== null) {
+                    const landed = hurt(current, victim, closecombatId, blow, { damage: damageSpec(closecombatId, "flurry"), contact: true });
                     if (landed) {
                         struck++;
-                        WorldFeedback.emit(scope, closecombatScene, 1, victimBody.position(),
-                            { moment: "hit", target: targetRef, index: index, hits: hits, motes: motes, scale: scale, intensity: intensity }, 20);
+                        WorldFeedback.emit(scope, closecombatScene, 1, contact,
+                            { moment: "hit", target: String(victim.ref()), index: index, hits: hits, motes: motes, scale: scale,
+                                intensity: intensity, path: [[from.x(), from.y(), from.z()], [contact.x(), contact.y(), contact.z()]] }, 20);
                         sound(current, "cobblemon:move.closecombat.target");
+                        // 总推距只在最后一记命中兑现一次：不逐拳重复预算，也不把人第一拳就顶出后续拳距。
+                        if (index === hits - 1 && scope.valid(victim) && push > 0.05)
+                            scope.hitDisplace(victim, stride.scale(push));
                     } else {
                         whiffed++;
                     }
-                    // 垫前一步跟上对手的小退步；不冲过头，位移受原生碰撞限制。
-                    const forward = Math.min(advance, Math.max(0, origin.minus(victimBody.position()).length() - 0.45));
-                    if (forward > 0.03) scope.displace(actor, heading.unit().scale(forward));
-                    if (landed && scope.valid(victim!) && push > 0.05) scope.hitDisplace(victim!, heading.unit().scale(push));
                 } else {
-                    // 空拳：目标离开拳距就不追伤，只朝当前朝向短扫；整串照打完后收招。
+                    // 空拳：目标离开拳距、隔墙或空瞄无人才空打；只朝当前朝向短扫，整串照打完后收招。
                     whiffed++;
-                    if (index === 0) WorldFeedback.text(scope, origin.plus(up), closecombatMissText, [], 24);
-                    WorldFeedback.emit(scope, closecombatScene, 1, origin.plus(heading.unit().scale(Math.min(0.6, reach))),
+                    if (index === 0) WorldFeedback.text(scope, from.plus(up), closecombatMissText, [], 24);
+                    WorldFeedback.emit(scope, closecombatScene, 1, from.plus(stride.scale(Math.min(0.6, reach))),
                         { moment: "whiff", index: index, hits: hits, motes: motes, scale: scale }, 14);
                 }
-                // 横扫式：这一拳同时扫到正面扇形里的其他人，按同一个判定/表现扇形；空拳也照扫。
+                // 横扫式：每一拳都按该拳朝向更新同一片正面扇面，空拳也照扫。
                 if (wide && arc > 0) {
-                    const fan = closecombatFan(origin, heading, reach + 0.5, arc);
-                    if (index === 0)
-                        WorldFeedback.emit(scope, closecombatScene, 1, origin,
-                            { moment: "sweep", path: fan, arc: arc, share: share, motes: motes, scale: scale, intensity: intensity }, 22);
+                    const fan = closecombatFan(from, stride, reach + 0.5, arc);
+                    scenes.show(current, "sweep", from,
+                        { moment: "sweep", path: fan, arc: arc, share: share, motes: motes, scale: scale, intensity: intensity });
                     let swept = 0;
-                    WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, heading, reach + 0.5, arc, { below: 1.2, above: 2.2 }),
+                    WorldGeometry.selectBodies(scope, WorldGeometry.bodySector(from, stride, reach + 0.5, arc, { below: 1.2, above: 2.2 }),
                         function (other, facts) {
+                            if (String(other.ref()) === String(actor.ref())) return;
                             if (String(other.ref()) === targetRef) return;
+                            if (facts.friendly()) return;
+                            if (!scope.clear(from, facts.position())) return;
                             if (hurt(current, other, closecombatId, blow * share, { damage: damageSpec(closecombatId, "flurry") })) {
                                 swept++;
                                 WorldFeedback.emit(scope, closecombatScene, 1, facts.position(),
@@ -182,7 +221,7 @@ namespace PokemonSkills {
                             }
                         });
                     if (index === 0 && swept > 0)
-                        WorldFeedback.text(scope, origin.plus(up), closecombatSweepText, [swept], 24);
+                        WorldFeedback.text(scope, from.plus(up), closecombatSweepText, [swept], 24);
                 }
                 index++;
                 if (index >= hits) finish(current);

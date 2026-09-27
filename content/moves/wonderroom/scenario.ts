@@ -6,7 +6,7 @@ Smoke.scenario("wonderroom", function (stage) {
     stage.weather("clear");
     stage.time("day");
 
-    const caster = stage.pokemon({ species: "slowbro", level: 32, moves: ["wonderroom"], at: [-3, 0, 0] });
+    const caster = stage.pokemon({ species: "slowking", level: 32, moves: ["wonderroom"], at: [-3, 0, 0] });
     const target = stage.pokemon({ species: "rattata", level: 22, moves: ["tackle"], at: [5, 0, 0] });
     const plain = stage.mob({ type: "minecraft:zombie", at: [-2, 0, 0] });
     stage.noai(plain);
@@ -17,7 +17,7 @@ Smoke.scenario("wonderroom", function (stage) {
         stage.expect(stage.casts("wonderroom", caster) > 0, "wonderroom was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/wonderroom"), "the dual-channel caster standing inside carried the shared wonderroom identity");
         stage.expect(!stage.hadMobEffect(plain, "world_combat:status/wonderroom"), "the single-channel vanilla mob was not marked as swapped");
-        stage.note("奇妙空间按在落点，半径内、同时具有防御与特防两条通道的活体才带共享身份；对调由共享伤害事实读取器按身份执行，命中该活体时读到的防御与特防互换。同场的原版僵尸没有双防通道，只从场边经过而不被标记。半径、时长、密度随身高/特攻/等级变化，广域与紧凑各有取舍；AI 只在落点范围内存在正收益对象时才自动施放。", {
+        stage.note("奇妙空间按在落点，半径内、同时具有防御与特防两条通道的活体才带共享身份；对调由共享伤害事实读取器按身份执行，命中该活体时读到的防御与特防互换。成员归属按空间实例用 StatusContributions 记档：同一人多场只交换一次，离最后一场才撤，被清标后只要还在场内下一次扫描会按场恢复。同场的原版僵尸没有双防通道，只从场边经过而不被标记。半径、时长、密度随身高/特攻/等级变化，广域与紧凑各有取舍；AI 按威胁最近真实攻击类别对落点内全体双通道对象求净收益，只在净收益为正时自动施放。", {
             casts: stage.casts("wonderroom", caster),
             casterHp: caster.health(),
             damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10

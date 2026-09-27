@@ -1,15 +1,15 @@
 /**
  * 潮旋 / whirlpool 的出手方式。
  *
- * 核心念头：把一道水旋甩到目标脚下，命中点固定为涡心；此后水旋一边把圈内的敌人朝涡心收、一边让它绕着涡心
- * 打转（切向与向心各占原回拉预算的一半），一圈圈把受困者带回中心并持续灌水——它不是把人直着拽，而是让目标
- * 顺着水流绕行。目标能跑、能打，但很难离开这片水，直到水势耗尽或被外力拽出圈外。
+ * 核心念头：把一道水旋甩到目标脚下，命中目标当时的脚底水平位置固定为涡心；此后水旋一边把圈内的敌人朝涡心收、
+ * 一边让它绕着涡心打转（切向与向心各占原回拉预算的一半），一圈圈把受困者带回中心并持续灌水——它不是把人直着拽，
+ * 而是让目标顺着水流绕行。目标能跑、能打，但很难离开这片水，直到水势耗尽或被外力拽出圈外。
  *
  * 三幕：
  *   起（windup，提交前）：脚边水花聚拢成一股回旋的预告。
  *   击（cast → grip）：提交后水箭自由飞出（可瞄实体，也可点方向／世界点）；命中第一个非友方活体即结算一次
- *       灌水（drown），在命中点立起涡心，并把共享身份 `world_combat:status/partiallytrapped`
- *       （本单元 `world_combat:whirlpool_current`，自带减速）挂到该目标身上；碰墙则散成一地水花。
+ *       灌水（drown），在它脚底立起涡心，并把共享身份 `world_combat:status/partiallytrapped`
+ *       （本单元 `world_combat:whirlpool_current`，减速由 fixedAttributes 按等级投影成大于零的移速倍率）挂到该目标身上；碰墙则散成一地水花。
  *   收（churn → release / slip）：绑定效果每 2 刻按原生碰撞位移把目标沿顺时针切向 + 向心带回，并维持水面；
  *       每 `interval` 灌一次水。目标离开涡心超过 `escape` 格、倒下、或状态被外力清掉时，水旋绷断散去。
  *
@@ -24,6 +24,14 @@ namespace PokemonSkills {
     const whirlpoolGripText = "world_combat.move.whirlpool.text.grip";
     const whirlpoolReleaseText = "world_combat.move.whirlpool.text.release";
     const whirlpoolSlipText = "world_combat.move.whirlpool.text.slip";
+    /** 每级减速压低导航速度的份额；三档 1..3 得到 0.83/0.66/0.49，都大于零，不把目标定住。 */
+    const whirlpoolSlowPerStage = 0.17;
+
+    // 载体的原生属性修饰按等级投影成同一份大于零的移速倍率（fixedAttributes 不随 amplifier+1 放大）。
+    MobEffects.fixedAttributes("world_combat:whirlpool_slow", whirlpoolCurrent, function (world, actor, carrier) {
+        return [{ id: "minecraft:generic.movement_speed", amount: -whirlpoolSlowPerStage * Math.max(1, carrier.amplifier()),
+            operation: "add_multiplied_total" }];
+    });
 
     function whirlpoolPoint(value: any): CombatPoint { return WorldCombat.point(value[0], value[1], value[2]); }
 
@@ -52,13 +60,13 @@ namespace PokemonSkills {
         if (body === null) { effect.end(); return; }
         const anchor = whirlpoolPoint(data.point);
         const pos = body.position();
-        // 逃脱判定相对命中锚点：被击退、冲刺或瞬移一步跨出 escape 就绷断。
-        if (pos.minus(anchor).length() > data.escape) {
+        // 水平面内的初始关系：涡心在命中目标的脚底，脱身只看水平距离，大体型不会因身体高度差自动绷断。
+        const dx = anchor.x() - pos.x(), dz = anchor.z() - pos.z();
+        const horiz = Math.sqrt(dx * dx + dz * dz);
+        if (horiz > data.escape) {
             data.slipped = true; effect.state(JSON.stringify(data)); effect.end(); return;
         }
         // 原 drag 预算拆成切向与向心各一半；水平面内操作，避免把重力算进曳引。
-        const dx = anchor.x() - pos.x(), dz = anchor.z() - pos.z();
-        const horiz = Math.sqrt(dx * dx + dz * dz);
         if (horiz > 0.04 && data.drag > 0) {
             const ix = dx / horiz, iz = dz / horiz;
             const tx = iz, tz = -ix; // 俯视顺时针
@@ -99,11 +107,14 @@ namespace PokemonSkills {
         }
         const body = world.observe(victim);
         if (body === null) return;
-        WorldFeedback.emit(world, whirlpoolScene, 1, body.position(),
-            { moment: data.slipped ? "slip" : "release", target: String(victim.ref()) }, 22);
+        // 收水在旧涡心、带命中时那份半径：水面按原尺寸塌回去，不从被缠者当前位置另起。
+        const anchor = whirlpoolPoint(data.point);
+        const scale = data.radius / 1.15;
+        WorldFeedback.emit(world, whirlpoolScene, 1, anchor,
+            { moment: data.slipped ? "slip" : "release", target: String(victim.ref()), radius: data.radius, scale: scale }, 22);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)),
             data.slipped ? whirlpoolSlipText : whirlpoolReleaseText, [], 24);
-        world.sound("minecraft:entity.generic.splash", body.position(), 12, "{}");
+        world.sound("minecraft:entity.generic.splash", anchor, 12, "{}");
     });
     WorldCombat.effectHandler(whirlpoolBond, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
@@ -122,11 +133,12 @@ namespace PokemonSkills {
         }
     });
 
-    // 卷入者被水流拖慢：对宝可梦与原生生物一致按减速级数压低脚本导航速度（原版生物另由效果属性修饰）。
+    // 卷入者被水流拖慢：对宝可梦与原生生物一致按减速级数压低脚本导航速度（原版生物另由 fixedAttributes 属性修饰）。
+    // 与载体属性用同一份大于零的倍率，三档都还能自主走动。
     WorldCombat.on("world_combat:move_whirlpool/current", "world_combat:navigate", "", function (event) {
         const state = MobEffects.read(event.world(), event.actor(), whirlpoolCurrent);
         if (state === null) return;
-        const factor = Math.max(0.3, Math.min(0.9, 1 - 0.17 * state.amplifier()));
+        const factor = Math.max(0.1, 1 - whirlpoolSlowPerStage * state.amplifier());
         const data = JSON.parse(String(event.data()));
         data.speed = Math.max(0, (Number(data.speed) || 0) * factor);
         event.data(JSON.stringify(data));
@@ -208,13 +220,15 @@ namespace PokemonSkills {
                     const scale = radius / 1.15;
                     const body = scope.observe(victim);
                     if (body === null) return;
+                    // 涡心落在命中目标当时的脚底：水平位置取目标中心，高度取脚底，水面贴着地面而不是身体接触点。
+                    const feet = body.position().y() - body.height() / 2;
+                    const anchor = WorldCombat.point(body.position().x(), feet, body.position().z());
                     // 旧绑定先清：它的结束只撤自己那一次载体，随后再种新的并记下新 key。
                     const existing = scope.effects(victim, whirlpoolBond);
                     for (let i = 0; i < existing.length; i++) scope.operation(existing[i].id(), "world_combat:dispel", "{}");
                     if (!CombatStatus.apply(scope, victim, "partiallytrapped", whirlpoolCurrent, duration, slow, { unique: true })) return;
                     const carrier = MobEffects.read(scope, victim, whirlpoolCurrent);
                     if (carrier === null) return;
-                    const anchor = at;
                     const state = { point: [anchor.x(), anchor.y(), anchor.z()], drag: actualDrag, drown: drown, interval: interval,
                         escape: escape, radius: radius, next: scope.tick() + interval, pulses: 0, slipped: false,
                         carrier: MobEffects.anchor(carrier) };

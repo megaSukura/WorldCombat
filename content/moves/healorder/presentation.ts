@@ -1,9 +1,11 @@
 /**
  * 回复指令 / Heal Order 的粒子语言。
  *
- * 一句话：施法者身边亮起一圈召唤的光，一群虫形手下绕着它飞，引导结束时每只把一团暖光交回施法者身上。
+ * 一句话：施法者身边亮起一圈召唤的光，一群虫形手下绕着它飞，回到身边才把一团暖光交回施法者身上；
+ *   被杀的那只当场散成虫屑。
  * 色相家族：蜜蜡琥珀 0xF2C14E 作主体，暖白 0xFFF3C4 作高光与治疗，深褐 0xB07A2E 只作余韵。
- * 拍子：起（windup）／召（summon）／引（channel）／交（deliver）／散（spent）。
+ * 拍子：起（windup）／召（summon）／引（channel）／交（deliver 收合＋治疗）／散（spent 寿命到）／
+ *   落（scatter 被击杀时散落）。
  * 数目：summon 的爆发数绑定 data.burst = 手下面数 × 8；每只手下自己的一份 channel 场景由它的实体撑起，
  *   所以画面里同时看到几个光点就等于还有几只手下在引导。channel 的粒子大小按 data.size 随精锐档位放大。
  */
@@ -80,6 +82,14 @@ const HealOrderDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
+                    name: "deliver_collapse", bind: "target", offset: [0, 0.45, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/flying_bugs",
+                    burst: { count: 10 }, shape: { kind: "sphere_surface", radius: 0.9 },
+                    direction: "inward", speed: [0.12, 0.34], spin: 8,
+                    lifetime: [8, 14], size: [0.14, 0.02],
+                    color: 0xF2C14E, alpha: [0.9, 0], light: "full", maxParticles: 30
+                },
+                {
                     name: "deliver_burst", bind: "target", offset: [0, 0.5, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_bug",
                     burst: { count: { data: "burst", fallback: 16 } }, shape: { kind: "sphere", radius: 0.4 },
@@ -108,6 +118,28 @@ const HealOrderDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.06],
                     lifetime: [10, 16], size: [0.06, 0.01],
                     color: 0xB07A2E, alpha: [0.6, 0], light: "world", maxParticles: 20
+                }
+            ]
+        },
+        scatter: {
+            duration: 20,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "scatter_bugs", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/flying_bugs",
+                    burst: { count: 14 }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.08, 0.3], spin: 12,
+                    lifetime: [10, 18], size: [0.1, 0.02],
+                    color: 0xF2C14E, alpha: [0.85, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "scatter_dust", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [8, 14], size: [0.05, 0.01],
+                    color: 0xB07A2E, alpha: [0.5, 0], light: "world", maxParticles: 20
                 }
             ]
         }

@@ -10,7 +10,8 @@
  * 范围：impact 的贴地环与 tear 的崩开半径用 `data.scale`（判定半径 / 0.5）给出，玩家看出这一滚能咬住多大的圈。
  * 运动：tear 的土块向上崩、roll 的钢屑贴地向外甩、chips 的碎屑在原地落下、impact 的碎片由内向外炸。
  * 数：`data.scraper`（物攻派生的钢屑数量）驱动滚动与地面钢屑，`data.fields`（被压碎的场地数）决定 tear 的强度，
- *   `data.fieldColor`（被吃掉场地的主色）染色轮身与钢屑。
+ *   `data.fieldColor`（被吃掉场地的主色）染色轮身与钢屑；可辨的钢轮外沿是独立自定义场景
+ *   （`world_combat:move_steelroller/wheel`），轮径读判定半径、颜色读被吃场地色、转角按真实每刻位移换算。
  */
 const SteelrollerDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -194,3 +195,55 @@ const SteelrollerDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_steelroller", 1, SteelrollerDefinition);
+
+/**
+ * 钢轮本体：固定数量的钢纹贴图在真实身体处滚成一只竖立的轮子，轮径读服务端实际判定半径，
+ * 轮色读被吃掉场地的主色，转动角度按真实每刻位移与半径换算，因此画面里的轮子始终贴住会被碾到的身体外沿。
+ * 服务端每刻在真实身体位置重发一份，收势或失败时停发。
+ */
+const SteelrollerWheelScene = "world_combat:move_steelroller/wheel";
+const SteelrollerRimSprite = "cobblemon:particle/generic/spinbeam";
+
+function steelrollerWheelVector(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function steelrollerWheelNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(SteelrollerWheelScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle || data.active === 0) return;
+    const at = steelrollerWheelVector(data.at);
+    if (at === null) return;
+    const radius = Math.max(0.3, Math.min(0.95, steelrollerWheelNumber(data.radius, 0.5)));
+    const raw: number = steelrollerWheelNumber(data.colour, 0xB8BEC8);
+    const tint = raw & 0xFFFFFF;
+    const spin = steelrollerWheelNumber(data.spin, 90);
+    const direction = steelrollerWheelVector(data.direction);
+    let fx = direction === null ? 1 : direction[0], fz = direction === null ? 0 : direction[2];
+    const flat = Math.sqrt(fx * fx + fz * fz);
+    if (!(flat > 1e-4)) { fx = 1; fz = 0; } else { fx /= flat; fz /= flat; }
+    const tick = frame.serverTick();
+    const phase = tick * spin * Math.PI / 180;
+    const segments = 10;
+    const centreY = at[1];
+    const alpha = 235;
+    const steel = (alpha << 24 | (tint & 0xF0F0F0) | 0x101418) | 0;
+    const rim = (alpha << 24 | 0xE8EEF4) | 0;
+    for (let i = 0; i < segments; i++) {
+        const angle = phase + i * (Math.PI * 2 / segments);
+        const forward = Math.cos(angle) * radius, vertical = Math.sin(angle) * radius;
+        const x = at[0] + fx * forward;
+        const z = at[2] + fz * forward;
+        const y = centreY + vertical;
+        frame.line(at[0], centreY, at[2], x, y, z, steel);
+        frame.sprite(SteelrollerRimSprite, x, y, z, radius * 0.7, -(angle * 180 / Math.PI) % 360, rim, Math.floor(tick * 0.5 + i) % 8, true);
+    }
+});

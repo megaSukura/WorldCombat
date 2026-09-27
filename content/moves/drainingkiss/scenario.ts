@@ -5,7 +5,9 @@
  *   伤害不了施法者）；先把施法者用 /damage 分步压到约七成，跨过掉血状态，再开战。
  *
  * 必然事实：本招被提交过；目标受到过吻击伤害；施法者从这一吻回复过生命（生命高于压血后的基线）。
- *   命中率、暴击、汲取比例（原生四分之三，个体数据会把它推高）与亲吻距离取决于双方数据，写进 note。
+ *   本招必须先凑到身上、贴住 `dwell` 刻才结算：所以吻击伤害与回血都不会在贴上之前发生。
+ *   命中率、暴击、汲取比例（原生四分之三，个体数据会把它推高）与贴触成败取决于双方数据与走位，写进 note；
+ *   追侧走敌中途断吻、被墙/第三方插进来打断这些随机位置结果也写进 note。
  */
 Smoke.scenario("drainingkiss", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
@@ -38,7 +40,7 @@ Smoke.scenario("drainingkiss", function (stage) {
             stage.expect(stage.casts("drainingkiss", caster) > 0, "draining kiss was cast");
             stage.expect(stage.damageTo(foe) > 0, "the kiss dealt damage");
             stage.expect(caster.health() > baseline + 2, "the user regained health from the kiss");
-            stage.note("回血走共享伤害载荷的 drain（原生四分之三）；命中率、暴击、亲密度带来的偏移不写死。",
+            stage.note("本招要凑到身上贴住才成吻：中途脱开、被墙挡或被打断都只松口、不结算伤害也不回补。回血走共享伤害载荷的 drain（原生四分之三）；命中率、暴击、亲密度带来的偏移不写死。",
                 { casts: stage.casts("drainingkiss", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                   woundedHealth: Math.round(baseline * 10) / 10, casterHealth: Math.round(caster.health() * 10) / 10,
                   travelled: Math.round(stage.travelled(caster) * 10) / 10 });

@@ -5,11 +5,11 @@
  *   炸开一小簇毒液与一圈地环，肢体随即收回；刺空或打在墙／被挡下只留一下滴落的毒点。
  * 色相家族：毒绿（0x9BE86B）与深紫（0x6B4E8A）为主，近白只做命中亮点。整体沿一条直线走，与飞行的毒针区分开。
  * 拍子：起 coil（聚毒）→ 伸 thrust（肢体延长）→ 中 sting（伤口溅毒）→ 收 whiff（落空淡出）。
- * 范围：thrust 的 `limb` 发射器绑 `direction`（服务端 trace 的同一 3D 方向）、长度直接读 `data.reach`
- *   （服务端取 trace 首碰止点到身体的距离），画出来的那条线就是判定用的直线，止点也和判定一致。
+ * 范围：thrust 的 `limb`/`beads` 发射器绑 `path`（服务端 trace 的真实起点与首碰/尽头两点），`polyline` 沿这条
+ *   绝对世界线段铺开，长度只由两端点决定、不再被 data.scale 二次缩放；画出来的那条线就是判定用的直线。
  * 运动：没有飞行物——肢体是瞬时的直线延长，命中在线的首碰处炸开，一眼看出是站定出臂的近身招。
  * 数：`data.swing`（由威力派生）绑定沿直线排布的毒点数量，`data.drops`（由物攻派生）绑定起手聚毒与命中溅毒量，
- *   `data.reach` 直接绑定肢体长度。画面里的数量和机制一致。
+ *   刺线长度直接来自 `data.path` 两端点、`data.scale` 只缩放粒子尺寸。画面里的数量和机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const PoisonjabDefinition: ParticleDefinition = {
@@ -17,7 +17,7 @@ const PoisonjabDefinition: ParticleDefinition = {
     moments: {
         coil: {
             duration: { data: "windup", fallback: 8 },
-            exit: { stop: 3, drain: 10 },
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "gather", bind: "source", offset: [0, 0.35, 0.25], height: 0.15,
@@ -43,19 +43,19 @@ const PoisonjabDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "limb", bind: "source", fit: "none", orient: "direction", offset: [0, 0, 0],
+                    name: "limb", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
                     burst: { count: { data: "swing", fallback: 8 }, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 2.6 }, rotation: [0, 0, 0] },
+                    shape: { kind: "polyline" },
                     direction: "shape", speed: [0.02, 0.1], gravity: 0.02, drag: 0.94,
                     lifetime: [6, 13], size: [0.16, 0.03], sizeMode: "index",
                     color: 0x6B4E8A, alpha: [0.9, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "beads", bind: "source", fit: "none", orient: "direction",
+                    name: "beads", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: { data: "swing", fallback: 8 }, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 2.6 }, rotation: [0, 0, 0] },
+                    shape: { kind: "polyline" },
                     direction: "shape", speed: [0.03, 0.14], gravity: 0.04, drag: 0.92,
                     lifetime: [7, 14], size: [0.1, 0.02], sizeMode: "index",
                     color: 0x9BE86B, alpha: [0.85, 0], light: "full", bloom: 0.2, maxParticles: 50

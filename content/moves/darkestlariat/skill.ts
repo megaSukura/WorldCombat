@@ -4,14 +4,19 @@ namespace PokemonSkills {
     const darkestlariatHitText = "world_combat.move.darkestlariat.text.hit";
     const darkestlariatMissText = "world_combat.move.darkestlariat.text.miss";
 
-    /** 一圈的顶点：以 origin 为心、半径 radius、高 `height` 的整圈闭合折线；判定与画面共用。 */
-    function darkestlariatRing(origin: CombatPoint, radius: number, height: number): number[][] {
-        const points: number[][] = [], steps = 24;
+    /** 一圈的顶点：以 origin 为心、半径 radius 的整圈闭合折线；判定与画面共用同一组 x/z。 */
+    function darkestlariatCircle(origin: CombatPoint, radius: number): CombatPoint[] {
+        const points: CombatPoint[] = [], steps = 24;
         for (let index = 0; index < steps; index++) {
             const angle = index / steps * Math.PI * 2;
-            points.push([origin.x() + Math.cos(angle) * radius, origin.y() + height, origin.z() + Math.sin(angle) * radius]);
+            points.push(WorldCombat.point(origin.x() + Math.cos(angle) * radius, origin.y(), origin.z() + Math.sin(angle) * radius));
         }
         return points;
+    }
+
+    /** 表现载荷里的顶点数组：与判定同一组 x/z，抬到给定高度。 */
+    function darkestlariatRingPath(origin: CombatPoint, radius: number, height: number): number[][] {
+        return darkestlariatCircle(origin, radius).map(function (point) { return [point.x(), origin.y() + height, point.z()]; });
     }
 
     define({
@@ -65,16 +70,22 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(1.9, radius / 2.6));
             const intensity = Math.max(0.6, Math.min(2.2, power / 66));
             const wide = config && config.wide === true ? 1 : 0;
+            // 判定用的整圈与覆盖高度：脚底到脚上 `depth` 之间，用真实身体箱相交取人。
+            const minY = self.boundsMin().y(), maxY = minY + depth;
+            const circle = darkestlariatCircle(centre, radius);
             let hits = 0;
 
             sound(action, "minecraft:entity.player.attack.sweep");
             WorldFeedback.emit(world, darkestlariatScene, 1, centre,
                 { moment: "spin", actor: String(actor.ref()), radius: radius, spin: spin, gales: gales,
-                  path: darkestlariatRing(centre, radius, 0.15), scale: scale, intensity: intensity, wide: wide }, 26);
+                  path: darkestlariatRingPath(centre, radius, 0.15), scale: scale, intensity: intensity, wide: wide }, 26);
 
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0.3, radius, { below: 2, above: depth }),
+            WorldGeometry.selectBodies(world, WorldGeometry.bodyPolygon(circle, minY, maxY),
                 function (enemy, facts) {
-                    if (hits >= 6 || String(enemy.ref()) === String(actor.ref())) return;
+                    if (hits >= 6 || facts.friendly() || String(enemy.ref()) === String(actor.ref())) return;
+                    // 墙后的人这一圈抡不到：先认真实墙面。
+                    const contact = world.closestPoint(enemy, centre);
+                    if (contact === null || WorldGeometry.blockHit(world, centre, contact) !== null) return;
                     if (!hurt(action, enemy, darkestlariatId, power,
                         { damage: damageSpec(darkestlariatId, "sweep"), contact: true })) return;
                     hits++;

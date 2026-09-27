@@ -2,13 +2,13 @@
  * 出奇一击 / feintattack 的客户端表现。
  *
  * 一句话：施法者的身影暗下去、脚下暗影一收，接着只在对手正面留下一小团暗影替身，
- * 下一瞬已经出现在对手背后，贴着背炸开一记靛色暗拳。
- * 色相家族：靛紫（0x7A5FD0）与近黑（0x241A3A），近白（0xE8E0FF）只给命中核心。
- * 拍子：起（gather 隐影）→ 击（vanish 真正闪灭、decoy 替身、strike 背刺）→ 收（miss 收拳）。
- * 范围：strike 的暗环半径由 `data.scale`（背后落点换算）给出，玩家看出这一拳贴住多大一圈。
+ * 下一瞬已经出现在对手背侧，贴着背炸开一记靛色暗拳；只站到侧后时用稍亮的色调读作侧袭，没触及任何人只留落点空拳。
+ * 色相家族：靛紫（0x7A5FD0）与近黑（0x241A3A），近白（0xE8E0FF）只给命中核心；侧袭沿用 `data.ringColor` 的亮紫。
+ * 拍子：起（gather 隐影）→ 击（vanish 真正闪灭、decoy 替身、strike 背刺／whiff 落点空拳）→ 收（miss 收拳）。
+ * 范围：strike 的暗环半径由 `data.scale`（真实落点距离换算）给出，玩家看出这一拳贴住多大一圈。
  * 运动：gather 的暗屑由外向内轻轻收；vanish 只在真正移动时在旧位置闪灭；strike 沿 `data.path`
- *   （实际落脚点到拳击接触）拉出一条暗线，命中处向外炸开暗拳。
- * 数：`data.power`（拳力）抬高命中亮度与碎屑量，`data.decoy` 决定替身是否出现。
+ *   （真实落脚点到 trace 首碰接触点）拉出一条暗线，命中处向外炸开暗拳；无接触的 whiff 只在落点起一小团空拳暗屑。
+ * 数：`data.power`（拳力）抬高命中亮度与碎屑量，`data.decoy` 决定替身是否出现，`data.flank`/`data.ringColor` 表示侧袭。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FeintattackDefinition: ParticleDefinition = {
@@ -87,7 +87,7 @@ const FeintattackDefinition: ParticleDefinition = {
                     color: 0x6B5AA8, alpha: [0.6, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "impact", bind: "target", height: 0.5,
+                    name: "impact", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
                     burst: { count: { data: "power", fallback: 18 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.3 },
@@ -96,7 +96,7 @@ const FeintattackDefinition: ParticleDefinition = {
                     color: 0x7A5FD0, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 110
                 },
                 {
-                    name: "spark", bind: "target", height: 0.45,
+                    name: "spark", bind: "point", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
                     burst: { count: { data: "power", fallback: 14 }, at: 2 },
                     shape: { kind: "sphere_surface", radius: 0.26 },
@@ -105,13 +105,28 @@ const FeintattackDefinition: ParticleDefinition = {
                     color: 0xE8E0FF, alpha: [0.9, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "ring", bind: "target", offset: [0, 0.08, 0], height: 0,
+                    name: "ring", bind: "point", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 1, at: 1 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 0.7 } },
                     direction: "outward", speed: [0.04, 0.1],
                     lifetime: [9, 14], size: [0.36, 0.14],
-                    color: 0x4A3A78, alpha: [0.55, 0], light: "world"
+                    color: { data: "ringColor", fallback: 0x4A3A78 }, alpha: [0.55, 0], light: "world"
+                }
+            ]
+        },
+        whiff: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "air", bind: "point", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    burst: { count: 8 },
+                    shape: { kind: "sphere", radius: 0.24 },
+                    direction: "outward", speed: [0.03, 0.12],
+                    lifetime: [7, 12], size: [0.16, 0.04],
+                    color: 0x3A3050, alpha: [0.5, 0], light: "world", maxParticles: 24
                 }
             ]
         },

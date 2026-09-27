@@ -27,6 +27,10 @@ public final class WorldEquipment {
 
     /** A provider that can also apply compare-and-set changes to its own slots. */
     public interface Writer {
+        /** Applies this provider's native durability rules to the exact observed item, including any real break. */
+        default NativeEquipmentDamage.Result damage(LivingEntity entity, String slot, int index, ItemStack expected, int amount) {
+            return NativeEquipmentDamage.Result.refused("damage-unsupported");
+        }
         /** Removes the exact observed stack. Success carries the removed stack; failure carries the reason. */
         default WriteResult take(LivingEntity entity, String slot, int index, ItemStack expected) { return WriteResult.failure("read-only"); }
         /** Installs {@code incoming} where {@code expected} currently sits (an empty expected requires an empty slot). */
@@ -84,6 +88,10 @@ public final class WorldEquipment {
 
     public static void registerWriter(String id, Writer writer) {
         if (WRITERS.putIfAbsent(id, writer) != null) throw new IllegalArgumentException("Duplicate equipment writer: " + id);
+    }
+    public static NativeEquipmentDamage.Result damage(String provider, LivingEntity entity, String slot, int index, ItemStack expected, int amount) {
+        var writer = WRITERS.get(provider);
+        return writer == null ? NativeEquipmentDamage.Result.refused("damage-unsupported") : writer.damage(entity, slot, index, expected, amount);
     }
     public static WriteResult take(String provider, LivingEntity entity, String slot, int index, ItemStack expected) {
         var writer = WRITERS.get(provider);

@@ -3,15 +3,15 @@
  *
  * 原生事实：Normal／变化／威力 —／命中 —／PP 5／target self；heal: [1,2] —— 回复自己最大 HP 的一半。
  *
- * 世界化：把「生蛋」当成字面意思——产下一枚**真实存在的蛋**，回复就装在蛋里：蛋滚落脚边，片刻后啄开，
- *   暖光把那一口补回身上。蛋是世界里的一件东西：它有寿命、会被敌人打碎（打碎就没有这一口），
- *   也可以（分蛋档）指名交给附近受伤的伙伴，代价是自己放弃这一口。
- * 与同族分开：自我再生按刻连续、偷懒留下一段减速；生蛋把回复**外化成一件可摧毁、可转赠的世界物件**。
+ * 世界化：把「生蛋」当成字面意思——产下一枚**真实存在的蛋**，回复就装在蛋里：蛋滚落脚边、先在原地成熟，
+ *   再由受益者走近啄开，暖光把那一口补回身上。蛋是世界里的一件东西：它有寿命、成熟前会被敌人打碎
+ *   （打碎就没有这一口），也可以（分蛋档）留给附近受伤的伙伴，等他回来取食，代价是自己放弃这一口。
+ * 与同族分开：自我再生按刻连续、偷懒留下一段减速；生蛋把回复**外化成一件可摧毁、需返回取用的世界物件**。
  *
  * 数值来源（每项读不同的个体数据，展开成场上看得见的差异）：
  *   heal       回复比例：0.42 + 亲密度(0..255)偏移[0,0.08] + 特防(≥60)偏移[0,0.06]，夹 0.34..0.64。
- *   eatTicks   孵化延迟：44 − 等级(≥20)偏移[0,14]，夹 26..60 刻。
- *   eggReach   递蛋范围：2.2 + 身高偏移[−0.3,0.9]，夹 1.8..3.6 格（分蛋档找伙伴的半径，也是画面的参考尺度）。
+ *   eatTicks   成熟延迟：44 − 等级(≥20)偏移[0,14]，夹 26..60 刻；这段时间里蛋可被打碎。
+ *   eggReach   留蛋范围：2.2 + 身高偏移[−0.3,0.9]，夹 1.8..3.6 格（分蛋档找伙伴的半径，也是画面的参考尺度）。
  *   shells     蛋壳碎片：14 + 体重(≥30)偏移[0,20]，夹 12..40 点，直接驱动粒子数量。
  *   cradle     守候微光：6 + 身高偏移[0,8]，夹 5..14，驱动蛋在地上脉动的密度。
  *   lay        起手：12 − 速度(≥40)偏移[0,4]，夹 8..15 刻。
@@ -28,9 +28,9 @@ namespace PokemonSkills {
             .clamp(0.34, 0.64).round(3),
             "回复比例", "蛋里那一口回复占受益者最大生命的比例；亲密度越高、特防越强，蛋质越好。"),
         eatTicks: seconds(F.base(44).minus(F.level().minus(20).max(0).times(0.35)).clamp(26, 60),
-            "孵化延迟", "蛋落地到啄开进食之间的时间；等级越高孵得越快，这段时间里蛋可以被打碎。"),
+            "成熟延迟", "蛋落地到成熟之间的时间；等级越高熟得越快，这段时间里蛋可以被打碎。"),
         eggReach: formula(F.base(2.2).plus(F.body("height").minus(1.4).times(0.6)).clamp(1.8, 3.6).round(2),
-            "递蛋范围", { unit: " 格", description: "分蛋档里向多远的伙伴递蛋；身量越大够得越远，也是画面的参考尺度。" }),
+            "留蛋范围", { unit: " 格", description: "分蛋档里把蛋留给多远的伙伴；身量越大够得越远，也是画面的参考尺度。" }),
         shells: formula(F.base(14).plus(F.body("weight").minus(30).max(0).times(0.4)).clamp(12, 40).round(),
             "蛋壳碎片", { unit: " 点", description: "啄开时迸出的蛋壳碎片数量；体重越大越多，直接驱动粒子。" }),
         cradle: formula(F.base(6).plus(F.body("height").minus(1.4).max(0).times(6)).clamp(5, 14).round(),
@@ -48,7 +48,6 @@ namespace PokemonSkills {
 
     describe(softboiledId, [
         { key: "description.0", values: ["heal","eatTicks"] },
-        { key: "description.wasted", values: [] },
         { key: "description.2", values: ["lay", "settleTicks"] },
         { key: "stance.share", values: ["eggReach","heal"], when: function (context) { return read(context.detail.values, ["share"]) === true; } },
         { key: "stance.self", values: ["heal"], when: function (context) { return read(context.detail.values, ["share"]) !== true; } },

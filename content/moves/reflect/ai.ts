@@ -4,15 +4,27 @@
  * 什么局面有意义：有可见威胁、自己还没被壁罩住，且它在 ai.maxChase 以内；
  *   ai.opening=受压时立壁（默认）只在对手正攻击自己或主人、或自己刚被打过时立；=随时时见威胁就先立上。
  * 对谁出手：自己；壁会以自身为锚顺手把队友一起罩住，所以不需要选中队友。
- * 候选之间怎么排：正在被打时抬到 100 越过分派顺序，先把壁立起来；其余情况 44，排在共用增益里。
+ * 候选之间怎么排：威胁最近真的打出一记物理且正打向自己或主人时抬到 100，越过分派顺序先把壁立起来；
+ *   其余受压（自己刚被打过、或正被该威胁盯上）70；否则 44，排在共用增益里。
  * 够不到怎么办：不需要够——威胁太远就先不理会，等它靠近。
  * 放完之后：壁替自己与队友削物理、镜面还会弹回近身一击；壁还在时不再重复，离开范围的人随补给停止失去。
  * 配置 mirror（镜面／坚壁）改变减伤份额与反弹；ai.maxChase、ai.opening 决定追多远、什么时候立壁。
  */
 namespace PokemonSkills {
+    /** 威胁最近一次真正打出的攻击是不是物理、且正是打向自己或主人；读已发生的原生攻击记忆，不只看 aggro。 */
+    function reflectPhysicalIncoming(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const attacker = world.actor(threat.ref);
+        if (attacker === null) return false;
+        const recent = DamageSemantics.recentAttack(world, attacker, 60);
+        if (recent === null || recent.category !== "physical") return false;
+        const owner = context.facts.owner;
+        return recent.target === String(self.ref) || !!owner && recent.target === String(owner.ref);
+    }
     function reflectPressured(context: WorldBehavior.Context, capability: WorldBehavior.Capability): boolean {
         const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"], self = CompanionBehavior.source(context);
         if (!threat) return false;
+        if (reflectPhysicalIncoming(context, threat)) return true;
         const owner = context.facts.owner;
         return self.hurtAgo < 60 || threat.attacking === self.ref || !!owner && threat.attacking === owner.ref;
     }
@@ -32,7 +44,11 @@ namespace PokemonSkills {
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },
-        priority: function (context, capability) { return reflectPressured(context, capability) ? 100 : 44; }
+        priority: function (context, capability) {
+            const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"];
+            if (threat && reflectPhysicalIncoming(context, threat)) return 100;
+            return reflectPressured(context, capability) ? 70 : 44;
+        }
     });
 
     const reflectAiChase = number("ai.maxChase", "考虑距离", 4, 26, 1);

@@ -26,7 +26,7 @@
   "worldcombat.skill.hornleech.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.hornleech.preference.ai.healBelow.help": "Below this health ratio the user prefers horn leech as sustain; higher starts leaning on it for healing sooner.",
   "world_combat.move.hornleech.text.gore": "Gored",
-  "world_combat.move.hornleech.text.sap": "Sap drawn back %1$s%%",
+  "world_combat.move.hornleech.text.sap": "Drained %1$s HP",
   "world_combat.move.hornleech.text.miss": "Charged through air",
-  "worldcombat.skill.hornleech.description.targeting": "The charge runs straight along the aim, goring only non-allies and settling each target once; with the goring form it catches up to two targets, otherwise only one. It stops when terrain blocks it or the distance runs out, and catching no one is a whiff."
+  "worldcombat.skill.hornleech.description.targeting": "The charge runs straight along the aim, goring only non-allies and settling each target once; with the goring form it catches up to two targets, otherwise only one. A contact that deals no damage does not consume a gore slot and draws no health; it stops when terrain blocks it or the distance runs out, and catching no one is a whiff."
 }

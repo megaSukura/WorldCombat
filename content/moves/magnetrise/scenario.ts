@@ -9,11 +9,12 @@ namespace MagnetriseReviewScenario {
         releaseMark = false;
         marks.forEach(function (mark) { didDispel = world.operation(mark.id(), "world_combat:dispel", "{}") || didDispel; });
     });
-// 电磁飘浮的可执行设计说明：让一只电属性宝可梦对着地面属性的对手只起浮。
+// 电磁飘浮的可执行设计说明：让一只电属性宝可梦对着真的配了地面招的对手只起浮。
 // 必然事实：电磁飘浮被放出来过；施法者带上共享身份 world_combat:status/magnetrise；
 //   原生托举让身体真的离地（重力属性被临时悬起、身体 Y 高于起浮前，且停在低空而非飞走）；
 //   显式驱散托举标记后重力归还、它的真实载体与共享身份一同清理。
-// 同极弹开需要一次真实落下的贴地接触命中，本私有装配里对手不还手，写进 note 供完整装配试玩核对。
+// AI 现在按「威胁的实际配招／近期地面攻击」而不是单纯地面属性来判断；对手冻结不还手（noai），
+//   同极弹开需要一次真实落下的贴地接触命中，写进 note 供完整装配试玩核对。
 Smoke.scenario("magnetrise", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:stone");
     stage.time("day");
@@ -24,8 +25,9 @@ Smoke.scenario("magnetrise", function (stage) {
     didDispel = false;
     var baseY = caster.position()[1];
     var baseGravity = stage.attribute(caster, "minecraft:generic.gravity");
-    // 岩石／地面属性的对手：伙伴 AI 的「躲地面招」把这种威胁当作起浮理由。
-    var target = stage.pokemon({ species: "onix", level: 30, moves: [], at: [3, 0, 0] });
+    // 配了地震（地面招）的对手：伙伴 AI 的「躲地面招」以实际配招作为起浮理由；冻结它以免打扰托举。
+    var target = stage.pokemon({ species: "onix", level: 30, moves: ["earthquake"], at: [3, 0, 0] });
+    stage.noai(target);
     stage.hostile(caster, target);
     stage.until(900, function () {
         return stage.casts("magnetrise", caster) > 0

@@ -94,18 +94,20 @@ namespace PokemonSkills {
                 appearance: { pierce: pierce },
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world();
-                    const cell = hit.blockPosition();
                     const victim = hit.target();
                     if (victim === null || !scope.valid(victim) || scope.friendly(victim)) {
-                        // 撞墙/空放：光杆到此结束，在原生方块面散成一片平面光屑。
+                        // 撞墙/空放：光杆到此结束，在真实接触点沿外法线散成一片平面光屑。
                         scenes.stop(current, "lance");
-                        const at = cell !== null ? cell : hit.position();
+                        const face = flashcannonNormal(hit.blockFace());
+                        const contact = hit.position();
+                        const at = WorldCombat.point(contact.x() + face[0] * 0.08, contact.y() + face[1] * 0.08, contact.z() + face[2] * 0.08);
                         WorldFeedback.emit(scope, flashcannonScene, 1, at,
-                            { moment: "shatter", point: [at.x(), at.y(), at.z()], direction: flashcannonNormal(hit.blockFace()),
+                            { moment: "shatter", point: [at.x(), at.y(), at.z()], direction: face,
                                 beams: beams, scale: scale }, 20);
                         sound(current, "minecraft:block.beacon.deactivate");
                         return;
                     }
+                    // 穿透份额按真实实体接触消耗：这一下被原生拒绝也照样推进 index，后续继续变暗变轻。
                     const shot = Math.max(1, power * Math.pow(falloff, index));
                     index++;
                     const landed = impact(current, hit, "flashcannon", shot, { damage: damageSpec("flashcannon", "core") });
@@ -120,10 +122,13 @@ namespace PokemonSkills {
                             intensity: Math.max(0.5, Math.min(2.2, shot / 80)), index: index }, 24);
                     sound(current, "cobblemon:impact.steel");
                     if (scope.valid(victim) && scope.random() < chance) {
-                        NativeEffects.boost(scope, victim, "spd", -stages);
-                        const at = scope.observe(victim);
-                        if (at !== null)
-                            WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), flashcannonSunderText, [stages], 30);
+                        const applied = NativeEffects.boost(scope, victim, "spd", -stages);
+                        // 被抵抗、已触底或原生拒绝时 applied 为 0，不发成功提示。
+                        if (applied !== 0) {
+                            const at = scope.observe(victim);
+                            if (at !== null)
+                                WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), flashcannonSunderText, [stages], 30);
+                        }
                     }
                 }
             }, function (current: CombatAction) { finish(current); });

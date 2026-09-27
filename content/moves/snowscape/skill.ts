@@ -60,7 +60,7 @@ namespace PokemonSkills {
                     seeded: false }, ticks);
             world.sound("minecraft:block.snow.place", point, 24, "{}");
             WorldFeedback.emit(world, snowscapeScene, 1, point,
-                { moment: "burst", radius: radius, scale: radius / 10, density: density, cover: cover, freeze: freeze, ticks: ticks }, 44);
+                { moment: "burst", scale: radius / 10, density: density, cover: cover, freeze: freeze, ticks: ticks }, 44);
             done(action);
         }
     });

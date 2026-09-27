@@ -26,13 +26,25 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(quashVisual, "status", effect => {
         const world = effect.world(), target = effect.target(), body = world.observe(target);
         if (body === null) { effect.end(); return; }
-        if (MobEffects.read(world, target, Quash) === null) {
+        const carrier = MobEffects.read(world, target, Quash);
+        if (carrier === null) {
             WorldFeedback.emit(world, quashScene, 1, body.position(), { moment: "release", target: String(target.ref()) }, 20);
             effect.end(); return;
         }
+        WorldFeedback.onEffect(world, effect.id(), "pin", quashScene, 1, body.position(),
+            { moment: "pin", target: String(target.ref()), denies: Math.max(0, carrier.amplifier()) });
         effect.schedule("status", "status", 1, "{}");
     });
     WorldCombat.effectHandler(quashVisual, "operation:world_combat:dispel", effect => effect.end());
+    // 减速固定 -30%：单独承载按载体存在与否投影，不随剩余可拒绝次数（amplifier）被原生乘算成 60/90/120%。
+    MobEffects.fixedAttributes("world_combat:quash_slow", Quash,
+        [{ id: "minecraft:generic.movement_speed", amount: -0.3, operation: "add_multiplied_total" }]);
+    /** 剩余可拒绝次数做成会消散的短符号；耗尽（0 次）时不再发，只留减速尾迹。 */
+    function quashMarks(world: CombatWorld, body: CombatObservation, target: CombatActor, denies: number): void {
+        if (denies <= 0) return;
+        WorldFeedback.emit(world, quashScene, 1, body.position(),
+            { moment: "marks", target: String(target.ref()), denies: denies }, 18);
+    }
     const quashAttempt = "world_combat:quash/attempt";
     CombatStatus.actions.define({ id: "world_combat:quash/deny", apply: function (context) {
         if (context.phase !== "commit" && !(context.phase === "damage" && DamageSemantics.read(context.metadata).attack)) return;
@@ -58,10 +70,13 @@ namespace PokemonSkills {
         if (effect === null || String(effect.key()) !== context.details.carrier || effect.amplifier() <= 0) return;
         const left = effect.amplifier() - 1, remaining = Math.max(1, effect.duration());
         if (!world.removeMobEffect(actor, Quash, String(effect.key()))) return;
-        MobEffects.apply(world, actor, Quash, remaining, left);
+        const carrier = MobEffects.apply(world, actor, Quash, remaining, left);
         const body = world.observe(actor);
-        if (body !== null) WorldFeedback.emit(world, quashScene, 1, body.position(),
-            { moment: "strike", target: String(actor.ref()), count: 8, size: .12, speed: .12 }, 12);
+        if (body !== null) {
+            WorldFeedback.emit(world, quashScene, 1, body.position(),
+                { moment: "strike", target: String(actor.ref()), count: 8, size: .12, speed: .12 }, 12);
+            if (carrier !== null) quashMarks(world, body, actor, left);
+        }
     } });
 
     define({
@@ -109,17 +124,25 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            const point = hit.position(), ref = String(target.ref());
-            world.interrupt(target, "world_combat:quash");
-            if (MobEffects.apply(world, target, Quash, lockTicks, deny) !== null) {
+            const point = hit.position(), ref = String(target.ref()), body = world.observe(target);
+            // 打断与附加状态各自结算：打断只采纳实际的 policy-respecting 回执；
+            // 载体挂不上就不把这一下当成压制已生效，只播按停成功的那一份反馈。
+            const interrupted = LivingActions.requestInterrupt(world, target);
+            const carrier = MobEffects.apply(world, target, Quash, lockTicks, deny);
+            if (carrier !== null) {
                 const count = Math.round(16 + lockTicks / 6);
                 WorldFeedback.emit(world, quashScene, 1, point, { moment: "strike", target: ref,
                     count: count, size: 0.08 + count * 0.006, speed: 0.16 + count * 0.008 }, 30);
                 world.effects(target, quashVisual).forEach(effect => world.operation(effect.id(), "world_combat:dispel", "{}"));
                 world.effect(quashVisual, target, "{}", lockTicks + 1);
+                if (body !== null) quashMarks(world, body, target, deny);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.3, 0)), quashPinText, [], 30);
+                sound(action, "minecraft:entity.warden.sonic_boom");
+            } else if (interrupted > 0) {
+                if (body !== null) WorldFeedback.emit(world, quashScene, 1, point,
+                    { moment: "strike", target: ref, count: 8, size: 0.12, speed: 0.12 }, 16);
+                sound(action, "minecraft:entity.warden.sonic_boom");
             }
-            sound(action, "minecraft:entity.warden.sonic_boom");
             done(action);
         }
     });

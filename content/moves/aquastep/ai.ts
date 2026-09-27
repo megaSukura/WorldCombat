@@ -15,19 +15,28 @@ namespace PokemonSkills {
      */
     function aquastepSideSpace(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         return CompanionBehavior.observedFlag(context, "world_combat:move_aquastep/side:" + target.ref, function () {
-            const world = CompanionBehavior.world(context);
+            const access = CompanionBehavior.world(context);
             const self = CompanionBehavior.source(context);
-            const actor = world.actor(self.ref);
-            const body = actor === null ? null : world.observe(actor);
+            const actor = access.actor(self.ref);
+            if (actor === null) return true;
+            const body = access.observe(actor);
             if (body === null) return true;
-            const at = body.position();
             const width = Math.max(0.3, body.width()), height = Math.max(0.5, body.height());
-            const dx = target.point[0] - at.x(), dz = target.point[2] - at.z();
+            // 用本个体真实的每拍步长，在冻结舞心（目标）周围的落点上按脚底探针测可达空间。
+            let stride = 1.6;
+            try {
+                const values = { world: access, actor: actor, skill: PokemonSkills.skills["aquastep"],
+                    detail: { values: capability.data.config || {} } };
+                stride = Math.max(0.8, PokemonSkills.p("aquastep", "stride", values));
+            } catch (error) { }
+            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
             const span = Math.sqrt(dx * dx + dz * dz) || 1;
             const sideX = -dz / span, sideZ = dx / span;
-            const reach = Math.max(1.2, Math.min(2.4, capability.data.range));
+            const targetHeight = typeof target.height === "number" && isFinite(target.height) ? target.height : body.height();
+            const groundY = target.point[1] - Math.max(0.5, targetHeight / 2);
             for (let side = -1; side <= 1; side += 2) {
-                if (world.freeSpace(CompanionBehavior.point([at.x() + sideX * reach * side, at.y(), at.z() + sideZ * reach * side]), width, height)) return true;
+                const candidate = CompanionBehavior.point([target.point[0] + sideX * stride * side, groundY, target.point[2] + sideZ * stride * side]);
+                if (access.freeSpace(candidate, width, height)) return true;
             }
             return false;
         });
@@ -47,10 +56,7 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("aquastep", {
         protocols: ["world_combat:attack"],
-        reach: function (context, capability, purpose) {
-            const twirl = !!(capability.data.config && capability.data.config.twirl);
-            return capability.data.range + (twirl ? 1 : 0);
-        },
+        reach: function (context, capability, purpose) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;

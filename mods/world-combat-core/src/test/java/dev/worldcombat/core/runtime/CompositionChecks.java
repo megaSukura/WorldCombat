@@ -153,7 +153,8 @@ public final class CompositionChecks {
             f.action("checks:b", null, a -> a.commit(3)); f.ready(); f.start("checks:a"); f.start("checks:b");
             rejected(() -> retained[0].world()); rejected(() -> scopes.getFirst().hurt(f.target, 1, "{}"));
             rejected(() -> f.world().projectile(ORIGIN, DIRECTION, 0, .2, 10, 20, "hit", "complete", "{}", "{}"));
-            check(!f.world().projectileActive(ids.getFirst()) && !f.world().cancelProjectile(ids.getFirst()), "Bare hook scope acquired another owner's projectile");
+            check(!f.world().projectileActive(ids.getFirst()) && !f.world().cancelProjectile(ids.getFirst())
+                && f.world().projectilePosition(ids.getFirst()) == null, "Bare hook scope acquired another owner's projectile");
             reason(() -> f.start("checks:b"), "cooldown");
             f.host.hit(ids.get(0), f.target); f.host.hit(ids.get(0), f.target); f.host.flights.get(ids.get(0)).complete.run();
             f.host.hit(ids.get(1), f.target); f.runtime.tick();

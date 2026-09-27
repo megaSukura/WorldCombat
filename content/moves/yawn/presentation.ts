@@ -1,14 +1,14 @@
 /**
  * 哈欠 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者嘴边的圈张开、吐出一串发黄的睡泡 → 睡泡沿通视直线摇摇晃晃飘到目标头上 → 目标头顶浮起
- *   一圈逐渐收拢的倒数环与零星的泡（读得出还剩多久）→ 时间到了爆出一片 Z，没落成则泡在空中破掉。
+ * 一句话：施法者嘴边的圈张开、当面吐出一口短呼气（windup → puff）→ 目标头顶立刻浮起一圈随睡意剩余收缩的
+ *   倒数环与零星睡泡（drowsy，绑在睡意载体上，净化即止）→ 时间到了爆出一片 Z，没落成则泡在空中破掉。
  *
  * 色相家族：暖黄（0xD9C24A）为主体与睡泡，琥珀（0x8A6E1E）只压在环，近白黄（0xFFF3C4）只给高光；单一色相。
- * 拍子：起 windup（张嘴）→ 飘 puff（睡泡过线）→ 倒数 drowsy（头顶环收拢）→ 落 sleep（Z 爆）／空 fizzle。
- * 范围：puff 沿 `data.path`（自身与目标两个真实顶点）连线，线长即真实传播距离；puff 飘到哪就标记到哪。
- * 运动：睡泡沿直线慢慢向前（速度低、有摆动），倒数环持续向内收拢；落睡时 Z 自下而上升起。
- * 数：`data.puffs`（特攻换算）决定飘过去的泡数与落睡 Z 的数量；`data.ringRadius`（剩余睡意比例换算）决定倒数环大小。
+ * 拍子：起 windup（张嘴）→ 呼 puff（嘴边短呼气 + 目标即刻标记）→ 倒数 drowsy（头顶环收拢）→ 落 sleep（Z 爆）／空 fizzle。
+ * 范围：标记是即刻的——不再有一条沿线同时亮起的睡泡线；puff 只在施法者嘴边，倒数绑在目标身上。
+ * 运动：短呼气从嘴边向上散开；倒数环持续向内收拢；落睡时 Z 自下而上升起。
+ * 数：`data.puffs`（特攻换算）决定短呼气的泡数与落睡 Z 的数量；`data.ringRadius`（剩余睡意比例换算）决定倒数环大小。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const YawnDefinition: ParticleDefinition = {
@@ -37,21 +37,21 @@ const YawnDefinition: ParticleDefinition = {
             ]
         },
         puff: {
-            duration: 26,
-            exit: { stop: 12, drain: 16 },
+            duration: 14,
+            exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "drift", bind: "path",
+                    name: "exhale", bind: "source", height: 0.82,
                     particle: "world_combat_core:cobblemon/generic/status/sleep_bubble",
-                    shape: { kind: "polyline" }, rate: { data: "puffs", fallback: 8 },
-                    direction: "shape", speed: [0.02, 0.07], spread: 14, spin: 24,
-                    lifetime: [10, 18], size: [0.18, 0.05], sizeMode: "sin",
-                    color: 0xD9C24A, alpha: [0.75, 0], light: "full", maxParticles: 80
+                    burst: { count: { data: "puffs", fallback: 8 } }, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "up", speed: [0.02, 0.08], spread: 20, spin: 20,
+                    lifetime: [8, 14], size: [0.16, 0.04],
+                    color: 0xD9C24A, alpha: [0.75, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "arrive", bind: "target", height: 0.8,
+                    name: "mark", bind: "target", height: 0.8,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 6, shape: { kind: "sphere", radius: 0.24 },
+                    burst: { count: 8, at: 1 }, shape: { kind: "sphere", radius: 0.24 },
                     direction: "inward", speed: [0.02, 0.06],
                     lifetime: [8, 14], size: [0.1, 0.02],
                     color: 0xFFF3C4, alpha: [0.8, 0], light: "full", maxParticles: 30

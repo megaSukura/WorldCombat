@@ -19,18 +19,13 @@ namespace PokemonSkills {
     const hexLockKey = "world_combat:hex/aim";
     const hexSigilEffect = "world_combat:hex_sigil";
 
-    /** 从一点向下找可承载地表（返回地表格中心）；找不到合法落面返回 null。 */
+    /** 从一点向下找真实可承载的碰撞顶面（花草、液体这类无碰撞面不算）；找不到合法落面返回 null。 */
     function hexGround(world: CombatWorld, point: CombatPoint, drop: number): CombatPoint | null {
-        const x = Math.floor(point.x()), y = Math.floor(point.y()), z = Math.floor(point.z());
-        for (let dy = 1; dy >= -drop; dy--) {
-            const block = world.block(WorldCombat.point(x, y + dy, z));
-            if (block === null) break;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-            return WorldCombat.point(x + 0.5, y + dy + 1, z + 0.5);
-        }
-        return null;
+        const reach = Math.max(1, Math.ceil(drop));
+        const hit = WorldGeometry.blockHit(world, point.plus(WorldCombat.point(0, 0.25, 0)),
+            point.minus(WorldCombat.point(0, reach + 0.25, 0)));
+        if (hit === null || hit.blockFace() !== "up") return null;
+        return hit.position();
     }
 
     function hexSigilData(json: string): string {
@@ -178,7 +173,8 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.shadowball.actor");
-            const flight = LivingActions.projectile(action, {
+            let flightId = "";
+            flightId = LivingActions.projectile(action, {
                 speed: crawl, range: range, radius: Math.max(0.25, radius * 0.3), gravity: 0,
                 direction: direction,
                 appearance: { sprite: "cobblemon:particle/generic/orb/energyorb", glow: true, tint: 0x8A6BE0, scale: 0.9, pierce: true },
@@ -187,8 +183,14 @@ namespace PokemonSkills {
                     if (hit.hitEntity()) return;
                     if (hit.blocked()) arrive(current, hit.position());
                 }
-            }, function (current: CombatAction) { arrive(current, locked); });
-            scenes.show(action, "cast", origin, { moment: "cast", projectile: flight, scale: scale, waves: waves });
+            }, function (current: CombatAction) {
+                // 飞尽：用 projectilePosition 读真实弹体末点，在那里找承载面；读不到或落点悬空就消散，
+                // 不用起手锁定的旧点假造终点。
+                const end = current.world().projectilePosition(flightId);
+                if (end !== null) arrive(current, end);
+                else finish(current);
+            });
+            scenes.show(action, "cast", origin, { moment: "cast", projectile: flightId, scale: scale, waves: waves });
         }
     });
 }

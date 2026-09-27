@@ -18,7 +18,7 @@ Smoke.scenario("psychoboost", function (stage) {
     }, function () {
         stage.expect(stage.casts("psychoboost", caster) > 0, "psycho boost was committed");
         stage.expect(stage.damageTo(foe) > 0, "the implosion reached the foe");
-        stage.note("念力收拢延迟、自身特攻下降级与视线遮断时散环属于设计事实；由完整装配的人工试玩核对", {
+        stage.note("第一发内爆按出手瞬间的特攻快照结算、随后才付自身 −SPA；收拢期间短频率查通视，被挡就在实际遮挡处散环。这些属于设计事实，由完整装配的人工试玩核对", {
             casts: stage.casts("psychoboost", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

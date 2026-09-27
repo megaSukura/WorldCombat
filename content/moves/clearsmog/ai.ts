@@ -46,7 +46,7 @@ namespace PokemonSkills {
 
     addPreferences(clearsmogId, {}, [
         field(pathOf("billow"), "漫烟式", "boolean", {
-            help: "开启：烟团半径 ×1.5、黏烟时长 ×1.4，但威力 ×0.85、起手 +1 刻、冷却 +8 刻——罩得更广更久。关闭（聚泥式，默认）：威力 ×1.15、出手快、冷却短，但烟团小、黏烟短。"
+            help: "开启：烟团半径 ×1.5、黏烟时长 ×1.4，但威力 ×0.85、起手 +1 刻、冷却 +8 刻——罩得更广更久。关闭（聚泥式，默认）：威力为基础值、出手快、冷却短，但烟团小、黏烟短。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 3, max: 16, step: 1,

@@ -2,14 +2,14 @@
  * 踩踏 / stomp 的出手方式。
  *
  * 核心念头：把全身重量往下砸——高高抬起、对准目标落脚；砸中的那一下最重，脚下的震波还把附近站着的人一起震懵，
- * 落点留下一小片被踩实的塌陷。它只砸得到**站在地上**的目标：空中的人躲得开（原生的 nonsky 落成可读的反制）。
+ * 落点画出一圈被踩实的压痕（只画画面，不改动方块）。它只砸得到**站在地上**的目标：空中的人躲得开（原生的 nonsky 落成可读的反制）。
  *
  * 三幕：
- *   起（raise，提交前）：抬脚、沉身，脚边尘土上跳的预告。
- *   砸（slam → hit / whiff）：提交后不移动，整只身体落到目标点上；目标站在地上且在射程内就结算 slam 接触伤害、
- *       按 flinchChance 掷畏缩，并以落点为心震出 shock 半径：圈内其他站在地上的敌人各吃一记 aftershock、
- *       按 staggerChance 掷畏缩。目标在空中或已走远则踩空，只踩实脚下的地。
- *   痕（crater）：落点的地表被踩成粗土／圆石／砂岩，停留一会儿后原方块回来。
+ *   起（raise，提交前）：抬脚、沉身，脚边尘土上跳的预告；同刻锁定唯一的可达落点。
+ *   砸（slam → hit / whiff）：提交后不移动，整只身体落到锁定的落点上；目标站在地上且与脚掌体积真实接触就结算 slam 伤害、
+ *       按 flinchChance 掷畏缩，并以落点为心震出 shock 半径：圈内其他站在相连地面上的敌人各吃一记 aftershock、
+ *       按 staggerChance 掷畏缩。目标在空中或已走出脚印则踩空，只压出脚下的痕。
+ *   痕（impression）：落点画一圈被踩实的脚印压痕，停留一会儿后自然淡去；不替换任何方块。
  *
  * 与同族分开：重踏是一圈外推的地裂、跺脚是一条朝目标的地缝、咬住是钩住拉近、骨棒是长柄横扫；
  * 只有踩踏是**垂直下砸、单体最重、附带一小圈震波、且只认站在地上的对手**。
@@ -43,43 +43,25 @@ namespace PokemonSkills {
         return true;
     }
 
-    /** 落脚处的地表形态：泥土类踩成粗土，石头类踩裂成圆石，沙地踩成砂岩；其余不动。 */
-    function stompCracked(id: string): string {
-        if (id === "minecraft:grass_block" || id === "minecraft:dirt" || id === "minecraft:coarse_dirt" ||
-            id === "minecraft:podzol" || id === "minecraft:rooted_dirt" || id === "minecraft:moss_block") return "minecraft:coarse_dirt";
-        if (id === "minecraft:stone" || id === "minecraft:granite" || id === "minecraft:diorite" ||
-            id === "minecraft:andesite" || id === "minecraft:tuff" || id === "minecraft:deepslate" ||
-            id === "minecraft:gravel") return "minecraft:cobblestone";
-        if (id === "minecraft:sand" || id === "minecraft:red_sand") return "minecraft:sandstone";
-        return "";
+    /**
+     * 起手与兑现共用同一个可达落点：先把瞄准点夹进射程、被真实墙面截断，再落到脚下地面。
+     * 预告的脚印和真正踩下去的位置因此是同一个点；目标走出这个脚印就避开主击。
+     */
+    function stompResolveLanding(world: CombatWorld, actor: CombatActor, aim: CombatPoint, range: number): CombatPoint {
+        const body = world.observe(actor);
+        const origin = body === null ? aim : body.position();
+        const offset = aim.minus(origin);
+        let landing = offset.length() > range ? origin.plus(offset.unit().scale(range)) : aim;
+        const wall = WorldGeometry.blockHit(world, origin, landing);
+        if (wall !== null) landing = wall.position();
+        return WorldGeometry.ground(world, landing, 4);
     }
 
-    /** 把落脚点周围的地表踩实→换成同层的地痕；只动地表方块，到期原方块回来。 */
-    function stompCrater(world: CombatWorld, point: CombatPoint, radius: number, ticks: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        const limit = Math.max(6, Math.round(radius * radius * 6));
-        const r = Math.ceil(radius), inner = Math.max(0.3, radius * 0.2);
-        for (let dx = -r; dx <= r && cells.length < limit; dx++) for (let dz = -r; dz <= r && cells.length < limit; dz++) {
-            const distance = Math.sqrt(dx * dx + dz * dz);
-            if (distance > radius || distance < inner) continue;
-            const x = baseX + dx, z = baseZ + dz;
-            for (let dy = 1; dy >= -2; dy--) {
-                const y = baseY + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") break;
-                const key = x + "," + y + "," + z;
-                const cracked = stompCracked(id);
-                if (!seen[key] && cracked !== "" && cracked !== id) { seen[key] = true; cells.push({ x: x, y: y, z: z, block: cracked }); }
-                break;
-            }
-        }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), ticks); }
-        catch (error) { return 0; }
-        return cells.length;
+    /** 落点到目标脚下之间没有墙或断层：震波只沿相连的地面扩散；射线抬到脚踝高度，避免擦到地面方块。 */
+    function stompConnected(world: CombatWorld, landing: CombatPoint, target: CombatObservation): boolean {
+        const foothold = WorldGeometry.ground(world, target.position(), 3);
+        const ankle = WorldCombat.point(0, 0.2, 0);
+        return WorldGeometry.blockHit(world, landing.plus(ankle), foothold.plus(ankle)) === null;
     }
 
     define({
@@ -87,8 +69,8 @@ namespace PokemonSkills {
         id: "stomp",
         cooldownParameter: "recharge",
         name: "Stomp",
-        description: "把全身重量往下砸的一脚：朝选定的近处地表落脚，正下方站在脚印里的目标吃最重的一击、有机会被踩懵，脚下的震波还会波及落点周围站着的其他敌人——走出脚印就能避开主击，腾空的人躲得开震波。",
-        uses: ["把靠近的地面目标一脚踩实，并尝试震懵", "顺带震到落点周围站着的其他敌人", "在对手被逼到地面时兑现最重的一击"],
+        description: "把全身重量往下砸的一脚：朝选定的近处地表落脚，正下方站在脚印里的目标吃最重的一击、有机会被踩懵，脚下的震波还会波及落点周围站在相连地面上的其他敌人——走出脚印就能避开主击，腾空的人躲得开震波，隔墙或另一层的人不会被震到。",
+        uses: ["把靠近的地面目标一脚踩实，并尝试震懵", "顺带震到落点周围站在相连地面上的其他敌人", "在对手被逼到地面时兑现最重的一击"],
         kind: "aim",
         range: 2.4,
         maxRange: 3.2,
@@ -113,13 +95,14 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            // 起手锁定踩点：兑现时读回同一点，标记与落足不会各指一处。
-            const locked = action.targetPosition();
-            action.data(stompLandingKey, JSON.stringify({ x: locked.x(), y: locked.y(), z: locked.z() }));
+            // 起手锁定可达的实际脚点：夹进射程、被墙面截断、贴到地面。兑现时读回同一点。
+            const world = action.sense(), actor = action.actor();
             const foot = p("stomp", "foot", action);
+            const landing = stompResolveLanding(world, actor, action.targetPosition(), skills["stomp"].range);
+            action.data(stompLandingKey, JSON.stringify({ x: landing.x(), y: landing.y(), z: landing.z() }));
             action.present("world_combat:stomp:" + action.id(), stompScene, 1, action.origin(),
                 JSON.stringify({ moment: "raise", heavy: config && config.heavy === true, windup: prepare }));
-            action.present("world_combat:stomp:mark:" + action.id(), stompScene, 1, WorldGeometry.ground(action.sense(), locked, 4),
+            action.present("world_combat:stomp:mark:" + action.id(), stompScene, 1, landing,
                 JSON.stringify({ moment: "mark", foot: foot, heavy: config && config.heavy === true }));
             return prepare;
         },
@@ -141,15 +124,10 @@ namespace PokemonSkills {
             const scale = foot / 0.5;
             const intensity = Math.max(0.5, Math.min(2.4, power / 80));
 
-            // 踩点用起手锁定的点：目标走出脚印就避开主击。越出射程收回，墙会真实截断。
             const origin = self.position();
-            let landing = stompLanding(action) || action.targetPosition();
-            const offset = landing.minus(origin);
-            if (offset.length() > skills["stomp"].range) landing = origin.plus(offset.unit().scale(skills["stomp"].range));
-            const probe = action.trace(origin, landing, foot);
-            if (probe.blocked() && !probe.hitEntity()) landing = probe.position();
-            // 落到实处：脚下有地面就贴地，悬空的点保持空踩（不会凭空生成坑）。
-            landing = WorldGeometry.ground(world, landing, 4);
+            // 踩点用起手锁定的可达点：预告与落足一致，目标走出脚印就避开主击。
+            const landing = stompLanding(action) || stompResolveLanding(world, actor, action.targetPosition(), skills["stomp"].range);
+            const heading = WorldGeometry.flatUnit(landing.minus(origin), action.direction());
 
             WorldFeedback.emit(world, stompScene, 1, landing,
                 { moment: "slam", scale: 1, intensity: intensity, foot: foot, shock: Math.round(shock * 100) / 100,
@@ -157,13 +135,15 @@ namespace PokemonSkills {
             sound(action, "minecraft:item.mace.smash_ground_heavy");
             sound(action, "cobblemon:impact.ground");
 
-            // 主击：按实际脚印范围选正下方站在地上的受击者，移出脚印就躲开主击。
-            let main: CombatActor | null = null;
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(landing, 0, Math.max(0.35, foot), { below: 2, above: 1.6 }), function (enemy, facts) {
-                if (main !== null || !facts.grounded()) return;
-                main = enemy;
-            });
-            const foe = main as CombatActor | null;
+            // 主击：按脚掌体积与真实碰撞箱选正下方站在地上的最近受击者；移出脚印就躲开主击。
+            const footholds: { actor: CombatActor; facts: CombatObservation }[] = [];
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySector(landing, heading, Math.max(0.35, foot), 360, { below: 2, above: 1.6 }),
+                function (enemy, facts) {
+                    if (facts.friendly() || !facts.grounded()) return;
+                    footholds.push({ actor: enemy, facts: facts });
+                });
+            footholds.sort(function (a, b) { return a.facts.position().minus(landing).length() - b.facts.position().minus(landing).length(); });
+            const foe = footholds.length ? footholds[0].actor : null;
             if (foe !== null) {
                 if (hurt(action, foe, "stomp", power, { damage: damageSpec("stomp", "slam"), contact: true })) {
                     WorldFeedback.emit(world, stompScene, 1, landing,
@@ -179,13 +159,22 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, landing.plus(WorldCombat.point(0, 1.0, 0)), stompMissText, [], 22);
             }
 
-            // 震波：落点周围站在地上的其他人各吃一记较轻的 aftershock，并按 staggerChance 掷畏缩；不重复主受击者。
+            // 震波：落点周围站在相连地面上的其他人各吃一记较轻的 aftershock，并按 staggerChance 掷畏缩；不重复主受击者。
+            const shakenTargets: { actor: CombatActor; facts: CombatObservation }[] = [];
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySector(landing, heading, shock, 360, { below: 2, above: 1 }),
+                function (enemy, facts) {
+                    const ref = String(enemy.ref());
+                    if (ref === String(actor.ref()) || (foe !== null && ref === String(foe.ref()))) return;
+                    if (facts.friendly() || !facts.grounded()) return;
+                    // 只沿相连地面：隔墙、断层或另一层的敌人不会被震到。
+                    if (!stompConnected(world, landing, facts)) return;
+                    shakenTargets.push({ actor: enemy, facts: facts });
+                });
+            shakenTargets.sort(function (a, b) { return a.facts.position().minus(landing).length() - b.facts.position().minus(landing).length(); });
             let shaken = 0;
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(landing, 0, shock, { below: 2, above: 1 }), function (enemy, facts) {
-                const ref = String(enemy.ref());
-                if (ref === String(actor.ref()) || (foe !== null && ref === String(foe.ref()))) return;
-                if (!facts.grounded() || shaken >= 3) return;
-                if (!hurt(action, enemy, "stomp", shockPower, { damage: damageSpec("stomp", "aftershock") })) return;
+            for (let index = 0; index < shakenTargets.length && shaken < 3; index++) {
+                const entry = shakenTargets[index], enemy = entry.actor, facts = entry.facts, ref = String(enemy.ref());
+                if (!hurt(action, enemy, "stomp", shockPower, { damage: damageSpec("stomp", "aftershock") })) continue;
                 shaken++;
                 WorldFeedback.emit(world, stompScene, 1, facts.position(),
                     { moment: "shock", target: ref, scale: Math.max(0.5, Math.min(2, shock / 1.6)),
@@ -193,12 +182,13 @@ namespace PokemonSkills {
                 if (world.valid(enemy) && world.random() < stagger && stompFlinch(world, enemy, flinchTicks)) {
                     WorldFeedback.emit(world, stompScene, 1, facts.position(), { moment: "flinch", target: ref }, 22);
                 }
-            });
+            }
             if (shaken > 0) WorldFeedback.text(world, landing.plus(WorldCombat.point(0, 1.45, 0)), stompShockText, [shaken], 24);
 
-            const placed = stompCrater(world, landing, crater, craterTicks);
+            // 落脚压痕只是画面：在真实落点画一圈被踩实的痕，不改动任何方块。
             WorldFeedback.emit(world, stompScene, 1, landing,
-                { moment: "crater", radius: Math.round(crater * 100) / 100, cells: placed, scale: 1, intensity: intensity }, 28);
+                { moment: "crater", radius: Math.round(crater * 100) / 100, foot: foot, craterTicks: craterTicks,
+                    scale: 1, intensity: intensity }, Math.max(20, craterTicks));
             done(action);
         }
     });

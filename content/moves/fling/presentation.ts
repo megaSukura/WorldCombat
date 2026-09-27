@@ -2,9 +2,9 @@
  * 投掷 / fling —— 客户端表现。
  *
  * 一句话：施法者把手里的东西举到身后 → 道具本体（投射物外观就是那件物品）沿弧线翻飞、身后拖一条尘线 →
- * 命中处炸起一圈尘与碎屑，道具本体随后落在脚边、闪一下。色相家族：中性尘（0xE8ECF2 / 0xF2F4F8），
- * 道具本身的贴图自带身份。碎屑数量由服务端算出的 data.bursts 驱动。
- * 拍子：抬（draw）→ 飞（flight）→ 击（impact）→ 落（land）。
+ * 命中处炸起一圈尘与碎屑，道具本体随后落在脚边、闪一下；没命中而在空中结束时只散成一小撮尘落下。
+ * 色相家族：中性尘（0xE8ECF2 / 0xF2F4F8），道具本身的贴图自带身份。碎屑数量由服务端算出的 data.bursts 驱动。
+ * 拍子：抬（draw）→ 飞（flight）→ 击（impact）→ 落地（land）／空中结束（fade）。
  */
 const FlingDefinition: ParticleDefinition = {
     moments: {
@@ -87,6 +87,21 @@ const FlingDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [8, 14], size: [0.08, 0.01],
                     color: 0xFFFFFF, alpha: [0.9, 0], light: "full", maxParticles: 6
+                }
+            ]
+        },
+        // 空中结束（未命中/越程/取消）：道具在半空散开落下，不播地面上才有的落定尘，别把空中结束叫落地。
+        fade: {
+            duration: 20,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "dissipate", bind: "point", fit: "none", height: 0.05,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 8 }, shape: { kind: "sphere", radius: 0.16 },
+                    direction: "outward", speed: [0.02, 0.07], gravity: 0.03,
+                    lifetime: [6, 12], size: [0.05, 0.01],
+                    color: 0xD8DDE6, alpha: [0.4, 0], light: "world", maxParticles: 16
                 }
             ]
         }

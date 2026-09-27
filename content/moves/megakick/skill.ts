@@ -24,7 +24,7 @@ namespace PokemonSkills {
         id: "megakick",
         cooldownParameter: "recharge",
         name: "Mega Kick",
-        description: "把一条腿整条拉满、身体后仰，再连人带腿撞穿对手，力量大到把目标直接踢飞出去。起手长、冷却久、PP 只有 5；踢空后收不住要多冲一段——对手有真实的余地让开，让开就是这一招的代价。",
+        description: "把一条腿整条拉满、身体后仰，再连人带腿撞穿对手，力量大到把目标直接踢飞出去。起手长、冷却久、PP 只有 5；踢空后收不住要多冲一段——对手有真实的余地让开，让开就是这一招的代价。地面起脚取水平投影，踢空后的余程只是失衡前移，不再造成伤害。",
         uses: ["一脚把单体目标踢出阵型", "用大起手逼对手让位，再收势", "对残血目标做一记终结式重踢"],
         kind: "enemy",
         range: 2.7,
@@ -52,8 +52,11 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            // 起手把一条腿向后收：足缘沿实际出脚方向的反向拉开，提交前只做预告。
+            const flat = WorldGeometry.flatUnit(aim(action), action.direction());
             action.present("world_combat:move_megakick:haul", megakickScene, 1, action.origin(),
-                JSON.stringify({ moment: "haul", launch: config && config.launch === false ? 0 : 1, windup: prepare }));
+                JSON.stringify({ moment: "haul", launch: config && config.launch === false ? 0 : 1, windup: prepare,
+                    direction: [-flat.x(), 0, -flat.z()] }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -64,13 +67,19 @@ namespace PokemonSkills {
             const radius = p("megakick", "collisionRadius", action);
             const overshoot = Math.max(0.4, p("megakick", "overshoot", action));
             const launch = !(config && config.launch === false);
-            const direction = aim(action);
             const self = world.observe(action.actor());
             const scale = self === null ? 1 : (self.width() + self.height()) / 2.3;
+            // 固定出脚方向；接地时把瞄准投到水平面，避免负 Y 起步让这记直线扫掠直接撞进地面
+            // （moveSweep 是直线，不会替招式把冲量沿地滑行；此前 zingzap 同根因已验证）。
+            const aimed = aim(action);
+            const fallback = WorldGeometry.facing(world, action.actor());
+            const direction = self !== null && self.grounded() ? WorldGeometry.flatUnit(aimed, fallback === null ? undefined : fallback) : aimed;
+            // “真实短足线”的长度与实际 lunge 同源：踢出的这一段按同一个突进距离派生的短足线显示。
+            const leg = Math.max(0.5, Math.round(length * 0.5 * 100) / 100);
             let travelled = 0, overrun = false, settled = false;
 
             movementScenes.show(action, "drive", action.origin(), { moment: "drive", direction: [direction.x(), direction.y(), direction.z()],
-                    stride: Math.max(3, Math.round(length / 0.55)), scale: scale, launch: launch ? 1 : 0 });
+                    stride: Math.max(3, Math.round(length / 0.55)), leg: leg, scale: scale, launch: launch ? 1 : 0 });
             sound(action, "minecraft:entity.player.attack.strong");
 
             function settle(current: CombatAction, moment: string, textKey: string): void {
@@ -78,15 +87,15 @@ namespace PokemonSkills {
                 settled = true;
                 const scope = current.world(), body = scope.observe(current.actor());
                 if (body !== null) {
-                    // The impact was already emitted at the actual hit point; settling must not create a second hit on the caster.
-                    if (moment !== "impact") WorldFeedback.emit(scope, megakickScene, 1, body.position(), { moment: moment, scale: scale, stride: 4 }, 22);
+                    // 命中/被拒的接触已在真实接触点发过；收势不再在施法者身上造第二个击中。
+                    if (moment !== "impact" && moment !== "blocked") WorldFeedback.emit(scope, megakickScene, 1, body.position(), { moment: moment, scale: scale, stride: 4 }, 22);
                     if (textKey) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), textKey, [], 22);
                 }
                 sound(current, moment === "whiff" ? "minecraft:entity.player.attack.weak" : "cobblemon:impact.fighting");
                 movementScenes.finish(current, done);
             }
 
-            /** 结算对一名目标的踢击：伤害 + 抛飞。目标体重只有在这里才读得到。 */
+            /** 结算对一名目标的踢击：伤害成功才播 impact；实际推动成功才播踢飞与浮字。目标体重只有在这里才读得到。 */
             function strike(current: CombatAction, target: CombatActor, point: CombatPoint): boolean {
                 const scope = current.world();
                 const context: NumberContext = { pokemon: CobblemonCombat.pokemon(current.actor()), skill: skills["megakick"],
@@ -95,20 +104,28 @@ namespace PokemonSkills {
                 const back = Math.max(0, p("megakick", "launchBack", context));
                 const up = Math.max(0, p("megakick", "launchUp", context));
                 const landed = hurt(current, target, "megakick", power, { damage: damageSpec("megakick", "kick"), contact: true });
+                if (!landed) {
+                    // 伤害被拒绝/免疫：不播 impact、不报踢实，也不做踢飞；只在真实接触点留一记轻的钝触。
+                    WorldFeedback.emit(scope, megakickScene, 1, point,
+                        { moment: "blocked", target: String(target.ref()), scale: scale }, 18);
+                    return false;
+                }
                 WorldFeedback.emit(scope, megakickScene, 1, point,
                     { moment: "impact", target: String(target.ref()), intensity: Math.max(0.7, Math.min(2.6, power / 110)),
                         force: back, launch: launch ? 1 : 0, scale: scale }, 26);
-                if (landed && scope.valid(target)) {
+                if (scope.valid(target)) {
                     const away = WorldCombat.point(direction.x(), 0, direction.z());
                     const heading = away.length() < 0.05 ? direction : away.unit();
-                    if (scope.hitDisplace(target, WorldCombat.point(heading.x() * back, up, heading.z() * back)) > 0.1)
+                    if (scope.hitDisplace(target, WorldCombat.point(heading.x() * back, up, heading.z() * back)) > 0.1) {
                         WorldFeedback.emit(scope, megakickScene, 1, point,
                             { moment: "launch", target: String(target.ref()), force: back, rise: up, scale: scale }, 28);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), megakickLaunchText, [], 22);
-                } else {
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), megakickHitText, [], 22);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), megakickLaunchText, [], 22);
+                    } else {
+                        // 实际位移没发生（抗击退/被挡住）：只报踢实，不报踢飞。
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), megakickHitText, [], 22);
+                    }
                 }
-                return landed;
+                return true;
             }
 
             function advance(current: CombatAction): void {
@@ -121,7 +138,8 @@ namespace PokemonSkills {
                 const hit = swept.hit;
                 if (hit.hitEntity()) {
                     const target = hit.target();
-                    if (target !== null && !scope.friendly(target) && scope.valid(target)) {
+                    // lunge 段内才是有效踢击；踢空后的 overshoot 只是失衡前移，碰到什么都不再造成伤害。
+                    if (!overrun && target !== null && !scope.friendly(target) && scope.valid(target)) {
                         strike(current, target, hit.position());
                         settle(current, "impact", "");
                         return;

@@ -1,24 +1,9 @@
-/**
- * 薄雾炸裂 / mistyexplosion 的客户端表现。
- *
- * 一句话：施法者身上先滚满粉雾、身体发亮，随后整片薄雾贴地向外**炸开一次**成粉白光环，把圈里的人蒙住；
- *   雾不再经营，只作一小段淡去的视效飘散。
- * 色相家族：粉白到浅金（largeobscure_pink／obscuringsmoke／glowingsparkle_pink／aura_white／impact_fairy），
- *   与三誓约的橙红、黄绿、青蓝在色相上分开；金色只出现在强调层的小面积上。
- * 拍子：起（swell，提交前收雾发亮）→ 击（bloom 雾环一次炸开 + hit 命中点）→ 散（mist 短视效淡去）。
- * 范围：swell／bloom／mist 的环半径 = `data.scale` × 参考 4.4 格（bloom）／4.4（swell）／3.6（mist），
- *   玩家看到的那圈雾就是实际波及范围。
- * 运动：swell 向内收拢；bloom 贴地向外一次炸开并略微上浮（雾比火慢）；mist 只低低地飘一下就散，不画边圈、不留危险区提示。
- * 数：`data.count`（由特攻派生）决定雾絮与光点数量，`data.intensity`（威力 / 120）决定亮度与密度，
- *   `data.gold`（站在薄雾上时为本次雾絮的六成，否则 0）决定金色强调光点的数量。
- * 参照节：视觉语言第二、三、四、五、七、九节；残雾是持续状态，按第五节「少而稳」写。
- */
 const MistyexplosionDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         swell: {
-            duration: 18,
-            exit: { stop: 10, drain: 12 },
+            duration: { data: "windup", fallback: 16 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "gather_mist", bind: "source", offset: [0, 0.7, 0], height: 0.4,
@@ -104,14 +89,24 @@ const MistyexplosionDefinition: ParticleDefinition = {
                 }
             ]
         },
+        haze: {
+            exit: { drain: 12 },
+            emitters: [{
+                name: "aim_mist", bind: "target", height: .85, fit: "body",
+                particle: "world_combat_core:cobblemon/generic/smoke/largeobscure_pink",
+                rate: 4, shape: { kind: "sphere_surface", radius: .15 }, direction: "up",
+                speed: [.004, .018], lifetime: [8, 14], size: [.13, .03],
+                color: 0xF0A8D0, alpha: [.3, 0], light: "world", maxParticles: 12
+            }]
+        },
         mist: {
-            duration: 20,
-            exit: { stop: 10, drain: 26 },
+            duration: { data: "ticks", fallback: 50 },
+            exit: { drain: 26 },
             emitters: [
                 {
                     name: "lost_mist", bind: "point", height: 0.08,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    burst: { count: { data: "count", fallback: 40 }, at: 0 },
+                    rate: 8,
                     shape: { kind: "circle", radius: 3.6 },
                     direction: "outward", speed: [0.01, 0.06],
                     lifetime: [16, 30], size: [0.4, 0.7],

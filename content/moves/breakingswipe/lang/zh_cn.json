@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.breakingswipe.summary": "身子不动，甩起坚韧的尾巴从一侧扫向另一侧、沿地面扫过一道宽弧：尾巴扫到的敌人各挨一记接触伤害、被掀开，并让它们的攻击下降一级。广域式罩得更宽，聚扫式打得更重。",
+  "worldcombat.skill.breakingswipe.summary": "身子不动，甩起坚韧的尾巴从一侧扫向另一侧、沿身体实际高度扫过一道宽弧：尾巴扫到的敌人各挨一记接触伤害、被掀开，并让它们的攻击下降一级；只有真被压低的才按实际级数反馈。广域式罩得更宽，聚扫式打得更重。",
   "worldcombat.skill.breakingswipe.use.0": "一次压低围在身边的一群敌人",
   "worldcombat.skill.breakingswipe.use.1": "把贴身的敌人一起掀开、拉开距离",
   "worldcombat.skill.breakingswipe.use.2": "趁敌人扎堆时一记压低多个物理输出",
@@ -25,8 +25,9 @@
   "worldcombat.skill.breakingswipe.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.breakingswipe.preference.ai.maxChase.help": "目标进入这个距离内才主动甩尾；越大越早扫，但还没收进身位时容易扫空。",
   "worldcombat.skill.breakingswipe.preference.ai.cluster": "瞄准扎堆",
-  "worldcombat.skill.breakingswipe.preference.ai.cluster.help": "开启：目标身边 3.2 格内还有别的敌人时排得更前，一次压低多人；关闭则只按普通交战排序。",
+  "worldcombat.skill.breakingswipe.preference.ai.cluster.help": "开启：目标所在的真实扇面里还有别的通视敌人时排得更前，一次压低多人；关闭则只按普通交战排序。",
   "world_combat.move.breakingswipe.text.drop": "攻击下降 ×%1$s",
+  "world_combat.move.breakingswipe.text.hit": "尾扫命中 %1$s 人",
   "world_combat.move.breakingswipe.text.miss": "尾扫落空",
   "worldcombat.skill.breakingswipe.value.maxTargets": "扫中上限"
 }

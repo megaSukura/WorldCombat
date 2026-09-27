@@ -68,7 +68,7 @@ namespace PokemonSkills {
             F.base(1.6).plus(F.body("height").times(0.5)).clamp(1.5, 3.0).round(2),
             "盾影半径", {
                 unit: "格",
-                description: "钢盾护住的横向半径；身板越大盾影越宽，画面与判定同半径。"
+                description: "钢盾的横向尺度；身板越大盾越宽。盾面按它定宽与高、判定与画面读同一组顶点。"
             }),
         /** 冷却：基础 75 刻 + 等级 ×0.5，夹在 75..125。 */
         charge: formula(

@@ -14,6 +14,8 @@ Smoke.scenario("geomancy", function (stage) {
     var caster = stage.pokemon({ species: "gardevoir", level: 50, moves: ["geomancy"], at: [-3, 0, 0] });
     var foe = stage.pokemon({ species: "rattata", level: 12, moves: ["tackle"], at: [9, 0, 0] });
     stage.hostile(caster, foe);
+    // 对手站住不动，保证蓄力两拍不被中途的接触位移/击退打断，场景只验证成功路径。
+    stage.noai(foe);
     // 记录施术者脚下的地面区域：本招只该留下粒子地纹，不该替换任何方块。
     stage.watch([-5, -1, -5], [0, 0, 0]);
     stage.until(1600, function () {

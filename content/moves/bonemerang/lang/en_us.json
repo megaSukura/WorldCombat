@@ -5,7 +5,7 @@
   "worldcombat.skill.bonemerang.use.2": "Throw before the target repositions and force it off its spot",
   "worldcombat.skill.bonemerang.description.0": "The bone flies at %2$s blocks per tick out to %3$s blocks, dealing about %1$s Ground damage on the way out; the target's Defence, type matchup and crits are settled on impact.",
   "worldcombat.skill.bonemerang.description.1": "Return power %1$s, contact radius %2$s blocks; catch within %3$s blocks of your body. Outward overshoot %4$s and sideways bow %5$s both stay within the throw budget.",
-  "worldcombat.skill.bonemerang.description.2": "The bone has %1$s durability; if it shatters or times out it drops where it falls.",
+  "worldcombat.skill.bonemerang.description.2": "The bone has %1$s durability; an enemy breaking it drops one bone, while a wall shatter or a timeout leaves nothing.",
   "worldcombat.skill.bonemerang.arc.on": "Arcing Loop: it flies further past, bows further to the side and slower, with the outbound pass 15 percent lighter and the return 20 percent heavier on a longer cooldown: a heavier but harder-to-land loop.",
   "worldcombat.skill.bonemerang.arc.off": "Straight Out and Back: faster, flatter, both passes even and a shorter cooldown: steadier, but no return bonus.",
   "worldcombat.skill.bonemerang.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",

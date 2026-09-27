@@ -5,8 +5,8 @@ namespace PokemonSkills {
         uses: ["预判改属性", "破除普通招", "帮电吸收队友"], kind: "aim", range: 9, prepare: 4, active: 0, recover: 6, cooldown: 60, style: "electrify",
         defaults: { allMoves: false },
         fields: [flag("allMoves", "全导")],
-        indicator: function (config, pokemon) {
-            return { radius: p("electrify", "dischargeRadius", pokemon), geometry: "line", style: "electrify",
+        indicator: function (config, _pokemon) {
+            return { radius: skills["electrify"].range, geometry: "line", style: "electrify",
                 label: config && config.allMoves ? "全导" : "滤波" };
         },
         resolve: function (pokemon, config, world, actor) {
@@ -34,15 +34,20 @@ namespace PokemonSkills {
             const duration = p("electrify", "surgeDuration", action);
             const arcs = p("electrify", "arcCount", action);
             if (!world.clear(from.position(), to.position()) || to.position().minus(from.position()).length() > action.range()) { done(action); return; }
-            if (MobEffects.apply(world, target, electrified, duration, 0) === null) { done(action); return; }
-            world.effects(target, electrifyPayload).forEach(effect => world.operation(effect.id(), "world_combat:dispel", "{}"));
-            world.effect(electrifyPayload, target, JSON.stringify({ all: config && config.allMoves ? 1 : 0 }), duration);
+            const carrier = MobEffects.apply(world, target, electrified, duration, 0);
+            if (carrier === null) { done(action); return; }
+            // 载荷与原生承载同一 key：新载荷带上这一次实际承载的锚点，落地后才替换旧载荷，
+            // 刷新被拒不会先把旧的删掉，留下一个没有配置的通电状态。
+            const payloadId = world.effect(electrifyPayload, target,
+                JSON.stringify({ all: config && config.allMoves ? 1 : 0, carrier: MobEffects.anchor(carrier) }), duration);
+            if (payloadId > 0) world.effects(target, electrifyPayload).forEach(effect => {
+                if (effect.id() !== payloadId) world.operation(effect.id(), "world_combat:dispel", "{}");
+            });
             sound(action, "minecraft:entity.lightning_bolt.impact");
             WorldFeedback.emit(world, electrifyScene, 1, from.position(),
                 { moment: "arc", target: String(target.ref()), arcCount: arcs, path: [String(self.ref()), String(target.ref())] }, 26);
             WorldFeedback.emit(world, electrifyScene, 1, to.position(),
-                { moment: "charge", target: String(target.ref()), arcCount: arcs,
-                    scale: Math.max(0.5, p("electrify", "dischargeRadius", action) / 0.9) }, 32);
+                { moment: "charge", target: String(target.ref()), arcCount: arcs }, 32);
             WorldFeedback.text(world, to.position().plus(WorldCombat.point(0, 1, 0)), electrifyText, [], 24);
             done(action);
         }

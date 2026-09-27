@@ -5,8 +5,8 @@
  *   隔开一段距离；它必须自己贴地猛扑过去才能吻到。呆壳兽不还手，让「扑到并入眠」可复现。
  *
  * 必然事实：恶魔之吻被提交过，且被吻到的目标身上出现过共享的睡眠身份（world_combat:status/sleep）。
- * 随机结果：能不能扑到由双方速度差决定（参数公式的 landChance），中途撞墙或目标提前走开则扑空；
- *   失败次数、走了多远、实际落点都写进 note 供读轨迹判断。
+ * 随机结果：接触后用**实际被扫到的那个人**重算扑中概率（参数公式的 landChance，按双方速度差压低；
+ *   慢目标也保留基础失手），中途撞墙或目标提前走开则扑空；失败次数、走了多远、实际落点都写进 note。
  */
 Smoke.scenario("lovelykiss", function (stage) {
     stage.weather("clear");
@@ -20,7 +20,7 @@ Smoke.scenario("lovelykiss", function (stage) {
         stage.expect(stage.casts("lovelykiss", caster) > 0, "lovely kiss was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/sleep"), "the kissed target carried the shared sleep identity");
         stage.expect(stage.travelled(caster) > 1, "the lunge carried the user toward the target");
-        stage.note("它必须先把身体送过去：AI 先接近到起扑距离，再沿直线突进；目标比施法者更快时才可能扭开。", {
+        stage.note("它必须先把身体送过去：AI 先接近到起扑距离，再沿直线突进；接触后用实际被扑到的目标重算速度对抗，慢目标也有基础失手。", {
             casts: stage.casts("lovelykiss", caster),
             travelled: Math.round(stage.travelled(caster) * 10) / 10,
             casterHp: Math.round(caster.health() * 10) / 10,

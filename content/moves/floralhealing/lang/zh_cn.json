@@ -5,7 +5,7 @@
   "worldcombat.skill.floralhealing.use.2": "用两拍补给缓冲伙伴的掉血节奏",
   "worldcombat.skill.floralhealing.description.0": "两朵花合计回复其最大生命的 %1$s（不含青草，补满即止）；亲密度越高花越滋养。受益人第二朵绽开时仍站在青草场地上，则第二朵额外多补 %2$s。",
   "worldcombat.skill.floralhealing.description.1": "只能在 %1$s 格内对选定的伙伴撒出花瓣，不能对自己施放。",
-  "worldcombat.skill.floralhealing.description.2": "第一朵当场绽放，%1$s 后开第二朵；受益人中途倒下或离场则取消剩余。",
+  "worldcombat.skill.floralhealing.description.2": "第一朵当场绽放，需要伙伴在射程内且中间没有方块遮挡；%1$s 后开第二朵，受益人中途倒下或离场则取消剩余。",
   "worldcombat.skill.floralhealing.description.3": "起手 %1$s、收招 %2$s。",
   "worldcombat.skill.floralhealing.stance.bouquet": "繁花：回复略高（×1.06），代价是射程 ×0.9、冷却更久——适合贴近照顾。",
   "worldcombat.skill.floralhealing.stance.plain": "省花：够得更远、冷却更短——适合隔一段距离救助。",

@@ -3,16 +3,16 @@
  *
  * 什么局面下出手：一记贴身的破守戳击。目标可见、敌对、存活，且在 `ai.maxChase`（默认 7）格内；更远交给
  *   共享接近逻辑。这招不靠伤害取胜，真正的价值是**把对手撑起来的守护掀掉**，所以目标身上有守护时它最想出手。
- * 对谁出手：`ai.breakGuard`（默认开）打开时，身上带着守护（任何 GuardEffects 池）的目标 priority 抬到 94，
- *   抢在共享交战次序之前；没有守护的目标按普通快攻排序（13）。
+ * 对谁出手：`ai.breakGuard`（默认开）打开时，身上带着**可被掀掉的防护类守护**（`GuardEffects.barriers`，
+ *   而原生举盾不属于这套守护）的目标 priority 抬到 94，抢在共享交战次序之前；没有可拆守护的目标按普通快攻排序（13）。
  * 够不到怎么办：reach 就是本招突进距离，先走近；扑进途中目标消失或离开范围就收招，不留下任何代价。
  * 放完之后：掀掉的守护当场碎掉，交回共享交战计划。目标没有守护时它仍是一记可用的小戳击，不会空转。
  */
 namespace PokemonSkills {
-    /** 只读探针：目标身上有几层共享守护（world_combat:guard），回调内缓存。 */
+    /** 只读探针：目标身上有几层「可被佯攻掀掉的防护类守护」（GuardEffects.barriers，排除已耗尽与非防护类），回调内缓存。 */
     CompanionBehavior.registerFact("world_combat:move_feint/guards", function (access, actor) {
         if (!access.valid(actor)) return 0;
-        return access.effects(actor, "world_combat:guard").length;
+        return GuardEffects.barriers(access, actor).length;
     });
 
     function feintGuards(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {

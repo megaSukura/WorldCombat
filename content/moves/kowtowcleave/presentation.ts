@@ -1,14 +1,14 @@
 /**
  * 仆刀 / kowtowcleave 的客户端表现。
  *
- * 一句话：施法者低头跪拜、身上坠下一层暗影，目标身上裂开一道「空门」标记；随后一道暗色刀光从施法者划到实际接触点，
- *         贴近途中拖出一缕低伏的暗影；命中处炸开暗色斩击，追不上则只在原地收刀。
+ * 一句话：施法者低头跪拜、身上坠下一层暗影，刀光收低；如果目标上钩，当刻在它身上短亮一道破绽；
+ *         随后刀尖从高处落到真实接触点，命中处炸开暗色斩击，追不上则只在原地收刀。
  * 色相家族：暗紫与近黑（impact_dark、obscuringsmoke、slash），强调处用一点冷白。
- * 拍子：起（bow 跪拜）→ 示（open 空门标记）→ 进（lunge 低伏欺近）→ 击（cleave 刀光与斩击）→ 收（miss 收刀）。
+ * 拍子：起（bow 收低刀光等待）→ 示（open 短亮破绽，仅上钩才发）→ 进（lunge 低伏欺近）→ 击（cleave 刀光与斩击）→ 收（miss 收刀）。
  * 范围：cleave 用 path 画出服务端从施法者到**实际接触点**的同一组顶点；追不到就不会有 cleave，只在施法者处 miss。
- * 运动：暗影从身上坠下，刀光沿 path 从施法者扫到接触点，空门标记在目标身上停留到窗口结束。
- * 数：`data.stages`（卸防等级）绑定 open 的标记数量，`data.intensity`（劈砍威力 / 85）抬高刀光与斩击亮度，
- * `data.open`（是否吃到空门）决定斩击是否更亮。
+ * 运动：暗影从身上坠下，刀光沿 path 由高到低扫到接触点，破绽只在真的上钩那一刻出现。
+ * 数：`data.intensity`（劈砍威力 / 85）抬高刀光与斩击亮度，`data.open`（是否吃到空门）决定斩击是否更亮，
+ * `data.notes`（威力 / 4）绑定命中斩击数量；跪拜时长由 `data.windup`（计算出的蓄拜刻数）驱动。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const KowtowcleaveDefinition: ParticleDefinition = {
@@ -33,27 +33,36 @@ const KowtowcleaveDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [8, 15], size: [0.12, 0.03], sizeMode: "sin",
                     color: 0x7A5AA8, alpha: [0.6, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "lowblade", bind: "source", offset: [0, 0.32, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/slash",
+                    rate: 8, shape: { kind: "circle", radius: 0.55 },
+                    direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [7, 13], size: [0.18, 0.05],
+                    color: 0x9A7AB8, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 26
                 }
             ]
         },
         open: {
-            duration: { data: "ticks", fallback: 80 },
-            exit: { stop: 10, drain: 18 },
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
             emitters: [
-                {
-                    name: "mark", bind: "target", offset: [0, 0.9, 0], height: 0.9,
-                    particle: "world_combat_core:cobblemon/generic/exclamation",
-                    burst: { count: { data: "stages", fallback: 1 }, at: 1 },
-                    lifetime: [18, 30], size: [0.36, 0.28],
-                    color: 0xB89AD8, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 6
-                },
                 {
                     name: "crack", bind: "target", offset: [0, 0.5, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
-                    rate: 5, shape: { kind: "sphere", radius: 0.4 },
-                    direction: "outward", speed: [0.01, 0.05],
-                    lifetime: [14, 24], size: [0.2, 0.06],
-                    color: 0x6A4A8A, alpha: [0.35, 0], light: "full", maxParticles: 14
+                    burst: { count: 12, at: 1 }, shape: { kind: "sphere", radius: 0.42 },
+                    direction: "outward", speed: [0.03, 0.14],
+                    lifetime: [12, 20], size: [0.22, 0.07],
+                    color: 0x6A4A8A, alpha: [0.5, 0], light: "full", maxParticles: 18
+                },
+                {
+                    name: "seam", bind: "target", offset: [0, 0.7, 0], height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: 10, at: 1 }, shape: { kind: "sphere_surface", radius: 0.4 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [8, 14], size: [0.12, 0.03],
+                    color: 0xD8C8F0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 22
                 }
             ]
         },

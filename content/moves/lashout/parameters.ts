@@ -16,12 +16,12 @@
  *   push        击退 0.4 格 + 物攻偏移。
  *   ventLevels  宣泄级数：宣泄开启 9（清空），关闭 1（只消一级）。
  *   rageStages  怒攻级数 1 + 受挫等级/4。
- *   rageTicks   怒攻持续 6 秒 + 等级偏移。
+ *   rageTicks   怒攻持续 120~240 刻（作者原意 6~12 秒，单位换算成刻）。
  *   tempo       起手 5 刻 − 速度偏移 + 宣泄 3 刻。
  *   settle      收招 8 刻。
  *   recharge    冷却 28 刻 − 速度偏移 + 宣泄 8 刻。
  *
- * 配置 `vent`（宣泄）：开启＝命中后一次清空全部负等级并把怒气转成 1~3 级物攻提升，但起手与冷却更长；
+ * 配置 `vent`（宣泄）：开启＝命中后按 9 级预算消减负等级，确实消减了才把怒气转成 1~3 级物攻提升，但起手与冷却更长；
  *   关闭＝只消掉一级负等级且无提升，更快更省。
  *
  * 伤害段 `lashout` 与参数同名，走共享换算（原生类别 Physical，Dark 属性）。
@@ -48,20 +48,26 @@ namespace PokemonSkills {
         return total + MobEffects.levels(world, actor, "harmful");
     }
 
-    /** 从最负的一项开始，最多消掉 budget 级负等级；返回实际消掉的级数。 */
+    /**
+     * 从最负的一项开始，最多消掉 budget 级负等级，再按剩余预算降低有害药水；返回实际消掉的级数。
+     * 只用真实回执累计：`NativeEffects.boost` 被上限或策略拒绝时返回 0，就换下一个负项，不虚报解除。
+     */
     export function lashoutVent(world: CombatWorld, actor: CombatActor, budget: number): number {
         const stages = lashoutStages(world, actor);
+        const exhausted: { [stat: string]: boolean } = Object.create(null);
         let removed = 0;
         while (removed < budget) {
             let worst = "", value = 0;
             lashoutStats.forEach(function (stat) {
+                if (exhausted[stat]) return;
                 const current = stages[stat] || 0;
                 if (current < value) { worst = stat; value = current; }
             });
             if (!worst) break;
-            NativeEffects.boost(world, actor, worst, 1);
-            stages[worst] = value + 1;
-            removed++;
+            const gained = NativeEffects.boost(world, actor, worst, 1);
+            if (gained <= 0) { exhausted[worst] = true; continue; }
+            stages[worst] = value + gained;
+            removed += gained;
         }
         return removed + MobEffects.reduce(world, actor, "harmful", budget - removed);
     }
@@ -116,10 +122,10 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "命中后把目标推开的距离；物攻高的个体把怒气推得更远。"
             }),
-        /** 宣泄级数：宣泄开启 9（清空），关闭 1（只消一级）。 */
+        /** 宣泄级数：宣泄开启 9（预算，不等于任意全部），关闭 1（只消一级）。 */
         ventLevels: formula(
             F.when(F.pref("vent"), F.const(9), F.const(1)).clamp(1, 9).floor(),
-            "宣泄级数", { unit: "级", description: "命中后最多消掉几级负等级：开启宣泄时一次清空，关闭时只消掉一级。" }),
+            "宣泄级数", { unit: "级", description: "命中后最多消掉几级负等级：开启宣泄时最多消减 9 级（先消最低的能力等级，再降低有害药水），关闭时只消掉一级。只有确实消减了至少一级才会获得物攻提升。" }),
         /** 怒攻级数：1 + 受挫等级/4；夹 1..3。 */
         rageStages: formula(
             F.base(1).plus(F.var("lashout.down").div(4).clamp(0, 2)).clamp(1, 3).floor(),
@@ -127,9 +133,9 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "宣泄开启时，命中后把憋着的怒气转成多少级物攻提升；受挫越深，转得越多。"
             }),
-        /** 怒攻持续：6 秒 + 等级偏移[0,3]；夹 4..12 秒。 */
+        /** 怒攻持续：6 秒 + 等级偏移[0,3]；夹 4..12 秒。单位是刻，`seconds` 只把值 /20 显示成秒。 */
         rageTicks: seconds(
-            F.base(6).plus(F.level().minus(30).times(0.06).clamp(0, 3)).clamp(4, 12).round(1),
+            F.base(120).plus(F.level().minus(30).times(1.2).clamp(0, 60)).clamp(80, 240).round(0),
             "怒攻持续", "这份怒气化作的物攻提升持续多久；等级高的个体撑得更久。"),
         /** 起手：5 刻 − 速度偏移[−1,2] + 宣泄 3 刻；夹 4..11。 */
         tempo: seconds(

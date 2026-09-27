@@ -30,7 +30,8 @@
   "effect.world_combat.cursed_hex": "诅咒之债",
   "effect.world_combat.curse_pact": "诅咒之契",
   "world_combat.move.curse.text.hex": "债已记下 · 还可收 %1$s 口",
-  "world_combat.move.curse.text.pact": "物攻与防御 +%1$s，速度 −%2$s",
+  "world_combat.move.curse.text.pact": "物攻 +%1$s，防御 +%2$s，速度 −%3$s",
+  "world_combat.move.curse.text.nogain": "能力已满，交换无收益",
   "world_combat.move.curse.text.toll": "债在收",
   "world_combat.move.curse.text.lift": "债清了"
 }

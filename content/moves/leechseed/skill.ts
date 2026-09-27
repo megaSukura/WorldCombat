@@ -100,8 +100,10 @@ namespace PokemonSkills {
             const span = holder.position().minus(held.position()).length();
             const flow = span < 0.05 ? WorldCombat.point(0, 1, 0) : holder.position().minus(held.position()).unit();
             const flowSpeed = Math.max(0.08, Math.min(2.4, span / 11));
+            // 回流连线两端用真实实体引用，随宿主与施法者当刻位置逐帧更新；判定与表现在同一次抽取上共用这两点。
             WorldFeedback.emit(world, leechSeedScene, 1, held.position(),
-                { moment: "drain", target: String(victim.ref()), vines: vines, amount: Math.round(loss * 10) / 10,
+                { moment: "drain", target: String(victim.ref()), path: [String(victim.ref()), String(caster.ref())],
+                    vines: vines, amount: Math.round(loss * 10) / 10,
                     direction: [flow.x(), flow.y(), flow.z()], span: span, flowSpeed: flowSpeed,
                     intensity: Math.max(0.6, Math.min(2.2, loss / Math.max(1, held.maxHealth()) * 18)) }, 24);
             WorldFeedback.text(world, held.position().plus(WorldCombat.point(0, 1.0, 0)), leechSeedDrainText,
@@ -184,6 +186,8 @@ namespace PokemonSkills {
             const interval = Math.max(10, Math.round(p(leechSeedId, "interval", action)));
             const drain = Math.max(0.01, p(leechSeedId, "drain", action));
             const vines = Math.max(1, Math.round(p(leechSeedId, "vines", action)));
+            // 弹尾要跟着种子飞完这一程：按实际射程与速度估出飞行刻数，交给表现逐刻停发。
+            const flightTicks = Math.max(6, Math.min(60, Math.ceil(action.range() / Math.max(0.1, speed)) + 4));
             sound(action, "minecraft:item.crop.plant");
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius,
@@ -227,7 +231,7 @@ namespace PokemonSkills {
                 }
             }, done);
             WorldFeedback.emit(world, leechSeedScene, 1, action.origin(),
-                { moment: "throw", projectile: flight, vines: vines, target: target === null ? "" : String(target.ref()) }, 60);
+                { moment: "throw", projectile: flight, vines: vines, flight: flightTicks, target: target === null ? "" : String(target.ref()) }, 60);
         }
     });
 }

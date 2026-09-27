@@ -6,9 +6,10 @@
  *
  * 三幕（提交前只播预告）：
  *   起（windup）：施法者周身念力上涌、目标头顶压出下压的印记，只播预告。
- *   落 + 砸（execute）：提交时把落点固定下来——重物在标记点上方 `height` 格处凝成，只沿竖直方向砸下，不横向追踪；
- *       屋顶或地面先接住就在真实接触格结束。命中结算 `crush`，压场式再以**实际撞点**为中心向 `splash` 半径内的
- *       其他非友方铺一层 `shock` 并顶开；没有实体时重物照样落在标记点。
+ *   落 + 砸（execute）：提交时把落点固定下来——以重物实际包围体验证标记点上方 `height` 格处的净空，
+ *       不足时向上找最近的可容身点，再从那里只沿竖直方向砸下、不横向追踪；顶盖挡住时重物从顶盖之上砸在顶面，
+ *       完全没有净空就只结算真实障碍接触。命中结算 `crush`，压场式再以**实际撞点**为中心向 `splash` 半径内的
+ *       其他非友方铺一层 `shock` 并顶开（被墙挡住的个体不吃）；没有实体时重物照样落在标记点。
  *   裂（sunder）：只有真的被重物砸伤的目标才特防下降 `sunderStages` 级；隔顶的目标不会被隔着屋顶结算。
  *
  * 选取：`kind: "aim"`——自由点或实体位置都能标记；空地照样落重块，不跟踪目标平移。
@@ -34,8 +35,9 @@ namespace PokemonSkills {
         defaults: { wide: false, ai: { maxChase: 18, focusThreat: true } },
         fields: [flag("wide", "压场")],
         indicator: function (config, pokemon) {
-            return { radius: p(psystrikeId, "mass", pokemon) * 4, geometry: "area", style: "psychic", color: 0x6A3FD0,
-                label: config && config.wide === true ? "精神击破·压场" : "精神击破·点压" };
+            const wide = config && config.wide === true;
+            return { radius: wide ? p(psystrikeId, "splash", pokemon) : p(psystrikeId, "mass", pokemon), geometry: "area",
+                style: "psychic", color: 0x6A3FD0, label: wide ? "精神击破·压场" : "精神击破·点压" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[psystrikeId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -49,82 +51,121 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const wide = config && config.wide === true;
-            const mark = action.targetPosition();
+            const mass = Math.max(0.35, p(psystrikeId, "mass", action));
+            const splash = Math.max(1.5, p(psystrikeId, "splash", action));
+            const cracks = Math.max(10, Math.round(p(psystrikeId, "cracks", action)));
             action.present("world_combat:psystrike:conjure", psystrikeScene, 1, action.origin(),
                 JSON.stringify({ moment: "conjure", wide: wide }));
-            action.present("world_combat:psystrike:mark", psystrikeScene, 1, mark,
-                JSON.stringify({ moment: "mark", wide: wide, point: [mark.x(), mark.y(), mark.z()],
-                    cracks: Math.round(p(psystrikeId, "cracks", action)) }));
+            // 准备期印记每刻重铺、跟着当前瞄点走；提交时 execute 锁住落点并停掉这枚印记，另起独立的下落预告。
+            function frame(current: CombatAction): void {
+                if (current.data("world_combat:psystrike_locked") !== null) return;
+                const aim = current.targetPosition();
+                current.present("world_combat:psystrike:aim", psystrikeScene, 1, aim,
+                    JSON.stringify({ moment: wide ? "mark_wide" : "mark", wide: wide, point: [aim.x(), aim.y(), aim.z()],
+                        mass: mass, splash: wide ? splash : 0, cracks: cracks }));
+                current.after(1, frame);
+            }
+            frame(action);
             return prepare;
         },
         execute: function (action, move, config, done) {
             const scenes = WorldFeedback.actionScenes(psystrikeScene);
+            const scope = action.world();
             const wide = config && config.wide === true;
             const power = p(psystrikeId, "crush", action);
             const shockPower = p(psystrikeId, "shock", action);
             const height = Math.max(2, p(psystrikeId, "height", action));
             const descend = Math.max(0.4, p(psystrikeId, "descend", action));
-            const radius = Math.max(0.2, p(psystrikeId, "mass", action));
+            const mass = Math.max(0.2, p(psystrikeId, "mass", action));
             const splash = Math.max(1.5, p(psystrikeId, "splash", action));
             const cracks = Math.max(10, Math.round(p(psystrikeId, "cracks", action)));
             const stages = Math.max(1, Math.round(p(psystrikeId, "sunderStages", action)));
-            const scale = Math.max(0.5, Math.min(2.4, radius / 0.5));
+            const scale = Math.max(0.5, Math.min(2.4, mass / 0.5));
             const intensity = Math.max(0.6, Math.min(2.4, power / 120));
-            let impacted = false, settled = false;
+            let impacted = false, settled = false, flightId = "";
 
             function finish(current: CombatAction): void { if (settled) return; settled = true; scenes.finish(current, done); }
 
             // 落点在提交时固定：重物从这里正上方竖直落下，之后不再横向追踪。
             const at = action.targetPosition();
-            const from = at.plus(WorldCombat.point(0, height, 0));
             const mark: number[] = [at.x(), at.y(), at.z()];
+            action.data("world_combat:psystrike_locked", "{}");
 
             sound(action, "cobblemon:move.psychic.actor");
-            // 把准备期的印记移到固定的落点上：从这一刻起标记就是地面上的这个点。
-            action.present("world_combat:psystrike:mark", psystrikeScene, 1, at,
-                JSON.stringify({ moment: "mark", wide: wide, point: mark, cracks: cracks }));
+            // 停掉准备期跟随印记（防旧位残影），提交后的地面印记改由下面的独立场景 key 承担，随命中立即停。
+            action.present("world_combat:psystrike:aim", psystrikeScene, 1, at,
+                JSON.stringify({ moment: wide ? "mark_wide" : "mark", wide: wide, point: mark,
+                    mass: mass, splash: wide ? splash : 0, cracks: cracks,
+                    lifecycle: { reason: "settled", tick: scope.tick() } }));
+            scenes.show(action, wide ? "mark_wide" : "mark", at,
+                { moment: wide ? "mark_wide" : "mark", wide: wide, point: mark,
+                    mass: mass, splash: wide ? splash : 0, cracks: cracks });
+
+            // 从合法净空生成：以重物的实际包围体（以 from 为中心、直径 2*mass）验证真实空间，而不是只看中心线；
+            // freeSpace 按脚点判定，故把中心换算成脚点。被顶盖或侧墙挡住时向上找最近的可容身点；
+            // 完全没有净空就只结算真实障碍接触，不在实心里造弹。
+            const requested = at.plus(WorldCombat.point(0, height, 0));
+            const diameter = mass * 2;
+            const ceiling = WorldGeometry.blockHit(scope, at.plus(WorldCombat.point(0, 0.1, 0)), requested);
+            let from: CombatPoint | null = null;
+            for (let up = 0; up <= 6 && from === null; up++) {
+                const candidate = requested.plus(WorldCombat.point(0, up, 0));
+                if (scope.freeSpace(candidate.minus(WorldCombat.point(0, mass, 0)), diameter, diameter)) from = candidate;
+            }
+            if (from === null) {
+                // 无合法净空：只做实际障碍接触结果。优先顶盖，其次标点上方的实际阻挡，最后标点本身。
+                const over = WorldGeometry.blockHit(scope, at, requested.plus(WorldCombat.point(0, mass, 0)));
+                const contact = ceiling !== null ? ceiling.position() : over !== null ? over.position() : at;
+                WorldFeedback.emit(scope, psystrikeScene, 1, contact,
+                    { moment: "crush", point: [contact.x(), contact.y(), contact.z()], cracks: cracks, scale: scale, intensity: intensity }, 30);
+                sound(action, "minecraft:block.deepslate.break");
+                WorldFeedback.text(scope, contact.plus(WorldCombat.point(0, 0.6, 0)), psystrikeMissText, [], 22);
+                finish(action);
+                return;
+            }
 
             const appearance: LivingActions.ProjectileAppearance = {
                 sprite: "cobblemon:generic/orb/largefadeorb", tint: 0x6A3FD0, glow: true,
-                scale: Math.max(0.9, Math.min(1.8, radius / 0.45))
+                scale: Math.max(0.9, Math.min(1.8, mass / 0.45))
             };
-            const flight = action.projectile(from, WorldCombat.point(0, -descend, 0), 0, radius, height + 8, 120,
+            const flight = action.projectile(from, WorldCombat.point(0, -descend, 0), 0, mass, height + 8, 120,
                 function (current: CombatAction, hit: CombatImpact) {
                     if (impacted) return;
                     impacted = true;
-                    scenes.stop(current, "descend");
-                    const scope = current.world();
+                    scenes.stop(current);
+                    const world = current.world();
                     const point = hit.position();
                     const victim = hit.target();
-                    const struck = victim !== null && hit.hitEntity() && scope.valid(victim) && !scope.friendly(victim) ? victim : null;
+                    const struck = victim !== null && hit.hitEntity() && world.valid(victim) && !world.friendly(victim) ? victim : null;
                     const ref = struck === null ? "" : String(struck.ref());
                     const landed = struck !== null ? impact(current, hit, psystrikeId, power, { segment: "crush" }) : false;
                     // 砸在实体或方块上都在真实撞点碎开：crush 的碎块与贴地环只铺在这里。
-                    WorldFeedback.emit(scope, psystrikeScene, 1, point,
+                    WorldFeedback.emit(world, psystrikeScene, 1, point,
                         { moment: "crush", target: ref, point: [point.x(), point.y(), point.z()],
                             cracks: cracks, scale: scale, intensity: intensity }, 30);
                     sound(current, landed ? "cobblemon:impact.psychic" : "minecraft:block.deepslate.break");
-                    // 裂：只有真的被重物砸伤的目标才削特防；隔顶的目标不会被隔着屋顶结算。
-                    if (landed && scope.valid(struck!)) {
-                        NativeEffects.boost(scope, struck!, "spd", -stages);
-                        const held = scope.observe(struck!);
+                    // 裂：伤害真的落下才尝试削特防；只有 boost 实际返回负值（真的降了级）才播削防回执，伤害成功与削防失败分开。
+                    if (landed && world.valid(struck!)) {
+                        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.4, 0)), psystrikeHitText, [], 24);
+                        const dropped = NativeEffects.boost(world, struck!, "spd", -stages);
+                        const held = dropped < 0 ? world.observe(struck!) : null;
                         if (held !== null) {
-                            WorldFeedback.emit(scope, psystrikeScene, 1, held.position(),
-                                { moment: "sunder", target: ref, stages: stages, cracks: Math.round(cracks * 0.5) }, 24);
-                            WorldFeedback.text(scope, held.position().plus(WorldCombat.point(0, 1.5, 0)), psystrikeSunderText, [stages], 28);
+                            WorldFeedback.emit(world, psystrikeScene, 1, held.position(),
+                                { moment: "sunder", target: ref, stages: Math.abs(dropped), cracks: Math.round(cracks * 0.5) }, 24);
+                            WorldFeedback.text(world, held.position().plus(WorldCombat.point(0, 1.5, 0)), psystrikeSunderText, [Math.abs(dropped)], 28);
                         }
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), psystrikeHitText, [], 24);
                     }
-                    // 压场：冲击面只以实际撞点为中心，不用目标位置。
-                    if (wide) {
-                        WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, splash, { below: 3, above: 4 }), function (other, facts) {
+                    // 压场：冲击面只以实际撞点为中心，且只在没有顶盖时铺开；真实视线被挡的个体不吃这一记。
+                    if (wide && ceiling === null) {
+                        WorldGeometry.selectEnemies(world, WorldGeometry.ring(point, 0, splash, { below: 3, above: 4 }), function (other, facts) {
                             if (String(other.ref()) === ref) return;
+                            if (!world.clear(point, facts.position())) return;
                             const pushed = hurt(current, other, psystrikeId, shockPower, { segment: "shock" });
                             if (pushed) {
                                 const away = facts.position().minus(point);
                                 const flat = WorldCombat.point(away.x(), 0, away.z());
-                                if (scope.valid(other) && flat.length() > 0.05) scope.displace(other, flat.unit().scale(0.6));
-                                WorldFeedback.emit(scope, psystrikeScene, 1, facts.position(),
+                                if (world.valid(other) && flat.length() > 0.05) world.hitDisplace(other, flat.unit().scale(0.6));
+                                WorldFeedback.emit(world, psystrikeScene, 1, facts.position(),
                                     { moment: "shock", target: String(other.ref()), cracks: Math.round(cracks * 0.6), scale: scale, intensity: intensity }, 24);
                             }
                         });
@@ -132,14 +173,18 @@ namespace PokemonSkills {
                     finish(current);
                 },
                 function (current: CombatAction) {
+                    // 未撞上任何东西：用弹体最后一个真实位置（完成回调内仍可读），不用瞄准点假造落点。
                     if (!impacted) {
-                        WorldFeedback.emit(current.world(), psystrikeScene, 1, at, { moment: "miss", scale: scale }, 22);
-                        WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.0, 0)), psystrikeMissText, [], 22);
+                        const end = current.world().projectilePosition(flightId);
+                        const spot = end === null ? at : end;
+                        WorldFeedback.emit(current.world(), psystrikeScene, 1, spot, { moment: "miss", scale: scale }, 22);
+                        WorldFeedback.text(current.world(), spot.plus(WorldCombat.point(0, 1.0, 0)), psystrikeMissText, [], 22);
                     }
                     finish(current);
                 }, JSON.stringify(appearance));
+            flightId = flight;
 
-            scenes.show(action, "descend", at,
+            scenes.show(action, "descend", from,
                 { moment: "descend", projectile: flight, cracks: cracks, scale: scale, intensity: intensity, from: height });
         }
     });

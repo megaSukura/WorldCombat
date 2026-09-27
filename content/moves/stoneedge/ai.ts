@@ -17,18 +17,19 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 11);
     }
 
-    /** 某一列承载石刺的地表顶面高度，读取方式与招式执行一致；找不到可站立自然地表时返回 null。 */
+    /**
+     * 某一列承载石刺的地表顶面高度，与招式执行共用 SurfacePaths 的原生顶面采样；找不到可站立自然地表时返回 null。
+     * 判定允许的抬升/落步与执行一致（各 1.6 格），过陡的台阶同样会让石脊断在这里。
+     */
     function stoneedgeProbe(world: CombatWorld, x: number, z: number, baseY: number): number | null {
-        for (var y = Math.floor(baseY + 1.6); y >= Math.floor(baseY - 4); y--) {
-            var block = world.block(CompanionBehavior.point([x + 0.5, y, z + 0.5]));
-            if (block === null) return null;
-            var id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:bedrock" || id === "minecraft:barrier"
-                || id === "minecraft:water" || id === "minecraft:lava") return null;
-            return y + 1;
-        }
-        return null;
+        var at = SurfacePaths.support(world, CompanionBehavior.point([x + 0.5, baseY, z + 0.5]), 1.6, 1.6);
+        if (at === null) return null;
+        var block = world.block(CompanionBehavior.point([x, Math.floor(at.y()) - 1, z]));
+        if (block === null) return null;
+        var id = String(block.id());
+        if (id === "minecraft:bedrock" || id === "minecraft:barrier"
+            || id === "minecraft:water" || id === "minecraft:lava") return null;
+        return at.y();
     }
 
     /** 从自己到对手之间真实地表是否连续到射程内；同一决策帧只探一次。 */

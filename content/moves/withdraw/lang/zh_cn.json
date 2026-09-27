@@ -23,10 +23,12 @@
   "worldcombat.skill.withdraw.preference.ai.maxChase": "缩壳距离",
   "worldcombat.skill.withdraw.preference.ai.maxChase.help": "威胁进入这个距离内才考虑缩壳；越大越早在远处就收起来。",
   "worldcombat.skill.withdraw.preference.ai.panic": "紧急血量",
-  "worldcombat.skill.withdraw.preference.ai.panic.help": "血量比例低于这个值时抢在共享次序前缩壳；调高更早进入龟缩姿态，调低只在濒危时才缩。",
+  "worldcombat.skill.withdraw.preference.ai.panic.help": "血量比例低于这个值、且攻击已经临头（正被瞄准或刚被打中）时抢在共享次序前缩壳；调高更早进入龟缩姿态，调低只在濒危时才缩。",
   "world_combat.move.withdraw.text.seal": "缩入壳中（防御 +%1$s，可挡 %2$s 次）",
   "world_combat.move.withdraw.text.block": "壳挡下一击（还剩 %1$s 次）",
   "world_combat.move.withdraw.text.open": "壳开了",
   "effect.world_combat.withdraw_shell": "龟壳",
-  "worldcombat.skill.withdraw.description.shell": "壳只挡来自敌人的攻击，不挡自己或环境造成的伤害；壳上显示还剩下的全挡次数（一枚大壳瓣＝一次），次数用尽或时间走完时当刻开壳、解除本次定身，抬起的防御也一并收回。"
+  "worldcombat.skill.withdraw.menu.release": "松壳",
+  "worldcombat.skill.withdraw.menu.release.hint": "立刻展开龟壳，解除壳、本次定身与按次防护。",
+  "worldcombat.skill.withdraw.description.shell": "壳只挡来自敌人的攻击，不挡自己或环境造成的伤害；壳上显示还剩下的全挡次数（一枚大壳瓣＝一次），次数用尽或时间走完时当刻开壳、解除本次定身，抬起的防御也一并收回。壳还在身时，可在 G 菜单选择「松壳」提前结束。"
 }

@@ -4,38 +4,36 @@
  * 原生事实：Grass／特殊／威力 80／命中 100／PP 10／target normal／追加 100% 令目标特防 −1。
  * （Cobblemon 1.8，正式学习者：苹裹龙 / Flapple。）
  *
- * 翻译：把「从酸苹果里提取的酸性液体」落成一颗**真的酸苹果被扔出去**——它沿弧线飞过一段距离，砸中目标时
- * 爆成酸浆、溅到落点周围所有人，每人特防 −1；被酸到的人会带着一层**发酵**（共享身份
- * `world_combat:status/sour`），短时间内再挨一颗酸苹果时第二口更狠（−2），这一口会把发酵窗口消费掉，
- * 之后重新从 −1 开始。落点留下一小摊冒泡的酸浆，走进去的人会被浸到发酵、留在里面持续发酵并被低频咬伤；
- * 酸浆自己从不降特防。苹果核落在地上，谁都能捡。它是四式里唯一扔出真东西、唯一能对同一目标叠酸的那个：
- * 第一颗磨、第二颗狠。
+ * 翻译：扔出一颗真的酸苹果砸向**单体**目标。命中时结算特殊伤害、令其特防 −1，并在目标身上留下一层
+ * 本招自己的**发酵**短窗（共享身份 world_combat:status/sour）；窗口内再命中同一目标，第二口更狠（−2）
+ * 并把发酵消费掉，之后重新从 −1 起算。它只结算直接命中的那一个目标：不溅射、不留酸场、落空不赠苹果。
  *
  * 数据分散（每项依赖不同的精灵数据）：
- *   core          砸击威力：特攻定酸浆的腐蚀性，等级给成长。
- *   splash        溅射威力：特攻定溅到周围人身上的酸量。
- *   patch         酸浆每跳威力：特攻定残留酸浆的腐蚀性。
+ *   core          砸击威力：特攻定酸液腐蚀性，等级给成长。
  *   globSpeed     投掷速度：速度决定苹果飞得多急。
  *   globRadius    苹果判定：身高决定苹果大小。
- *   reach         施放距离：等级与身高决定能在多远扔到。
- *   splashRadius  溅射半径：体型与特攻共同决定溅开多大。
- *   patchRadius   酸浆半径：体型决定酸浆摊多开。
- *   patchTicks    酸浆时长：等级与特攻决定残留多久。
- *   patchPulse    酸浆间隔：速度决定两跳之间隔多久。
+ *   reach         施放距离：等级与身高决定能在多远扔到，也是本招实际射程。
  *   sourStages    首次酸蚀级数：固定 1 级特防，与原生一致。
- *   secondStages  叠酸级数：目标已带发酵身份时，改为固定 2 级特防。
- *   sourTicks     发酵时长：等级与特攻决定发酵在目标身上留多久。
- *   cores         苹果粒数：特攻与等级派生，也驱动表现。
+ *   secondStages  叠酸级数：目标已带发酵时改为固定 2 级特防，并消费那层发酵。
+ *   sourTicks     发酵时长：等级与特攻决定窗口；下限保证冷却走完仍赶得上第二口。
+ *   cores         苹果粒子数：内部表现数量，不向玩家显示。
  *   tempo         起手：速度决定取果出手的快慢。
  *
- * 配置 `ferment`（发酵式）双向取舍：开启＝苹果飞得更慢、砸击与溅射略轻、溅射范围更小，但发酵时长 ×1.6、
- * 酸浆更久（×1.3），更容易对同一目标叠到 −2；关闭（爆汁式）＝一发砸得更痛、溅得更开、飞得更快，但酸留不久。
- * 两向分别对应「盯住一个叠酸」与「一次溅开一片」。
+ * 配置 `ferment`（发酵式）双向取舍：开启＝苹果飞得更慢、砸击略轻、射程略短，但发酵窗口 ×1.6，
+ * 更容易对同一目标接上第二口；关闭（爆汁式）＝一发更痛、飞得更快、射得更远，但酸留不久。
+ * 冷却在发酵式下 +10（见 skill.ts）。
  *
- * 伤害段 `core`（砸击）、`splash`（溅射）、`patch`（酸浆每跳）各自成段，走共享换算（原生类别 Special）。
- * 特防下降走共享能力等级阶梯 NativeEffects.boost(..., "spd", -N)。
+ * 伤害段只有 `core`（直接命中），走共享换算（原生类别 Special）。特防下降走共享能力等级阶梯
+ * NativeEffects.boost(..., "spd", -N)。
  */
 namespace PokemonSkills {
+    /** 续击窗口下限：本档实际冷却（48／发酵式 58）+ 起手 + 常规投递余量，保证冷却走完仍能接上第二口。 */
+    function appleacidRehitFloor(): Formula.Node {
+        return F.when(F.pref("ferment"), F.const(58), F.const(48))
+            .plus(F.base(10).minus(F.stat("speed").minus(50).times(0.04)).clamp(6, 14))
+            .plus(8);
+    }
+
     actionParameters.define("appleacid", {
         /** 砸击威力：62 + 特攻偏移[−12,32] + 等级(≥30)偏移[0,11]；发酵 ×0.9；夹 44..142。 */
         core: formula(
@@ -46,21 +44,7 @@ namespace PokemonSkills {
                 .clamp(44, 142).round(1),
             "砸击威力", {
                 unit: "威力",
-                description: "酸苹果砸中目标时结算一次的威力；特攻越高酸浆越腐蚀、等级越高越经用，发酵式把力让给叠酸。对手特防、相性与暴击在命中时另算。"
-            }),
-        /** 溅射威力：24 + 特攻偏移[−5,14]；夹 14..54。 */
-        splash: formula(
-            F.base(24).plus(F.stat("specialAttack").minus(55).times(0.12).clamp(-5, 14)).clamp(14, 54).round(1),
-            "溅射威力", {
-                unit: "威力",
-                description: "酸浆溅到落点周围其他敌人身上时各结算一次的威力；特攻越高溅酸越狠。"
-            }),
-        /** 酸浆威力：7 + 特攻偏移[−2,8]；夹 4..20。 */
-        patch: formula(
-            F.base(7).plus(F.stat("specialAttack").minus(55).times(0.04).clamp(-2, 8)).clamp(4, 20).round(1),
-            "酸浆威力", {
-                unit: "威力",
-                description: "落点酸浆每跳一次对圈内每人造成的伤害；特攻越高残留越咬人。酸浆只造成伤害并维持发酵，自己不会降低特防。"
+                description: "酸苹果砸中目标时结算一次的威力；特攻越高酸液越腐蚀、等级越高越经用，发酵式把力让给更长的窗口。对手特防、相性与暴击在命中时另算。"
             }),
         /** 投掷速度：0.95 + 速度偏移[−0.12,0.4]；发酵 ×0.85；夹 0.7..1.5。 */
         globSpeed: formula(
@@ -90,36 +74,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "能把苹果扔到多远；等级与身高越高扔得越远。它也是本招的实际射程。"
             }),
-        /** 溅射半径：2.2 + 高度偏移[−0.3,0.9] + 特攻偏移[−0.3,0.7]；发酵 ×0.8；夹 1.5..4.4。 */
-        splashRadius: formula(
-            F.base(2.2)
-                .plus(F.body("height").minus(1.4).times(0.5).clamp(-0.3, 0.9))
-                .plus(F.stat("specialAttack").minus(55).times(0.006).clamp(-0.3, 0.7))
-                .times(F.when(F.pref("ferment"), F.const(0.8), F.const(1)))
-                .clamp(1.5, 4.4).round(2),
-            "溅射半径", {
-                unit: "格",
-                description: "酸浆能溅到落点周围多大一圈；大个子、特攻高的人溅得更开，发酵式收小。"
-            }),
-        /** 酸浆半径：1.8 + 高度偏移[−0.2,0.7]；夹 1.4..3.2。 */
-        patchRadius: formula(
-            F.base(1.8).plus(F.body("height").minus(1.4).times(0.35).clamp(-0.2, 0.7)).clamp(1.4, 3.2).round(2),
-            "酸浆半径", {
-                unit: "格",
-                description: "落点那摊酸浆摊开多大；体型越高摊得越开。"
-            }),
-        /** 酸浆时长：60 + 等级(≥30)偏移[0,32] + 特攻偏移[−4,14]；发酵 ×1.3；夹 40..150。 */
-        patchTicks: seconds(
-            F.base(60)
-                .plus(F.level().minus(30).times(1.0).clamp(0, 32))
-                .plus(F.stat("specialAttack").minus(55).times(0.2).clamp(-4, 14))
-                .times(F.when(F.pref("ferment"), F.const(1.3), F.const(1)))
-                .clamp(40, 150).round(0),
-            "酸浆时长", "落点那摊酸浆停留多久；等级与特攻越高、发酵式留得越久。"),
-        /** 酸浆间隔：20 − 速度偏移[−3,6]；夹 12..28。 */
-        patchPulse: seconds(
-            F.base(20).minus(F.stat("speed").minus(50).times(0.06).clamp(-3, 6)).clamp(12, 28).round(0),
-            "酸浆间隔", "酸浆两跳之间隔多久；速度快的个体咬得更密。"),
         /** 首次酸蚀级数：固定 1 级特防，与原生一致。 */
         sourStages: formula(
             F.base(1),
@@ -134,48 +88,48 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "目标已经带着发酵身份时，再被酸苹果命中改为下降的等级——第二口更狠，且这一口会把发酵窗口消费掉。"
             }),
-        /** 发酵时长：60 + 等级(≥30)偏移[0,30] + 特攻偏移[−5,16]；发酵式 ×1.6；夹 40..160。 */
+        /**
+         * 发酵时长：60 + 等级(≥30)偏移[0,30] + 特攻偏移[−5,16]；发酵式 ×1.6；
+         * 下限按本档实际冷却 + 起手 + 常规投递余量，保证冷却走完仍能赶上同一个目标身上的第二口。
+         */
         sourTicks: seconds(
             F.base(60)
                 .plus(F.level().minus(30).times(0.9).clamp(0, 30))
                 .plus(F.stat("specialAttack").minus(55).times(0.25).clamp(-5, 16))
                 .times(F.when(F.pref("ferment"), F.const(1.6), F.const(1)))
-                .clamp(40, 160).round(0),
-            "发酵时长", "被酸到后发酵身份在目标身上留多久；这段时间内再挨一颗酸苹果就会更狠。"),
-        /** 苹果粒数：12 + 特攻偏移[−2,6] + 等级(≥30)偏移[0,8]；夹 10..38。 */
+                .clamp(appleacidRehitFloor(), 160).round(0),
+            "发酵时长", "被酸到后本招的发酵在目标身上留多久；这段时间内再让同一目标吃到一颗就会更狠。下限按本档冷却与出手预算，保证冷却走完仍接得上第二口。"),
+        /** 苹果粒子数：12 + 特攻偏移[−2,6] + 等级(≥30)偏移[0,8]；夹 10..38。内部表现数量。 */
         cores: formula(
             F.base(12)
                 .plus(F.stat("specialAttack").minus(55).times(0.12))
                 .plus(F.level().minus(30).times(0.3))
                 .clamp(10, 38).round(),
             "苹果粒数", {
-                unit: "粒",
-                description: "酸苹果与酸浆的粒子数量，也驱动表现密度；特攻与等级越高越密。"
+                unit: "粒", visible: false,
+                description: "酸苹果与命中表现的粒子数量，随特攻与等级增长；只用于画面密度，不向玩家展示。"
             }),
-        /** 起手：10 − 速度偏移[−? ,?]；夹 6..14。 */
+        /** 起手：10 − 速度偏移；夹 6..14。 */
         tempo: seconds(
             F.base(10).minus(F.stat("speed").minus(50).times(0.04)).clamp(6, 14).round(),
             "起手", "摸出酸苹果、掂一掂再扔出的时间；速度越快越短。")
     });
 
     defineDamage("appleacid", "core", {});
-    defineDamage("appleacid", "splash", {});
-    defineDamage("appleacid", "patch", {});
 
     stages("appleacid", [
-        { level: 35, values: { core: 70, splashRadius: 2.5 } }
+        { level: 35, values: { core: 70 } }
     ]);
 
     describe("appleacid", [
-        { key: "description.0", values: ["core","sourStages"] },
-        { key: "description.1", values: ["reach","globSpeed","splashRadius","splash"] },
-        { key: "description.2", values: ["secondStages","sourTicks"] },
-        { key: "description.3", values: ["patchRadius","patch","patchTicks","patchPulse"] },
-        { key: "ferment.on", values: ["core","sourTicks","patchTicks"],
+        { key: "description.0", values: ["core", "sourStages"] },
+        { key: "description.1", values: ["reach", "globSpeed"] },
+        { key: "description.2", values: ["secondStages", "sourTicks"] },
+        { key: "ferment.on", values: ["core", "sourTicks"],
             when: function (context) { return read(context.detail.values, ["ferment"]) === true; } },
-        { key: "ferment.off", values: ["core","splashRadius","sourTicks"],
+        { key: "ferment.off", values: ["core", "sourTicks"],
             when: function (context) { return read(context.detail.values, ["ferment"]) !== true; } },
         { key: "timing", values: ["reach", "tempo", "recover", "pp", "cooldown"] },
-        { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.splashRadius"] }
+        { key: "growth.0", values: ["tier.0.level", "tier.0.core"] }
     ]);
 }

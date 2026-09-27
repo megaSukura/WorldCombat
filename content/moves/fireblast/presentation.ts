@@ -2,14 +2,14 @@
  * 大字爆炎 / fireblast 的客户端表现。
  *
  * 一句话：喉间先攒起一团将写成字的火，随后「大」字的三笔在字心处一笔一笔点亮（笔画厚度与伤害带一致），
- * 字成形时每一笔沿真实笔迹爆亮，字心起一撮火星与烟；刻印式还有贴地的余字，只有发烫的笔画带发光、字间空隙留白。
+ * 字成形时每一笔沿真实笔迹爆亮，字心只留余烟；刻印式还有贴地的余字，只有发烫的笔画带发光、字间空隙留白。
  * 色相家族：烈火橙（0xFF6A24）与白热黄（0xFFE8A0）为主体，深褐烟（0x3A2E2A）衬托；余字随时间暗下。
- * 拍子：起 stoke（聚火）→ 书 bar/left/right（三笔点亮）→ 崩 flare（逐笔爆亮）与 erupt（字心火星）与 hit
+ * 拍子：起 stoke（聚火）→ 书 bar/left/right（三笔点亮）→ 崩 flare（逐笔爆亮）与 erupt（字心余烟）与 hit
  *   → 印 mark/markhit（地面余字按笔画闷烧）→ fade。
- * 范围：笔画厚度直接读 `data.thickness`（机制笔画厚度），字间空隙因此保持空；markground 用 `data.markRadius`
- *   画余字覆盖，但只有 mark 的 polyline 笔画带会持续。erupt 不再画整圆，避免误导读作圈伤。
+ * 范围：笔画厚度直接读 `data.thickness`（机制笔画厚度），字间空隙因此保持空；mark 只沿 `data.path` 的笔画带发光，
+ *   不画整圆焦圈，避免误读为满圆危险；erupt 也只留余烟，不再以字心圆爆遮掩真实安全空隙。
  * 运动：三笔与地面余字都沿服务端给的 `data.path`（真实笔迹顶点）铺设，崩开沿笔迹爆亮、余字贴地。
- * 数：flare/erupt/hit 的火星数绑定 `data.sparks`（特攻与等级换算），强度绑定 `data.intensity`（威力派生）；
+ * 数：flare/hit 的火星数绑定 `data.sparks`（特攻与等级换算），强度绑定 `data.intensity`（威力派生）；
  *   余字的颜色绑定 `data.color`（随余下寿命由鲜橙转暗烬）。
  */
 const FireblastDefinition: ParticleDefinition = {
@@ -133,32 +133,13 @@ const FireblastDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "core", bind: "point", fit: "none", offset: [0, 0.4, 0],
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
-                    burst: { count: { data: "sparks", fallback: 26 } },
-                    shape: { kind: "sphere", radius: { data: "thickness", fallback: 0.5 } },
-                    direction: "outward", speed: [0.08, 0.34], spread: 18,
-                    lifetime: [7, 14], size: [0.42, 0.06], sizeMode: "index",
-                    color: 0xFFF0C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 100
-                },
-                {
-                    name: "shards", bind: "point", fit: "none", offset: [0, 0.4, 0],
-                    particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    burst: { count: { data: "sparks", fallback: 26 } },
-                    shape: { kind: "sphere_surface", radius: { data: "thickness", fallback: 0.6 } },
-                    direction: "outward", speed: [0.1, 0.4], spread: 24,
-                    gravity: 0.05, drag: 0.9,
-                    lifetime: [10, 20], size: [0.16, 0.02], sizeMode: "index",
-                    color: 0xFF6A24, alpha: [0.95, 0], light: "full", maxParticles: 140
-                },
-                {
                     name: "smoke", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: 20 },
+                    burst: { count: 14 },
                     shape: { kind: "sphere", radius: { data: "glyph", fallback: 2.2 } },
-                    direction: "up", speed: [0.03, 0.14], drag: 0.9,
-                    lifetime: [14, 26], size: [0.36, 0.6],
-                    color: 0x3A2E2A, alpha: [0.35, 0], light: "world", maxParticles: 70
+                    direction: "up", speed: [0.02, 0.1], drag: 0.9,
+                    lifetime: [14, 26], size: [0.34, 0.56],
+                    color: 0x3A2E2A, alpha: [0.28, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -196,20 +177,6 @@ const FireblastDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05], drag: 0.9,
                     lifetime: [8, 16], size: [{ data: "thickness", fallback: 0.3 }, 0.02],
                     color: { data: "color", fallback: 0xFF6A24 }, alpha: [0.55, 0], light: "full", maxParticles: 120
-                }
-            ]
-        },
-        markground: {
-            duration: 0,
-            emitters: [
-                {
-                    name: "mark", bind: "point", fit: "none", offset: [0, 0.02, 0],
-                    particle: "world_combat_core:cobblemon/generic/scorch/floorscorch",
-                    burst: { count: 1 },
-                    shape: { kind: "point" },
-                    direction: "up", speed: [0, 0],
-                    lifetime: { data: "markTicks", fallback: 80 }, size: { data: "markRadius", fallback: 1.6 },
-                    color: { data: "color", fallback: 0x4A2E22 }, alpha: [0.8, 0], light: "world", maxParticles: 2
                 }
             ]
         },

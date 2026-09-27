@@ -4,6 +4,8 @@ namespace PokemonSkills {
     const swallowEffect = "world_combat:swallowed";
     const swallowTextGulp = "world_combat.move.swallow.text.gulp";
     const swallowTextSip = "world_combat.move.swallow.text.sip";
+    const swallowTextFull = "world_combat.move.swallow.text.full";
+    const swallowTextDenied = "world_combat.move.swallow.text.denied";
     /** 表现里的参考半径：`data.scale = 实际回光半径 / 这个数`。 */
     const swallowReferenceRadius = 1.4;
     /** 慢咽分几口。 */
@@ -65,10 +67,19 @@ namespace PokemonSkills {
             const motes = Math.max(8, Math.round(p("swallow", "motes", action)));
             const spread = Math.max(0.6, p("swallow", "spread", action));
             const scale = spread / swallowReferenceRadius;
+            // 封疗时那口力照常被收走，但一口也回不出来：只出无效回执，不铺回光、也不铺咽力标记。
+            if (CombatStatus.has(world, self, "healblock")) {
+                WorldFeedback.emit(world, swallowScene, 1, body.position(),
+                    { moment: "denied", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale }, 26);
+                WorldFeedback.text(world, swallowAbove(body.position()), swallowTextDenied, [layers], 26);
+                done(action);
+                return;
+            }
             MobEffects.apply(world, self, swallowEffect, sipping ? digestTicks : Math.min(digestTicks, 30), layers);
             if (sipping) {
-                const step = Math.max(1, Math.round(digestTicks / swallowSips)), share = worth / swallowSips;
-                let index = 0, settled = false;
+                // 慢咽：第 1..3 口分别落在 1/3、2/3、3/3 处，最后一口与标称消化窗口末端对齐，实际结束不再早于窗口。
+                const step = Math.max(1, Math.floor(digestTicks / swallowSips)), share = worth / swallowSips;
+                let index = 0, settled = false, denied = false, restored = 0;
                 const finish = function (current: CombatAction): void { if (!settled) { settled = true; done(current); } };
                 const sipStep = function (current: CombatAction): void {
                     const scope = current.world();
@@ -76,31 +87,54 @@ namespace PokemonSkills {
                     const healed = heal(scope, self, share, "swallow");
                     const now = scope.observe(self);
                     if (now !== null) {
-                        WorldFeedback.emit(scope, swallowScene, 1, now.position(),
-                            { moment: "sip", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale,
-                                healed: swallowRound(healed), index: index + 1, sips: swallowSips,
-                                intensity: Math.max(0.6, Math.min(2, 0.7 + layers / 3 + healed / Math.max(1, now.maxHealth()) * 8)) }, 20);
-                        scope.sound("minecraft:entity.generic.drink", now.position(), 10, "{}");
+                        if (healed > 0) {
+                            restored += healed;
+                            WorldFeedback.emit(scope, swallowScene, 1, now.position(),
+                                { moment: "sip", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale,
+                                    healed: swallowRound(healed), index: index + 1, sips: swallowSips,
+                                    intensity: Math.max(0.6, Math.min(2, 0.7 + layers / 3 + healed / Math.max(1, now.maxHealth()) * 8)) }, 20);
+                            scope.sound("minecraft:entity.generic.drink", now.position(), 10, "{}");
+                        } else if (!denied && CombatStatus.has(scope, self, "healblock")) {
+                            // 咽到一半才被封疗：明确显示这一口被挡回，不再假报成功。
+                            denied = true;
+                            WorldFeedback.emit(scope, swallowScene, 1, now.position(),
+                                { moment: "denied", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale,
+                                    index: index + 1, sips: swallowSips }, 22);
+                        }
                     }
                     index++;
-                    if (index >= swallowSips) { finish(current); return; }
+                    if (index >= swallowSips) {
+                        const at = swallowAbove(now !== null ? now.position() : body.position());
+                        if (restored > 0) WorldFeedback.text(scope, at, swallowTextSip, [layers, swallowRound(restored)], 26);
+                        else if (denied) WorldFeedback.text(scope, at, swallowTextDenied, [layers], 24);
+                        else WorldFeedback.text(scope, at, swallowTextFull, [layers], 24);
+                        finish(current); return;
+                    }
                     current.after(step, sipStep);
                 };
                 WorldFeedback.emit(world, swallowScene, 1, body.position(),
                     { moment: "hold", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale }, 16);
-                WorldFeedback.text(world, swallowAbove(body.position()), swallowTextSip, [layers, Math.round(worth * 100)], 26);
                 world.sound("minecraft:item.honey_bottle.drink", body.position(), 14, "{}");
-                sipStep(action);
+                action.after(step, sipStep);
                 return;
             }
             const healed = heal(world, self, worth, "swallow");
-            WorldFeedback.emit(world, swallowScene, 1, body.position(),
-                { moment: "wash", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale,
-                    healed: swallowRound(healed),
-                    intensity: Math.max(0.7, Math.min(2, 0.8 + layers / 3 + healed / Math.max(1, body.maxHealth()) * 10)) }, 30);
-            WorldFeedback.text(world, swallowAbove(body.position()), swallowTextGulp, [layers, Math.round(worth * 100)], 28);
-            world.sound("minecraft:item.honey_bottle.drink", body.position(), 14, "{}");
-            if (healed > 0) world.sound("minecraft:entity.player.levelup", body.position(), 12, "{}");
+            if (healed > 0) {
+                WorldFeedback.emit(world, swallowScene, 1, body.position(),
+                    { moment: "wash", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale,
+                        healed: swallowRound(healed),
+                        intensity: Math.max(0.7, Math.min(2, 0.8 + layers / 3 + healed / Math.max(1, body.maxHealth()) * 10)) }, 30);
+                WorldFeedback.text(world, swallowAbove(body.position()), swallowTextGulp, [layers, swallowRound(healed)], 28);
+                world.sound("minecraft:item.honey_bottle.drink", body.position(), 14, "{}");
+                world.sound("minecraft:entity.player.levelup", body.position(), 12, "{}");
+            } else if (CombatStatus.has(world, self, "healblock")) {
+                WorldFeedback.emit(world, swallowScene, 1, body.position(),
+                    { moment: "denied", actor: String(self.ref()), layers: layers, motes: motes, spread: spread, scale: scale }, 26);
+                WorldFeedback.text(world, swallowAbove(body.position()), swallowTextDenied, [layers], 26);
+            } else {
+                // 满血溢出：这口力没有变成回复，只留一行说明，不铺亮色回光冒充成功治疗。
+                WorldFeedback.text(world, swallowAbove(body.position()), swallowTextFull, [layers], 24);
+            }
             done(action);
         }
     });

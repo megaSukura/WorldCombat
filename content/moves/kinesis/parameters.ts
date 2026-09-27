@@ -3,10 +3,10 @@
  *
  * 原生：Psychic／Status／威力 —／命中 80／PP 15／目标 normal（单体）／boosts={accuracy:-1}。
  * 世界化：不隔空扣等级，而是**当场用念力点出一把汤匙并逐步掰弯，引开对面的视线**。汤匙只弯给一个看得见它的目标看，
- *   所以这招只作用于单个对手，却是全族射程最远的：靠的是「你看得见我」而不是弹道。代价是折弯全过程都必须通视——
- *   躲到墙后、柱子后，或者干脆走出视线范围，这场戏就白演了。这也是全族唯一会明确「落空」的一招。
- *   弯完最后一刻且仍通视，才给被引开注意的人挂共享身份 world_combat:status/beguiled 的真实 MobEffect（攻击变弱），
- *   宝可梦那一层再调用 NativeEffects.boost 下降原生命中等级；「慢掰／快掰」在深度与出手速度之间取舍。
+ *   所以这招只作用于单个对手，靠的是「你看得见我」而不是弹道。代价是折弯全过程都必须通视——
+ *   躲到墙后、柱子后，或者干脆走出视线范围，这场戏就白演了，会明确「落空」。
+ *   弯完最后一刻且仍通视，才给被引开注意的人挂共享身份 world_combat:status/beguiled 的真实 MobEffect（物理直接攻击变弱），
+ *   并把命中等级下降以 boostWindow 绑在这份载体上——载体在就在，载体到期或被清掉就一起复原；「慢掰／快掰」在深度与出手速度之间取舍。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   blindStage  特攻每 75 点升一级，基础 1 级，夹 1..2；心力越强，越能把视线拽住。
@@ -14,13 +14,14 @@
  *   duration    120 + (等级 − 30) × 2.5 刻，夹 120..300；经验越足，失神留得越久。
  *   spoonTicks  14 + (特攻 − 60) × 0.03 刻，夹 14..26；把汤匙掰弯要多久，心力越强越从容，过程也看得更清楚。
  *   swirl       12 + 特攻 ÷ 8，夹 12..30；点出汤匙轮廓与头顶标记的念力点数，随特攻变多。
- *   tempo       速度 ÷ 8 + 4 刻，夹 5..12；速度越快越早把汤匙举起来。
- *   recharge    140 + (等级 − 30) × 1.5 刻，夹 140..240；等级越高越熟练。
+ *   tempo       9 − (速度 − 60) × 0.04 刻，夹 5..12；速度越快越早把汤匙举起来。
+ *   recharge    200 − (等级 − 30) × 1.5 刻，夹 140..240；等级越高越熟练、冷却越短。
  */
 namespace PokemonSkills {
     export const kinesisId = "kinesis";
     export const kinesisEffect = "world_combat:kinesis_beguiled";
     export const kinesisScene = "world_combat:move_kinesis";
+    export const kinesisSpoonScene = "world_combat:move_kinesis_spoon";
     export const kinesisSpot = "world_combat:status/beguiled";
 
     actionParameters.define(kinesisId, {
@@ -30,7 +31,7 @@ namespace PokemonSkills {
         }),
         gazeRange: formula(F.body("height").times(2).plus(4).clamp(5, 9).round(1), "凝注距离", {
             unit: " 格",
-            description: "汤匙能被对方看清的最远距离；施法者身量越高，递得越远。这也是全族最远的射程。"
+            description: "汤匙能被对方看清的最远距离；施法者身量越高，递得越远。"
         }),
         duration: seconds(F.base(120).plus(F.level().minus(30).max(0).times(2.5)).clamp(120, 300).round(0), "失神时长",
             "被引开注意的人多久缓不过来；等级越高留得越久。"),
@@ -40,9 +41,9 @@ namespace PokemonSkills {
             unit: " 点",
             description: "点出汤匙轮廓、以及留在对方头顶的念力点数；特攻越高，画面里越多。"
         }),
-        tempo: seconds(F.stat("speed").div(8).plus(4).clamp(5, 12).round(0), "起手",
+        tempo: seconds(F.base(9).minus(F.stat("speed").minus(60).times(0.04)).clamp(5, 12).round(0), "起手",
             "把汤匙举起来需要多久；速度越快越早。"),
-        recharge: seconds(F.base(140).plus(F.level().minus(30).max(0).times(1.5)).clamp(140, 240).round(0), "冷却",
+        recharge: seconds(F.base(200).minus(F.level().minus(30).times(1.5)).clamp(140, 240).round(0), "冷却",
             "两次折弯之间的等待；等级越高越熟练。")
     });
     describe(kinesisId, [

@@ -20,9 +20,10 @@ Smoke.scenario("sing", function (stage) {
         stage.expect(stage.casts("sing", caster) > 0, "sing was committed");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/drowsy"), "the lullaby left the shared drowsy identity");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/sleep"), "the listener fell asleep to the song");
-        stage.note("歌声从施法者身上一圈圈荡出、不认遮挡；每唱一句给圈里还醒着的目标记一分睡意，凑够句数才睡下。目标是否在唱完前走出声场、用了几个乐句，见轨迹。", {
+        stage.note("歌声从施法者身上一圈圈荡出、不认遮挡；整段演唱中施法者站定不动，每唱一句给圈里还醒着的目标记一分睡意（计数与固定小幅减速分开），凑够句数才睡下；被打断则未来句不再唱。目标是否在唱完前走出声场、用了几个乐句，见轨迹。", {
             casts: stage.casts("sing", caster),
             travelled: Math.round(stage.travelled(foe) * 10) / 10,
+            casterTravelled: Math.round(stage.travelled(caster) * 10) / 10,
             casterHp: Math.round(caster.health() * 10) / 10,
             foeHp: Math.round(foe.health() * 10) / 10
         });

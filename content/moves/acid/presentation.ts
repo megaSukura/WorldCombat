@@ -1,12 +1,12 @@
 /**
  * 溶解液 / acid —— 客户端表现。
  *
- * 一句话：施法者口边鼓起一囊冒泡的强酸 → 一团酸glob低弧抛出、一路滴落 → 落地炸开溅绿、泼到周围敌人身上 →
- * 地面留下一滩持续冒泡的腐蚀酸池。
+ * 一句话：施法者口边鼓起一囊冒泡的强酸 → 一团酸glob沿解算好的低弧抛出、一路滴落 → 落到真实支撑上炸开溅绿、
+ * 泼到周围可达的敌人身上 → 地面留下一滩持续冒泡的腐蚀酸池。
  * 色相家族：酸绿（0x5B8C22 / 0x9BD34A）为主，近黄绿（0xD6F08A）只给溅点；气泡收在灰绿。
- * 拍子：起 windup（鼓酸）→ 泼 throw（低弧）→ 击 splash（炸开）→ 留 pool（酸池冒泡）／空 fizzle（无处落脚只散雾）。
- * 范围：酸池发射范围直接读取真实半径；轮廓与持续冒泡由场地效果拥有。
- * 运动：酸glob沿抛物线飞行（服务端重力），落地后酸滴向外抛、贴地摊开。
+ * 拍子：起 windup（鼓酸）→ 泼 throw（低弧）→ 击 splash（炸开）→ 留 pool（酸池冒泡）／空 fizzle（悬空命中只散身体酸滴）。
+ * 范围：即时泼溅环与酸池发射范围都直接读取真实半径；池轮廓与持续冒泡由场地效果拥有。
+ * 运动：酸glob沿抛物线飞行（服务端重力与弹道），落地后酸滴向外抛、贴地摊开。
  * 数：酸滴数绑定 `data.drops`（特攻与等级换算），强度绑定 `data.intensity`（单发威力 / 40）。
  */
 const AcidDefinition: ParticleDefinition = {
@@ -71,13 +71,13 @@ const AcidDefinition: ParticleDefinition = {
                     color: 0xD6F08A, alpha: [1, 0], light: "full", bloom: 0.25, maxParticles: 8
                 },
                 {
-                    name: "splash_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "splash_ring", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: 0.5 },
+                    burst: { count: { data: "drops", fallback: 12 } },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "outward", speed: [0.12, 0.3],
                     lifetime: [10, 18], size: [0.3, 0.9],
-                    color: 0x5B8C22, alpha: [0.75, 0], light: "world", maxParticles: 8
+                    color: 0x5B8C22, alpha: [0.75, 0], light: "world", maxParticles: 36
                 },
                 {
                     name: "splash_drops", bind: "point", fit: "none", offset: [0, 0.25, 0],
@@ -117,15 +117,6 @@ const AcidDefinition: ParticleDefinition = {
             duration: 18,
             exit: { stop: 6, drain: 14 },
             emitters: [
-                {
-                    name: "fizzle_mist", bind: "point", fit: "none", offset: [0, 0.15, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: 8, at: 0 },
-                    shape: { kind: "sphere", radius: 0.28 },
-                    direction: "up", speed: [0.02, 0.07],
-                    lifetime: [8, 16], size: [0.16, 0.03],
-                    color: 0x5B8C22, alpha: [0.4, 0], light: "world", maxParticles: 16
-                },
                 {
                     name: "fizzle_drops", bind: "point", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/goo/acidsplash",

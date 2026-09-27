@@ -11,6 +11,8 @@
  */
 namespace WorldBodies {
     export interface Brain {
+        /** Confirmed death observed by this living body. The victim handle remains non-writable. */
+        observedDeath?: (brain: CombatEffect, facts: CombatNativeDeathFacts) => void;
         /** State schema version; raise it and supply `migrate` when the saved shape changes. */
         schema?: number;
         /** Upper bound of one body's lifetime in ticks (default 1200000). */
@@ -76,6 +78,9 @@ namespace WorldBodies {
             const input = JSON.parse(effect.input());
             brain.died!(effect, input.killer ? effect.world().actor(input.killer) : null, input);
         });
+        if (brain.observedDeath) WorldCombat.effectHandler(id, "operation:world_combat:observed_death", function (effect) {
+            brain.observedDeath!(effect, JSON.parse(effect.input()));
+        });
         Object.keys(brain.operations || {}).forEach(function (name) {
             WorldCombat.effectHandler(id, "operation:" + name, function (effect) { brain.operations![name](effect); });
         });
@@ -112,6 +117,7 @@ namespace WorldBodies {
         route("world_combat:body_interact", "interact", who);
         route("world_combat:body_touch", "touch", who);
         route("world_combat:body_blocked", "blocked");
+        route("world_combat:actor_died", "observed_death");
         route("world_combat:body_died", "died", function (event, data) { const killer = event.target(); data.killer = killer ? String(killer.ref()) : ""; return data; });
     }
     WorldBodies.install();

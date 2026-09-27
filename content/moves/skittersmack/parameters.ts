@@ -4,9 +4,10 @@
  * 原生事实：虫／物理／威力 70／命中 90／PP 10／接触／100% 让目标特攻下降 1 级／目标单体。
  *
  * 翻译：把「从对手背后爬近后进行攻击」落成一件有形状的事——施法者先贴着地面绕到目标的侧后方，
- * 再从背后用带甲壳的前肢拍一记。它与同族分开的地方是**落点**：只有它会让施法者绕到目标的身后，
+ * 再从背后用带甲壳的前肢横扫一记。它与同族分开的地方是**落点**：只有它会让施法者绕到目标的身后，
  * 从对方看不见的那一侧出手；绕到背后的一击更重（`backstab` 加成），只能从侧面掠过的一记只是普通拍打。
- * 如果目标跑开、绕行被挡，这一记就落在空处。
+ * 绕行用原生身体扫掠：落点先确认可站地面，被墙或身体挡住就停在原地侧拍，不穿身体也不伪称已经绕背；
+ * 目标跑开、绕行到不了就落空。最后那一记横扫按真实的 `reach` 与 `smackWidth` 画出具形状的扇面。
  *
  * 数值来源（每项读不同的精灵数据）：
  *   strike     拍击威力：物攻定力道、等级定发力。
@@ -14,9 +15,9 @@
  *   scuttle    绕行弧长：速度与体型宽度定要绕多远才能到背后。
  *   pace       爬行速度：速度定每刻挪几格。
  *   standoff   贴身距离：目标体型宽度定站到它身后多远。
- *   reach      出手距离：速度与身高定前肢够到多远，也是本招射程。
- *   smackWidth 拍击扇面：等级定张角，也是画面里那一拍的宽度。
- *   dropStages 特攻下降级数：固定 1 级（原生 100%）。
+ *   reach      出手距离：速度与身高定前肢够到多远，也是本招射程与横扫半径。
+ *   smackWidth 拍击扇面：等级定张角，也是画面里那一拍的真实宽度。
+ *   dropStages 特攻下降级数：固定 1 级（原生 100%），实际按被接受后的级数回执。
  *   motes      甲屑数量：物攻定，也驱动画面。
  *   tempo／aftercast／recharge：速度定节奏，背击式更慢更久。
  *
@@ -28,6 +29,7 @@
 namespace PokemonSkills {
     export const skittersmackId = "skittersmack";
     export const skittersmackScene = "world_combat:move_skittersmack";
+    export const skittersmackSweepScene = "world_combat:move_skittersmack/sweep";
     export const skittersmackHitText = "world_combat.move.skittersmack.text.hit";
     export const skittersmackFocusText = "world_combat.move.skittersmack.text.focus";
     export const skittersmackMissText = "world_combat.move.skittersmack.text.miss";
@@ -98,7 +100,7 @@ namespace PokemonSkills {
             F.base(1),
             "特攻下降", {
                 unit: "级",
-                description: "拍中后目标特攻下降的能力等级；对宝可梦落到原生特攻等级，对其他战斗者落到攻击阶梯。原生为必中 1 级。"
+                description: "拍中后目标特攻下降的能力等级；对宝可梦落到原生特攻等级，对其他战斗者落到攻击阶梯，实际只按被接受后的级数回执。原生为必中 1 级。"
             }),
         /** 甲屑数量：14 + 物攻偏移[−4,16]；夹 10..40。 */
         motes: formula(

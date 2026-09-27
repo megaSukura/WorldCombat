@@ -72,7 +72,7 @@ const GravityDefinition: ParticleDefinition = {
             emitters: [
                 { name: "edge", bind: "point", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
-                    rate: 7, shape: { kind: "ring", radius: 2.9 },
+                    rate: 7, shape: { kind: "ring", radius: 3.4 },
                     direction: "up", speed: [0.005, 0.02],
                     lifetime: [20, 34], size: [0.5, 0.9], sizeMode: "sin",
                     color: 0x9B8FC2, alpha: [0.3, 0], alphaMode: "sin", light: "world", maxParticles: 40 },

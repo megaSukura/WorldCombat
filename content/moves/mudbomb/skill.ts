@@ -2,16 +2,16 @@
  * 泥巴炸弹 / mudbomb 的出手方式。
  *
  * 核心念头：把泥压实成一颗硬球掷出，直线砸到对手身上炸开——伤害重，但只有约三成机会把泥雾糊进它的眼睛；
- * 主目标留下泥印，周围的人被碎泥泼溅到。
+ * 主目标吃下这一记，周围的人被碎泥泼溅到。
  *
  * 选取：kind 为 aim——可以锁定一个实体、也可以朝一个方向或世界点空投；撞上方块照常碎开，
- *   落点按原生命中的真实方块格与朝向定位；伤害许可仍由命中层按敌我独立判断。
+ *   落点按原命中的真实方块格与朝向定位；伤害许可仍由命中层按敌我独立判断。
  *
  * 三幕：
  *   起：泥在身前被压实、边转边收紧（提交前 windup 预告）。
  *   飞：提交后泥弹沿直线高速飞出，带旋转与泥屑尾迹。
- *   爆：命中处炸开泥雾，主目标留一片泥印、按概率糊眼；泼溅到附近其他敌人（较小泥粒）。
- *       不再替换任何方块，只在真实碰撞表面留下短泥印，战场地板不变成泥。
+ *   爆：命中处炸开泥雾；只有主目标真的受伤后才按概率糊眼，泼溅从真实接触面外检查可达后落到附近其他敌人。
+ *       不再替换任何方块，只在真实碰撞面溅开短泥滴，战场地板不变成泥。
  *
  * 与同族分开：掷泥是低弧线的软泥团、必定糊眼、伤害轻；泥巴炸弹是直线硬弹、爆开泼溅、只有概率致盲。
  */
@@ -31,7 +31,7 @@ namespace PokemonSkills {
     define({
         id: "mudbomb",
         name: "Mud Bomb",
-        description: "把泥压实成一颗硬弹直线掷向瞄准方向或落点；命中时炸开，主目标留泥印、附近敌人被碎泥泼溅，有时会糊住目标的眼。撞上方块照常碎开，但不再把地板变成泥。",
+        description: "把泥压实成一颗硬弹直线掷向瞄准方向或落点；命中时炸开，主目标吃下这一记、附近敌人被碎泥泼溅，造成伤害后有时会糊住目标的眼。撞上方块照常碎开，但不会把地板变成泥。",
         uses: ["中远距离的直线重击", "用爆开泼溅打到目标身边的敌人", "偶尔糊眼，削掉对手的命中"],
         kind: "aim",
         range: 14,
@@ -56,7 +56,9 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "gather", shell: config && config.shell ? 1 : 0 }));
             return prepare;
         },
-        indicator: function () { return { radius: 0.7, geometry: "point", style: "mud", color: 0x6E5A40, label: "泥巴炸弹" }; },
+        indicator: function (config, pokemon) {
+            return { radius: p("mudbomb", "blastRadius", pokemon), geometry: "circle", style: "mud", color: 0x6E5A40, label: "泥巴炸弹" };
+        },
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
@@ -88,11 +90,14 @@ namespace PokemonSkills {
                     const delta = point.minus(origin);
                     const away = delta.length() < 0.01 ? WorldCombat.point(0, 1, 0) : delta.unit();
                     const normal = cell !== null ? mudbombNormal(hit.blockFace()) : [away.x(), away.y(), away.z()];
+                    const outward = WorldCombat.point(normal[0], normal[1], normal[2]);
+                    const contact = cell !== null ? point.plus(outward.scale(0.15)) : point;
                     let primary: CombatActor | null = null;
                     if (target !== null && currentWorld.valid(target) && !currentWorld.friendly(target)) {
                         primary = target;
-                        impact(current, hit, "mudbomb", power, { damage: damageSpec("mudbomb", "boom") });
-                        if (currentWorld.random() < chance) {
+                        // 只有主伤真的结算成功，才谈糊眼；伤害被拒或免疫时不凭空降命中。
+                        if (impact(current, hit, "mudbomb", power, { damage: damageSpec("mudbomb", "boom") })
+                            && currentWorld.random() < chance) {
                             const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
                             const at = currentWorld.observe(target);
                             if (dropped !== 0 && at !== null) {
@@ -107,7 +112,9 @@ namespace PokemonSkills {
                     let splashed = 0;
                     WorldGeometry.selectEnemies(currentWorld, region, function (other, facts) {
                         if (primary !== null && String(other.ref()) === String(primary.ref())) return;
-                        hurt(current, other, "mudbomb", splashPower, { damage: damageSpec("mudbomb", "splash") });
+                        // 从真实接触面外侧的身体可达性：墙后的敌人不被溅到。
+                        if (WorldGeometry.blockHit(currentWorld, contact, facts.position())) return;
+                        if (!hurt(current, other, "mudbomb", splashPower, { damage: damageSpec("mudbomb", "splash") })) return;
                         splashed++;
                         WorldFeedback.emit(currentWorld, mudbombScene, 1, facts.position(),
                             { moment: "spray", target: String(other.ref()), motes: motes, scale: scale,

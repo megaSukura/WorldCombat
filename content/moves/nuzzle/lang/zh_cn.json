@@ -31,6 +31,7 @@
   "worldcombat.skill.nuzzle.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.nuzzle.preference.ai.leaveStation.help": "开启后，驻守命令下也会为蹭到目标离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.nuzzle.text.hit": "蹭上，麻痹",
-  "world_combat.move.nuzzle.text.immune": "电属性免疫麻痹",
+  "world_combat.move.nuzzle.text.immune": "麻痹没生效",
+  "world_combat.move.nuzzle.text.resist": "没能蹭动",
   "world_combat.move.nuzzle.text.whiff": "蹭了个空"
 }

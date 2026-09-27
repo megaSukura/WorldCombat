@@ -23,8 +23,8 @@ namespace PokemonSkills {
     }
 
     /**
-     * 实际能借到多少：比较目标确证的招式、六维与特性与自己现配置，取正向差异；普通主体只比
-     * CombatCopies 限定表里的攻击/移动/防护。生命与库存从不计入收益。
+     * 实际净得失：比较目标确证的招式、六维与特性与自己现配置，正负都算——借来的强项与被覆盖的原强项一起
+     * 计入，不只累加正收益。普通主体只比 CombatCopies 限定表里的攻击/移动/防护。生命与库存从不计入。
      */
     CompanionBehavior.registerFact("world_combat:move_transform/gain", function (access, actor, _argument) {
         const self = access.source();
@@ -35,8 +35,7 @@ namespace PokemonSkills {
             Object.keys(values).forEach(id => {
                 const own = access.attributeValue(self, id);
                 if (!own) return;
-                const delta = values[id] - own.value();
-                if (delta > 0) gain += delta / Math.max(1, Math.abs(own.value()));
+                gain += (values[id] - own.value()) / Math.max(1, Math.abs(own.value()));
             });
             return gain;
         }
@@ -45,11 +44,13 @@ namespace PokemonSkills {
         let gain = 0;
         ["atk", "def", "spa", "spd", "spe"].forEach(stat => {
             const own = NativeEffects.stat(myPokemon, myState, stat), theirs = NativeEffects.stat(otPokemon, otState, stat);
-            if (theirs > own) gain += (theirs - own) / Math.max(1, own);
+            gain += (theirs - own) / Math.max(1, own);
         });
-        if (NativeEffects.ability(myPokemon, myState) !== NativeEffects.ability(otPokemon, otState)) gain += 0.2;
+        if (NativeEffects.ability(myPokemon, myState) !== NativeEffects.ability(otPokemon, otState))
+            gain += NativeModifiers.abilityCopyable(access, actor) ? 0.1 : -0.05;
         const mine = transformMoveIds(access, self), theirs = transformMoveIds(access, actor);
-        for (let i = 0; i < theirs.length; i++) if (mine.indexOf(theirs[i]) < 0) gain += 0.2;
+        for (let i = 0; i < theirs.length; i++) if (mine.indexOf(theirs[i]) < 0) gain += 0.15;
+        for (let j = 0; j < mine.length; j++) if (theirs.indexOf(mine[j]) < 0) gain -= 0.15;
         return gain;
     });
 
@@ -104,20 +105,18 @@ namespace PokemonSkills {
         priority: function (context, item, target) {
             if (target === null || !transformWants(context, item, target)) return 0;
             const gain = CompanionBehavior.fact<number>(context, "world_combat:move_transform/gain", target);
+            // 净得失决定要不要变；高威力只是净收益为正时的加分，不越过被覆盖的强项和丢失的防护。
+            if (gain === null || gain <= 0.05) return 6;
+            let score = gain >= 0.8 ? 55 : gain > 0.25 ? 34 : 20;
             const power = CompanionBehavior.fact<number>(context, "world_combat:move_transform/power", target);
-            let score = 6;
-            // 普通生物与招式威力为 0 的宝可梦一样按实际借到的部分评分，不因 powerfact 归零就被当成没意义。
-            if (gain !== null && gain >= 0.8) score = 55;
-            else if (gain !== null && gain > 0.15) score = 30;
-            if (power !== null && power >= 80) score = Math.max(score, 55);
-            else if (power !== null && power >= CompanionBehavior.ai<number>(item, "minPower", 30)) score = Math.max(score, 30);
+            if (power !== null && power >= CompanionBehavior.ai<number>(item, "minPower", 30)) score += 6;
             return score;
         }
     });
 
     addPreferences(transformId, { dwell: true, ai: { maxChase: 12, minPower: 30, leaveStation: false } }, [
         number("ai.maxChase", "考虑距离", 3, 20, 1),
-        number("ai.minPower", "优先威力", 20, 120, 5),
+        number("ai.minPower", "威力加分线", 20, 120, 5),
         flag("ai.leaveStation", "驻守时允许离位")
     ]);
 }

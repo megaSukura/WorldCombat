@@ -1,12 +1,14 @@
 /**
  * 羽栖 / Roost 的粒子语言。
  *
- * 一句话：一只鸟收翼沉到地面，脚边一股下压的风把羽尘与碎屑吹开一圈，落定后身上一遍遍浮起温热的休息光。
+ * 一句话：一只鸟在空中先收翼下坠、脚边气流向下压，落到地面时把羽尘与碎屑吹开一圈，落定后身上一遍遍浮起温热的休息光。
  * 色相家族：蜜蜡奶油 0xE8D9A8 作主体，暖白 0xFFF6E0 作高光与回复，土棕 0xB07A3A／0xB9A472 只作落地尘与余韵。
- * 拍子：起（windup）／落（land）／栖（rest）／起（rise）；身份被清除时走 broken。
+ * 拍子：起（windup）／坠（descend）／落（land）／栖（perch，持续整段）／疗（heal，每段一次）／起（rise）；身份被清除时走 broken。
  * 范围：作用于自己，绑 source（fit body）：下压环与落尘在脚下铺开，玩家看得出这是一次落地，而不是原地发光。
- * 机制驱动：land 的尘与羽数量绑定 data.burst（羽尘参数），落尘环半径绑定 data.radius（羽风范围）；
- *   rest 的上升光点速率绑定 data.restRate（羽尘数派生）、尺寸绑定 data.scale（羽风范围派生）——身量大、翼展宽的对象落地与栖息画面都更大更密。
+ * 机制驱动：descend 的羽尘数绑 data.downdraft、下落尺度绑 data.scale；land 的尘与羽数量绑 data.burst（羽尘参数）、
+ *   落尘环半径绑 data.radius（羽风范围）；perch 的上升光点速率绑 data.restRate、尺寸绑 data.scale；
+ *   heal 每段回复的画面数量绑 data.healed（本段真实回复量）——身量、翼展与实际疗量都直接写进画面。
+ * 生命周期：perch 由本次栖息载体拥有（服务端 onEffect），载体到期、被清除或取消时随之一并收，不留残影。
  */
 const RoostDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -29,6 +31,27 @@ const RoostDefinition: ParticleDefinition = {
                     rate: 6, shape: { kind: "sphere", radius: 0.4 }, direction: "down", speed: [0.03, 0.09],
                     lifetime: [14, 24], size: [0.08, 0.01],
                     color: 0xFFF6E0, alpha: [0.7, 0], light: "full", maxParticles: 24
+                }
+            ]
+        },
+        descend: {
+            duration: 10,
+            exit: { stop: 3, drain: 10 },
+            emitters: [
+                {
+                    name: "fall_feather", bind: "path", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf_white",
+                    burst: { count: { data: "downdraft", fallback: 10 } },
+                    shape: { kind: "polyline" }, direction: "up", speed: [0.02, 0.08], gravity: 0.004, drag: 0.94,
+                    lifetime: [12, 22], size: [0.07, 0.01],
+                    color: 0xFFF6E0, alpha: [0.7, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "fall_draft", bind: "path", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 6 }, shape: { kind: "polyline" }, direction: "shape", speed: [0.02, 0.07],
+                    lifetime: [10, 16], size: [0.08, 0.02],
+                    color: 0xD8C48A, alpha: [0.5, 0], light: "world", maxParticles: 30
                 }
             ]
         },
@@ -63,9 +86,7 @@ const RoostDefinition: ParticleDefinition = {
                 }
             ]
         },
-        rest: {
-            duration: 40,
-            exit: { stop: 10, drain: 18 },
+        perch: {
             emitters: [
                 {
                     name: "breath", bind: "source", offset: [0, 0.2, 0], height: 0.3,
@@ -80,6 +101,26 @@ const RoostDefinition: ParticleDefinition = {
                     burst: { count: 8, interval: 8 }, shape: { kind: "ring", radius: 0.55 }, direction: "inward", speed: [0.01, 0.04],
                     lifetime: [12, 20], size: [0.22, 0.06],
                     color: 0xE8D9A8, alpha: [0.4, 0], light: "world", maxParticles: 20
+                }
+            ]
+        },
+        heal: {
+            duration: 18,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "mend", bind: "source", offset: [0, 0.15, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    burst: { count: { data: "healed", fallback: 6 } }, shape: { kind: "sphere", radius: 0.4 }, direction: "up", speed: [0.02, 0.06],
+                    lifetime: [14, 24], size: { data: "scale", fallback: 0.16 },
+                    color: 0xFFF6E0, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 40
+                },
+                {
+                    name: "mend_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 3 }, shape: { kind: "ring", radius: 0.5 }, direction: "inward", speed: [0.01, 0.04],
+                    lifetime: [12, 20], size: [0.2, 0.05],
+                    color: 0xFFF0C0, alpha: [0.5, 0], light: "world", maxParticles: 16
                 }
             ]
         },

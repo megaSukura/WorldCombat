@@ -11,14 +11,17 @@ Smoke.scenario("wrap", function (stage) {
         return stage.casts("wrap", caster) >= 1 && stage.damageTo(heavy) > 0;
     }, function () {
         stage.after(40, function () {
+            var ladder = stage.stages(heavy);
             stage.expect(stage.casts("wrap", caster) >= 1, "wrap was committed");
             stage.expect(stage.damageTo(heavy) > 0, "the coil crushed the target at least once");
             stage.expect(stage.hadMobEffect(heavy, "world_combat:status/partiallytrapped"), "the target was wrapped");
             stage.expect(Math.abs(stage.attribute(heavy, "minecraft:generic.movement_speed") - baseSpeed) < .001, "the maintained coil leaves the target mobile");
+            stage.expect((ladder.atk || 0) < 0, "the maintained coil lowers the target's Attack");
             stage.note("how many squeezes landed, whether the coil was torn, and the crit roll are positional/random", {
                 casts: stage.casts("wrap", caster),
                 heavyDamage: Math.round(stage.damageTo(heavy) * 10) / 10,
                 speed: [baseSpeed, Math.round(stage.attribute(heavy, "minecraft:generic.movement_speed") * 100) / 100],
+                attackStages: ladder.atk || 0,
                 attack: Math.round(stage.attribute(heavy, "minecraft:generic.attack_damage") * 10) / 10,
                 heavyAlive: heavy.alive(),
                 casterAlive: caster.alive()

@@ -14,7 +14,7 @@ Smoke.scenario("sunnyday", function (stage) {
         stage.expect(stage.casts("sunnyday", caster) > 0, "sunnyday was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/sunlit") || stage.hadMobEffect(target, "world_combat:status/sunlit"),
             "a body inside the sun carries the shared sunlit identity");
-        stage.note("sun laid over the engagement; the sunlit identity landed on a body inside it. Fire x1.5 / Water x0.5, thaw and dry need a second caster and are left to play.",
+        stage.note("sun laid over the engagement; the sunlit identity landed on a body inside it. The Fire x1.5 / Water x0.5 boost now follows the current effective weather at the body (newest covering field wins), so an overlapping rain field cancels it and Hydro Steam is never halved. Thaw and dry need a second caster and are left to play.",
             { casts: stage.casts("sunnyday", caster),
               casterSunlit: stage.hadMobEffect(caster, "world_combat:status/sunlit"),
               targetSunlit: stage.hadMobEffect(target, "world_combat:status/sunlit") });

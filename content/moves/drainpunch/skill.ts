@@ -18,6 +18,7 @@
  */
 namespace PokemonSkills {
     const drainPunchScene = "world_combat:move_drainpunch";
+    const drainPunchFistScene = "world_combat:move_drainpunch_fist";
     const drainPunchHitText = "world_combat.move.drainpunch.text.hit";
     const drainPunchSapText = "world_combat.move.drainpunch.text.sap";
     const drainPunchMissText = "world_combat.move.drainpunch.text.miss";
@@ -30,7 +31,7 @@ namespace PokemonSkills {
         uses: ["贴身时用最短的一拳抢输出", "边打边把伤害换成回血", "连打式一次压出三段伤害"],
         kind: "aim",
         range: 2.4,
-        maxRange: 3.6,
+        maxRange: 4.1,
         prepare: 6,
         active: 1,
         recover: 6,
@@ -39,7 +40,7 @@ namespace PokemonSkills {
         defaults: { combo: false, ai: { maxChase: 6, healBelow: 0.85 } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("drainpunch", "reach", pokemon) + 0.3, geometry: "line", style: "punch", color: 0xE8A24A,
+            return { radius: p("drainpunch", "reach", pokemon) + 0.6, geometry: "line", style: "punch", color: 0xE8A24A,
                 label: config && config.combo === true ? "吸取拳·连打" : "吸取拳" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -49,11 +50,15 @@ namespace PokemonSkills {
                 recover: Math.round(p("drainpunch", "aftercast", context)),
                 cooldown: Math.round(p("drainpunch", "recharge", context)),
                 active: skills["drainpunch"].active,
-                range: p("drainpunch", "reach", context) + 0.3
+                // 判定、UI 指示与实际拳路统一到 reach + 0.6（臂展往前送出的一截）。
+                range: p("drainpunch", "reach", context) + 0.6
             };
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:drainpunch:" + action.id(), drainPunchScene, 1, action.origin(),
+            // 收敛的拳头落在真实瞄准方向的前侧，而不是固定的世界南侧偏移。
+            const front = WorldGeometry.flatUnit(action.direction());
+            const at = action.origin().plus(front.scale(0.3));
+            action.present("world_combat:drainpunch:" + action.id(), drainPunchScene, 1, at,
                 JSON.stringify({ moment: "windup", combo: config && config.combo === true ? 1 : 0 }));
             return prepare;
         },
@@ -81,8 +86,22 @@ namespace PokemonSkills {
                 const delta = point.minus(origin);
                 return delta.length() < 0.05 ? current.direction() : delta.unit();
             }
-            function whiff(current: CombatAction, at: CombatPoint, index: number): void {
+            /** 拳从身体一侧的真实世界坐标出发：左右交替，出拳手在当刻朝向下的一侧肩位。 */
+            function shoulder(me: CombatObservation, forward: CombatPoint, index: number): CombatPoint {
+                const frame = WorldGeometry.basis(forward);
+                const side = (index % 2 === 0 ? 1 : -1) * me.width() * 0.45;
+                return me.position().plus(frame.right.scale(side)).plus(frame.up.scale(-me.height() * 0.08));
+            }
+            /** 每拍的前伸/收回轨迹交给独立客户端场景，用真实体侧起点与当刻朝向画出拳头。 */
+            function thrust(scope: CombatWorld, from: CombatPoint, at: CombatPoint, forward: CombatPoint, index: number, landed: boolean): void {
+                WorldFeedback.emit(scope, drainPunchFistScene, 1, at,
+                    { moment: landed ? "punch" : "miss", from: [from.x(), from.y(), from.z()], at: [at.x(), at.y(), at.z()],
+                        direction: [forward.x(), forward.y(), forward.z()], punch: index + 1, punches: total,
+                        start: scope.tick(), dur: 18, scale: scale }, 20);
+            }
+            function whiff(current: CombatAction, at: CombatPoint, from: CombatPoint, forward: CombatPoint, index: number): void {
                 const scope = current.world();
+                thrust(scope, from, at, forward, index, false);
                 WorldFeedback.emit(scope, drainPunchScene, 1, at, { moment: "miss", motes: motes, scale: scale, punch: index + 1 }, 16);
                 if (index === 0) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), drainPunchMissText, [], 18);
                 sound(current, "minecraft:entity.player.attack.weak");
@@ -93,26 +112,29 @@ namespace PokemonSkills {
                 const scope = current.world(), me = scope.observe(current.actor());
                 if (me === null) { finish(current); return; }
                 const forward = heading(current, scope);
+                const from = shoulder(me, forward, index);
                 const hit = current.trace(me.position(), me.position().plus(forward.scale(reach + 0.6)), radius, true);
                 sound(current, index === 0 ? "minecraft:entity.player.attack.strong" : "minecraft:entity.player.attack.weak");
                 const struck = hit.target();
                 // 墙、空处、非活体与友方身体都会截住拳路，但都不结算伤害也不回血：收拳，继续自己的连打节奏。
-                if (!hit.hitEntity() || struck === null || scope.friendly(struck)) { whiff(current, hit.position(), index); return; }
+                if (!hit.hitEntity() || struck === null || scope.friendly(struck)) { whiff(current, hit.position(), from, forward, index); return; }
                 const at = hit.position();
                 const struckRef = String(struck.ref());
+                thrust(scope, from, at, forward, index, true);
                 WorldFeedback.emit(scope, drainPunchScene, 1, at,
                     { moment: "punch", target: struckRef, motes: motes, scale: scale,
                         intensity: intensity, punch: index + 1, punches: total, combo: combo ? 1 : 0 }, 20);
                 const before = me.health();
+                // 每拳独立 strike：同体多拍各自结算，同一拍的重复接触仍由原生按 strike+目标去重。
                 const landed = impact(current, hit, "drainpunch", power,
-                    { damage: damageSpec("drainpunch", "jab"), contact: true, punch: true, drain: share });
+                    { damage: damageSpec("drainpunch", "jab"), contact: true, punch: true, drain: share }, "punch." + (index + 1));
                 const after = scope.observe(current.actor());
                 const healed = landed && after !== null ? Math.max(0, after.health() - before) : 0;
                 // 只有这一拳真的把血抽回来时才画回流，强弱由实际治疗量决定；目标是否已被打倒都不影响已发生的回血。
                 if (healed > 0) {
                     const self = scope.observe(current.actor());
-                    const from = self === null ? current.origin() : self.position();
-                    const flow = from.minus(at), span = flow.length();
+                    const selfPoint = self === null ? current.origin() : self.position();
+                    const flow = selfPoint.minus(at), span = flow.length();
                     const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
                     const healedRatio = self === null ? 0 : healed / Math.max(1, self.maxHealth());
                     WorldFeedback.emit(scope, drainPunchScene, 1, at,
@@ -122,7 +144,7 @@ namespace PokemonSkills {
                             intensity: Math.max(0.5, Math.min(2.4, healedRatio * 40)), punch: index + 1 }, 24);
                     sound(current, "cobblemon:move.bulletpunch.target");
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), drainPunchHitText, [], 20);
-                    WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.2, 0)), drainPunchSapText, [Math.round(healed * 10) / 10], 20);
+                    WorldFeedback.text(scope, selfPoint.plus(WorldCombat.point(0, 1.2, 0)), drainPunchSapText, [Math.round(healed * 10) / 10], 20);
                 }
                 if (index + 1 >= total) finish(current); else current.after(gap, function (next: CombatAction) { punch(next, index + 1); });
             }

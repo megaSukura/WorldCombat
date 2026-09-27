@@ -1,11 +1,12 @@
 /**
  * 泄愤 / lashout 的客户端表现。
  *
- * 一句话：施法者脚下腾起暗红怒气，身上每条负等级缠成一缕黑气、从两侧收紧成短压痕 → 原地前踏留下双压痕步点 →
- * 朝正前方砸下时喷出暗红爆；确有负等级被解除，就在命中点碎出同等段数的束线 → 开启宣泄时再把怒气转成向上的红光包住自己。
+ * 一句话：施法者脚下腾起暗红怒气，身上每条负等级缠成一缕黑气、从两侧收紧成短压痕 → 原地前踏在真实落点留下双压痕步点 →
+ * 沿服务端给的真实 from→to 斜段画一条窄压击线并爆一次命中 → 确有负等级被解除，就从施法者身上断出同等段数的束线 →
+ * 开启宣泄且确实解除时，把怒气转成向上的红光包住自己（挂在真正的 boostWindow 上）。
  * 色相家族：暗红与近黑（impact_dark、anger_red、obscuringsmoke），强调处用一点橙红。
- * 拍子：蓄 fume → 踏 step → 砸 strike / vent → 碎 sever → 转 rage；空挥走 miss。
- * 范围：fume/rage 画在施法者身上；step 沿真实落点铺步点；strike/vent/sever 的点爆与环由 `data.scale`（判定半径派生）决定大小。
+ * 拍子：蓄 fume → 踏 step → 砸 slam → 击 strike / vent → 碎 sever → 转 rage；空挥走 miss。
+ * 范围：fume/rage 画在施法者身上；step 落在真实落点；sever 从施法者身上断开；strike/vent 的点爆与环由 `data.scale`（判定半径派生）决定大小。
  * 运动：fume 的黑气从两侧向内收紧、暗红怒气向上冒；vent 由内向外炸；sever 的束线碎片向外崩散；rage 的红光贴着身体向上升。
  * 数：`data.fumes`（受挫等级派生）决定蓄怒粒子数量，`data.count`（最终威力派生）决定命中碎片数量，
  *   `data.removed`（实际解除的负等级数）决定碎出的束线段数，`data.boosted` 决定怒气红光强度；画面里的数量与机制里的数一致。
@@ -51,22 +52,50 @@ const LashoutDefinition: ParticleDefinition = {
                 }
             ]
         },
+        slam: {
+            // 下砸过程：沿服务端给出的真实 from→to 斜段铺一条窄压击线，落点补一记刃尖；判定与表现同程。
+            duration: 8,
+            exit: { stop: 4, drain: 10 },
+            emitters: [
+                {
+                    name: "press", bind: "path", fit: "world", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    burst: { count: { data: "press", fallback: 10 }, at: 0 },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.02, 0.06],
+                    lifetime: [5, 10], size: [0.12, 0.03], sizeMode: "index",
+                    color: 0x9B4A5A, alpha: [0.85, 0], light: "full", maxParticles: 30
+                },
+                {
+                    name: "tip", bind: "point", fit: "world", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    burst: { count: 4, at: 0 },
+                    shape: { kind: "sphere", radius: 0.2 },
+                    direction: "shape", speed: [0.05, 0.18],
+                    lifetime: [5, 9], size: [0.24, 0.05], sizeMode: "index",
+                    color: 0x9B4A5A, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 20
+                }
+            ]
+        },
         step: {
+            // 落点即步点：在真实踏出的落点上落双压痕与短尘，静止也能看到。
             duration: 12,
             exit: { stop: 4, drain: 8 },
             emitters: [
                 {
-                    name: "tread", bind: "source", offset: [0, 0, 0], height: 0.03, trail: { minDistance: 0.3 },
+                    name: "tread", bind: "point", fit: "none", offset: [0, 0.03, 0],
                     particle: "world_combat_core:cobblemon/generic/foot",
-                    rate: 8,
+                    burst: { count: { data: "treads", fallback: 2 }, at: 0 },
+                    shape: { kind: "circle", radius: 0.26 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [8, 14], size: [0.15, 0.03],
                     color: 0x7A2A34, alpha: [0.55, 0], light: "world", maxParticles: 24
                 },
                 {
-                    name: "dust", bind: "source", offset: [0, 0, 0], height: 0.05, trail: { minDistance: 0.3 },
+                    name: "dust", bind: "point", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 6, shape: { kind: "sphere", radius: 0.16 },
+                    burst: { count: { data: "treads", fallback: 2 }, at: 0 },
+                    shape: { kind: "circle", radius: 0.3 },
                     direction: "up", speed: [0.02, 0.06],
                     lifetime: [6, 12], size: [0.11, 0.02],
                     color: 0x3A1F26, alpha: [0.3, 0], light: "world", maxParticles: 20
@@ -136,7 +165,7 @@ const LashoutDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "snap", bind: "target", height: 0.5,
+                    name: "snap", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: { data: "removed", fallback: 1 } },
                     shape: { kind: "sphere_surface", radius: 0.34 },
@@ -148,17 +177,19 @@ const LashoutDefinition: ParticleDefinition = {
             ]
         },
         rage: {
-            duration: 26,
-            exit: { stop: 10, drain: 16 },
+            // 由服务端 WorldFeedback.onEffect 挂在真正的 boostWindow 上：窗口多长，这圈怒纹就多长，随窗口到期/驱散一起收。
+            duration: 0,
+            exit: { drain: 16 },
             emitters: [
                 {
                     name: "updraft", bind: "source", offset: [0, 0, 0], height: 0.1,
                     particle: "world_combat_core:cobblemon/mood/anger_red",
-                    burst: { count: { data: "count", fallback: 18 } },
+                    burst: { count: { data: "count", fallback: 18 }, at: 0 },
+                    rate: { data: "stages", fallback: 1 },
                     shape: { kind: "ring", radius: 0.34 },
-                    direction: "up", speed: [0.08, 0.3],
-                    lifetime: [8, 16], size: [0.16, 0.03],
-                    color: 0xFF7A4A, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 50
+                    direction: "up", speed: [0.06, 0.22],
+                    lifetime: [10, 20], size: [0.16, 0.03],
+                    color: 0xFF7A4A, alpha: [0.75, 0], alphaMode: "sin", light: "full", bloom: 0.35, maxParticles: 50
                 }
             ]
         },

@@ -1,8 +1,8 @@
 /**
  * 铁头 / ironhead 的出手方式。
  *
- * 核心念头：把头像铁块一样沉下去，向前一小步，贴身从下往上顶实，用整个头的重量把目标掀开——全家最短、
- * 最慢、最重的一记，起手看得见、够不到就白砸，砸上一下能把人从掩体边或队友身边轰走。
+ * 核心念头：把头像铁块一样沉下去，向前一小步，贴身从下往上顶实，用整个头的重量把目标掀开——一次起手偏慢、
+ * 单发很重的贴身解围，起手看得见、够不到就白砸，砸上一下能把人从掩体边或队友身边轰走。
  *
  * 三幕：
  *   起（windup，提交前）：钢铁光泽爬上前额、脚边压出细尘，只播预告。
@@ -38,8 +38,8 @@ namespace PokemonSkills {
         id: "ironhead",
         cooldownParameter: "recharge",
         name: "Iron Head",
-        description: "把头像铁块一样沉下去、短促一步贴身从下往上顶实的一记重击：射程最短、起手最慢，砸中即结算伤害，并依目标的击退抗性把目标掀开（免推的目标只吃伤害），还震懵最久。它靠防御与体重吃饭，可只朝一个方向空顶。",
-        uses: ["贴身被围时把人整个轰开", "把对手砸下高台或砸出据点", "用最久的震懵锁住一个目标"],
+        description: "把头像铁块一样沉下去、短促一步贴身从下往上顶实的一记重击：起手偏慢、上步沉重，砸中即结算伤害，并依目标的击退抗性把目标掀开（免推的目标只吃伤害），震懵较久。它靠防御与体重吃饭，可只朝一个方向空顶。",
+        uses: ["贴身被围时把人整个轰开", "把对手砸下高台或砸出据点", "用震懵锁住一个目标"],
         kind: "aim",
         range: 3.1,
         maxRange: 4.6,
@@ -87,12 +87,13 @@ namespace PokemonSkills {
 
             movementScenes.show(action, "stomp", action.origin(),
                 { moment: "stomp", direction: [direction.x(), direction.y(), direction.z()],
-                    scale: scale, intensity: intensity, stride: Math.max(2, Math.round(length / 0.7)) });
+                    scale: scale, intensity: intensity, stride: Math.max(2, Math.round(length / 0.7)),
+                    reach: Math.round(length * 100) / 100 });
             sound(action, "minecraft:block.anvil.step");
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
-            /** 收势：撞空在尽头刹住；撞墙停在真实方块格，把金属刮擦画在实际接触面上。 */
+            /** 收势：撞空在尽头刹住；撞墙停在真实接触点，把金属刮擦画在实际接触面上。 */
             function stop(current: CombatAction, at: CombatPoint, blocked: boolean): void {
                 const scope = current.world();
                 WorldFeedback.emit(scope, ironheadScene, 1, at,
@@ -141,8 +142,7 @@ namespace PokemonSkills {
                 }
                 travelled += swept.moved;
                 if (hit.blocked()) {
-                    const block = hit.blockPosition();
-                    stop(current, block === null ? origin : block, true);
+                    stop(current, hit.position(), true);
                     return;
                 }
                 if (swept.moved < p("ironhead", "minimumMove", current) || travelled >= length) {

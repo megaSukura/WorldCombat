@@ -15,6 +15,17 @@ function point(x, y, z) {
 const context = vm.createContext({ WorldCombat: { point } });
 vm.runInContext(ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES5 } }).outputText, context);
 const G = context.WorldGeometry, origin = point(0, 0, 0), vertical = { below: 4, above: 1 };
+const blockReceipt={blocked:()=>true}, missReceipt={blocked:()=>false};
+for(const receipt of [blockReceipt,missReceipt,null])assert.equal(G.blockHit({clipBlocks:()=>receipt},origin,point(1,0,0)),receipt===blockReceipt?blockReceipt:null,'only native BLOCK receipts count as a surface');
+const dot3 = (a,b) => a.x()*b.x()+a.y()*b.y()+a.z()*b.z();
+for (const input of [point(0,0,0),point(0,1,0),point(0,-1,0),point(1,2,3),point(0,0,-1)]) {
+  for (const hint of [undefined, input, point(0,0,1)]) {
+    const basis=G.basis(input,point(0,0,1),hint), axes=[basis.forward,basis.right,basis.up];
+    axes.forEach(axis=>assert(Math.abs(axis.length()-1)<1e-9,'frame stays finite and normalized'));
+    for(let i=0;i<3;i++) for(let j=i+1;j<3;j++) assert(Math.abs(dot3(axes[i],axes[j]))<1e-9,'aim plane remains orthogonal, including vertical input');
+    assert(dot3(basis.forward,input.length()>0?input.unit():point(0,0,1))>1-1e-9,'frame preserves actual aim');
+  }
+}
 const regions = [G.sector(origin, point(1,0,0), 3, 90, vertical), G.lane(origin, point(1,0,0), 3, 2, vertical),
   G.box(origin, point(1,0,0), point(2,0,3), vertical), G.ring(origin, 1, 3, vertical),
   G.polygon([point(0,0,0),point(3,0,0),point(0,0,3)], vertical)];

@@ -20,7 +20,7 @@ namespace PokemonSkills {
         id: aircutterId,
         cooldownParameter: "recharge",
         name: "Air Cutter",
-        description: "朝方向或世界点一次张开一片细风刃，横扫该扇区、同时切中多个对手，也可以朝空地空放；起手短、冷却低，容易击中要害。聚刃式更窄更重，广扇式更宽更密。",
+        description: "朝方向或世界点一次水平张开一片细风刃，横扫身前扇区、同时切中多个对手，也可以朝空地空放；起手短、冷却低，容易击中要害。聚刃式更窄更重，广扇式更宽更密。",
         uses: ["一次张开扫过面前一整片对手", "同时切伤挤在扇面里的多个目标", "瞬发轻快，起手窗口里逼对手走位"],
         kind: "aim",
         range: 8,
@@ -33,7 +33,8 @@ namespace PokemonSkills {
         defaults: { focus: false, ai: { maxChase: 10, crowd: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p(aircutterId, "reach", pokemon), geometry: "cone", style: "air", color: 0xDCE9F0,
+            const context=pokemon?{pokemon,skill:skills[aircutterId],detail:{values:config}}:undefined;
+            return { radius: p(aircutterId, "reach", context), geometry: "cone", orientation:"ground", spread:p(aircutterId,"span",context), style: "air", color: 0xDCE9F0,
                 label: config && config.focus === true ? "聚刃空气利刃" : "空气利刃" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -68,7 +69,9 @@ namespace PokemonSkills {
             const origin = self.position();
             const scale = Math.max(0.6, Math.min(2.0, reach / aircutterReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 60));
-            const heading = [direction.x(), direction.y(), direction.z()];
+            // 水平扇面：竖直或零水平输入用已有 flatUnit 安全回退，判定、表现与文字共用同一个朝向。
+            const flat = WorldGeometry.flatUnit(direction, action.direction());
+            const heading = [flat.x(), flat.y(), flat.z()];
             let hits = 0;
 
             sound(action, "cobblemon:move.gust.actor");
@@ -77,7 +80,7 @@ namespace PokemonSkills {
                     shards: shards, scale: scale, intensity: intensity }, 24);
 
             WorldGeometry.selectEnemies(world,
-                WorldGeometry.sector(origin, direction, reach, span, { below: 1.6, above: 3.0 }),
+                WorldGeometry.sector(origin, flat, reach, span, { below: 1.6, above: 3.0 }),
                 function (target, facts) {
                     if (hits >= cap) return;
                     // 墙后的对象不算在扇里：扇面铺开时仍按现有 clear 规则排除被遮挡的对手。
@@ -94,7 +97,7 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, aircutterScene, 1, origin, { moment: "miss", scale: scale }, 18);
                 WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.05, 0)), aircutterMissText, [], 20);
             } else {
-                const mark = origin.plus(WorldCombat.point(direction.x(), 0, direction.z()).unit().scale(reach * 0.55));
+                const mark = origin.plus(flat.scale(reach * 0.55));
                 WorldFeedback.text(world, mark.plus(WorldCombat.point(0, 1.0, 0)), aircutterHitText, [hits], 24);
             }
             sound(action, "minecraft:entity.player.attack.sweep");

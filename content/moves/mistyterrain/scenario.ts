@@ -15,7 +15,7 @@ Smoke.scenario("mistyterrain", function (stage) {
         stage.expect(stage.casts("mistyterrain", caster) > 0, "mistyterrain was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/mistyterrain"), "the grounded caster carried the shared mistyterrain identity");
         stage.after(200, function () {
-            stage.note("薄雾铺在施法者脚下；场上的活体不会陷入主异常（被 CombatStatus.gate 拒绝），受到的龙属性招式伤害减半；开启净化时，活体首次进入本次雾会被洗掉已有异常一次（退出再入不重复）。AI 在己方依赖上异常时避用，只有净化雾要救中异常的队友时才照。本场景的野生对手未主动出手，门禁、龙伤减半与净化的实际命中留给完整装配试玩核对；半径/时长/雾点随特攻/身高/等级变化，净化雾与薄幕各有取舍。", {
+            stage.note("薄雾铺在施法者脚下；只有雾里且贴地的活体获得护体（离地或离场标记立即撤）：不会陷入**有害**状态（被 CombatStatus.gate 拒绝），有益与中性效果照常通过，受到的龙属性招式伤害减半；开启净化时，活体首次进入本次雾会被洗掉已有异常一次（退出再入不重复）。AI 在己方依赖有害异常进攻时避用，只有净化雾要救中异常的队友时才照，落点取施放范围内能罩住最多受害友方的位置。本场景的野生对手未主动出手，门禁、龙伤减半与净化的实际命中留给完整装配试玩核对；半径/时长/雾点随特攻/身高/等级变化，净化雾与薄幕各有取舍。", {
                 casts: stage.casts("mistyterrain", caster), casterHp: Math.round(caster.health() * 10) / 10,
                 poisoned: stage.hasMobEffect(caster, "world_combat:status/poison"), damageTaken: Math.round(stage.damageTo(caster) * 10) / 10
             });

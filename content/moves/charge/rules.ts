@@ -6,6 +6,7 @@ namespace PokemonSkills {
         if (typeof value.radius !== "number" || !isFinite(value.radius) || value.radius <= 0) throw new Error("Invalid charge radius");
         if (typeof value.discharge !== "number" || !isFinite(value.discharge) || value.discharge <= 0) throw new Error("Invalid charge discharge");
         if (typeof value.speed !== "number" || !isFinite(value.speed) || value.speed <= 0) throw new Error("Invalid charge speed");
+        if (!MobEffects.validAnchor(value.anchor)) throw new Error("Invalid charge carrier anchor");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(chargeMark, "start", function () { });
@@ -13,7 +14,11 @@ namespace PokemonSkills {
 
     function chargeMarkOf(world: CombatWorld, actor: CombatActor): any {
         const views = world.effects(actor, chargeMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+        if (!views.length) return null;
+        try {
+            const state = JSON.parse(String(views[0].data()));
+            return state.anchor && MobEffects.matches(world, actor, state.anchor) ? state : null;
+        } catch (error) { return null; }
     }
     function chargeReleaseMark(world: CombatWorld, actor: CombatActor): void {
         const views = world.effects(actor, chargeMark);
@@ -26,7 +31,9 @@ namespace PokemonSkills {
         const world = context.world, source = context.actor;
         const eligible = context.metadata.some(data => String(data.type).toLowerCase() === "electric" && data.category !== "status");
         const mark = chargeMarkOf(world, source);
-        const enabled = eligible && MobEffects.consume(world, source, chargeUp) !== null;
+        // 整招消费契约由共享执行身份兑现：载体在就提交即消费，与是否命中、是否仍有 mark 展示无关。
+        const carrier = MobEffects.read(world, source, chargeUp);
+        const enabled = eligible && carrier !== null && MobEffects.consume(world, source, chargeUp) !== null;
         MoveExecutions.write(world, chargeExecution, { enabled: enabled });
         if (!enabled) return;
         chargeReleaseMark(world, source);
@@ -65,6 +72,8 @@ namespace PokemonSkills {
         if (String(data.id) !== chargeUp) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        // 旧应用被新应用替换时，新应用已经拥有这份电荷；不要拆掉它刚挂上的 mark。
+        if (MobEffects.read(world, actor, chargeUp) !== null) return;
         chargeReleaseMark(world, actor);
         if (String(data.cause) !== "expired") return;
         const body = world.observe(actor);

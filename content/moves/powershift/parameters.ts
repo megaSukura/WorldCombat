@@ -10,7 +10,11 @@
  *   的回合制边界，改成一段可见窗口，让对手能读出交换的起止。
  *
  * 换的是真实数值，不是等级：宝可梦走共享的临时属性层（NativeModifiers.stats，与纹理、特性替换同一机制），
- *   其他战斗者把 NativeEffects.boost 的载体落在原版攻击与护甲属性上——两条路都让「换完的数值」真正参与结算。
+ *   其他战斗者按公开单位 **2 护甲点 = 1 攻击 HP**（A'=Armor/2、Armor'=2*A）用 CombatCopies.equalize 建自有加性层，
+ *   两条路都让「换完的数值」真正参与结算。缺项不拿 0 伪造，原生范围/零乘数不允许时整层回滚。
+ *
+ * 与力量戏法（powertrick）的互斥：两招共用 MobEffect 标签 world_combat:status/attack_defence_inversion。
+ *   本窗内重施、以及任何另一倒转姿态仍在时一律拒绝，**既不刷新也不翻第二遍**；短窗自动回位是它和长姿态（可主动撤）的分工。
  *
  * 数值来源（每个参数读不同的精灵数据／现场事实，分散到不同参数上）：
  *   window    交换窗口：基础 160 刻 ＋ 等级 ×3 ＋ 防御 ×0.4，夹 120..480；配置「维持」×1.8。
@@ -18,8 +22,8 @@
  *   tempo     起手：速度每比 60 快 1 减 0.02 刻，夹 5..12；维持 +3。
  *   aftercast 收招：基础 5 刻 ＋ 碰撞箱高度，夹 5..9。
  *   wait      冷却：基础 80 刻 − 等级 ×0.4；维持 ×1.3、短换 ×0.9，夹 45..110。PP 10 的代价。
- * 配置 hold（维持）双向取舍：开启＝交换窗口 ×1.8，能把转换后的形态用得更久；代价是起手 +3 刻、冷却 ×1.3，
- *   而且这段时间里换不回来。关闭＝短换，出手快、冷却短、随时能换回，但只够应付一下。
+ * 配置 hold（维持）双向取舍：开启＝交换窗口 ×1.8，能把转换后的形态用得更久；代价是起手 +3 刻、冷却 ×1.3。
+ *   关闭＝短换，出手快、冷却短，但只够应付一下。
  */
 namespace PokemonSkills {
     actionParameters.define("powershift", {
@@ -35,7 +39,7 @@ namespace PokemonSkills {
             F.base(160).plus(F.level().times(3)).plus(F.stat("defence").times(0.4))
                 .times(F.when(F.pref("hold", text("worldcombat.skill.powershift.preference.hold")), F.const(1.8), F.const(1)))
                 .clamp(120, 480).round(0),
-            "交换窗口", "交换维持多久；等级与防御越高撑得越久，配置「维持」再 ×1.8。窗口走完自动换回原来的数值。"),
+            "交换窗口", "交换维持多久；等级与防御越高撑得越久，配置「维持」再 ×1.8。窗口走完自动换回原来的数值，窗口内不能刷新或再翻一次。"),
         /** 起手：速度决定倒转多快。 */
         tempo: seconds(
             F.base(8).minus(F.stat("speed").minus(60).times(0.02))
@@ -60,6 +64,7 @@ namespace PokemonSkills {
     ]);
 
     describe("powershift", [
+        { key: "unit", values: [] },
         { key: "description.0", values: ["window"] },
         { key: "hold.on", values: [], when: function (context) { return read(context.detail.values, ["hold"]) === true; } },
         { key: "hold.off", values: [], when: function (context) { return read(context.detail.values, ["hold"]) !== true; } },

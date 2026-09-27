@@ -1,16 +1,17 @@
 /**
  * 爆音波 / boomburst 的出手方式。
  *
- * 核心念头：这是全场最响的一声——施法者先憋住一口气把空气压在身上，再猛地放开，一圈肉眼可见的声压球
+ * 核心念头：这是全场最响的一声——施法者先憋住一口气把空气压在身上，再猛地放开，一圈肉眼可见的声压圈
  * 整圈炸开：身周所有活体（空中地上一起）被轰中并被吹开，越靠近中心声压越密、挨得越重、吹得越远；
  * 爆响留在每个人（包括施法者自己）耳里一阵耳鸣。它不看属性、不看地面，也没有飞行物——声压就是它的形状。
  *
  * 三幕：
  *   蓄（windup，提交前）：空气被压向身体、身周尘点被吸拢的预告；起手可被打断。
- *   爆（burst → hit）：提交后声压球整圈炸开；圈内每个敌人按到中心的距离衰减后各挨一次 `blast`，
+ *   爆（burst → hit）：提交后声压圈整圈炸开；圈内每个敌人按到中心的距离衰减后各挨一次 `blast`，
  *       被沿离中心方向击飞 `shock`（中心的人吹得更远）并被抬起一点；击飞走原生受击位移入口，
  *       抗性、权限、骑乘与事件取消由它处理，被拒绝时画面也不画目标飞出。命中者与自己都挂上耳鸣。
- *   鸣（ringing）：余响在身周荡几圈，只作画面，不再造成伤害。
+ *   鸣（ringing／deaf）：身周先荡几圈余响；被震到的人（含施法者）在耳鸣状态存续期间头上持续可见余响，
+ *       状态被驱散或到期即收。只作画面，不再造成伤害。
  *
  * 配置 `concussive`（爆压式）由 resolve 改时序、由公式改半径与威力：开启＝窄而重、吹得更远。
  */
@@ -104,7 +105,21 @@ namespace PokemonSkills {
                 { moment: "ringing", radius: radius, flow: Math.round(30 + radius * 16), rings: rings }, 40);
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.4, 0)),
                 dealt > 0 ? boomburstHitText : boomburstMissText, dealt > 0 ? [dealt] : [], 26);
+            if (dealt === 0)
+                WorldFeedback.emit(world, boomburstScene, 1, centre, { moment: "miss" }, 22);
             done(action);
         }
+    });
+
+    // 耳鸣存续期间，被震到的人（含施法者）头上持续荡出可见的余响；状态被驱散或到期即收，不留残留。
+    WorldCombat.on("world_combat:move_boomburst/deaf", "world_combat:mob_effect_tick", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== boomburstDeafened) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor) || world.tick() % 8 !== 0) return;
+        const body = world.observe(actor);
+        if (body === null) return;
+        WorldFeedback.keep(world, "boomburst:deaf:" + String(actor.ref()), boomburstScene, 1, body.position(),
+            { moment: "deaf", target: String(actor.ref()) }, 24);
     });
 }

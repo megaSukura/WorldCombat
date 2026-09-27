@@ -14,13 +14,14 @@
 namespace PokemonSkills {
     const disarmingvoiceScene = "world_combat:move_disarmingvoice";
     const disarmingvoiceCharm = "world_combat:disarming_charm";
+    const disarmingvoiceLingerMark = "world_combat:move_disarmingvoice/linger_mark";
     const disarmingvoiceHitText = "world_combat.move.disarmingvoice.text.hit";
     const disarmingvoiceEmptyText = "world_combat.move.disarmingvoice.text.empty";
 
     define({
         id: "disarmingvoice",
         name: "Disarming Voice",
-        description: "一声魅惑的鸣叫充满以身周为心的整块空间，站在声场里的对手避无可避，因此不做随机命中检定；只有真的受伤的对手才会被震到错拍，安抚形态还额外卸掉它们出手的劲并留下魅惑。没有敌人时也能清唱。",
+        description: "一声魅惑的鸣叫充满以身周为心的整块空间，站在声场里的对手避无可避，因此不做随机命中检定，声场也不被墙壁与掩体阻挡；只有真的受伤的对手才会被震到错拍，安抚形态还额外卸掉它们出手的劲并留下魅惑。错拍与卸劲是不会自行恢复的能力等级，只有能力等级被重置或脱离战斗后才归零。没有敌人时也能清唱。",
         uses: ["以自身为心的整圈声场", "同时让一圈对手错拍", "用安抚卸掉一圈对手的劲"],
         kind: "self",
         range: 6,
@@ -77,6 +78,10 @@ namespace PokemonSkills {
                 var charmed = false;
                 if (soothe && charmTicks > 0 && MobEffects.apply(world, target, disarmingvoiceCharm, charmTicks, 0) !== null) {
                     if (soften > 0) NativeEffects.boost(world, target, "atk", -soften);
+                    // 心形表现由真实魅惑载体自己的托管效果拥有：载体被驱散或到期，头顶的心同步收走。
+                    if (world.effects(target, disarmingvoiceLingerMark).length === 0)
+                        world.effect(disarmingvoiceLingerMark, target, JSON.stringify({ notes: notes, intensity: intensity }),
+                            Math.max(1, Math.min(2400, charmTicks)));
                     charmed = true;
                 }
                 hits++;
@@ -93,15 +98,37 @@ namespace PokemonSkills {
         }
     });
 
-    // 魅惑存续期：只要目标还带着本单元的魅惑载体就续播头顶的心，驱散或到期后不再续期，随反馈自然结束。
-    WorldCombat.on("world_combat:move_disarmingvoice/linger", "world_combat:mob_effect_tick", "", function (event) {
+    // 魅惑存续的托管载体：把「目标头顶持续打转的心」绑在真实 status/charmed 载体上，
+    // 自然到期、牛奶／`/effect clear` 提前拿掉都随载体一起停，不再靠独立计时，也不留驱散后的残影。
+    function disarmingvoiceLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        // 每次巡检都重读当前魅惑载体（含刷新后的新应用），时间以最新载体为准，不留失效锚。
+        const carrier = world.mobEffect(target, disarmingvoiceCharm);
+        if (carrier === null) { effect.end(); return; }
+        const mark = JSON.parse(String(effect.state()));
+        WorldFeedback.onEffect(world, effect.id(), "charmed", disarmingvoiceScene, 1, body.position(),
+            { moment: "charmed", target: String(target.ref()), notes: mark.notes, intensity: mark.intensity, tick: 40 });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(disarmingvoiceLingerMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.notes !== "number" || !isFinite(value.notes) || value.notes < 0) throw new Error("Invalid disarming voice linger mark: notes");
+        if (typeof value.intensity !== "number" || !isFinite(value.intensity) || value.intensity <= 0) throw new Error("Invalid disarming voice linger mark: intensity");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(disarmingvoiceLingerMark, "start", disarmingvoiceLingerWatch);
+    WorldCombat.effectHandler(disarmingvoiceLingerMark, "watch", disarmingvoiceLingerWatch);
+    WorldCombat.effectHandler(disarmingvoiceLingerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 魅惑被牛奶／/effect clear 提前拿掉时，立即撤掉托管的心，不等它自己的下一次巡检。
+    WorldCombat.on("world_combat:move_disarmingvoice/linger-release", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== disarmingvoiceCharm) return;
         const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 10 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "disarmingvoice:charm:" + String(actor.ref()), disarmingvoiceScene, 1, body.position(),
-            { moment: "charmed", target: String(actor.ref()), tick: 40 }, 40);
+        if (!world.valid(actor)) return;
+        world.effects(actor, disarmingvoiceLingerMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
     });
 }

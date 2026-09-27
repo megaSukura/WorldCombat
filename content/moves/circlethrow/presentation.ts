@@ -1,11 +1,12 @@
 /**
  * 巴投 / circlethrow 的客户端表现。
  *
- * 一句话：施法者压身、双手拢起土褐色的抓握光，一把扣住贴脸的对手，转身把它从自己头顶抡过去——
- *   对手拖着尘迹划出一道抛物线，重重砸在施法者背后，落地炸开一圈土尘；若半途撞墙，就在挡住的位置压出一圈小尘。
+ * 一句话：施法者压身、在身前拢起土褐色的抓握光，一把扣住贴脸的对手，转身把它从自己头顶抡过去——
+ *   对手拖着尘迹划出一道抛物线，重重砸在施法者背后，落地炸开一圈土尘；若半途撞墙，就在真实接触处压出一圈小尘；
+ *   完全抗搬的目标只在原地挣一下。
  * 色相家族：土褐／摔投橙（0xD89A6A 主体、0x8A5A3A 尘）＋淡白（0xF0E0D0）只给抓握与击点高光；没有第二个色相。
- * 拍子：起（windup 拢手）→ 抓（grip 扣住，只播一次）→ 摔（throw 沿实际位置逐刻更新的抛物尾迹）→
- *   落（land 砸地／bump 受阻压地）→ 空（miss 抓空）。
+ * 拍子：起（windup 身前拢手）→ 抓（grip 扣住，只播一次）→ 摔（throw 沿实际位置逐刻更新的抛物尾迹）→
+ *   落（land 砸地／bump 在真碰处压地／resist 原地挣脱）→ 空（miss 抓空）。
  * 范围：grip 的尘土环是贴身抓取的那一小圈；飞行段由 target 绑定逐刻跟随被摔者的实际位置，落点就在它真实停下的地方。
  * 数：气环与尘环数量由 `data.rings`（物攻派生）驱动；飞行进度用 `data.phase` 让余尘在落地前收细。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -18,7 +19,7 @@ const CircleThrowDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "hands", bind: "source", offset: [0, 0.4, 0.4], height: 0.25,
+                    name: "hands", bind: "point", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/grab",
                     rate: 12, shape: { kind: "sphere", radius: 0.42 },
                     direction: "inward", speed: [0.03, 0.12],
@@ -126,7 +127,7 @@ const CircleThrowDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "press", bind: "target", height: 0.4,
+                    name: "press", bind: "point", offset: [0, 0.4, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
                     burst: { count: 6 }, shape: { kind: "sphere_surface", radius: 0.3 },
                     direction: "outward", speed: [0.05, 0.18], spread: 20,
@@ -134,7 +135,7 @@ const CircleThrowDefinition: ParticleDefinition = {
                     color: 0xE8B68A, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 18
                 },
                 {
-                    name: "flare", bind: "target", height: 0.06,
+                    name: "flare", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "rings", fallback: 10 }, interval: 1, repeats: 2 },
                     shape: { kind: "circle", radius: 0.32, thickness: 0 },
@@ -144,12 +145,35 @@ const CircleThrowDefinition: ParticleDefinition = {
                 }
             ]
         },
+        resist: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "strain", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 5 }, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.03, 0.12], spread: 24,
+                    lifetime: [6, 12], size: [0.2, 0.03], sizeMode: "index",
+                    color: 0xD89A6A, alpha: [0.85, 0], light: "full", maxParticles: 16
+                },
+                {
+                    name: "brace", bind: "target", height: 0.05,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "rings", fallback: 8 } },
+                    shape: { kind: "circle", radius: 0.3, thickness: 0 },
+                    direction: "outward", speed: [0.03, 0.1], spread: 8, gravity: 0.03,
+                    lifetime: [6, 12], size: [0.06, 0.01],
+                    color: 0x8A5A3A, alpha: [0.5, 0], light: "world", maxParticles: 40
+                }
+            ]
+        },
         miss: {
             duration: 16,
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "empty", bind: "source", offset: [0, 0.35, 0.5], height: 0.25,
+                    name: "empty", bind: "point", offset: [0, 0.3, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 12 }, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.03, 0.12], gravity: 0.02,

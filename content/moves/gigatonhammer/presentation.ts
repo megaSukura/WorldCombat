@@ -1,16 +1,19 @@
 /**
  * 巨力锤 / gigatonhammer 的客户端表现。
  *
- * 一句话：施法者连人带锤旋身蓄力，钢色碎屑绕着它越转越密；巨锤抡下先砸中落脚点附近一圈，再沿地面掀起一道
- *   前推的冲击波——过顶式下把地面走廊分三段按真实时刻依次点亮前移，横扫式下绕身扫满一圈；抡完身上留下一层
- *   力竭的标识，说明巨锤还没能重新举起。
+ * 一句话：施法者连人带锤旋身蓄力，巨锤由同一个姿态真实抬高；锤头沿真实弧线下落（过顶式）或沿真实水平弧扫过
+ *   （横扫式），锤头扫到哪就亮到哪；过顶式触地后才从接触点沿真实地表掀起前推的冲击波，按真实路径亮起；抡完
+ *   身上留下一层力竭的标识。
  * 色相家族：冷钢灰（0x9AA4AE、0xC9D4DE、0xE6ECF2）做锤与冲击波，白（0xFFFFFF）只给命中那一抹，暖火星只作细节。
- * 拍子：起 wind（蓄力）→ 砸 slam（近圈锤落）→ 波 wave（三段地纹前移）/ wave-hit（被波命中）→ 击 hit（主目标）→ 收 mark/spent。
- * 范围：slam 的靠近击用 `data.radius` 的一圈；wave 的每一段按 `data.path` 四点画出（与判定同一组顶点），`data.scale`
- *   让画面尺寸跟着机制范围走，`data.front` 给出这一段走到了三段的第几段。
- * 运动：wind 的碎屑绕身快速旋转、wave 的地纹由内向外按真实时刻推进、spent 的尘贴着脚边慢慢升起。
+ * 拍子：起 wind/raise（蓄力抬锤）→ 挥 swing（当前真实锤头段/子弧）→ 砸 slam（触地）→ 波 wave（真实地表分三段）→
+ *   击 hit / wave-hit → 收 mark/spent。
+ * 范围：slam 的靠近击用 `data.radius` 的一圈；wave 的每一段按 `data.path` 四点画出（与判定同一组真实地表顶点）；
+ *   `data.scale` 让画面尺寸跟着机制范围走，`data.front` 给出这一段走到了三段的第几段。
+ * 运动：wind 的碎屑绕身快速旋转、swing 的锤头段由服务端每刻给出真实端点、wave 的地纹沿真实地表按真实时刻推进。
  * 数：`data.dust`（物攻派生）绑定发射量，`data.intensity`（锤击威力派生）抬高亮度，`data.sweep` 区分两种形态，
  *   `data.linger` 绑定禁复标记的时长。
+ * 锤身：`world_combat:move_gigatonhammer/hammer` 由自定义场景逐帧画出线框锤头 + 锤柄；蓄力按 serverTick 从
+ *   `data.start`/`data.duration` 抬起，挥动时每刻读服务端给出的真实 `data.head`，不假借环状粒子冒充锤身。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const GigatonhammerDefinition: ParticleDefinition = {
@@ -35,6 +38,28 @@ const GigatonhammerDefinition: ParticleDefinition = {
                     direction: "shape", speed: [0.2, 0.5], spread: 10, spin: 8,
                     lifetime: [6, 11], size: [0.13, 0.03],
                     color: 0xE6ECF2, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 60
+                }
+            ]
+        },
+        swing: {
+            duration: 14,
+            exit: { stop: 5, drain: 10 },
+            emitters: [
+                {
+                    name: "trail", bind: "path", fit: "world", offset: [0, 0, 0],
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    shape: { kind: "polyline" },
+                    rate: 40, direction: "shape", speed: [0.05, 0.18], spread: 12,
+                    lifetime: [5, 10], size: [0.22, 0.03], sizeMode: "index",
+                    color: 0xE6ECF2, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 120
+                },
+                {
+                    name: "motes", bind: "point", offset: [0, 0.02, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
+                    burst: { count: { data: "dust", fallback: 10 } },
+                    shape: { kind: "sphere", radius: 0.26 }, direction: "outward", speed: [0.06, 0.2], spread: 24,
+                    lifetime: [6, 12], size: [0.12, 0.02],
+                    color: 0xFFFFFF, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 60
                 }
             ]
         },
@@ -72,26 +97,18 @@ const GigatonhammerDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "lane", bind: "path", shape: { kind: "polygon" }, fit: "none",
+                    name: "lane", bind: "path", shape: { kind: "polygon" }, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     rate: 80, direction: "outward", speed: [0.1, 0.4], spread: 10, gravity: 0.04, drag: 0.93,
                     lifetime: [8, 15], size: [0.18, 0.03], sizeMode: "index",
                     color: 0xB9A88C, alpha: [0.6, 0], light: "world", maxParticles: 140
                 },
                 {
-                    name: "laneSteel", bind: "path", shape: { kind: "polygon" }, fit: "none",
+                    name: "laneSteel", bind: "path", shape: { kind: "polygon" }, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
                     rate: 50, direction: "outward", speed: [0.14, 0.5], spread: 12,
                     lifetime: [7, 13], size: [0.14, 0.03], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 110
-                },
-                {
-                    name: "edge", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    rate: 24, shape: { kind: "ring", radius: 0.6, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.14, 0.44], drag: 0.93,
-                    lifetime: [8, 14], size: [0.4, 0.1], sizeMode: "index",
-                    color: 0xC9D4DE, alpha: [0.7, 0], light: "world", maxParticles: 70
                 }
             ]
         },
@@ -179,3 +196,54 @@ const GigatonhammerDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_gigatonhammer", 1, GigatonhammerDefinition);
+
+/**
+ * 锤身本体：线框锤头 + 锤柄，由服务端姿态驱动。蓄力（raise）读 start/duration 把锤从脚下抬起并旋转；
+ * 挥动（swing）每刻读服务端给出的真实 root/head。固定几何、无粒子生灭、无额外实体。
+ */
+const GigatonhammerHammerScene = "world_combat:move_gigatonhammer/hammer";
+function gigatonhammerNumber(value: any, fallback: number): number { return typeof value === "number" && isFinite(value) ? value : fallback; }
+function gigatonhammerVector(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+
+WorldCombatClient.scene(GigatonhammerHammerScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const root = gigatonhammerVector(data.root);
+    if (root === null) return;
+    const scale = Math.max(0.5, Math.min(2.4, gigatonhammerNumber(data.scale, 1)));
+    const sweep = data.sweep === 1 || data.sweep === true;
+    let head = gigatonhammerVector(data.head);
+    if (head === null) {
+        // 蓄力：按真实进度把锤从脚边抬到过顶，并随进度转起来。
+        const start = gigatonhammerNumber(data.start, frame.serverTick());
+        const duration = Math.max(1, gigatonhammerNumber(data.duration, 12));
+        const progress = Math.max(0, Math.min(1, (frame.serverTick() - start) / duration));
+        const angle = progress * Math.PI * 2;
+        const length = (0.6 + 1.5 * progress) * scale;
+        head = [root[0] + Math.cos(angle) * 0.35 * scale, root[1] + length, root[2] + Math.sin(angle) * 0.35 * scale];
+    }
+    // 锤柄：从身体中心到锤头。
+    const handle = (sweep ? 230 : 200) << 24 | 0xC9D4DE;
+    frame.line(root[0], root[1], root[2], head[0], head[1], head[2], handle | 0);
+    // 锤头：以 head 为中心的线框方块，尺寸随 scale。
+    const s = gigatonhammerNumber(data.headRadius, .45) / Math.sqrt(3);
+    const cx = head[0], cy = head[1], cz = head[2];
+    const corners = [
+        [cx - s, cy - s, cz - s], [cx + s, cy - s, cz - s], [cx + s, cy - s, cz + s], [cx - s, cy - s, cz + s],
+        [cx - s, cy + s, cz - s], [cx + s, cy + s, cz - s], [cx + s, cy + s, cz + s], [cx - s, cy + s, cz + s]
+    ];
+    const color = (245 << 24 | 0xE6ECF2) | 0;
+    const edges = [[0, 1], [1, 2], [2, 3], [3, 0], [4, 5], [5, 6], [6, 7], [7, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
+    for (let i = 0; i < edges.length; i++) {
+        const a = corners[edges[i][0]], b = corners[edges[i][1]];
+        frame.line(a[0], a[1], a[2], b[0], b[1], b[2], color);
+    }
+});

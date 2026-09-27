@@ -4,8 +4,8 @@
  * 场面：只会火焰牙的黑鲁加（houndoom，L40，原生学习者）对 5 格外的卡比兽（snorlax，L50，只会跃起）；
  * 平地、白天晴天。开战后 AI 只有这一招可用，必须自己走近到短咬距离再合牙。
  * 必然事实：本招被提交过；目标受到过咬合伤害。
- * 是否点着（scorchChance，走原生免疫）、烧多久、是否咬懵、空咬还是咬中、暴击，都是概率与站位结果，
- * 写进 note 供读轨迹判断。
+ * 是否点着（scorchChance，走原生免疫）、烧多久、是否咬懵（先经 CombatStatus 的 flinch 允许判定）、
+ * 空咬还是咬中、暴击，都是概率与站位结果，写进 note 供读轨迹判断。合牙几何与 miss 落点属表现，不在此断言。
  */
 Smoke.scenario("firefang", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");

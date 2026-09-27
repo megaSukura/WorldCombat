@@ -19,7 +19,7 @@
   "worldcombat.skill.snatch.preference.patient": "探手方式",
   "worldcombat.skill.snatch.preference.patient.help": "屏息：张手时长 ×1.5，起手 +3 刻、冷却 ×1.2，用来等一个慢一点的布置；急取：起手 −2 刻、冷却 ×0.85，张手时长 ×0.9，用来抢一拍。",
   "worldcombat.skill.snatch.preference.ai.maxChase": "考虑距离",
-  "worldcombat.skill.snatch.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才探手；调小只在贴身时夺，调大愿意追出去等着抢。",
+  "worldcombat.skill.snatch.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才探手；实际探手距离是本招自己算出的上限，这个值再收紧时只在更近处夺，调大则愿意追到射程边缘等着抢。",
   "worldcombat.skill.snatch.preference.ai.opening": "出手时机",
   "worldcombat.skill.snatch.preference.ai.opening.help": "等它要加东西：已知配有可抢招式或近期出现真实有益状态时探手；随时：按用户偏好提前守候。",
   "worldcombat.skill.snatch.preference.ai.opening.setup": "等它要加东西",

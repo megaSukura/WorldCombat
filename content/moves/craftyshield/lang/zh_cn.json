@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.craftyshield.summary": "织起一片戏法符阵，替自己与身边的队友把变化招式整条拨开；符阵由有限的法印撑起，拨掉几条就散，伤害招式直接穿阵而过。",
+  "worldcombat.skill.craftyshield.summary": "织起一片戏法符阵，替自己与身边的队友挡下敌方的变化招式，以及有真实来源的有害状态；符阵由有限的法印撑起，每挡下一条就少一枚，用尽或超时即散，伤害招式直接穿阵而过。",
   "worldcombat.skill.craftyshield.use.0": "挡下成片铺来的异常与弱化招式",
   "worldcombat.skill.craftyshield.use.1": "在对手的挑衅、封锁落下前先织阵",
   "worldcombat.skill.craftyshield.use.2": "护住正要进场的队友不被变化招式拿捏",
-  "worldcombat.skill.craftyshield.description.0": "符阵只拨敌方的变化招式，伤害招式直接穿过；每个被罩住的人各能挡下 %1$s 条，整条拨开，每挡一条耗掉一条，用尽即收，否则最多撑约 %2$s 秒。",
+  "worldcombat.skill.craftyshield.description.0": "符阵只拨敌方的变化招式与有真实来源的有害状态，伤害招式直接穿过；每个被罩住的人各能挡下 %1$s 条，整条拨开，每挡一条耗掉一条，用尽即收，否则最多撑约 %2$s 秒。余量不足、或同刻压来更多时，超出余量的那一手会直接落下。",
   "worldcombat.skill.craftyshield.description.1": "施放那一刻，符阵罩住自己与半径 %1$s 格内的队友；之后进圈的人不再被覆盖。",
   "worldcombat.skill.craftyshield.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.craftyshield.weave.fine": "细纹：拨挡次数 ×1.3、时长 ×1.15、半径 ×0.9，代价是起手 +2 刻、冷却 ×1.1——多拨几条、罩得紧。",

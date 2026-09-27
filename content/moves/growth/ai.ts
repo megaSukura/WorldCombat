@@ -2,8 +2,9 @@
  * 生长 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：附近有威胁、还在 ai.maxChase 以内时，先长一轮再打；有交战需求才准备。
- * 什么时候最想出手：站在阳光下（context.facts.sunlight ≥ 0.6）时 priority 抬到 90 抢在共享顺序前——
- *   阳光让双攻各多长一级，值得先占这个窗口；阴影里就退回普通次序。
+ * 什么时候最想出手：被威胁直接攻击或刚挨打（战斗紧迫）时先抢这一拍；除此之外站在阳光下
+ *   （context.facts.sunlight ≥ 0.6）时 priority 抬到 90 抢在共享顺序前——阳光让双攻各多长一级；
+ *   附近没有容纳更大身体的空间时降低权重，避免在被顶住的窄处浪费这一轮；阴影里退回普通次序。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
  * 放完之后：双攻抬起（阳光下更高），伙伴交回共享交战计划。
  */
@@ -14,6 +15,20 @@ namespace CompanionBehavior {
     function growthSunlit(context: WorldBehavior.Context): boolean {
         const value = context.facts.sunlight;
         return typeof value === "number" && value >= 0.6;
+    }
+    /** Whether the actor can actually take the body growth this cast would ask for. */
+    function growthRoom(context: WorldBehavior.Context, capability: WorldBehavior.Capability): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context), actor = world.actor(self.ref);
+        const body = actor === null ? null : world.observe(actor);
+        if (body === null || actor === null) return true;
+        let gain = 0;
+        try {
+            gain = PokemonSkills.p("growth", "bodyGain", { world: world, actor: actor,
+                skill: PokemonSkills.skills.growth, detail: { values: capability.data.config } });
+        } catch (error) { return true; }
+        const factor = 1 + Math.max(0, gain);
+        const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+        return world.freeSpace(feet, body.width() * factor, body.height() * factor);
     }
 
     registerUse("growth", {
@@ -32,6 +47,10 @@ namespace CompanionBehavior {
         priority: function (context, capability, _target) {
             const threat = growthThreat(context);
             if (!threat) return 0;
+            const self = source(context);
+            const urgent = threat.attacking === self.ref || self.hurtAgo < 40;
+            if (urgent) return 75;
+            if (!growthRoom(context, capability)) return 30;
             if (growthSunlit(context)) return ai<boolean>(capability, "waitForSun", true) ? 90 : 50;
             return ai<boolean>(capability, "shadeGrowth", false) ? 0 : 45;
         }

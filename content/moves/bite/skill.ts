@@ -7,8 +7,9 @@
  * 两幕：
  *   起（windup，提交前）：压低身子、口边泛起暗色牙光，只播预告表现。
  *   咬（pounce → bite / whiff）：提交后沿瞄准方向逐刻推进；trace 撞上活体即结算 fang 接触咬合、
- *       把目标朝自己拽近 drag 格、按 flinchChance 掷畏缩；撞空则扑到尽头刹住。
- *   果（hit / miss / flinch）：命中浮字与暗色迸溅，畏缩的浮“咬懵”并按共享身份挂上本单元效果。
+ *       把目标朝自己**走原生受击位移**（`hitDisplace`）拽近最多 drag 格、按 flinchChance 掷畏缩；撞空则扑到尽头刹住。
+ *       抗推目标只吃伤害、不被硬拽，回执的实际距离同时决定拽回画面铺多远。
+ *   果（hit / miss / flinch）：牙影在真实接触点从上下两侧合拢、暗色迸溅；畏缩的浮“咬懵”并按共享身份挂上本单元效果。
  *
  * 与同族分开：头锤把人顶开、意念头锤会拐弯、虫咬与精神之牙咬的是树果与屏障；
  * 只有咬住把目标拽回身前——玩家凭“被咬的人反而更贴近对手”把它认出来。
@@ -20,11 +21,21 @@
  */
 namespace PokemonSkills {
     const biteScene = "world_combat:move_bite";
+    const biteJawScene = "world_combat:move_bite_jaws";
     const biteFlinchEffect = "world_combat:bite_flinch";
     const biteHitText = "world_combat.move.bite.text.hit";
     const biteDragText = "world_combat.move.bite.text.drag";
     const biteFlinchText = "world_combat.move.bite.text.flinch";
     const biteMissText = "world_combat.move.bite.text.miss";
+
+    /** 施法者真实的嘴前一点：按咬合方向从头部向前推，牙影与拽回都朝这个方向收束。 */
+    function biteMouth(world: CombatWorld, actor: CombatActor, direction: CombatPoint): CombatPoint {
+        const body = world.observe(actor);
+        if (body === null) return WorldCombat.point(0, 0, 0);
+        const unit = direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
+        const head = body.position().plus(WorldCombat.point(0, Math.max(0.35, body.height() * 0.45), 0));
+        return head.plus(unit.scale(Math.max(0.28, body.width() * 0.5 + 0.12)));
+    }
 
     function biteFlinch(world: CombatWorld, target: CombatActor, ticks: number): boolean {
         if (MobEffects.apply(world, target, biteFlinchEffect, ticks, 0) === null) return false;
@@ -70,6 +81,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(biteScene);
+            const jaws = WorldFeedback.actionScenes(biteJawScene);
             const world = action.world();
             const length = p("bite", "reach", action);
             const speed = p("bite", "lunge", action);
@@ -83,10 +95,14 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.0, power / 62));
             let travelled = 0, settled = false;
 
-            movementScenes.show(action, "pounce", action.origin(), { moment: "pounce", scale: scale, intensity: intensity, drag: Math.round(drag * 100) / 100 });
+            movementScenes.show(action, "pounce", action.origin(),
+                { moment: "pounce", scale: scale, intensity: intensity, drag: Math.round(drag * 100) / 100,
+                    direction: [direction.x(), direction.y(), direction.z()] });
             sound(action, "minecraft:entity.fox.bite");
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
+            function finish(current: CombatAction): void {
+                if (!settled) { settled = true; jaws.stop(current); movementScenes.finish(current, done); }
+            }
 
             function whiff(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
@@ -112,16 +128,24 @@ namespace PokemonSkills {
                         { moment: "bite", target: target ? String(target.ref()) : "", scale: scale, intensity: intensity,
                             drag: Math.round(drag * 100) / 100, morsels: Math.max(10, Math.round(power * 0.2)) }, 26);
                     if (landed && target !== null && scope.valid(target)) {
-                        // 獠牙钩住皮肉：用接触瞬间目标至嘴边的真实方向拽近，画面与实际位移同向。
+                        // 牙影在真实接触点从上下两侧合拢，方向取自本招实际 aim；牙尖落在接触点那一格。
+                        const mouth = biteMouth(scope, current.actor(), direction);
+                        jaws.show(current, "jaws", at,
+                            { moment: "jaws", from: [mouth.x(), mouth.y(), mouth.z()],
+                                contact: [at.x(), at.y(), at.z()],
+                                direction: [direction.x(), direction.y(), direction.z()],
+                                scale: scale, start: scope.tick() });
+                        // 獠牙钩住皮肉：用接触瞬间目标至嘴边的真实方向拽近，走原生受击位移，抗推与碰撞决定实际距离。
                         const pull = current.origin().minus(at);
                         const pullDirection = pull.length() < 0.05 ? direction.scale(-1) : pull.unit();
-                        const dragged = scope.displace(target, pullDirection.scale(drag));
+                        const dragged = scope.hitDisplace(target, pullDirection.scale(drag));
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), biteHitText, [], 22);
-                        // 免位移目标只显示咬伤，不播放飞退画面。
+                        // 免位移目标只显示咬伤，不播放飞退画面；拽回图按实际回执的距离铺。
                         if (dragged > 0.05) {
+                            const caster = current.origin();
                             WorldFeedback.emit(scope, biteScene, 1, at,
-                                { moment: "drag", direction: [pullDirection.x(), pullDirection.y(), pullDirection.z()],
-                                    drag: Math.max(4, Math.round(drag * 8)) }, 18);
+                                { moment: "drag", path: [[at.x(), at.y(), at.z()], [caster.x(), caster.y(), caster.z()]],
+                                    drag: Math.max(4, Math.round(dragged * 8)) }, 18);
                             WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), biteDragText, [Math.round(dragged * 10) / 10], 22);
                         }
                         sound(current, "cobblemon:impact.dark");

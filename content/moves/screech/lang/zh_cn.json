@@ -3,7 +3,7 @@
   "worldcombat.skill.screech.use.0": "把排成一线冲上来的敌人依次剥掉防御",
   "worldcombat.skill.screech.use.1": "隔着矮墙压住正对方向的物理输出",
   "worldcombat.skill.screech.use.2": "在窄道、门口把来犯的敌人整排削弱",
-  "worldcombat.skill.screech.description.0": "被前沿扫到的每个敌人物防下降 %1$s 级，并带上约 %2$s 的耳鸣；同一个人只降一次，耳鸣本身不改变属性或行动，物防下降也不随耳鸣结束而恢复，按常规能力等级保留。",
+  "worldcombat.skill.screech.description.0": "被前沿薄片真正扫到的每个敌人物防实际下降 %1$s 级（已到下限或免疫时不再下降、也不报虚假降幅），并挂上约 %2$s 的耳鸣身份；同一个人只扫一次。耳鸣只表示耳朵嗡响，不改变属性或行动；物防下降是普通能力等级，不随耳鸣结束而恢复。",
   "worldcombat.skill.screech.description.1": "声浪沿正前方铺出 %1$s 格、两侧各宽 %2$s 格，前沿用约 %3$s 扫完全程；掩体挡不住，站得太近的人先被扫到，远处的人随后才被扫到。",
   "worldcombat.skill.screech.description.2": "开嗓 %1$s，冷却 %2$s。",
   "worldcombat.skill.screech.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -25,6 +25,7 @@
   "worldcombat.skill.screech.preference.ai.leaveStation": "驻守时离位",
   "worldcombat.skill.screech.preference.ai.leaveStation.help": "开启后，收到「驻守」指令时也会离开原位去吼。",
   "world_combat.move.screech.text.hit": "刺耳声扎中 %1$s 个目标（物防 -%2$s）",
+  "world_combat.move.screech.text.deaf": "刺耳声扫到 %1$s 个目标（物防已到底）",
   "world_combat.move.screech.text.miss": "刺耳声扫空了",
   "effect.world_combat.screech_ringing": "耳鸣"
 }

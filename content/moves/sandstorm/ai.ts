@@ -16,7 +16,7 @@ namespace CompanionBehavior {
     const sandstormAdvance = PokemonSkills.flag("ai.advance", "把沙幕压向对手");
     sandstormAdvance.help = "开启后把沙幕扬在自己与威胁之间、更靠威胁的一侧，让风向压进敌人走廊；关闭则扬在脚下先护住自己。";
     const sandstormAvoid = PokemonSkills.flag("ai.avoidAllies", "避开顺风的友军");
-    sandstormAvoid.help = "开启后，若沙幕顺风走廊里已有非岩石／地面／钢属性的友军就不在这里起风；关闭则也把沙幕盖到他们头上。";
+    sandstormAvoid.help = "开启后，若沙幕的真实圆场里、下风侧且上风没有掩体挡住的非岩石／地面／钢属性友军会挨磨，就不在这里起风；关闭则也把沙幕盖到他们头上。";
 
     PokemonSkills.addPreferences("sandstorm", { ai: { maxChase: 14, advance: true, avoidAllies: true, leaveStation: false } },
         [sandstormChase, sandstormAdvance, sandstormAvoid, PokemonSkills.flag("ai.leaveStation", "离开驻守点")]);
@@ -32,11 +32,21 @@ namespace CompanionBehavior {
         for (let i = 0; i < areas.length; i++) if (distance(areas[i].position, self.point) <= areas[i].radius) return true;
         return false;
     }
-    function sandstormCrowd(context: WorldBehavior.Context): number {
+    function sandstormCrowd(context: WorldBehavior.Context, radius: number): number {
         const self = source(context);
         return (context.facts.nearby as Entity[]).filter(function (other) {
-            return other.health > 0 && other.visible && !other.friendly && distance(other.point, self.point) <= 16;
+            return other.health > 0 && other.visible && !other.friendly && distance(other.point, self.point) <= radius;
         }).length;
+    }
+
+    /** 这一次实际会张开的沙幕半径：体型、攻击与磨法系数一起算，站位与收益评估都用它。 */
+    function sandstormRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        const raw = PokemonSkills.p("sandstorm", "stormRadius", {
+            world: world, actor: world.source(), skill: PokemonSkills.skills["sandstorm"],
+            detail: { values: item.data.config }
+        });
+        return Math.max(6, Math.min(16, raw));
     }
 
     /** 落点与风向：advance 时把落点推到自己与威胁之间、更靠威胁的一侧；风向始终取朝威胁那一头。 */
@@ -63,18 +73,25 @@ namespace CompanionBehavior {
         return !(types.indexOf("rock") >= 0 || types.indexOf("ground") >= 0 || types.indexOf("steel") >= 0);
     }
 
-    /** 落点顺风走廊（下风向、横向 16 格内）里是否已有非免疫友军。 */
+    /** 落点真实的沙幕圆场（不是 16 格矩形）里、下风侧且上风无掩体的非免疫友军，才算会被磨到。 */
     function sandstormAllyAtRisk(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const place = sandstormPlacement(context, item, threat);
+        const world = CompanionBehavior.world(context);
+        const radius = sandstormRadius(context, item);
+        const centre = CompanionBehavior.point(place.point.point);
+        const upwind = WorldCombat.point(place.wind[0], 0, place.wind[2]);
         const nearby = (context.facts.nearby as Entity[]) || [];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (!other.friendly || other.health <= 0) continue;
             if (!sandstormAllyExposed(context, other)) continue;
-            const dx = other.point[0] - place.point.point[0], dz = other.point[2] - place.point.point[2];
-            const along = dx * place.wind[0] + dz * place.wind[2];
-            const across = Math.abs(-place.wind[2] * dx + place.wind[0] * dz);
-            if (along > -2 && along <= 16 && across <= 16) return true;
+            const at = CompanionBehavior.point(other.point);
+            const dx = at.x() - centre.x(), dz = at.z() - centre.z();
+            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+            if (dx * place.wind[0] + dz * place.wind[2] < 0) continue;
+            // 上风侧已有实心掩体挡住的友军不受磨蚀，不算风险。
+            if (WorldGeometry.blockHit(world, at, at.minus(upwind.scale(radius + 1))) !== null) continue;
+            return true;
         }
         return false;
     }
@@ -91,7 +108,7 @@ namespace CompanionBehavior {
     registerUse("sandstorm", {
         protocols: ["world_combat:prepare"],
         reach: function (_context, item) { return item.data.range; },
-        priority: function (context) { return sandstormCrowd(context) >= 2 ? 62 : 46; },
+        priority: function (context, item) { return sandstormCrowd(context, sandstormRadius(context, item)) >= 2 ? 62 : 46; },
         available: function (context, item, _purpose, _target) { return sandstormWants(context, item, context.senses["world_combat:threat"]); }
     });
     registry.goal({ id: "world_combat:move_sandstorm/goal", propose: function (context) {

@@ -17,7 +17,8 @@
   "worldcombat.skill.morningsun.preference.ai.healBelow": "回复阈值",
   "worldcombat.skill.morningsun.preference.ai.healBelow.help": "自身生命低于该比例时才把晨光排进恢复计划；调低更倾向硬撑，调高则一掉血就迎候晨光。",
   "worldcombat.skill.morningsun.preference.ai.waitForSky": "等晨光",
-  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "开启：只在晨光可及（白天晴空或共享烈日）时出手，夜里与阴雨把这招留着（那时回复少、也没有加速）；生命跌到回复阈值一半以下时先取保底回复，不为等最强晨光错过窗口。关闭：受伤就照用。",
+  "worldcombat.skill.morningsun.preference.ai.waitForSky.help": "开启：只在晨光可及（白天晴空或共享烈日）时出手，不在光里时先走向附近可达的露天光斑；实在找不到才留在原地等（夜里与阴雨回复少、也没有加速）；生命跌到回复阈值一半以下时先取保底回复，不为等最强晨光错过窗口。关闭：受伤就照用。",
   "world_combat.move.morningsun.text.dawn": "晨光普照",
-  "world_combat.move.morningsun.text.dim": "晨光微弱"
+  "world_combat.move.morningsun.text.dim": "晨光微弱",
+  "world_combat.move.morningsun.text.vigor": "晨间振作（速度提升）"
 }

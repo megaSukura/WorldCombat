@@ -5,10 +5,10 @@
  *   浪墙上翻、泡沫四溅，被扫到的人各自炸开水花、被推着走或被拉近并被浇透。
  * 色相家族：水蓝的一族（0x4FB6E8／0x8FD6F5 为主体，0xE8F8FF 只做浪头高光，水汽用中性灰）。
  * 拍子：起（gather 兜水）→ 涌（surge 潮头逐格推进、hit 拍中、douse 浇熄）→ 退（recede 湿痕）。
- * 范围：surge 的地面环按服务端逐步刷新的 `data.radius`（潮头当前半径）画出，圈到哪就是会扫到哪；
- *   推涌式的半径递增、回卷式递减，泡沫流向与实际位移方向一致，最外圈不会提前收画。
- * 数：`data.volume`（体重派生的水量）决定浪花密度，`data.scale`（潮头距离派生）决定粒子尺度，
- *   `data.flow`（外推浪花）与 `data.inward`（回卷内拉）分别驱动两式的流向——画面里的数与机制里的数一致。
+ * 范围：surge 的地面环按真实世界块结算（fit:world），`data.radius` 就是潮头当前半径，圈到哪就是会扫到哪；
+ *   推涌式的半径递增、回卷式递减，最外圈不会提前收画。
+ * 数：`data.volume`（体重派生的水量）与 `data.flow` 决定浪花密度，`data.scale`（潮头距离派生）只放大粒子尺寸；
+ *   `data.outward`（外推浪花）与 `data.inward`（回卷内拉）分别驱动两式的流向——回卷式主水沿半径向内收，只留少量外溅。
  */
 const WaterspoutDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -40,7 +40,7 @@ const WaterspoutDefinition: ParticleDefinition = {
             exit: { stop: 200, drain: 12 },
             emitters: [
                 {
-                    name: "wall", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
+                    name: "wall", bind: "point", fit: "world", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
                     rate: { data: "flow", fallback: 60 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
                     direction: "up", speed: [0.1, 0.34], spread: 16,
@@ -48,23 +48,39 @@ const WaterspoutDefinition: ParticleDefinition = {
                     color: 0x8FD6F5, alpha: [0.8, 0], light: "full", bloom: 0.2, maxParticles: 160
                 },
                 {
-                    name: "crest", bind: "point", fit: "none", offset: [0, 0.08, 0], height: 0,
+                    name: "crest_out", bind: "point", fit: "world", offset: [0, 0.08, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    rate: { data: "flow", fallback: 60 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
+                    rate: { data: "outward", fallback: 60 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
                     direction: "outward", speed: [0.08, 0.3], spread: 22,
                     lifetime: [8, 15], size: [0.16, 0.04],
                     color: 0x6FC6E8, alpha: [0.6, 0], light: "world", maxParticles: 180
                 },
                 {
-                    name: "foam", bind: "point", fit: "none", offset: [0, 0.2, 0], height: 0,
+                    name: "crest_in", bind: "point", fit: "world", offset: [0, 0.08, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    rate: { data: "inward", fallback: 0 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
+                    direction: "inward", speed: [0.08, 0.3], spread: 22,
+                    lifetime: [8, 15], size: [0.16, 0.04],
+                    color: 0x6FC6E8, alpha: [0.6, 0], light: "world", maxParticles: 180
+                },
+                {
+                    name: "foam_out", bind: "point", fit: "world", offset: [0, 0.2, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
-                    rate: { data: "volume", fallback: 30 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
+                    rate: { data: "outward", fallback: 30 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
                     direction: "outward", speed: [0.12, 0.38], spread: 30, gravity: 0.05, drag: 0.94,
                     lifetime: [10, 20], size: [0.08, 0.02],
                     color: 0xBFE8FA, alpha: [0.7, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "undertow_pull", bind: "point", fit: "none", offset: [0, 0.12, 0], height: 0,
+                    name: "foam_in", bind: "point", fit: "world", offset: [0, 0.2, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
+                    rate: { data: "inward", fallback: 0 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
+                    direction: "inward", speed: [0.12, 0.38], spread: 30, gravity: 0.05, drag: 0.94,
+                    lifetime: [10, 20], size: [0.08, 0.02],
+                    color: 0xBFE8FA, alpha: [0.7, 0], light: "full", maxParticles: 120
+                },
+                {
+                    name: "undertow_pull", bind: "point", fit: "world", offset: [0, 0.12, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
                     rate: { data: "inward", fallback: 0 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1 } },
                     direction: "inward", speed: [0.12, 0.4], spread: 18,
@@ -126,7 +142,7 @@ const WaterspoutDefinition: ParticleDefinition = {
             exit: { drain: 20 },
             emitters: [
                 {
-                    name: "wet_ground", bind: "point", fit: "none", offset: [0, 0.04, 0], height: 0,
+                    name: "wet_ground", bind: "point", fit: "world", offset: [0, 0.04, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
                     burst: { count: 1, at: 1 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 3.2 } },
@@ -135,7 +151,7 @@ const WaterspoutDefinition: ParticleDefinition = {
                     color: 0x8FD6F5, alpha: [0.35, 0], light: "world", maxParticles: 4
                 },
                 {
-                    name: "residue", bind: "point", fit: "none", offset: [0, 0.06, 0], height: 0,
+                    name: "residue", bind: "point", fit: "world", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     burst: { count: { data: "volume", fallback: 20 }, at: 1 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 3.2 } },

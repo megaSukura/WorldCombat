@@ -43,8 +43,9 @@ namespace PokemonSkills {
     export const beakblastSearText = "world_combat.move.beakblast.text.sear";
     export const beakblastMissText = "world_combat.move.beakblast.text.miss";
 
-    /** 一次来袭是否算「用身体碰到」：招式伤害带 contact；原版近战没有作者类别，由「造成者就是直接命中者」判定。 */
+    /** 一次来袭是否算「用身体碰到」：读共享伤害语义的 contact，排除本反应自身的间接／残余伤害。 */
     function beakblastContact(data: any): boolean {
+        if (data.indirect === true || data.kind === "residual" || data.environment === true) return false;
         return DamageSemantics.read(data).contact;
     }
 
@@ -72,7 +73,6 @@ namespace PokemonSkills {
         if (!CombatStatus.has(world, victim, "beakblast")) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.amount > 0)) return;
-        if (String(data.cause || "").indexOf("world_combat") === 0) return;
         if (!beakblastContact(data)) return;
         const from = world.observe(attacker), at = world.observe(victim);
         if (from === null || at === null) return;
@@ -83,7 +83,7 @@ namespace PokemonSkills {
         const sparks = mark !== null ? Math.round(mark.sparks) : 14;
         const burned = CombatStatus.inflict(world, attacker, "burn", burnTicks);
         WorldFeedback.emit(world, beakblastScene, 1, from.position(),
-            { moment: "sear", target: String(victim.ref()), sparks: sparks }, 30);
+            { moment: "sear", target: String(attacker.ref()), sparks: sparks }, 30);
         if (burned) WorldFeedback.text(world, from.position().plus(WorldCombat.point(0, 1.3, 0)), beakblastSearText, [], 30);
     });
 

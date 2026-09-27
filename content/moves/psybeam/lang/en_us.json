@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.psybeam.summary": "Fire a phantom ray that homes in on its target: the purple light turns to run the target down, dealing special damage and possibly leaving it confused; while confused, each action it starts may be fumbled. With Echo the ray travels on, hitting up to two targets.",
+  "worldcombat.skill.psybeam.summary": "Fire a phantom ray that homes in on its target: the purple light turns to run the target down, dealing special damage and possibly leaving it confused; while confused, each action it starts may be fumbled. With Echo the ray travels on, hitting up to two targets. The ray does not go around walls and stops when a block blocks it.",
   "worldcombat.skill.psybeam.use.0": "Mid-range pinpoint that curves around cover",
   "worldcombat.skill.psybeam.use.1": "Punish targets that dodge by strafing",
   "worldcombat.skill.psybeam.use.2": "Use Echo to pierce through two targets",
   "worldcombat.skill.psybeam.description.0": "Deal %1$s special damage on hit.",
   "worldcombat.skill.psybeam.description.1": "On a hit, %1$s chance to leave the target confused for %2$s; while confused, each action it starts has %3$s chance to be broken.",
-  "worldcombat.skill.psybeam.description.2": "The ray reaches %1$s blocks at %2$s blocks/tick, turns %3$s degrees per tick toward its target and has a %4$s block hit radius - slow turners let strafing targets escape.",
+  "worldcombat.skill.psybeam.description.2": "The ray reaches %1$s blocks at %2$s blocks/tick, turns %3$s degrees per tick toward its target and has a %4$s block hit radius - slow turners let strafing targets escape. It does not go around walls; a block stops it.",
   "worldcombat.skill.psybeam.echo.on": "Echo: after the first hit the ray travels on to a second target, turns harder and is both likelier and longer to confuse, at the cost of a lighter hit, slightly less speed and range, a thinner hit radius, and a longer windup and cooldown.",
   "worldcombat.skill.psybeam.echo.off": "Single: a faster, heavier ray that hits only one target and does not pierce.",
   "worldcombat.skill.psybeam.timing": "Range %1$s blocks, windup %2$s, recover %3$s, costs %4$s PP, cooldown %5$s.",
@@ -32,7 +32,7 @@
   "worldcombat.skill.psybeam.preference.ai.finish": "Finish the low",
   "worldcombat.skill.psybeam.preference.ai.finish.help": "On: lower-health targets rank higher for the finishing shot; off: normal ranged-attack ordering.",
   "worldcombat.skill.psybeam.preference.ai.line": "Prefer lined-up targets",
-  "worldcombat.skill.psybeam.preference.ai.line.help": "On (with Echo): a target with another enemy behind it ranks higher so one ray pierces two; off: single target only.",
+  "worldcombat.skill.psybeam.preference.ai.line.help": "On (with Echo): a target with another enemy lined up behind it within the remaining range and with clear line of sight ranks higher, so one ray pierces two; a line blocked by a wall or beyond remaining range gains no bonus. Off: single target only.",
   "effect.world_combat.psybeam_trance": "Phantom Trance",
   "world_combat.move.psybeam.text.daze": "Phantom-bound",
   "world_combat.move.psybeam.text.miss": "Phantom missed"

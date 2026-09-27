@@ -4,12 +4,14 @@
  * 核心念头：就地睡进一个可被打断的窗口；睡满才彻底恢复，中途被打醒只能按睡到的比例回，还带着一身起床气。
  *
  * 出手：共享节奏。windup 播放下沉的睡意；ready 在提交前拒绝「已经睡着」和「没什么可恢复」。
- * 结果：提交后施加共享睡眠（真实 MC 效果 world_combat:sleep，宝可梦层同步为原生异常），随后逐刻守着：
- *   睡满则按 heal 回复缺失生命、治愈全部有害状态效果，并在沉睡档获得「神清气爽」；被任何伤害惊醒则按
- *   elapsed/duration 的比例回复、追加 minecraft:slowness。睡着期间无法行动。
+ * 结果：提交后先施加共享睡眠（真实 MC 效果 world_combat:sleep，宝可梦层同步为原生异常）；只有自己的 sleep carrier
+ *   真正落地才进入等待，被免眠/Safeguard 拒绝时既不入睡也不发任何治疗。等待只认这一次的 carrier 实例：
+ *   被外来睡眠刷新/覆盖、或提前被伤害打醒时，本招按已睡比例收尾。睡满则按入睡时缺失的生命回复、治愈全部有害
+ *   状态效果，并在沉睡档获得「神清气爽」；被任何伤害提前惊醒则按 elapsed/duration 的比例回复、追加 minecraft:slowness。
+ *   睡着期间无法行动。
  * 反制：准备期可被打断且不花 PP；睡着后任意一次伤害就能惊醒，砍掉回复并让施法者迟缓；小憩档更快但报酬更低。
- * 表现：不画任何保护圈；脚边与头顶的呼吸泡随已睡比例放慢变大，被惊醒只留一记短破裂，回血与清状态按实际
- *   结算数值浮字。
+ * 表现：不画任何保护圈；睡眠场由本次动作持有，随提前醒来或收尾同步停止；脚边与头顶的呼吸泡随已睡比例放慢变大，
+ *   被惊醒只留一记短破裂，回血与清状态按实际结算数值浮字。
  */
 namespace PokemonSkills {
     const restScene = "world_combat:move_rest";
@@ -17,6 +19,7 @@ namespace PokemonSkills {
     const restTextWake = "world_combat.move.rest.text.wake";
     const restTextGroggy = "world_combat.move.rest.text.groggy";
     const restTextRefreshed = "world_combat.move.rest.text.refreshed";
+    const restTextNoSleep = "world_combat.move.rest.text.nosleep";
     const restRefreshedEffect = "world_combat:refreshed";
 
     function restAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 0.7, 0)); }
@@ -85,20 +88,23 @@ namespace PokemonSkills {
             var shortNap = config.shortNap === true;
             var duration = Math.max(20, Math.round(p(restId, "sleepTicks", action) * (shortNap ? 0.55 : 1)));
             var healFraction = p(restId, "heal", action);
+            // 起睡缺血预算：入睡当刻缺失的生命；被伤害惊醒时新落的那一刀不计入本招的治疗承诺。
             var missing = Math.max(0, body.maxHealth() - body.health());
             sound(action, "minecraft:block.beacon.deactivate");
+            // 先真正睡下：自己的 sleep carrier 失败（免眠、Safeguard 等）就不进入睡眠过程，也不发任何治疗。
             if (!CombatStatus.inflict(world, self, "sleep", duration)) {
-                var early = restApplyHeal(world, self, missing, healFraction * 0.5);
-                WorldFeedback.emit(world, restScene, 1, body.position(),
-                    { moment: "wake", target: String(self.ref()), complete: false, ratio: 0.5,
-                        healed: Math.round(early * 10) / 10, cured: 0, burst: 10 }, 26);
-                WorldFeedback.text(world, restAbove(body.position()), restTextGroggy, [Math.round(early * 10) / 10, 0], 30);
+                WorldFeedback.text(world, restAbove(body.position()), restTextNoSleep, [], 30);
                 done(action);
                 return;
             }
-            WorldFeedback.emit(world, restScene, 1, body.position(), restSleepBody(self, duration, shortNap, 0), duration);
+            // 本次等待只认这一份 carrier 实例：被外来睡眠刷新/覆盖、或提前被伤害打醒时，本招按已睡比例收尾。
+            var sleepers = CombatStatus.tagged(world, self, "sleep");
+            var anchor = sleepers.length ? MobEffects.anchor(sleepers[0]) : null;
+            // 睡眠场随动作拥有：提前醒来、动作结束或施法者失效时同步停止，不再自己飘满整段时长。
+            action.present("rest:sleep", restScene, 1, body.position(), JSON.stringify(restSleepBody(self, duration, shortNap, 0)));
             WorldFeedback.text(world, restAbove(body.position()), restTextSleep, [], 30);
             var start = world.tick(), settled = false;
+            function asleep(access: CombatWorld): boolean { return anchor !== null && MobEffects.matches(access, self, anchor); }
             function step(current: CombatAction): void {
                 if (settled) return;
                 var access = current.world();
@@ -106,9 +112,9 @@ namespace PokemonSkills {
                 var now = access.observe(self);
                 if (!now) { settled = true; done(current); return; }
                 var elapsed = access.tick() - start;
-                if (CombatStatus.has(access, self, "sleep") && elapsed < duration + 2) {
+                if (asleep(access) && elapsed < duration + 2) {
                     if (elapsed % 8 === 0)
-                        access.present("rest:sleep", restScene, 1, now.position(),
+                        current.present("rest:sleep", restScene, 1, now.position(),
                             JSON.stringify(restSleepBody(self, duration, shortNap, Math.max(0, Math.min(1, elapsed / duration)))));
                     current.after(1, step);
                     return;

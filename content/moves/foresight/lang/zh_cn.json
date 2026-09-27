@@ -26,6 +26,7 @@
   "world_combat.move.foresight.text.read": "被识破（%1$s 秒内虚体看实）",
   "world_combat.move.foresight.text.fade": "识破褪去",
   "world_combat.move.foresight.text.blocked": "视线被挡，看不穿",
+  "world_combat.move.foresight.text.warded": "印记留不住，看不穿",
   "world_combat.move.foresight.text.empty": "没有可识破的对象",
   "effect.world_combat.foresight_mark": "被识破",
   "worldcombat.skill.foresight.description.release": "窗口走完或印记被清除时，剥掉的闪避原样还回，印记褪去；再次识破会先把上一份闪避还回，不在同一份上反复扣还。"

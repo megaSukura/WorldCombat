@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.karatechop.summary": "抬手一记手刀，几乎没有起手：朝瞄准方向递出极短的一刀，刀路只碰到的第一个非友方，一道竖直的白线紧贴拳距落下，把它劈开并崩出碎屑。它够得极近、只打一个、冷却极短，前排的身体和墙会先截住它；刀口专找护甲的缝，对高防御目标衰减更慢，暴击率比同族高一档。",
+  "worldcombat.skill.karatechop.summary": "抬手一记手刀，几乎没有起手：朝瞄准方向递出极短的一刀，刀路只碰到的第一个非友方，一道暖白刀光从抬手处压到刀口，把它劈开并崩出碎屑。它够得极近、只打一个、冷却极短，前排的身体和墙会先截住它；刀口专找护甲的缝，对高防御目标衰减更慢，暴击率比同族高一档。",
   "worldcombat.skill.karatechop.description.0": "手刀对刀路上第一个非友方造成 %1$s 的接触伤害，且更容易击中要害；这一刀比同族更少吃防御减免。",
   "worldcombat.skill.karatechop.description.1": "劈距 %1$s 格；前方空挥照常落刀，刀路上的友方身体与实墙会先截住这一记。",
   "worldcombat.skill.karatechop.stance.knife": "当前为手刀式：单发更重，但够得更短。",

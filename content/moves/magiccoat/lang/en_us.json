@@ -19,7 +19,7 @@
   "worldcombat.skill.magiccoat.preference.sweep": "Film width",
   "worldcombat.skill.magiccoat.preference.sweep.help": "Wide: reflect reach x1.3, but duration x0.8, +2 ticks wind-up, x1.1 cooldown. Narrow: duration x1.2, -1 tick wind-up, x0.9 cooldown, but reach x0.8. Reach or patience, pick one.",
   "worldcombat.skill.magiccoat.preference.ai.maxChase": "Consider range",
-  "worldcombat.skill.magiccoat.preference.ai.maxChase.help": "The partner only raises the film while a threat is this close; smaller keeps it for melee, larger prepares further out.",
+  "worldcombat.skill.magiccoat.preference.ai.maxChase.help": "The partner only raises the film while a threat is this close; the actual reflect reach is this move's own ceiling, so a smaller value keeps it closer while a larger one prepares inside the reach.",
   "worldcombat.skill.magiccoat.preference.ai.opening": "When to raise",
   "worldcombat.skill.magiccoat.preference.ai.opening.help": "Anytime: raise against a known status threat. When pressured: require that status threat and pressure on the partner or owner.",
   "worldcombat.skill.magiccoat.preference.ai.opening.anytime": "Anytime",

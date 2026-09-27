@@ -4,12 +4,40 @@
  * 一句话：施法者周身念力上涌、标记点上方压出一圈下压的印记 → 一整块深紫重物从标记点正上方竖直砸落、拖着下坠的光屑 →
  *   在真实撞点（实体或方块）炸成一圈白边冲击面与飞散的碎块；被砸伤的目标身上再闪过一道裂特防的紫纹。
  * 色相家族：深紫蓝（0x6A3FD0 主 / 0x9B7BEE 亮 / 0xE4D8FF 近白核心），近白只给砸落的核心与冲击面；无第二个色相。
- * 拍子：起 conjure 0–22t ／ 标记 mark ／ 落 descend 0–80t ／ 砸 crush 0–30t ／ 裂 sunder ／ 场 shock ／ 空 miss。
- * 范围：crush 的贴地大环与 shock 的外扩环都按 `data.scale`（判定半径 / 0.5）铺开，就是这一压盖住的那块地方。
+ * 拍子：起 conjure 0–22t ／ 标记 mark ／ 压场标记 mark_wide ／ 落 descend 0–80t ／ 砸 crush 0–30t ／ 裂 sunder ／ 场 shock ／ 空 miss。
+ * 范围：mark／mark_wide 的印记分别按 `data.mass`（真实判定半径）与 `data.splash`（压场实际范围）铺开；
+ *   crush 的贴地大环与 shock 的外扩环都按 `data.scale`（判定半径 / 0.5）铺开，就是这一压盖住的那块地方。
  * 运动：conjure 向上涌；mark 的印记固定在标记点缓缓下压；descend 绑 projectile 沿下落方向甩出下坠的光屑；
  *   crush 在真实撞点由内向外炸、碎块受重力落下；shock 环贴地向外扩。
  * 数：`data.cracks`（特攻与等级派生的碎裂数）驱动砸落与冲击的碎块量，`data.intensity`（重压威力派生）抬高亮度。
  */
+/** 预警圈按本招的真实判定半径铺开，标记与压场共用同一枚印记。 */
+const PsystrikeSeal: ParticleEmitter = {
+    name: "seal", bind: "point", offset: [0, 1.4, 0], height: 0.4, orient: "fixed",
+    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
+    rate: 5, shape: { kind: "ring", radius: { data: "mass", fallback: 0.5 } },
+    direction: "inward", speed: [0.01, 0.05], spin: 8,
+    lifetime: [12, 20], size: [0.26, 0.46],
+    color: 0x9B7BEE, alpha: [0.55, 0], light: "full", maxParticles: 14
+};
+const PsystrikeWeight: ParticleEmitter = {
+    name: "weight", bind: "point", offset: [0, 0.6, 0], height: 0.6,
+    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+    rate: { data: "cracks", fallback: 18 }, shape: { kind: "sphere", radius: 0.45 },
+    direction: "down", speed: [0.02, 0.08],
+    lifetime: [10, 18], size: [0.24, 0.05],
+    color: 0x4A2FA0, alpha: [0.4, 0], light: "world", maxParticles: 60
+};
+/** 压场预警：外圈就是这一压实际盖住的范围（`data.splash`）。 */
+const PsystrikeScope: ParticleEmitter = {
+    name: "scope", bind: "point", offset: [0, 0.35, 0], height: 0, orient: "fixed",
+    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
+    rate: 3, shape: { kind: "ring", radius: { data: "splash", fallback: 2.6 } },
+    direction: "inward", speed: [0.01, 0.04],
+    lifetime: [14, 22], size: [0.3, 0.7],
+    color: 0x6A3FD0, alpha: [0.35, 0], light: "full", maxParticles: 22
+};
+
 const PsystrikeDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
@@ -36,26 +64,14 @@ const PsystrikeDefinition: ParticleDefinition = {
             ]
         },
         mark: {
-            duration: 34,
-            exit: { stop: 16, drain: 18 },
-            emitters: [
-                {
-                    name: "seal", bind: "point", offset: [0, 1.4, 0], height: 0.4, orient: "fixed",
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    rate: 5, shape: { kind: "ring", radius: 0.5 },
-                    direction: "inward", speed: [0.01, 0.05], spin: 8,
-                    lifetime: [12, 20], size: [0.26, 0.46],
-                    color: 0x9B7BEE, alpha: [0.55, 0], light: "full", maxParticles: 14
-                },
-                {
-                    name: "weight", bind: "point", offset: [0, 0.6, 0], height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: { data: "cracks", fallback: 18 }, shape: { kind: "sphere", radius: 0.45 },
-                    direction: "down", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.24, 0.05],
-                    color: 0x4A2FA0, alpha: [0.4, 0], light: "world", maxParticles: 60
-                }
-            ]
+            duration: 40,
+            exit: { stop: 40, drain: 18 },
+            emitters: [PsystrikeSeal, PsystrikeWeight]
+        },
+        mark_wide: {
+            duration: 40,
+            exit: { stop: 40, drain: 18 },
+            emitters: [PsystrikeSeal, PsystrikeScope, PsystrikeWeight]
         },
         descend: {
             duration: 90,

@@ -5,6 +5,7 @@
  *   `ai.maxChase`（默认 9）格内；焦点目标不受距离限制。总接触距离是固定的，够不着的目标只能先走近。
  * 选择倾向：`ai.finishLow`（默认开）打开时，生命比例低的目标排前——这一拳是拿来收残的。
  *   落拳有真实的向下下扫与首碰判定，移动慢或体型大的目标更难躲开，因此它们额外加一点权重；
+ *   主目标周围还挤着看得见的别人时抬价——群震只发生在真实命中的落点上。
  *   落点震开只是顺带，不改变目标选择。
  * 够不到交给共享接近逻辑；进了拳程就短靠并砸下。放完交回共享交战计划。
  */
@@ -19,6 +20,19 @@ namespace PokemonSkills {
         const height = typeof target.height === "number" ? target.height : 1.4;
         if (width * height > 1.7) bonus += 4;
         return bonus;
+    }
+
+    /** 落点一圈内看得见、还挤着几个敌人；用落拳的真实接触范围读「真实落点可见群体」，只影响排序。 */
+    function meteormashCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity, reach: number): number {
+        const nearby: CompanionBehavior.Entity[] = <any>context.facts.nearby || [];
+        const radius = Math.max(1.5, reach * 0.6);
+        let count = 0;
+        for (let index = 0; index < nearby.length && count < 6; index++) {
+            const other = nearby[index];
+            if (String(other.ref) === String(target.ref) || other.friendly || other.health <= 0 || !other.visible) continue;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
+        }
+        return count;
     }
 
     CompanionBehavior.registerUse("meteormash", {
@@ -43,6 +57,9 @@ namespace PokemonSkills {
                 else if (ratio <= 0.7) base += 5;
             }
             base += meteormashSteady(target);
+            // 偏好真实落点处看得见的群体：震开与副伤都发生在主目标周围。
+            const crowd = meteormashCrowd(context, target, capability.data.range);
+            if (crowd >= 1) base += Math.min(8, 3 * crowd);
             return base;
         }
     });

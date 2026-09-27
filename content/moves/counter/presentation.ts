@@ -98,7 +98,7 @@ const CounterDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "clang", bind: "target", height: 0.5,
+                    name: "clang", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/minihit",
                     burst: { count: 8 },
                     shape: { kind: "sphere", radius: 0.26 },
@@ -113,7 +113,7 @@ const CounterDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "dust", bind: "target", height: 0.45,
+                    name: "dust", bind: "point", fit: "none", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: 8 },
                     shape: { kind: "sphere", radius: 0.26 },

@@ -1,21 +1,25 @@
 /**
  * 爆音波 / boomburst 的伙伴 AI 用途。
  *
- * 什么局面下出手：以自身为中心、空中地面都轰的一次性声压爆。`ready` 要求身周 `ai.maxChase`（默认 9）格内
- * 至少站着 `ai.minFoes`（默认 2）个可见、敌对的敌人——它起手长、威力高，是用来一次轰开一圈的，
- * 只对一个目标放不划算。`available` 还要求目标在考虑距离内；它不挑目标站不站在地上。
+ * 什么局面下出手：以自身为中心、空中地面都轰的一次性声压爆。`ready` 按招式真实的波及半径（不是笼统的
+ * 考虑距离）数人：至少站着 `ai.minFoes`（默认 2）个可见、敌对、还没在耳鸣里的敌人才炸——它起手长、威力高，
+ * 是用来一次轰开一圈的，已经震得耳鸣的人不算新目标。爆压式（concussive）收窄成啃硬目标的一束时，
+ * 一个也能炸，此时只要 1 个即可。`available` 还要求目标在考虑距离内；它不挑目标站不站在地上。
  * 另外：自己血量低于一半时 priority 抬高一段——被压着打时，把贴身的人一次吹开比继续硬拼更值。
  * 够不到交给共享接近逻辑；走到波及半径以内就原地炸。
  */
 namespace PokemonSkills {
+    /** 实际波及圈内、还没在耳鸣里的可见敌方人数；爆压式半径已由参数公式收窄，这里按招式真实半径取值。 */
     function boomburstCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
-        const limit = CompanionBehavior.ai<number>(item, "maxChase", 9);
+        const radius = typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range : CompanionBehavior.ai<number>(item, "maxChase", 9);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= limit) count++;
+            if (CompanionBehavior.distance(self.point, other.point) > radius) continue;
+            if (CompanionBehavior.status(context, other, "deafened")) continue;
+            count++;
         }
         return count;
     }
@@ -30,7 +34,9 @@ namespace PokemonSkills {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         ready: function (context, capability) {
-            return capability.data.ready !== false && boomburstCount(context, capability) >= CompanionBehavior.ai<number>(capability, "minFoes", 2);
+            const concussive = !!(capability.data.config && capability.data.config.concussive);
+            const needed = concussive ? 1 : CompanionBehavior.ai<number>(capability, "minFoes", 2);
+            return capability.data.ready !== false && boomburstCount(context, capability) >= needed;
         },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;

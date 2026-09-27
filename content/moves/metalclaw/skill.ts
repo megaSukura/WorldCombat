@@ -123,21 +123,23 @@ namespace PokemonSkills {
                 done(current);
             }
 
-            /** 劈中后的磨利掷骰：每记各掷一次，整次施放共享 cap；按有效物攻实际增量播，满级或被拒不留成功回执。 */
-            function sharpen(current: CombatAction, point: CombatPoint, index: number): void {
+            /** 劈中后的磨利掷骰：每记各掷一次，整次施放共享 cap；重爪式一记可涨满配置级数，连爪式每记涨 1。 */
+            function sharpen(current: CombatAction, contact: CombatPoint, index: number): void {
                 if (gained >= cap) return;
                 const scope = current.world();
                 if (scope.random() >= chance) return;
-                const delta = NativeEffects.boost(scope, actor, "atk", 1);
+                const increment = Math.min(hone ? cap : 1, cap - gained);
+                if (increment <= 0) return;
+                const delta = NativeEffects.boost(scope, actor, "atk", increment);
                 if (delta <= 0) return;
                 gained += delta;
-                // 磨利只在实际涨了物攻的那一记、贴判定位置闪一下爪尖。
-                WorldFeedback.emit(scope, metalclawScene, 1, point,
-                    { moment: "sharpen", target: String(actor.ref()), side: index, stages: gained, scale: scale, intensity: intensity }, 26);
                 const self = scope.observe(actor);
-                const at = self === null ? point : self.position();
+                const at = self === null ? contact : self.position();
+                // 磨利是施法者身上的变化：回本人身位闪，显示这一记实际涨了多少，而不是把累计当成单次。
+                WorldFeedback.emit(scope, metalclawScene, 1, at,
+                    { moment: "sharpen", target: String(actor.ref()), side: index, stages: delta, scale: scale, intensity: intensity }, 26);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, self === null ? 1.5 : self.height() + 0.1, 0)),
-                    metalclawSharpenText, [gained], 28);
+                    metalclawSharpenText, [delta], 28);
                 sound(current, "minecraft:block.anvil.land");
             }
 
@@ -145,7 +147,12 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const self = scope.observe(actor);
                 if (self === null) { finish(current); return; }
-                const from = self.position(), to = from.plus(towards.scale(reach));
+                // 左右两爪各从身体一侧起手、斜向同一准心：索引 0 走右、1 走左，两条真实爪迹因此不同向。
+                const body = self.position(), focus = body.plus(towards.scale(reach));
+                const side = WorldGeometry.basis(towards).right;
+                const flank = Math.max(0.16, Math.min(0.5, radius * 0.7));
+                const from = body.plus(side.scale(index === 0 ? flank : -flank));
+                const to = from.plus(focus.minus(from).unit().scale(reach));
                 const trace = current.trace(from, to, radius, true);
                 const contact = trace.position();
                 const lander = trace.hitEntity() ? trace.target() : null;
@@ -157,7 +164,7 @@ namespace PokemonSkills {
                 sound(current, "minecraft:entity.player.attack.sweep");
                 if (victim !== null) {
                     const landedHit = impact(current, trace, "metalclaw", power,
-                        { damage: damageSpec("metalclaw", "rake"), contact: true });
+                        { damage: damageSpec("metalclaw", "rake"), contact: true }, "metalclaw:rake:" + index);
                     if (landedHit) {
                         landed++;
                         if (scope.valid(victim)) {

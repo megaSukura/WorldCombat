@@ -21,7 +21,7 @@ namespace PokemonSkills {
         id: crushgripId,
         cooldownParameter: "recharge",
         name: "Crush Grip",
-        description: "一只巨力手沿瞄准方向抓住第一个碰到的敌人：物攻与体重决定握力，对手此刻剩余的生命越满，这一握越重。它是三压招里最重、最慢、最贵，也是唯一会改变目标位置的一记——高举式把它整个人提起，只有真的举离地面才按住再砸回地面补一记固定伤害并短暂定身；没举起来（免疫位移或被顶住）就只算初握。原地式则一记捏完。",
+        description: "一只巨力手沿瞄准方向抓住第一个碰到的敌人：物攻与体重决定握力，对手此刻剩余的生命越满，这一握越重。它是三压招里最重、最慢、最贵，也是唯一会改变目标位置的一记——高举式把它整个人提起，只有真的举离地面才按住再砸回地面补一记不随目标剩余生命变化的追加威力并短暂定身；没举起来（免疫位移或被顶住）就只算初握。原地式则一记捏完。",
         uses: ["用最重的一握捏掉满血目标的血条", "高举式把关键目标提起、按住再摔下", "用会改变目标位置的一握拆掉对手的站位"],
         kind: "aim",
         range: 2.6,
@@ -51,6 +51,14 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             action.present("world_combat:move_crushgrip:loom", crushgripScene, 1, action.origin(),
                 JSON.stringify({ moment: "loom", hoist: config && config.hoist === true ? 1 : 0, windup: prepare }));
+            // 两掌先在落点两侧浮出、张开；提交后同一 key 换成合拢。
+            const delta = action.targetPosition().minus(action.origin());
+            const heading = WorldGeometry.flatUnit(delta, action.direction());
+            const point = delta.length() < 0.05 ? action.origin().plus(heading.scale(2.0)) : action.targetPosition();
+            action.present("world_combat:move_crushgrip:palms/" + action.id(), crushgripPalmsScene, 1, point,
+                JSON.stringify({ moment: "open", point: [point.x(), point.y(), point.z()],
+                    direction: [heading.x(), heading.y(), heading.z()], start: action.sense().tick(),
+                    width: p(crushgripId, "gripRadius", action), hoist: config && config.hoist === true ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -91,6 +99,10 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, crushgripScene, 1, at,
                 { moment: "grip", target: String(victim.ref()), motes: motes, scale: scale, hoist: hoist ? 1 : 0,
                     intensity: Math.max(0.6, Math.min(2.2, power / 100)) }, 30);
+            // 显式两掌从接触点两侧合拢；掌口半径只按实际 gripRadius 缩放一次。
+            action.present("world_combat:move_crushgrip:palms/" + action.id(), crushgripPalmsScene, 1, at,
+                JSON.stringify({ moment: "close", point: [at.x(), at.y(), at.z()],
+                    direction: [heading.x(), heading.y(), heading.z()], start: world.tick(), width: radius, hoist: hoist ? 1 : 0 }));
             const landed = hurt(action, victim, crushgripId, power,
                 { damage: damageSpec(crushgripId, "grip"), contact: true, segment: "grip" });
             if (!landed) { WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), crushgripMissText, [], 22); finish(action); return; }

@@ -38,7 +38,9 @@ public final class RhinoGUiChecks {
         public Widget getStyle() { return this; }
         public Widget getTextStyle() { return this; }
         public Widget getButtonStyle() { return this; }
+        public Widget textStyle(Consumer<Widget> style) { style.accept(this); return this; }
         public Widget textColor(int color) { colorCalls++; return this; }
+        public Widget textAlignHorizontal(Object alignment) { return this; }
         public Widget textWrap(Object wrap) { return this; }
         public Widget backgroundTexture(Object texture) { return this; }
         public Widget baseTexture(Object texture) { return this; }

@@ -35,7 +35,7 @@ Smoke.scenario("synthesis", function (stage) {
         stage.expect(stage.casts("synthesis", caster) >= 1, "the wounded hoppip spread its leaves to synthesise in the open sun");
         stage.after(120, function () {
             stage.expect(caster.health() > woundedAt + 5, "the four photosynthesis pulses restored health above the wound floor");
-            stage.note("日照系数（WorldEnvironment.sunlight = 天光/15 × 白天 × 可见天空 × 阴雨折扣）与每口回复量、叶脉亮度都取自同一份世界读数：正午晴天接近 1，树荫/夜里接近 0。整段光合按缺失生命均分 4 口，每口取「单次 heal 比例 / 4」，总预算固定为开始时缺血量，中途再挨打也不会撑大；固定上限 30%-72% 随特防增长。本场景开阔无遮挡，因此必定有可观的回复。", {
+            stage.note("日照系数（WorldEnvironment.sunlight = 天光/15 × 白天 × 可见天空 × 阴雨折扣）与每口回复量、叶阵亮度都取自同一份世界读数：正午晴天接近 1，树荫/夜里接近 0。整段光合按缺失生命均分 4 口，每口取「单次 heal 比例 / 4」，总预算固定为开始时缺血量，中途再挨打也不会撑大；固定上限 30%-72% 随特防增长。实际光合拍数取 floor(光合时长/4)×4（说明里显示这个真实拍数，与四次落点一致）；四片叶位由独立客户端场景逐片收亮，只有真正到账的每一口才多亮一片。本场景开阔无遮挡，因此必定有可观的回复。", {
                 casterCasts: stage.casts("synthesis", caster),
                 woundedHealth: Math.round(woundedAt * 10) / 10,
                 casterHealthNow: Math.round(caster.health() * 10) / 10,

@@ -137,7 +137,7 @@ const MagnetbombDefinition: ParticleDefinition = {
                     name: "core", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: { data: "notes", fallback: 16 }, at: 1 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 1.2 },
                     direction: "shape", speed: [0.08, 0.3],
                     lifetime: [6, 12], size: [0.36, 0.05], sizeMode: "index",
                     color: 0xB8C2CC, alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 110
@@ -146,7 +146,7 @@ const MagnetbombDefinition: ParticleDefinition = {
                     name: "shards", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/spike",
                     burst: { count: { data: "notes", fallback: 16 }, at: 2 },
-                    shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere_surface", radius: 1.2 },
                     direction: "outward", speed: [0.1, 0.3], spread: 24, gravity: 0.04, drag: 0.9, spin: 120,
                     lifetime: [9, 17], size: [0.12, 0.02],
                     color: 0x9AA4AE, alpha: [0.9, 0], light: "full", maxParticles: 60
@@ -155,7 +155,7 @@ const MagnetbombDefinition: ParticleDefinition = {
                     name: "ring", bind: "point", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: 1.2 },
                     direction: "outward", speed: [0.05, 0.14],
                     lifetime: [10, 18], size: [0.36, 0.14],
                     color: 0x8A939C, alpha: [0.55, 0], light: "world"
@@ -170,7 +170,7 @@ const MagnetbombDefinition: ParticleDefinition = {
                     name: "splash_core", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_steel",
                     burst: { count: 10, at: 1 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 1.2 },
                     direction: "shape", speed: [0.06, 0.22],
                     lifetime: [6, 11], size: [0.26, 0.04], sizeMode: "index",
                     color: 0xB8C2CC, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 50

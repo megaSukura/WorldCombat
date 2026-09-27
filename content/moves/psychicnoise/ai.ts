@@ -18,6 +18,34 @@ namespace PokemonSkills {
         return psychicNoiseRecentHeal(access, actor);
     });
 
+    /** 当前配置是否开着贯穿啸叫；没配置或读不到时按关闭处理。 */
+    function psychicNoisePierce(capability: WorldBehavior.Capability): boolean {
+        const config = capability.data && capability.data.config;
+        return !!(config && config.pierce === true);
+    }
+
+    /** 从自己到目标的方向上，还有几个非友方真的落在一条窄走廊里——供贯穿取向判断，看的是实际排列。 */
+    function psychicNoiseAligned(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const self = CompanionBehavior.source(context);
+        const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 0.5) return 0;
+        const ux = dx / length, uz = dz / length;
+        const declared = capability.data.range;
+        const reach = typeof declared === "number" && isFinite(declared) ? declared : 12;
+        const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
+        let aligned = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            const forward = ox * ux + oz * uz;
+            if (forward < 0.5 || forward > reach) continue;
+            if (Math.abs(ox * uz - oz * ux) <= 1.1) aligned++;
+        }
+        return aligned;
+    }
+
     CompanionBehavior.registerUse(psychicNoiseId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -34,9 +62,12 @@ namespace PokemonSkills {
             if (!target) return 0;
             // 已经封住的敌人再封一次只剩伤害，价值降低；真正会回血的敌人优先，纯血量高低不再作为依据。
             if (CompanionBehavior.status(context, target, psychicNoiseStatus)) return 18;
+            let score = 30;
             if (CompanionBehavior.fact<boolean>(context, "world_combat:move/psychicnoise/heals", target)
-                || CompanionBehavior.fact<boolean>(context, "world_combat:move/psychicnoise/recent-heal", target)) return 45;
-            return 30;
+                || CompanionBehavior.fact<boolean>(context, "world_combat:move/psychicnoise/recent-heal", target)) score = 45;
+            // 贯穿开启时才额外看重真实一线排列：串得到更多人才更值得用贯穿的代价换。
+            if (psychicNoisePierce(capability)) score += Math.min(12, psychicNoiseAligned(context, capability, target) * 6);
+            return Math.min(96, score);
         }
     });
 

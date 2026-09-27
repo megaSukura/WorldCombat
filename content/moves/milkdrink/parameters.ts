@@ -13,7 +13,7 @@
  *   heal       回复比例：0.40 + 特攻(≥60)偏移[0,0.08] + 体重(≥30)偏移[0,0.05]，温奶档 +0.05／冷饮档 −0.03，夹 0.32..0.62。
  *   gulps      口数：3 + 等级(≥20)偏移[0,2]，夹 3..5 口。
  *   gulpTicks  口间隔：9 − 速度(≥40)偏移[0,3]，温奶档 ×1.3、冷饮档 ×0.8，夹 5..14 刻。
- *   drops      奶滴数量：16 + 体重(≥30)偏移[0,26]，夹 12..48 点，直接驱动粒子数量。
+ *   drops      奶滴数量：8 + 体重(≥30)偏移[0,12]，夹 6..20 点，直接驱动粒子数量（少量口部奶滴）。
  *   cleanRadius 冲毒光晕：0.8 + 身高偏移[−0.15,0.6]，夹 0.65..1.7 格。
  *   open       起手：8 − 速度(≥40)偏移[0,3]，夹 5..10 刻。
  *   wipe       收招：10 − 速度偏移[0,3]，夹 6..12 刻。
@@ -37,8 +37,8 @@ namespace PokemonSkills {
             .times(F.when(F.pref("warm"), F.const(1.3), F.const(0.8)))
             .clamp(5, 14),
             "口间隔", "两口之间的时间；速度越快喝得越急，温奶档放慢、冷饮档更快。"),
-        drops: formula(F.base(16).plus(F.body("weight").minus(30).max(0).times(0.4)).clamp(12, 48).round(),
-            "奶滴数量", { unit: " 点", description: "每口溅起的乳白奶滴数量；体重越大越多，直接驱动粒子。" }),
+        drops: formula(F.base(8).plus(F.body("weight").minus(30).max(0).times(0.2)).clamp(6, 20).round(),
+            "奶滴数量", { unit: " 点", description: "每口嘴角溅起的乳白奶滴数量；体重越大越多，直接驱动粒子。" }),
         cleanRadius: formula(F.base(0.8).plus(F.body("height").minus(1.4).times(0.4)).clamp(0.65, 1.7).round(2),
             "冲毒光晕", { unit: " 格", description: "最后一口把毒冲散时清亮水光扫过的半径；身量越大范围越广。" }),
         open: seconds(F.base(8).minus(F.stat("speed").minus(40).max(0).times(0.05)).clamp(5, 10),

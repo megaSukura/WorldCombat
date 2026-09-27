@@ -73,6 +73,6 @@ namespace PokemonSkills {
     describe("poisongas", [
         { key: "description.0", values: ["reach", "cloudRadius"] },
         { key: "description.1", values: ["cloudTicks","poisonTicks","maxTargets"] },
-        { key: "description.2", values: ["blast","burnTicks"] }
+        { key: "description.2", values: ["blast","burnTicks","maxTargets"] }
     ]);
 }

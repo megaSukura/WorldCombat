@@ -13,7 +13,7 @@
  *   radius      4 + (特攻 − 50) × 0.025 格，夹 4..8；另有 50 级台阶 +1；特攻越高、等级越高，光铺得越远。
  *   duration    100 + (等级 − 20) × 2.5 刻，夹 100..220；经验越足，晃花的后劲留得越久。
  *   afterimage  20 + 特攻 ÷ 6，夹 20..70；画面里残留的光点数，随特攻变多。
- *   tempo       速度 ÷ 7 + 4 刻，夹 5..12；速度越快越早炸亮。
+ *   tempo       9 − (速度 − 60) × 0.08 刻，夹 5..12；速度越快，聚光越早。
  *   recharge    140 + (等级 − 20) × 1.2 刻，夹 120..220；等级越高越熟练，冷却略短。
  */
 namespace PokemonSkills {
@@ -37,7 +37,7 @@ namespace PokemonSkills {
             unit: " 点",
             description: "目标眼前残留的光点数；特攻越高，画面里拖的余光越多。"
         }),
-        tempo: seconds(F.stat("speed").div(7).plus(4).clamp(5, 12).round(0), "起手",
+        tempo: seconds(F.base(9).minus(F.stat("speed").minus(60).times(0.08)).clamp(5, 12).round(0), "起手",
             "聚起这道光需要多久；速度越快，越早炸亮。"),
         recharge: seconds(F.base(140).plus(F.level().minus(20).max(0).times(1.2)).clamp(120, 220).round(0), "冷却",
             "两次闪光之间的等待；等级越高越熟练。")

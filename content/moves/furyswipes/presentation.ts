@@ -7,7 +7,7 @@
  *   第二色相不进入，画面是同一族白。
  * 拍子：起 raise（亮爪）→ 抓 cut（每道一片扇面）→ 中 hit / 空 miss（命中或落空）→ 收 settle（余尘落定）。
  * 范围：cut 用 `data.reach` 当扇面半径、`data.span` 当张角，`orient: "heading"` 让扇面朝本次出爪方向；
- *   画面里的扇面就是判定的扇面，玩家能看出站哪会被抓。
+ *   画面里的扇面就是判定的扇面，玩家能看出站哪会被抓；每道弧的寿命绑 `data.gap`，与两拍间隔同长，不会叠到下一拍。
  * 运动：每道从施法者身前贴着目标铺开，方向由 `data.direction` 给出；落空那道只在空气里划一道就淡出。
  * 数：`data.dust`（物攻派生）绑定命中与余尘的发射量，`data.intensity`（每道威力派生）抬高亮度与尺寸，
  *   `data.index`／`data.cuts` 让同一趟里越到后面的爪痕略强；`data.tilt`（左右交替派生）让每道爪痕的
@@ -19,7 +19,7 @@ const FuryswipesDefinition: ParticleDefinition = {
     moments: {
         raise: {
             duration: { data: "windup", fallback: 6 },
-            exit: { stop: 3, drain: 9 },
+            exit: { drain: 9 },
             emitters: [
                 {
                     name: "claw", bind: "source", offset: [0, 0.55, -0.2], height: 0.5, fit: "body",
@@ -32,8 +32,8 @@ const FuryswipesDefinition: ParticleDefinition = {
             ]
         },
         cut: {
-            duration: 18,
-            exit: { drain: 10 },
+            duration: { data: "gap", fallback: 4 },
+            exit: { drain: 8 },
             emitters: [
                 {
                     name: "arc", bind: "point", fit: "world", orient: "heading",

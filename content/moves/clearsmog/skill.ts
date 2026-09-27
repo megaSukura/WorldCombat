@@ -20,27 +20,34 @@ namespace PokemonSkills {
         ["interval", "fumes", "scale", "intensity"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid clear smog veil state");
         });
-        if (value.interval < 1) throw new Error("Invalid clear smog veil state");
+        if (value.interval < 1 || !MobEffects.validAnchor(value.mark)) throw new Error("Invalid clear smog veil state");
         return JSON.stringify(value);
     }
 
-    function clearsmogHeld(world: CombatWorld, victim: CombatActor, data: any): void {
+    /** 薄烟绑在这次清除效果实例上：效果在烟就在，效果被驱散/替换/到期时一起收走。 */
+    function clearsmogVeilPresent(effect: CombatEffect): void {
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         const body = world.observe(victim);
         if (body === null) return;
-        WorldFeedback.keep(world, "clearsmog:veil:" + String(victim.ref()), clearsmogScene, 1, body.position(),
-            { moment: "veil", target: String(victim.ref()), fumes: data.fumes, scale: data.scale, intensity: data.intensity }, 14);
+        WorldFeedback.onEffect(world, effect.id(), "clearsmog:veil:" + String(victim.ref()), clearsmogScene, 1, body.position(),
+            { moment: "veil", target: String(victim.ref()), fumes: data.fumes, scale: data.scale, intensity: data.intensity });
     }
 
     WorldCombat.effect(clearsmogVeil, 1, 200, "actor", clearsmogVeilData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(clearsmogVeil, "start", function (effect) {
-        const world = effect.world(), victim = effect.target();
-        if (!world.valid(victim)) { effect.end(); return; }
-        clearsmogHeld(world, victim, JSON.parse(effect.state()));
-        effect.schedule("scour", "scour", JSON.parse(effect.state()).interval, "{}");
+        const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
+        if (!world.valid(victim) || !MobEffects.matches(world, victim, data.mark)) { effect.end(); return; }
+        // 标记由这次清除效果持有：效果结束时同步撤标；标记被外力清除/替换时，周期检查让效果收场。
+        data.markLease = MobEffects.bind(world, victim, clearsmogMark);
+        effect.state(JSON.stringify(data));
+        clearsmogVeilPresent(effect);
+        effect.schedule("scour", "scour", data.interval, "{}");
     });
     WorldCombat.effectHandler(clearsmogVeil, "scour", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
+        // 烟被净化/替换（牛奶、驱散、另一发覆盖）后不再继续清除。
+        if (!MobEffects.matches(world, victim, data.mark)) { effect.end(); return; }
         const removed = clearsmogErase(world, victim);
         const body = world.observe(victim);
         if (body !== null && removed > 0) {
@@ -49,7 +56,7 @@ namespace PokemonSkills {
                     scale: data.scale, intensity: data.intensity }, 18);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), clearsmogClearedText, [removed], 20);
         }
-        clearsmogHeld(world, victim, data);
+        clearsmogVeilPresent(effect);
         effect.schedule("scour", "scour", data.interval, "{}");
     });
     WorldCombat.effectHandler(clearsmogVeil, "end", function (effect) {
@@ -71,20 +78,23 @@ namespace PokemonSkills {
         const intensity = Math.max(0.6, Math.min(2.2, p(clearsmogId, "mud", action) / 42));
         let swept = 0, erased = 0;
         WorldGeometry.selectEnemies(world, WorldGeometry.ring(at, 0, radius, { below: 2, above: 3 }), function (foe, facts) {
+            // 实墙遮挡：从炸点到身体之间隔着方块就不被烟洗到，墙后的增益留得住。
+            if (WorldGeometry.blockHit(world, at, facts.position()) !== null) return;
             swept++;
             const removed = clearsmogErase(world, foe);
             erased += removed;
-            MobEffects.apply(world, foe, clearsmogMark, linger, 0);
-            const data = { interval: interval, fumes: fumes, scale: scale, intensity: intensity };
+            // 先退休同一目标身上的旧烟，旧烟持有的标记随之撤走；再挂新标记并把它交给新烟。
             const existing = world.effects(foe, clearsmogVeil);
             for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
+            const mark = MobEffects.apply(world, foe, clearsmogMark, linger, 0);
+            if (mark === null) return;
+            const data = { interval: interval, fumes: fumes, scale: scale, intensity: intensity, mark: MobEffects.anchor(mark) };
             world.effect(clearsmogVeil, foe, JSON.stringify(data), linger);
-            clearsmogHeld(world, foe, data);
             WorldFeedback.emit(world, clearsmogScene, 1, facts.position(),
                 { moment: "caught", target: String(foe.ref()), erased: removed, fumes: fumes, scale: scale, intensity: intensity }, 24);
         });
         WorldFeedback.emit(world, clearsmogScene, 1, at,
-            { moment: "burst", fumes: fumes, radius: radius, scale: scale, intensity: intensity, swept: swept, erased: erased }, 30);
+            { moment: "burst", fumes: fumes, scale: scale, intensity: intensity, swept: swept, erased: erased }, 30);
         WorldFeedback.text(world, at.plus(WorldCombat.point(0, 0.9, 0)),
             erased > 0 ? clearsmogClearedText : clearsmogEmptyText, erased > 0 ? [erased] : [swept], 24);
         return { swept: swept, erased: erased };
@@ -148,9 +158,10 @@ namespace PokemonSkills {
                 sprite: "cobblemon:particle/generic/mud/mudsplash", tint: 0x8E9C7A,
                 scale: Math.max(0.7, Math.min(1.6, radius / 0.26))
             };
-            if (homing !== null) appearance.homing = { target: homing, turn: 9, delay: 1, range: reach + 2 };
+            // 追踪搜索圈与实际弹程都用同一 reach，和 resolve 声明的射程一致。
+            if (homing !== null) appearance.homing = { target: homing, turn: 9, delay: 1, range: reach };
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: reach + 2, radius: radius, gravity: 0.02, lifetime: 140, direction: direction,
+                speed: speed, range: reach, radius: radius, gravity: 0.02, lifetime: 140, direction: direction,
                 appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), victim = hit.target(), at = hit.position();
@@ -171,8 +182,10 @@ namespace PokemonSkills {
                 settled = true;
                 const scope = current.world();
                 if (!burst) {
-                    WorldFeedback.emit(scope, clearsmogScene, 1, current.targetPosition(), { moment: "miss", scale: scale }, 18);
-                    WorldFeedback.text(scope, current.targetPosition(), clearsmogMissText, [], 20);
+                    // 自然飞尽或被墙挡下：用弹体最后真实接触/结束点落空，不用旧瞄准点。
+                    const end = scope.projectilePosition(flight) || current.targetPosition();
+                    WorldFeedback.emit(scope, clearsmogScene, 1, end, { moment: "miss", scale: scale }, 18);
+                    WorldFeedback.text(scope, end, clearsmogMissText, [], 20);
                 }
                 done(current);
             });

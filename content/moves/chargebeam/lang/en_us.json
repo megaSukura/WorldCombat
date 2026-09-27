@@ -5,7 +5,7 @@
   "worldcombat.skill.chargebeam.use.2": "Chip a weak point at mid-to-long range with the beam",
   "worldcombat.skill.chargebeam.description.0": "Runs a thin beam from the nozzle along free aim up to %2$s blocks; the first body or wall cuts it off and the first enemy hit takes about %1$s special damage. Front ranks and walls block the beam, and firing into open air is allowed.",
   "worldcombat.skill.chargebeam.description.1": "The beam has a %1$s-block radius; on the opening-tick hit, a %2$s chance for the residual current to flow back, raising the user's Sp. Atk by %3$s stage(s). A target swept later never receives a second full hit.",
-  "worldcombat.skill.chargebeam.description.2": "Keep the beam on the same struck target for %2$s s after the hit and the residual current bites once more on settle for %1$s of the main hit's damage; turning away, the target leaving, or a wall breaking the beam loses it.",
+  "worldcombat.skill.chargebeam.description.2": "Keep the beam on the same struck target for %2$s s after the hit and the residual current bites once more on settle for %1$s of the main hit's damage (settled with the Sp. Atk the opening hit raised); turning away on any tick, the target leaving, or a wall breaking the beam permanently loses it.",
   "worldcombat.skill.chargebeam.overcharge.on": "Overcharge: 5 ticks more windup and a longer cooldown, but range ×1.2, power ×1.2, a higher surge chance and denser arcs.",
   "worldcombat.skill.chargebeam.overcharge.off": "Quick shot: shorter and cheaper, with shorter range, power ×0.9 and a lower surge chance.",
   "worldcombat.skill.chargebeam.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

@@ -6,8 +6,9 @@
  * 吃中的人被沿同一条线推飞，推得多远取决于施法者有多重、目标有多大。
  *
  * 拳路是**三维**的：从身体中心沿瞄准方向伸出 `fistReach` 的一条窄管，可向上出拳；`WorldGeometry.bodySegment`
- * 只选身体真正与这条窄管相交的目标，落在拳路上方的飞行目标不会被旧的地面高盒扫中。实墙由方块射线裁剪，
- * 拳路停在真实方块格与表面上；伤害仍对每个被选中的非友方单独结算。
+ * 只选身体真正与这条窄管相交的目标，落在拳路上方的飞行目标不会被旧的地面高盒扫中。实墙按**真实粗拳体**裁剪：
+ * 沿拳管横截面取中心与四周共九条平行射线，取最近的真实方块接触面，拳管停在墙前，侧墙也能挡住拳面；
+ * 伤害仍对每个被选中的非友方单独结算。
  *
  * 三幕：
  *   起（windup，提交前）：收拳沉腰、后脚蹬地，只播预告。
@@ -68,7 +69,8 @@ namespace PokemonSkills {
             const actor = action.actor();
             const me = world.observe(actor);
             if (me === null) { done(action); return; }
-            const direction = aim(action);
+            const frame = WorldGeometry.basis(aim(action));
+            const direction = frame.forward, right = frame.right, up = frame.up;
             const reach = p("megapunch", "fistReach", action);
             const bore = p("megapunch", "bore", action);
             const power = p("megapunch", "megaton", action);
@@ -76,13 +78,29 @@ namespace PokemonSkills {
             const scale = reach / 2.3;
             const intensity = Math.max(0.6, Math.min(2.4, power / 90));
             const flows = Math.max(40, Math.round(90 + rings * 14 + bore * 40));
+            const swing = Math.max(4, Math.min(8, Math.round(4 + power / 60)));
             const perStep = 0.55;
             const start = me.position();
             const rawEnd = start.plus(direction.scale(reach));
-            // 实墙裁拳路：方块射线给出原生命中格与表面，拳路停在墙前，不隔墙打人。
-            const wall = world.clipBlocks(start, rawEnd);
-            const walled = wall !== null && wall.blocked();
-            const stop = walled ? wall!.position() : rawEnd;
+            // 粗拳体过墙：拳管横截面九列平行射线，取最近的真实方块接触，拳路停在墙前，不隔墙打人。
+            const diagonal = bore * 0.7071067811865476;
+            const offsets = [
+                WorldCombat.point(0, 0, 0),
+                right.scale(bore), right.scale(-bore), up.scale(bore), up.scale(-bore),
+                right.plus(up).scale(diagonal), right.minus(up).scale(diagonal),
+                up.minus(right).scale(diagonal), right.plus(up).scale(-diagonal)
+            ];
+            let wallHit: CombatImpact | null = null, wallAlong = 0;
+            for (let r = 0; r < offsets.length; r++) {
+                const offset = offsets[r];
+                const found = WorldGeometry.blockHit(world, start.plus(offset), rawEnd.plus(offset));
+                if (found === null) continue;
+                const delta = found.position().minus(start);
+                const along = delta.x() * direction.x() + delta.y() * direction.y() + delta.z() * direction.z();
+                if (along < -0.05) continue;
+                if (wallHit === null || along < wallAlong) { wallHit = found; wallAlong = along; }
+            }
+            const stop = wallHit === null ? rawEnd : start.plus(direction.scale(Math.max(0, wallAlong)));
             const travel = stop.minus(start).length();
             const pending: { ref: string; remaining: number }[] = [];
             let settled = false, anyWall = false;
@@ -97,7 +115,8 @@ namespace PokemonSkills {
                     if (victim === null || !scope.valid(victim)) continue;
                     const amount = Math.min(perStep, entry.remaining);
                     if (amount <= 0.001) continue;
-                    const moved = scope.displace(victim, direction.scale(amount));
+                    // 受击位移走 hitDisplace：保留原生抗击退、事件与敌我权限；被挡住就少推。
+                    const moved = scope.hitDisplace(victim, direction.scale(amount));
                     entry.remaining -= moved;
                     // 实际推不动（抗击退 Boss 等）就不再重发；重拳伤害已经成立。
                     if (moved <= 0.001) continue;
@@ -117,10 +136,16 @@ namespace PokemonSkills {
                 // 权威首碰（实体或方块），与拳路终点共用同一组位置数据。
                 const contact = action.trace(start, stop, bore, true);
                 if (contact.blocked() && !contact.hitEntity()) anyWall = true;
+                // 冲击环与掠线沿真实拳路发射（判定同一组端点）。
                 WorldFeedback.emit(world, megapunchScene, 1, start,
                     { moment: "thrust", path: [[start.x(), start.y(), start.z()], [stop.x(), stop.y(), stop.z()]],
                         direction: [direction.x(), direction.y(), direction.z()],
-                        rings: rings, flows: flows, scale: scale, intensity: intensity }, 18);
+                        rings: rings, scale: scale, intensity: intensity }, 18);
+                // 一枚明确拳形从收拳到出拳：自定义场景按 serverTick 把拳沿拳路推出去，并画出拳道与 bore 宽度。
+                action.present("world_combat:move_megapunch_fist", "world_combat:move_megapunch_fist", 1, start,
+                    JSON.stringify({ moment: "thrust", path: [[start.x(), start.y(), start.z()], [stop.x(), stop.y(), stop.z()]],
+                        direction: [direction.x(), direction.y(), direction.z()], bore: bore, start: world.tick(), swing: swing,
+                        flows: flows, scale: scale, intensity: intensity }));
                 WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(start, stop, bore), function (victim, facts) {
                     if (String(victim.ref()) === String(actor.ref()) || world.friendly(victim)) return;
                     if (!hurt(action, victim, "megapunch", power,
@@ -130,10 +155,10 @@ namespace PokemonSkills {
                         { moment: "hit", target: String(victim.ref()), scale: scale, intensity: intensity }, 22);
                 });
             }
-            if (walled) {
-                const cell = wall!.blockPosition() || wall!.position();
-                WorldFeedback.emit(world, megapunchScene, 1, cell,
-                    { moment: "wall", scale: scale, intensity: intensity }, 18);
+            if (wallHit !== null) {
+                // 墙回执落在真实接触面（position() 是接触点，blockFace() 给朝向）。
+                WorldFeedback.emit(world, megapunchScene, 1, wallHit.position(),
+                    { moment: "wall", face: wallHit.blockFace(), scale: scale, intensity: intensity }, 18);
                 anyWall = true;
             }
 

@@ -17,7 +17,7 @@
  *   rootTicks  绊住时长：**目标体重**；越重越难立刻站稳。
  *   tripTicks  失衡持续：**目标体重** + 等级。
  *   airbornePenalty 腾空折扣：固定 0.5；扫不到腿时只擦到。
- *   prepare/recover/cooldown 起手／收招／冷却：速度与等级，配置 reap 另加。
+ *   tempo/aftercast/recharge 起手／收招／冷却：速度与等级，配置 reap 另加（收招 +2、冷却 +6，只写在这份公式里）。
  *
  * 配置 `reap`（扫堂式，默认关）双向取舍：开＝突进更远，扫踢还会带倒目标身旁的一名敌人，但单发威力略低、
  * 收招与冷却更久；关＝一记更重更快的单体扫踢。两向各有局面（清场 vs 单点速伤）。
@@ -99,15 +99,16 @@ namespace PokemonSkills {
         /** 腾空折扣：目标双脚离地时威力乘的系数（固定 0.5，且不再绊倒）。 */
         airbornePenalty: percent(F.base(0.5), "腾空折扣", "扫不到支撑腿时的威力系数；腾空的目标只被擦到，也不会被绊倒。"),
         /** 起手：基础 6 刻；速度每比 60 快 1 减 0.04 刻（上限 −3）；夹在 4..11。 */
-        prepare: seconds(
+        tempo: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.04).clamp(-1, 3)).clamp(4, 11).round(0),
             "起手", "压低重心、把脚放稳的时间。"),
-        /** 收招：基础 6 刻；速度每比 60 快 1 减 0.03 刻（上限 −3）；夹在 4..11。 */
-        recover: seconds(
-            F.base(6).minus(F.stat("speed").minus(60).times(0.03).clamp(-1, 3)).clamp(4, 11).round(0),
-            "收招", "收回踢腿、重新站稳的收势。"),
+        /** 收招：基础 6 刻；速度每比 60 快 1 减 0.03 刻（上限 −3）；扫堂 +2；夹在 4..11。 */
+        aftercast: seconds(
+            F.base(6).minus(F.stat("speed").minus(60).times(0.03).clamp(-1, 3)).clamp(4, 11)
+                .plus(F.when(F.pref("reap", text("worldcombat.skill.lowkick.preference.reap")), F.const(2), F.const(0))).round(0),
+            "收招", "收回踢腿、重新站稳的收势；扫堂式缓一点。"),
         /** 冷却：基础 18 刻；速度每比 60 快 1 减 0.08 刻（上限 −6）；扫堂 +6；夹在 10..36。 */
-        cooldown: seconds(
+        recharge: seconds(
             F.base(18).minus(F.stat("speed").minus(60).times(0.08).clamp(-2, 6))
                 .plus(F.when(F.pref("reap", text("worldcombat.skill.lowkick.preference.reap")), F.const(6), F.const(0)))
                 .clamp(10, 36).round(0),

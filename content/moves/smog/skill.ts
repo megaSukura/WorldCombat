@@ -25,6 +25,12 @@ namespace PokemonSkills {
 
     function smogPoint(values: number[]): CombatPoint { return WorldCombat.point(values[0], values[1], values[2]); }
 
+    /** 雾团到尽头时的横截面半径：由雾锥张角与射程换算，执行、AI 与画面共用同一份。 */
+    export function smogFlare(mouth: number, coneDegrees: number, reach: number): number {
+        const half = coneDegrees * Math.PI / 360;
+        return Math.max(mouth + 0.35, Math.min(3.6, reach * Math.tan(half)));
+    }
+
     /** 托管雾团的状态校验；缺省字段补全，保证旧存档也能继续滚。 */
     function smogCloudData(json: string): string {
         const value = JSON.parse(json);
@@ -103,8 +109,12 @@ namespace PokemonSkills {
                     travel = distance;
                     center = origin.plus(direction.scale(travel));
                     state.wall = 1; state.wallTick = elapsed; state.stopDistance = travel;
+                    // The wall pile sits on the near side, so the smoke never reads as danger through the block.
+                    const wallBack = Math.max(0.3, state.mouth);
                     WorldFeedback.emit(world, smogScene, 1, center,
-                        { moment: "wall", puffs: state.puffs, scale: state.mouth / smogRadiusRef }, 24);
+                        { moment: "wall", puffs: state.puffs, scale: state.mouth / smogRadiusRef,
+                          direction: [direction.x(), direction.y(), direction.z()],
+                          backX: -direction.x() * wallBack, backY: -direction.y() * wallBack, backZ: -direction.z() * wallBack }, 24);
                     world.sound("minecraft:entity.slime.squish_small", center, 12, "{}");
                 }
             }
@@ -120,6 +130,7 @@ namespace PokemonSkills {
         WorldFeedback.onEffect(world, effect.id(), "smog:roll", smogScene, 1, center,
             { moment: "roll", scale: radius / smogRadiusRef, puffs: state.puffs,
                 intensity: state.intensity, direction: [direction.x(), direction.y(), direction.z()],
+                frontX: direction.x() * radius, frontY: direction.y() * radius, frontZ: direction.z() * radius,
                 backX: -direction.x() * Math.max(0.4, radius), backY: -direction.y() * Math.max(0.4, radius),
                 backZ: -direction.z() * Math.max(0.4, radius) });
 
@@ -148,6 +159,8 @@ namespace PokemonSkills {
         WorldFeedback.onEffect(world, effect.id(), "smog:roll", smogScene, 1, smogPoint(state.origin),
             { moment: "roll", scale: state.mouth / smogRadiusRef, puffs: state.puffs,
                 intensity: state.intensity, direction: state.direction,
+                frontX: state.direction[0] * state.mouth, frontY: state.direction[1] * state.mouth,
+                frontZ: state.direction[2] * state.mouth,
                 backX: -state.direction[0] * state.mouth, backY: -state.direction[1] * state.mouth,
                 backZ: -state.direction[2] * state.mouth });
         effect.schedule("roll", "roll", 1, "{}");
@@ -207,9 +220,8 @@ namespace PokemonSkills {
             const puffs = Math.max(8, Math.round(p("smog", "puffs", action)));
             const cap = Math.max(1, Math.round(p("smog", "maxTargets", action)));
             const intensity = Math.max(0.6, Math.min(2, power / 30));
-            const half = cone * Math.PI / 360;
-            // 雾团到尽头时的横截面半径按锥宽换算，夹在可打的体积内；画面与判定共用它。
-            const flare = Math.max(mouth + 0.35, Math.min(3.6, reach * Math.tan(half)));
+            // 雾团到尽头时的横截面半径按锥宽换算，夹在可打的体积内；画面、判定与 AI 共用它。
+            const flare = smogFlare(mouth, cone, reach);
             const linger = Math.max(6, Math.round(roll * 0.35));
             const state = {
                 origin: [origin.x(), origin.y(), origin.z()],

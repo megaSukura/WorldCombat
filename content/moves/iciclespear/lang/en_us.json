@@ -23,7 +23,7 @@
   "worldcombat.skill.iciclespear.value.aftercast": "Recovery",
   "worldcombat.skill.iciclespear.value.recharge": "Cooldown",
   "worldcombat.skill.iciclespear.preference.rime": "Rime",
-  "worldcombat.skill.iciclespear.preference.rime.help": "On: each hit's chill is one slow tier higher, chill duration x1.6, frost radius x1.3 and spread x0.8, good for pinning a target and frosting ground; costs icicles capped at 3, interval +1 tick, per-icicle power x0.9, wind-up +2 ticks and cooldown +4 ticks. Off (shatter): up to 5 icicles, per-icicle power x1.1 and cooldown -4 ticks, at the cost of the shallowest chill, a smaller frost patch and a wider spread.",
+  "worldcombat.skill.iciclespear.preference.rime.help": "On: each hit's chill is one slow tier higher (about 30% slow), chill duration x1.6 and ice-chip radius x1.3, good for pinning a target; costs icicles capped at 3, per-icicle power x0.9, wind-up +2 ticks and cooldown +4 ticks. Off (shatter): up to 5 icicles, per-icicle power x1.1 and cooldown -4 ticks, at the cost of the shallowest chill (about 15% slow) and a smaller ice-chip radius.",
   "worldcombat.skill.iciclespear.preference.ai.maxChase": "Cast distance",
   "worldcombat.skill.iciclespear.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger prefers opening from farther away.",
   "worldcombat.skill.iciclespear.preference.ai.finish": "Prefer low health",

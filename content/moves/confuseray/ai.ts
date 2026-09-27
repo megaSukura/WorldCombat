@@ -5,7 +5,8 @@
  *   光会被掩体挡下，绕不过去。ai.opening=先手时（默认）只在目标正攻击自己或主人、或自己刚被打过时出手；
  *   =随时时见威胁就照，当纯粹的扰乱手段。
  * 对谁出手：当前威胁；带着共享身份 confusion 的目标会被跳过，不重复照。
- * 够不到怎么办：reach 就是本招射程（由特攻决定），accepts 不按距离硬拒；伙伴会先走近到能通视的射程再照。
+ * 够不到怎么办：reach 就是本招射程（由特攻决定），accepts 不按距离硬拒；当刻没有通视也不会被提前淘汰，
+ *   伙伴会先绕到能通视、能放光的射程再照；驻守时只要目标已在射程内就照，不放远的就交给接近。
  * 放完之后：目标出手可能作废、打中还会自伤；after 让它照完后退开一步，别停在被晃晕的敌人刀口上。
  * 配置 beam（广照／凝神）改变射程与混乱时长；ai.maxChase、ai.opening 决定追多远、什么时候照。
  */
@@ -14,12 +15,15 @@ namespace PokemonSkills {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "confusion")) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
+        const stay = context.facts.intent === "hold" || context.facts.intent === "stay";
+        // 驻守只要求目标已经在射程内；够不到的交给接近逻辑，而不是整招被淘汰。
+        if (stay && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)
+            && CompanionBehavior.distance(self.point, target.point) > Math.max(1, Number(item.data.range) || 0)) return false;
         const focus = item.data.config && item.data.config.beam === "focus";
         const ceiling = CompanionBehavior.ai<number>(item, "maxChase", 16) * (focus ? 0.8 : 1);
         if (context.facts.focus !== target.ref && CompanionBehavior.distance(self.point, target.point) > ceiling) return false;
-        if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
+        // 视线与换位交由 approach 处理；此处不因当刻没有通视而提前淘汰，伙伴会绕到能照的位置再放。
         if (CompanionBehavior.ai<string>(item, "opening", "opening") !== "opening") return true;
         const owner = context.facts.owner;
         return target.attacking === self.ref || !!owner && target.attacking === owner.ref || self.hurtAgo < 40;

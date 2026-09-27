@@ -29,10 +29,13 @@ namespace PokemonSkills {
     const spiritshackleNoAnchorText = "world_combat.move.spiritshackle.text.noanchor";
     const spiritshackleBlockedText = "world_combat.move.spiritshackle.text.blocked";
 
-    /** 影子缝线的持久承载：记录锚点与自己那份钉住载体的 key，每几刻复查锚地与载体。 */
+    /** 影子缝线的持久承载：记录锚点、命中时脚底位置与自己那份钉住载体的 key，每几刻复查锚地与位移。 */
     function spiritshackleSeamData(json: string): string {
         const value = JSON.parse(json);
         if (!Array.isArray(value.point) || value.point.length !== 3) throw new Error("Invalid spirit shackle anchor");
+        // 旧状态没有 pin 时按锚点补齐，避免读不到命中时脚底位。
+        if (value.pin === undefined) value.pin = value.point.slice();
+        if (!Array.isArray(value.pin) || value.pin.length !== 3) throw new Error("Invalid spirit shackle pin");
         if (typeof value.pinnedKey !== "string" || !value.pinnedKey) throw new Error("Invalid spirit shackle carrier");
         ["escape", "threads", "radius", "scale", "intensity"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid spirit shackle state");
@@ -48,27 +51,17 @@ namespace PokemonSkills {
                 threads: data.threads, radius: data.radius, scale: data.scale, intensity: data.intensity });
     }
 
-    /** 目标脚下最近的合法实际地表，返回地表顶面；脚下 7 格内没有实心方块（飞空、悬空）时为 null。 */
+    /** 脚底向下 7 格内第一块真实碰撞顶面（花草、液体这类无碰撞面不算）；飞空、悬空为 null。 */
     function spiritshackleGround(world: CombatWorld, feet: CombatPoint): CombatPoint | null {
-        const baseX = Math.floor(feet.x()), baseZ = Math.floor(feet.z()), baseY = Math.floor(feet.y());
-        for (let dy = 1; dy >= -6; dy--) {
-            const block = world.block(WorldCombat.point(baseX, baseY + dy, baseZ));
-            if (block === null) return null;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava") return null;
-            return WorldCombat.point(feet.x(), baseY + dy + 1, feet.z());
-        }
-        return null;
+        const hit = WorldGeometry.blockHit(world,
+            WorldCombat.point(feet.x(), feet.y() + 0.25, feet.z()),
+            WorldCombat.point(feet.x(), feet.y() - 7, feet.z()));
+        return hit === null ? null : hit.position();
     }
 
-    /** 锚地仍是可缝的实心方块。 */
+    /** 锚地仍是可直接踩上的真实碰撞面；被挖掉或只剩花草时不再成立。 */
     function spiritshackleAnchorHolds(world: CombatWorld, anchor: CombatPoint): boolean {
-        const block = world.block(WorldCombat.point(Math.floor(anchor.x()), Math.floor(anchor.y()) - 1, Math.floor(anchor.z())));
-        if (block === null) return false;
-        const id = String(block.id());
-        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
-            && id !== "minecraft:water" && id !== "minecraft:lava";
+        return WorldGeometry.blockHit(world, anchor.plus(WorldCombat.point(0, 0.1, 0)), anchor.minus(WorldCombat.point(0, 0.5, 0))) !== null;
     }
 
     WorldCombat.effect(spiritshackleSeam, 1, 400, "actor", spiritshackleSeamData, EffectProtocols.unchanged);
@@ -95,7 +88,9 @@ namespace PokemonSkills {
         if (body === null || !MobEffects.present(world, data.carrierLease)) { effect.end(); return; }
         const anchor = WorldCombat.point(data.point[0], data.point[1], data.point[2]);
         if (!spiritshackleAnchorHolds(world, anchor)) { data.reason = "anchor"; effect.state(JSON.stringify(data)); effect.end(); return; }
-        if (body.position().minus(anchor).length() > data.escape) {
+        // 用命中时记录的脚底位算实际位移；身体中心高度不再计入，较高目标原地不动也不会被误判为超距。
+        const pin = WorldCombat.point(data.pin[0], data.pin[1], data.pin[2]);
+        if (body.boundsMin().minus(pin).length() > data.escape) {
             data.reason = "snapped"; effect.state(JSON.stringify(data));
             WorldFeedback.emit(world, spiritshackleScene, 1, body.position(),
                 { moment: "snap", target: String(victim.ref()), point: data.point, threads: data.threads, scale: data.scale }, 22);
@@ -171,7 +166,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_spiritshackle:windup", spiritshackleScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", anchor: config && config.anchor === true }));
+                JSON.stringify({ moment: "windup", anchor: config && config.anchor === true, prepare: prepare }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -193,7 +188,7 @@ namespace PokemonSkills {
             function pin(current: CombatAction, victim: CombatActor): void {
                 const scope = current.world(), body = scope.observe(victim);
                 if (body === null) return;
-                const feet = body.position().minus(WorldCombat.point(0, body.height() / 2, 0));
+                const feet = body.boundsMin();
                 const ground = spiritshackleGround(scope, feet);
                 if (ground === null) {
                     WorldFeedback.emit(scope, spiritshackleScene, 1, body.position(),
@@ -212,8 +207,8 @@ namespace PokemonSkills {
                 const pinned = MobEffects.read(scope, victim, spiritshacklePinned);
                 if (pinned === null) return;
                 const anchor = [ground.x(), ground.y(), ground.z()];
-                const data = { point: anchor, pinnedKey: String(pinned.key()), carrierLease: 0, escape: escape,
-                    threads: threads, radius: radius, scale: scale, intensity: intensity, reason: "" };
+                const data = { point: anchor, pin: [feet.x(), feet.y(), feet.z()], pinnedKey: String(pinned.key()), carrierLease: 0,
+                    escape: escape, threads: threads, radius: radius, scale: scale, intensity: intensity, reason: "" };
                 scope.effect(spiritshackleSeam, victim, JSON.stringify(data), hold);
                 WorldFeedback.text(scope, ground.plus(WorldCombat.point(0, 0.8, 0)), spiritshacklePinText,
                     [Math.round(hold / 20 * 10) / 10], 26);

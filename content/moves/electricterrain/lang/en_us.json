@@ -1,13 +1,13 @@
 {
-  "worldcombat.skill.electricterrain.summary": "Press current into a chosen patch of ground: grounded bodies on the field hit 1.3x harder with Electric moves, the charge underfoot keeps them awake, and sleeping bodies are jolted awake; it treats both sides alike.",
+  "worldcombat.skill.electricterrain.summary": "Press current into a chosen patch of real ground (the spot must be reachable and sit on solid support): grounded bodies on the same level as the field hit 1.3x harder with Electric moves, the residual charge underfoot keeps them awake, and sleeping bodies are jolted awake; it treats both sides alike.",
   "worldcombat.skill.electricterrain.use.0": "Boost Electric moves",
   "worldcombat.skill.electricterrain.use.1": "Keep the team from being put to sleep",
   "worldcombat.skill.electricterrain.use.2": "Jolt a sleeping target awake",
   "worldcombat.skill.electricterrain.description.0": "Press a field of radius %1$s blocks into the chosen ground, lasting %2$s.",
-  "worldcombat.skill.electricterrain.description.1": "Grounded living beings in the field cannot fall asleep, and sleeping ones are awakened. Each refresh keeps them awake for up to %1$s; after leaving, the remaining duration counts down.",
-  "worldcombat.skill.electricterrain.description.2": "A charged body's Electric moves are 1.3x as strong, applying to both sides alike.",
-  "worldcombat.skill.electricterrain.description.3": "Starts up in %1$s and settles in %2$s, both driven by Speed.",
-  "worldcombat.skill.electricterrain.timing": "Cast at ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to press the current in, recovers %3$s, and commits a %5$s cooldown on cast.",
+  "worldcombat.skill.electricterrain.description.1": "Grounded bodies in the field on its level cannot fall asleep, and sleeping ones are awakened. Each refresh keeps them awake for up to %1$s; after leaving, the remaining duration counts down. This residual charge only wards off sleep and grants no damage bonus.",
+  "worldcombat.skill.electricterrain.description.2": "A grounded body standing inside the field on its level deals 1.3x with Electric moves, applying to both sides alike; leaving the field, taking off, or standing on another level below or above loses the bonus immediately.",
+  "worldcombat.skill.electricterrain.description.3": "Starts up in %1$s and settles in %2$s, both driven by Speed (the faster it is, the sooner it presses in and recovers).",
+  "worldcombat.skill.electricterrain.timing": "Cast at real ground within %1$s blocks; after %2$s of preparation it spends %4$s PP to press the current in, recovers %3$s, and commits a %5$s cooldown on cast. The spot must sit on standable ground with an unobstructed path.",
   "worldcombat.skill.electricterrain.growth.0": "At level %1$s the committed cooldown drops to %2$s s.",
   "worldcombat.skill.electricterrain.growth.1": "At level %1$s the committed cooldown drops again to %2$s s.",
   "worldcombat.skill.electricterrain.value.gather": "Start-up",
@@ -28,6 +28,7 @@
   "worldcombat.skill.electricterrain.preference.ai.leaveStation.help": "On, a companion holding its station will step out to lay the field.",
   "world_combat.move.electricterrain.text.charge": "Charged ground",
   "world_combat.move.electricterrain.text.awake": "Jolted awake",
+  "world_combat.move.electricterrain.text.miss": "No ground to charge",
   "effect.world_combat.electricterrain_ground": "Charged",
   "worldcombat.skill.electricterrain.value.wakeDuration": "Maximum wakefulness duration"
 }

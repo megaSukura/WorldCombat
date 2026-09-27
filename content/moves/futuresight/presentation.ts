@@ -96,7 +96,7 @@ const FuturesightDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 10 },
             emitters: [
                 {
-                    name: "dive_streak", bind: "source", offset: [0, 0, 0], height: 0, fit: "none",
+                    name: "dive_streak", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/moves/psychicsend",
                     burst: { count: 16, interval: 2, repeats: 3 }, shape: { kind: "ring", radius: 0.24 },
                     direction: "down", speed: [0.2, 0.5],
@@ -153,3 +153,47 @@ const FuturesightDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_futuresight", 1, FuturesightDefinition);
+
+// 念团倒计时：悬在目标头顶，随剩余时间逐渐收紧的念环与一圈倒计时弧，读出「还有多久落下」。
+// 由 charge 效果托管（onEffect），预约结束/被清除时同步消失；它只是表现，不参与任何判定。
+const FuturesightMoteRing = "cobblemon:particle/generic/psychic/psyring2";
+
+function futuresightColour(alpha: number, rgb: number): number {
+    return ((Math.round(255 * Math.max(0, Math.min(1, alpha))) << 24) | rgb) | 0;
+}
+
+WorldCombatClient.scene("world_combat:move_futuresight_mote", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    if (data.moment === "strike" && Array.isArray(data.path) && data.path.length === 2) {
+        const age = Math.max(0, frame.serverTick() - Number(data.start));
+        const alpha = Math.max(0, 1 - age / 6), a = data.path[0], b = data.path[1];
+        frame.line(a[0], a[1], a[2], b[0], b[1], b[2], futuresightColour(alpha, 0xD8E8FF));
+        frame.sprite(FuturesightMoteRing, b[0], b[1], b[2], .4, 0, futuresightColour(alpha, 0x8A7BFF), 0, true);
+        return;
+    }
+    const remaining = Math.max(0, Number(data.remaining) || 0);
+    const total = Math.max(1, Number(data.total) || 1);
+    const radius = Math.max(0.4, Number(data.radius) || 0.6);
+    const scale = Math.max(0.5, Math.min(2, Number(data.scale) || 1));
+    const progress = Math.max(0, Math.min(1, 1 - remaining / total));
+    const anchor = data.target ? JSON.parse(frame.anchor(String(data.target))) : null;
+    const x = anchor ? anchor.x : entry.position[0];
+    const y = anchor ? anchor.y + Number(anchor.height) * .5 + (Number(data.hang) || 3) : entry.position[1];
+    const z = anchor ? anchor.z : entry.position[2];
+    const now = frame.serverTick();
+    const tightening = radius * (1.25 - 0.6 * progress);
+    frame.ring(x, y, z, tightening, futuresightColour(0.4, 0x8A7BFF));
+    frame.ring(x, y, z, Math.max(0.05, tightening * 0.5), futuresightColour(0.6, 0xD8E8FF));
+    // 倒计时弧：剩余越多弧越长，围绕念团一圈，越接近兑现收得越紧。
+    const fraction = Math.max(0, Math.min(1, remaining / total));
+    const points = 20, full = Math.PI * 2 * fraction, r = radius * 1.45;
+    for (let i = 0; i < points; i++) {
+        const a0 = full * i / points - Math.PI / 2, a1 = full * (i + 1) / points - Math.PI / 2;
+        frame.line(x + Math.cos(a0) * r, y, z + Math.sin(a0) * r,
+            x + Math.cos(a1) * r, y, z + Math.sin(a1) * r, futuresightColour(0.66, 0x8A7BFF));
+    }
+    frame.sprite(FuturesightMoteRing, x, y, z, 0.3 * scale, 0, futuresightColour(0.8, 0x8A7BFF), Math.floor(now * 0.4) % 8, true);
+});

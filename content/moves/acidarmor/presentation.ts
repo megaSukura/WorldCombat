@@ -11,6 +11,8 @@
  * 运动：酸滴由体内向外溅、受轻微重力落下；酸环贴地推开；池面低密度上浮；凝回时酸滴向心倒吸。
  * 数：酸滴量绑 `data.residue`（体重派生），`data.scale` 放大整片半径与粒子尺寸。
  * 持续状态：持液态低密度、贴地贴体，放在脚边与身侧，玩家仍看得清目标。
+ * 拥有：pool 画面绑在真实 world_combat:field 上、slick 滴液绑在 startup 载体窗口上（服务端 WorldFeedback.onEffect），
+ *   池到期或载体被清除/驱散时一起收，不靠独立计时。
  */
 const AcidArmorDefinition: ParticleDefinition = {
     interrupt: "drain",

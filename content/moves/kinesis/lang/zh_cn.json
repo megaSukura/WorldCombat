@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.kinesis.summary": "当面用念力点出一把汤匙并逐步掰弯，只引开一个看得见它的对手的注意：命中下降、攻击变弱。射程很远，但整个折弯过程都必须与目标通视，中途被掩体挡住或目标离开就落空。",
+  "worldcombat.skill.kinesis.summary": "当面用念力点出一把汤匙并逐步掰弯，只引开一个看得见它的对手的注意：命中下降、物理直接攻击变弱。射程较远，但整个折弯过程都必须与目标通视，中途被掩体挡住或目标离开就落空。",
   "worldcombat.skill.kinesis.use.0": "远距离点名一个最难缠的对手",
   "worldcombat.skill.kinesis.use.1": "在掩体对峙时削弱对方的远程",
   "worldcombat.skill.kinesis.use.2": "给决斗或撤退创造单点优势",
-  "worldcombat.skill.kinesis.description.0": "被引开注意期间，目标的物理攻击降低 15%%、宝可梦还会额外失去 %1$s 级命中；攻击削弱持续 %2$s，命中等级则按普通能力等级保留（要等脱战才消退，不随失神结束恢复）。",
+  "worldcombat.skill.kinesis.description.0": "被引开注意期间，目标的物理直接攻击降低 15%%（对宝可梦、原版生物与其他模组生物同语义，不只原版近战属性），命中等级再下降 %1$s 级；两项都绑在这份失神上，载体到期、被牛奶或 /effect clear 清除、或目标脱离失神时一起复原。攻击削弱持续 %2$s。",
   "worldcombat.skill.kinesis.description.1": "凝注距离 %1$s 格；只作用于单个目标，不会波及旁人。",
   "worldcombat.skill.kinesis.description.2": "折弯汤匙要 %1$s，冷却 %2$s。折弯的全过程都必须与目标通视：墙、柱子或其他掩体挡住视线，或目标走出凝注距离，这场戏法就中断落空。",
   "worldcombat.skill.kinesis.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

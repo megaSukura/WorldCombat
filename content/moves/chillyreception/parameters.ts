@@ -2,11 +2,12 @@
  * 冷笑话 / chillyreception 的参数。
  *
  * 原生事实：Ice／变化／威力 —／命中 —／PP 10／讲一个冷到极点的笑话后与后备宝可梦替换；场上下雪 5 回合。
- * 世界化：这招的念头是「冷场的交接」——施法者抛出一句冷到没人接得住的话，全场安静下来：身边的敌人接到
- * 一次**可被正常免疫的短打断**（`world_combat:interrupt` 动作事件，无法打断的动作照常继续），并挂上
- * 共享身份 `world_combat:status/cold_silence`；雪随之落下；施法者趁这片安静退到场内一处背离威胁、站得住的
- * 落点，把场子留给下一只上来的伙伴。**有合法后备时由原生队伍操作收回自己、让后备在同一点登场；
- * 没有后备时只撤一步、留在场上。核心退场不依赖打断成功。**
+ * 世界化：这招的念头是「冷场的交接」——施法者抛出一句冷到没人接得住的话，全场安静下来：身边有视线的
+ * 敌人各接到一次**真实计数过的短打断**（`LivingActions.requestInterrupt` 只数真正结束的动作；无法打断或
+ * 免疫的动作照常继续、不算成功），并挂上共享身份 `world_combat:status/cold_silence`；雪随之落下；施法者
+ * 趁这片安静沿背离威胁、**逐段踩在真实支撑上**退开最多 withdraw 格，把场子留给下一只上来的伙伴。
+ * **有合法后备时由原生队伍操作收回自己、让后备在实际退到的脚点登场；没有后备就用同样的有限退步留在场上。
+ * 核心退场不依赖打断成功。**
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   gather         起手：基础 14 刻，速度每快 1 点减 0.05，夹在 9..22；话讲得越快，冷场越早。
@@ -33,9 +34,9 @@ namespace PokemonSkills {
     WorldEnvironment.defineWeather("snow", { sunlight: 0.4 });
 
     actionParameters.define("chillyreception", {
-        gather: seconds(F.base(14).plus(F.stat("speed").minus(40).max(0).times(0.05).clamp(0, 7)).clamp(9, 22),
+        gather: seconds(F.base(14).minus(F.stat("speed").minus(40).max(0).times(0.05).clamp(0, 7)).clamp(9, 22),
             "起手", "把笑话讲完需要多少时间；速度越快，冷场来得越早。"),
-        settle: seconds(F.base(10).plus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 5)).clamp(6, 15),
+        settle: seconds(F.base(10).minus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 5)).clamp(6, 15),
             "收招", "退开后的收势时间；速度越快越利落。"),
         silenceRadius: formula(
             F.base(7).plus(F.stat("specialAttack").minus(60).max(0).times(0.02))

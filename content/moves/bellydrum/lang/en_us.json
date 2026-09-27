@@ -20,6 +20,7 @@
   "worldcombat.skill.bellydrum.preference.ai.healthFloor": "Drum threshold",
   "worldcombat.skill.bellydrum.preference.ai.healthFloor.help": "The companion drums only above this health ratio; lower dares to spend half a life, higher reinforces near full health.",
   "effect.world_combat.bellydrum": "Swollen Power",
-  "world_combat.move.bellydrum.text.surge": "Attack maxed out",
-  "world_combat.move.bellydrum.text.fade": "The drumming fades"
+  "world_combat.move.bellydrum.text.surge": "Drummed up · Attack stage %1$s",
+  "world_combat.move.bellydrum.text.fade": "The drumming fades",
+  "world_combat.move.bellydrum.text.unpaid": "The drum falters - the price could not be paid"
 }

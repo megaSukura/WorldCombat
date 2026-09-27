@@ -4,7 +4,8 @@
  * 一句话：托手成盘、盘中亮起一点暖金；实际伙伴先递来一道短指令线，随后一枚托盘形龙气平抛飞出，
  * 碰到第一个身体时拍出一圈礼花；成功加到谁，就在谁身上按能力亮出对应的小符。
  * 色相家族：暖金与米白（托盘与菜势）为底，玫瑰色只做点缀；能力光环按提升的能力取红／蓝／黄之一的窄色。
- * 拍子：起（windup 托盘聚金）→ 令（order 伙伴到自身）→ 端（fly 龙气飞行）→ 中（hit 礼花）→ 供（dish 能力小符）→ 空（miss 散掉）。
+ * 拍子：起（windup 托盘聚金）→ 令（order 伙伴到自身，带本招实际提升的能力）→ 端（fly 龙气飞行）→ 中（hit 礼花）
+ *   → 供（dish 能力礼物，仅实际增级时发）→ 符（sigil 按能力画不同简形状）→ 空（miss 散掉）。
  * 范围：order 的 path 是伙伴与施法者两点连成的同一道短指令线；fly 绑真实投射物，命中与增益点都读服务端给的坐标。
  * 数：`data.power`（下手威力）绑定命中礼花量，`data.stages`（增益级数）绑定能力光环环数，
  * `data.stat`（提升的能力序号）选光环色，`data.scale`（下手半宽 / 0.45）放菜势范围。
@@ -154,3 +155,36 @@ const OrderupDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_orderup", 1, OrderupDefinition);
+
+/**
+ * 实际增级的小符：按 `data.stat`（0 攻击 / 1 防御 / 2 速度，来自 orderupStatIndex）在真正被补上能力的
+ * 对象（`data.target`）上方画一个不同的简单形状——攻击双叉、防御方框、速度双箭头；只由服务端确认真实增级后
+ * 的 emit 触发，能力满时不发。
+ */
+WorldCombatClient.scene("world_combat:move_orderup_sigil", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry<{ stat?: number; target?: string }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    const anchor = data.target ? JSON.parse(frame.anchor(String(data.target))) : null;
+    if (!anchor) return;
+    const cx = anchor.x, cy = anchor.y + (anchor.height || 1.4) * 0.6, cz = anchor.z;
+    const stat = typeof data.stat === "number" ? data.stat : 0;
+    if (stat === 1) {
+        const col = 0x8070A8F0, r = 0.42;
+        frame.line(cx - r, cy - r, cz, cx + r, cy - r, cz, col);
+        frame.line(cx + r, cy - r, cz, cx + r, cy + r, cz, col);
+        frame.line(cx + r, cy + r, cz, cx - r, cy + r, cz, col);
+        frame.line(cx - r, cy + r, cz, cx - r, cy - r, cz, col);
+    } else if (stat === 2) {
+        const col = 0x80F0D060;
+        frame.line(cx - 0.42, cy - 0.4, cz, cx, cy, cz, col);
+        frame.line(cx + 0.42, cy - 0.4, cz, cx, cy, cz, col);
+        frame.line(cx - 0.42, cy + 0.4, cz, cx, cy + 0.8, cz, col);
+        frame.line(cx + 0.42, cy + 0.4, cz, cx, cy + 0.8, cz, col);
+    } else {
+        const col = 0x80F07070;
+        frame.line(cx - 0.4, cy - 0.4, cz, cx + 0.4, cy + 0.4, cz, col);
+        frame.line(cx - 0.4, cy + 0.4, cz, cx + 0.4, cy - 0.4, cz, col);
+        frame.ring(cx, cy, cz, 0.4, col);
+    }
+});

@@ -13,6 +13,11 @@
  *   与陀螺球并排：一个贴身钢球称「对方快多少」，一个远投电团称「自己快多少」。
  */
 namespace PokemonSkills {
+    /** 速度比载荷 → 电团体积（发射外观、蓄力预告与接触闪光共用同一条换算）。 */
+    function electroballScale(load: number): number { return Math.max(0.7, Math.min(2.0, 0.7 + load * 0.22)); }
+    /** 威力 → 电团亮度（发射与命中共用）。 */
+    function electroballIntensity(value: number): number { return Math.max(0.6, Math.min(2.2, value / 70)); }
+
     define({
         id: electroballId,
         cooldownParameter: "recharge",
@@ -38,15 +43,16 @@ namespace PokemonSkills {
                 world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p(electroballId, "tempo", context)),
-                recover: Math.round(p(electroballId, "recover", context)),
+                recover: Math.round(p(electroballId, "aftercast", context)),
                 cooldown: Math.round(p(electroballId, "recharge", context)),
                 active: 0,
                 range: p(electroballId, "reach", context)
             };
         },
         windup: function (action, config, prepare) {
+            const load = p(electroballId, "load", action);
             action.present("electroball:charge", electroballScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", load: p(electroballId, "load", action), windup: prepare,
+                JSON.stringify({ moment: "charge", scale: electroballScale(load), load: load, windup: prepare,
                     overcharge: config && config.overcharge === true }));
             return prepare;
         },
@@ -62,15 +68,11 @@ namespace PokemonSkills {
             const predictedSparks = Math.max(8, Math.round(p(electroballId, "sparks", action)));
             const predictedLoad = action.target() !== null ? p(electroballId, "load", action) : 0;
             const predictedScale = electroballScale(predictedLoad);
+            // 自由投弹尊重完整 3D 瞄准：高低目标沿所选方向投出，不压到水平面。
             const aimed = aim(action);
-            let direction = WorldCombat.point(aimed.x(), 0, aimed.z());
+            let direction = WorldCombat.point(aimed.x(), aimed.y(), aimed.z());
             direction = direction.length() < 0.05 ? WorldCombat.point(0, 0, 1) : direction.unit();
             let settled = false;
-
-            /** 速度比载荷 → 电团体积（发射外观与接触闪光共用同一条换算）。 */
-            function electroballScale(load: number): number { return Math.max(0.7, Math.min(2.0, 0.7 + load * 0.22)); }
-            /** 威力 → 电团亮度（发射与命中共用）。 */
-            function electroballIntensity(value: number): number { return Math.max(0.6, Math.min(2.2, value / 70)); }
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -84,7 +86,8 @@ namespace PokemonSkills {
             };
             sound(action, "cobblemon:move.thundershock.actor");
 
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), gravity: 0, radius: radius, lifetime: 180, direction: direction,
                 appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
@@ -109,20 +112,20 @@ namespace PokemonSkills {
                         return;
                     }
                     // 撞到方块或第一个挡路的非友方：在真实接触点散开，不飞越它去锁后面的伤害。
-                    const at = hit.blocked() && hit.blockPosition() !== null ? hit.blockPosition()! : point;
-                    WorldFeedback.emit(scope, electroballScene, 1, at,
+                    // position() 是实际接触点；blockPosition() 只是方块格坐标，不用它当散开位置。
+                    WorldFeedback.emit(scope, electroballScene, 1, point,
                         { moment: "fade", blocked: hit.blocked() ? 1 : 0, face: hit.blocked() ? hit.blockFace() : "",
                             scale: predictedScale, direction: [direction.x(), direction.y(), direction.z()] }, 20);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.8, 0)), electroballMissText, [], 20);
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.8, 0)), electroballMissText, [], 20);
                     finish(current);
                 }
             }, function (current: CombatAction) {
                 if (settled) return;
-                // 飞满射程没碰到任何东西：在施法者身边收势解散。
-                const scope = current.world(), self = scope.observe(action.actor());
-                if (self !== null) {
-                    WorldFeedback.emit(scope, electroballScene, 1, self.position(), { moment: "fade", scale: predictedScale }, 18);
-                    WorldFeedback.text(scope, self.position().plus(WorldCombat.point(0, 1.05, 0)), electroballMissText, [], 20);
+                // 飞满射程没碰到任何东西：用弹体的真实末点散去，不用满射程点或旧瞄准点假造终点。
+                const scope = current.world(), end = scope.projectilePosition(flight);
+                if (end !== null) {
+                    WorldFeedback.emit(scope, electroballScene, 1, end, { moment: "fade", scale: predictedScale }, 18);
+                    WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.05, 0)), electroballMissText, [], 20);
                 }
                 finish(current);
             });

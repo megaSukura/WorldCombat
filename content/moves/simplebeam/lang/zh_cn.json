@@ -30,6 +30,7 @@
   "world_combat.move.simplebeam.text.clear": "单纯效果结束",
   "world_combat.move.simplebeam.text.fizzle": "它的特性改不动",
   "world_combat.move.simplebeam.text.empty": "念波散在空处，没有对象",
+  "world_combat.move.simplebeam.text.line": "念波被挡住",
   "effect.world_combat.simple_beam": "单纯",
   "worldcombat.skill.simplebeam.world": "普通生物受念波影响 %1$s，期间攻击、防御、特攻、特防、速度、命中与闪避的后续能力等级变化翻倍，上下限仍为±6级；有利与不利变化都会放大。效果被清除或到期后停止放大，已经改变的等级保留。"
 }

@@ -13,32 +13,30 @@
 namespace PokemonSkills {
     function featherdanceAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
-    /** 羽绒耗尽落点的实际着地面：向下探一次，找到支撑面就落在其上方，找不到就保持原高度。 */
-    function featherdanceGround(world: CombatWorld, point: CombatPoint): CombatPoint {
-        const baseY = Math.floor(point.y());
-        for (let probe = baseY + 1; probe >= baseY - 4; probe--) {
-            const block = world.block(WorldCombat.point(point.x(), probe, point.z()));
-            if (block === null) break;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava") break;
-            return WorldCombat.point(point.x(), probe + 1, point.z());
-        }
-        return point;
+    /** 羽绒耗尽落点的真实着地面：向下投射一次真实方块碰撞，取实际接触面；探不到支撑面则返回 null（不硬造地云）。 */
+    function featherdanceGround(world: CombatWorld, point: CombatPoint): CombatPoint | null {
+        const hit = WorldGeometry.blockHit(world, point.plus(WorldCombat.point(0, 1.0, 0)), point.minus(WorldCombat.point(0, 4.0, 0)));
+        if (hit === null) return null;
+        const at = hit.position();
+        return WorldCombat.point(at.x(), at.y(), at.z());
     }
 
-    /** 把羽绒覆到一个目标身上：挂身份、扣攻击、播命中表现与浮字。 */
-    function featherdanceSmother(world: CombatWorld, target: CombatActor, drop: number, downTicks: number, tufts: number): void {
-        MobEffects.apply(world, target, featherdanceEffect, downTicks, 0);
-        NativeEffects.boost(world, target, "atk", -drop);
+    /** 把羽绒覆到一个目标身上：挂身份、扣攻击、播命中表现与浮字；只有真正扣到等级才报出数值。 */
+    function featherdanceSmother(world: CombatWorld, target: CombatActor, drop: number, downTicks: number, tufts: number): boolean {
+        const applied = MobEffects.apply(world, target, featherdanceEffect, downTicks, 0);
+        const dropped = NativeEffects.boost(world, target, "atk", -drop);
         const body = world.observe(target);
-        if (body === null) return;
+        if (body === null) return false;
         WorldFeedback.emit(world, featherdanceScene, 1, body.position(),
             { moment: "smother", target: String(target.ref()), drop: drop, tufts: tufts }, 26);
-        WorldFeedback.text(world, featherdanceAbove(body.position()), "world_combat.move.featherdance.text.smother", [drop], 34);
+        // 降攻被原生拒绝、或已到下限时，不报出一次没发生的成功。
+        if (dropped !== 0)
+            WorldFeedback.text(world, featherdanceAbove(body.position()), "world_combat.move.featherdance.text.smother", [Math.abs(dropped)], 34);
+        return applied !== null || dropped !== 0;
     }
 
-    // 落点绒雾：踏进来的非友方各覆一次羽（每人只生效一次，反复进出不叠加）；scan 让绒雾一直看得见。
+    // 落点绒雾：踏进来的非友方各覆一次羽（每人只生效一次，反复进出不叠加）。
+    // 表现用 presentOn 绑在这片场地效果本身：场地到期、被驱散或施法者离场时画面一起收，不靠固定时长续期。
     WorldEffects.fieldRule(featherdanceField, {
         enter: function (world, actor, field) {
             if (world.friendly(actor)) return;
@@ -49,9 +47,9 @@ namespace PokemonSkills {
             featherdanceSmother(world, actor, field.data.drop, field.data.ticks, field.data.tufts);
         },
         scan: function (effect, world, field) {
-            WorldFeedback.keep(world, "featherdance:" + String(effect.id()), featherdanceScene, 1,
-                WorldCombat.point(field.position[0], field.position[1], field.position[2]),
-                { moment: "field", radius: field.radius, scale: field.radius / 3.0, feathers: field.data.tufts }, 12);
+            const at = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
+            WorldFeedback.onEffect(world, effect.id(), "featherdance:field:" + String(effect.id()),
+                featherdanceScene, 1, at, { moment: "field", radius: field.radius, feathers: field.data.tufts });
         }
     });
 
@@ -89,9 +87,11 @@ namespace PokemonSkills {
                     target: action.target() === null ? "" : String(action.target()!.ref()) }));
             return prepare;
         },
-        indicator: function (config) {
+        indicator: function (config, pokemon) {
             const dense = !!(config && config.dense);
-            return { radius: dense ? 5 : 6, geometry: "line", style: "plume", color: 0xF6F3EA, label: dense ? "羽毛舞·厚羽" : "羽毛舞" };
+            const context: NumberContext = { pokemon: pokemon!, skill: skills[featherdanceId], detail: { values: config } };
+            const reach = pokemon ? p(featherdanceId, "reach", context) : 6;
+            return { radius: reach, geometry: "line", style: "plume", color: 0xF6F3EA, label: dense ? "羽毛舞·厚羽" : "羽毛舞" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
@@ -104,40 +104,45 @@ namespace PokemonSkills {
             const speed = Math.max(0.5, p(featherdanceId, "flightSpeed", action));
             const strandRadius = Math.max(0.15, p(featherdanceId, "strandRadius", action));
             const tufts = Math.max(10, Math.round(p(featherdanceId, "feathers", action)));
-            // 提交时锁定发射点与方向，与 LivingActions.projectile 用的是同一组数据；羽场只在真实碰撞点或云团实际耗尽处。
+            // 提交时锁定发射点与方向，与 LivingActions.projectile 用的是同一组数据；弹体路程由所选落点限制，不再一律飞满射程。
             const launch = action.origin();
             const offset = action.targetPosition().minus(launch);
             const direction = offset.length() < 0.01 ? action.direction() : offset.unit();
-            const landing = launch.plus(direction.scale(action.range()));
+            const requested = offset.length();
+            const travel = Math.max(0.5, Math.min(action.range(), requested > 0.01 ? requested : action.range()));
+            const landing = launch.plus(direction.scale(travel));
             sound(action, "minecraft:entity.parrot.fly");
             let settled = false;
             function settle(current: CombatAction, point: CombatPoint, entity: CombatActor | null): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                // 绒雾是地面区域：落点统一贴到实际着地面，而不是命中那一刻的身体高度。
-                const ground = featherdanceGround(scope, point);
                 const marked: any = {};
                 if (entity !== null && !scope.friendly(entity)) {
                     marked[String(entity.ref())] = true;
                     featherdanceSmother(scope, entity, drop, down, tufts);
                 }
+                // 只有真实着地才铺绒雾：探不到支撑面时只留下覆羽，不硬造一片悬空的地云。
+                const ground = featherdanceGround(scope, point);
+                if (ground === null) return;
                 WorldEffects.field(scope, featherdanceField, ground, radius,
                     { drop: drop, ticks: down, tufts: tufts, marked: marked }, fieldTicks);
                 WorldFeedback.emit(scope, featherdanceScene, 1, ground,
-                    { moment: "settle", radius: radius, drop: drop, feathers: tufts, scale: radius / 3.0 }, 32);
+                    { moment: "settle", radius: radius, drop: drop, feathers: tufts }, 32);
                 sound(current, "minecraft:block.wool.place");
             }
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: action.range(), radius: strandRadius, lifetime: 50,
+                speed: speed, range: travel, radius: strandRadius, lifetime: 50,
                 appearance: { sprite: "cobblemon:generic/grass/smallleaf_white", scale: 0.8, tint: 0xF6F3EA },
                 impact: function (current, hit) {
                     const target = hit.target();
                     settle(current, hit.position(), target !== null && !current.world().friendly(target) ? target : null);
                 }
             }, function (current) {
-                // 云团在 open 处耗尽：落点是它自己飞到的位置，不是旧的目标锁定点；settle 再贴到实际着地面。
-                settle(current, landing, null);
+                // 云团耗尽：读弹体自己的真实末点，命中后仍可读；不用满射程点或旧瞄准点假造终点。
+                const scope = current.world();
+                const end = scope.projectilePosition(flight);
+                settle(current, end === null ? landing : end, null);
                 done(current);
             });
             WorldFeedback.emit(world, featherdanceScene, 1, origin,

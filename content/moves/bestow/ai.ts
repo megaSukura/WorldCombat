@@ -4,9 +4,16 @@ namespace CompanionBehavior {
         const held = NativeItems.heldOf(access, actor);
         return held === null ? "" : held.id;
     });
+    registerFact("world_combat:move_bestow/berry", function (access: CombatWorld, actor: CombatActor, _argument: any): any {
+        const held = NativeItems.heldOf(access, actor);
+        return held !== null && held.berry === true;
+    });
 
     function bestowHeldOf(context: WorldBehavior.Context, target: Entity): string {
         return CompanionBehavior.fact<string>(context, "world_combat:move_bestow/held", target) || "";
+    }
+    function bestowBerry(context: WorldBehavior.Context, target: Entity): boolean {
+        return CompanionBehavior.fact<boolean>(context, "world_combat:move_bestow/berry", target) === true;
     }
     function bestowCapability(context: WorldBehavior.Context): WorldBehavior.Capability | null {
         const items = ready(context, "world_combat:bolster");
@@ -17,8 +24,12 @@ namespace CompanionBehavior {
         if (!ally || ally.health <= 0 || !ally.visible || !ally.friendly) return false;
         const self = source(context);
         if (ally.ref === self.ref) return false;
-        if (status(context, ally, "embargo")) return false;
+        // 明确意愿：默认不自动赠物；查封双方都先预检，别把被查封的手当通路。
+        if (!ai<boolean>(item, "autoGift", false)) return false;
+        if (status(context, self, "embargo") || status(context, ally, "embargo")) return false;
         if (bestowHeldOf(context, self) === "") return false;
+        // 可赠范围：默认只自动送出树果一类消耗品；珍稀持物留给玩家自己决定。
+        if (ai<boolean>(item, "onlyBerries", true) && !bestowBerry(context, self)) return false;
         if (bestowHeldOf(context, ally) !== "") return false;
         if (ally.health / Math.max(1, ally.maximum) > ai<number>(item, "giftBelow", 1.0)) return false;
         if (context.facts.intent === "hold" && !ai<boolean>(item, "leaveStation", false)) return false;
@@ -80,6 +91,10 @@ namespace CompanionBehavior {
     bestowBelow.help = "默认 1.0：开战前就把道具递给空手的队友。调低后只在队友生命掉到这个比例以下才递，把礼物留到更危险的时刻。";
     const bestowStation = PokemonSkills.flag("ai.leaveStation", "驻守时允许离位");
     bestowStation.help = "开启后，收到「驻守」指令时也会离开原位去递礼物；关闭则只在原地够得到时出手。";
-    PokemonSkills.addPreferences("bestow", { ai: { maxChase: 12, giftBelow: 1.0, leaveStation: false } },
-        [bestowChase, bestowBelow, bestowStation]);
+    const bestowAuto = PokemonSkills.flag("ai.autoGift", "自动赠物");
+    bestowAuto.help = "开启后伙伴才会在战斗中主动把携带物送给空手队友；关闭时不会自动赠出任何东西，只在玩家手动使用时送出。";
+    const bestowBerries = PokemonSkills.flag("ai.onlyBerries", "只自动送消耗品");
+    bestowBerries.help = "开启：自动赠物只送树果这类消耗品，装备与珍贵持物默认留在自己手上；关闭后才允许把任意持物交给队友。";
+    PokemonSkills.addPreferences("bestow", { ai: { maxChase: 12, giftBelow: 1.0, leaveStation: false, autoGift: false, onlyBerries: true } },
+        [bestowChase, bestowBelow, bestowStation, bestowAuto, bestowBerries]);
 }

@@ -18,15 +18,18 @@ namespace CompanionBehavior {
         return actor !== null && PokemonSkills.belchBerryOf(CompanionBehavior.world(context), actor) !== null;
     }
 
-    /** 另一个敌人是否落在「自己 → 目标」方向、半角约 31° 的锥内。 */
-    function belchInCone(self: WorldMethods.Subject, direction: WorldMethods.Subject, other: WorldMethods.Subject, reach: number, degrees: number): boolean {
-        const dx = direction.point[0] - self.point[0], dz = direction.point[2] - self.point[2];
-        const length = Math.sqrt(dx * dx + dz * dz);
+    /** 另一个敌人是否落在「自己 → 目标」的三维锥内，且从自身到它有真实视线。degrees 是整张锥角。 */
+    function belchInCone(world: CombatWorld, self: WorldMethods.Subject, target: WorldMethods.Subject,
+        other: WorldMethods.Subject, reach: number, degrees: number): boolean {
+        const dx = target.point[0] - self.point[0], dy = target.point[1] - self.point[1], dz = target.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (length < 0.01) return false;
-        const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
-        const od = Math.sqrt(ox * ox + oz * oz);
+        const ux = dx / length, uy = dy / length, uz = dz / length;
+        const ox = other.point[0] - self.point[0], oy = other.point[1] - self.point[1], oz = other.point[2] - self.point[2];
+        const od = Math.sqrt(ox * ox + oy * oy + oz * oz);
         if (od < 0.01 || od > reach) return false;
-        return (ox * dx + oz * dz) / (od * length) >= Math.cos(degrees * Math.PI / 360);
+        if ((ox * ux + oy * uy + oz * uz) / od < Math.cos(degrees * Math.PI / 360)) return false;
+        return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point));
     }
 
     registerUse("belch", {
@@ -53,12 +56,12 @@ namespace CompanionBehavior {
             if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
                 let crowded = 1;
                 const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+                const world = CompanionBehavior.world(context), actor = world.actor(self.ref);
+                const degrees = actor ? PokemonSkills.p("belch", "arc", { world: world, actor: actor }) : 0;
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                    const world = CompanionBehavior.world(context), actor = world.actor(self.ref);
-                    const degrees = actor ? PokemonSkills.p("belch", "arc", { world, actor }) : 0;
-                    if (belchInCone(self, target, other, reach, degrees)) crowded++;
+                    if (belchInCone(world, self, target, other, reach, degrees)) crowded++;
                 }
                 if (crowded >= 2) score += 18;
             }

@@ -1,66 +1,45 @@
-/**
- * 燕返 / aerialace 的 AI 用途。
- *
- * 什么局面下出手：考虑距离内有可见的敌对目标就列入候选；够不到交给共享接近逻辑。
- * `ai.skirmish`（默认开）：目标正在移动（追人或逃跑）时抬高 priority——掠袭刀路能拦在它前面。
- * 落点安全：掠过目标后会落到它的另一侧，那里放不下自己的身体（墙后、窄缝）时降低推荐，不硬撞墙停下。
- */
 namespace PokemonSkills {
-    /** 掠过目标后身体需要落下的那侧是否有容身之处；同一决策帧内缓存。 */
-    function aerialaceLanding(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
-        return CompanionBehavior.observedFlag(context, "aerialace:landing:" + target.ref, function () {
-            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
-            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
-            const length = Math.sqrt(dx * dx + dz * dz);
-            if (!(length > 0.01)) return false;
-            const travel = p("aerialace", "pursuit", world);
-            const beyond = Math.max(0.6, travel - length);
-            const height = self.height === undefined ? 1.4 : self.height;
-            const feet = CompanionBehavior.point([target.point[0] + dx / length * beyond, target.point[1] - height / 2,
-                target.point[2] + dz / length * beyond]);
-            return world.freeSpace(feet, self.width === undefined ? 0.9 : self.width, height);
+    function aerialaceLanding(context:WorldBehavior.Context,target:WorldMethods.Subject):boolean {
+        return CompanionBehavior.observedFlag(context,"aerialace:flank:"+target.ref,()=>{
+            const world=CompanionBehavior.world(context),source=world.source(),foe=world.actor(target.ref);
+            const self=world.observe(source);if(!self||!foe)return false;
+            const at=CompanionBehavior.point(target.point),delta=at.minus(self.position());
+            const route=aerialaceRoute(world,source,foe,at,delta,p("aerialace","pursuit",world));
+            if(!route.ready)return false;
+            const incoming=self.grounded()?WorldGeometry.flatUnit(route.goal.minus(route.waypoint),delta):WorldGeometry.basis(route.goal.minus(route.waypoint),delta).forward;
+            const returnDirection=incoming.scale(-1).minus(route.side.scale(.5)).unit();
+            const width=p("aerialace","laneWidth",world),reserve=Math.min(.9,p("aerialace","pursuit",world)*.24);
+            const a=route.goal.plus(route.side.scale(self.width()*.4+width*.3));
+            const b=route.goal.plus(returnDirection.scale(reserve)).minus(route.side.scale(self.width()*.5+width*.7)).minus(incoming.scale(width*.5));
+            const facts=world.observe(foe);
+            return !!facts&&WorldGeometry.bodySegment(a,b,Math.max(.12,width*.28)).intersects(facts.boundsMin(),facts.boundsMax());
         });
     }
-
-    CompanionBehavior.registerUse("aerialace", {
-        protocols: ["world_combat:attack"],
-        reach: function (context, capability) { return capability.data.range; },
-        available: function (context, capability, purpose, target) {
-            if (context.facts.mounted) return false;
-            if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
+    CompanionBehavior.registerUse("aerialace",{
+        protocols:["world_combat:attack"],
+        reach:(context,capability)=>capability.data.range,
+        available:(context,capability,purpose,target)=>{
+            if(context.facts.mounted)return false;
+            return !target||CompanionBehavior.distance(CompanionBehavior.source(context).point,target.point)<=CompanionBehavior.ai<number>(capability,"maxChase",11);
         },
-        accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
-        },
-        priority: function (context, capability, target) {
-            if (!target) return 0;
-            var gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
-            var base = gap <= capability.data.range ? 20 : 4;
-            // 落点不安全时降低推荐；空放换位不值得撞墙停下。
-            if (!aerialaceLanding(context, target)) base -= 10;
-            if (!CompanionBehavior.ai<boolean>(capability, "skirmish", true)) return base;
-            // 移动中的目标（velocity 非零）优先——掠袭刀路正拦在它前面。
-            var velocity = CompanionBehavior.velocity(context, target);
-            if (velocity && (velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.0004) return base + 12;
-            return base;
+        accepts:(context,capability,target)=>!target.friendly&&target.health>0&&target.visible,
+        priority:(context,capability,target)=>{
+            if(!target)return 0;
+            const self=CompanionBehavior.source(context),gap=CompanionBehavior.distance(self.point,target.point);
+            if(gap>capability.data.range)return 12;
+            if(!aerialaceLanding(context,target))return 8;
+            let score=24;
+            if(CompanionBehavior.ai<boolean>(capability,"skirmish",true)){
+                const velocity=CompanionBehavior.velocity(context,target);
+                if(velocity&&(velocity[0]*(self.point[0]-target.point[0])+velocity[2]*(self.point[2]-target.point[2]))>.02)score+=12;
+            }
+            return score;
         }
     });
-
-    addPreferences("aerialace", {}, [
-        field(pathOf("skim"), "低掠", "boolean", {
-            help: "开启：压低身子掠得更宽、射程更长，能一次扫到并排的敌人，但单刀约 −18%、起手多 2 刻、冷却多 4 刻。关闭：高掠，刀路窄而重，一发更疼、更快。"
-        }),
-        field(pathOf("ai.maxChase"), "掠袭距离", "number", {
-            min: 4, max: 20, step: 1,
-            help: "超过这个距离就不主动燕返，先走近。越大越愿意从远处一步切上来。"
-        }),
-        field(pathOf("ai.skirmish"), "追动目标", "boolean", {
-            help: "开启后，正在移动的敌人优先成为燕返目标（刀路拦得住移动）；关闭则只按普通近身斩排序。"
-        }),
-        field(pathOf("ai.leaveStation"), "驻守时允许离位", "boolean", {
-            help: "开启后，驻守命令下也会为切入目标离开站位；关闭则只在原地够得到时出手。"
-        })
+    addPreferences("aerialace",{},[
+        field(pathOf("skim"),"低掠","boolean",{help:"更宽、更轻、总换位距离稍短，起手与冷却更长；关闭后较窄而重。"}),
+        field(pathOf("ai.maxChase"),"接战距离","number",{min:4,max:20,step:1,help:"在这个距离内才考虑走近并侧掠回刀。"}),
+        field(pathOf("ai.skirmish"),"侧翼反打","boolean",{help:"有可达侧翼且敌人向自己逼近时，更倾向用燕返移开正面并回刀。"}),
+        field(pathOf("ai.leaveStation"),"驻守时允许离位","boolean",{help:"允许为侧掠回刀离开当前守位。"})
     ]);
 }

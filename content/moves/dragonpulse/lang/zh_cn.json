@@ -5,7 +5,7 @@
   "worldcombat.skill.dragonpulse.use.2": "连锁式沿同一条线逐级穿过后续敌人",
   "worldcombat.skill.dragonpulse.description.0": "波面沿途扫过敌人，每个被扫中的目标结算一次约 %1$s 点特殊伤害；波面厚度 %2$s 格。",
   "worldcombat.skill.dragonpulse.description.1": "波能推 %1$s 格，每刻前进 %2$s 格。",
-  "worldcombat.skill.dragonpulse.chain.on": "连锁式：波碰到第一个敌人即收束，先对它结算一次约 %1$s 点波面伤害，再沿同一条线在 %3$s 格半宽带内最多额外命中 %4$s 个敌人，从约 %2$s 点起逐级递减地造成特殊伤害（不再前进）。",
+  "worldcombat.skill.dragonpulse.chain.on": "连锁式：波碰到第一个敌人即收束，先对它结算一次约 %1$s 点波面伤害，再沿同一条真实 3D 方向逐段前扫，最多额外命中 %4$s 个敌人，从约 %2$s 点起每级 ×0.72 递减地造成特殊伤害（%3$s 格为容忍半宽）；扫到墙就停在真实阻挡处，不再穿透或越墙。",
   "worldcombat.skill.dragonpulse.chain.off": "贯通式：一条线上最多额外穿过 %1$s 个敌人。",
   "worldcombat.skill.dragonpulse.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.dragonpulse.growth.0": "%1$s 级起波面威力升至 %2$s、射程 %3$s 格。",

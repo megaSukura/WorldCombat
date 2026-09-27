@@ -17,7 +17,7 @@ Smoke.scenario("tailwhip", function (stage) {
         stage.expect(stage.casts("tailwhip") > 0, "tail whip was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/guardbroken"), "the target carried the shared guardbroken identity");
         stage.expect(stage.attribute(target, "minecraft:generic.armor") < baseArmor - 0.001, "the target's armor fell with the Defense drop");
-        stage.note("tail whip landed; the rear 120-degree band, the second swing, line of sight and the once-only drop are not part of this run", {
+        stage.note("tail whip landed with a real two-pass rear arc: the tip sweeps across the 120-degree band behind the committed facing and back 6 ticks later, one drop per body. The Defense drop is a boost window tied to the daze carrier, so it is restored when the daze ends or is cured. Whether a front body was spared, whether the second pass caught a new mover, and line of sight are not part of this run", {
             casts: stage.casts("tailwhip"), baseArmor: baseArmor,
             armor: stage.attribute(target, "minecraft:generic.armor"),
             casterHp: caster.health(), targetHp: target.health()

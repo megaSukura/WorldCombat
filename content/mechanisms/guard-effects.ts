@@ -9,6 +9,9 @@ namespace GuardEffects {
         statusWard?: boolean;
     }
     export interface Rule {
+        /** Own setup/cleanup for this exact guard, including explicit dispel, exhaustion and expiry. */
+        start?: (effect: CombatEffect, state: State) => void;
+        end?: (effect: CombatEffect, state: State) => void;
         pulse?: (effect: CombatEffect, state: State) => void;
         accepts?: (effect: CombatEffect, state: State, incoming: Incoming) => boolean;
         guarded?: (effect: CombatEffect, state: State, amount: number, incoming: Incoming) => void;
@@ -68,6 +71,8 @@ namespace GuardEffects {
     WorldCombat.effectHandler("world_combat:guard", "start", function (effect) {
         effect.listen("world_combat:incoming", "world_combat:intercept", "intercept");
         effect.schedule("pulse", "pulse", 1, "{}");
+        var state: State = JSON.parse(effect.state()), rule = rules[state.rule];
+        if (rule.start) rule.start(effect, state);
     });
     WorldCombat.effectHandler("world_combat:guard", "pulse", function (effect) {
         var state: State = JSON.parse(effect.state());
@@ -107,4 +112,8 @@ namespace GuardEffects {
         if (rule.guarded) rule.guarded(effect, state, blocked, incoming);
     });
     WorldCombat.effectHandler("world_combat:guard", "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler("world_combat:guard", "end", function (effect) {
+        var state: State = JSON.parse(effect.state()), rule = rules[state.rule];
+        if (rule.end) rule.end(effect, state);
+    });
 }

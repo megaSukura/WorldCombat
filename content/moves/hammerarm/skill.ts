@@ -7,9 +7,10 @@
  *
  * 三幕（提交前只播预告）：
  *   起（hoist）：手臂高举过顶、拳边聚起斗气，长前摇、可被打断，只播预告。
- *   砸（swing → slam/wall/miss）：提交后自由瞄准，沿一条**真实短下砸拳路** `trace` 首个接触；先碰实体且伤害
- *       成立才把目标沿接触方向砸退 `knock`、按实际体重与物攻震出 `dents` 条尘线；碰真墙只在墙面扬尘，不伤
- *       墙后的人，也不动地形；什么都没碰到就只留扑空的尘。
+ *   砸（swing → slam/wall/miss）：提交后自由瞄准，沿一条**有界单次过顶拳面弧**逐刻 `trace` 当前真实子段；弧顶
+ *       足够高，矮顶会真的挡住拳路。首碰实体且伤害成立才把目标沿接触方向砸退 `knock`（按**实际受害者体重**），
+ *       并在真实接触点下方的可达支撑顶面扬出 `dents` 条尘线；碰真墙用真实接触位置/面闪，不伤墙后的人，也不动
+ *       地形；什么都没碰到就只在弧尖留扑空的尘。
  *   沉（stagger）：命中并真的降速后才浮字，显示**实际降下的级数**；已在最低速时不报固定降 1。
  *
  * 与同族分开：狂舞挥打是原地转整圈的覆盖、疾速转轮是贴地旋转冲进、冰锤是裹冰垂直下砸留冰面；
@@ -19,6 +20,7 @@
  */
 namespace PokemonSkills {
     const hammerarmScene = "world_combat:move_hammerarm";
+    const hammerarmFistScene = "world_combat:move_hammerarm/fist";
     const hammerarmStaggerText = "world_combat.move.hammerarm.text.stagger";
     const hammerarmMissText = "world_combat.move.hammerarm.text.miss";
 
@@ -91,21 +93,43 @@ namespace PokemonSkills {
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
             const centre = body.position();
+            const height = body.height();
             const dir = aim(action);
+            // 水平朝向给空间弧，上/右用稳定正交基（含竖直瞄准的退化输入回退到 +Z）。
+            const heading = WorldGeometry.flatUnit(dir, WorldCombat.point(0, 0, 1));
+            const forward = WorldCombat.point(heading.x(), 0, heading.z());
+            const frame = WorldGeometry.basis(forward);
             const reach = Math.max(1.8, action.range());
             const power = p("hammerarm", "hammer", action);
-            const knock = p("hammerarm", "knock", action);
             const cleft = Math.max(0.6, p("hammerarm", "cleft", action));
             const dents = Math.max(4, Math.round(p("hammerarm", "dents", action)));
             const speedLoss = Math.max(0, Math.round(p("hammerarm", "speedLoss", action)));
             const scale = Math.max(0.6, Math.min(2.0, cleft / 1.1));
             const intensity = Math.max(0.6, Math.min(2.2, power / 100));
             const gauge = Math.max(0.3, Math.min(1.0, body.width() * 0.5));
-            const start = centre.plus(dir.scale(0.15));
-            const rawEnd = centre.plus(dir.scale(reach));
+            // 有界单次过顶拳面轨迹：高举过顶 → 斜跨向前回收，弧顶足够高，矮顶会挡住拳路。
+            const apex = height * 1.15 + reach * 0.45;
+            const lateral = Math.max(0.3, body.width() * 1.1);
+            const sweepTicks = Math.max(4, Math.min(9, Math.round(reach * 2)));
+            const start = centre.plus(forward.scale(reach * 0.32)).plus(frame.up.scale(apex)).plus(frame.right.scale(lateral));
+            const end = centre.plus(dir.scale(reach));
+            const control = centre.plus(forward.scale(reach * 0.62)).plus(frame.up.scale(apex * 1.12)).plus(frame.right.scale(lateral * 0.5));
+            const scenes = WorldFeedback.actionScenes(hammerarmScene);
+            const fistKey = "hammerarm:fist:" + action.id();
             let settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            /** 二次贝塞尔弧上一点：t=0 是高举的拳，t=1 落在瞄准点。 */
+            function tipAt(t: number): CombatPoint {
+                return start.scale((1 - t) * (1 - t)).plus(control.scale(2 * (1 - t) * t)).plus(end.scale(t * t));
+            }
+
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
+
+            /** 停止当前拳形的客户端绘制；动作结束时随 present 一并清理。 */
+            function stopFist(current: CombatAction, at: CombatPoint): void {
+                current.present(fistKey, hammerarmFistScene, 1, at,
+                    JSON.stringify({ lifecycle: { reason: "settled", tick: current.sense().tick() } }));
+            }
 
             /** 命中且真的降了速才显示；已在最低速时 boost 返回 0，不报固定降 1。 */
             function stagger(current: CombatAction): void {
@@ -119,59 +143,83 @@ namespace PokemonSkills {
                 WorldFeedback.text(scope, above, hammerarmStaggerText, [Math.abs(applied)], 28);
             }
 
-            // 真实短下砸拳路：从身体沿瞄准方向（含俯仰）伸出，首碰实体或真墙即止；判定与表现共用同一终点。
-            const contact = action.trace(start, rawEnd, gauge, true);
-            const end = contact.hitEntity() || contact.blocked() ? contact.position() : rawEnd;
-            WorldFeedback.emit(world, hammerarmScene, 1, start,
-                { moment: "swing", path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    direction: [dir.x(), dir.y(), dir.z()], radius: cleft, dents: dents, scale: scale, intensity: intensity }, 18);
+            /** 可达支撑顶面扬出一圈尘线；没有地面（空中目标/悬空）就只在接触点留拳劲，不凭空铺尘。 */
+            function groundDust(scope: CombatWorld, at: CombatPoint): void {
+                const surface = SurfacePaths.support(scope, at, 1.5, 4);
+                if (surface === null) return;
+                WorldFeedback.emit(scope, hammerarmScene, 1, surface,
+                    { moment: "dust", dents: dents, radius: cleft, tint: hammerarmSurfaceTint(scope, surface), scale: scale, intensity: intensity }, 22);
+            }
 
-            if (contact.hitEntity()) {
-                let victim = contact.target();
-                if (victim !== null && (String(victim.ref()) === String(actor.ref()) || world.friendly(victim))) victim = null;
-                if (victim === null) { finish(action); return; }
-                const landed = hurt(action, victim, "hammerarm", power,
+            /** 命中首个实体：按**实际受害者体重**砸退，尘落在真实接触点下方的可达支撑顶面。 */
+            function landEntity(current: CombatAction, contact: CombatImpact): void {
+                const scope = current.world();
+                const victim = contact.target();
+                if (victim === null || String(victim.ref()) === String(actor.ref()) || scope.friendly(victim)) { stopFist(current, contact.position()); finish(current); return; }
+                const knock = p("hammerarm", "knock", withTarget(factContext(current), victim));
+                const landed = hurt(current, victim, "hammerarm", power,
                     { damage: damageSpec("hammerarm", "hammer"), contact: true, punch: true });
-                const body1 = world.observe(victim);
+                const body1 = scope.observe(victim);
                 const point = body1 === null ? contact.position() : body1.position();
                 if (landed) {
                     let pushed = 0;
-                    if (world.valid(victim)) {
+                    if (scope.valid(victim)) {
                         const away = WorldCombat.point(point.x() - centre.x(), 0, point.z() - centre.z());
-                        if (away.length() >= 0.05) pushed = world.hitDisplace(victim, away.unit().scale(knock));
+                        if (away.length() >= 0.05) pushed = scope.hitDisplace(victim, away.unit().scale(knock));
                     }
-                    const body2 = world.observe(victim);
+                    const body2 = scope.observe(victim);
                     const at = body2 === null ? point : body2.position();
-                    WorldFeedback.emit(world, hammerarmScene, 1, at,
+                    WorldFeedback.emit(scope, hammerarmScene, 1, at,
                         { moment: "slam", target: String(victim.ref()), dents: dents, radius: cleft,
-                            pushed: Math.round(pushed * 100) / 100, tint: hammerarmSurfaceTint(world, at),
-                            scale: scale, intensity: intensity }, 22);
-                    world.sound("cobblemon:impact.fighting", at, 15, "{}");
-                    stagger(action);
+                            pushed: Math.round(pushed * 100) / 100, scale: scale, intensity: intensity }, 22);
+                    groundDust(scope, contact.position());
+                    scope.sound("cobblemon:impact.fighting", at, 15, "{}");
+                    stagger(current);
                 } else {
-                    WorldFeedback.emit(world, hammerarmScene, 1, point,
+                    WorldFeedback.emit(scope, hammerarmScene, 1, point,
                         { moment: "blocked", target: String(victim.ref()), scale: scale }, 20);
-                    sound(action, "minecraft:entity.player.attack.nodamage");
+                    sound(current, "minecraft:entity.player.attack.nodamage");
                 }
-                finish(action);
-                return;
+                stopFist(current, point);
+                finish(current);
             }
 
-            if (contact.blocked()) {
-                const cell = contact.blockPosition();
-                const at = cell === null ? contact.position() : cell;
-                WorldFeedback.emit(world, hammerarmScene, 1, at,
-                    { moment: "wall", face: contact.blockFace(), dents: dents, radius: cleft,
-                        tint: hammerarmSurfaceTint(world, at), scale: scale, intensity: intensity }, 22);
-                world.sound("minecraft:block.deepslate.break", at, 15, "{}");
-                finish(action);
-                return;
+            /** 墙闪：用真实接触位置与方块面，不改用方块格坐标。 */
+            function landWall(current: CombatAction, contact: CombatImpact): void {
+                const scope = current.world();
+                const at = contact.position();
+                WorldFeedback.emit(scope, hammerarmScene, 1, at,
+                    { moment: "wall", face: contact.blockFace(), dents: dents, scale: scale, intensity: intensity }, 22);
+                scope.sound("minecraft:block.deepslate.break", at, 15, "{}");
+                stopFist(current, at);
+                finish(current);
             }
 
-            WorldFeedback.emit(world, hammerarmScene, 1, rawEnd, { moment: "miss", dents: dents, scale: scale }, 20);
-            WorldFeedback.text(world, rawEnd.plus(WorldCombat.point(0, 1.0, 0)), hammerarmMissText, [], 22);
-            sound(action, "minecraft:entity.player.attack.weak");
-            finish(action);
+            /** 沿真实过顶弧逐刻 trace：每刻发当前真实子段，首碰实体/真墙即止，一次命中。 */
+            function swing(current: CombatAction, tick: number, from: CombatPoint): void {
+                const progress = sweepTicks <= 1 ? 1 : Math.min(1, (tick + 1) / sweepTicks);
+                const tip = tipAt(progress);
+                scenes.show(current, "swing", tip,
+                    { moment: "swing", path: [[from.x(), from.y(), from.z()], [tip.x(), tip.y(), tip.z()]],
+                        direction: [dir.x(), dir.y(), dir.z()], radius: cleft, scale: scale, intensity: intensity });
+                current.present(fistKey, hammerarmFistScene, 1, tip,
+                    JSON.stringify({ moment: "fist", point: [tip.x(), tip.y(), tip.z()], from: [from.x(), from.y(), from.z()],
+                        direction: [dir.x(), dir.y(), dir.z()], progress: progress, scale: scale, intensity: intensity }));
+                const contact = current.trace(from, tip, gauge, true);
+                if (contact.hitEntity()) { landEntity(current, contact); return; }
+                if (contact.blocked()) { landWall(current, contact); return; }
+                if (progress >= 1) {
+                    WorldFeedback.emit(current.world(), hammerarmScene, 1, tip, { moment: "miss", dents: dents, scale: scale }, 20);
+                    WorldFeedback.text(current.world(), tip.plus(WorldCombat.point(0, 1.0, 0)), hammerarmMissText, [], 22);
+                    sound(current, "minecraft:entity.player.attack.weak");
+                    stopFist(current, tip);
+                    finish(current);
+                    return;
+                }
+                current.after(1, function (next: CombatAction) { swing(next, tick + 1, tip); });
+            }
+
+            swing(action, 0, start);
         }
     });
 }

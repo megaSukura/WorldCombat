@@ -5,9 +5,10 @@
  *
  * 色相家族：由服务端 data.tint 定的单一土色（沙黄／砂砾灰／泥褐）为主体，浅一档的同类土色只做细节，
  *   没有第二个色相。tint 来自真实方块，所以沙地扬沙、石地扬灰。
- * 层次：脚边扬尘（起手）→ 贴地扇形砂流（张角 data.angle、实际长度 data.reach，受地形截断）→ 脸上溅沙（命中）→ 余尘（持续）。
+ * 层次：脚边扬尘（起手）→ 贴地扇形砂流（沿 data.path 这份服务器裁好的真实扇面铺开）→ 脸上溅沙（命中）→ 余尘（持续）。
  * 起击收：gather（刨地）→ spray（贴地踢出、升起）→ splat（落到脸上或 fizzle 停在扇面末端）→ linger（眼里还有沙）。
- * 数：砂流的发射量绑定 data.grains（身高换算），张角绑定 data.angle、实际扇长绑定 data.reach（都是机制值），溅沙量也读 data.grains。
+ * 判定与表现共用端点：spray 直接消费服务器在真实墙面上裁出的扇面顶点 data.path（polygon 填充 + polyline 描边），
+ *   墙面在哪个角度截断，画面就在哪里停；data.reach／data.angle 只作为机制值记录。砂量绑定 data.grains（身高换算）。
  */
 const SandAttackDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -39,22 +40,32 @@ const SandAttackDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    // 主扇：填满被地形截断后的实际扇面（data.reach × data.angle），砂粒从低处升起。
-                    name: "spray_grit", bind: "point", offset: [0, 0.08, 0], fit: "world", orient: "heading",
+                    // 主扇：直接铺满服务器在真实墙面裁出的扇面顶点（data.path 的 polygon），不再另画一个统一半径的扇。
+                    name: "spray_grit", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "grains", fallback: 34 } },
-                    shape: { kind: "sector", radius: { data: "reach", fallback: 4 }, angleDegrees: { data: "angle", fallback: 65 } },
-                    direction: [{ data: "flow.0", fallback: 1 }, { data: "flow.1", fallback: 1 }, { data: "flow.2", fallback: 0 }],
+                    shape: { kind: "polygon" },
+                    direction: [{ data: "flow.0", fallback: 0 }, { data: "flow.1", fallback: 1 }, { data: "flow.2", fallback: 0 }],
                     speed: [0.1, 0.24], gravity: 0.035, drag: 0.93,
                     lifetime: [9, 16], size: [0.07, 0.01],
                     color: { data: "tint", fallback: 0xBFA77A }, alpha: [0.95, 0], light: "world", maxParticles: 140
                 },
                 {
-                    name: "spray_clods", bind: "point", offset: [0, 0.05, 0], fit: "world", orient: "heading",
+                    // 扇沿描边：把裁剪边界画清楚，玩家看得出墙从哪里把沙截断。
+                    name: "spray_edge", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 26 },
+                    shape: { kind: "polyline", closed: true },
+                    direction: "up", speed: [0.02, 0.08], gravity: 0.02, drag: 0.93,
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: { data: "tint", fallback: 0xBFA77A }, alpha: [0.7, 0], light: "world", maxParticles: 70
+                },
+                {
+                    name: "spray_clods", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_ground",
                     burst: { count: { data: "clods", fallback: 10 } },
-                    shape: { kind: "sector", radius: { data: "reach", fallback: 4 }, angleDegrees: { data: "angle", fallback: 65 } },
-                    direction: [{ data: "flow.0", fallback: 1 }, { data: "flow.1", fallback: 1 }, { data: "flow.2", fallback: 0 }],
+                    shape: { kind: "polygon" },
+                    direction: [{ data: "flow.0", fallback: 0 }, { data: "flow.1", fallback: 1 }, { data: "flow.2", fallback: 0 }],
                     speed: [0.07, 0.18], gravity: 0.03, drag: 0.9, spin: 14,
                     lifetime: [10, 18], size: [0.14, 0.03],
                     color: { data: "tint", fallback: 0xA98B58 }, alpha: [0.8, 0], light: "world", maxParticles: 50
@@ -105,7 +116,7 @@ const SandAttackDefinition: ParticleDefinition = {
             ]
         },
         linger: {
-            duration: { data: "tick", fallback: 60 },
+            // 没有固定 duration：发布这份表现的 owned 托管标记活多久，余尘就飘多久；状态被驱散/覆盖时随标记一起收。
             exit: { drain: 24 },
             emitters: [
                 {

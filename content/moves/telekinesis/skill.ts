@@ -9,18 +9,26 @@ namespace PokemonSkills {
         const world=effect.world(),target=effect.target(),data=JSON.parse(effect.state());
         if(!MobEffects.matches(world,target,data.carrier)||!world.attribute(target,"minecraft:generic.gravity",-1,"add_multiplied_total")){effect.end();return;}
         MobEffects.bind(world,target,telekinesisField);world.attribute(target,"minecraft:generic.movement_speed",-Math.max(0,Math.min(.95,data.hold)),"add_multiplied_total");
-        const body=world.observe(target);if(body)WorldFeedback.onEffect(world,effect.id(),"lift",telekinesisScene,1,body.position(),{moment:"hover",target:String(target.ref()),rings:data.rings,path:[data.cast,String(target.ref())]});
+        const body=world.observe(target);if(body)WorldFeedback.onEffect(world,effect.id(),"lift",telekinesisScene,1,body.position(),{moment:"hoist",target:String(target.ref()),rings:data.rings,path:[data.cast,String(target.ref())]});
+        data.hoisted=false;effect.state(JSON.stringify(data));
         effect.schedule("lift","lift",1,"{}");
     });
     WorldCombat.effectHandler(telekinesisMark,"lift",function(effect){
         const world=effect.world(),target=effect.target(),data=JSON.parse(effect.state()),source=world.actor(data.cast),body=world.observe(target);
         if(!source||!world.valid(source)||!body||!MobEffects.matches(world,target,data.carrier)||CombatStatus.has(world,target,"smackdown")||CombatStatus.has(world,target,"ingrain")){effect.end();return;}
+        // 失距/遮挡断链：源走远或被墙挡住，这条真实的念力连线断开，托举随之结束。
+        const sourceBody=world.observe(source);
+        if(!sourceBody||sourceBody.position().minus(body.position()).length()>data.holdReach||!world.clear(sourceBody.position(),body.position())){effect.end();return;}
         const goal=WorldCombat.point(data.anchor[0],data.anchor[1]+body.height()/2,data.anchor[2]),offset=goal.minus(body.position());
         if(Math.sqrt(offset.x()*offset.x()+offset.z()*offset.z())>1.4||body.velocity().length()>.8){effect.end();return;}
         if(offset.length()>.02){
             const step=offset.length()>.18?offset.unit().scale(.18):offset;
             const moved=data.friendly?world.displace(target,step):world.hitDisplace(target,step);
             if(moved<.001){effect.end();return;}
+        } else if(!data.hoisted){
+            // 到达托点后由起浮转入稳态，环随真实身体。
+            data.hoisted=true;effect.state(JSON.stringify(data));
+            WorldFeedback.onEffect(world,effect.id(),"lift",telekinesisScene,1,body.position(),{moment:"hover",target:String(target.ref()),rings:data.rings,steady:data.steady,path:[data.cast,String(target.ref())]});
         }
         data.age++;if(data.age>12&&body.boundsMin().y()-data.floor<.12){effect.end();return;}
         effect.state(JSON.stringify(data));effect.schedule("lift","lift",1,"{}");
@@ -31,9 +39,11 @@ namespace PokemonSkills {
     NativeEffects.incomingRules.define({id:"world_combat:telekinesis/ground",apply:function(hit){
         if(!(hit.data.amount>0)||hit.data.bypassesInvulnerability||String(hit.data.type||"").toLowerCase()!=="ground")return;
         const world=hit.world,body=world.observe(hit.target);if(!body||body.grounded())return;
-        const marks=world.effects(hit.target,telekinesisMark);if(!marks.some(view=>MobEffects.matches(world,hit.target,JSON.parse(String(view.data())).carrier)))return;
-        const feet=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()),floor=SurfacePaths.support(world,feet,.05,2);
-        if(!floor||feet.y()-floor.y()<.2)return;
+        // 免地面依真实悬空与**起浮时记录的支撑面**：确实离地且高出原支撑面，才免疫，不做临场 2 格探测。
+        const marks=world.effects(hit.target,telekinesisMark);let floor:number|null=null;
+        for(let i=0;i<marks.length;i++){const state=JSON.parse(String(marks[i].data()));if(MobEffects.matches(world,hit.target,state.carrier)){floor=typeof state.floor==="number"?state.floor:null;break;}}
+        const feet=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z());
+        if(floor===null||feet.y()-floor<.2)return;
         hit.data.amount=0;WorldFeedback.emit(world,telekinesisScene,1,body.position(),{moment:"negate",target:String(hit.target.ref()),source:"ground"},16);
     }});
     define({
@@ -104,7 +114,9 @@ namespace PokemonSkills {
             }
             const carrier=world.mobEffect(target,telekinesisField);if(!carrier){done(action);return;}
             world.effect(telekinesisMark,target,JSON.stringify({carrier:MobEffects.anchor(carrier),cast:String(action.actor().ref()),friendly:friendly,
-                anchor:[body.position().x(),feet.y()+(config&&config.pin?1.2:1.5),body.position().z()],floor:support.y(),height:body.height(),hold:p("telekinesis","hold",action),rings:p("telekinesis","rings",action),age:0}),window);
+                anchor:[body.position().x(),feet.y()+(config&&config.pin?1.2:1.5),body.position().z()],floor:support.y(),height:body.height(),
+                hold:p("telekinesis","hold",action),rings:p("telekinesis","rings",action),steady:Math.max(2,Math.round(p("telekinesis","rings",action)/3)),
+                holdReach:p("telekinesis","reach",action)+2,age:0}),window);
             sound(action,"minecraft:block.beacon.activate");done(action);
         }
     });

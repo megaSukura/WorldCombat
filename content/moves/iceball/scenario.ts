@@ -21,7 +21,7 @@ Smoke.scenario("iceball", function (stage) {
         stage.after(80, function () {
             stage.expect(stage.casts("iceball", caster) >= 1, "caster committed ice ball");
             stage.expect(stage.damageTo(foe) > 0, "ice ball dealt damage to the foe");
-            stage.note("each real hit grows the next ball by ramp (2x by default) and its radius by girth; a whiff, frame hit or refused hit shatters the ball where it really stopped instead of looping back, and the caster stays rooted for the whole sequence. The ice patch is a real terrain lease that stage.changedBlocks() cannot see from here.", {
+            stage.note("each real hit grows the next ball by ramp (2x by default) and its radius by an actual per-layer block amount (girth); a whiff, frame hit or refused hit shatters the ball where it really stopped (a whiff uses world.projectilePosition, never the previous hit) instead of looping back, and the caster stays rooted for the whole sequence. The ice patch is a real terrain lease placed on each cell's real surface with expectedState, so stage.changedBlocks() cannot see it from here.", {
                 casts: stage.casts("iceball", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

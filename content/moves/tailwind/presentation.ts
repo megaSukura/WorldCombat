@@ -5,12 +5,13 @@
  *   风场以施法者为锚一路转着，风停时整片一起散去。
  *
  * 色相家族：风青（0xBEE9F2）为主体，近白（0xEAF7FA）做高光，灰蓝（0x7FB6C4）做尘与余韵；没有第二个色相。
- * 层次：聚风（起）／气旋爆发与地环（击）／受风者身上的风线（收）／以施法者为锚的持续风场（持续）／散。
- * 起击收：gather（起）→ burst（击）→ catch（接力）→ ride（持续）／streaks（持续）→ fade（收）。
- * 范围：地环绑落点、fit none，半径按 `data.scale`（实际风场半径 / 6）推出，画出来的圈就是风真罩到的范围。
- * 运动：起手风点向内收；爆发时向外炸开、地环一圈推远；持续时大气旋绕施法者慢转，风线贴着受风者向后拖。
+ * 层次：聚风（起）／气旋爆发与地环（击）／受风者各自身上的风线（持续）／散。
+ * 起击收：gather（起）→ burst（击）→ catch（接力）→ ride（施法者贴身持续）／streaks（其他受风者持续）→ fade（收）。
+ * 范围：地环绑落点、fit none，半径按 `data.scale`（实际风场半径 / 6）推出，画出来的圈就是这一下风真罩到的范围；
+ *   持续层改绑每个受风者自己的身体（`data.target`），不再有以施法者为锚的接人风场。
+ * 运动：起手风点向内收；爆发时向外炸开、地环一圈推远；持续时施法者身边的小气旋慢转、其他受风者贴着身体拖风线。
  * 数：风点量绑 `data.motes`（速度派生），风线数绑 `data.streaks`（速度派生），尺寸与范围绑 `data.scale`（体型与配置派生）。
- * 持续状态：持续层放在脚边与身周，低密度、慢节奏，玩家仍看得清目标。
+ * 持续状态：持续层由每个受风者自己的 shared 窗口（服务端 `WorldFeedback.onEffect`）拥有，低密度、慢节奏，窗口一收即收。
  */
 const TailwindDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -125,11 +126,12 @@ const TailwindDefinition: ParticleDefinition = {
                     color: 0x7FB6C4, alpha: [0.35, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "fade_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    // 每个人带着自己的那一阵风：收束时贴身一缩，不再画固定半径的整片地环。
+                    name: "fade_ring", bind: "target", fit: "body", height: 0.05,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 16 },
-                    shape: { kind: "ring", radius: 6 },
-                    direction: "outward", speed: [0.02, 0.07], drag: 0.94,
+                    shape: { kind: "ring", radius: 0.55 },
+                    direction: "inward", speed: [0.02, 0.07], drag: 0.94,
                     lifetime: [16, 26], size: [0.24, 0.06],
                     color: 0x7FB6C4, alpha: [0.3, 0], light: "world", maxParticles: 34
                 }

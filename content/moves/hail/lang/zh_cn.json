@@ -4,7 +4,7 @@
   "worldcombat.skill.hail.use.1": "把成群露天站位的敌人砸在雹区里",
   "worldcombat.skill.hail.use.2": "把躲檐的对手晾在露天",
   "worldcombat.skill.hail.description.0": "在选定地面压下半径 %1$s 格的雹区，持续 %2$s。",
-  "worldcombat.skill.hail.description.1": "非冰之躯在雹区里每 %3$s 被砸掉 %1$s 最大生命（至少 1 点），但只有头顶到雹云没有实心遮挡的露天者才挨砸：屋檐、岩顶等顶棚会挡住这一趟，冰粒在顶棚上碎掉；侧墙不挡。冰之躯不受砸击，只被冷气裹上白霜。所有进入雹区的活体会被记上雹击印记，离开后仍留存 %2$s，算作可被净化类效果清除的负面状态。",
+  "worldcombat.skill.hail.description.1": "非冰属性的活体在雹区里每 %3$s 被砸掉 %1$s 最大生命（至少 1 点），但只有头顶到雹云没有实心遮挡的露天者才挨砸：屋檐、岩顶等顶棚会挡住这一趟，冰粒在顶棚上碎掉；侧墙不挡。冰属性（含临时获得者，宝可梦与普通生物一致）不受砸击，只被冷气裹上白霜。所有进入雹区的活体会被记上雹击印记，离开后仍留存 %2$s，算作可被净化类效果清除的负面状态。",
   "worldcombat.skill.hail.description.2": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.hail.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 落下冰雹，收招 %3$s，提交起冷却 %5$s。",
   "worldcombat.skill.hail.growth.0": "达到 %1$s 级，提交起冷却缩短至 %2$s 秒。",

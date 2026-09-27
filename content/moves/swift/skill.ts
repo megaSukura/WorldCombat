@@ -6,9 +6,9 @@
  *
  * 两幕：
  *   起：星光在身周结成环（提交前 windup 预告）。
- *   放：提交后一圈星向四面迸出；选中敌人时每颗星用原生追踪锁定分到的对手，散星时星分给射程内
- *       看得见的每个敌人，聚星时全部砸向选定目标。空瞄（没有选中实体）时星沿瞄准方向散出，
- *       飞出的星不再另找目标、也不会自动追友方。撞墙则在撞点熄灭，飞完自然散去。
+ *   放：提交后一圈星向四面迸出；选中敌人时聚星朝选定目标收成小扇、散星朝各自分到的对手发出，
+ *      每颗星用原生追踪锁定自己的目标；空瞄（没有选中实体）时星沿瞄准方向散出，飞出的星不再另找目标。
+ *      撞墙则在撞点熄灭，飞完实际航程自然散去。
  *
  * 与同族分开：infernalparade 是一队鬼火朝一个目标收拢；魔法叶是一整群叶全扑同一个对手；
  *           高速星星是向四面迸开后**一颗星一个对手**。
@@ -19,10 +19,11 @@ namespace PokemonSkills {
     define({
         id: "swift",
         name: "Swift",
-        description: "从身周迸出一圈星形光弹，每颗星自己拐弯追向一个对手；选中敌人时散星可同时咬住多个，聚星则全部砸向选定目标，未选中敌人时沿瞄准方向散出。星不做随机命中检定，但会撞上地形或在追上之前燃尽而落空。",
+        description: "从身周迸出一圈星形光弹，每颗星自己拐弯追向一个对手；选中敌人时聚星朝选定目标收成小扇，散星则分头咬住多个对手，未选中敌人时沿瞄准方向散出。星不做随机命中检定，但会撞上地形或在追上之前燃尽而落空。",
         uses: ["一圈追人的星光", "同时压住多个对手", "在移动的目标身上收束"],
         kind: "aim",
         range: 13,
+        maxRange: 23,
         prepare: 6,
         active: 30,
         recover: 8,
@@ -31,7 +32,8 @@ namespace PokemonSkills {
         defaults: { scatter: false, ai: { maxChase: 15, spread: true, leaveStation: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("swift", "lockRange", pokemon), geometry: "area", style: "star", color: 0xFFE9A8, label: "高速星星" };
+            const context: NumberContext = { pokemon: pokemon!, skill: skills["swift"], detail: { values: config } };
+            return { radius: p("swift", "lockRange", context) + 8, geometry: "area", style: "star", color: 0xFFE9A8, label: "高速星星" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["swift"], detail: { values: config }, world: world, actor: actor, attributes: attributes };
@@ -39,7 +41,9 @@ namespace PokemonSkills {
             return {
                 prepare: p("swift", "prepare", context) + (scatter ? 2 : 0),
                 recover: p("swift", "recover", context),
-                cooldown: p("swift", "cooldown", context) + (scatter ? 3 : 0)
+                cooldown: p("swift", "cooldown", context) + (scatter ? 3 : 0),
+                // 输入范围、实际锁距与航程统一到同一个值：锁距 + 追踪余量。
+                range: p("swift", "lockRange", context) + 8
             };
         },
         windup: function (action, config, prepare) {
@@ -59,10 +63,14 @@ namespace PokemonSkills {
             const turn = p("swift", "turn", action);
             const radius = p("swift", "collisionRadius", action);
             const lockRange = p("swift", "lockRange", action);
+            const reach = Math.max(2, action.range());
             const scatter = !!(config && config.scatter);
             const intensity = Math.max(0.5, Math.min(2, power / 26));
             const trail = Math.max(18, Math.round(power * 1.6));
             const notes = Math.max(6, Math.round(power / 4));
+            // 尾迹密度由机制值换算成实际顶点间距：威力越高越密，不再是无效的 rate。
+            const spacing = Math.max(0.08, Math.min(0.3, 0.34 - trail * 0.002));
+            const scenes = WorldFeedback.actionScenes(swiftScene);
 
             // aim 可能只给了一个世界点：没有选中实体时星纯按方向散出，不替友方找目标。
             const selected = action.target();
@@ -87,10 +95,12 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:entity.firework_rocket.launch");
             WorldFeedback.emit(world, swiftScene, 1, origin,
-                { moment: "launch", count: count, targets: roster.length, intensity: intensity, scatter: scatter, radius: radius }, 24);
+                { moment: "launch", count: count, targets: roster.length, intensity: intensity, scatter: scatter, radius: radius }, 10);
 
             const base = swiftHeading(action);
-            const cone = 70 * Math.PI / 180;
+            const focusCone = 18 * Math.PI / 180;
+            const scatterCone = 40 * Math.PI / 180;
+            const emptyCone = 70 * Math.PI / 180;
             let remaining = count;
             let settled = false;
             function completeOne(current: CombatAction): void {
@@ -99,27 +109,29 @@ namespace PokemonSkills {
                 settled = true;
                 done(current);
             }
-            for (var shot = 0; shot < count; shot++) {
-                var ref = "";
-                var direction: CombatPoint;
-                if (roster.length > 0) {
-                    // 一圈迸出后再各自拐向分到的对手。
-                    const target = roster[shot % roster.length];
-                    ref = String(target.ref());
-                    const angle = base + Math.PI * 2 * (shot / count);
-                    direction = WorldCombat.point(Math.cos(angle), 0.12, Math.sin(angle)).unit();
-                } else {
-                    // 空瞄：沿瞄准方向散开，飞出的星不再另找目标。
-                    const spreadAngle = base + (count === 1 ? 0 : (shot / (count - 1) - 0.5) * cone);
-                    direction = WorldCombat.point(Math.cos(spreadAngle), 0.12, Math.sin(spreadAngle)).unit();
-                }
+            function rotateFlat(direction: CombatPoint, angle: number): CombatPoint {
+                const c = Math.cos(angle), s = Math.sin(angle);
+                return WorldCombat.point(direction.x() * c - direction.z() * s, direction.y(), direction.x() * s + direction.z() * c).unit();
+            }
+            function towardTarget(target: CombatActor): CombatPoint {
+                const targetBody = world.observe(target);
+                if (targetBody === null) return WorldCombat.point(Math.cos(base), 0.12, Math.sin(base)).unit();
+                const at = targetBody.position();
+                const flat = WorldCombat.point(at.x() - origin.x(), 0.12, at.z() - origin.z());
+                if (flat.length() < 1e-4) return WorldCombat.point(Math.cos(base), 0.12, Math.sin(base)).unit();
+                return flat.unit();
+            }
+            // 每颗星一条可读场景，随真实弹体生灭；完成回执里用 projectilePosition 读实际终点，不假造满射程点。
+            function launchShot(shot: number, ref: string, direction: CombatPoint): void {
                 const appearance: LivingActions.ProjectileAppearance = {
                     sprite: "cobblemon:particle/generic/star", glow: true, tint: 0xFFE9A8 };
                 if (ref !== "") appearance.homing = { target: ref, turn: turn, delay: 1, range: lockRange + 6 };
+                let ended = false;
                 const flight = LivingActions.projectile(action, {
-                    speed: speed, range: lockRange + 8, radius: radius, direction: direction,
+                    speed: speed, range: reach, radius: radius, direction: direction,
                     appearance: appearance,
                     impact: function (current: CombatAction, hit: CombatImpact) {
+                        ended = true;
                         const currentWorld = current.world();
                         const who = hit.target();
                         if (who !== null && currentWorld.valid(who) && !currentWorld.friendly(who)) {
@@ -141,9 +153,32 @@ namespace PokemonSkills {
                         WorldFeedback.emit(currentWorld, swiftScene, 1, hit.position(),
                             { moment: "fade", intensity: intensity }, 18);
                     }
-                }, function (current: CombatAction) { completeOne(current); });
-                WorldFeedback.emit(world, swiftScene, 1, origin,
-                    { moment: "seek", projectile: flight, target: ref, intensity: intensity, trail: trail, scale: radius / 0.3 }, 40);
+                }, function (current: CombatAction) {
+                    const live = current.world();
+                    if (!ended) {
+                        const end = live.projectilePosition(flight);
+                        WorldFeedback.emit(live, swiftScene, 1, end === null ? origin : end,
+                            { moment: "fade", intensity: intensity, scale: radius / 0.3 }, 18);
+                    }
+                    scenes.stop(current, "seek/" + shot);
+                    completeOne(current);
+                });
+                scenes.show(action, "seek/" + shot, origin,
+                    { moment: "seek", projectile: flight, target: ref, intensity: intensity, trail: trail, spacing: spacing, scale: radius / 0.3 });
+            }
+
+            for (var shot = 0; shot < count; shot++) {
+                if (roster.length > 0) {
+                    // 聚星朝选定目标收成小扇；散星每颗朝自己分到的对手，带一点展开但仍朝目标。
+                    const target = roster[shot % roster.length];
+                    const spread = scatter ? scatterCone : focusCone;
+                    const angle = count > 1 ? (shot / (count - 1) - 0.5) * spread : 0;
+                    launchShot(shot, String(target.ref()), rotateFlat(towardTarget(target), angle));
+                } else {
+                    // 空瞄：沿瞄准方向散开，飞出的星不再另找目标。
+                    const spreadAngle = base + (count === 1 ? 0 : (shot / (count - 1) - 0.5) * emptyCone);
+                    launchShot(shot, "", WorldCombat.point(Math.cos(spreadAngle), 0.12, Math.sin(spreadAngle)).unit());
+                }
             }
         }
     });

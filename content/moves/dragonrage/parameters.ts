@@ -18,7 +18,7 @@
  *   motes        怒焰量：体重与等级换算，驱动表现密度。
  *   tempo／settle／recharge：速度定起手，身高定收势，等级与配置定冷却。
  *
- * 固定伤害：`damage` 由行动直接结算（绕过攻防），见 skill.ts 的 `dragonrageRawHit`。
+ * 固定伤害：`damage` 由行动交给共享 `PokemonDamage.fixed` 结算（绕过攻防），见 skill.ts 的 `dragonrageFixedHit`。
  */
 namespace PokemonSkills {
     actionParameters.define("dragonrage", {

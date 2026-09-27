@@ -1,8 +1,9 @@
 /**
  * 震级 / magnitude 的伙伴 AI 用途。
  *
- * 什么局面下出手：一个以自身为中心、只颤地面的原地扫场。`ready` 要求身周 `ai.maxChase`（默认 7）格内
- *   至少有 `ai.minFoes`（默认 2）个可见、敌对、存活、**站在地上**的目标——它本来就是拿来震一圈的。
+ * 什么局面下出手：一个以自身为中心、只颤地面的原地扫场。`ready` 要求**实际震幅半径**内至少有
+ *   `ai.minFoes`（默认 2）个可见、敌对、存活、**站在地上且与施法者同层连续实地**的目标——它本来就是拿来震一圈的。
+ *   人数门槛读本个体算出的 `shudder`，不是追击距离；`ai.maxChase`（默认 7）只管考虑距离。
  *   空中的对手不在目标里，AI 不会为它转身。
  * 对谁出手：候选就是当前威胁，但 `accepts`/`available` 只接受站在地上的；飞行、漂浮中的目标跳过。
  * 够不到怎么办：交给共享接近逻辑；走进震幅以内就原地压地。
@@ -10,14 +11,34 @@
  * 排序：目标每多一个 +7（上限 +28）；冷却短，是可以用它反复骚扰的近身扫场。
  */
 namespace PokemonSkills {
+    /** 本个体这一招的真实震幅半径；AI 人数门槛与指示圈、判定圈同源。 */
+    function magnitudeRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return Math.max(2.6, p("magnitude", "shudder",
+            { world: world, actor: world.source(), skill: skills["magnitude"], detail: { values: item.data.config } }));
+    }
+
+    /** 施法者脚面下的真实支撑点；AI 的波段与判定的波段同源。 */
+    function magnitudeCentre(context: WorldBehavior.Context, self: CompanionBehavior.Entity): CombatPoint {
+        const world = CompanionBehavior.world(context);
+        const feet = CompanionBehavior.point([self.point[0], self.point[1] - (self.height || 1.4) / 2, self.point[2]]);
+        return SurfacePaths.support(world, feet, 0.6, 3) || feet;
+    }
+
+    /** 实际震幅内、站在地上、且与施法者同层连续实地的敌人数；悬台/另一楼层不计。 */
     function magnitudeCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
-        const limit = CompanionBehavior.ai<number>(item, "maxChase", 7);
+        const world = CompanionBehavior.world(context);
+        const centre = magnitudeCentre(context, self);
+        const band = WorldGeometry.ring(centre, 0, magnitudeRadius(context, item), { below: 1.5, above: 2 });
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible || other.grounded === false) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= limit) count++;
+            const point = CompanionBehavior.point(other.point);
+            if (!band.contains(point)) continue;
+            if (!magnitudeGroundLink(world, centre, point)) continue;
+            count++;
         }
         return count;
     }

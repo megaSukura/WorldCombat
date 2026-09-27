@@ -5,9 +5,9 @@
  *   钝击是一圈壳屑与冲击环，喷射是一团扩散的毒云。
  * 色相家族：毒紫（0x8A6BA8）做壳与钝击的色相，毒绿（0x9BE86B）做喷射的毒云，近白只做命中亮点。
  *   两种形态用不同色相与轮廓彼此分开，与同族的细针/双针一眼不同。
- * 拍子：起 charge（聚毒压壳，开合壳预告形态）→ 钝击 swing（真近身粗短弧）→ ram（砸中）／喷射 fire（炮口）→ shell（厚尾）→ spray（命中）→ 空 whiff。
- * 范围：钝击 swing 从身体沿真实 trace 方向伸出、长度读 `data.reach`（服务端取首碰止点到身体的距离），ram 绑在命中者身上；
- *   喷射 shell 沿投射物本部走，spray 绑在命中点、`data.scale` 对应实际判定；两者画面就是会打到的那块地。
+ * 拍子：起 charge（聚毒压壳，开合壳预告形态）→ 钝击 swing（身侧壳臂到真接触的短横砸）→ ram（砸中）／喷射 fire（炮口）→ shell（厚尾）→ spray（命中）／wall（撞墙溅开）／immune（被拒）→ 空 whiff。
+ * 范围：钝击 swing 读服务端给的 `data.path`（身体一侧壳臂起点→真实接触点），world 尺度不随 `data.scale` 伸长，画出来就是判定真正走到的那条；
+ *   ram 绑在命中者身上。喷射 shell 沿投射物本部走，spray 绑在真正命中的目标、wall 绑在真实墙面接触点，两者 `data.scale` 对应实际判定。
  * 运动：钝击是瞬时伸出的一记短横砸，喷射是一发厚实毒壳沿直线（带有限追踪）飞出去；命中处向四周炸开，一沉一扩散。
  * 数：`data.cloud`（由个体最强一面派生）绑定起手聚毒与命中毒云的粒子量，`data.scale`（由判定半径派生）缩放整体，
  *   `data.intensity`（由威力派生）抬高亮度与速度。画面里的数量和机制一致。
@@ -35,7 +35,7 @@ const ShellsidearmDefinition: ParticleDefinition = {
                     shape: { kind: "sphere_surface", radius: 0.24 },
                     direction: "inward", speed: [0.02, 0.1],
                     lifetime: [5, 12], size: [0.09, 0.02],
-                    color: 0x9BE86B, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 50
+                    color: { data: "color", fallback: 0x9BE86B }, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 50
                 }
             ]
         },
@@ -44,10 +44,10 @@ const ShellsidearmDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "arm", bind: "source", fit: "none", orient: "direction", offset: [0, 0.1, 0],
+                    name: "arm", bind: "path", fit: "world", height: 0,
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
                     burst: { count: 8, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 2.4 }, rotation: [0, 0, 0] },
+                    shape: { kind: "polyline" },
                     direction: "shape", speed: [0.02, 0.1], gravity: 0.02, drag: 0.94,
                     lifetime: [5, 11], size: [0.2, 0.04], sizeMode: "index",
                     color: 0x8A6BA8, alpha: [0.85, 0], light: "world", maxParticles: 40
@@ -182,6 +182,45 @@ const ShellsidearmDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.12],
                     lifetime: [10, 18], size: [0.26, 0.08],
                     color: 0xC8F0A0, alpha: [0.5, 0], light: "world", maxParticles: 18
+                }
+            ]
+        },
+        wall: {
+            duration: 24,
+            exit: { stop: 10, drain: 15 },
+            emitters: [
+                {
+                    name: "splash", bind: "point", fit: "none", height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_poison",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.05, 0.2], spread: 26,
+                    lifetime: [5, 11], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xD7F5A8, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 24
+                },
+                {
+                    name: "venom", bind: "point", fit: "none", height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
+                    burst: { count: { data: "cloud", fallback: 12 }, interval: 3, repeats: 3 },
+                    shape: { kind: "sphere_surface", radius: 0.32 },
+                    direction: "outward", speed: [0.03, 0.15], gravity: 0.03, drag: 0.9,
+                    lifetime: [9, 18], size: [0.09, 0.02],
+                    color: 0x9BE86B, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 60
+                }
+            ]
+        },
+        immune: {
+            duration: 20,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "shrug", bind: "target", fit: "none", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 8, at: 0 },
+                    shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.03, 0.1], gravity: -0.01, drag: 0.9,
+                    lifetime: [8, 14], size: [0.14, 0.02],
+                    color: 0x6B6B78, alpha: [0.4, 0], light: "world", maxParticles: 20
                 }
             ]
         },

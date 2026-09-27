@@ -23,8 +23,8 @@ namespace PokemonSkills {
     function grasspledgeChoice(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): GrassPledgeChoice | null {
         const key = "grasspledge:point:" + item.id + ":" + target.ref;
         if (Object.prototype.hasOwnProperty.call(context.scratch, key)) return context.scratch[key];
-        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
-        const scope = { world: world, actor: world.source(), detail: { values: item.data.config || {} } };
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context), caster = world.source();
+        const scope = { world: world, actor: caster, detail: { values: item.data.config || {} } };
         const prepare = Math.max(5, Math.round(p(grasspledgeId, "tempo", scope)));
         const radius = Math.max(1, p(grasspledgeId, "pillarRadius", scope));
         const detect = p(grasspledgeId, "comboDetect", scope);
@@ -34,19 +34,13 @@ namespace PokemonSkills {
         if (length > cap) { dx *= cap / length; dz *= cap / length; }
         const moving = Math.sqrt(dx * dx + dz * dz) > 0.15;
         const here = CompanionBehavior.point(target.point), candidates = moving ? [here.plus(WorldCombat.point(dx, 0, dz)), here] : [here];
-        const areas = WorldEffects.areas(world);
         let best: GrassPledgeChoice | null = null;
         candidates.forEach(function (candidate, index) {
             const ground = grasspledgeGround(world, self, target, candidate);
             if (!ground) return;
-            let combo = false;
-            for (let i = 0; i < areas.length; i++) {
-                const area = areas[i], centre = CompanionBehavior.point(area.position), distance = centre.minus(ground).length();
-                if (area.data.combo && distance <= 1 + area.radius) return;
-                if (area.pending || area.remaining <= prepare) continue;
-                if (area.rule !== "world_combat:field/pledge_fire" && area.rule !== "world_combat:field/pledge_water") continue;
-                if (distance <= detect && world.clear(ground.plus(WorldCombat.point(0, 0.25, 0)), centre.plus(WorldCombat.point(0, 0.25, 0)))) combo = true;
-            }
+            // 组合资格与 execute 同源：同阵营、未组合、留有余时且通路无阻的真实誓约印。
+            const match = grasspledgeResonance(world, caster, ground, detect);
+            const combo = !!(match && match.remaining > prepare);
             const intercept = moving && index === 0;
             const score = combo ? 54 : intercept ? 42 : 34;
             if (!best || score > best.score) best = { point: [ground.x(), ground.y(), ground.z()], score: score };

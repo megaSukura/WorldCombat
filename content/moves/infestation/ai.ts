@@ -1,5 +1,7 @@
 /** 站定敌人承受完整虫份，快速运动敌人能逐簇甩落；保持基础伤害用途。 */
 namespace PokemonSkills {
+    /** 本招自己种下的虫群身份；只有它会让再次施放无意义，别的束缚反而帮忙把虫留在身上。 */
+    const infestationSwarmId = "world_combat:infestation_swarm";
     CompanionBehavior.registerUse("infestation", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -8,11 +10,11 @@ namespace PokemonSkills {
             if (!target) return true;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 > CompanionBehavior.ai<number>(capability, "maxChase", 14)) return false;
-            return !CompanionBehavior.status(context, target, "partiallytrapped");
+            return !CompanionBehavior.effect(context, target, infestationSwarmId);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible
-                && !CompanionBehavior.status(context, target, "partiallytrapped");
+                && !CompanionBehavior.effect(context, target, infestationSwarmId);
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
@@ -21,7 +23,10 @@ namespace PokemonSkills {
             if (!close) return 0;
             const scope = CompanionBehavior.world(context), actor = scope.actor(target.ref), body = actor === null ? null : scope.observe(actor);
             const motionCost = body === null ? 0 : Math.min(25, body.velocity().length() * 60);
-            return Math.round(CompanionBehavior.ratio(target) * 40 - motionCost) + (context.facts.focus === target.ref ? 24 : 0);
+            let value = Math.round(CompanionBehavior.ratio(target) * 40 - motionCost) + (context.facts.focus === target.ref ? 24 : 0);
+            // 已有束缚（定身、束缚、别的部分束缚）会让目标甩不掉虫，价值更高。
+            if (CompanionBehavior.bound(context, target)) value += 12;
+            return value;
         }
     });
 

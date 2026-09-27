@@ -27,6 +27,6 @@
   "worldcombat.skill.seedbomb.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.seedbomb.preference.ai.maxChase.help": "威胁离自己这么远以内才考虑抛荚；调小只在近处砸，调大愿意先远远砸一轮。",
   "worldcombat.skill.seedbomb.preference.ai.preferGround": "优先落地目标",
-  "worldcombat.skill.seedbomb.preference.ai.preferGround.help": "开启：站在地上的目标多一档分——种雨从上方落下，站定的目标更吃得住；关闭：对空中的目标也照常排序。",
+  "worldcombat.skill.seedbomb.preference.ai.preferGround.help": "开启：站在地上的目标多一档分——高抛种荚从上方砸落，站定的目标更吃得住；关闭：对空中的目标也照常排序。",
   "world_combat.move.seedbomb.text.miss": "种子落空"
 }

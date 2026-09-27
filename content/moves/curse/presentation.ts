@@ -3,11 +3,12 @@
  *
  * 一句话：掌心聚起一团幽火（windup）→ 幽灵把一条紫黑的债线牵到对手身上、在他胸口烙下印记（hex），
  *   之后幽影不时浮起（haunt）、每一口债都把紫光从对手身上抽走（toll）→ 债走完，幽影安静升散（lift）；
- *   非幽灵则在自己身上套起一圈契约环，凶悍与硬壳随之而来（pact）。
- * 色相家族：幽紫 0x9B6BD6 作主体，暗紫 0x3A2352 作底，契约的赤红 0xC0503C 只出现在 pact。
+ *   非幽灵则在自己身上套起契约环（pact），交换期间持续垂落琥珀尘与下沉环（pact_hold，读得出速度被押走），
+ *   印记到期时收势（pact_lift）；若物攻/防御已封顶、速度已触底则只有一圈无收益的 inward 环（nogain）。
+ * 色相家族：幽紫 0x9B6BD6 作主体，暗紫 0x3A2352 作底，契约的赤红 0xC0503C 只出现在 pact，沉脚琥珀 0x8A6E1E 只在降速。
  * 范围：hex 用 `data.path`（施法者 ↔ 目标）画 polyline，债从谁记到谁一眼可见；路径顶点每帧跟随双方。
  * 运动：债线沿两人连线、每口债把紫光向内抽进目标、退场时幽影上浮散去。
- * 数：每口债的份额 `data.share`、扣血规模 `data.burst`、契约等级 `data.gain` 来自本招算出的机制值。
+ * 数：每口债的份额 `data.share`、扣血规模 `data.burst`、契约实际物攻/防御等级 `data.gain`、速度实际降级 `data.down` 来自本招算出的机制值。
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  */
 const CurseDefinition: ParticleDefinition = {
@@ -105,7 +106,54 @@ const CurseDefinition: ParticleDefinition = {
                     burst: { count: { data: "gain", fallback: 1 } }, shape: { kind: "ring", radius: 0.45 },
                     direction: "outward", speed: [0.05, 0.12],
                     lifetime: [12, 20], size: [0.38, 0.78], sizeMode: "sin",
-                    color: 0xC0503C, alpha: [0.6, 0], light: "full", maxParticles: 12 }
+                    color: 0xC0503C, alpha: [0.6, 0], light: "full", maxParticles: 12 },
+                { name: "drop", bind: "source", offset: [0, 0.9, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: { data: "down", fallback: 1 } }, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "down", speed: [0.02, 0.07], gravity: 0.03,
+                    lifetime: [10, 16], size: [0.06, 0.02],
+                    color: 0x8A6E1E, alpha: [0.6, 0], light: "world", maxParticles: 24 }
+            ]
+        },
+        pact_hold: {
+            exit: { drain: 26 },
+            emitters: [
+                { name: "weight", bind: "source", height: 0.85,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 5, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "down", speed: [0.01, 0.04], gravity: 0.02,
+                    lifetime: [14, 22], size: [0.06, 0.02],
+                    color: 0x8A6E1E, alpha: [0.4, 0], light: "world", maxParticles: 20 },
+                { name: "sink_ring", bind: "source", offset: [0, 0.12, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    rate: 2, shape: { kind: "ring", radius: 0.34 },
+                    direction: "down", speed: [0.005, 0.02],
+                    lifetime: [16, 24], size: [0.3, 0.1], sizeMode: "sin",
+                    color: 0xB4453F, alpha: [0.3, 0], light: "full", maxParticles: 10 }
+            ]
+        },
+        pact_lift: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                { name: "release", bind: "source", offset: [0, 0.15, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 14 }, shape: { kind: "ring", radius: 0.36 },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [10, 16], size: [0.26, 0.08],
+                    color: 0xB4453F, alpha: [0.4, 0], light: "world", maxParticles: 18 }
+            ]
+        },
+        nogain: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                { name: "flat", bind: "source", offset: [0, 0.15, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 12 }, shape: { kind: "ring", radius: 0.32 },
+                    direction: "inward", speed: [0.02, 0.06],
+                    lifetime: [10, 16], size: [0.24, 0.06],
+                    color: 0x6E5A6E, alpha: [0.35, 0], light: "world", maxParticles: 16 }
             ]
         },
         lift: {

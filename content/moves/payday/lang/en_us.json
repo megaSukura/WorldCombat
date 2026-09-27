@@ -12,7 +12,7 @@
   "worldcombat.skill.payday.growth.0": "From level %1$s the shot rises to %2$s power.",
   "worldcombat.skill.payday.growth.1": "From level %1$s the shot rises to %2$s power and %3$s coins hit the ground.",
   "worldcombat.skill.payday.value.coin": "Shot power",
-  "worldcombat.skill.payday.value.coins": "Coins thrown",
+  "worldcombat.skill.payday.value.coins": "Gold flash density",
   "worldcombat.skill.payday.value.scatter": "Coins spilled",
   "worldcombat.skill.payday.value.throwSpeed": "Throw speed",
   "worldcombat.skill.payday.value.radius": "Trace radius",
@@ -22,7 +22,7 @@
   "worldcombat.skill.payday.value.aftercast": "Recovery",
   "worldcombat.skill.payday.value.wait": "Cooldown",
   "worldcombat.skill.payday.preference.largesse": "Largesse",
-  "worldcombat.skill.payday.preference.largesse.help": "On: coins spilled ×1.4, but shot power ×0.82, +2 ticks wind-up and +6 ticks cooldown. Off: one heavy handful, faster and harder, with fewer coins spilled.",
+  "worldcombat.skill.payday.preference.largesse.help": "On: gold flash density x1.5 and coins spilled x1.4, but shot power x0.82, +2 ticks wind-up and +6 ticks cooldown. Off: one heavy handful, faster and harder, with fewer coins spilled.",
   "worldcombat.skill.payday.preference.ai.maxChase": "Throw distance",
   "worldcombat.skill.payday.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it open from further away.",
   "world_combat.move.payday.text.scatter": "%1$s coins scattered"

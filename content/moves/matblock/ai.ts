@@ -17,12 +17,22 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("matblock", { fold: 1, ai: { trigger: 9, cover: false } },
         [matBlockTrigger, matBlockCover]);
 
-    function matBlockAllyNear(context: WorldBehavior.Context, radius: number): boolean {
-        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+    /** 席面朝威胁；只有站在施法者背后的真实遮蔽半径内友方才算被这张席护到，用本招实际 radius 与来击方向判断。 */
+    function matBlockCoverable(context: WorldBehavior.Context, capability: WorldBehavior.Capability, threat: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const radius = Math.max(1.6, PokemonSkills.p("matblock", "radius",
+            { world: world, actor: world.source(), skill: PokemonSkills.skills["matblock"], detail: { values: capability.data.config || {} } }));
+        const dx = threat.point[0] - self.point[0], dz = threat.point[2] - self.point[2];
+        const length = Math.sqrt(dx * dx + dz * dz);
+        const fx = length > 0.05 ? dx / length : 0, fz = length > 0.05 ? dz / length : 0;
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly && other.health > 0 && other.ref !== self.ref
-                && CompanionBehavior.distance(other.point, self.point) <= radius) return true;
+            if (!other.friendly || other.health <= 0 || other.ref === self.ref) continue;
+            const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
+            const along = ox * fx + oz * fz, lateral = Math.abs(ox * fz - oz * fx);
+            if (along > -0.2) continue;
+            if (along * along + lateral * lateral <= radius * radius) return true;
         }
         return false;
     }
@@ -42,7 +52,7 @@ namespace CompanionBehavior {
             const threat = context.senses["world_combat:threat"];
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             if (CompanionBehavior.distance(self.point, threat.point) > CompanionBehavior.ai<number>(capability, "trigger", 9)) return false;
-            if (CompanionBehavior.ai<boolean>(capability, "cover", false) && !matBlockAllyNear(context, 5)) return false;
+            if (CompanionBehavior.ai<boolean>(capability, "cover", false) && !matBlockCoverable(context, capability, threat)) return false;
             return true;
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },

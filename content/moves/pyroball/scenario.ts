@@ -18,7 +18,7 @@ Smoke.scenario("pyroball", function (stage) {
     }, function () {
         stage.expect(stage.casts("pyroball", caster) > 0, "pyroball was committed");
         stage.expect(stage.damageTo(foe) > 0, "the fiery ball struck and burst");
-        stage.note("小石滚到踢点后从脚下踢出；引燃约 10% 概率（pyroball.burnChance），落点焦痕时长与出膛散布见实现；散布替代原生 90 命中", {
+        stage.note("小石滚到踢点后从脚前以真实求出的低弧踢出；引燃约 10% 概率（pyroball.burnChance）且只在真的挂上灼伤时才显示附着火焰，落点焦痕只落在可达地面、无伤害，出膛散布替代原生 90 命中", {
             casts: stage.casts("pyroball", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             burned: stage.hadMobEffect(foe, "world_combat:status/burn"),

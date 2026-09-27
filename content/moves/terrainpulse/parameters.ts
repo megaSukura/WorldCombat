@@ -16,56 +16,63 @@
 namespace PokemonSkills {
     export interface TerrainpulseTerrain { type: string; colour: number; }
     /**
-     * 场地按共享语义身份读取，不枚举生产者的规则 id：四种场地招式与掀起同名场地的 surge 特性都声明同一身份，
-     * 于是这里只认「哪片场地」而不认「谁铺的」。
+     * 旧场地身份到元素/颜色的兼容映射：仅当一片场地没有在自己的 data 里声明 element/colour 时使用。
+     * 生产者在新场地 data 里给出 `element`（属性 id）与 `colour`（主色），本单元优先读它，不枚举生产规则。
      */
-    const terrainpulseFields: { rule: string; terrain: TerrainpulseTerrain }[] = [
-        { rule: WorldEffects.terrain("electricterrain"), terrain: { type: "electric", colour: 0xF8D030 } },
-        { rule: WorldEffects.terrain("grassyterrain"), terrain: { type: "grass", colour: 0x78C850 } },
-        { rule: WorldEffects.terrain("mistyterrain"), terrain: { type: "fairy", colour: 0xEE99AC } },
-        { rule: WorldEffects.terrain("psychicterrain"), terrain: { type: "psychic", colour: 0xF85888 } }
-    ];
-    /** 一个点是否落在某片场地里；`WorldEffects.areas` 按来源与邻近效果收集现有场地。 */
-    function terrainpulseAreaAt(world: CombatWorld, rule: string, point: CombatPoint): boolean {
-        var areas = WorldEffects.areas(world, rule);
+    const terrainpulseLegacy: { [name: string]: TerrainpulseTerrain } = {
+        electricterrain: { type: "electric", colour: 0xF8D030 },
+        grassyterrain: { type: "grass", colour: 0x78C850 },
+        mistyterrain: { type: "fairy", colour: 0xEE99AC },
+        psychicterrain: { type: "psychic", colour: 0xF85888 }
+    };
+    function terrainpulseName(identity: string): string { var slash = identity.lastIndexOf("/"); return slash >= 0 ? identity.substring(slash + 1) : identity; }
+    /** 一片场地的元素与主色：优先场地 data.element/colour，旧场地回落到身份映射；无法识别时 null。 */
+    function terrainpulseTerrainOf(area: WorldEffects.Area): TerrainpulseTerrain | null {
+        var data = area.data || {};
+        var legacy = terrainpulseLegacy[terrainpulseName(String(area.identity || ""))];
+        var type = typeof data.element === "string" && data.element.length > 0 ? data.element : legacy ? legacy.type : null;
+        if (type === null) return null;
+        var colour = typeof data.colour === "number" ? data.colour : typeof data.color === "number" ? data.color : legacy ? legacy.colour : 0x9AA0A8;
+        return { type: type, colour: colour };
+    }
+    /**
+     * 覆盖真实脚点、且在同楼层的最新生效场地：`areasWithTag` 已排待生效，`surfaceTouches` 用真实脚点与高度容差
+     * 排别楼层。多个覆盖时取最新 id，不再按固定元素顺序抢先。
+     */
+    function terrainpulseFieldAt(world: CombatWorld | null, feet: CombatPoint | null, grounded: boolean): WorldEffects.Area | null {
+        if (!world || !feet || !grounded) return null;
+        var areas = WorldEffects.areasWithTag(world, WorldEffects.categories.terrain), best: WorldEffects.Area | null = null;
         for (var i = 0; i < areas.length; i++) {
-            var dx = areas[i].position[0] - point.x(), dz = areas[i].position[2] - point.z();
-            if (Math.sqrt(dx * dx + dz * dz) <= areas[i].radius) return true;
+            var area = areas[i];
+            if (!WorldEffects.surfaceTouches(area, feet, 0, 1)) continue;
+            if (best === null || area.id > best.id) best = area;
         }
-        return false;
+        return best;
     }
-    /** 读出脚下场地的元素；没有场地返回 null。 */
-    export function terrainpulseTerrainAt(world: CombatWorld | null, point: CombatPoint | null): TerrainpulseTerrain | null {
-        if (!world || !point) return null;
-        for (var i = 0; i < terrainpulseFields.length; i++)
-            if (terrainpulseAreaAt(world, terrainpulseFields[i].rule, point)) return terrainpulseFields[i].terrain;
-        return null;
+    /** 观察到的战斗者脚下场地的元素；悬空、脚下无场地或无法识别时 null。 */
+    export function terrainpulseTerrainAt(world: CombatWorld | null, actor: CombatActor | null): TerrainpulseTerrain | null {
+        if (!world || !actor || !world.valid(actor)) return null;
+        var body = world.observe(actor);
+        if (!body || !body.grounded()) return null;
+        var feet = WorldCombat.point(body.position().x(), body.boundsMin().y(), body.position().z());
+        var area = terrainpulseFieldAt(world, feet, true);
+        return area === null ? null : terrainpulseTerrainOf(area);
     }
-    function terrainpulsePoint(context: any): CombatPoint | null {
-        if (!context || !context.world) return null;
-        var actor = context.actor;
-        if (actor && context.world.valid(actor)) {
-            var body = context.world.observe(actor);
-            return body ? body.position() : null;
-        }
-        return null;
-    }
-    /** 接地且脚下有场地才算蓄力；悬空接不到地气。 */
-    export function terrainpulseChargedAt(world: CombatWorld | null, point: CombatPoint | null): boolean {
-        if (!world || !point) return false;
-        var actor = world.source(), body = world.valid(actor) ? world.observe(actor) : null;
-        if (!body || !body.grounded()) return false;
-        return !!terrainpulseTerrainAt(world, point);
+    /** AI 用的点版本：调用方给出真实支撑脚点与接地事实，语义与上面的观察版本一致。 */
+    export function terrainpulseTerrainAtPoint(world: CombatWorld | null, feet: CombatPoint | null, grounded: boolean): TerrainpulseTerrain | null {
+        var area = terrainpulseFieldAt(world, feet, grounded);
+        return area === null ? null : terrainpulseTerrainOf(area);
     }
     defineFacts("terrainpulse", function (context: FactContext): Formula.Facts {
+        function charged(): boolean { return !!terrainpulseTerrainAt(context.world || null, context.actor || null); }
         return {
             read: function (id: string): Formula.Fact {
-                if (id === "ground.charged") return terrainpulseChargedAt(context.world || null, terrainpulsePoint(context));
+                if (id === "ground.charged") return charged();
                 return undefined;
             },
             expand: function (id: string): Formula.Explanation | undefined {
                 if (id !== "ground.charged") return undefined;
-                return { value: terrainpulseChargedAt(context.world || null, terrainpulsePoint(context)) ? 1 : 0,
+                return { value: charged() ? 1 : 0,
                     label: { key: "worldcombat.skill.terrainpulse.value.charged" }, terms: [] };
             }
         };
@@ -104,16 +111,13 @@ namespace PokemonSkills {
         // 地环半径：命中处那道贴地环的半径，也用于共鸣第二波的作用半径。
         ring: formula(
             F.base(1.2).plus(F.level().minus(20).max(0).times(0.02)).clamp(1.2, 2.4).round(2),
-            "地环半径", { unit: " 格", description: "实际接触点的表现地环半径；共鸣仍由相邻两道有限地脉结算。" }),
-        repeatDelay: hidden(8)
+            "地环半径", { unit: " 格", description: "实际接触点的表现地环半径；共鸣仍由相邻两道有限地脉结算。" })
     });
 
     defineDamage("terrainpulse", "pulse", { defenceCoefficient: 0.0046, rationale: "地脉推进穿透略强，让场地与特攻的差别更可见。" }, {
         resolve: function (damage: PokemonDamage.FeatureContext): PokemonDamage.Metadata | undefined {
             if (!damage.world || !damage.actor) return undefined;
-            var body = damage.world.observe(damage.actor);
-            if (!body || !body.grounded()) return undefined;
-            var terrain = terrainpulseTerrainAt(damage.world, body.position());
+            var terrain = terrainpulseTerrainAt(damage.world, damage.actor);
             return terrain ? { type: terrain.type } : undefined;
         }
     });

@@ -4,9 +4,10 @@
  * 一句话：口边先越冒越多地堆起小泡，随后一大群泡泡沿准线扇形铺出去、一路噗噗破掉，糊到的人身上
  *   炸开一圈泡、脚下不停往上冒泡。
  * 色相家族：泡青（0xBFEFFF）与近白（0xEAFBFF）；大面积半透明的泡面 + 小面积高亮的破泡核心。
- * 拍子：起 gather（堆泡）→ 吹 fan（泡群铺开）→ 击 target（糊上炸开）／ 破 pop → 收 linger／clear。
- * 范围：fan 用 `data.path`（与服务端同一个扇形多边形）画成面，玩家看泡群铺到哪就知道站哪会被糊到。
- * 运动：泡泡沿扇形各飞各的（投射物外观本身就是一颗泡），面层带轻微上浮；命中处向外炸开，打滑期间脚边持续上冒。
+ * 拍子：起 gather（堆泡）→ 吹 fan（发射口的一口泡）→ 击 target（糊上炸开）／ 破 pop → 收 linger／clear。
+ * 范围：真正飞出去的是原生小泡各自的原生弹路，画面上以小泡本体为准；不再预涂一整片扇形多边形，
+ *   所以墙后不会出现「已经铺满」的假覆盖。
+ * 运动：泡泡沿扇形各飞各的（投射物外观本身就是一颗泡），fan 只在发射口喷出一撮；命中处向外炸开，打滑期间脚边持续上冒。
  * 数：`data.bubbles`（特攻＋等级换算的泡数）绑定发射量，`data.puffs`／`data.volleys` 说明这一口分几轮，
  *   `data.intensity`（泡泡威力 / 40）放大整幕，`data.sudsed`／`data.stages` 让打滑那一下更亮。
  */
@@ -38,25 +39,25 @@ const BubbleDefinition: ParticleDefinition = {
         },
         fan: {
             duration: 0,
-            exit: { drain: 12 },
+            exit: { drain: 10 },
             emitters: [
                 {
-                    name: "sheet", bind: "path", fit: "none", shape: { kind: "polygon" },
+                    name: "muzzle", bind: "point", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/bubble",
-                    rate: { data: "bubbles", fallback: 24 },
-                    direction: "up", speed: [0.02, 0.1], spread: 20,
-                    drag: 0.95,
-                    lifetime: [10, 18], size: [0.14, 0.03],
-                    color: 0xBFEFFF, alpha: [0.7, 0], light: "full", maxParticles: 220
+                    burst: { count: { data: "bubbles", fallback: 24 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.35 },
+                    direction: "up", speed: [0.02, 0.1], spread: 24,
+                    lifetime: [6, 12], size: [0.12, 0.02],
+                    color: 0xBFEFFF, alpha: [0.7, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "mist", bind: "path", fit: "none", shape: { kind: "polygon" },
+                    name: "muzzle_froth", bind: "point", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
-                    rate: { data: "bubbles", fallback: 24 },
-                    direction: "up", speed: [0.02, 0.12], spread: 24,
-                    drag: 0.94,
-                    lifetime: [12, 20], size: [0.08, 0.02],
-                    color: 0xEAFBFF, alpha: [0.6, 0], light: "full", maxParticles: 240
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "ring", radius: 0.3 },
+                    direction: "outward", speed: [0.04, 0.14],
+                    lifetime: [7, 13], size: [0.07, 0.02],
+                    color: 0xEAFBFF, alpha: [0.7, 0], light: "full", maxParticles: 40
                 }
             ]
         },

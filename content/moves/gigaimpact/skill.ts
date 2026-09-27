@@ -7,14 +7,15 @@
  * 三幕：
  *   起：压低身体、脚下起尘，并沿实际冲程方向拉出冲迹预告（windup，提交前）。
  *   击：提交后逐刻沿瞄准方向推进，用 moveSweep 找接触；撞上活体按精灵数据结算这一撞、把目标顶开；
- *       撞墙在真实方块面留一处收势痕；跑满冲程、跑不动或撞墙都算空冲。
- *   收：无论命中、撞墙还是空冲，都挂上 `world_combat:status/mustrecharge`（本单元 startup 声明的效果），
- *       进入力竭：无法行动、无法移动。喘息表现由一段托管效果承载，随真实力竭状态自然到期或被提前解除一起撤下。
+ *       只有真的造成伤害才爆完整命中，友体或拒伤只在接触点撞停。撞墙在真实方块面留一处收势痕；
+ *       跑满冲程、跑不动或撞墙都算空冲。
+ *   收：**起冲的那一刻就付力竭**（`world_combat:status/mustrecharge`，本单元 startup 声明的效果），
+ *       所以中途取消、被断、跑空都不免除；喘息表现由一段托管效果承载，随真实力竭状态自然到期或被提前解除一起撤下。
  *
  * 选取：kind 为 aim——方向或世界点都能放，瞄空中也成立；不要求提交时存在敌人，命中权限仍由命中层判断。
  *
- * 力竭的「无法行动」由一条 CombatStatus.actions 门禁实现（对所有活体一致）；「无法移动」由效果自带的
- * movement_speed/flying_speed 归零与 navigate 归零实现。
+ * 力竭的「无法行动」由一条 CombatStatus.actions 门禁实现（对本作所有活体一致，不覆盖原生 Boss 的私有攻击）；
+ * 「无法移动」由效果自带的 movement_speed/flying_speed 归零与 navigate 归零实现。
  */
 namespace PokemonSkills {
     const gigaimpactScene = "world_combat:move_gigaimpact";
@@ -28,7 +29,7 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "gigaimpact",
         name: "Giga Impact",
-        description: "把整个身体压低后沿直线全力撞出去；撞实的一刻把目标顶开，但无论撞中、撞墙还是冲空，冲完自己都会力竭一段时间，无法行动也无法移动。",
+        description: "把整个身体压低后沿直线全力撞出去；撞实的一刻把目标顶开，但起冲的瞬间就开始力竭，冲完（甚至冲空、半路取消）自己都会有一段时间无法行动也无法移动。",
         uses: ["直线全力冲撞", "把目标撞飞，用自己的力竭换这一下", "在对手还手前先手终结"],
         kind: "aim",
         range: 5,
@@ -77,26 +78,36 @@ namespace PokemonSkills {
             const direction = aim(action);
             const scale = radius / 0.55;
             const intensity = Math.max(0.6, Math.min(2.4, crash / 130));
+            const seconds = Math.round(exhaustTicks / 20 * 10) / 10;
             let travelled = 0;
 
             movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity });
             sound(action, "cobblemon:move.bodyslam.actor_1");
 
-            /** 落力竭：挂上真实 mustrecharge 并停步；喘息表现由一段托管效果承载，跟状态同起同落。 */
-            function exhale(current: CombatAction): void {
+            // 起冲即付：力竭时钟从真正冲出的这一刻开始，中途 input-stop／被断不免除。
+            // 载体拒绝时不谎报（不挂状态、不播力竭表现）。
+            const carrier = MobEffects.apply(world, actor, gigaimpactExhaustEffect, exhaustTicks, 0);
+            if (carrier !== null) {
+                world.stopMovement(actor);
+                world.effect(gigaimpactExhaustMark, actor,
+                    JSON.stringify({ scale: scale, seconds: seconds, puffs: Math.round(6 + seconds * 3),
+                        id: String(carrier.id()), key: String(carrier.key()) }), exhaustTicks);
+                const body = world.observe(actor);
+                if (body !== null) {
+                    WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), gigaimpactExhaustText, [seconds], 30);
+                    sound(action, "minecraft:entity.generic.big_fall");
+                }
+            }
+
+            /** 收势：力竭已在起冲时挂上，这里只停步、播一次收势尘并收尾。 */
+            function finishDash(current: CombatAction): void {
                 const scope = current.world();
-                MobEffects.apply(scope, current.actor(), gigaimpactExhaustEffect, exhaustTicks, 0);
                 scope.stopMovement(current.actor());
                 const body = scope.observe(current.actor());
-                if (body !== null) {
-                    const seconds = Math.round(exhaustTicks / 20 * 10) / 10;
+                if (body !== null)
                     WorldFeedback.emit(scope, gigaimpactScene, 1, body.position(),
                         { moment: "exhaust", scale: scale, seconds: seconds, count: Math.round(8 + seconds * 5) }, 30);
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.4, 0)), gigaimpactExhaustText, [seconds], 30);
-                    scope.effect(gigaimpactExhaustMark, current.actor(),
-                        JSON.stringify({ scale: scale, seconds: seconds, puffs: Math.round(6 + seconds * 3) }), exhaustTicks);
-                }
-                sound(current, "minecraft:entity.generic.big_fall");
+                movementScenes.finish(current, done);
             }
 
             function land(current: CombatAction, textKey: string, moment: string): void {
@@ -105,8 +116,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), gigaimpactScene, 1, body.position(), { moment: moment, scale: scale }, 24);
                     WorldFeedback.text(current.world(), body.position().plus(WorldCombat.point(0, 1.4, 0)), textKey, [], 24);
                 }
-                exhale(current);
-                movementScenes.finish(current, done);
+                finishDash(current);
             }
 
             /** 撞墙：在实际撞到的原生方块格上留一处收势痕，落点就是真正停下的位置。 */
@@ -127,23 +137,28 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     const point = hit.position();
+                    // 只有真被非友方接纳的伤害才爆完整命中；友体或拒伤只算接触撞停。
                     const landed = impact(current, hit, "gigaimpact", crash,
                         { damage: damageSpec("gigaimpact", "crash"), contact: true });
-                    WorldFeedback.emit(scope, gigaimpactScene, 1, point,
-                        { moment: "impact", target: target ? String(target.ref()) : "", scale: scale,
-                            intensity: intensity, count: Math.round(30 + intensity * 60) }, 34);
+                    let moved = 0;
                     if (landed && target !== null && scope.valid(target)) {
                         const body = scope.observe(target);
                         if (body !== null) {
                             const outward = body.position().minus(origin);
-                            if (outward.length() >= 0.05) scope.hitDisplace(target, outward.unit().scale(push));
+                            // push 用 hitDisplace 实际接受的位移量，不冒称全额。
+                            if (outward.length() >= 0.05) moved = scope.hitDisplace(target, outward.unit().scale(push));
                         }
+                    }
+                    WorldFeedback.emit(scope, gigaimpactScene, 1, point, landed
+                        ? { moment: "impact", target: target ? String(target.ref()) : "", scale: scale,
+                            intensity: intensity, count: Math.round(30 + intensity * 60), push: Math.round(moved * 100) / 100 }
+                        : { moment: "blocked", target: target ? String(target.ref()) : "", scale: scale }, landed ? 34 : 22);
+                    if (landed && target !== null) {
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), gigaimpactHitText, [], 30);
                         sound(current, "cobblemon:move.bodyslam.target");
                     }
                     sound(current, "minecraft:entity.iron_golem.attack");
-                    exhale(current);
-                    movementScenes.finish(current, done);
+                    finishDash(current);
                     return;
                 }
                 travelled += swept.moved;
@@ -160,6 +175,7 @@ namespace PokemonSkills {
     });
 
     // 力竭的共享身份门禁：带着 mustrecharge 的人在窗口内不能开始新动作；伤害阶段不受影响。
+    // 只约束本作动作，不替代原生 Boss 私有的攻击调度。
     CombatStatus.actions.define({ id: "world_combat:gigaimpact/exhaust-gate", applies: function (context) { return context.phase !== "damage"; }, apply: function (context) {
         if (CombatStatus.has(context.world, context.actor, "mustrecharge")) context.blocked.exhausted = true;
     } });
@@ -169,7 +185,8 @@ namespace PokemonSkills {
         const value = JSON.parse(json);
         if (typeof value.seconds !== "number" || !isFinite(value.seconds) || value.seconds <= 0
             || typeof value.scale !== "number" || !isFinite(value.scale) || value.scale <= 0
-            || typeof value.puffs !== "number" || !isFinite(value.puffs) || value.puffs < 1)
+            || typeof value.puffs !== "number" || !isFinite(value.puffs) || value.puffs < 1
+            || typeof value.id !== "string" || !value.id || typeof value.key !== "string" || !value.key)
             throw new Error("Invalid gigaimpact exhaust mark");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
@@ -181,10 +198,10 @@ namespace PokemonSkills {
             body.position(), { moment: "pant", target: String(actor.ref()), scale: state.scale, seconds: state.seconds, puffs: state.puffs });
         effect.schedule("watch", "watch", 5, "{}");
     });
-    // 状态提前消失（牛奶、驱散）时立刻结束托管表现；自然到期时托管效果自己的计时也到点。
+    // 绑定本次实际挂上的载体 anchor：状态被牛奶、驱散或换新实例时立即结束托管表现，不等自己的计时。
     WorldCombat.effectHandler(gigaimpactExhaustMark, "watch", function (effect) {
-        const world = effect.world(), actor = effect.target();
-        if (!world.valid(actor) || world.mobEffect(actor, gigaimpactExhaustEffect) === null) { effect.end(); return; }
+        const world = effect.world(), actor = effect.target(), state = JSON.parse(effect.state());
+        if (!world.valid(actor) || !MobEffects.matches(world, actor, { id: state.id, key: state.key })) { effect.end(); return; }
         effect.schedule("watch", "watch", 5, "{}");
     });
     WorldCombat.effectHandler(gigaimpactExhaustMark, "operation:world_combat:dispel", function (effect) { effect.end(); });

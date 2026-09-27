@@ -5,11 +5,11 @@
  * 谁踩上去，两片齿当场合拢并炸起一圈尘土，接着一磨一磨地咬着不放，直到松开或滑脱。
  * 色相家族：铁灰（0xC9CDD2／0x8A8F96）为主体，草绿（0xB9C7A6）只做草属的边光，白色做咬合高光。
  * 拍子：起（cock 撑齿）→ 掷（toss 抛出）→ 伏（armed 落地摊开 / armed_idle 待机亮点）→
- *   咬（snap 合上 + chew 反复磨）→ 收（loose 松开 / release 滑脱 / fade 收起）。
- * 范围：伏与收都绑 `point`、`fit: "none"`，用 `data.trigger`（真实触发半径）决定咬齿张开的大小；
- *   咬合与磨绑 `target`，跟着被夹住的人。
- * 运动：夹子沿抛物线飞出落地；咬齿合拢时粉尘向外炸，磨的时候碎屑贴着地面弹。
- * 数：`data.jaws`（物攻派生）决定咬合与磨的碎屑量，`data.wait`（待机时长）只用来让待机亮点保持低频。
+ *   咬（snap 两侧夹口合拢 + chew 反复磨）→ 持（hold 夹口一直夹着被夹住的人）→ 收（loose 松开 / release 滑脱 / fade 收起）。
+ * 范围：伏与收都绑 `point`、`fit: "none"`，用 `data.trigger`（真实触发半径）决定咬齿张开的大小，画面圆与判定同半径；
+ *   咬合、磨与持守绑 `target`，跟着被夹住的人。
+ * 运动：夹子沿抛物线飞出落地；合上时两侧夹口相向收拢，磨的时候碎屑贴着地面弹，持守时夹口保持贴在身上。
+ * 数：`data.jaws`（物攻派生）决定咬合、磨与持守的碎屑量，`data.wait`（待机时长）只用来让待机亮点保持低频。
  * 参照节：视觉语言第二、三、四、五、七、九节。
  */
 const SnaptrapDefinition: ParticleDefinition = {
@@ -110,13 +110,51 @@ const SnaptrapDefinition: ParticleDefinition = {
                     color: 0xF2F5F6, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },
                 {
-                    name: "snap_teeth", bind: "target", height: 0.35,
+                    name: "snap_jaw_left", bind: "target", offset: [-0.55, 0.12, 0], height: 0.25,
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    burst: { count: { data: "jaws", fallback: 10 }, interval: 3, repeats: 2 },
-                    shape: { kind: "ring", radius: 0.34 },
-                    direction: "outward", speed: [0.06, 0.2], spread: 18, gravity: 0.04, drag: 0.92,
-                    lifetime: [8, 16], size: [0.14, 0.03],
-                    color: 0xB9C7A6, alpha: [0.8, 0], light: "world", maxParticles: 60
+                    burst: { count: { data: "jaws", fallback: 10 }, at: 1 },
+                    shape: { kind: "box", size: [0.14, 0.2, 0.5] },
+                    direction: "inward", speed: [0.14, 0.32], spread: 8,
+                    lifetime: [6, 12], size: [0.16, 0.04],
+                    color: 0xB9C7A6, alpha: [0.9, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "snap_jaw_right", bind: "target", offset: [0.55, 0.12, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "jaws", fallback: 10 }, at: 1 },
+                    shape: { kind: "box", size: [0.14, 0.2, 0.5] },
+                    direction: "inward", speed: [0.14, 0.32], spread: 8,
+                    lifetime: [6, 12], size: [0.16, 0.04],
+                    color: 0xB9C7A6, alpha: [0.9, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        hold: {
+            exit: { drain: 22 },
+            emitters: [
+                {
+                    name: "hold_jaw_left", bind: "target", offset: [-0.42, 0.18, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    rate: 4, shape: { kind: "box", size: [0.1, 0.16, 0.42] },
+                    direction: "inward", speed: [0.0, 0.03],
+                    lifetime: [10, 18], size: [0.13, 0.03],
+                    color: 0xB9C7A6, alpha: [0.5, 0.06], alphaMode: "sin", light: "world", maxParticles: 18
+                },
+                {
+                    name: "hold_jaw_right", bind: "target", offset: [0.42, 0.18, 0], height: 0.25,
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    rate: 4, shape: { kind: "box", size: [0.1, 0.16, 0.42] },
+                    direction: "inward", speed: [0.0, 0.03],
+                    lifetime: [10, 18], size: [0.13, 0.03],
+                    color: 0xB9C7A6, alpha: [0.5, 0.06], alphaMode: "sin", light: "world", maxParticles: 18
+                },
+                {
+                    name: "hold_glint", bind: "target", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 3, shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [10, 18], size: [0.06, 0.01],
+                    color: 0xEAF0F2, alpha: [0.35, 0], light: "full", bloom: 0.2, maxParticles: 10
                 }
             ]
         },

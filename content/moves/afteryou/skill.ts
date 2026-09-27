@@ -8,6 +8,8 @@ namespace PokemonSkills {
     }
     function afteryouGo(effect: CombatEffect, state: AfterYouState, ticks: number): void {
         const world = effect.world(), body = world.observe(effect.target());
+        // 消费即收回本人这一次的等待载体（按 key 比对，伙伴被新的让先刷新时旧 key 不匹配，保留新载体）。
+        world.removeMobEffect(effect.target(), state.carrier.id, state.carrier.key);
         state.spent = ticks; effect.state(JSON.stringify(state));
         if (body) {
             WorldFeedback.emit(world, afteryouScene, 1, body.position(), { moment: "go", target: String(effect.target().ref()), motes: state.motes, haste: state.haste }, 24);
@@ -43,10 +45,14 @@ namespace PokemonSkills {
         if (body.player()) {
             state.player = world.attribute(effect.target(), "minecraft:generic.attack_speed", state.haste / 100, "add_multiplied_total");
             effect.state(JSON.stringify(state));
+        } else if (LivingActions.preparing(world, effect.target()).length === 0) {
+            // 普通非玩家怪没有标准准备可提前：明确告知，窗口仍保留给随后可能出现的准备。
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.15, 0)), afteryouNoneText, [], 30);
         }
-        world.present("world_combat:afteryou/pending", afteryouScene, 1, body.position(), JSON.stringify({
+        // 等待画面绑在 mark 效果自身的整个存续期上：真实提前、驱散或到期都随载体一起收束。
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:afteryou/pending", afteryouScene, 1, body.position(), {
             moment: "ready", target: String(effect.target().ref()), motes: state.motes, haste: state.haste
-        }));
+        });
         effect.schedule("watch", "watch", 1, "{}");
     }
     WorldCombat.effectHandler(afteryouMark, "watch", effect => {

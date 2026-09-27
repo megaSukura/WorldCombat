@@ -14,7 +14,7 @@
   "worldcombat.skill.razorleaf.value.waves": "Waves",
   "worldcombat.skill.razorleaf.value.reach": "Range",
   "worldcombat.skill.razorleaf.value.spread": "Lane half-width",
-  "worldcombat.skill.razorleaf.value.leafRadius": "Leaf body",
+  "worldcombat.skill.razorleaf.value.leafRadius": "Leaf thickness",
   "worldcombat.skill.razorleaf.value.leaves": "Leaves per wave",
   "worldcombat.skill.razorleaf.value.gap": "Between waves",
   "worldcombat.skill.razorleaf.value.pace": "Curtain advance",

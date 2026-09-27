@@ -6,7 +6,8 @@
  * 色相家族：深紫（0x6B4FA8 / 0x8A6BC8）为主体，近白紫（0xD8CCFF）只给锥缘与击点高光，烟黑收地面。
  * 拍子：起 gather（聚声，可反复）→ 击 bark（每一声一锥）→ 中 hush（第一次被骂软，掉特攻）/ chide（已在锥里被骂过、只继续挨削血）→ 收 linger（被斥余韵）/ fizzle（喝空）。
  * 范围：bark 的锥形顶点就是判定用的扇面（`data.path`），长度 `data.reach`、张角 `data.halfArc` —— 铺到哪就是会被喝到哪；
- *   一个脉冲一个 bark，画面里连推几次就是机制里连喝几声；每一拍都朝第一声锁定的 `data.direction` 推同一道锥。
+ *   一个脉冲一个 bark、短拍收束，画面里连推几次就是机制里连喝几声；声锥长度用 world 单位，不再被 `data.scale` 二次放大。
+ *   断喝式（单声）额外点亮 `data.core` 重峰，让一声比连斥的某一声更清楚；每一拍都朝第一声锁定的 `data.direction` 推同一道锥。
  * 运动：锥面朝 `data.direction` 压出去，锥缘沿顶点连线铺开；被喝者身上的符号下坠。
  * 数：音符量与锥面密度绑定 `data.notes`（特攻派生），锥长/张角绑定 `data.reach`/`data.halfArc`，掉级绑定 `data.drop`。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -37,18 +38,29 @@ const SnarlMoveDefinition: ParticleDefinition = {
             ]
         },
         bark: {
-            duration: 16,
-            exit: { stop: 6, drain: 14 },
+            duration: 9,
+            exit: { stop: 4, drain: 10 },
             emitters: [
                 {
-                    name: "cone_air", bind: "point", fit: "none", offset: [0, 0.55, 0],
+                    // 声锥用 world 长度：reach 已是实际格数，不能再被 data.scale 二次放大成第二套尺寸。
+                    name: "cone_air", bind: "point", fit: "world", offset: [0, 0.55, 0],
                     orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "notes", fallback: 18 },
                     shape: { kind: "cone_volume", radius: 0.32, length: { data: "reach", fallback: 4.5 }, angleDegrees: { data: "halfArc", fallback: 27 } },
                     direction: "shape", speed: [0.1, 0.34], spread: 10, spin: 8,
                     lifetime: [6, 13], size: [0.2, 0.04],
-                    color: 0x6B4FA8, alpha: [0.4, 0], light: "world", maxParticles: 260
+                    color: 0x6B4FA8, alpha: [0.4, 0], light: "world", maxParticles: 220
+                },
+                {
+                    // 断喝式（单声）才有的重峰：整锥一次亮起，让一声比连斥的某一声更清楚。
+                    name: "cone_peak", bind: "point", fit: "world", offset: [0, 0.62, 0], orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dark",
+                    shape: { kind: "cone_volume", radius: 0.5, length: { data: "reach", fallback: 4.5 }, angleDegrees: { data: "halfArc", fallback: 27 } },
+                    burst: { count: { data: "core", fallback: 0 }, at: 0 },
+                    direction: "shape", speed: [0.12, 0.4], spread: 12,
+                    lifetime: [6, 12], size: [0.26, 0.05],
+                    color: 0xE6DEFF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 120
                 },
                 {
                     name: "cone_fill", bind: "path", offset: [0, -0.35, 0],

@@ -1,25 +1,25 @@
 /**
  * 晶光转转 / mortalspin 的客户端表现。
  *
- * 一句话：施法者脚边聚起一圈毒紫的晶光 → 先甩散缠在身上的东西（free），随后贴地撒出一圈真实毒晶、毒晶各自
- *   朝外飞成一圈紫环（spin → crystal）→ 沾到人或撞到方块的一瞬炸开一撮毒光（剧毒式更亮更浓）（hit／block），
- *   最后余毒慢慢沉下去（settle）。
+ * 一句话：施法者脚边聚起毒紫的晶光、一圈环绕光扫过身周（gather：短起手）→ 起手一荡把毒晶真正甩出去（fling）
+ *   → 每枚真实毒晶各自拖一条短尾迹飞成一圈紫环（crystal）→ 沾到人或撞到方块的一瞬炸开一撮毒光
+ *   （剧毒式更亮更浓）（hit／block），最后余毒慢慢沉下去（settle）。
  * 色相家族：毒紫晶（0xB06AD0 主体、0xE2B8F2 亮面、0xF6ECFB 近白核心），余韵用中性灰；无第二个色相。
- * 拍子：起 gather 0–12t ／ 旋 spin 0–18t ／ 飞 crystal（逐枚续期）／ 中 hit ／ 撞 block ／ 解 free ／ 沉 settle。
- * 范围：spin／free 的贴地毒环半径绑 `data.scale`（晶光半径 / 2.6），crystal 绑各枚真实毒晶（`data.projectile`），
- *   hit／block 绑真实接触点——玩家一眼看出毒晶撒到哪一圈、有没有被方块挡住。
- * 运动：gather 的毒晶向脚边收；spin 的毒晶贴地外抛、紫环一圈圈扩散；crystal 的短尾迹沿各枚毒晶同一位置拖行；
+ * 拍子：起 gather 0–12t ／ 荡 fling 0–24t ／ 飞 crystal（逐枚续期）／ 中 hit ／ 撞 block ／ 解 free ／ 沉 settle。
+ * 范围：环绕光半径与重放次数读 `data.rings`（本招真实起手圈数）；crystal 绑各枚真实毒晶（`data.projectile`），
+ *   hit／block 绑真实接触点——玩家一眼看出毒晶撒到哪一圈、有没有被方块挡住，不再画与判定无关的整圈假晶。
+ * 运动：gather 的毒晶向脚边收、环绕光圈扫过身周；crystal 的短尾迹沿各枚毒晶同一位置拖行；
  *   hit 的毒光从接触点向上炸，block 的碎晶沿方块表面溅开。
- * 数：`data.scatter`（物攻与等级派生的碎光数）驱动 gather／spin／hit／block 的发射量，`data.crystals`（本轮实际
- *   毒晶枚数）决定 spin 起射那一 burst，`data.rings`（旋动圈数）决定毒环重放次数，`data.freed`（甩脱的束缚条数）
- *   追加解缚环，`data.toxic`（剧毒式）抬高毒光的亮度与浓度。
+ * 数：`data.scatter`（物攻与等级派生的碎光数）驱动 gather／hit／block 的发射量，`data.crystals`（本轮实际
+ *   毒晶枚数）决定 fling 起射那一 burst，`data.rings`（起手环绕圈数）决定 gather 环绕光重放次数，
+ *   `data.freed`（甩脱的束缚条数）追加解缚环，`data.toxic`（剧毒式）抬高毒光的亮度与浓度。
  */
 const MortalSpinDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         gather: {
-            duration: { data: "windup", fallback: 7 },
-            exit: { stop: 4, drain: 10 },
+            duration: { data: "windup", fallback: 9 },
+            exit: { stop: 6, drain: 10 },
             emitters: [
                 {
                     name: "pool", bind: "source", offset: [0, 0.2, 0], height: 0.05,
@@ -36,38 +36,31 @@ const MortalSpinDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.09, 0.01],
                     color: 0xE2B8F2, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 50
+                },
+                {
+                    // 环绕光：短起手时扫过身周，圈数就是本招算出的起手环绕圈数；荡出毒晶后即停。
+                    name: "girdle", bind: "source", offset: [0, 0.45, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 1, interval: 2, repeats: { data: "rings", fallback: 2 } },
+                    shape: { kind: "ring", radius: 0.55 },
+                    direction: "outward", speed: [0.1, 0.24],
+                    lifetime: [8, 14], size: [0.36, 0.78], sizeMode: "sin",
+                    color: 0x9A57C0, alpha: [0.5, 0], light: "world", maxParticles: 8
                 }
             ]
         },
-        spin: {
-            duration: 18,
-            exit: { stop: 8, drain: 15 },
+        fling: {
+            duration: 24,
+            exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "crystals", bind: "source", offset: [0, 0.45, 0], height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/spike",
-                    burst: { count: { data: "crystals", fallback: 8 }, at: 0 },
-                    shape: { kind: "ring", radius: 0.3 },
-                    direction: "outward", speed: [0.16, 0.44], spin: 22,
-                    lifetime: [7, 14], size: [0.22, 0.05], sizeMode: "index",
-                    color: 0xB06AD0, alpha: [0.8, 0], light: "world", maxParticles: 60
-                },
-                {
-                    name: "glint", bind: "source", offset: [0, 0.4, 0], height: 0.3,
+                    name: "throw", bind: "source", offset: [0, 0.45, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
-                    rate: { data: "scatter", fallback: 16 }, shape: { kind: "ring", radius: 0.42 },
-                    direction: "shape", speed: [0.05, 0.16], spin: 26,
+                    burst: { count: { data: "crystals", fallback: 8 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.12, 0.34], spin: 24,
                     lifetime: [5, 11], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xE2B8F2, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 100
-                },
-                {
-                    name: "ring", bind: "source", offset: [0, 0.05, 0], height: 0, orient: "fixed",
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1, interval: 4, repeats: { data: "rings", fallback: 2 } },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
-                    direction: "outward", speed: [0.14, 0.32],
-                    lifetime: [10, 18], size: [0.4, 0.9], sizeMode: "sin",
-                    color: 0x9A57C0, alpha: [0.55, 0], light: "world", maxParticles: 8
+                    color: 0xE2B8F2, alpha: [0.8, 0], light: "full", bloom: 0.3, maxParticles: 40
                 }
             ]
         },

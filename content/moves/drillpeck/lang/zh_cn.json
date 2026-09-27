@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.drillpeck.summary": "原地旋起来，把身体拧成一支钻，贴着身前一条短轴一下一下地把尖喙钻进去：不是一记，而是连续几口，每一口都把对手往后顶一点。对手离地时每一口更狠——尖喙专钻空中的破绽。它是全族唯一的持续接触钻孔。",
+  "worldcombat.skill.drillpeck.summary": "旋起身来，把身体拧成一支钻，贴着身前一条短轴一下一下地把尖喙钻进去：不是一记，而是连续几口，每一口都把对手往后顶一点。钻轴跟着当前身体位置推进，可以边移动边钻；对手离地时每一口更狠——尖喙专钻空中的破绽。它是全族唯一的持续接触钻孔。",
   "worldcombat.skill.drillpeck.use.0": "原地旋成一支钻，连续几口钻同一个目标",
   "worldcombat.skill.drillpeck.use.1": "把贴脸的目标一口口往后顶开",
   "worldcombat.skill.drillpeck.use.2": "对离地的目标钻得更狠",
@@ -30,5 +30,5 @@
   "worldcombat.skill.drillpeck.preference.ai.finish": "优先收残血",
   "world_combat.move.drillpeck.text.hit": "啄钻 %1$s 口",
   "world_combat.move.drillpeck.text.miss": "转了个空",
-  "worldcombat.skill.drillpeck.description.3": "起手先朝目标垫进 %1$s 格，只垫到判定边缘、不会穿过目标；每一口只结算身前固定钻轴上离得最近、通视的一名对手，目标滑出钻轴后那几口落空，但整支钻仍会转完所有口数再收势。"
+  "worldcombat.skill.drillpeck.description.3": "起手先朝目标垫进 %1$s 格，只垫到判定边缘、不会穿过目标；每一口只结算身前固定钻轴上离得最近、通视的一名对手，轴端跟着当前身体位置更新，移动时钻头也随身体前推、贴着喙尖围轴旋进；目标滑出钻轴后那几口落空，但整支钻仍会转完所有口数再收势。"
 }

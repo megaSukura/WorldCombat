@@ -145,7 +145,10 @@ for ((name, script) in mapOf(
     "checkSharedContent" to "tools/check-shared-content.mjs",
     "checkWorldMethods" to "tools/check-world-methods.mjs",
     "checkWorldGeometry" to "tools/check-world-geometry.mjs",
-    "checkUiLibrary" to "tests/client/ui-library.mjs"
+    "checkUiLibrary" to "tests/client/ui-library.mjs",
+    "checkCompanionHud" to "tests/client/companion-hud.mjs",
+    "checkDetailsPanels" to "tests/client/details-panels.mjs",
+    "checkRadialMenu" to "tests/client/radial-menu.mjs"
 )) {
     val verification = tasks.register<Exec>(name) {
         group = "verification"

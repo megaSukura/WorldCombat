@@ -5,11 +5,11 @@
  *   滑得更远更快。它不自己种草：借的是环境或其他招式已经铺好的青草场地，滑过处只翻起一层转瞬即逝的草叶。
  *
  * 两幕：
- *   起（windup，提交前）：脚边草叶收拢、身体压低，只播预告（present gather）；脚下真站在青草场地上时另播一记
- *       托举（present boost），那一记才代表起手归零、滑得更远更快。
- *   滑（execute）：提交后沿瞄准方向逐刻滑行，身后拖一条草浪；撞上第一个非友方活体就结算 slide 接触伤害、
- *       把它沿滑行方向铲开，并在接触处扬一撮短草（纯装饰，不留场地、不授青草身份）；
- *       一路滑到尽头没撞上就收势落空（whiff）。
+ *   起（windup，提交前）：脚边草叶收拢、身体压低，只播预告（present gather）。
+ *   滑（execute）：提交后沿水平瞄准逐刻贴地滑行（丢弃俯仰），身后拖一条草浪；脚下真站在青草场地上时，
+ *       在第一步实际移动前补发一记短叶扇作为起滑（present boost），代表起手归零、滑得更远更快，整段滑行沿用
+ *       提交那一刻的草地判定；撞上第一个非友方活体就结算 slide 接触伤害、把它沿滑行方向铲开，并在接触处
+ *       只扬一撮短草（纯装饰，不留场地、不授青草身份）；一路滑到尽头没撞上就收势落空（whiff）。
  *
  * 自由瞄准：`kind: "aim"`，朝方向或世界点都能滑，空地也能放；没有输入辅助目标时照常滑出去并落空。
  * 草属性加成与共享草地结算由真正的青草场地承担，本招只读取共享身份 `world_combat:status/grassyterrain`。
@@ -51,14 +51,16 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const onGrass = CombatStatus.has(action.sense(), action.actor(), "grassyterrain");
             const tufts = Math.max(12, Math.round(p(grassyglideId, "tufts", action)));
+            // 准备期只播内收的聚草；草地版起手归零，真正的起滑叶扇在 execute 第一步前补发，不依赖这条预告实例。
             action.present("grassyglide:gather", grassyglideScene, 1, action.origin(),
-                JSON.stringify({ moment: onGrass ? "boost" : "gather", windup: prepare, onGrass: onGrass ? 1 : 0, tufts: tufts }));
+                JSON.stringify({ moment: "gather", windup: prepare, onGrass: onGrass ? 1 : 0, tufts: tufts }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(grassyglideScene);
             const world = action.world();
-            const direction = aim(action);
+            // 贴地滑行：丢弃俯仰，只沿水平瞄准推进；坡度与墙仍由原生碰撞管。
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
             const length = p(grassyglideId, "dash", action);
             const step = p(grassyglideId, "pace", action);
             const radius = p(grassyglideId, "collisionRadius", action);
@@ -67,10 +69,16 @@ namespace PokemonSkills {
             const tufts = Math.max(12, Math.round(p(grassyglideId, "tufts", action)));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.5));
             const intensity = Math.max(0.6, Math.min(2.2, power / 70));
+            // 提交即取样一次：整段滑行沿用这一份草地判定，滑出草区或场地到期都不会中途改数值。
+            const onGrass = CombatStatus.has(action.sense(), action.actor(), "grassyterrain");
             let travelled = 0;
 
             sound(action, "cobblemon:move.razorleaf.actor_1");
             movementScenes.show(action, "slide", action.origin(), { moment: "slide", scale: scale, tufts: tufts, intensity: intensity });
+            // 草地版零准备：在第一步实际移动前补一记短叶扇作为起滑，让「草把人托起来」每次都看得见。
+            if (onGrass)
+                WorldFeedback.emit(world, grassyglideScene, 1, action.origin(),
+                    { moment: "boost", windup: 12, tufts: Math.max(8, Math.round(tufts * 0.6)), scale: scale, intensity: intensity }, 14);
 
             function finish(current: CombatAction, at: CombatPoint, moment: string): void {
                 const scope = current.world();
@@ -98,8 +106,8 @@ namespace PokemonSkills {
                             WorldFeedback.emit(scope, grassyglideScene, 1, hit.position(),
                                 { moment: "hit", target: String(victim.ref()), tufts: tufts, scale: scale, intensity: intensity }, 24);
                             WorldFeedback.emit(scope, grassyglideScene, 1, hit.position(),
-                                { moment: "plant", tufts: Math.max(8, Math.round(tufts * 0.6)), scale: scale }, 18);
-                            WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)), grassyglidePlantText, [], 24);
+                                { moment: "wake", tufts: Math.max(8, Math.round(tufts * 0.6)), scale: scale }, 18);
+                            WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)), grassyglideWakeText, [], 24);
                             scope.sound("minecraft:block.grass.break", hit.position(), 12, "{}");
                         }
                         finish(current, hit.position(), "hit");

@@ -8,8 +8,8 @@
  * 它同时改变属性结算和世界里真烧着的东西——一场雨落下的位置和时机就是这招的选择。
  *
  * 数值来源（每个参数读不同的个体数据，展开成场上看得见的差异）：
- *   gather        起手：基础 12 刻，速度每快 1 点减 0.04 刻，夹在 8..20。
- *   settle        收招：基础 9 刻，速度每快 1 点减 0.02 刻，夹在 6..14。
+ *   gather        起手：基础 12 刻，速度超过 40 后每点减 0.04（最多减 6），夹在 8..20；速度越快第一滴雨落得越早。
+ *   settle        收招：基础 9 刻，速度超过 40 后每点减 0.02（最多减 4），夹在 6..14。
  *   reach         施放距离：基础 14 格，20 级起每级 +0.08，夹在 10..18。
  *   stormRadius   雨区半径：基础 9 格 +（特攻超过 60）×0.02 +（身高超过 1.4）×1.5，再乘铺法系数，夹在 6..16。
  *   stormTicks    雨区持续：基础 360 刻 + 20 级起每级 6 刻，再乘铺法系数，夹在 240..700。
@@ -28,9 +28,9 @@ namespace PokemonSkills {
     WorldEnvironment.defineWeather("rain", { sunlight: 0.35 });
 
     actionParameters.define("raindance", {
-        gather: seconds(F.base(12).plus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(8, 20),
+        gather: seconds(F.base(12).minus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(8, 20),
             "起手", "把雨叫来需要多少时间；速度越快，第一滴雨落得越早。"),
-        settle: seconds(F.base(9).plus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
+        settle: seconds(F.base(9).minus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
             "收招", "雨落下后收势需要多少时间；速度越快越利落。"),
         reach: formula(F.base(14).plus(F.level().minus(20).max(0).times(0.08)).clamp(10, 18).round(1),
             "施放距离", { unit: " 格", description: "能在多远的地面叫来这场雨；等级越高够得越远。" }),
@@ -49,7 +49,7 @@ namespace PokemonSkills {
             F.base(80).plus(F.stat("speed").times(0.6))
                 .times(F.when(F.pref("downpour"), F.const(1.35), F.const(0.8)))
                 .clamp(50, 200),
-            "淋湿持续", "离开雨区后身上还湿多久；速度越快越难甩干，倾盆更久、细雨更短。"),
+            "淋湿持续", "离开雨区后淋湿身份还留存多久；速度越快越难甩干，倾盆更久、细雨更短。留存期间水 / 火加成不生效，属性加成只随身处雨区的当前天气生效。"),
         rainDensity: formula(
             F.base(30).plus(F.stat("specialAttack").div(9))
                 .times(F.when(F.pref("downpour"), F.const(1.4), F.const(0.8)))

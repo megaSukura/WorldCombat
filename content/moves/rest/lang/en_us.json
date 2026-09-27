@@ -3,7 +3,7 @@
   "worldcombat.skill.rest.use.0": "Refill inside a safe window",
   "worldcombat.skill.rest.use.1": "Clear status conditions",
   "worldcombat.skill.rest.use.2": "Return to the fight with a speed-up",
-  "worldcombat.skill.rest.description.0": "Sleeps for %1$s; a full sleep restores %2$s of the missing health, and any damage wakes you early to pay out only the share you slept through.",
+  "worldcombat.skill.rest.description.0": "Sleeps for %1$s; a full sleep restores %2$s of the health missing when you fell asleep, and any damage wakes you early to pay out only the share you slept through.",
   "worldcombat.skill.rest.description.1": "A full sleep also grants %1$s of movement speed-up (+20%%); being woken early grants none and instead leaves you slowed for %2$s (reduced movement speed).",
   "worldcombat.skill.rest.stance.deep": "Deep sleep: the full duration, all missing health and Refreshed, with a longer cooldown.",
   "worldcombat.skill.rest.stance.nap": "Nap: about half the duration, about 60 percent of the healing and no Refreshed, for x0.8 cooldown and a shorter recovery.",
@@ -25,5 +25,6 @@
   "world_combat.move.rest.text.wake": "Fully rested: restored %1$s health, cleared %2$s condition(s).",
   "world_combat.move.rest.text.groggy": "Woken early: restored %1$s health, cleared %2$s condition(s).",
   "world_combat.move.rest.text.refreshed": "Refreshed",
-  "worldcombat.skill.rest.description.additional": "It can only be used while wounded or carrying a status; whether you sleep through or are woken early, every harmful status is cured, while healing pays out by the share you slept."
+  "world_combat.move.rest.text.nosleep": "Cannot fall asleep",
+  "worldcombat.skill.rest.description.additional": "It can only be used while wounded or carrying a status; whether you sleep through or are woken early, every harmful status is cured, while healing pays out by the share you slept. If sleep is refused (sleep immunity, Safeguard, ...) you neither fall asleep nor heal anything."
 }

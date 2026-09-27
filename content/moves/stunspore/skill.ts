@@ -99,6 +99,7 @@ namespace PokemonSkills {
             const hold = Math.max(20, Math.round(p(stunsporeId, "holdTicks", action)));
             const spores = Math.max(8, Math.round(p(stunsporeId, "spores", action)));
             const scale = Math.max(0.5, Math.min(2.2, radius / 2.3));
+            let flight = "";
             let settled = false;
 
             function burst(current: CombatAction, point: CombatPoint): void {
@@ -114,11 +115,16 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.stunspore.actor");
-            const flight = LivingActions.projectile(action, {
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.26, lifetime: 100,
                 appearance: { sprite: "cobblemon:particle/generic/powder", scale: 0.9, tint: 0xE8C81E },
                 impact: function (current, hit) { burst(current, hit.position()); }
-            }, function (current) { burst(current, current.targetPosition()); });
+            }, function (current) {
+                // 无碰撞时在真实飞行终点落云；方向与射程在出手时冻结，不追踪目标瞬移生成。
+                const end = current.world().projectilePosition(flight);
+                if (end === null) { done(current); return; }
+                burst(current, end);
+            });
             WorldFeedback.emit(world, stunsporeScene, 1, origin,
                 { moment: "throw", projectile: flight, target: action.target() === null ? "" : String(action.target()!.ref()),
                     scale: scale, spores: spores }, 30);

@@ -60,7 +60,7 @@ public final class DefinitionParser {
         "event", ParticleDefinition.ChildTrigger.EVENT);
 
     private static final Set<String> ROOT_KEYS = Set.of("moments", "interrupt");
-    private static final Set<String> MOMENT_KEYS = Set.of("duration", "exit", "emitters", "children");
+    private static final Set<String> MOMENT_KEYS = Set.of("duration", "exit", "emitters", "children", "sound");
     private static final Set<String> EXIT_KEYS = Set.of("stop", "drain");
     private static final Set<String> CHILD_KEYS = Set.of("on", "of", "event", "emit");
     private static final Set<String> BURST_KEYS = Set.of("count", "interval", "repeats", "at");
@@ -185,7 +185,21 @@ public final class DefinitionParser {
                 }
                 children = parsed;
             }
-            return new ParticleDefinition.Moment(duration, stop, drain, emitters, children);
+            ParticleDefinition.SoundCue sound = null;
+            if (present(obj, "sound")) {
+                String soundPath = path + ".sound";
+                JsonObject cue = requireObject(obj.get("sound"), soundPath);
+                requireOnly(cue, Set.of("id", "volume", "pitch", "bind"), soundPath);
+                String id = requireString(cue, "id", soundPath);
+                if (!id.matches("[a-z0-9_.-]+:[a-z0-9_./-]+")) throw error(soundPath + ".id", "expected a resource id");
+                double volume = finiteDefault(cue, "volume", 1, soundPath), pitch = finiteDefault(cue, "pitch", 1, soundPath);
+                if (volume < 0 || volume > Float.MAX_VALUE || pitch <= 0 || pitch > Float.MAX_VALUE)
+                    throw error(soundPath, "volume must be nonnegative and pitch positive native floats");
+                String bind = present(cue, "bind") ? requireString(cue, "bind", soundPath) : "point";
+                if (!Set.of("point", "source", "target").contains(bind)) throw error(soundPath + ".bind", "expected point, source or target");
+                sound = new ParticleDefinition.SoundCue(id, volume, pitch, ParticleDefinition.Bind.valueOf(bind.toUpperCase(java.util.Locale.ROOT)));
+            }
+            return new ParticleDefinition.Moment(duration, stop, drain, emitters, children, sound);
         }
 
         private ParticleDefinition.EmitterSpec emitter(

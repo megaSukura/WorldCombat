@@ -62,11 +62,11 @@ const DazzlinggleamDefinition: ParticleDefinition = {
                     color: 0xFFE9F6, alpha: [0.45, 0], light: "full", bloom: 0.25, maxParticles: 90
                 },
                 {
-                    name: "rays", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "none",
+                    name: "rays", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
                     burst: { count: { data: "rays", fallback: 9 }, at: 0 },
                     shape: { kind: "circle", radius: 0.5, thickness: 0.6 },
-                    direction: "outward", speed: [0.5, 1.3], spread: 8,
+                    direction: "outward", speed: [{ data: "raySlow", fallback: 0.12 }, { data: "rayFast", fallback: 0.2 }], spread: 8,
                     lifetime: [8, 16], size: [0.3, 0.06], sizeMode: "index",
                     color: 0xFFFFFF, alpha: [0.75, 0], light: "full", bloom: 0.5, maxParticles: 40
                 },
@@ -116,8 +116,7 @@ const DazzlinggleamDefinition: ParticleDefinition = {
             ]
         },
         dazzle: {
-            duration: 20,
-            exit: { stop: 8, drain: 14 },
+            duration: 0,
             emitters: [
                 {
                     name: "eye", bind: "target", height: 0.45,

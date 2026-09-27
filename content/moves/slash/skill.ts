@@ -1,44 +1,74 @@
 /**
  * 劈开 / slash 的出手方式。
  *
- * 核心念头：站定、把刃举到头顶，朝身前一条窄而高的竖直面压下去——慢、稳、最容易劈中要害。
- * 它的形状是一道从高处斜下、落在命中点的长刀痕；普通命中只画这一条，命中真劈中要害时再补一次更亮的强调。
+ * 核心念头：站定、把刃举到头顶，朝身前一道窄而高的斜压刀面压下去——慢、稳，最容易劈中要害。
+ * 判定与画面共用同一道薄面：举起点在上、落点在前，刃尖在 3 刻里从高处斜下推进到落点；每刻只结算
+ * 当前扫过的那一小段；墙先把够不到的刃段裁掉，墙后不受伤。
  *
- * 两幕：
- *   起（windup，提交前）：举刃过头，刃尖聚起一道竖直的亮线。
- *   劈（cleave → fall → strike，提交后）：沿身前 `reach` 格长、`edge` 半宽的走廊压下一记 `cleave` 接触斩击，
- *       走廊里的非友方各挨一下；命中处画出一道由高处斜下的长刀痕。
+ * 三幕：
+ *   起（windup，提交前）：举刃过头，刃尖聚起一道亮线。
+ *   劈（blade → strike / wall）：提交后刃尖从身体上方 `depth` 高处斜下、推进 `reach` 格到落点；每一刻都用
+ *       **当前身体**重新量一次真实可达的刀面——先查身体到举刃点（顶棚/身位）够不够，再让刀面全宽（左缘、中线、
+ *       右缘）各自沿瞄准方向裁到第一堵墙，取最短的一段；命中的非友方各结算一次接触斩击，候选接触再从刀段出发
+ *       复核一次墙。抬不起刀、或整片刀面被墙截到近零，就直接收招，不再恢复成全长。
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器在落点补一发亮白标记与浮字。
  *
- * 选取：`kind: "aim"` 接受任意阵营实体或世界点；横向窄、纵向高，所以旁侧不挨这一刀，高目标仍会被纵劈覆盖。
- * 与同族分开：居合斩是一趟贴地的宽弧并割草，连斩是越接越多刀的攒节奏，十字剪是两刃合拢的交叉；
- * 劈开是唯一「慢、窄、期待要害」的单点重劈。
+ * 选取：`kind: "aim"` 接受任意阵营实体或世界点；竖直瞄准用稳定局部侧轴，不压成水平。
+ * 与同族分开：居合斩是一趟贴地的宽弧并割草，连斩是越接越多刀的攒节奏；劈开是唯一「慢、窄、高、期待要害」的单点重劈。
  */
 namespace PokemonSkills {
-    /** 走廊四个角：origin 起、朝 direction 长 reach、半宽 half；判定与表现共用。 */
-    function slashLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): number[][] {
-        const forward = WorldCombat.point(direction.x(), 0, direction.z());
-        const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(heading.scale(reach));
-        return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))]
-            .map(function (point) { return [point.x(), point.y(), point.z()]; });
+    /** 举起点：身体中心正上方 `depth` 格。 */
+    function slashRaised(origin: CombatPoint, depth: number): CombatPoint {
+        return origin.plus(WorldCombat.point(0, depth, 0));
     }
 
-    /** 命中处一记斜下长刀痕：从落点斜后上方沿刃势压到落点斜前下方，一条线读完整记竖劈。 */
-    function slashStroke(point: CombatPoint, direction: CombatPoint, depth: number): number[][] {
-        const heading = WorldGeometry.flatUnit(direction);
-        const top = point.plus(WorldCombat.point(0, depth, 0)).minus(heading.scale(depth * 0.55));
-        const bottom = point.plus(WorldCombat.point(0, -0.2, 0)).plus(heading.scale(depth * 0.35));
-        return [[top.x(), top.y(), top.z()], [bottom.x(), bottom.y(), bottom.z()]];
+    /** 一段斜压刀面的四个顶点：上沿 prev、下沿 tip，沿稳定侧轴各展开 `edge` 半宽；判定与表现共用。 */
+    function slashQuad(prev: CombatPoint, tip: CombatPoint, side: CombatPoint, edge: number): CombatPoint[] {
+        return [prev.plus(side.scale(edge)), prev.minus(side.scale(edge)), tip.minus(side.scale(edge)), tip.plus(side.scale(edge))];
+    }
+
+    /** 刀面平面的单位法线（由同一组顶点算出）。 */
+    function slashNormal(vertices: CombatPoint[]): CombatPoint {
+        const first = vertices[1].minus(vertices[0]), second = vertices[3].minus(vertices[0]);
+        return WorldCombat.point(first.y() * second.z() - first.z() * second.y(),
+            first.z() * second.x() - first.x() * second.z(),
+            first.x() * second.y() - first.y() * second.x()).unit();
+    }
+
+    function slashPath(vertices: CombatPoint[]): number[][] {
+        return vertices.map(function (point) { return [point.x(), point.y(), point.z()]; });
+    }
+
+    export interface SlashBlade { top: CombatPoint; bottom: CombatPoint; quad: CombatPoint[]; normal: CombatPoint; }
+
+    /**
+     * 从当前本体量出这一记真实可达的斜压刀面：先查身体到举刃点（顶棚/身位），再从举刃点沿瞄准方向让刀面全宽
+     * （左缘、中线、右缘）各自裁到第一堵墙并取最短的一段。返回同一组顶点供判定与画面共用；抬不起或近零返回 null。
+     */
+    export function slashBlade(world: CombatWorld, origin: CombatPoint, depth: number, forward: CombatPoint,
+                               reach: number, side: CombatPoint, edge: number): SlashBlade | null {
+        const top = slashRaised(origin, depth);
+        if (WorldGeometry.blockHit(world, origin, top) !== null) return null;
+        const wanted = origin.plus(forward.scale(reach)), span = wanted.minus(top), length = span.length();
+        if (!(length > 0)) return null;
+        let ratio = 1;
+        [-1, 0, 1].forEach(function (lateral) {
+            const offset = side.scale(edge * lateral);
+            const wall = WorldGeometry.blockHit(world, top.plus(offset), wanted.plus(offset));
+            if (wall !== null) ratio = Math.min(ratio, wall.position().minus(top.plus(offset)).length() / length);
+        });
+        if (!(ratio > 0)) return null;
+        const bottom = top.plus(span.scale(ratio));
+        const quad = slashQuad(top, bottom, side, edge);
+        return { top: top, bottom: bottom, quad: quad, normal: slashNormal(quad) };
     }
 
     define({
         id: slashId,
         cooldownParameter: "recharge",
         name: "Slash",
-        description: "站定、举刃过头，沿身前一条窄而高的竖直面压下一记斜劈：走廊里的对手各吃一记接触斩击，命中处划出一道由高处斜下的长刀痕；普通命中只画这一条。它天生更容易劈中要害，只有真正劈中要害时落点才会再闪一记亮白标记——疾刃更快更宽、重刃更慢更重。",
-        uses: ["站定一记压下去的重劈", "更容易劈中要害", "慢、窄、准"],
+        description: "站定、举刃过头，朝身前一道窄而高的斜压刀面压下去：刃尖从高处斜下推进，扫到的对手各吃一记接触斩击，命中处就是刃面真正接触身体的位置；墙会先把够不到的刃段截短，墙后不受伤。它天生更容易劈中要害，只有真正劈中要害时落点才会再闪一记亮白标记——疾刃更快更宽、重刃更慢更重。",
+        uses: ["站定一记压下去的重劈", "更容易劈中要害", "慢、窄、高、准"],
         kind: "aim",
         range: 2.4,
         maxRange: 2.9,
@@ -70,41 +100,92 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(slashScene);
             const world = action.world();
+            const caster = action.actor();
             const direction = aim(action);
             const reach = p(slashId, "reach", action);
             const edge = p(slashId, "edge", action);
             const depth = p(slashId, "depth", action);
             const power = p(slashId, "cleave", action);
             const notes = Math.round(p(slashId, "notes", action));
-            const self = world.observe(action.actor());
-            const origin = self === null ? action.origin() : self.position();
+            const frame = WorldGeometry.basis(direction, action.direction());
+            const side = frame.right;
+            const steps = 3;
+            const thickness = Math.max(0.08, Math.min(0.22, edge * 0.25));
+            const bladeFloor = 0.12;
             const scale = Math.max(0.6, Math.min(2.0, edge / slashReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 70));
+            const selfRef = String(caster.ref());
+            const hitRefs: { [ref: string]: boolean } = {};
+            let hits = 0, settled = false;
 
-            const path = slashLane(origin, direction, reach, edge);
-            let hits = 0, strike = origin.plus(direction.scale(reach));
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, direction, reach, edge, { below: 1.0, above: depth }),
-                function (victim, facts) {
-                    if (hurt(action, victim, slashId, power, { damage: damageSpec(slashId, "cleave"), contact: true, slice: true })) {
-                        if (hits === 0) strike = facts.position();
-                        hits++;
-                        WorldFeedback.emit(world, slashScene, 1, facts.position(),
-                            { moment: "strike", target: String(victim.ref()), notes: notes, scale: scale, intensity: intensity }, 18);
-                    }
+            sound(action, "minecraft:entity.player.attack.strong");
+
+            function finish(current: CombatAction, at: CombatPoint): void {
+                if (settled) return;
+                settled = true;
+                const scope = current.world();
+                if (hits === 0) {
+                    WorldFeedback.emit(scope, slashScene, 1, at, { moment: "miss", scale: scale }, 18);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), slashMissText, [], 20);
+                }
+                scenes.finish(current, done);
+            }
+
+            /** 刀面在这刻抬不起来或已被墙截到近零：不再补全长，直接收招。 */
+            function stop(current: CombatAction, at: CombatPoint): void {
+                if (settled) return;
+                const scope = current.world();
+                WorldFeedback.emit(scope, slashScene, 1, at, { moment: "wall", scale: scale }, 18);
+                scope.sound("minecraft:block.deepslate.break", at, 14, "{}");
+                finish(current, at);
+            }
+
+            /** 当前一刻：只结算刚刚扫过的那一小段真实刀面，命中的目标各一次。 */
+            function advance(current: CombatAction, index: number): void {
+                if (settled) return;
+                const scope = current.world();
+                const moved = scope.observe(caster);
+                const base = moved === null ? current.origin() : moved.position();
+                // 每刻以当前本体重新校验真实可达子段；表现与判定都读这一组被裁过的顶点。
+                const blade = slashBlade(scope, base, depth, frame.forward, reach, side, edge);
+                if (blade === null || blade.bottom.minus(blade.top).length() <= bladeFloor) {
+                    stop(current, slashRaised(base, depth));
+                    return;
+                }
+                const axis = blade.bottom.minus(blade.top);
+                const from = blade.top.plus(axis.scale(index / steps));
+                const to = blade.top.plus(axis.scale((index + 1) / steps));
+                const quad = slashQuad(from, to, side, edge);
+
+                const region = WorldGeometry.bodyPrism(quad, slashNormal(quad), thickness);
+                WorldGeometry.selectBodies(scope, region, function (victim, facts) {
+                    const ref = String(victim.ref());
+                    if (facts.friendly() || ref === selfRef || hitRefs[ref]) return;
+                    const contact = scope.closestPoint(victim, WorldGeometry.closestOnSegment(facts.position(), blade.top, blade.bottom));
+                    // 候选接触复核墙：刀段到身体之间还有实墙就不结算。
+                    if (WorldGeometry.blockHit(scope, from, contact) !== null) return;
+                    if (!hurt(current, victim, slashId, power,
+                        { damage: damageSpec(slashId, "cleave"), contact: true, slice: true })) return;
+                    hitRefs[ref] = true; hits++;
+                    WorldFeedback.emit(scope, slashScene, 1, contact,
+                        { moment: "strike", point: [contact.x(), contact.y(), contact.z()], target: ref,
+                            notes: notes, scale: scale, intensity: intensity }, 18);
                 });
 
-            WorldFeedback.emit(world, slashScene, 1, origin,
-                { moment: "cleave", path: path, notes: notes, hits: hits, depth: depth,
-                    direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity }, 20);
-            WorldFeedback.emit(world, slashScene, 1, strike,
-                { moment: "fall", path: slashStroke(strike, direction, depth), scale: scale, intensity: intensity }, 18);
-            sound(action, "minecraft:entity.player.attack.strong");
-            if (hits === 0) {
-                WorldFeedback.emit(world, slashScene, 1, strike, { moment: "miss", scale: scale }, 18);
-                WorldFeedback.text(world, origin.plus(direction.scale(reach)).plus(WorldCombat.point(0, 0.9, 0)), slashMissText, [], 20);
+                scenes.show(current, "blade", base, { moment: "blade", path: slashPath(quad),
+                    step: index + 1, notes: notes, motes: Math.round(notes * 4), hits: hits,
+                    scale: scale, intensity: intensity, direction: [direction.x(), direction.y(), direction.z()] });
+
+                if (index + 1 < steps) {
+                    current.after(1, function (next: CombatAction) { advance(next, index + 1); });
+                    return;
+                }
+                finish(current, blade.bottom);
             }
-            done(action);
+
+            advance(action, 0);
         }
     });
 

@@ -4,8 +4,9 @@
  * 什么局面下出手：一记远程赌注盒。有可见、敌对、存活且落在 `ai.maxChase`（默认 10）格内的目标就列入候选；
  *   站在稍远处扔更安全（省得被贴脸），所以距离在 4 格以上时 priority 抬一档。
  * 对谁出手：当前威胁；友方、倒下或不可见的不接受。
- * 什么时候不用：目标生命比例低于 `ai.riskBelow`（默认 0.4）时降档——盒子有可能反而把它治好，
- *   所以残血时不拿它赌。这个取舍会直接改变伙伴在追击残血目标时的出手选择。
+ * 什么时候不用：糖果按最大生命的固定比例回血，所以按**当前/最大血量估绝对治疗代价**降档——高血量的 Boss
+ *   哪怕当前比例不低，一次误治也是很大的绝对回复；目标生命比例低于 `ai.riskBelow`（默认 0.4）时再降一档。
+ *   这个取舍会直接改变伙伴在追击高血量或残血目标时的出手选择。
  * 放完之后：交回共享顺序；它不占手，下一次决策就能再用。
  */
 namespace CompanionBehavior {
@@ -33,6 +34,11 @@ namespace CompanionBehavior {
             const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
             let score = 16;
             if (gap >= 4) score += 6;
+            // 糖果按最大生命的固定比例回血：按当前/最大血量估一次误治的绝对代价，避免只看比例去赌厚血 Boss。
+            const maximum = Math.max(1, target.maximum);
+            const missing = Math.max(0, maximum - target.health);
+            const expectedHeal = Math.min(missing, maximum * 0.25);
+            score -= Math.min(24, Math.round(expectedHeal / 4));
             if (CompanionBehavior.ratio(target) < CompanionBehavior.ai<number>(capability, "riskBelow", 0.4)) score -= 12;
             return score;
         }

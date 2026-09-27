@@ -31,7 +31,9 @@
   "worldcombat.skill.sharpen.preference.ai.ranged.help": "On: when the threat's last attack was a projectile/spell and it is still beyond melee, the companion holds off raising the edges rather than feeding a ranged pin. Off: ignore the attack kind and decide by distance alone.",
   "world_combat.move.sharpen.text.jagged": "Sharpen (Attack +%1$s)",
   "world_combat.move.sharpen.text.capped": "Edges already at their limit (no Attack gained)",
+  "world_combat.move.sharpen.text.rejected": "The edges failed to rise (Attack unchanged)",
   "world_combat.move.sharpen.text.cut": "Cut by the edges",
   "world_combat.move.sharpen.text.dull": "Edges dull (Attack -%1$s)",
+  "world_combat.move.sharpen.text.dullplain": "Edges dull (Attack unchanged)",
   "effect.world_combat.sharpened": "Sharpened"
 }

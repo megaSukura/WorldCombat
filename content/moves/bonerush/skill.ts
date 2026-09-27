@@ -7,13 +7,15 @@
  *
  * 幕：
  *   起（draw，提交前）：拔骨、拧身，手里聚起一圈骨白光；`action.present`，可打断、不花 PP。
- *   掷（throw，提交后）：`strikes` 击。每一击朝目标当前所在处抛一枚骨头（外观是 `minecraft:bone`，按 `boomArc`
- *       走弧线）；骨头在真实接触点落定即为「夯」，结算一段 `quake` 地面伤害——落点 `shock` 半径内、真正贴地
- *       的非友方各吃一下、被向上顶起 `lift`；只留一段会散去的尘痕 `crack`。最后一击威力 ×`finish`。
+ *   掷（throw，提交后）：`strikes` 击。每一击从身体顶真实起点抛一枚骨头（外观是 `minecraft:bone`，按 `boomArc`
+ *       走弧线，`Flight.origin` 用同一个起点）；瞄准目标脚底（或所选世界点）脚下的真实支撑面。骨头在真实接触点
+ *       落定即为「夯」，只有真实支撑地面才把 `quake` 传开——落点 `shock` 半径内、同层真实贴地、到落点没有实心墙
+ *       挡住的非友方各吃一下、被向上顶起 `lift`；撞墙（非顶面）或在空中撞到目标只在接触面收势，不隔墙跨层。
+ *       每击只留一段会散去的尘痕 `crack`，不改动地表。最后一击威力 ×`finish`。
  *   收（settle）：这一串夯完收势，余尘落定。
  *
  * 选取 `kind: "aim"`：可以点任意阵营实体，也可以只给一个世界点或方向自由抛骨；骨头撞墙就在真实接触面结束，
- *   落在哪里震哪里，不会在远处的锁点震地。飞行/悬空的目标不吃地面震动。
+ *   落在哪里震哪里，不会在远处的锁点震地，也不会隔墙或跨层传震。飞行/悬空的目标不吃地面震动。
  *
  * 与同族分开：乱抓会绕圈换位、乱击是站定定点突刺、扫尾拍打是原地整圈旋尾；只有骨棒乱打隔着距离掷骨、留下地痕，
  *   反制方式是远离落点或站到不平的地面上（骨头弧线会偏），也可在掷出后走开让骨头砸空。
@@ -76,7 +78,6 @@ namespace PokemonSkills {
             const boneRadius = Math.max(0.12, p(bonerushId, "boneRadius", action));
             const lift = p(bonerushId, "lift", action);
             const finishMul = p(bonerushId, "finish", action);
-            const accuracy = Math.max(0.05, Math.min(0.99, p(bonerushId, "accuracy", action)));
             const crackTicks = Math.max(60, Math.round(p(bonerushId, "crack", action)));
             const dust = Math.max(8, Math.round(p(bonerushId, "dust", action)));
             // 骨头飞行是持续过程：每次 execute 建一个 actionScenes，逐枚绑定真实投递，撞到就停、收势随 finish。
@@ -105,7 +106,12 @@ namespace PokemonSkills {
                 const victim = targetRef === "" ? null : scope.actor(targetRef);
                 const vbody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                 const origin = self.position().plus(WorldCombat.point(0, self.height() * 0.5, 0));
-                const aimPoint = vbody !== null ? vbody.position() : current.targetPosition();
+                // 瞄脚不瞄身：取目标脚底（或所选世界点）脚下那片真实支撑面；没有支撑就落在所点位置。
+                const feet = vbody !== null
+                    ? WorldCombat.point(vbody.position().x(), vbody.boundsMin().y(), vbody.position().z())
+                    : current.targetPosition();
+                const support = SurfacePaths.support(scope, feet, 0.8, 2.0);
+                const aimPoint = support !== null ? support : feet;
                 let direction = LivingActions.ballistic(origin, aimPoint, speed, gravity);
                 if (direction === null) direction = aim(current);
                 // 命中 90：共享偏角让这一枚骨头真的会扔歪；目标走开就砸在空地上。
@@ -118,25 +124,36 @@ namespace PokemonSkills {
                 sound(current, "minecraft:entity.arrow.shoot");
                 const flight = LivingActions.projectile(current, {
                     speed: speed, range: distance + 3, radius: boneRadius, direction: direction, gravity: gravity,
-                    lifetime: life,
+                    origin: origin, lifetime: life,
                     appearance: { item: "minecraft:bone", spin: true, scale: 0.9 } as any,
                     impact: function (inner: CombatAction, hit: CombatImpact): void {
                         const scope2 = inner.world();
-                        const at = hit.position();
+                        const contact = hit.position();
                         const struck = hit.target();
                         // 骨头在真实接触点停下：飞行轨迹随之收掉，不再继续拖尾。
                         scenes.stop(inner, key);
-                        WorldFeedback.emit(scope2, bonerushScene, 1, at,
+                        scope2.sound("minecraft:block.bone_block.break", contact, 14, "{}");
+                        // 只有真实支撑地面才传震：撞墙（非顶面）或在空中撞到目标都只在接触面收势，不隔墙跨层。
+                        let centre: CombatPoint | null = null;
+                        if (hit.blocked()) centre = hit.blockFace() === "up" ? contact : null;
+                        else centre = SurfacePaths.support(scope2, contact, 1.2, 2.5);
+                        if (centre === null) {
+                            if (struck !== null && scope2.valid(struck))
+                                WorldFeedback.emit(scope2, bonerushScene, 1, contact,
+                                    { moment: "hit", target: String(struck.ref()), index: shot, strikes: strikes, dust: dust, lifted: 0,
+                                        intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 20);
+                            return;
+                        }
+                        WorldFeedback.emit(scope2, bonerushScene, 1, centre,
                             { moment: "slam", index: shot, strikes: strikes, shock: shock, dust: dust,
                                 intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 22);
-                        scope2.sound("minecraft:block.bone_block.break", at, 14, "{}");
-                        // 只有真正贴地的目标才沿地层吃到震动；飞行/悬空的不算。
-                        WorldGeometry.selectEnemies(scope2, WorldGeometry.ring(at, 0, shock, { below: 2.0, above: 2.0 }),
+                        // 震波只沿真实支撑地面传：目标脚下要有真实支撑、与本层同高，且到落点没有实心墙挡住。
+                        WorldGeometry.selectEnemies(scope2, WorldGeometry.ring(centre, 0, shock, { below: 1.5, above: 2.5 }),
                             function (other, facts) {
-                                // 真实贴地才算：原生 grounded 或脚高贴着脚下地面，任一成立；飞行/悬空的不吃震动。
-                                const feet = facts.position().y() - facts.height() * 0.5;
-                                const ground = WorldGeometry.ground(scope2, facts.position(), 2).y();
-                                if (!facts.grounded() && Math.abs(feet - ground) > 0.7) return;
+                                const feet = WorldCombat.point(facts.position().x(), facts.boundsMin().y(), facts.position().z());
+                                const ground = SurfacePaths.support(scope2, feet, 0.6, 2.0);
+                                if (ground === null || Math.abs(ground.y() - centre.y()) > 1.0) return;
+                                if (!scope2.clear(centre, facts.position())) return;
                                 if (!hurt(inner, other, bonerushId, hitPower, { damage: damageSpec(bonerushId, "quake") })) return;
                                 landed++;
                                 const pos = facts.position();
@@ -146,9 +163,9 @@ namespace PokemonSkills {
                                     { moment: "hit", target: String(other.ref()), index: shot, strikes: strikes, dust: dust,
                                         lifted: lifted ? 1 : 0, intensity: Math.max(0.5, Math.min(2.4, hitPower / 28)) }, 20);
                             });
-                        if (struck !== null && scope2.valid(struck)) scope2.sound("cobblemon:impact.ground", at, 14, "{}");
+                        if (struck !== null && scope2.valid(struck)) scope2.sound("cobblemon:impact.ground", centre, 14, "{}");
                         // 地痕只是会自己散去的尘，不改动地表；crack 参数改为这段尘痕能留多久。
-                        WorldFeedback.emit(scope2, bonerushScene, 1, at,
+                        WorldFeedback.emit(scope2, bonerushScene, 1, centre,
                             { moment: "crack", radius: Math.max(1.0, shock * 0.9), linger: crackTicks, dust: dust,
                                 index: shot, strikes: strikes, shock: shock }, 26);
                     }

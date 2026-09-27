@@ -1,23 +1,4 @@
-/**
- * 大爆炸 / explosion 的出手方式。
- *
- * 核心念头：带着一根看得见的引信把自己压进选定的近地点，引信烧完才炸。它和自爆是同一件事的两个量级：
- *   更大、更慢、掀得更远、还留坑；区别在送达——大爆炸要先在引信下短步压进爆点，自爆则原地瞬间引爆。
- *
- * 与同族分开：自爆更小更快、原地一颗紧凑火球；大爆炸的引信长到对手有机会看着引信环熄灭、绕开爆点，
- *   换来最重的一击与最远的掀飞，以及一个会留一会儿的弹坑。
- *
- * 三幕：
- *   起（windup，提交前）：地面从脚下裂开、光从缝里漏出、尘絮向内收——只播预告，可被打断。
- *   引（fuse，提交后）：锁定玩家所选近地点（推进距离内、压到近地），三道引信环按剩余时间逐一熄灭、
- *       爆圈贴着真实半径跟随身体；身体受碰撞短步前进，抵达或撞墙就停住，仍等引信烧完。撞墙不提前爆、不补爆。
- *   爆（detonate → shock → hit → crater / miss）：引信归零时在实际停止点一次结清——圈内每个非友方各挨一次
- *       `blast`、被向外掀飞 `knock`、向上抛起 `lift`，地面按 `craterCells` 留下焦黑弹坑（租借，到期原方块回来）；
- *       一个人都没炸到也照样倒下——原生 `selfdestruct: "always"`。
- *
- * 反制：引信期间引信环可读，能绕开爆点；墙体挡住推进，爆心停在墙的这一侧；引信中被击倒则这一记作废、不会补爆。
- * 提交即结清 PP 与冷却；收招为 0，倒下即动作结束。
- */
+/** 移动引信在真实位置完成牺牲后，由独立爆源兑现一次爆发。 */
 namespace PokemonSkills {
     const explosionScene = "world_combat:move_explosion";
     const explosionHitText = "world_combat.move.explosion.text.hit";
@@ -26,44 +7,50 @@ namespace PokemonSkills {
     /** 引信环的发射率（熄灭时发 0）。三道环由外向内先后熄灭。 */
     const explosionFuseRate = 10;
 
-    /** 弹坑形态：可炸的表层一律烧成黑石，水／岩浆／基岩不动。 */
-    function explosionCharred(id: string): string {
-        if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") return "";
-        if (id === "minecraft:bedrock" || id === "minecraft:barrier" || id === "minecraft:water" || id === "minecraft:lava") return "";
-        return "minecraft:blackstone";
-    }
-
-    /** 从爆点向外把地表烧成一个弹坑；只动表层可换方块，租借 `linger`，到期原方块回来。 */
-    function explosionCrater(world: CombatWorld, point: CombatPoint, radius: number, ticks: number, cap: number): number {
-        const cells: any[] = [], seen: { [key: string]: boolean } = {};
-        const baseX = Math.floor(point.x()), baseY = Math.floor(point.y()), baseZ = Math.floor(point.z());
-        const limit = Math.max(6, Math.round(cap)), r = Math.ceil(radius);
-        for (let dx = -r; dx <= r && cells.length < limit; dx++) for (let dz = -r; dz <= r && cells.length < limit; dz++) {
-            if (dx * dx + dz * dz > radius * radius) continue;
-            const x = baseX + dx, z = baseZ + dz;
-            for (let dy = 1; dy >= -2; dy--) {
-                const y = baseY + dy, block = world.block(WorldCombat.point(x, y, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                const key = x + "," + y + "," + z;
-                const charred = explosionCharred(id);
-                if (charred !== "" && charred !== id && !seen[key]) { seen[key] = true; cells.push({ x: x, y: y, z: z, block: charred }); }
-                break;
-            }
+    WorldBodies.define("world_combat:move/explosion/departure", {
+        maxTicks: 400,
+        start: body => { body.schedule("watch", "watch", 1, "{}"); },
+        resume: body => { DeferredSacrifice.waiting(body); },
+        handlers: { watch: body => { DeferredSacrifice.waiting(body); } },
+        end: body => { DeferredSacrifice.forget(body); },
+        observedDeath: function (body, death) {
+            const state = DeferredSacrifice.confirm(body, death);
+            if (!state) return;
+            body.remaining(Math.max(48, state.craterTicks + 30));
+            const world = body.world(), centre = ExplosionDeparture.point(state.centre);
+            const region = WorldGeometry.ring(centre, 0, state.radius, { below: state.band, above: state.band });
+            let hits = 0;
+            world.sound("minecraft:entity.generic.explode", centre, 24, "{}");
+            WorldFeedback.emit(world, explosionScene, 1, centre, { moment: "detonate", radius: state.radius,
+                debris: state.debris, scale: 1, intensity: state.intensity }, 36);
+            state.targets.forEach((shot: any) => {
+                const target = world.actor(shot.ref), facts = target && world.valid(target) ? world.observe(target) : null;
+                if (!target || !facts || !ExplosionDeparture.inside(region, facts) || !world.clear(centre, facts.position())) return;
+                if (!DeferredSacrifice.hurt(body, target, shot.amount, shot.metadata)) return;
+                hits++;
+                if (world.valid(target)) {
+                    const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
+                    if (away.length() > .001) world.hitDisplace(target, away.unit().scale(state.knock));
+                    if (state.lift > 0) world.hitImpulse(target, WorldCombat.point(0, state.lift, 0));
+                }
+                WorldFeedback.emit(world, explosionScene, 1, facts.position(), { moment: "hit",
+                    target: shot.ref, scale: state.radius / 5.6, debris: state.debris }, 26);
+            });
+            WorldFeedback.emit(world, explosionScene, 1, centre, { moment: "shock", radius: state.radius, scale: 1, debris: state.debris }, 24);
+            if (state.ground) WorldFeedback.emit(world, explosionScene, 1, ExplosionDeparture.point(state.ground),
+                { moment: "crater", radius: state.radius, cells: state.craterCells, ticks: state.craterTicks,
+                    debris: state.debris, scale: 1, hits: hits }, state.craterTicks);
+            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.2, 0)),
+                hits > 0 ? explosionHitText : explosionMissText, hits > 0 ? [hits] : [], 30);
         }
-        if (!cells.length) return 0;
-        try { return JSON.parse(world.terrainResult(JSON.stringify({ cells: cells, replace: true, linger: true, bestEffort: true }), ticks)).placed.length; }
-        catch (error) { return 0; }
-    }
-
+    });
     define({
         freeMovement: true,
         id: "explosion",
         cooldownParameter: "recharge",
         name: "Explosion",
-        description: "点燃一根可见引信，朝所选近地点短步压进：引信烧完时在身体真实所在处炸开，圈内每个敌人各挨一次重击、被狠狠掀飞抛起，地面留下焦黑弹坑。撞墙就停在墙前、引信照烧；引信中被击倒则这一记作废，不补第二爆。即使一个人都没炸到，使用者也会倒下。蓄爆式更大更久、坑更久，瞬爆式更快。",
-        uses: ["带着引信压进人堆，把一圈人炸成重伤", "把贴身的整圈对手远远掀飞", "用可读的引信逼对手离开落点", "在倒下前留下一个会留一会儿的弹坑"],
+        description: "点燃一根可见引信，朝所选近地点短步压进：引信烧完时在身体真实所在处炸开，圈内每个敌人各挨一次重击、被狠狠掀飞抛起，地面留下焦烟余烬。撞墙就停在墙前、引信照烧；引信中被击倒则这一记作废，不补第二爆。即使一个人都没炸到，使用者也会倒下。蓄爆式更大更久、余烬更久，瞬爆式更快。",
+        uses: ["带着引信压进人堆，把一圈人炸成重伤", "把贴身的整圈对手远远掀飞", "用可读的引信逼对手离开落点", "在倒下前留下一圈渐散的余烬"],
         kind: "aim",
         range: 4,
         maxRange: 6,
@@ -92,7 +79,7 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const body = action.sense().observe(action.actor());
             action.present("explosion:charge", explosionScene, 1, action.origin(), JSON.stringify({
-                moment: "charge", charged: config && config.charged === true,
+                moment: "charge", windup: prepare, charged: config && config.charged === true,
                 radius: p("explosion", "blastRadius", action),
                 full: body === null || body.maxHealth() <= 0 ? 1 : body.health() / body.maxHealth()
             }));
@@ -145,39 +132,13 @@ namespace PokemonSkills {
                 if (live === null || live.health() <= 0) { finish(current); return; }
                 movementScenes.stop(current, "fuse");
                 const centre = live.position();
-                let hits = 0;
-
-                sound(current, "minecraft:entity.generic.explode");
-                WorldFeedback.emit(scope, explosionScene, 1, centre,
-                    { moment: "detonate", radius: radius, debris: debris, scale: scale,
-                        intensity: Math.max(0.7, Math.min(2.8, power / 250)) }, 36);
-
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: radius * 0.85, above: radius * 0.85 }),
-                    function (enemy, facts) {
-                        if (hits >= cap) return;
-                        if (!hurt(current, enemy, "explosion", power, { damage: damageSpec("explosion", "blast"), area: true })) return;
-                        hits++;
-                        const away = facts.position().minus(centre);
-                        if (scope.valid(enemy)) {
-                            if (away.length() > 0.2) scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(knock));
-                            if (lift > 0) scope.hitImpulse(enemy, WorldCombat.point(0, lift, 0));
-                        }
-                        WorldFeedback.emit(scope, explosionScene, 1, facts.position(),
-                            { moment: "hit", target: String(enemy.ref()), scale: scale, debris: debris }, 26);
-                    });
-
-                WorldFeedback.emit(scope, explosionScene, 1, centre,
-                    { moment: "shock", radius: radius, scale: scale, debris: debris }, 24);
-                const placed = explosionCrater(scope, centre, radius, craterTicks, craterCells);
-                WorldFeedback.emit(scope, explosionScene, 1, centre,
-                    { moment: hits > 0 ? "crater" : "miss", radius: radius, cells: placed, debris: debris, scale: scale, hits: hits }, 34);
-                WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.3, 0)),
-                    hits > 0 ? explosionHitText : explosionMissText, hits > 0 ? [hits] : [], 30);
-
-                // 原生 selfdestruct: "always"——有没有炸到，使用者都用完即陷入濒死。放在最后，倒下即结束。
-                const last = scope.observe(self);
-                if (last !== null && last.health() > 0) scope.health(self, -last.health(), "world_combat:explosion_cost");
-                finish(current);
+                const ground = SurfacePaths.support(scope, centre.minus(WorldCombat.point(0, live.height() / 2, 0)), .5, 4);
+                const state = { centre: [centre.x(), centre.y(), centre.z()], ground: ground ? [ground.x(), ground.y(), ground.z()] : null, radius: radius, band: radius * .85,
+                    knock: knock, lift: lift, debris: debris, craterTicks: craterTicks, craterCells: craterCells,
+                    intensity: Math.max(.7, Math.min(2.8, power / 250)),
+                    targets: ExplosionDeparture.damage(current, "explosion", "blast", centre, radius, radius * .85, cap, power) };
+                if (!DeferredSacrifice.arm(current, centre, "world_combat:move/explosion/departure", state, 48,
+                    fresh => { finish(fresh); }, "world_combat:explosion_cost")) finish(current);
             }
 
             function tick(current: CombatAction): void {

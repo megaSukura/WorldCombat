@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.dragonenergy.summary": "Condenses its own life-force into a dragon breath and spits it as a forward 3D cone (it can be aimed upward, and walls block it): every foe inside takes the draconic power once and is carried along the breath. Power falls with the user's remaining health, snapshotted before the drain, peaking at full HP; sacrifice style spends extra health to boost it.",
+  "worldcombat.skill.dragonenergy.summary": "Condenses its own life-force into a dragon breath and spits it as a forward 3D cone (it can be aimed upward, and walls block it): every foe inside takes the draconic power once and is carried along the breath. Power falls with the user's remaining health, snapshotted before the drain, peaking at full HP; sacrifice style spends a level-scaled part of its health to boost it, and finishing itself ends the breath before it fires.",
   "worldcombat.skill.dragonenergy.use.0": "Pierce a line of foes in one breath",
   "worldcombat.skill.dragonenergy.use.1": "Deliver the biggest forward breath at full health",
   "worldcombat.skill.dragonenergy.use.2": "Push a whole column of foes out",
@@ -18,7 +18,7 @@
   "worldcombat.skill.dragonenergy.value.lifeDraw": "Sacrifice drain",
   "worldcombat.skill.dragonenergy.value.focusCount": "Life-force strand count",
   "worldcombat.skill.dragonenergy.preference.sacrifice": "Sacrifice style",
-  "worldcombat.skill.dragonenergy.preference.sacrifice.help": "On: the breath deals ×1.3, but the cast drains part of your maximum health (more dangerous at low HP) and can finish you, with a slightly longer wind-up and cooldown; off (reserved) spends no health at lower power.",
+  "worldcombat.skill.dragonenergy.preference.sacrifice.help": "On: the breath deals ×1.3, but the cast drains a level-scaled part of your maximum health (independent of your current HP) and can finish you, ending the breath before it fires, with a slightly longer wind-up and cooldown; off (reserved) spends no health at lower power.",
   "worldcombat.skill.dragonenergy.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.dragonenergy.preference.ai.maxChase.help": "Beyond this the companion walks in instead of breathing; higher opens from farther away but the cone more easily catches a single foe.",
   "worldcombat.skill.dragonenergy.preference.ai.line": "Prefer a column",

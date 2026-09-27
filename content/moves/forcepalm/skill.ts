@@ -6,11 +6,11 @@
  *
  * 两幕 + 收：
  *   起（windup，提交前）：沉肩、掌心拢起一层将成的内劲，只播预告、可被打断。
- *   按（execute → strike）：提交后先迈出 `step` 那一步，再沿瞄准方向做一次短 `trace`，用真实的第一个接触
- *       对象确定主敌；贴上就按 `palm` 结算接触物理伤害、把人推开、并按 `numbChance` 掷一次麻痹；撞墙或
- *       扑空都没有透劲。
- *   透（through，仅透劲式）：主击成功后，从真实命中点沿同一条方向再扫 `throughReach` 的窄带，命中直线上的
- *       后续目标（`through` 段）；侧边的敌人不在窄带内就不受旁伤。
+ *   按（execute → strike）：提交后先迈出 `step` 那一步；掌根落在自身有效身体表面，先校验这段根路无墙，
+ *       再沿瞄准方向做一次长度等于 `reach`（手程）的短 `trace`，用真实的第一个接触对象确定主敌；贴上就按
+ *       `palm` 结算接触物理伤害、把人推开、并按 `numbChance` 掷一次麻痹；撞墙或扑空都没有透劲。
+ *   透（through，仅透劲式）：主击成功后，从真实命中点沿同一条方向做一个到墙为止的窄 `bodySegment`，按到接触
+ *       点的距离近先命中后续目标（`through` 段），只对成功命中计数；侧边的敌人不在窄束内就不受旁伤。
  *
  * 选取：`kind: "aim"`——朝方向出掌，点选敌人只是辅助瞄准；命中权限仍由命中层判断。
  *
@@ -90,47 +90,72 @@ namespace PokemonSkills {
                     if (body === null) { done(action); return; }
                 }
             }
-            // 短 trace 定主敌：从身体前缘起、沿出掌方向，只认第一个接触对象（含友方与方块），它决定掌印与透劲的真实起点。
-            const from = body.position().plus(heading.scale(Math.min(0.8, body.width() * 0.5 + 0.15)));
-            const span = reach + body.width() * 0.5 + 0.6;
-            const contact = action.trace(from, from.plus(heading.scale(span)), radius, true);
+            // 掌根在自身有效身体表面：先校验这段根路无墙，贴着墙时掌就按在墙上，不隔墙把判定推出去。
+            const root = body.position().plus(heading.scale(body.width() * 0.5 + radius));
+            const pressed = WorldGeometry.blockHit(world, body.position(), root);
+            if (pressed !== null) {
+                WorldFeedback.emit(world, forcepalmScene, 1, pressed.position(), { moment: "miss", scale: radius / 0.45, motes: motes }, 20);
+                WorldFeedback.text(world, pressed.position().plus(WorldCombat.point(0, 1.0, 0)), forcepalmMissText, [], 22);
+                sound(action, "minecraft:entity.player.attack.weak");
+                done(action);
+                return;
+            }
+            // 手程即 `reach`：从掌根沿出掌方向只扫这一段，第一具身体（含友方）就是掌按到的人；撞墙则停在墙面。
+            const span = Math.max(0.1, reach);
+            const contact = action.trace(root, root.plus(heading.scale(span)), radius, true);
             const victim: CombatActor | null = contact.hitEntity() ? contact.target() : null;
-            if (victim === null || !world.valid(victim) || world.friendly(victim)) {
+            if (victim === null || String(victim.ref()) === String(self.ref()) || !world.valid(victim) || world.friendly(victim)) {
                 WorldFeedback.emit(world, forcepalmScene, 1, contact.position(), { moment: "miss", scale: radius / 0.45, motes: motes }, 20);
                 WorldFeedback.text(world, contact.position().plus(WorldCombat.point(0, 1.0, 0)), forcepalmMissText, [], 22);
                 sound(action, "minecraft:entity.player.attack.weak");
                 done(action);
                 return;
             }
+            const contactPoint = contact.position();
+            // 掌心压入：短掌形从掌根推进到真实首碰处，与主判定共用同一个端点。
+            WorldFeedback.emit(world, forcepalmScene, 1, root,
+                { moment: "reach", point: [contactPoint.x(), contactPoint.y(), contactPoint.z()],
+                  path: [[root.x(), root.y(), root.z()], [contactPoint.x(), contactPoint.y(), contactPoint.z()]],
+                  scale: radius / 0.45, motes: motes }, 18);
+            const alreadyNumb = CombatStatus.has(world, victim, "paralysis");
             const landed = hurt(action, victim, "forcepalm", power,
                 { damage: damageSpec("forcepalm", "palm"), contact: true, status: "paralysis", chance: chance });
             sound(action, "minecraft:entity.player.attack.strong");
             if (!landed) { done(action); return; }
-            const contactPoint = contact.position();
             const after = world.observe(victim), at = after === null ? contactPoint : after.position();
             if (world.valid(victim)) world.hitDisplace(victim, heading.scale(push));
             WorldFeedback.emit(world, forcepalmScene, 1, at,
                 { moment: "strike", target: String(victim.ref()), scale: radius / 0.45, intensity: intensity, motes: motes }, 26);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), forcepalmHitText, [Math.round(power)], 24);
-            if (CombatStatus.has(world, victim, "paralysis")) {
+            // 只有这一次真的新上了麻痹才播麻纹；原本已麻痹的目标不再重复播新麻回执。
+            if (!alreadyNumb && CombatStatus.has(world, victim, "paralysis")) {
                 WorldFeedback.emit(world, forcepalmScene, 1, at, { moment: "numb", target: String(victim.ref()), motes: motes }, 24);
                 WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.35, 0)), forcepalmNumbText, [], 24);
             }
             if (through) {
-                // 只有主击成功才从真实命中点往后扫既有透劲线：窄带内的后续目标各吃 `through`，侧边目标不在带内。
-                const lane = WorldGeometry.lane(contactPoint, heading, throughReach, radius, { below: 1.5, above: 3 });
-                let extra = 0;
-                WorldFeedback.emit(world, forcepalmScene, 1, contactPoint,
-                    { moment: "through", scale: throughReach / 3.2, intensity: intensity, motes: motes, path: [
-                        [contactPoint.x(), contactPoint.y(), contactPoint.z()],
-                        [contactPoint.x() + heading.x() * throughReach, contactPoint.y(), contactPoint.z() + heading.z() * throughReach] ] }, 24);
-                WorldGeometry.selectEnemies(world, lane, function (other: CombatActor, facts: CombatObservation) {
-                    if (extra >= cap || String(other.ref()) === String(victim.ref())) return;
-                    extra++;
-                    hurt(action, other, "forcepalm", throughPower, { damage: damageSpec("forcepalm", "through") });
-                    WorldFeedback.emit(world, forcepalmScene, 1, facts.position(),
-                        { moment: "strike", target: String(other.ref()), scale: radius / 0.45, intensity: intensity * 0.85, motes: motes }, 22);
+                // 透劲是主击命中后从真实接触点沿同轴的窄束：先到墙，再按到接触点的距离近先挑非友方，成功命中才计数。
+                const wall = WorldGeometry.blockHit(world, contactPoint, contactPoint.plus(heading.scale(throughReach)));
+                const end = wall === null ? contactPoint.plus(heading.scale(throughReach)) : wall.position();
+                const beam = WorldGeometry.bodySegment(contactPoint, end, radius);
+                const marks: { actor: CombatActor; facts: CombatObservation; distance: number }[] = [];
+                WorldGeometry.selectBodies(world, beam, function (other: CombatActor, facts: CombatObservation) {
+                    if (String(other.ref()) === String(victim.ref()) || facts.friendly()) return;
+                    marks.push({ actor: other, facts: facts, distance: facts.position().minus(contactPoint).length() });
                 });
+                marks.sort(function (a, b) { return a.distance - b.distance; });
+                let extra = 0;
+                for (let i = 0; i < marks.length && extra < cap; i++) {
+                    const other = marks[i].actor;
+                    if (!world.valid(other)) continue;
+                    if (!hurt(action, other, "forcepalm", throughPower, { damage: damageSpec("forcepalm", "through") })) continue;
+                    extra++;
+                    WorldFeedback.emit(world, forcepalmScene, 1, marks[i].facts.position(),
+                        { moment: "strike", target: String(other.ref()), scale: radius / 0.45, intensity: intensity * 0.85, motes: motes }, 22);
+                }
+                WorldFeedback.emit(world, forcepalmScene, 1, contactPoint,
+                    { moment: "through", scale: radius / 0.45, thickness: radius * 2, intensity: intensity, motes: motes,
+                      path: [[contactPoint.x(), contactPoint.y(), contactPoint.z()],
+                             [end.x(), end.y(), end.z()]] }, 24);
                 if (extra > 0) WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.55, 0)), forcepalmThroughText, [extra], 24);
             }
             done(action);

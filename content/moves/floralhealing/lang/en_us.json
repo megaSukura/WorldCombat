@@ -5,7 +5,7 @@
   "worldcombat.skill.floralhealing.use.2": "Buffer an ally's damage with a two-beat heal",
   "worldcombat.skill.floralhealing.description.0": "The two flowers together restore %1$s of the ally's maximum health (before Grassy Terrain, never past full); a stronger bond grows a richer bloom. If the ally still stands on Grassy Terrain when the second flower opens, it heals an extra %2$s.",
   "worldcombat.skill.floralhealing.description.1": "Can only be cast on a chosen ally within %1$s blocks, never on yourself.",
-  "worldcombat.skill.floralhealing.description.2": "The first flower opens at once; the second opens %1$s later. An ally downed or gone in between cancels the remainder.",
+  "worldcombat.skill.floralhealing.description.2": "The first flower opens at once, needing the ally within range with a clear line; the second opens %1$s later. An ally downed or gone in between cancels the remainder.",
   "worldcombat.skill.floralhealing.description.3": "Windup %1$s, recovery %2$s.",
   "worldcombat.skill.floralhealing.stance.bouquet": "Bouquet: slightly more healing (x1.06), at the cost of a 0.9x range and a longer cooldown - for close care.",
   "worldcombat.skill.floralhealing.stance.plain": "Plain: reaches farther with a shorter cooldown - for rescues across a gap.",

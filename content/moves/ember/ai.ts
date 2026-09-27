@@ -39,7 +39,7 @@ namespace PokemonSkills {
 
     addPreferences("ember", {}, [
         field(pathOf("charged"), "蓄力式", "boolean", {
-            help: "开启：威力 ×1.4、点燃概率 +5%%、火粒更大，但起手 +4 刻、冷却 +8 刻、射程 −1 格。关闭（速射式）：出手更快、弹得更远、冷却更短，代价是威力与引燃都低。"
+            help: "开启：威力 ×1.4、点燃概率 +5%%，但起手 +4 刻、冷却 +8 刻、射程 −1 格。关闭（速射式）：出手更快、弹得更远、冷却更短，代价是威力与引燃都低。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 5, max: 22, step: 1,

@@ -355,10 +355,18 @@ def main():
     if args.native_runtime:
         scenario += 'WorldCombat.register("checks:native_projectile", "fixture", 100, function (a) { Java.loadClass("dev.worldcombat.core.checks.NativeProjectileChecks").launch(a); });\n'
         scenario += 'WorldCombat.on("checks:healing", "world_combat:healing_incoming", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeHealingChecks").onHeal(e); });\n'
+        scenario += 'WorldCombat.on("checks:motion", "world_combat:knockback_incoming", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeHitMotionChecks").onMotion(e); });\n'
         scenario += 'WorldCombat.on("checks:mob_effect", "world_combat:mob_effect_incoming", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeMobEffectChecks").onIncoming(e); });\n'
+        scenario += 'WorldCombat.on("checks:effect-clock", "world_combat:mob_effect_tick", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeEffectTransformChecks").onTick(e); });\n'
         scenario += 'WorldCombat.on("checks:item_consumed", "world_combat:item_consumed", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeEquipmentPickupChecks").onConsumed(e); });\n'
         scenario += 'WorldCombat.on("checks:critical", "world_combat:critical_hit", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeCriticalChecks").onCritical(e); });\n'
+        scenario += 'WorldCombat.on("checks:critical-prepare", "world_combat:critical_prepare", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativePreparedReceiptChecks").onCriticalPrepare(e); });\n'
+        scenario += 'WorldCombat.on("checks:damage-prepare", "world_combat:damage_prepare", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativePreparedReceiptChecks").onDamagePrepare(e); });\n'
+        scenario += 'WorldCombat.on("checks:prepared-settled", "world_combat:damage_settled", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativePreparedReceiptChecks").onSettled(e); });\n'
         scenario += 'WorldCombat.on("checks:death", "world_combat:actor_died", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeDeathChecks").onDeath(e); });\n'
+        scenario += 'WorldCombat.on("checks:damage-receipt-incoming", "world_combat:damage_incoming", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeDamageReceiptChecks").onIncoming(e); });\n'
+        scenario += 'WorldCombat.on("checks:damage-receipt-settled", "world_combat:damage_settled", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeDamageReceiptChecks").onSettled(e); });\n'
+        scenario += 'WorldCombat.on("checks:damage-receipt-applied", "world_combat:damage_applied", "", function (e) { Java.loadClass("dev.worldcombat.core.checks.NativeDamageReceiptChecks").onApplied(e); });\n'
     if args.p5_equipment: scenario += (ROOT / "mods/cobblemon-world-combat/src/test/resources/worldcombat/equipment-behavior.js").read_text(encoding="utf-8")
     if args.p5_status and args.restart: scenario = scenario.replace('.tick(event.server)', '.restart(event.server)')
     if args.p5_content or args.p5_riding:

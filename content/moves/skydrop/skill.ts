@@ -44,33 +44,40 @@ namespace PokemonSkills {
         action.releaseTarget();
         const carry=action.effect(skydropCarry,target,JSON.stringify({carrier:MobEffects.anchor(carrier)}),240),own=action.effect(skydropSelf,action.actor(),"{}",240);
         world.deliver(target,"world_combat:interrupt");world.motion(action.actor(),WorldCombat.point(0,0,0),false);
-        const before=world.observe(target)!;if(before.velocity().length()>.01&&!world.hitImpulse(target,before.velocity().scale(-1))){world.operation(carry,"world_combat:dispel","{}");skydropFinish(action);return;}
+        const before=world.observe(target)!;if(before.velocity().length()>.01&&!world.hitImpulse(target,before.velocity().scale(-1))){world.operation(carry,"world_combat:dispel","{}");releaseOwn(world);skydropFinish(action);return;}
         const offset=before.position().minus(self.position()),base=victim.boundsMin().y(),height=p("skydrop","altitude",action),lift=Math.max(.15,p("skydrop","liftSpeed",action)),drop=Math.max(.3,p("skydrop","dropSpeed",action)),hold=Math.max(4,Math.round(p("skydrop","holdTicks",action)));
         const context:NumberContext={pokemon:CobblemonCombat.pokemon(action.actor()),skill:skills["skydrop"],detail:{values:config},world:world,actor:action.actor(),target:{world:world,actor:target}};
         const power=p("skydrop","slam",context),scenes=WorldFeedback.actionScenes(skydropScene);let phase="rise",age=0,total=0,raised=0,ended=false;
-        function finish(current:CombatAction):void{if(ended)return;ended=true;const scope=current.world();if(scope.valid(target)&&scope.effects(target,skydropCarry).some(view=>view.id()===carry))scope.operation(carry,"world_combat:dispel","{}");scenes.stop(current);skydropFinish(current);}
+        /** The carrier's own gravity lease ends as soon as the carry does, so recovery never hovers. */
+        function releaseOwn(scope:CombatWorld):void{if(scope.valid(action.actor())&&scope.effects(action.actor(),skydropSelf).some(view=>view.id()===own))scope.operation(own,"world_combat:dispel","{}");}
+        function finish(current:CombatAction):void{if(ended)return;ended=true;const scope=current.world();releaseOwn(scope);if(scope.valid(target)&&scope.effects(target,skydropCarry).some(view=>view.id()===carry))scope.operation(carry,"world_combat:dispel","{}");scenes.stop(current);skydropFinish(current);}
+        /** A broken grip or a refusal reads as its own release, never as a landing impact. */
+        function cancel(current:CombatAction,fallback:CombatPoint):void{if(ended)return;const scope=current.world(),body=scope.valid(target)?scope.observe(target):null,at=body?body.position():fallback;WorldFeedback.emit(scope,skydropScene,1,at,{moment:"release",target:String(target.ref())},12);finish(current);}
         function step(current:CombatAction):void{
             const scope=current.world(),actor=current.actor(),a=scope.observe(actor),b=scope.valid(target)?scope.observe(target):null;
-            if(!a||!b||++total>200||!MobEffects.matches(scope,target,MobEffects.anchor(carrier!))){finish(current);return;}
+            if(!a||!b||++total>200||!MobEffects.matches(scope,target,MobEffects.anchor(carrier!))){cancel(current,current.origin());return;}
             skydropReset(scope,actor);skydropReset(scope,target);
-            if(phase!=="drop"&&(b.position().minus(a.position().plus(offset)).length()>1.1||!scope.clear(a.position(),b.position()))){finish(current);return;}
+            if(phase!=="drop"&&(b.position().minus(a.position().plus(offset)).length()>1.1||!scope.clear(a.position(),b.position()))){cancel(current,b.position());return;}
             if(phase==="rise"||phase==="hold"){
                 const rise=phase==="rise"?Math.min(lift,Math.max(0,height-raised)):0;
                 const moved=rise>0?scope.displace(actor,WorldCombat.point(0,rise,0)):0;
                 const now=scope.observe(actor)!;const correction=now.position().plus(offset).minus(b.position());
-                if(correction.length()>.005){const applied=scope.hitDisplace(target,correction.length()>lift?correction.unit().scale(lift):correction);if(applied<.001){finish(current);return;}}
+                if(correction.length()>.005){const applied=scope.hitDisplace(target,correction.length()>lift?correction.unit().scale(lift):correction);if(applied<.001){cancel(current,b.position());return;}}
                 const actual=scope.observe(target)!;raised=Math.max(raised,actual.boundsMin().y()-base);
                 scenes.show(current,"grip",actual.position(),{moment:"hold",target:String(target.ref()),path:[String(actor.ref()),String(target.ref())],altitude:raised});
-                if(phase==="rise"&&(moved<rise*.5||raised>=height-.1||++age>Math.ceil(height/lift)+8)){if(raised<.12){finish(current);return;}phase="hold";age=0;}
+                if(phase==="rise"&&(moved<rise*.5||raised>=height-.1||++age>Math.ceil(height/lift)+8)){if(raised<.12){cancel(current,actual.position());return;}phase="hold";age=0;}
                 else if(phase==="hold"&&++age>=hold){phase="drop";age=0;}
             }else{
                 const feet=WorldCombat.point(b.position().x(),b.boundsMin().y(),b.position().z()),floor=SurfacePaths.support(scope,feet,.1,.25);
                 if(b.grounded()||floor&&feet.y()-floor.y()<.12){
+                    const ground=floor?floor:feet;
                     scope.operation(carry,"world_combat:dispel","{}");
                     if(raised>.12)hurt(current,target,"skydrop",power*Math.max(.05,Math.min(1,raised/height)),{damage:damageSpec("skydrop","slam"),contact:true});
-                    WorldFeedback.emit(scope,skydropScene,1,b.position(),{moment:"slam",target:String(target.ref()),intensity:raised/height,count:20},20);finish(current);return;
+                    WorldFeedback.emit(scope,skydropScene,1,ground,{moment:"slam",target:String(target.ref()),intensity:raised/height,count:20},20);
+                    const settle=scope.observe(actor);if(settle)WorldFeedback.emit(scope,skydropScene,1,settle.position(),{moment:"land",target:String(actor.ref())},18);
+                    finish(current);return;
                 }
-                if(scope.hitDisplace(target,WorldCombat.point(0,-drop,0))<.001){finish(current);return;}
+                if(scope.hitDisplace(target,WorldCombat.point(0,-drop,0))<.001){cancel(current,b.position());return;}
                 scope.displace(actor,WorldCombat.point(0,-drop,0));
                 scenes.show(current,"grip",b.position(),{moment:"fall",target:String(target.ref()),rate:30,drop:drop});
             }

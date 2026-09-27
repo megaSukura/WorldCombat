@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.psybeam.summary": "射出一道会追人的幻影射线：紫光带转向追向目标，命中造成特殊伤害，并可能把目标搅得恍惚；恍惚期间目标每次想出手都有几率被打散。回响状态下紫光会继续穿行，最多打到两个目标。",
+  "worldcombat.skill.psybeam.summary": "射出一道会追人的幻影射线：紫光带转向追向目标，命中造成特殊伤害，并可能把目标搅得恍惚；恍惚期间目标每次想出手都有几率被打散。回响状态下紫光会继续穿行，最多打到两个目标。紫光不绕墙，被方块挡住就停在墙上。",
   "worldcombat.skill.psybeam.use.0": "中距离点名，绕开掩体追人",
   "worldcombat.skill.psybeam.use.1": "压制喜欢横移躲弹的对手",
   "worldcombat.skill.psybeam.use.2": "用回响一次穿到两个目标",
   "worldcombat.skill.psybeam.description.0": "命中造成 %1$s 点特殊伤害。",
   "worldcombat.skill.psybeam.description.1": "命中后有 %1$s 概率让目标恍惚 %2$s；恍惚期间它每次想出手有 %3$s 概率被打散。",
-  "worldcombat.skill.psybeam.description.2": "紫光射程 %1$s 格、弹速 %2$s 格/刻，每刻朝目标转向 %3$s 度、命中判定半径 %4$s 格——转向慢的个体会被横移甩开。",
+  "worldcombat.skill.psybeam.description.2": "紫光射程 %1$s 格、弹速 %2$s 格/刻，每刻朝目标转向 %3$s 度、命中判定半径 %4$s 格——转向慢的个体会被横移甩开；紫光不绕墙，被方块挡住就停在墙上。",
   "worldcombat.skill.psybeam.echo.on": "当前为回响：命中后紫光继续穿行打第二个目标、转向更死、更容易也更久地让人恍惚，但单发更轻、弹速与射程略减、判定更细、起手与冷却更长。",
   "worldcombat.skill.psybeam.echo.off": "当前为单影：更快更重的一束，只打一个目标，代价是不会穿。",
   "worldcombat.skill.psybeam.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -32,7 +32,7 @@
   "worldcombat.skill.psybeam.preference.ai.finish": "残血补刀",
   "worldcombat.skill.psybeam.preference.ai.finish.help": "开启：目标生命比例越低排得越前，用它收尾；关闭则只按普通远程攻击排序。",
   "worldcombat.skill.psybeam.preference.ai.line": "优先串成一线的目标",
-  "worldcombat.skill.psybeam.preference.ai.line.help": "开启且本招为回响时，目标身后还连着别的敌人就排前，让一束紫光穿两个；关闭则只看单个目标。",
+  "worldcombat.skill.psybeam.preference.ai.line.help": "开启且本招为回响时，目标身后还在剩余射程内、且无遮挡地连着别的敌人就排前，让一束紫光穿两个；被墙挡住或射程不够的排线不加分。关闭则只看单个目标。",
   "effect.world_combat.psybeam_trance": "幻影恍惚",
   "world_combat.move.psybeam.text.daze": "幻影缠身",
   "world_combat.move.psybeam.text.miss": "幻影落空"

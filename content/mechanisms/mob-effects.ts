@@ -11,8 +11,7 @@ namespace MobEffects {
     export interface Anchor { id: string; key: string; }
     export function anchor(value: CombatMobEffect): Anchor { return { id: String(value.id()), key: String(value.key()) }; }
     export function matches(world: CombatWorld, actor: CombatActor, value: Anchor): boolean {
-        const current = read(world, actor, value.id);
-        return current !== null && String(current.key()) === value.key;
+        return world.matchesMobEffect(actor, value.id, value.key);
     }
     export function validAnchor(value: Anchor): boolean {
         return !!value && typeof value.id === "string" && /^[a-z0-9_.-]+:[a-z0-9_./-]+$/.test(value.id)
@@ -96,11 +95,9 @@ namespace MobEffects {
         return native(world, actor, category).filter(effect => !!inverses[String(effect.id())]);
     }
     export function invert(world: CombatWorld, actor: CombatActor, onlyGains: boolean): number {
-        const removed = invertible(world, actor, onlyGains ? "beneficial" : undefined)
-            .filter(effect => world.removeMobEffect(actor, effect.id(), effect.key()));
-        // Remove the snapshot first so simultaneous opposite effects do not consume each other's replacement.
-        removed.forEach(effect => apply(world, actor, inverses[String(effect.id())], effect.duration(), effect.amplifier()));
-        return removed.length;
+        const changes = invertible(world, actor, onlyGains ? "beneficial" : undefined)
+            .map(effect => ({ id: String(effect.id()), key: String(effect.key()), to: inverses[String(effect.id())] }));
+        return changes.length ? world.transformMobEffects(actor, JSON.stringify({ changes })) : 0;
     }
     export interface FixedAttribute { id: string; amount: number; operation: "add_value" | "add_multiplied_base" | "add_multiplied_total"; }
     /** Project modifiers for one native application; factories sample current facts once per application.

@@ -125,13 +125,21 @@ const StickyWebDefinition: ParticleDefinition = {
 
 WorldCombatParticles.scene("world_combat:move_stickyweb", 1, StickyWebDefinition);
 
-// 真实网线：按服务端裁剪后的线段顶点逐条画线，线就是判定带，网孔保持透明；绑定在 field 效果上，随它存续/清理。
+// 真实网线：按服务端裁剪后的线段顶点画线，线就是判定带，网孔保持透明；绑定在 field 效果上，随它存续/清理。
+// 每条线画出 band 半宽的两条边缘，中间的孔宽就是可安全穿行的余量。
 WorldCombatClient.scene("world_combat:move_stickyweb_web", 1, function (frame) {
     const entry: CombatSceneEntry<{ segments: number[][]; radius: number; threads: number; band: number }> = JSON.parse(frame.data());
     if (entry.lifecycle) return;
     const segments = entry.data.segments || [];
+    const band = Math.max(0.02, Number(entry.data.band) || 0.34);
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
-        frame.line(segment[0], segment[1], segment[2], segment[3], segment[4], segment[5], 0xCCF2EAC0);
+        const x1 = segment[0], y1 = segment[1], z1 = segment[2], x2 = segment[3], y2 = segment[4], z2 = segment[5];
+        const dx = x2 - x1, dz = z2 - z1, length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 1e-4) continue;
+        const ox = -dz / length * band, oz = dx / length * band;
+        frame.line(x1 + ox, y1, z1 + oz, x2 + ox, y2, z2 + oz, 0x99F2EAC0);
+        frame.line(x1 - ox, y1, z1 - oz, x2 - ox, y2, z2 - oz, 0x99F2EAC0);
+        frame.line(x1, y1, z1, x2, y2, z2, 0xCCF2EAC0);
     }
 });

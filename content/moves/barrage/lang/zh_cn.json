@@ -33,5 +33,6 @@
   "worldcombat.skill.barrage.preference.ai.cover.help": "仅对平投式生效：与目标之间没有掩体遮挡时排得更前——平投的球会被墙挡住；躲在墙后的目标排后，不会假装能反弹命中。高抛式能越过掩体，忽略这一项。",
   "world_combat.move.barrage.text.tally": "投中 %1$s / %2$s 球",
   "world_combat.move.barrage.text.out": "目标离开了，停止投球（共投中 %1$s 球）",
+  "world_combat.move.barrage.text.noarc": "没有可越过的弧线",
   "worldcombat.skill.barrage.description.out": "球没碰到敌人就只会落地（平投先弹一下），不造成伤害；每个球按当刻瞄点/方向出手，所以目标离场也不会取消剩下的球——纯方向空投照样成立。"
 }

@@ -18,6 +18,7 @@ namespace PokemonSkills {
     const dreameaterSapText = "world_combat.move.dreameater.text.sap";
     const dreameaterWakeText = "world_combat.move.dreameater.text.wake";
     const dreameaterFadeText = "world_combat.move.dreameater.text.fade";
+    const dreameaterRefusedText = "world_combat.move.dreameater.text.refused";
 
     define({
         id: dreameaterId,
@@ -33,7 +34,7 @@ namespace PokemonSkills {
         recover: 10,
         cooldown: 34,
         style: "dream",
-        defaults: { deep: false, ai: { maxChase: 13, healBelow: 0.75 } },
+        defaults: { deep: false, ai: { maxChase: 13, healBelow: 0.75, minSleep: 16 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: pokemon ? p(dreameaterId, "mist", pokemon) * 1.6 : 0.74, geometry: "circle", style: "dream", color: 0x8E5BD0,
@@ -108,12 +109,16 @@ namespace PokemonSkills {
             const before = self === null ? 0 : self.health();
             const dream = CombatStatus.representative(world, target, "sleep");
             const depth = dream === null ? 0 : Math.max(0, Math.min(1, dream.duration() / 160));
-            const flow = from.minus(at), span = flow.length();
+            // 抽取线两端用明确的头顶与口边点：梦从睡者头顶被拉起，沿「头顶→口边」抽回，而不是两个身体中心之间。
+            const head = at.plus(WorldCombat.point(0, body.height() * 0.5, 0));
+            const mouth = self === null ? from : from.plus(WorldCombat.point(0, self.height() * 0.42, 0));
+            const flow = mouth.minus(head), span = flow.length();
             const inward = span < 0.05 ? WorldCombat.point(0, 1, 0) : flow.unit();
 
             sound(action, "cobblemon:move.psychic.actor");
-            WorldFeedback.emit(world, dreameaterScene, 1, at,
-                { moment: "draw", target: String(target.ref()), path: ["target", "source"],
+            WorldFeedback.emit(world, dreameaterScene, 1, head,
+                { moment: "draw", target: String(target.ref()),
+                    path: [[head.x(), head.y(), head.z()], [mouth.x(), mouth.y(), mouth.z()]],
                     direction: [inward.x(), inward.y(), inward.z()], span: span, motes: motes, depth: depth }, 34);
 
             const landed = hurt(action, target, dreameaterId, power,
@@ -123,15 +128,20 @@ namespace PokemonSkills {
             const afterBody = world.observe(action.actor());
             const healed = landed && self !== null && afterBody !== null ? Math.max(0, afterBody.health() - before) : 0;
 
-            WorldFeedback.emit(world, dreameaterScene, 1, at,
-                { moment: "feast", target: String(target.ref()), motes: motes, depth: depth, scale: scale }, 24);
-            sound(action, "cobblemon:impact.psychic");
+            // 只有真正吃到这一口才播进食；被拒时改播逸散，不再用命中的精神爆点冒充成功。
             if (landed) {
+                WorldFeedback.emit(world, dreameaterScene, 1, at,
+                    { moment: "feast", target: String(target.ref()), motes: motes, depth: depth, scale: scale }, 24);
+                sound(action, "cobblemon:impact.psychic");
                 WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.15, 0)), dreameaterFeastText, [], 24);
                 if (healed > 0) {
                     WorldFeedback.emit(world, dreameaterScene, 1, from, { moment: "sap", heal: healed, motes: motes }, 26);
                     WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.25, 0)), dreameaterSapText, [Math.round(healed * 10) / 10], 24);
                 }
+            } else {
+                WorldFeedback.emit(world, dreameaterScene, 1, at, { moment: "fizzle", scale: scale }, 18);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 0.9, 0)), dreameaterRefusedText, [], 22);
+                world.sound("minecraft:block.fire.extinguish", at, 12, "{}");
             }
             done(action);
         }

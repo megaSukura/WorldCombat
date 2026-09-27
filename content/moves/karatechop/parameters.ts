@@ -12,7 +12,7 @@
  * 数值分散（每个参数读不同的精灵数据；公式即悬浮里展开的那一棵）：
  *   chop    手刀威力：物攻定刃口，等级定发力；手刀式更重、空手式更轻。
  *   reach   劈距：碰撞箱宽度决定够得到多近的目标，它也是实际射程；手刀式收短、空手式伸长。
- *   depth   劈深：身高决定这一记从脚上压到多高，也是画面里那道竖线的高度。
+ *   depth   劈深：身高决定抬臂与回落的高度，也是画面里那道刀光的长度。
  *   shards  崩屑量：物攻与速度换算，驱动表现密度。
  *   aftercast／recharge：速度定收招与冷却；它没有起手，节奏全压在冷却上。
  *
@@ -29,7 +29,7 @@ namespace PokemonSkills {
     export const karatechopHitText = "world_combat.move.karatechop.text.hit";
     export const karatechopCritText = "world_combat.move.karatechop.text.crit";
     export const karatechopMissText = "world_combat.move.karatechop.text.miss";
-    /** 表现里劈深（竖线高度）的参考值（格）；服务端传 scale = 实际劈深 / 这个值。 */
+    /** 表现里劈深（刀路长度）的参考值（格）；服务端传 scale = 实际劈深 / 这个值。 */
     export const karatechopReference = 1.1;
 
     actionParameters.define(karatechopId, {
@@ -58,7 +58,7 @@ namespace PokemonSkills {
             F.base(1.1).plus(F.body("height").minus(1.4).times(0.35).clamp(-0.15, 0.5)).clamp(0.8, 1.8).round(2),
             "劈深", {
                 unit: "格",
-                description: "这一记从脚上压到多高；高大的个体劈得更深，画面里那道竖线就有多高。"
+                description: "这一记抬手与回落的高度；高大的个体把上臂抬得更高、刀路压得更深，画面里那道刀光就有多长。"
             }),
         /** 崩屑量：14 + (物攻−55)×0.25（夹 −3..20）+ (速度−55)×0.1（夹 −2..6）；夹 10..42 个。 */
         shards: formula(

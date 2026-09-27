@@ -18,10 +18,11 @@ Smoke.scenario("shadowbone", function (stage) {
     }, function () {
         stage.expect(stage.casts("shadowbone", caster) >= 1, "caster committed shadow bone");
         stage.expect(stage.damageTo(foe) > 0, "shadow bone dealt damage to the foe");
-        stage.note("the rattle is a 20% roll; the mark tag records whether it landed at all", {
+        stage.note("the rattle is a 20% roll; the mark only lands when the target could still lose Defence, and AI reads the real stage not the mark", {
             casts: stage.casts("shadowbone", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             spooked: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),
+            foeDef: (stage.stages(foe) || {}).def,
             foeAlive: foe.alive()
         });
         stage.done();

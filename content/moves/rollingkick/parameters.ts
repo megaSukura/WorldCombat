@@ -17,14 +17,14 @@
  *   kick        踢力：物攻定腿劲，速度定旋转的冲劲。
  *   reach       扑击距离：身高与速度决定这一腿能够到多远（驱动实际射程）。
  *   lunge       扑出速度：速度决定扑出那半步多急。
- *   launchAway  抛飞距离：物攻与自身体重决定把目标踢出多远；不是单纯的击退，是抛飞。
- *   launchUp    抛飞高度：把目标抬离地面的分量（抛飞式更高）。
+ *   launchAway  抛飞初速（水平）：物攻与自身体重决定这一腿给目标多大的水平冲量；不是保证位移，是真实受击冲量。
+ *   launchUp    上抛初速：把目标顶离地面的向上冲量（抛飞式更高）。
  *   flinchChance 畏缩几率：原生 30% 起，速度再抬一档。
  *   flinchTicks 畏缩持续。
  *   sparks      火星量：速度与物攻换算，驱动表现密度。
  *   tempo／aftercast／recharge：速度定起旋与收招；抛飞式多转一会儿、冷却更久。
  *
- * 配置 `liftoff`（抛飞式）双向取舍：开＝抛飞距离 ×1.25、抛飞高度 +0.35、起旋 +2、冷却 +4，把目标扔得更远更高；
+ * 配置 `liftoff`（抛飞式）双向取舍：开＝抛飞初速 ×1.25、上抛初速 +0.11、起旋 +2、冷却 +4，把目标扔得更远更高；
  *   关（盘踢式，默认）＝踢力 ×1.10、起手更快、冷却更短，但抛得近、弧线平。抛远拉开 vs 打重留在原地，两向各有局面。
  *
  * 伤害段 `kick` 与参数同名，走共享换算（原生类别 Physical，Fighting 属性，带 contact 标记）。
@@ -32,6 +32,8 @@
 namespace PokemonSkills {
     export const rollingkickId = "rollingkick";
     export const rollingkickScene = "world_combat:move_rollingkick";
+    /** 绕腿弧与向外上踢痕的自定义场景（固定图形的客户端绘制，无粒子生灭）。 */
+    export const rollingkickLegScene = "world_combat:move_rollingkick_leg";
     export const rollingkickFlinchEffect = "world_combat:rollingkick_flinch";
     export const rollingkickHitText = "world_combat.move.rollingkick.text.hit";
     export const rollingkickMissText = "world_combat.move.rollingkick.text.miss";
@@ -74,24 +76,24 @@ namespace PokemonSkills {
                 unit: "格/刻",
                 description: "扑出那半步每刻前进多少；速度越快扑得越急，留给对手走位的时间越短。"
             }),
-        /** 抛飞距离：基础 1.0 格，物攻每比 60 多 1 加 0.006（夹 −0.2..0.9），自身体重每比 300hg 多 1hg 加 0.002（夹 −0.1..0.6）；
-         *  抛飞 ×1.25 / 盘踢 ×0.85；夹在 0.6..2.8。 */
+        /** 抛飞初速（水平）：基础 0.09 格/刻，物攻每比 60 多 1 加 0.00054（夹 −0.02..0.08），
+         *  自身体重每比 300hg 多 1hg 加 0.00018（夹 −0.01..0.05）；抛飞 ×1.25 / 盘踢 ×0.85；夹在 0.05..0.25。 */
         launchAway: formula(
-            F.base(1.0).plus(F.stat("attack").minus(60).times(0.006).clamp(-0.2, 0.9))
-                .plus(F.body("weight").minus(300).times(0.002).clamp(-0.1, 0.6))
+            F.base(0.09).plus(F.stat("attack").minus(60).times(0.00054).clamp(-0.02, 0.08))
+                .plus(F.body("weight").minus(300).times(0.00018).clamp(-0.01, 0.05))
                 .times(F.when(F.pref("liftoff", text("worldcombat.skill.rollingkick.preference.liftoff")), F.const(1.25), F.const(0.85)))
-                .clamp(0.6, 2.8).round(2),
-            "抛飞距离", {
-                unit: "格",
-                description: "被踢中的人沿踢击方向飞出多远；物攻与自身体重决定这一腿能抛多开。抛飞式扔得最远，也用它把人从队友身边踢出去。"
+                .clamp(0.05, 0.25).round(3),
+            "抛飞初速", {
+                unit: "格/刻",
+                description: "踢中时施加给目标的水平初速；物攻越高、自己越重，送得越远。实际飞多远由原生抗击退、空中阻尼与碰撞决定，不保证固定格数。抛飞式给得更远。"
             }),
-        /** 抛飞高度：基础 0.28，抛飞 +0.35；夹在 0.15..0.9。 */
+        /** 上抛初速：基础 0.21 格/刻，抛飞 +0.11；夹在 0.15..0.34。 */
         launchUp: formula(
-            F.base(0.28).plus(F.when(F.pref("liftoff", text("worldcombat.skill.rollingkick.preference.liftoff")), F.const(0.35), F.const(0)))
-                .clamp(0.15, 0.9).round(2),
-            "抛飞高度", {
-                unit: "格",
-                description: "被踢中的人抬离地面多高；它让这一腿是「踢飞」而不是单纯的击退。"
+            F.base(0.21).plus(F.when(F.pref("liftoff", text("worldcombat.skill.rollingkick.preference.liftoff")), F.const(0.11), F.const(0)))
+                .clamp(0.15, 0.34).round(3),
+            "上抛初速", {
+                unit: "格/刻",
+                description: "踢中时施加给目标的向上初速；它让这一腿是「踢飞」而不是单纯的击退，目标沿真实抛体弧线离地。抛飞式给得更高。"
             }),
         /** 畏缩几率：基础 0.30，速度每比 60 快 1 加 0.0012（夹 −0.05..0.12）；夹在 0.16..0.46。 */
         flinchChance: percent(
@@ -131,7 +133,7 @@ namespace PokemonSkills {
     defineDamage(rollingkickId, "kick", { rationale: "回旋腿的接触踢击；与原生一致走物理类别。" }, { contact: true });
 
     stages(rollingkickId, [
-        { level: 30, values: { kick: 70, launchAway: 1.3 } }
+        { level: 30, values: { kick: 70, launchAway: 0.12 } }
     ]);
 
     describe(rollingkickId, [

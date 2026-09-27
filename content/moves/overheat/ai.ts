@@ -2,10 +2,12 @@
  * 过热 / overheat 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 13）格之内；更远先交给共享接近逻辑。
- * 对谁出手：面前贴近、身边挤着更多敌人的目标排前——一张扇面正好把靠内的几个一起烧到；
+ * 对谁出手：`overheatCoverage` 按本个体**实际配置**的射程与张角铺出扇面，逐个用连通性排掉被墙挡住的敌人，
+ *   数一数实际前扇里挤着几个；能罩住更多人的目标排前。
  *   `ai.finish`（默认开）打开时残血目标也排前。特攻高于物攻的个体更愿意用它。
- *   特攻已经被压低时（例如刚排过一次热），`ai.regain`（默认开）会让它明显收敛，不无脑连发。
- * 够不到怎么办：reach 就是本招射程，不够就靠近；前方被地形挡住（`world.clear` 不通）时降权。
+ *   特攻已经被压低时（例如刚排过一次热），`ai.regain`（默认开）会让它明显收敛，不无脑连发——本发虽用付代价前的
+ *   快照、不会被自己的降级削弱，但继续排热会继续压低后续输出，所以仍按当前特攻等级权衡。
+ * 够不到怎么办：reach 就是本招射程，不够就靠近。
  * 放完之后：一记按内外层分伤的扇形高热；用完自身特攻下降，交回共享交战计划等冷却。
  */
 namespace PokemonSkills {
@@ -16,13 +18,25 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 13);
     }
 
-    function overheatCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
-        const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
+    /** 按本个体真实射程与张角，从自己朝目标方向铺出扇面，数一数实际前扇里挤着几个、且没被墙挡住的非友方（含目标）。 */
+    function overheatCoverage(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const from = CompanionBehavior.point(self.point), delta = CompanionBehavior.point(target.point).minus(from);
+        if (delta.length() < 0.05) return 1;
+        const values = { world: world, actor: world.source(), skill: skills["overheat"], detail: { values: capability.data.config } };
+        const reach = typeof capability.data.range === "number" ? capability.data.range : p("overheat", "reach", values);
+        const cone = p("overheat", "cone", values);
+        const region = WorldGeometry.sector(from, delta, reach, cone);
         let count = 0;
+        const targetPoint = CompanionBehavior.point(target.point);
+        if (region.contains(targetPoint) && world.clear(from, targetPoint)) count = 1;
+        const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.ref === target.ref || other.friendly || other.health <= 0) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.5) count++;
+            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+            const point = CompanionBehavior.point(other.point);
+            if (!region.contains(point) || !world.clear(from, point)) continue;
+            count++;
         }
         return count;
     }
@@ -46,7 +60,8 @@ namespace PokemonSkills {
             if (distance <= capability.data.range) score += 7;
             if (distance <= capability.data.range * 0.6) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) < 0.5) score += 6;
-            if (overheatCluster(context, target) > 0) score += 5;
+            // 实际扇面能一起罩住的人越多越值；内层满额、外层的分摊已体现在扇面几何里。
+            score += Math.min(18, Math.max(0, overheatCoverage(context, capability, target) - 1) * 6);
             if ((context.facts.specialAttack || 0) >= (context.facts.attack || 0)) score += 4;
             if (CompanionBehavior.ai<boolean>(capability, "regain", true)) {
                 const dropped = Math.min(0, CompanionBehavior.stage(context, self, "spa"));

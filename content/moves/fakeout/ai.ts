@@ -1,13 +1,4 @@
-/**
- * 击掌奇袭 / fakeout 的伙伴 AI 用途。
- *
- * 什么局面下出手：只有「刚出场」（这段时间内还没提交过任何招式的个体）才进入候选——这正是本招的成立条件；
- *   一旦已经出过手，`available` 直接 false，它根本不会白扣 PP。目标可见、敌对、存活且在 `ai.maxChase`（默认 6）格内。
- * 对谁出手：当前威胁；若那矛头正对着自己（`attacking` 是自己）就排得更靠前，因为它很可能正要出手、
- *   这一掌正好把它按停。
- * 够不到怎么办：射程由 `blink` 决定，共享任务把身位收进闪身距离后再拍。
- * 放完之后：交回共享交战计划；时机已过，本场它不会再被选中。
- */
+/** Encounter-opening clap: use only within the real step/palm reach, preferring known interruptible authored preparation. */
 namespace PokemonSkills {
     function fakeoutWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
@@ -15,8 +6,10 @@ namespace PokemonSkills {
         const actor = world.actor(CompanionBehavior.source(context).ref);
         if (actor === null || !fakeoutFresh(world, actor)) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-            <= CompanionBehavior.ai<number>(item, "maxChase", 6);
+        const victim = world.actor(target.ref);
+        return victim !== null && world.closestPoint(victim, CompanionBehavior.point(CompanionBehavior.source(context).point))
+            .minus(CompanionBehavior.point(CompanionBehavior.source(context).point)).length()
+            <= Math.min(item.data.range, CompanionBehavior.ai<number>(item, "maxChase", 6));
     }
 
     CompanionBehavior.registerUse(fakeoutId, {
@@ -35,7 +28,12 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !fakeoutWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
-            return target.attacking === self.ref ? 78 : 68;
+            const world = CompanionBehavior.world(context), victim = world.actor(target.ref);
+            if (victim !== null && LivingActions.preparing(world, victim).some(clock => {
+                const skill = skills[clock.identity];
+                return !!skill && (skill.interruptible === undefined || skill.interruptible === true);
+            })) return 80;
+            return CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 68 : 24;
         }
     });
 

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.bite.summary": "短促扑出、一口钩住：冷却最短的近身咬合，咬实后有几率把目标咬懵，并把它朝自己拽近一步——它的价值在抢节奏与留人。",
   "worldcombat.skill.bite.description.0": "这一口造成约 %1$s 的接触伤害，獠牙判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.bite.description.1": "最多扑出 %1$s 格、扑咬速度 %2$s 格每刻；撞上第一个敌人即咬实，把它朝自己拽近 %3$s 格。",
+  "worldcombat.skill.bite.description.1": "最多扑出 %1$s 格、扑咬速度 %2$s 格每刻；撞上第一个敌人即咬实，最多把它朝自己拽近 %3$s 格（走原生受击位移，受抗击退与碰撞限制）。",
   "worldcombat.skill.bite.description.2": "咬实后有 %1$s 的几率使目标畏缩 %2$s：先尝试打断它当前可被打断的动作，畏缩期间它无法发动新招，也无法进行普通攻击。",
   "worldcombat.skill.bite.deep.on": "死咬式：咬得更深、拽得更近、畏缩更久更易，但起手更慢、单发略轻、冷却更长。",
   "worldcombat.skill.bite.deep.off": "快咬式：出手快、单发更高，但拽不回多少。",
@@ -26,7 +26,7 @@
   "worldcombat.skill.bite.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.bite.preference.ai.maxChase.help": "超过这个距离就不主动扑咬，先走近。越大追得越执着，也越容易扑空后停在对手身边。",
   "worldcombat.skill.bite.preference.ai.reelIn": "留人优先",
-  "worldcombat.skill.bite.preference.ai.reelIn.help": "开启：对正在拉开距离或贴身未中招的对手优先咬住，把目标拽回身前；关闭：只把咬住当普通近身招排序，不再为拉人加分。",
+  "worldcombat.skill.bite.preference.ai.reelIn.help": "开启：对正在拉开距离或贴身未中招的对手优先咬住，把目标拽回身前；关闭：只把咬住当普通近身招排序，不再为拉人加分。完全抗击退的目标本来就拽不动，无论开关都不为「拉回来」加分。",
   "world_combat.move.bite.text.hit": "咬住",
   "world_combat.move.bite.text.drag": "拽近 %1$s 格",
   "world_combat.move.bite.text.flinch": "被咬懵",

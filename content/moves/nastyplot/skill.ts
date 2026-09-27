@@ -1,21 +1,21 @@
 /**
  * 诡计 / nastyplot — 执行组织。
  *
- * 核心念头：把心思盘起来换一段大幅特攻窗口——头顶的想法一点点汇成一个亮点，特攻当场抬起来。
- *   它是本族里唯一只抬特攻的一招：没有必须存在的敌人，开战前、赶路途中都能先算一档；
- *   面前若真有个对手可盯，这条毒计盘得更牢（窗口更长），但那只是加成，不是出手门槛。
+ * 核心念头：把心思盘成一个短促的进攻机会——头顶的想法汇成一个亮点，特攻当场抬起来；机会很短，
+ *   起身快、收势也快，逼着人立刻接上特殊攻击把它兑现。它没有必须存在的敌人，开战前也能先算。
  *
  * 两幕：
  *   起念（windup 播「盘算」，提交前只观察与预告，打断不花代价）。
- *   成计（提交后）：空明载体 world_combat:nasty_plot_scheme 拥有一段 boostWindow，
- *     把这次实际抬起的特攻等级挂在共享身份 world_combat:status/nastyplot 的窗口上；
- *     窗口到期、被清除或再次施放刷新时，只撤本招自己这一次贡献的级数，绝不误扣别人的特攻增益。
+ *   成计（提交后）：载体 world_combat:nasty_plot_scheme 拥有一段 boostWindow，把这次实际抬起的
+ *     特攻等级挂在共享身份 world_combat:status/nastyplot 的窗口上。
  *
  * 结束：窗口走完或被清除时，等级由载体窗口自行收回，本单元只在移除事件里收尾表现。
+ *   窗口只由自身时长、驱散和原生生命周期决定；没有续时、受击打散或额外的托管效果。
  */
 namespace PokemonSkills {
     const nastyPlotScene = "world_combat:move_nastyplot";
     const nastyPlotScheme = "world_combat:nasty_plot_scheme";
+    const nastyPlotMarkKey = "world_combat:move_nastyplot/mark";
     const nastyPlotContribution = "world_combat:move/nastyplot";
     const nastyPlotSettleText = "world_combat.move.nastyplot.text.scheme";
     const nastyPlotCappedText = "world_combat.move.nastyplot.text.capped";
@@ -23,24 +23,12 @@ namespace PokemonSkills {
     /** 表现里的参考半径：`data.scale = 实际标识半径 / 这个数`。 */
     const nastyPlotReferenceRadius = 0.5;
 
-    /** 面前 `reach` 格内有没有一个活着的非友方；有就盯着它算，窗口更牢——这只是加成，不是出手前提。 */
-    function nastyPlotFoe(world: CombatWorld, actor: CombatActor, reach: number): boolean {
-        const body = world.observe(actor);
-        if (body === null) return false;
-        const actors = world.query(body.position(), Math.max(0.5, reach), false);
-        for (let index = 0; index < actors.length; index++) {
-            const facts = world.observe(actors[index]);
-            if (facts !== null && facts.health() > 0 && !facts.friendly()) return true;
-        }
-        return false;
-    }
-
     define({
         id: "nastyplot",
         cooldownParameter: "wait",
         name: "诡计",
-        description: "把心思盘起来，头顶的想法汇成一个亮点：特攻大幅提高，并维持一段可见窗口。它没有必须存在的敌人，开战前也能先算；面前若有对手可盯，窗口更长。窗口走完或被清除时，只收回本招抬起的那几级。",
-        uses: ["开战前先算一档，把特攻垫到最高", "对手露头、有空档时抢着起念", "赶路途中闭门先算一档备用"],
+        description: "把心思盘成一个短促的进攻机会：特攻大幅提高，但窗口很短，得马上接上特殊攻击兑现。它没有必须存在的敌人，开战前也能先算。窗口走完或被清除时，只收回本招抬起的那几级。",
+        uses: ["即将接敌前，用短促的算计把特攻抬起来", "对手露头、有空档时快速起念，趁短窗口打出一轮特殊攻击", "开战前先算好，把短窗口留给接上来的第一轮特殊攻击"],
         kind: "self",
         range: 1,
         maxRange: 1,
@@ -77,11 +65,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             if (body === null) { done(action); return; }
             const scheme = Math.max(1, Math.min(2, Math.round(p("nastyplot", "scheme", action))));
-            const baseWindow = Math.max(100, Math.round(p("nastyplot", "window", action)));
-            const reach = Math.max(0.5, p("nastyplot", "reach", action));
-            // 面前有可盯的对手时这条毒计更牢，但没有对手也照样能算。
-            const focused = nastyPlotFoe(world, actor, reach);
-            const window = Math.max(100, Math.round(baseWindow * (focused ? 1.15 : 1)));
+            const window = Math.max(50, Math.round(p("nastyplot", "window", action)));
             const swirl = Math.max(0.3, p("nastyplot", "swirl", action));
             const motes = Math.max(12, Math.round(p("nastyplot", "motes", action)));
             const beats = Math.max(2, Math.min(4, Math.round(p("nastyplot", "beats", action))));
@@ -96,7 +80,7 @@ namespace PokemonSkills {
                     nastyPlotContribution, carrier, previous);
                 levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "spa") - before);
                 if (carrier.amplifier() !== levels) {
-                    const shown = MobEffects.apply(world, actor, nastyPlotScheme, window, levels);
+                    const shown = MobEffects.apply(world, actor, nastyPlotScheme, carrier.duration(), levels);
                     if (shown) {
                         const id = NativeEffects.boostWindow(world, actor, {}, shown.duration(), nastyPlotContribution, shown, carrier);
                         if (id) windowId = id;
@@ -110,11 +94,11 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, nastyPlotScene, 1, body.position(),
                 { moment: levels > 0 ? "spark" : "capped", actor: String(actor.ref()), levels: levels,
                     // 只有实际抬到级数才亮：charge 为 0 时亮点一个都不发。
-                    charge: levels > 0 ? motes : 0, motes: motes, beats: beats, scale: scale, focused: focused ? 1 : 0,
+                    charge: levels > 0 ? motes : 0, motes: motes, beats: beats, scale: scale,
                     intensity: Math.max(0.8, Math.min(2, levels / 2 + motes / 60)) }, 30);
             if (windowId)
                 // 窗口还在时头顶只留极轻的标识；窗口到期、被清除或刷新时这条表现随之收。
-                WorldFeedback.onEffect(world, windowId, "world_combat:move_nastyplot/mark", nastyPlotScene, 1, head,
+                WorldFeedback.onEffect(world, windowId, nastyPlotMarkKey, nastyPlotScene, 1, head,
                     { moment: "mark", actor: String(actor.ref()), motes: Math.max(6, Math.round(motes / 3)), scale: scale });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, body.height() * 0.75 + 0.5, 0)),
                 levels > 0 ? nastyPlotSettleText : nastyPlotCappedText, levels > 0 ? [levels, Math.round(window / 20)] : [], 32);

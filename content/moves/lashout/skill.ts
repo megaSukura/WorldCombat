@@ -6,8 +6,9 @@
  * 三幕：
  *   起（fume，提交前）：脚下怒火上升、负等级的黑气从两侧收紧成短压痕（present fume）。
  *   踏（step）：原地向前短踏一步，受碰撞限制、读实际落点；落点处留下双压痕步点。
- *   砸（slam → strike / vent → sever / rage）：朝正前方砸下，只结算前方第一个近敌；命中后先消掉一部分负等级，
- *       确有层数被解除就碎出同等段数的束线；开启宣泄时再把怒气转成一段物攻提升。砸空则只扬尘，不解削弱。
+ *   砸（slam → strike / vent → sever / rage）：把真实 from→to 的高到低斜段发给客户端画出压击线，只结算前方第一个近敌；
+ *       命中后按实际回执消掉一部分负等级，确有层数被解除才从施法者身上碎出同等段数的束线；
+ *       宣泄时也只在确实解除 > 0 时把怒气转成一段物攻提升（窗口与视觉同生命周期）。砸空则只扬尘，不解削弱。
  *
  * 选取：`kind: "aim"`——短前方点或实体都行，空挥可发生；不要求提交时存在敌人，空挥不净化。
  *
@@ -80,11 +81,13 @@ namespace PokemonSkills {
 
             sound(action, "minecraft:entity.vex.charge");
 
-            // 原地短前踏：受碰撞限制，读实际落点；沿落点铺出双压痕步点。
+            // 原地短前踏：受碰撞限制，读实际落点；落点即双压痕步点，不再只靠静止时不触发的 trail。
             const stride = sweepStep(action, direction.scale(step), radius);
-            movementScenes.show(action, "step", action.origin(),
+            const landedAt = action.origin();
+            const stepped = Math.round(stride.moved * 100) / 100;
+            movementScenes.show(action, "step", landedAt,
                 { moment: "step", direction: [direction.x(), direction.y(), direction.z()],
-                    stepped: Math.round(stride.moved * 100) / 100, scale: scale });
+                    stepped: stepped, treads: 2, scale: scale });
 
             action.after(1, slam);
 
@@ -95,6 +98,11 @@ namespace PokemonSkills {
                 const from = here.plus(WorldCombat.point(0, lift, 0)).plus(direction.scale(reach * 0.28));
                 const to = here.plus(direction.scale(reach));
                 const contact = current.trace(from, to, radius);
+                // 下砸过程：把真实 from→to 和判定半径发给客户端，画出窄而高的压击线；判定与表现同程。
+                movementScenes.show(current, "slam", to,
+                    { moment: "slam", path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]],
+                        point: [to.x(), to.y(), to.z()], direction: [direction.x(), direction.y(), direction.z()],
+                        press: Math.max(6, Math.round(reach * 8)), scale: scale });
                 const victim = contact.hitEntity() ? contact.target() : null;
                 if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                     const power = p(lashoutId, "lashout", current);
@@ -111,17 +119,28 @@ namespace PokemonSkills {
                         if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                         const removed = lashoutVent(scope, current.actor(), budget);
                         let boosted = 0;
-                        if (vent && scope.valid(current.actor())) {
-                            NativeEffects.boostWindow(scope, current.actor(), { atk: boostStages }, boostTicks, "world_combat:move/lashout");
-                            boosted = boostStages;
+                        // 怒攻必须由实际解除量 > 0 换得；窗口与视觉都绑在同一个 boostWindow 上，随它一起结束。
+                        if (vent && removed > 0 && scope.valid(current.actor())) {
+                            const before = NativeEffects.effectiveStages(scope, current.actor());
+                            const owned = NativeEffects.boostWindow(scope, current.actor(), { atk: boostStages }, boostTicks, "world_combat:move/lashout");
+                            const raised = NativeEffects.effectiveStages(scope, current.actor());
+                            boosted = Math.max(0, (raised.atk || 0) - (before.atk || 0));
                             const self = scope.observe(current.actor());
-                            if (self !== null) WorldFeedback.emit(scope, lashoutScene, 1, self.position(),
-                                { moment: "rage", boosted: boostStages, count: Math.round(10 + boostStages * 8) }, Math.min(120, boostTicks));
-                            WorldFeedback.text(scope, contact.position().plus(WorldCombat.point(0, 1.25, 0)), lashoutRageText, [boostStages], Math.min(80, boostTicks));
+                            if (owned && boosted > 0 && self !== null) {
+                                WorldFeedback.onEffect(scope, owned, "world_combat:move_lashout/rage", lashoutScene, 1, self.position(),
+                                    { moment: "rage", boosted: boosted, stages: boosted, count: Math.round(10 + boosted * 8), ticks: boostTicks });
+                                WorldFeedback.text(scope, contact.position().plus(WorldCombat.point(0, 1.25, 0)),
+                                    lashoutRageText, [boosted], Math.max(40, Math.min(100, boostTicks)));
+                            } else if (owned) {
+                                NativeEffects.windowClose(scope, owned);
+                            }
                         }
-                        // 确实解除几层就碎几段束线：以实际 removed 驱动 sever 的段数。
-                        if (removed > 0) WorldFeedback.emit(scope, lashoutScene, 1, contact.position(),
-                            { moment: "sever", target: String(victim.ref()), removed: removed, scale: scale }, 24);
+                        // 确实解除几层就碎几段束线：从施法者身上断开，段数由实际 removed 驱动。
+                        if (removed > 0) {
+                            const self = scope.observe(current.actor());
+                            WorldFeedback.emit(scope, lashoutScene, 1, self === null ? contact.position() : self.position(),
+                                { moment: "sever", removed: removed, scale: scale }, 24);
+                        }
                         WorldFeedback.emit(scope, lashoutScene, 1, contact.position(),
                             { moment: doubled ? "vent" : "strike", target: String(victim.ref()), doubled: doubled ? 1 : 0,
                                 down: down, power: Math.round(power * 10) / 10, count: count, removed: removed, boosted: boosted, scale: scale }, 30);

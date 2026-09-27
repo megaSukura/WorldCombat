@@ -4,7 +4,8 @@
  * 场面：只会岩石爆击的隆隆石（30 级）对一只被点住、不会还手的铁傀儡（耐打又不会跑掉的靶子），
  *   站在草地上——石头材质取自脚下（草方块归圆石）。
  * 必然事实：本招被提交过、目标受过伤害。投石数（2～5，随物攻／体重／等级与配置变化）、单石威力、
- *   散布与弧线只写进 note，供读轨迹判断；落点不再改动地表。
+ *   落区固定在 reach 内、每块独立 strike、空飞读 projectilePosition 的真实末点、巨岩式上限 3 块，
+ *   这些只写进 note，供读轨迹判断；落点不再改动地表。
  */
 Smoke.scenario("rockblast", function (stage) {
     stage.fill([-8, -1, -8], [8, -1, 8], "minecraft:grass_block");
@@ -21,7 +22,7 @@ Smoke.scenario("rockblast", function (stage) {
         stage.after(80, function () {
             stage.expect(stage.casts("rockblast", caster) > 0, "rockblast was committed");
             stage.expect(stage.damageTo(foe) > 0, "the stone volley dealt damage to the foe");
-            stage.note("the volley length (2-5 stones), per-stone power, spread and arc follow Attack/weight/level and the boulder choice; each stone's arc is a real projectile and rubble is dust at the real impact, with no terrain change", {
+            stage.note("the volley length (2-5 stones, boulder capped at 3 in code), per-stone power and spread follow Attack/weight/level; the landing zone is clamped to the actual reach so a retreating target never lengthens the flight, each stone is a real projectile with its own strike, a spent stone fades at its real projectilePosition, and rubble is dust at the real impact with no terrain change", {
                 casts: stage.casts("rockblast", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

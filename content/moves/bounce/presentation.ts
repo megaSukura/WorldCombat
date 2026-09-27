@@ -184,6 +184,60 @@ const BounceDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 击（空中首体）：明确的空中接触分支，不播地面地震环，只在接触点炸开一记体撞。
+        contact: {
+            duration: 26,
+            exit: { stop: 12, drain: 18 },
+            emitters: [
+                {
+                    name: "contact_core", bind: "point", offset: [0, 0.3, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
+                    burst: { count: 16, at: 1 }, shape: { kind: "sphere", radius: 0.38 },
+                    direction: "shape", speed: [0.06, 0.24],
+                    lifetime: [7, 13], size: [0.32, 0.05], sizeMode: "index",
+                    color: 0xFFF6DC, alpha: [1, 0], light: "full", bloom: 0.5
+                },
+                {
+                    name: "contact_gust", bind: "point", offset: [0, 0.3, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/vanilla/small_gust",
+                    burst: { count: 20 }, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.08, 0.26],
+                    lifetime: [8, 15], size: [0.2, 0.05],
+                    color: 0xFFD86A, alpha: [0.7, 0], light: "world", maxParticles: 70
+                },
+                {
+                    name: "contact_spark", bind: "point", offset: [0, 0.34, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    burst: { count: { data: "sparks", fallback: 0 } }, shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.08, 0.26],
+                    lifetime: [8, 16], size: [0.22, 0.04],
+                    color: 0xFFF3A0, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 90
+                }
+            ]
+        },
+        // 收：坠落线被侧壁挡住，落点处一撮阻挡尘烟，不当落地。
+        blocked: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                {
+                    name: "blocked_dust", bind: "point", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 14 }, shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.06, 0.18], gravity: 0.08, drag: 0.9,
+                    lifetime: [10, 20], size: [0.1, 0.02],
+                    color: 0xA08E72, alpha: [0.6, 0], light: "world", maxParticles: 40
+                },
+                {
+                    name: "blocked_puff", bind: "point", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.03, 0.1],
+                    lifetime: [14, 26], size: [0.2, 0.3],
+                    color: 0xB8A98C, alpha: [0.35, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
         // 收：落到空处，一小圈散开的尘。
         whiff: {
             duration: 20,

@@ -25,33 +25,42 @@
 namespace PokemonSkills {
     export const steelrollerId = "steelroller";
     export const steelrollerScene = "world_combat:move_steelroller";
+    /** 钢轮本体的独立自定义场景：固定数量钢纹绕真实身体外沿滚动，尺寸读判定半径、颜色读被吃场地色。 */
+    export const steelrollerWheelScene = "world_combat:move_steelroller/wheel";
     export const steelrollerTearText = "world_combat.move.steelroller.text.tear";
     export const steelrollerHitText = "world_combat.move.steelroller.text.hit";
     export const steelrollerFalterText = "world_combat.move.steelroller.text.falter";
 
-    /** 场地在活体身上的共享身份；AI 用它做便宜的判断。 */
-    export var steelrollerTerrainNames: string[] = ["electricterrain", "grassyterrain", "mistyterrain", "psychicterrain"];
-
     /**
-     * 脚下正在生效、覆盖该点的场地（已展开的，不含预约）。按共享的场地类别读取：任何声明了场地类别的
-     * 生产者（四种场地招式与 surge 特性）都会被读到，不枚举规则 id，新场地自动可用。
+     * 覆盖该真实脚点、且在同楼层的生效场地（`areasWithTag` 已排待生效，`surfaceTouches` 用脚点高度容差排别楼层）。
+     * 按共享类别读取，不枚举规则 id，新场地自动可用。
      */
-    export function steelrollerAreas(world: CombatWorld, point: CombatPoint): WorldEffects.Area[] {
-        return WorldEffects.areasWithTag(world, WorldEffects.categories.terrain, point, 0);
+    export function steelrollerAreas(world: CombatWorld, feet: CombatPoint): WorldEffects.Area[] {
+        var found = WorldEffects.areasWithTag(world, WorldEffects.categories.terrain), result: WorldEffects.Area[] = [];
+        for (var i = 0; i < found.length; i++) if (WorldEffects.surfaceTouches(found[i], feet, 0, 1)) result.push(found[i]);
+        return result;
     }
-    /** 该点是否被某片场地覆盖且脚下贴地；机制判定与 AI 共用同一份判据。 */
-    export function steelrollerCharged(world: CombatWorld, actor: CombatActor): boolean {
-        if (!world.valid(actor)) return false;
+    /** 观察到的战斗者真正站立、且资格有效的同层场地；排待生效与别楼层。机制判定与 AI 共用。 */
+    export function steelrollerGroundedAreas(world: CombatWorld, actor: CombatActor): WorldEffects.Area[] {
+        if (!world.valid(actor)) return [];
         var body = world.observe(actor);
-        if (body === null || !body.grounded()) return false;
-        return steelrollerAreas(world, body.position()).length > 0;
+        if (body === null || !body.grounded()) return [];
+        var feet = WorldCombat.point(body.position().x(), body.boundsMin().y(), body.position().z());
+        return steelrollerAreas(world, feet).filter(function (area) { return WorldEffects.covers(world, area, actor); });
     }
-    /** 已知场地身份到场地主色的对照；未知场地回落到钢灰。表现按被吃掉场地的颜色卷进轮身。 */
+    /** 该战斗者是否站在一片真实生效、同层且覆盖自己的场地上；机制判定与 AI 共用同一份判据。 */
+    export function steelrollerCharged(world: CombatWorld, actor: CombatActor): boolean {
+        return steelrollerGroundedAreas(world, actor).length > 0;
+    }
+    /** 已知场地身份到场地主色的对照；仅当场地未声明 data.colour 时回落到它，未知场地回落到钢灰。 */
     var steelrollerTerrainColors: { [name: string]: number } = {
         grassyterrain: 0x7CCB5A, electricterrain: 0xFFE24A, mistyterrain: 0xBFE3EF, psychicterrain: 0xD86FC0
     };
     export function steelrollerFieldColor(areas: WorldEffects.Area[]): number {
         for (var i = 0; i < areas.length; i++) {
+            var data = areas[i].data || {};
+            if (typeof data.colour === "number") return data.colour;
+            if (typeof data.color === "number") return data.color;
             var identity = String(areas[i].identity || ""), slash = identity.lastIndexOf("/");
             var name = slash >= 0 ? identity.substring(slash + 1) : identity;
             var color = steelrollerTerrainColors[name];

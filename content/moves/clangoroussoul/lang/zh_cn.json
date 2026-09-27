@@ -19,5 +19,6 @@
   "worldcombat.skill.clangoroussoul.preference.ai.maxChase.help": "威胁超过这个距离就不再考虑先起舞；越大越愿意在远处先叠状态。",
   "world_combat.move.clangoroussoul.text.beat": "第 %1$s / %2$s 拍",
   "world_combat.move.clangoroussoul.text.climax": "唱满 · 全部能力提升",
-  "world_combat.move.clangoroussoul.text.weak": "生命不足以继续起舞"
+  "world_combat.move.clangoroussoul.text.weak": "生命不足以继续起舞",
+  "world_combat.move.clangoroussoul.text.raise": "本拍五项共 +%1$s 级（%2$s 项生效）"
 }

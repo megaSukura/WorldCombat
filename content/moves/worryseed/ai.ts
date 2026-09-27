@@ -14,23 +14,22 @@ namespace CompanionBehavior {
         if (!world(context).clear(point(self.point), point(target.point))) return false;
         if (domain(context, target) !== "cobblemon") return false;
         const ability = fact<string>(context, "world_combat:worryseed-ability", target);
-        return ability !== null && PokemonSkills.worryseedPlantable(ability);
+        // 顶掉一个对敌人不利的特性反而帮了它，必须先排除；只有真的值得拆的特性才出手。
+        return ability !== null && PokemonSkills.worryseedPlantable(ability) && !PokemonSkills.worryseedLiability(ability)
+            && PokemonSkills.worryseedWorthReplacing(ability);
     }
 
-    /** 支援一个伙伴：只在它正睡着或已挂上睡意（临近催眠）时才值得出手。 */
+    /** 支援一个伙伴：只在它正睡着或已挂上睡意（临近催眠）时才值得出手。友方不换特性，普通生物同样成立。 */
     function worryseedFriendWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
         if (!item.data.config || item.data.config.helpFriends === false) return false;
         if (target.health <= 0 || !target.friendly || !target.visible) return false;
         if (target.ref === source(context).ref) return false;
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (status(context, target, "worryseed")) return false;
         if (!(status(context, target, "sleep") || status(context, target, "yawn"))) return false;
         const self = source(context);
         if (distance(self.point, target.point) > ai<number>(item, "maxChase", 13)) return false;
         if (!world(context).clear(point(self.point), point(target.point))) return false;
-        if (domain(context, target) === "cobblemon") {
-            const ability = fact<string>(context, "world_combat:worryseed-ability", target);
-            if (ability === null || !PokemonSkills.worryseedPlantable(ability)) return false;
-        }
         return true;
     }
 

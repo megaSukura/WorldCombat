@@ -6,8 +6,8 @@
  * 这是一记「拧完整度」的特殊攻击：威力随**目标剩余生命比例**走高，所以 `ai.preferHealthy`（默认开）把血量更满的
  *   目标排在前面；目标已经残了就把评分压下去，让补刀招先上——残血目标也不值得再赌第二拧。特攻高的个体在同样局面下
  *   更该用它（伤害随特攻走），这由公式承担，不需要额外选项。
- * 对谁出手：单体；`twin`（双绞式）开启且目标还有大半条血时，一次进攻能反向补第二拧，适合打还拧不死的大目标，
- *   代价是更慢更费。
+ * 对谁出手：单体；`twin`（双绞式）开启、目标还有大半条血、且没在逃（第二拧要它留在原范围）时，一次进攻能反向
+ *   补第二拧，适合打还拧不死的大目标，代价是更慢更费；正在逃跑的目标不追加这一段，免得第二拧落空。
  * 放完之后：冷却中等，可以隔一会儿再拧；AI 用同一套判断继续寻找下一个还满着血的目标。
  */
 namespace PokemonSkills {
@@ -42,7 +42,8 @@ namespace PokemonSkills {
                 if (ratio < 0.33) score -= 16;
             }
             const config = capability.data.config;
-            if (config && config.twin && ratio > 0.6) score += 10;
+            // 双绞的第二拧要目标留在原范围：血还够、且没在逃（留得住）才值得赌这一段。
+            if (config && config.twin && ratio > 0.6 && !CompanionBehavior.fleeing(context, target)) score += 10;
             return score;
         }
     });

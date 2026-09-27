@@ -8,6 +8,7 @@
  * 层次：蓄声（起手，光点向里收）／声浪与鼓舞（一圈圈推开、逐人亮起）／贴身士气（低密度持续）／散开。
  * 起击收：breathe（蓄声）→ roar（吼出）→ rally（每人身上的鼓舞）→ fade（散）。
  * 范围：声浪绑脚点、fit none，半径按 `data.scale`（实际鼓舞半径 / 4）推出，画出来的圈就是声浪罩到的范围。
+ * 起手：breathe 的 stop 覆盖最长的起手（长啸 tempo 最高 16 刻），不被提前掐断。
  * 运动：蓄声光点向里收拢；声浪一圈圈向外推开；被罩到的友方身上迸起一柱光并转入缓慢上浮的贴身绿光。
  * 数：声浪圈数绑 `data.waves`（等级派生），光点数绑 `data.motes`（特攻与等级派生），
  *   逐人光环的强弱绑 `data.dragon`（是否龙属性）；整体尺度绑 `data.scale`。
@@ -18,7 +19,7 @@ const DragonCheerDefinition: ParticleDefinition = {
     moments: {
         breathe: {
             duration: 16,
-            exit: { stop: 6, drain: 12 },
+            exit: { stop: 16, drain: 12 },
             emitters: [
                 {
                     name: "breathe_mote", bind: "source", fit: "none", height: 0.8,

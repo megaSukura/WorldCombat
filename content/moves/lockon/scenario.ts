@@ -9,7 +9,11 @@ Smoke.scenario("lockon",function(stage){
    stage.expect(!stage.hasMobEffect(a,"world_combat:lockon_focus"),"one caster's lock ended");
    stage.expect(stage.hasMobEffect(b,"world_combat:lockon_focus"),"the other caster kept its own lock");
    stage.expect(stage.attribute(target,"minecraft:generic.movement_speed")<base,"the remaining owner's native control survives");
-   stage.note("Two-owner release and remaining control verified. Actual follow-up consumption uses the existing settled-damage hook; visual clamp and native immunity are manual checks.");stage.done();
+   stage.command("effect clear "+target.ref.split("/")[0]+" world_combat:lockon_track");
+   stage.after(4,function(){
+    stage.expect(!stage.hasMobEffect(b,"world_combat:lockon_focus"),"control end disperses the lock");
+    stage.note("Two-owner release, remaining control and control-end dispersion verified. Actual follow-up consumption uses the existing settled-damage hook; visual clamp and native immunity are manual checks.");stage.done();
+   });
   });
  },"two independent locks");
 });

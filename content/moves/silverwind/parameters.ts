@@ -17,7 +17,7 @@
  *   gale         风威：特攻定这一扫的力度，等级定鳞粉的密。
  *   reach        扇面长度：特攻决定这扇鳞粉能铺多远（本招射程）。
  *   span         扇面张角：碰撞箱宽度决定铺开多宽，体型宽的扇得更开。
- *   drift        飘散时间：特攻决定鳞粉在空气里飘多久再落，也决定对手有多少时间走出扇边。
+ *   drift        飘散时间：特攻决定鳞粉余尘在空气里飘多久再落，只驱动画面寿命；伤害在起手当刻已结算。
  *   scales       鳞粉数：特攻与等级决定扇里的鳞粉量，也驱动表现。
  *   surgeChance  反哺概率：特攻与等级共同决定，基础 10% 取自原生。
  *   surgeStages  反哺级数：固定 1 级，与原生一致。
@@ -57,8 +57,8 @@ namespace PokemonSkills {
                 description: "鳞粉扇铺开的总张角；体型宽的个体扇得更开，浓鳞式收得更窄，更容易只罩住点名的一个方向。"
             }),
         drift: seconds(
-            F.base(1.2).plus(F.stat("specialAttack").minus(60).times(0.004).clamp(-0.2, 0.8)).clamp(0.8, 2.0).round(2),
-            "飘散时间", "鳞粉从翅上抖出到落地消散的时间；特攻越高飘得越久，对手也更有机会走出扇边——这是这招可被读出的反制窗口。"),
+            F.base(24).plus(F.stat("specialAttack").minus(60).times(0.08).clamp(-4, 16)).clamp(16, 40).round(0),
+            "飘散时间", "鳞粉从翅上抖出到落地消散、画面余尘持续的时间；特攻越高飘得越久。判定在起手那一刻已经完成，飘散只是余尘，不提供迟到伤害。"),
         scales: formula(
             F.base(26)
                 .plus(F.stat("specialAttack").minus(60).times(0.3).clamp(-6, 12))

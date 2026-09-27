@@ -60,6 +60,8 @@ namespace PokemonSkills {
             const world = action.world(), self = action.actor();
             const body = world.observe(self);
             if (body === null) { done(action); return; }
+            // 撑壳是一段持续过程：hold 由本次 execute 的 actionScenes 拥有，炸开/收壳/被打断即 stop。
+            const scenes = WorldFeedback.actionScenes(shelltrapScene);
             const hairtrigger = !!(config && config.hairtrigger);
             const window = Math.max(20, Math.round(p("shelltrap", "window", action)));
             const power = p("shelltrap", "blast", action);
@@ -72,13 +74,13 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.0, radius / 3.6));
             const intensity = Math.max(0.7, Math.min(2.4, power / 130));
             const armedAt = world.tick();
-            let resolved = false, nextKeep = 0;
+            let resolved = false;
 
             // amplifier 1 表示感应壳（任何敌对命中都点着）；0 表示只认物理。
             MobEffects.apply(world, self, shelltrapEffect, window, hairtrigger ? 1 : 0);
             sound(action, "minecraft:block.deepslate.place");
             WorldFeedback.emit(world, shelltrapScene, 1, body.position(),
-                { moment: "arm", scale: scale, sparks: sparks, window: window, hairtrigger: hairtrigger, intensity: intensity }, 24);
+                { moment: "arm", radius: radius, scale: scale, sparks: sparks, window: window, hairtrigger: hairtrigger, intensity: intensity }, 24);
             WorldFeedback.text(world, shelltrapAbove(body.position()), shelltrapChargeText, [Math.round(window / 20)], 26);
 
             /** 收壳：拿下待爆载体，并清掉可能还在的「已点着」记号。 */
@@ -94,26 +96,30 @@ namespace PokemonSkills {
             function detonate(current: CombatAction): void {
                 if (resolved) return;
                 resolved = true;
+                scenes.stop(current);
                 release(current);
                 const scope = current.world();
                 const at = scope.observe(self);
                 const centre = at === null ? action.targetPosition() : at.position();
                 let hits = 0, lit = 0;
                 const features: any = { damage: damageSpec("shelltrap", "blast"), knockback: false };
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 2.5, above: 3 }), function (other) {
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 2.5, above: 3 }), function (other, facts) {
                     if (hits >= cap) return;
+                    const point = facts.position();
+                    // 碎片不穿墙：爆点与目标之间被实墙挡住就波不到它。
+                    if (!scope.clear(centre, point)) return;
                     if (!hurt(current, other, "shelltrap", power, features)) return;
                     hits++;
                     if (!scope.valid(other)) return;
-                    const otherBody = scope.observe(other)!;
-                    const away = otherBody.position().minus(centre);
-                    if (away.length() > 0.2 && shock > 0) scope.hitDisplace(other, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shock));
-                    WorldFeedback.emit(scope, shelltrapScene, 1, otherBody.position(),
+                    const away = point.minus(centre), flat = WorldCombat.point(away.x(), 0, away.z());
+                    // 推力只取水平方向：正上/正下的目标水平向量为零，不做 unit 除法。
+                    if (flat.length() > 0.2 && shock > 0) scope.hitDisplace(other, flat.unit().scale(shock));
+                    WorldFeedback.emit(scope, shelltrapScene, 1, point,
                         { moment: "detonate_hit", target: String(other.ref()), scale: scale, sparks: sparks, intensity: intensity }, 26);
                     // 碎片点燃：命中后按概率挂共享的灼伤身份，停留 burnTicks。
                     if (burnChance > 0 && scope.random() < burnChance && CombatStatus.inflict(scope, other, "burn", burnTicks)) {
                         lit++;
-                        WorldFeedback.emit(scope, shelltrapScene, 1, otherBody.position(), { moment: "burn", target: String(other.ref()), sparks: sparks }, 26);
+                        WorldFeedback.emit(scope, shelltrapScene, 1, point, { moment: "burn", target: String(other.ref()), sparks: sparks }, 26);
                     }
                 });
                 WorldFeedback.emit(scope, shelltrapScene, 1, centre,
@@ -127,6 +133,7 @@ namespace PokemonSkills {
             function fizzle(current: CombatAction): void {
                 if (resolved) return;
                 resolved = true;
+                scenes.stop(current);
                 release(current);
                 const scope = current.world();
                 const at = scope.observe(self);
@@ -141,24 +148,24 @@ namespace PokemonSkills {
             function watch(current: CombatAction): void {
                 if (resolved) return;
                 const scope = current.world();
-                if (!scope.valid(self)) { resolved = true; return; }
+                if (!scope.valid(self)) { resolved = true; scenes.stop(current); return; }
                 current.stopMovement();
                 const now = scope.tick();
                 if (scope.effects(self, shelltrapLit).length > 0) { detonate(current); return; }
+                // 待爆载体被外力清掉（牛奶、/effect clear 等）就立即收壳，不再等满窗口留下残影。
+                if (MobEffects.read(scope, self, shelltrapEffect) === null) { fizzle(current); return; }
                 if (now - armedAt >= window) { fizzle(current); return; }
-                if (now >= nextKeep) {
-                    nextKeep = now + 6;
-                    const at = scope.observe(self);
-                    if (at !== null) WorldFeedback.keep(scope, "shelltrap:hold:" + String(self.key()), shelltrapScene, 1, at.position(),
-                        { moment: "hold", scale: scale, sparks: sparks, remaining: Math.max(0, window - (now - armedAt)),
-                            window: window, intensity: intensity }, 20);
-                }
+                const at = scope.observe(self);
+                if (at !== null) scenes.show(current, "hold", at.position(),
+                    { moment: "hold", radius: radius, scale: scale, sparks: sparks,
+                        remaining: Math.max(0, window - (now - armedAt)), window: window, intensity: intensity });
                 current.after(1, watch);
             }
 
             action.on("world_combat:interrupt", function (current: CombatAction) {
                 if (resolved) return;
                 resolved = true;
+                scenes.stop(current);
                 release(current);
             });
 

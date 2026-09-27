@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.doubleteam.summary": "Sidestep toward a chosen point and leave a few one-hit decoys at positions actually visited. Pursuers may attack the old positions; hits on the real body still hurt normally.",
+  "worldcombat.skill.doubleteam.summary": "Sidestep toward a chosen point and leave spaced one-hit decoy bodies at positions actually visited. Pursuers may turn on the old positions; hits on the real body still hurt normally.",
   "worldcombat.skill.doubleteam.use.0": "Leave images before focus fire, pulling damage onto them",
   "worldcombat.skill.doubleteam.use.1": "Speed away from a pursuit while the images soak the hits",
   "worldcombat.skill.doubleteam.use.2": "Buy a few seconds to reposition or withdraw",
-  "worldcombat.skill.doubleteam.description.0": "The sidestep budget is about %1$s blocks; native obstacles shorten actual travel. A few decoys appear only at visited positions where their bodies fit.",
-  "worldcombat.skill.doubleteam.description.1": "Decoys last %1$s and leave when this speed carrier is removed. The caster gains 12%% movement speed and retains the original one-stage Pokemon evasion gain. Each decoy can be struck directly and broken.",
+  "worldcombat.skill.doubleteam.description.0": "The sidestep budget is about %1$s blocks; native obstacles shorten actual travel. A few decoys appear only at visited positions spaced far enough apart for their bodies to fit; a short path leaves fewer.",
+  "worldcombat.skill.doubleteam.description.1": "Decoys last %1$s and vanish when this identity is cleared. The caster gains 12%% movement speed (a brief surge) and keeps a lasting one-stage Pokemon evasion gain. Each decoy can be struck directly and broken.",
   "worldcombat.skill.doubleteam.description.2": "Prepare for %1$s, recover for %2$s, and cool down for %3$s. Swarm leaves more lasting decoys with a shorter step; swift moves farther and faster with fewer decoys and extra speed.",
   "worldcombat.skill.doubleteam.value.copies": "Images",
   "worldcombat.skill.doubleteam.value.mirrorPool": "Sidestep distance",

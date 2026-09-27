@@ -1,16 +1,18 @@
 /**
  * 爱心印章 / heartstamp 的客户端表现。
  *
- * 一句话：施法者抬眼冒出一颗心、飞向目标并在它头顶炸开成粉色心环，同时一圈随实际疏忽窗口收缩的暗纹收拢
+ * 一句话：施法者抬眼冒出一颗心、飞向目标并在它头顶炸开成粉色心环，同时一圈随真实疏忽窗口收缩的暗纹收拢
  * （目标头上浮出「被萌到了」）→ 施法者贴地扑过去、拖一条粉色残影 → 命中处炸开一圈精神波与碎心，
  * 乘机命中时印章向内闭合、更大更亮，普通碰撞只炸普通精神波 → 被拍懵的人头上晃星。
  * 色相家族：粉与玫红（infatuation_heart / fadeheart_white / glowingsparkle_pink / mediumring）为主体，
  *   精神紫（impact_psychic）只给「击」那一拍。
- * 拍子：起 windup（抬眼）→ 骗 feint（爱心炸开、窗口收缩）→ 行 dash（扑击残影）→ 击 hit/seize（命中）→ 懵 flinch。
+ * 拍子：起 windup（抬眼、近距边界）→ 骗 feint（爱心炸开）→ 行 dash（扑击残影、近距边界）→ 击 hit/seize（命中）→ 懵 flinch
+ *      → 窗口 window（与真实疏忽载体同存，消费／驱散即停）。
  * 范围：dash 沿机制给的位移逐刻铺开，命中 hit/seize 在接触点炸开一圈（点数按 `data.intensity` 派生）。
  * 运动：dash 残影朝向 `orient: velocity` 沿扑击方向；feint 的心向外抛、命中碎心带重力下坠。
  * 数：`data.hearts`（实际疏忽窗口时长派生）决定卖萌心数，`data.charmTicks`（实际挂上的 MobEffect 时长）决定
- *   窗口暗纹的收缩长度，`data.intensity`（实际一击威力派生）决定命中强调与碎心数，`data.scale`（接触判定派生）缩放尺寸。
+ *   窗口暗纹的存续，`data.seizeReach`（窗口减去卖萌间隔后按扑速算出的距离）决定近距边界环半径，
+ *   `data.intensity`（实际一击威力派生）决定命中强调与碎心数，`data.scale`（接触判定派生）缩放尺寸。
  */
 const HeartStampDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -34,12 +36,21 @@ const HeartStampDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.01, 0.05], spread: 20,
                     lifetime: [10, 18], size: [0.12, 0.02],
                     color: 0xFF9EC4, alpha: [0.8, 0], light: "world", maxParticles: 16
+                },
+                {
+                    // 出扑前就能读出的「可抢窗口」近距边界，半径由本招公式算出。
+                    name: "seize_ring", bind: "source", fit: "world", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 6, shape: { kind: "ring", radius: { data: "seizeReach", fallback: 3 } },
+                    direction: "outward", speed: [0.0, 0.03],
+                    lifetime: [10, 18], size: [0.28, 0.9], sizeMode: "sin",
+                    color: 0xE68BB4, alpha: [0.26, 0], light: "world", render: "translucent", maxParticles: 20
                 }
             ]
         },
         feint: {
-            duration: { data: "charmTicks", fallback: 32 },
-            exit: { stop: 12, drain: 16 },
+            duration: 22,
+            exit: { stop: 8, drain: 14 },
             emitters: [
                 {
                     name: "hearts", bind: "target", offset: [0, 0.1, 0], height: 0.6,
@@ -61,16 +72,6 @@ const HeartStampDefinition: ParticleDefinition = {
                     color: 0xE68BB4, alpha: [0.7, 0], light: "full", maxParticles: 4
                 },
                 {
-                    // 随实际 MobEffect 时长收缩的破绽暗纹：寿命就是这一份疏忽的时间。
-                    name: "window", bind: "target", offset: [0, 0.14, 0], height: 0.62,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1 },
-                    shape: { kind: "point" },
-                    speed: [0.0, 0.0],
-                    lifetime: { data: "charmTicks", fallback: 32 }, size: [0.75, 0.06], sizeMode: "linear",
-                    color: 0xE68BB4, alpha: [0.75, 0], light: "full", maxParticles: 4
-                },
-                {
                     name: "charm_sparkle", bind: "target", offset: [0, 0.4, 0], height: 0.7,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     burst: { count: 6, interval: 3, repeats: 2 },
@@ -78,6 +79,21 @@ const HeartStampDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1], spin: 10,
                     lifetime: [10, 18], size: [0.07, 0.01],
                     alpha: [0.9, 0], light: "full", maxParticles: 16
+                }
+            ]
+        },
+        window: {
+            // 破绽窗口的存续画面：由服务端托管的疏忽载体驱动，消费／驱散时立即停。
+            duration: 0,
+            exit: { stop: 4, drain: 10 },
+            emitters: [
+                {
+                    name: "window_ring", bind: "target", offset: [0, 0.14, 0], height: 0.62,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 3, shape: { kind: "ring", radius: 0.42 },
+                    direction: "outward", speed: [0.0, 0.02],
+                    lifetime: [14, 22], size: [0.72, 0.06], sizeMode: "linear",
+                    color: 0xE68BB4, alpha: [0.55, 0], light: "full", maxParticles: 6
                 }
             ]
         },
@@ -101,6 +117,15 @@ const HeartStampDefinition: ParticleDefinition = {
                     gravity: 0.02, drag: 0.9,
                     lifetime: [8, 14], size: [0.07, 0.01],
                     color: 0xC98BA8, alpha: [0.6, 0], light: "world", maxParticles: 36
+                },
+                {
+                    // 扑击途中保留可抢窗口的近距边界，让玩家读出「还追得上／已经过期」。
+                    name: "seize_ring", bind: "source", fit: "world", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 6, shape: { kind: "ring", radius: { data: "seizeReach", fallback: 3 } },
+                    direction: "outward", speed: [0.0, 0.03],
+                    lifetime: [10, 18], size: [0.28, 0.9], sizeMode: "sin",
+                    color: 0xE68BB4, alpha: [0.26, 0], light: "world", render: "translucent", maxParticles: 20
                 }
             ]
         },

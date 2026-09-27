@@ -20,7 +20,7 @@ Smoke.scenario("ficklebeam", function (stage) {
     }, function () {
         stage.expect(stage.casts("ficklebeam", caster) > 0, "ficklebeam was committed");
         stage.expect(stage.damageTo(foe) > 0, "the beam hit the target");
-        stage.note("齐射（所有光股一起醒来、数股近线并行覆盖更宽）按 chance 在准备期一次决定并存储；同一目标本次合计伤害封顶为基础的两倍，不按股无限乘。这里只记录一次交战的观测值。", {
+        stage.note("齐射（所有光股一起醒来、数股近线并行覆盖更宽）按 chance 在准备期一次决定并存储；同一目标本次合计伤害封顶为基础的两倍，不按股无限乘；齐射成功而只聚起一股时该股直接按两倍结算。这里只记录一次交战的观测值。", {
             casts: stage.casts("ficklebeam", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             foeHp: foe.health()

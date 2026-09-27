@@ -7,9 +7,12 @@
  *
  * 两幕：
  *   起（coil，提交前）：枝叶在身侧收拢、枝尖聚一点绿光，只播预告。
- *   戳（thrust → hit / miss，提交后）：沿瞄准方向把枝条绷直，先由原生方块射线裁出实际枝线（方块挡枝，枝梢停在墙前）；
- *       再取这条细线上第一个非友方，伤害 = `poke` ×(1 + `bend` × 目标距离/枝长)，越远越疼；刺枝式再挂 `snareTicks` 的减速。
- *       `tip` 只在真的戳到目标时于接触点弹亮，近处命中只是一记轻回弹；空戳立即收回，不发光。
+ *   戳（thrust → hit / miss，提交后）：沿**真实 3D 瞄准**绷出一根细枝；先用原生方块射线在真实接触点截枝
+ *       （`WorldGeometry.blockHit` 的 `position()`，枝梢停在墙前）；再沿这条细枝用真实身体箱找**最近的**一个非友方，
+ *       伤害 = `poke` ×(1 + `bend` × 接触距离/枝长)，越远越疼；刺枝式再按成功回执挂一记减速。
+ *       `tip` 只在真的戳到目标时于接触点弹亮。
+ *   主体过程由自定义场景 `move_branchpoke_twig` 画：一根细枝逐刻绷直、末梢在接触点弯弹、再收回，细叶随枝线陪衬；
+ *       判定与表现共用同一组枝根/枝梢端点。
  *
  * 选取：`kind: "aim"`——可点任意阵营实体或一个世界点，朝空地也能戳空；命中权限仍由命中层判断。
  *
@@ -20,21 +23,10 @@
  */
 namespace PokemonSkills {
     const branchpokeScene = "world_combat:move_branchpoke";
+    const branchpokeTwigScene = "world_combat:move_branchpoke_twig";
     const branchpokeHitText = "world_combat.move.branchpoke.text.hit";
     const branchpokeSnareText = "world_combat.move.branchpoke.text.snare";
     const branchpokeMissText = "world_combat.move.branchpoke.text.miss";
-
-    /** 把瞄准方向压平成一个水平单位向量。 */
-    function branchpokeHeading(direction: CombatPoint): CombatPoint {
-        const flat = WorldCombat.point(direction.x(), 0, direction.z());
-        return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-    }
-
-    /** 枝线判定与画面共用的顶点：原点到枝梢的一条细线。 */
-    function branchpokeLine(origin: CombatPoint, heading: CombatPoint, reach: number): number[][] {
-        const tip = origin.plus(heading.scale(reach));
-        return [[origin.x(), origin.y(), origin.z()], [tip.x(), tip.y(), tip.z()]];
-    }
 
     define({
         id: "branchpoke",
@@ -76,7 +68,8 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const thorn = config && config.thorn === true;
-            const heading = branchpokeHeading(aim(action));
+            const aimed = aim(action);
+            const heading = aimed.length() < 1e-6 ? action.direction() : aimed;
             const reach = Math.max(2.2, p("branchpoke", "reach", action));
             const twig = Math.max(0.14, p("branchpoke", "twig", action));
             const bend = Math.max(0.1, p("branchpoke", "bend", action));
@@ -85,30 +78,45 @@ namespace PokemonSkills {
             const snareTicks = Math.max(10, Math.round(p("branchpoke", "snareTicks", action)));
             const snareLevel = Math.max(1, Math.round(p("branchpoke", "snareLevel", action)));
             const intensity = Math.max(0.6, Math.min(2.0, power / 38));
-            const direction = [heading.x(), heading.y(), heading.z()];
+            const actorRef = String(actor.ref());
 
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const origin = self.position();
-            // 方块挡枝：原生方块射线裁出实际枝线，枝梢停在墙前，墙后的人不再被算入。
+            // 方块挡枝：在真实接触点截枝，枝梢停在墙前，墙后的人不再被算入。
             let length = reach;
-            const clip = world.clipBlocks(origin, origin.plus(heading.scale(reach)));
-            if (clip !== null && clip.blocked()) {
-                const wall = clip.blockPosition();
-                if (wall !== null) length = Math.max(0.4, Math.min(reach, wall.minus(origin).length()));
-            }
+            const wall = WorldGeometry.blockHit(world, origin, origin.plus(heading.scale(reach)));
+            if (wall !== null) length = Math.max(0.1, Math.min(reach, wall.position().minus(origin).length()));
             const endpoint = origin.plus(heading.scale(length));
-            const line = branchpokeLine(origin, heading, length);
+
+            // 真实 3D 细枝：用真实身体箱沿这条枝找最近的一个非友方，按接触距离排序，第一个拦下整枝。
+            const candidates: { actor: CombatActor; at: CombatPoint; along: number }[] = [];
+            if (length > 0.01) {
+                WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(origin, endpoint, twig),
+                    function (candidate, facts) {
+                        if (String(candidate.ref()) === actorRef || facts.friendly()) return;
+                        if (!world.clear(origin, facts.position())) return;
+                        const near = world.closestPoint(candidate, origin);
+                        candidates.push({ actor: candidate, at: near, along: near.minus(origin).length() });
+                    });
+                candidates.sort(function (a, b) { return a.along - b.along; });
+            }
+            const contactDistance = candidates.length > 0 ? candidates[0].along : length;
+            const ratio = Math.max(0, Math.min(1, contactDistance / reach));
+            const tipScale = 1 + bend * ratio;
+            const contact = candidates.length > 0 ? candidates[0].at : endpoint;
+            const direction = [heading.x(), heading.y(), heading.z()];
 
             sound(action, "minecraft:block.wood.hit");
-            WorldFeedback.emit(world, branchpokeScene, 1, origin,
-                { moment: "thrust", path: line, direction: direction, reach: length, leaves: leaves,
-                    thorn: thorn ? 1 : 0, intensity: intensity }, 16);
+            // 主体过程：一根细枝从枝根逐刻绷直、末梢在接触点弯弹、再收回；端点与判定共用。
+            WorldFeedback.emit(world, branchpokeTwigScene, 1, origin,
+                { moment: "twig", origin: [origin.x(), origin.y(), origin.z()], tip: [endpoint.x(), endpoint.y(), endpoint.z()],
+                    contact: [contact.x(), contact.y(), contact.z()], hit: candidates.length > 0 ? 1 : 0,
+                    length: length, twig: twig, ratio: ratio, scale: tipScale, leaves: leaves,
+                    direction: direction, start: world.tick(), grow: 4, hold: 4, pull: 6 }, 18);
 
-            const found: CombatActor[] = [];
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, length, twig, { below: 1.2, above: 1.6 }),
-                function (candidate) { if (found.length === 0) found.push(candidate); });
-            if (found.length === 0) {
+            const victim = candidates.length > 0 ? candidates[0].actor : null;
+            if (victim === null) {
                 WorldFeedback.emit(world, branchpokeScene, 1, endpoint,
                     { moment: "miss", leaves: Math.round(leaves * 0.6), scale: 0.8 }, 16);
                 WorldFeedback.text(world, endpoint.plus(WorldCombat.point(0, 1.0, 0)), branchpokeMissText, [], 20);
@@ -116,18 +124,11 @@ namespace PokemonSkills {
                 return;
             }
 
-            const victim = found[0];
-            const foe = world.observe(victim);
-            if (foe === null) { done(action); return; }
-            const delta = foe.position().minus(origin);
-            const flat = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
-            const ratio = Math.max(0, Math.min(1, flat / reach));
-            const tipScale = 1 + bend * ratio;
             if (!hurt(action, victim, "branchpoke", power * tipScale, { damage: damageSpec("branchpoke", "poke"), contact: true })) { done(action); return; }
             sound(action, "cobblemon:impact.grass");
 
             const now = world.observe(victim);
-            const at = now === null ? foe.position() : now.position();
+            const at = now === null ? contact : now.position();
             // tip 只在真的戳到目标时于接触点弹亮：越靠末梢（ratio 越大）回弹越猛，贴脸只是一记轻回弹。
             const tipLeaves = Math.max(4, Math.round(leaves * (0.4 + 0.6 * ratio)));
             WorldFeedback.emit(world, branchpokeScene, 1, at,
@@ -136,11 +137,18 @@ namespace PokemonSkills {
                 { moment: "hit", target: String(victim.ref()), leaves: leaves, scale: tipScale, intensity: intensity }, 20);
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), branchpokeHitText, [Math.round(tipScale * 100) / 100], 20);
 
+            // 状态按成功回执：只有这次挂枝真的改变了目标身上的缓慢载体，才报出减速。
             if (thorn && world.valid(victim)) {
+                const before = world.mobEffect(victim, "minecraft:slowness");
                 world.marker(victim, "minecraft:slowness", snareTicks, snareLevel);
-                WorldFeedback.emit(world, branchpokeScene, 1, at,
-                    { moment: "snare", target: String(victim.ref()), snareTicks: snareTicks, snareLevel: snareLevel, scale: tipScale }, 22);
-                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.35, 0)), branchpokeSnareText, [snareLevel + 1], 22);
+                const after = world.mobEffect(victim, "minecraft:slowness");
+                const snared = after !== null && (before === null || String(after.key()) !== String(before.key()));
+                if (snared) {
+                    // 挂枝标记跟着实际载体：吸附在被挂住的这一个身上，并持续到这次减速真正结束的长度。
+                    WorldFeedback.emit(world, branchpokeScene, 1, at,
+                        { moment: "snare", target: String(victim.ref()), snareTicks: snareTicks, snareLevel: snareLevel, scale: tipScale }, snareTicks);
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.35, 0)), branchpokeSnareText, [snareLevel + 1], 22);
+                }
             }
             done(action);
         }

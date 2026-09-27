@@ -8,7 +8,8 @@
  * 范围：bolt 的发射器绑在 `data.path` 上，顶点就是判定真正停下的那半段——画出来的形状就是电流实际走的距离；
  *   blocked 在真实方块面上消散，shielded 在挡线的同伴身上消散，air 是空放时电流在半空散掉。
  * 运动：电流是瞬发的，整条线同一刻亮起；`joltSpeed` 只决定火花炸开的密度（`flux` 为每秒撒多少点）。
- * 数：服务端把 `arcs`（电弧条数）与 `intensity`（麻痹越久越亮）交给下面的发射器，画面里的数量和强度与机制一致。
+ * 数：服务端把 `sparkDensity`（沿线火花/分叉的采样疏密）与 `intensity`（麻痹越久越亮）交给下面的发射器，
+ *   画面里的数量和强度与机制一致；`intensity` 只缩放发射量，不再充当粒子速度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ThunderWaveDefinition: ParticleDefinition = {
@@ -37,22 +38,22 @@ const ThunderWaveDefinition: ParticleDefinition = {
             ]
         },
         bolt: {
-            duration: 22,
-            exit: { stop: 12, drain: 12 },
+            duration: 18,
+            exit: { stop: 10, drain: 12 },
             emitters: [
                 {
                     name: "core_line", bind: "path", height: 0,
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    burst: { count: { data: "arcs", fallback: 6 }, interval: 1, repeats: 3 },
+                    burst: { count: { data: "sparkDensity", fallback: 6 }, interval: 1, repeats: 3 },
                     shape: { kind: "polyline" },
-                    direction: "shape", speed: { data: "intensity", fallback: 1 },
+                    direction: "shape", speed: [0.02, 0.08],
                     lifetime: [4, 9], size: [0.18, 0.03], sizeMode: "index",
                     color: 0xFFFDE8, alpha: [1, 0], light: "full", bloom: 0.6
                 },
                 {
                     name: "arc_detail", bind: "path", height: 0,
                     particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
-                    rate: { data: "flux", fallback: 36 }, trail: { minDistance: 0.1 },
+                    rate: { data: "flux", fallback: 36 },
                     shape: { kind: "polyline" },
                     direction: "shape", speed: [0.02, 0.12],
                     lifetime: [5, 11], size: [0.06, 0.01],
@@ -61,7 +62,7 @@ const ThunderWaveDefinition: ParticleDefinition = {
                 {
                     name: "branch_spark", bind: "path", height: 0,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    burst: { count: { data: "arcs", fallback: 6 }, interval: 2, repeats: 2 },
+                    burst: { count: { data: "sparkDensity", fallback: 6 }, interval: 2, repeats: 2 },
                     shape: { kind: "polyline" },
                     direction: "outward", speed: [0.03, 0.16], spread: 45,
                     lifetime: [6, 13], size: [0.07, 0.01],
@@ -76,29 +77,20 @@ const ThunderWaveDefinition: ParticleDefinition = {
                 {
                     name: "jolt_flash", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_electric",
-                    burst: { count: { data: "arcs", fallback: 10 }, at: 1 },
+                    burst: { count: { data: "sparkDensity", fallback: 10 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.32 },
-                    direction: "shape", speed: { data: "intensity", fallback: 0.2 },
+                    direction: "shape", speed: [0.04, 0.14],
                     lifetime: [7, 13], size: [0.3, 0.05], sizeMode: "index",
                     alpha: [1, 0], light: "full", bloom: 0.5
                 },
                 {
                     name: "jolt_cling", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
-                    burst: { count: { data: "arcs", fallback: 8 }, interval: 3, repeats: 3 },
+                    burst: { count: { data: "sparkDensity", fallback: 8 }, interval: 3, repeats: 3 },
                     shape: { kind: "sphere_surface", radius: 0.3 },
-                    direction: "outward", speed: { data: "intensity", fallback: 0.16 },
+                    direction: "outward", speed: [0.03, 0.12],
                     lifetime: [12, 22], size: [0.09, 0.02],
                     color: 0xF2E24A, alpha: [0.9, 0], light: "full", maxParticles: 80
-                },
-                {
-                    name: "jolt_ring", bind: "target", offset: [0, 0.08, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: { data: "arcs", fallback: 8 } },
-                    shape: { kind: "ring", radius: 0.44, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.04, 0.12],
-                    lifetime: [10, 18], size: [0.24, 0.1],
-                    color: 0xC8F0A0, alpha: [0.6, 0], light: "world", maxParticles: 30
                 }
             ]
         },
@@ -163,7 +155,7 @@ const ThunderWaveDefinition: ParticleDefinition = {
                 {
                     name: "air_fizzle", bind: "point", height: 0,
                     particle: "world_combat_core:cobblemon/generic/status/accessory_spark",
-                    burst: { count: { data: "arcs", fallback: 8 } },
+                    burst: { count: { data: "sparkDensity", fallback: 8 } },
                     shape: { kind: "sphere", radius: 0.18 },
                     direction: "outward", speed: [0.03, 0.12],
                     lifetime: [6, 12], size: [0.07, 0.01],

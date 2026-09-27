@@ -8,12 +8,15 @@
  *   起（windup，提交前）：低头、在脚边把一块石头拎起来，石屑向内收。
  *   击（throw → hit / wall）：提交后把石头沿低弧线抛向方向点或选中的实体（看得见、能躲）。砸中落地活物即结算
  *       一次不接触伤害，并在它脚下立起石栏；砸到地面也在真实落点围一圈；砸到墙或空中目标只崩出碎石。
- *   收（cage / shatter）：石栏按 `world.terrain` 租借留下 `cageTicks`，到期原方块回来；速度的下降不随围栏恢复。
+ *       伤害被原生拒绝时只碎石，不播成功砸击的强爆、也不围栏。
+ *   收（cage / shatter）：石栏按 `world.terrain` 租借留下 `cageTicks`，到期原方块回来；降速是同一段
+ *       `cageTicks` 的限时窗口（`NativeEffects.boostWindow`），随围栏与 encased 标记一同结束，不手动反扣。
  *
  * 选取：kind 为 aim——方向或世界点都能放，也可以直接点实体；提交时不要求存在敌人，命中权限仍由命中层判断。
  * 围栏只由**真实地面命中**生成：砸中落地目标、或石头真正落在可替换地表上；对着空处点不会凭空围住谁。
- * 围栏特意留一道可走缺口（`cageGap`，随目标体宽加宽），避免大个子被挤进石柱；地形被原生保护拒绝时，
- * 只呈碎石与真实减速，不画成功石墙。速度下降是 `NativeEffects.boost(...,"spe",-N)`，并另挂共享身份
+ * 围栏特意留一道可走缺口（`cageGap`，随目标体宽加宽），半径另有硬上限（与 `cageRadius` 夹取一致），
+ * 大体型只得到一圈有限弧墙，不会按身体无限外扩；地形被原生保护拒绝时，只呈碎石与真实（限时）减速，
+ * 不画成功石墙。速度下降是 `NativeEffects.boostWindow(...,"spe",-N)`，并另挂共享身份
  * `world_combat:status/encased`（本单元发明，别的单元可直接消费「行动被封」）。
  *
  * 与同族分开：同是物理一击留痕，撕裂爪/铁尾/暗影之骨/碎岩留下的是**防御**的缺口，岩石封锁留下的是
@@ -30,9 +33,11 @@ namespace PokemonSkills {
     const rocktombWallText = "world_combat.move.rocktomb.text.wall";
     const rocktombBlockedText = "world_combat.move.rocktomb.text.blocked";
     const rocktombMissText = "world_combat.move.rocktomb.text.miss";
+    /** 围栏圆环的硬上限，与 cageRadius 参数自己的夹取上限一致：再大的身体也只得到一圈有限的弧墙，不会按体型无限造墙。 */
+    const rocktombCageRadiusCap = 4.0;
 
     /** 可被围栏替换成石的地表方块；替换不会碰到方块实体、流体与不可破坏方块。 */
-    function rocktombSurface(id: string): string {
+    export function rocktombSurface(id: string): string {
         if (id === "minecraft:grass_block" || id === "minecraft:dirt" || id === "minecraft:coarse_dirt" ||
             id === "minecraft:podzol" || id === "minecraft:rooted_dirt" || id === "minecraft:moss_block" ||
             id === "minecraft:stone" || id === "minecraft:granite" || id === "minecraft:diorite" ||
@@ -191,7 +196,8 @@ namespace PokemonSkills {
                 const halfX = min !== null && max !== null ? (max.x() - min.x()) * 0.5 : 0;
                 const halfZ = min !== null && max !== null ? (max.z() - min.z()) * 0.5 : 0;
                 const halfWidth = Math.max(halfX, halfZ);
-                const radius = Math.max(p("rocktomb", "cageRadius", aimed), halfWidth + 1.3);
+                // 硬预算：半径不超过参数自身的上限；大身体只得到一圈有限弧墙与更宽的缺口，不按体型无限外扩。
+                const radius = Math.min(Math.max(p("rocktomb", "cageRadius", aimed), halfWidth + 1.3), rocktombCageRadiusCap);
                 const away = WorldGeometry.flatUnit(centre.minus(origin));
                 const gapWidth = Math.max(p("rocktomb", "cageGap", aimed),
                     2 * (halfX * Math.abs(away.z()) + halfZ * Math.abs(away.x())) + 0.5);
@@ -205,8 +211,10 @@ namespace PokemonSkills {
                     return;
                 }
                 const cage = rocktombCage(scope, centre, radius, cageHeight, cageTicks, gapAway, gapWidth);
-                if (victim !== null) NativeEffects.boost(scope, victim, "spe", -stages);
                 if (!cage.pillars.length) {
+                    // 原生保护或占用导致立不起石柱：只崩碎石。拖慢这一份仍是本次攻击的重心，用限时窗口自行到期，不手动反扣。
+                    if (victim !== null)
+                        NativeEffects.boostWindow(scope, victim, { spe: -stages }, cageTicks, "world_combat:rocktomb");
                     WorldFeedback.emit(scope, rocktombScene, 1, point,
                         { moment: "shatter", target: victim !== null ? String(victim.ref()) : "", notes: notes, scale: scale }, 24);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.05, 0)), rocktombBlockedText, [], 26);
@@ -219,10 +227,12 @@ namespace PokemonSkills {
                 for (let i = 0; i < cage.pillars.length; i++) {
                     const cell = cage.pillars[i];
                     WorldFeedback.emit(scope, rocktombScene, 1, WorldCombat.point(cell[0] + 0.5, cell[1], cell[2] + 0.5),
-                        { moment: "pillar", scale: scale }, 40);
+                        { moment: "pillar", scale: scale, phase: i % 4 }, 40);
                 }
                 if (victim !== null) {
-                    MobEffects.apply(scope, victim, rocktombTomb, cageTicks, 0);
+                    // 限时封锁：减速窗口绑定这一份 encased 载体的当前 revision，载体到期/被驱散时同步松开，不留失效锚。
+                    const tomb = MobEffects.apply(scope, victim, rocktombTomb, cageTicks, 0);
+                    NativeEffects.boostWindow(scope, victim, { spe: -stages }, cageTicks, "world_combat:rocktomb", tomb);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), rocktombEncaseText, [stages], 30);
                 }
                 scope.sound("minecraft:block.stone.place", point, 14, "{}");
@@ -234,10 +244,18 @@ namespace PokemonSkills {
                 if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                     const body = scope.observe(victim);
                     const landed = impact(current, hit, "rocktomb", power, { damage: damageSpec("rocktomb", "boulder"), contact: false });
+                    if (!landed) {
+                        // 伤害被原生拒绝（免疫/吸收到零等）：只碎石，不播成功砸击的强爆，也不围栏。
+                        WorldFeedback.emit(scope, rocktombScene, 1, point,
+                            { moment: "shatter", target: String(victim.ref()), notes: notes, scale: throwScale }, 22);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), rocktombMissText, [], 22);
+                        sound(current, "minecraft:block.stone.break");
+                        return;
+                    }
                     WorldFeedback.emit(scope, rocktombScene, 1, point,
                         { moment: "hit", target: String(victim.ref()), notes: notes, scale: throwScale, intensity: intensity }, 24);
                     sound(current, "cobblemon:impact.rock");
-                    if (landed) seal(current, victim, point, body !== null && body.grounded());
+                    seal(current, victim, point, body !== null && body.grounded());
                     return;
                 }
                 if (victim !== null) {
@@ -255,7 +273,9 @@ namespace PokemonSkills {
             }
 
             const targetPoint = action.targetPosition();
-            const direction = LivingActions.ballistic(origin, targetPoint, speed, gravity) || aim(action);
+            // 用可达解：低弧弹道真的有解才照它出手，否则才退回直瞄，不再拿近似角度硬凑。
+            const arc = LivingActions.ballisticSolutions(origin, targetPoint, speed, gravity, 200);
+            const direction = arc.length ? arc[0].direction : aim(action);
             const flightRange = Math.max(range, origin.minus(targetPoint).length() + 3);
             const flight = action.projectile(origin, direction.scale(speed), gravity, rockRadius, flightRange,
                 Math.max(30, Math.round(flightRange / Math.max(0.2, speed) + 40)),

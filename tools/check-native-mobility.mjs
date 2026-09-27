@@ -39,7 +39,7 @@ function navigate(options = {}) {
   const state = { ...context.NativeEffects.empty(), stages: { spe: value.stage || 0 }, flags: value.flags || {} };
   const nativeAttributes = Object.freeze({ movementSpeed: value.nativeMovement });
   const world = {
-    layers: value.layers || {}, sunlight: value.sunlight, tick: () => 100, source: () => actor, valid: () => true, mobEffects: () => [], mobEffect: () => null,
+    layers: value.layers || {}, sunlight: value.sunlight, tick: () => 100, source: () => actor, valid: () => true, mobEffects: () => [], mobEffect: () => null, matchesMobEffect: () => false,
     observe: target => { assert.equal(target, actor); return { position: () => ({ x: 1, y: 2, z: 3 }), movementSpeed: () => nativeAttributes.movementSpeed }; },
     effects: (_actor, kind) => kind === 'cobblemon_world_combat:individual' ? [{ data: () => JSON.stringify(state) }]
       : kind === 'world_combat:rooted' && value.rooted ? [{}] : [],

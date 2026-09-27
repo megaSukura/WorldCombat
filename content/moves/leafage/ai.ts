@@ -5,6 +5,7 @@
  *   这是最便宜的一记远程消耗，偏好从稍远处先手、然后一记接一记地撒。
  * 对谁出手：`ai.finish`（默认关）打开时，生命已不足四成的目标多一档分（拿一把叶去收尾）；关闭则所有目标同价。
  * 够不到怎么办：reach 就是本招射程，不够先走近；叶有扇面，目标的走位通常仍会被兜到。
+ * 高低差：会按本招真实叶速、重力与射程预算解一次弹道，当前弧线到不了的高/低目标不当作候选，避免空交。
  * 放完之后：一发即散，交回共享交战计划等很短的冷却再撒下一把。
  */
 namespace PokemonSkills {
@@ -15,13 +16,28 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
     }
 
+    /** 一把叶走小弧：按本招真实叶速、重力与射程预算解一条弹道。高低差太大、当前打不到的候选不空交。
+     *  同一决策帧内按目标缓存，只解一次。 */
+    function leafageReachable(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        return CompanionBehavior.observedFlag(context, "leafage:reach:" + target.ref, function () {
+            const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+            const origin = CompanionBehavior.point(self.point), goal = CompanionBehavior.point(target.point);
+            if (CompanionBehavior.distance(self.point, target.point) < 1) return true;
+            const values = { world: world, actor: world.source(), detail: { values: capability.data.config } };
+            const speed = Math.max(0.8, p(leafageId, "velocity", values));
+            const reach = Math.max(4, p(leafageId, "reach", values));
+            const budget = Math.max(4, Math.floor((reach - 0.4) / speed));
+            return LivingActions.ballisticSolutions(origin, goal, speed, 0.035, budget).length > 0;
+        });
+    }
+
     CompanionBehavior.registerUse(leafageId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return leafageWants(context, capability, target);
+            return leafageWants(context, capability, target) && leafageReachable(context, capability, target);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;

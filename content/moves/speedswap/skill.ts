@@ -36,6 +36,11 @@ namespace PokemonSkills {
         const attribute = world.attributeValue(actor, speedswapAttribute, true);
         return attribute === null ? -1 : attribute.value();
     }
+    /** 回读此刻真正的有效移速，含本次交换窗口本身与之后新加的加速/减速；维持画面按它变密变疏。 */
+    function speedswapCurrent(world: CombatWorld, actor: CombatActor): number {
+        const attribute = world.attributeValue(actor, speedswapAttribute, false);
+        return attribute === null ? -1 : attribute.value();
+    }
     /** 供 AI 事实使用：把一名战斗者的有效速度折成同一把尺上的读数。 */
     export function speedswapRating(world: CombatWorld, actor: CombatActor): number { return speedswapSpeed(world, actor); }
     /** 画面里的脚边刻线数量：由实际速度派生，快的人刻线更密。 */
@@ -63,10 +68,13 @@ namespace PokemonSkills {
     function speedswapHold(effect: CombatEffect, state: any): void {
         const world = effect.world(), actor = effect.target(), body = world.observe(actor);
         if (body === null) return;
+        // 维持期回读真实有效移速：换到快速度的一侧刻线更密、换到慢速度的一侧更疏；后加的加速/减速也照此变化。
+        const speed = speedswapCurrent(world, actor);
+        const shown = speed > 0 ? speed : (Number(state.speed) || 0);
         // 持续窗口表现绑在这枚托管效果上：结束或被提前清除时同步收回。
         WorldFeedback.onEffect(world, effect.id(), "world_combat:move_speedswap/hold/" + String(actor.ref()),
             speedswapScene, 1, body.position(), { moment: "hold", target: String(actor.ref()), pair: state.partner,
-                speed: Number(state.speed) || 0, marks: Number(state.marks) || 6, ratio: Number(state.ratio) || 1,
+                speed: shown, marks: speedswapMarks(shown), ratio: Number(state.ratio) || 1,
                 mode: Number(state.mode) || 1 });
     }
     WorldCombat.effectHandler(speedswapBind, "start", function (effect) {
@@ -79,6 +87,8 @@ namespace PokemonSkills {
     });
     WorldCombat.effectHandler(speedswapBind, "watch", function (effect) {
         if (!speedswapAlive(effect)) { effect.end(); return; }
+        // 每刻回读实际移速并刷新维持表现，让刻线密度在整个窗口内跟着真实速度走。
+        speedswapHold(effect, JSON.parse(effect.state()));
         effect.schedule("watch", "watch", 1, "{}");
     });
     // 任一侧失效或清除：成对窗口同步结束。只撤本实例登记的两枚载体，已被新窗口替换的不动。

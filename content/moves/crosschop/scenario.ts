@@ -19,7 +19,7 @@ Smoke.scenario("crosschop", function (stage) {
     }, function () {
         stage.expect(stage.casts("crosschop", caster) >= 1, "caster committed cross chop");
         stage.expect(stage.damageTo(foe) > 0, "cross chop dealt damage to the foe");
-        stage.note("释放时锁定面前交叉点：两劈隔 gap 刻先后沿真实武器段 trace 落下，第一劈先撞开架势；只有第二劈仍命中第一劈已劈中的同一实体才按 (1 + seam) 放大，目标侧移离开锁定交叉点、或第二刀落到旁人身上就只剩普通一劈。撞墙停在墙上。破势式的间隔与起手更久。", {
+        stage.note("释放时锁定身前竖直挥击面与中心 C：第一笔从左上扫到右下、gap 刻后第二笔从右上扫到左下，两笔都穿过 C 并继续越过；每刻只沿上一刀尖到当前刀尖的一小段真实刃迹 trace，撞墙停在墙上。只有第二笔首次接触的仍是第一笔已劈中的同一实体，才按 (1 + seam) 放大；目标侧移离开挥击面、或第二笔首次碰到旁人身上就只剩普通一劈。破势式的间隔与起手更久。", {
             casts: stage.casts("crosschop", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive(),

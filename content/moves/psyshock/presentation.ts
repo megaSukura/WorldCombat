@@ -40,12 +40,13 @@ const PsyshockDefinition: ParticleDefinition = {
             exit: { stop: 90, drain: 14 },
             emitters: [
                 {
-                    name: "shard", bind: "projectile", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/star",
-                    rate: 26, shape: { kind: "sphere", radius: 0.12 },
-                    direction: "velocity", speed: [0.0, 0.03],
-                    lifetime: [6, 12], size: [0.2, 0.03],
-                    color: 0xB49CF0, alpha: [0.9, 0], light: "full", maxParticles: 40
+                    // 短定向棱缘：主体是有棱角的实形弹体（服务端 appearance），这里沿飞行方向补一小段硬边棱屑。
+                    name: "shard", bind: "projectile", fit: "none", orient: "velocity", direction: "shape",
+                    particle: "world_combat_core:cobblemon/generic/spike", spriteFrom: "random",
+                    rate: 22, shape: { kind: "line", length: 0.5 },
+                    speed: [0.0, 0.02],
+                    lifetime: [5, 10], size: [0.16, 0.04],
+                    color: 0xB49CF0, alpha: [0.9, 0], light: "full", maxParticles: 30
                 },
                 {
                     name: "grit", bind: "projectile", fit: "none",

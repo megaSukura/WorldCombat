@@ -1,8 +1,8 @@
-/** Restore one confirmed consumed item into an empty held slot, using real nearby material when selected. */
+/** Restore one confirmed consumed item into an empty held slot; no world search, no scavenge. */
 namespace PokemonSkills {
     const recycleScene = "world_combat:move_recycle";
+    const recycleItemScene = "world_combat:move_recycle_item";
     const recycleDoneText = "world_combat.move.recycle.text.done";
-    const recycleFoundText = "world_combat.move.recycle.text.found";
     const recycleEmptyText = "world_combat.move.recycle.text.empty";
 
     /** 施法者当前是否空手（统一装备读取：宝可梦携带物 / 原版生物与玩家的手）。 */
@@ -23,8 +23,8 @@ namespace PokemonSkills {
         cooldown: 20,
         style: "recycle",
         stationary: true,
-        defaults: { scavenge: false, ai: {} },
-        fields: [flag("scavenge", "就地取材")],
+        defaults: { ai: {} },
+        fields: [],
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["recycle"], detail: { values: config },
                 world: world || null, actor: actor || null, attributes: attributes };
@@ -39,10 +39,8 @@ namespace PokemonSkills {
         windup: function (action: CombatAction, config: any, prepare: number): number {
             var body = action.sense().observe(action.actor());
             var scale = body ? (body.width() + body.height()) / 2.3 : 1;
-            var scavenge = !!(config && config.scavenge);
             action.present("world_combat:recycle:" + action.id(), recycleScene, 1, action.origin(), JSON.stringify({
-                moment: "gather", scale: scale, radius: p("recycle", "drawRadius", action),
-                motes: Math.round(p("recycle", "motes", action)), scavenge: scavenge ? 1 : 0 }));
+                moment: "gather", scale: scale, motes: Math.round(p("recycle", "motes", action)) }));
             return prepare;
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
@@ -51,11 +49,9 @@ namespace PokemonSkills {
             if (body === null) { done(action); return; }
             var scale = (body.width() + body.height()) / 2.3;
             var motes = Math.round(p("recycle", "motes", action));
-            var radius = p("recycle", "drawRadius", action);
-            var scavenge = !!(config && config.scavenge);
             var memory = recycleMemory(world, actor);
-            WorldFeedback.emit(world, recycleScene, 1, body.position(), { moment: "gather", scale: scale, radius: radius,
-                motes: motes, scavenge: scavenge ? 1 : 0 }, 24);
+            WorldFeedback.emit(world, recycleScene, 1, body.position(), { moment: "gather", scale: scale,
+                motes: motes }, 24);
             if (!recycleEmptyHanded(world, actor) || !memory.id) {
                 WorldFeedback.emit(world, recycleScene, 1, body.position(), { moment: "fizzle", scale: scale }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), recycleEmptyText, [], 26);
@@ -63,7 +59,7 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            var result = recycleRestore(world, actor, memory, scavenge, radius);
+            var result = recycleRestore(world, actor, memory);
             if (result === null) {
                 WorldFeedback.emit(world, recycleScene, 1, body.position(), { moment: "fizzle", scale: scale }, 20);
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), recycleEmptyText, [], 26);
@@ -71,16 +67,17 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            const path = result.found && result.point ? [[result.point.x(), result.point.y(), result.point.z()], String(actor.ref())] : [];
-            WorldFeedback.emit(world, recycleScene, 1, body.position(), { moment: "forge", path: path, item: memory.id,
-                scale: scale, radius: radius, motes: motes, found: result.found ? 1 : 0, travelMotes: result.found ? motes : 0 }, 30);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)),
-                result.found ? recycleFoundText : recycleDoneText, [{ key: itemNameKey(memory.id), fallback: memory.id }], 30);
+            // 成器与实际写入同一拍：记忆里的那件物品图沿短弧聚到持有槽，落地即闪一圈金光。
+            WorldFeedback.emit(world, recycleItemScene, 1, body.position(), { moment: "forge", item: memory.id,
+                start: world.tick(), duration: 10, scale: scale }, 30);
+            WorldFeedback.emit(world, recycleScene, 1, body.position(), { moment: "forge", scale: scale, motes: motes }, 30);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), recycleDoneText,
+                [{ key: itemNameKey(memory.id), fallback: memory.id }], 30);
             sound(action, "minecraft:item.trident.return");
             done(action);
         },
         indicator: function (config: any, pokemon?: CombatPokemon) {
-            return { radius: pokemon ? p("recycle", "drawRadius", pokemon) : 3, geometry: "area", style: "recycle", color: 0xE8C56A, label: "回收范围" };
+            return { radius: pokemon ? p("recycle", "drawRadius", pokemon) : 3, geometry: "area", style: "recycle", color: 0xE8C56A, label: "汇聚范围" };
         }
     });
 

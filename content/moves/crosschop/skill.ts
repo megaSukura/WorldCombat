@@ -1,46 +1,30 @@
 /**
  * 十字劈 / crosschop 的出手方式。
  *
- * 核心念头：双手交叉举过头顶，两道劈击从相反斜上方先后落向面前挥击平面上的同一个点：第一劈撞开对手的架势，
- *   第二劈顺着同一个交叉点切下去。两劈隔 `gap` 刻先后结算，各自沿真实武器段做碰撞与墙裁剪；第二劈只对第一劈
- *   实际劈中的同一实体带破势加成——对手在第一劈之后侧移半步就只剩第一劈，换到旁人身上也没有加成。
+ * 核心念头：双手交叉举过头顶，在身前同一个竖直挥击面上先后劈出两道斜线——第一笔从左上落到右下，`gap` 刻后第二笔
+ *   从右上落到左下。两笔都穿过锁定的交叉点并继续越过，不在交点戛然而止；每刻只沿刀尖刚划过的那一小段真实刃迹
+ *   结算，撞墙就停在墙上。只有同一个实体两笔都真正吃到，第二笔才带破势加成；对手在第一笔之后侧移离开挥击面、
+ *   或第二笔首次碰到的是旁人，就只剩普通一劈。
  *
- * 两幕：
+ * 两幕（提交前只播预告）：
  *   起（windup，提交前）：双臂交叉举高，只播预告。
- *   劈（guard → seam → cross / wall / miss）：提交后锁定交叉点，第一劈落下（trace 真实武器段）；
- *       `gap` 刻后第二劈从另一侧落下，只有命中与第一劈相同的实体才按 (1 + seam) 放大；两劈都中同一实体才补 X。
+ *   劈（guard → seam → cut / wall / miss，提交后）：提交时锁定挥击中心 C 与朝向；单位右轴 R、上轴 U 张成竖直
+ *       挥击面，半宽 w 取本招展开、半高 h 取身高。第一笔 A=C-R*w+U*h 到 B=C+R*w-U*h，逐刻从上一刀尖到当前
+ *       刀尖只判一小段并裁到真实墙面；`gap` 刻后第二笔 D=C+R*w+U*h 到 E=C-R*w-U*h，同样逐刻判新子段，不再重新
+ *       对准目标——第二笔首次接触仍为第一笔目标才有破势加成。
  *
  * 与同族分开：十字剪是两把镰刀从左右合拢、扫过两片半扇面；劈瓦是贴地宽弧；上菜是不接触的窄走廊。
- * 十字劈是唯一「两劈先后从斜上方落在同一个锁定点上、第一劈替第二劈开门」的贴身双击。
+ *   十字劈是唯一「在同一个竖直面里、两道斜劈先后交叉、第一劈替第二劈开门」的贴身双击。
  */
 namespace PokemonSkills {
-    /** 一道从施术者该侧肩上劈向交叉点的线：起于肩上（身体之外），落到锁定的交叉点。 */
-    function crosschopSlash(grip: CombatPoint, center: CombatPoint, direction: CombatPoint, side: number, spread: number): number[][] {
-        var lateral = WorldCombat.point(-direction.z(), 0, direction.x());
-        var start = grip.plus(lateral.scale(side * spread * 0.6)).plus(WorldCombat.point(0, spread * 1.8, 0));
-        return [[start.x(), start.y(), start.z()], [center.x(), center.y() + 0.4, center.z()]];
-    }
-
-    /** 落点上两道交叉的短线，组成一个 X。 */
-    function crosschopCross(center: CombatPoint, direction: CombatPoint, half: number): CombatPoint[][] {
-        var lateral = WorldCombat.point(-direction.z(), 0, direction.x()), up = WorldCombat.point(0, 1, 0);
-        return [
-            [center.plus(lateral.scale(-half)).plus(up.scale(half * 0.8)), center.plus(lateral.scale(half)).minus(up.scale(half * 0.8))],
-            [center.plus(lateral.scale(-half)).minus(up.scale(half * 0.8)), center.plus(lateral.scale(half)).plus(up.scale(half * 0.8))]
-        ];
-    }
-
-    /** 一段真实武器线的两个端点，供表现与判定读同一组位置。 */
-    function crosschopSegment(from: CombatPoint, to: CombatPoint): number[][] {
-        return [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]];
-    }
+    function crosschopVertex(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
 
     define({
         id: crosschopId,
         cooldownParameter: "recharge",
         name: "Cross Chop",
-        description: "双臂交叉举过头顶，两道劈击从相反斜上方先后落向面前同一个锁定交叉点：第一劈沿真实武器段把对手的架势撞开，第二劈顺着交叉点切下去；第二劈只对第一劈劈中的同一个敌人才切得更深，对手在间隔里侧移半步或换到旁人身上就只剩普通一劈。撞墙停在墙上，不会隔墙伤人。双劈式两劈等重、出手更快，但没有破势加成。",
-        uses: ["用两次先后落下的交叉劈切开一个点", "第一劈撞开架势，第二劈切得更深", "在贴身距离结算两次接触伤害"],
+        description: "双臂交叉举过头顶，在身前同一个竖直挥击面上先后劈出两道交叉的斜劈：第一笔从左上落到右下，第二笔隔一瞬从右上落到左下，都穿过锁定的交叉点。第一笔沿真实刃迹把对手的架势撞开，第二笔只对第一笔劈中的同一个敌人才切得更深；对手在间隔里侧移离开挥击面、或第二笔首次碰到旁人身上就只剩普通一劈。撞墙停在墙上，不会隔墙伤人。双劈式两劈等重、出手更快，但没有破势加成。",
+        uses: ["在同一竖直面上先后扫出两道交叉的斜劈", "第一劈撞开架势，第二劈切得更深", "在贴身距离结算两次接触伤害"],
         kind: "aim",
         range: 2.4,
         maxRange: 3.2,
@@ -68,93 +52,124 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present(crosschopScene + ":windup", crosschopScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", guard: config && config.guard !== false ? 1 : 0 }));
+                JSON.stringify({ moment: "windup", windup: prepare, guard: config && config.guard !== false ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             var world = action.world();
             var actor = action.actor();
             var body = world.observe(actor);
-            var centre = body === null ? action.origin() : body.position();
-            var reach = Math.max(1.8, action.range());
+            if (body === null) { done(action); return; }
+            var scenes = WorldFeedback.actionScenes(crosschopScene);
             var chop = p(crosschopId, "chop", action);
             var seam = Math.max(0, p(crosschopId, "seam", action));
             var gap = Math.max(2, Math.round(p(crosschopId, "gap", action)));
+            var reach = Math.max(1.8, action.range());
             var spread = Math.max(0.35, p(crosschopId, "spread", action));
             var gauge = Math.max(0.12, Math.min(0.4, spread * 0.3));
             var scale = Math.max(0.6, Math.min(2.0, spread / 0.6));
             var intensity = Math.max(0.6, Math.min(2.4, chop / 50));
-            // 释放锁定面前挥击平面：选中实体就用它当刻的身体中心，否则取面前 reach 处的世界点。
-            var heading = WorldGeometry.flatUnit(aim(action), WorldCombat.point(0, 0, 1));
-            var selected = action.target();
-            var at = centre.plus(heading.scale(reach));
-            if (selected !== null && world.valid(selected)) {
-                var selectedBody = world.observe(selected);
-                if (selectedBody !== null) at = selectedBody.position();
-            }
+            // 挥击面的两条半轴：半宽取展开的交叉幅度，半高随身高；两笔都在这个竖直面内。
+            var halfWidth = spread;
+            var halfHeight = Math.max(0.5, Math.min(1.2, body.height() * 0.45));
+            var swing = Math.max(2, Math.min(4, Math.round(gap / 2)));
+            // 提交时锁定挥击中心与朝向：用含竖直瞄准的稳定基，R/U 张成的竖直面朝向前方。
+            var frame = WorldGeometry.basis(aim(action), WorldCombat.point(0, 0, 1));
+            var selectedPoint=action.targetPosition(),distance=selectedPoint.minus(body.position()).length();
+            var at=body.position().plus(frame.forward.scale(Math.min(reach,distance>.01?distance:reach)));
+            var frontWall=WorldGeometry.blockHit(world,body.position(),at);if(frontWall)at=frontWall.position();
+            action.releaseTarget();
             action.data("world_combat:move_crosschop/point", JSON.stringify({ x: at.x(), y: at.y(), z: at.z() }));
-            var firstRef = "", secondRef = "", settled = false;
+            var firstFrom = at.minus(frame.right.scale(halfWidth)).plus(frame.up.scale(halfHeight));
+            var firstTo = at.plus(frame.right.scale(halfWidth)).minus(frame.up.scale(halfHeight));
+            var secondFrom = at.plus(frame.right.scale(halfWidth)).plus(frame.up.scale(halfHeight));
+            var secondTo = at.minus(frame.right.scale(halfWidth)).minus(frame.up.scale(halfHeight));
+            var firstRef = "", secondRef = "";
+            var settled = false, cancelled = false;
 
             function wallSound(scope: CombatWorld, point: CombatPoint): void { scope.sound("minecraft:block.deepslate.break", point, 14, "{}"); }
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
-                var scope = current.world();
                 if (firstRef === "" && secondRef === "") {
+                    var scope = current.world();
                     WorldFeedback.emit(scope, crosschopScene, 1, at, { moment: "miss", scale: scale }, 20);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), crosschopMissText, [], 22);
                 }
-                done(current);
+                scenes.finish(current, done);
             }
 
-            function strike(current: CombatAction, isSecond: boolean): void {
-                var scope = current.world();
-                var slash = crosschopSlash(centre, at, heading, isSecond ? 1 : -1, spread);
-                var start = WorldCombat.point(slash[0][0], slash[0][1], slash[0][2]);
-                var end = WorldCombat.point(slash[1][0], slash[1][1], slash[1][2]);
-                // 沿真实武器段做碰撞：先碰实体就命中，先碰墙就停在墙上。
-                var contact = current.trace(start, end, gauge, true);
-                var wallBlock = contact.blocked() && !contact.hitEntity();
-                var victim = contact.hitEntity() ? contact.target() : null;
-                if (victim !== null && (String(victim.ref()) === String(actor.ref()) || scope.friendly(victim))) victim = null;
-                var stop = wallBlock ? (contact.blockPosition() || contact.position()) : end;
-                WorldFeedback.emit(scope, crosschopScene, 1, stop,
-                    { moment: isSecond ? "seam" : "guard", path: crosschopSegment(start, stop), side: isSecond ? 1 : -1,
-                        target: victim === null ? "" : String(victim.ref()), spread: spread, scale: scale, intensity: intensity }, 16);
-                if (wallBlock) {
-                    WorldFeedback.emit(scope, crosschopScene, 1, stop, { moment: "wall", face: contact.blockFace(), scale: scale }, 18);
-                    wallSound(scope, stop);
-                } else if (victim !== null) {
-                    var power = isSecond && firstRef !== "" && firstRef === String(victim.ref()) ? chop * (1 + seam) : chop;
-                    if (hurt(current, victim, crosschopId, power, { damage: damageSpec(crosschopId, "chop"), contact: true })) {
-                        if (isSecond) secondRef = String(victim.ref()); else firstRef = String(victim.ref());
-                        var now = scope.observe(victim);
-                        var point = now === null ? stop : now.position();
-                        WorldFeedback.emit(scope, crosschopScene, 1, point,
-                            { moment: "cut", target: String(victim.ref()), second: isSecond ? 1 : 0, power: power,
-                                count: Math.round(8 + power * 0.3),
-                                scale: scale, intensity: Math.max(0.5, Math.min(2.4, power / 50)) }, 18);
-                        scope.sound("cobblemon:impact.fighting", point, 14, "{}");
-                        if (!isSecond) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.15, 0)), crosschopBreakText, [], 20);
+            /** 沿 from→to 用 `swing` 刻扫过；每刻只判上一刀尖到当前刀尖的新子段，撞墙停下，实体只在首次接触结算一次。 */
+            function stroke(current: CombatAction, from: CombatPoint, to: CombatPoint, isSecond: boolean, next: (action: CombatAction) => void): void {
+                var delta = to.minus(from), total = swing, passed = 0, struck = false;
+                function step(cur: CombatAction): void {
+                    var scope = cur.world();
+                    var actual = scope.observe(actor);
+                    // 施法者被推到够不到锁定挥击中心时取消剩余笔：阈值取本次实际出手距离，另加身体半径作边界余量，不用固定扩程。
+                    if (actual === null) { cancelled = true; next(cur); return; }
+                    var reachLimit = reach + actual.width() * 0.5 + 0.3;
+                    if (actual.position().minus(at).length() > reachLimit) { cancelled = true; next(cur); return; }
+                    var before = from.plus(delta.scale(passed / total));
+                    passed++;
+                    var tip = from.plus(delta.scale(Math.min(1, passed / total)));
+                    var reachBlock=WorldGeometry.blockHit(scope,actual.position(),before);
+                    if(reachBlock){wallSound(scope,reachBlock.position());next(cur);return;}
+                    var tipBlock=WorldGeometry.blockHit(scope,actual.position(),tip);if(tipBlock)tip=tipBlock.position();
+                    var contact = cur.trace(before, tip, gauge, true);
+                    var wall = contact.blocked() && !contact.hitEntity();
+                    var stop = wall ? contact.position() : tip;
+                    var victim = contact.hitEntity() ? contact.target() : null;
+                    if (victim !== null && (String(victim.ref()) === String(actor.ref()) || scope.friendly(victim))) victim = null;
+                    scenes.show(cur, isSecond ? "second" : "first", at,
+                        { moment: isSecond ? "seam" : "guard", side: isSecond ? 1 : -1,
+                            path: [crosschopVertex(before), crosschopVertex(stop)], point: crosschopVertex(stop),
+                            spread: spread, scale: scale, intensity: intensity });
+                    if (victim !== null && !struck) {
+                        struck = true;
+                        var power = isSecond && firstRef !== "" && firstRef === String(victim.ref()) ? chop * (1 + seam) : chop;
+                        if (impact(cur, contact, crosschopId, power, { damage: damageSpec(crosschopId, "chop"), contact: true },isSecond?"second":"first")) {
+                            if (isSecond) secondRef = String(victim.ref()); else firstRef = String(victim.ref());
+                            var now = scope.observe(victim);
+                            var point = now === null ? stop : now.position();
+                            WorldFeedback.emit(scope, crosschopScene, 1, point,
+                                { moment: "cut", target: String(victim.ref()), second: isSecond ? 1 : 0, power: power,
+                                    count: Math.round(8 + power * 0.3),
+                                    scale: scale, intensity: Math.max(0.5, Math.min(2.4, power / 50)) }, 18);
+                            scope.sound("cobblemon:impact.fighting", point, 14, "{}");
+                            if (!isSecond) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.15, 0)), crosschopBreakText, [], 20);
+                            if (isSecond && firstRef !== "" && firstRef === secondRef) {
+                                WorldFeedback.emit(scope, crosschopScene, 1, point,
+                                    { moment: "cross", target: secondRef, count: Math.round(10 + chop * 0.3), scale: scale }, 20);
+                                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.25, 0)), crosschopCrossText, [], 24);
+                            }
+                        }
                     }
+                    if (wall) {
+                        WorldFeedback.emit(scope, crosschopScene, 1, stop, { moment: "wall", face: contact.blockFace(), scale: scale }, 18);
+                        wallSound(scope, stop);
+                        next(cur);
+                        return;
+                    }
+                    if (passed >= total) { next(cur); return; }
+                    cur.after(1, step);
                 }
-                if (!isSecond) { current.after(gap, function (next: CombatAction) { strike(next, true); }); return; }
-                // 只有同一实体两劈都中才补完整 X 伤痕。
-                if (firstRef !== "" && firstRef === secondRef) {
-                    var cross = crosschopCross(at, heading, Math.max(0.45, Math.min(1.0, spread)));
-                    for (var index = 0; index < cross.length; index++)
-                        WorldFeedback.emit(scope, crosschopScene, 1, at, { moment: "cross", target: secondRef,
-                            path: crosschopSegment(cross[index][0], cross[index][1]), scale: scale }, 20);
-                    WorldFeedback.emit(scope, crosschopScene, 1, at,
-                        { moment: "cross", target: secondRef, count: Math.round(10 + chop * 0.3), scale: scale }, 20);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), crosschopCrossText, [], 24);
-                }
-                finish(current);
+                step(current);
+            }
+
+            function second(current: CombatAction): void {
+                if (cancelled) { finish(current); return; }
+                stroke(current, secondFrom, secondTo, true, finish);
+            }
+
+            function handoff(current: CombatAction): void {
+                scenes.stop(current, "first");
+                if (cancelled) { finish(current); return; }
+                current.after(Math.max(1,gap-swing+1), second);
             }
 
             sound(action, "minecraft:entity.player.attack.strong");
-            strike(action, false);
+            stroke(action, firstFrom, firstTo, false, handoff);
         }
     });
 }

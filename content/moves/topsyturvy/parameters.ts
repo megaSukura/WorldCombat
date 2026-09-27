@@ -13,24 +13,20 @@ namespace PokemonSkills {
         return NativeEffects.effectiveStages(world, actor);
     }
 
-    /**
-     * 把 actor 的每一项非零能力变化取反；返回翻过的项数。`onlyGains` 为真时只翻正面变化。
-     * 持久等级与临时窗口分别原位取反；临时窗口沿用原来源、归属和剩余时长。
-     */
-    export function topsyFlip(world: CombatWorld, actor: CombatActor, onlyGains: boolean): number {
-        return NativeEffects.invertStages(world, actor, onlyGains) + MobEffects.invert(world, actor, onlyGains);
-    }
-
-    /** 翻面前按符号清点即将被反转的项：`down` 是正面变负面（增益被拆），`up` 是负面变正面（减益被救）。 */
-    export function topsySigns(world: CombatWorld, actor: CombatActor, onlyGains: boolean): { up: number; down: number; total: number } {
+    /** Count observed stage changes and the committed native potion transaction, preserving their own clocks. */
+    export function topsyFlip(world: CombatWorld, actor: CombatActor, onlyGains: boolean): { up: number; down: number; total: number } {
         const signs = { up: 0, down: 0, total: 0 };
-        const stages = NativeEffects.effectiveStages(world, actor);
+        const before = topsyStages(world, actor);
+        NativeEffects.invertStages(world, actor, onlyGains);
+        const after = topsyStages(world, actor);
         for (let index = 0; index < topsyStats.length; index++) {
-            const value = Number(stages[topsyStats[index]]) || 0;
-            if (value > 0) signs.down++;
-            else if (value < 0 && !onlyGains) signs.up++;
+            const stat = topsyStats[index], delta = (Number(after[stat]) || 0) - (Number(before[stat]) || 0);
+            if (delta < 0) signs.down++;
+            else if (delta > 0) signs.up++;
         }
-        MobEffects.invertible(world, actor, onlyGains ? "beneficial" : undefined).forEach(function (effect) {
+        const potions = MobEffects.invertible(world, actor, onlyGains ? "beneficial" : undefined);
+        const changed = MobEffects.invert(world, actor, onlyGains);
+        if (changed > 0) potions.forEach(function (effect) {
             if (onlyGains || String(effect.category()) === "beneficial") signs.down++;
             else signs.up++;
         });

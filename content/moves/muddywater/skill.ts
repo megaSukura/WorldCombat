@@ -1,23 +1,24 @@
 /**
  * 浊流 / muddywater 的出手方式。
  *
- * 核心念头：**一道贴地向前推的浑浊泥浪**。它不快，但很阔：泥水从脚下整片漫出去，一层层扫过身前，
+ * 核心念头：**一道贴着真实地表向前推的浑浊泥浪**。它不快，但很阔：泥水从脚下整片漫出去，一层层扫过身前，
  *   把扇形里所有敌人的视线一起糊住；推完，扫过的地面只留下短泥膜。它区别于同族水招的地方就是这条
  *   「宽而低、单向推进的泥面」——冲浪是整圈水漫、水枪是细线、泡沫光线是黏人的泡沫球。
  *
  * 三幕：
  *   起（windup，提交前）：口边与脚边涌起一圈浑水、泥泡向内收，只播预告（可被打断）。
- *   漫（surge → hit）：提交后泥浪从脚下按 `sweep` 步向 `reach` 推进；每一步扫过一道扇环，环内每个
- *       非友方（最多 `maxTargets` 个）各吃一次 `surge`，且必须与脚下通视——挡住的片段到不了目标。
- *       有 `murkChance` 概率掉 `murkStages` 级命中并带上共享身份 `world_combat:status/murky`；
- *       泥浪会沿准线越过目标继续铺，横移或退远可以躲开后段。
+ *   漫（surge → hit）：提交后锁定起点与方向，泥浪沿真实地表（共享 SurfacePaths 的原生顶面采样与抬升/跨步/落步走廊）
+ *       按 `sweep` 步向 `reach` 推进；断口、高墙或过陡台阶让它提前停下，不会悬空继续铺。每一步只取实际走到的地表
+ *       作判定与画面，扫过一道扇环，环内每个非友方（最多 `maxTargets` 个）各吃一次 `surge`，且必须与浪根通视——
+ *       挡住的片段到不了目标。有 `murkChance` 概率掉 `murkStages` 级命中并带上共享身份 `world_combat:status/murky`；
+ *       只有真正降了命中才播提示；横移或退远可以躲开后段。
  *   淤（silt / miss）：浪推完，扫过的地面只留下 `siltTicks` 之内的短泥膜粒子，到期自然散去；
- *       一个人都没扫到时播一个空浪。
+ *       一个人都没扫到、或脚下没有可供推进的真实地表时播一个空浪。
  *
  * 与同族分开：唯一一条**贴地、单向、按步推进的宽泥浪**；画面上是低矮的褐色水墙向前抹，不是整圈、不是细线、
  *   不是会浮起的泡。选取是 `kind: "aim"`——方向或世界点都能放，目标为 null 时沿当前朝向照常推浪。
- *   命中下降走共享能力等级（NativeEffects.boost 的 accuracy）落到原生命中等级，同时挂真实 MobEffect
- *   （身份 murky + 伞身份 aim_impaired），对其他战斗者落到攻击变弱。
+ *   命中下降只落共享能力等级（NativeEffects.boost 的 accuracy）与原生命中等级；MobEffect 只带共享身份
+ *   （murky + 伞身份 aim_impaired），不额外承诺攻击削弱。
  */
 namespace PokemonSkills {
     /** 把瞄准方向压到水平面；泥浪沿地面推出去。 */
@@ -29,7 +30,7 @@ namespace PokemonSkills {
     /** 扇环多边形：内弧 + 外弧围出的那段泥浪带，判定（sector∩ring）与表现（polygon）读同一片区域。 */
     function muddywaterBand(origin: CombatPoint, heading: CombatPoint, inner: number, outer: number, degrees: number): number[][] {
         const base = Math.atan2(heading.z(), heading.x());
-        const half = (degrees * Math.PI / 180) / 2, steps = 8;
+        const half = (degrees * Math.PI / 180) / 2, steps = 10;
         const innerRadius = Math.max(0, inner), outerRadius = Math.max(innerRadius + 0.05, outer);
         const vertices: number[][] = [];
         for (let i = 0; i <= steps; i++) {
@@ -41,6 +42,27 @@ namespace PokemonSkills {
             vertices.push([origin.x() + Math.cos(angle) * outerRadius, origin.y(), origin.z() + Math.sin(angle) * outerRadius]);
         }
         return vertices;
+    }
+
+    /** 沿真实地表推进的路径在 `distance` 处的顶面高度；路径不足时用最后一点，无路径时用 fallback。 */
+    function muddywaterGroundY(path: CombatPoint[], distance: number, fallback: number): number {
+        let travelled = 0;
+        for (let i = 1; i < path.length; i++) {
+            const leg = path[i].minus(path[i - 1]).length();
+            if (travelled + leg >= distance) {
+                const t = leg < 1e-6 ? 0 : (distance - travelled) / leg;
+                return path[i - 1].y() + (path[i].y() - path[i - 1].y()) * t;
+            }
+            travelled += leg;
+        }
+        return path.length ? path[path.length - 1].y() : fallback;
+    }
+
+    /** 泥浪沿真实地表能推到多远；断口、高墙或过陡台阶让共享 SurfacePaths 提前结束。 */
+    function muddywaterTravel(world: CombatWorld, from: CombatPoint, heading: CombatPoint, distance: number): SurfacePaths.Step {
+        const spacing = 0.5;
+        return SurfacePaths.advance(world, from, heading, distance,
+            { up: 1.2, down: 2.5, spacing: spacing, samples: Math.max(8, Math.ceil(distance / spacing) + 2) });
     }
 
     /**
@@ -85,8 +107,8 @@ namespace PokemonSkills {
         id: muddywaterId,
         cooldownParameter: "recharge",
         name: "Muddy Water",
-        description: "从脚下向前推出一道贴地的浑浊泥浪：泥水一层层漫过身前大片，扇形里的敌人各挨一记，有概率被泥水糊住眼睛、掉命中，还会沿准线越过目标继续铺；掩体挡住的片段到不了目标，横移或退远能躲开后段。推完地面只留下一层短泥膜。淤积式铺得更宽更久更黏，急流式更重更快更远。",
-        uses: ["一次糊住身前扇形里的一排敌人", "削掉对手的命中，为对手的下一轮攻击留出空门", "沿地面推进，隔着障碍打到正对着的那排敌人"],
+        description: "从脚下向前推出一道贴着真实地表的浑浊泥浪：泥水一层层漫过身前大片，扇形里的敌人各挨一记，有概率被泥水糊住眼睛、掉命中；地表断开、越过高墙或台阶太陡时泥浪就停在上一段，不会悬空继续铺，横移或退远能躲开后段。推完地面只留下一层短泥膜。淤积式铺得更宽更久更黏，急流式更重更快更远。",
+        uses: ["一次糊住身前扇形里的一排敌人", "削掉对手的命中，为对手的下一轮攻击留出空门", "沿地面推进，隔着一道矮坡打到正对着的那排敌人"],
         kind: "aim",
         range: 11,
         maxRange: 16,
@@ -122,10 +144,13 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const body = world.observe(actor);
-            const origin = body === null ? action.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.25, 0));
+            const release = body === null ? action.origin() : body.position();
+            // 贴地：起点投到脚下的真实地表；x/z 保持施法者位置，把整道浪钉在它自身所在的平面上。
+            const snapped = WorldGeometry.ground(world, release, 6);
+            const origin = WorldCombat.point(release.x(), snapped.y(), release.z());
             const heading = muddywaterHeading(aim(action));
             const power = p(muddywaterId, "surge", action);
-            const reach = Math.max(4, p(muddywaterId, "reach", action));
+            const budgetReach = Math.max(4, p(muddywaterId, "reach", action));
             const span = Math.max(35, p(muddywaterId, "span", action));
             const steps = Math.max(3, Math.round(p(muddywaterId, "sweep", action)));
             const stages = Math.max(1, Math.min(2, Math.round(p(muddywaterId, "murkStages", action))));
@@ -133,62 +158,78 @@ namespace PokemonSkills {
             const murk = Math.max(40, Math.round(p(muddywaterId, "murkTicks", action)));
             const cap = Math.max(1, Math.round(p(muddywaterId, "maxTargets", action)));
             const drops = Math.max(10, Math.round(p(muddywaterId, "drops", action)));
+            const flow = Math.max(48, Math.round(drops * 5));
             const filmTicks = Math.max(12, Math.round(p(muddywaterId, "siltTicks", action)));
-            const scale = Math.max(0.5, Math.min(2.2, reach / 11));
+            const scale = Math.max(0.5, Math.min(2.2, budgetReach / 11));
             const intensity = Math.max(0.5, Math.min(2.2, power / 90));
             const scenes = WorldFeedback.actionScenes(muddywaterScene);
+            const band: WorldGeometry.Band = { below: 1.2, above: 1.8 };
+            // 整道浪沿真实地表推进：断口/高墙前就停，实际走得多少用多少。
+            const walk = muddywaterTravel(world, origin, heading, budgetReach);
+            const supported = walk.path.length >= 2;
+            const total = supported ? Math.max(0.5, Math.min(budgetReach, walk.travelled)) : 0;
+            const path = walk.path.length ? walk.path : [origin];
             const struck: { [ref: string]: boolean } = {};
             let step = 0, hits = 0, settled = false;
+
+            function bandAt(distance: number): CombatPoint {
+                return WorldCombat.point(origin.x(), muddywaterGroundY(path, distance, origin.y()), origin.z());
+            }
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                // 独立余波：短泥膜只按自己的寿命停留，不替换任何方块。
+                // 独立余波：短泥膜只按自己的寿命停留，不替换任何方块，且只铺在真实扫过的地面上。
+                const filmOrigin = supported ? bandAt(total) : origin;
                 const film = Math.max(6, Math.round(drops * 0.5));
-                WorldFeedback.emit(scope, muddywaterScene, 1, origin,
-                    { moment: hits > 0 ? "silt" : "miss", film: film, drops: drops, scale: scale,
-                        path: muddywaterBand(origin, heading, 0, reach, span) }, filmTicks);
+                WorldFeedback.emit(scope, muddywaterScene, 1, filmOrigin,
+                    { moment: hits > 0 ? "silt" : "miss", film: film, drops: drops, flow: flow, scale: scale,
+                        path: muddywaterBand(filmOrigin, heading, 0, total, span) }, filmTicks);
                 if (hits === 0)
-                    WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 0.9, 0)), muddywaterMissText, [], 24);
+                    WorldFeedback.text(scope, filmOrigin.plus(WorldCombat.point(0, 0.9, 0)), muddywaterMissText, [], 24);
                 scenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {
+                if (!supported) { finish(current); return; }
                 const scope = current.world();
-                const outer = reach * (step + 1) / steps, inner = Math.max(0, reach * step / steps - 0.35);
-                const wedge = WorldGeometry.sector(origin, heading, outer, span, { below: 2.2, above: 2.0 });
-                const annulus = WorldGeometry.ring(origin, inner, outer, { below: 2.2, above: 2.0 });
+                const outer = Math.min(total, total * (step + 1) / steps), inner = Math.max(0, total * step / steps - 0.35);
+                const front = bandAt(outer);
+                const wedge = WorldGeometry.sector(front, heading, outer, span, band);
+                const annulus = WorldGeometry.ring(front, inner, outer, band);
                 const region: WorldGeometry.Region = {
                     contains: function (point) { return wedge.contains(point) && annulus.contains(point); },
-                    centre: function () { return origin; },
+                    centre: function () { return front; },
                     radius: function () { return annulus.radius(); }
                 };
                 WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === String(actor.ref()) || struck[ref] || hits >= cap) return;
                     // 障碍逐段裁切：被挡住的切片不再往后铺，目标也吃不到这一记。
-                    if (!scope.clear(origin, facts.position())) return;
+                    if (!scope.clear(origin.plus(WorldCombat.point(0, 0.1, 0)), facts.position())) return;
                     struck[ref] = true;
                     if (!hurt(current, enemy, muddywaterId, power, { damage: damageSpec(muddywaterId, "surge") })) return;
                     hits++;
-                    let murked = false;
+                    let dropped = 0;
                     if (scope.valid(enemy) && scope.random() < chance) {
-                        murked = true;
-                        NativeEffects.boost(scope, enemy, "accuracy", -stages);
-                        MobEffects.apply(scope, enemy, muddywaterEffect, murk, 0);
-                        if (scope.effects(enemy, muddywaterLingerMark).length === 0)
-                            scope.effect(muddywaterLingerMark, enemy,
-                                JSON.stringify({ density: Math.max(4, Math.min(10, Math.round(drops / 6))) }),
-                                Math.max(1, Math.min(2400, murk)));
+                        // 只按实际降下的命中等级落状态与提示；被原生拒绝时不发成功提示。
+                        dropped = NativeEffects.boost(scope, enemy, "accuracy", -stages);
+                        if (dropped !== 0) {
+                            MobEffects.apply(scope, enemy, muddywaterEffect, murk, 0);
+                            if (scope.effects(enemy, muddywaterLingerMark).length === 0)
+                                scope.effect(muddywaterLingerMark, enemy,
+                                    JSON.stringify({ density: Math.max(4, Math.min(10, Math.round(drops / 6))) }),
+                                    Math.max(1, Math.min(2400, murk)));
+                        }
                     }
                     WorldFeedback.emit(scope, muddywaterScene, 1, facts.position(),
-                        { moment: "hit", target: ref, drops: drops, intensity: intensity }, 26);
-                    if (murked)
-                        WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), muddywaterMurkText, [stages], 32);
+                        { moment: "hit", target: ref, drops: drops, flow: flow, intensity: intensity }, 26);
+                    if (dropped !== 0)
+                        WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.15, 0)), muddywaterMurkText, [Math.abs(dropped)], 32);
                 });
-                scenes.show(current, "front", origin,
-                    { moment: "surge", path: muddywaterBand(origin, heading, inner, outer, span), drops: drops,
+                scenes.show(current, "front", front,
+                    { moment: "surge", path: muddywaterBand(front, heading, inner, outer, span), drops: drops, flow: flow,
                         scale: scale, intensity: intensity });
                 step++;
                 if (step >= steps) { finish(current); return; }
@@ -197,7 +238,7 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:move.waterpulse.actor");
             scenes.show(action, "front", origin,
-                { moment: "surge", path: muddywaterBand(origin, heading, 0, 0.6, span), drops: drops,
+                { moment: "surge", path: muddywaterBand(origin, heading, 0, 0.6, span), drops: drops, flow: flow,
                     scale: scale, intensity: intensity });
             advance(action);
         }

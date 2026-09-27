@@ -2,15 +2,14 @@
  * 放电 / discharge 的出手方式。
  *
  * 核心念头：把电从身上同时迸开——它不挑方向、不挑高低，空中地上一起打；每一次真正的命中都牵出一条
- * 从施法者连到该目标的电弧，谁被电了看得见。过载式把这一发收窄加重，去掉余电。
+ * 从施法者连到该目标的电弧，谁被电了看得见。所有形态都只放一次：过载式把这一发收窄加重。
  *
- * 三幕：
+ * 两幕：
  *   起（windup，提交前）：身上攒起细碎火花、电弧的预告。
- *   击（flash → hit → echo）：提交后电弧从身上同时迸出，圈内敌人（含空中的）各挨一记，掷一次麻痹；
- *       广域式在 `echoDelay` 刻后再扫一次余电，重新检查谁还在圈里且视线未被挡住，还命中的再挨一记。
- *   散（crackle）：有实际命中时电弧在圈内噼啪残留一阵，只作画面提示；空放只留自身短火花。
+ *   击（flash → hit → crackle）：提交后电弧从身上同时迸出，身周有限球域内、视线未被挡住的敌人各挨一记，
+ *       每人只结算一次伤害与一次麻痹掷；每次命中牵出一条从自己到该目标的电弧，有实际命中时电弧噼啪残留一阵。
  *
- * 配置 `overcharge`（过载式）由 resolve 改时序、由公式改半径与威力：开启＝窄而重、无余电。
+ * 配置 `overcharge`（过载式）由 resolve 改时序、由公式改半径与威力：开启＝窄而重、最多 3 个目标。
  */
 namespace PokemonSkills {
     const dischargeScene = "world_combat:move_discharge";
@@ -38,8 +37,8 @@ namespace PokemonSkills {
     define({
         id: "discharge",
         name: "Discharge",
-        description: "让电从身上同时迸开：身周一圈的敌人（空中地上都算）一起挨电，每次命中都牵出一条从自己到目标的电弧，被电到的可能麻痹；广域式过一会儿还会重新检查圈内、再扫一次余电。过载式收窄加重、去除余电。",
-        uses: ["被围住时一次电到一圈", "连空中一起打的无差别扫场", "让贴身的几个人麻痹", "用余电逼圈里的人走开"],
+        description: "让电从身上同时迸开：身周一圈的敌人（空中地上都算）一起挨一次电，每次命中都牵出一条从自己到目标的电弧，被电到的可能麻痹。全形态只放一次；过载式收窄加重、最多打 3 个目标。",
+        uses: ["被围住时一次电到一圈", "连空中一起打的无差别扫场", "让贴身的几个人麻痹"],
         kind: "self",
         range: 3.6,
         maxRange: 5.8,
@@ -72,66 +71,53 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
-            const body = world.observe(action.actor());
+            const actor = action.actor();
+            const self = String(actor.ref());
+            const body = world.observe(actor);
             const centre = body !== null ? body.position() : action.origin();
             const radius = Math.max(2.4, p("discharge", "fieldRadius", action));
             const power = p("discharge", "surge", action);
             const chance = p("discharge", "numbChance", action);
             const arcs = Math.max(2, Math.min(8, Math.round(p("discharge", "arcs", action))));
             const cap = Math.max(1, Math.round(p("discharge", "maxTargets", action)));
-            const overcharge = !!(config && config.overcharge);
-            const echoPower = p("discharge", "echo", action);
-            const echoDelay = Math.max(4, Math.round(p("discharge", "echoDelay", action)));
             const crackle = Math.max(10, Math.round(p("discharge", "crackleTicks", action)));
             const scale = radius / 3.6;
             const bend = Math.max(0.2, 0.45 * scale);
-            let total = 0, settled = false;
+            const intensity = Math.max(0.5, Math.min(2, power / 70));
+            let total = 0, seed = world.tick();
 
-            function finish(current: CombatAction): void {
-                if (settled) return;
-                settled = true;
-                const scope = current.world();
+            function settle(scope: CombatWorld): void {
                 if (total > 0)
-                    WorldFeedback.keep(scope, "discharge:crackle:" + String(current.actor().ref()), dischargeScene, 1, centre,
+                    WorldFeedback.keep(scope, "discharge:crackle:" + self, dischargeScene, 1, centre,
                         { moment: "crackle", radius: radius, arcs: Math.max(2, Math.round(arcs * 0.5)) }, crackle);
                 else
                     WorldFeedback.emit(scope, dischargeScene, 1, centre, { moment: "miss", radius: radius, scale: scale }, 18);
                 WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.3, 0)),
                     total > 0 ? dischargeHitText : dischargeMissText, total > 0 ? [total] : [], 26);
-                done(current);
-            }
-
-            /** 一次放电：圈内敌人各命中一次，每次命中牵出一条从自己到该目标的电弧；`recheck` 时再查视线遮挡。 */
-            function strike(current: CombatAction, amount: number, segment: string, moment: string, limit: number, recheck: boolean): number {
-                const scope = current.world();
-                let hits = 0, seed = scope.tick();
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 3 }), function (enemy, facts) {
-                    const ref = String(enemy.ref());
-                    if (ref === String(current.actor().ref()) || hits >= limit) return;
-                    if (recheck && !scope.clear(centre, facts.position())) return;
-                    if (!hurt(current, enemy, "discharge", amount,
-                        { damage: damageSpec("discharge", segment), status: "paralysis", chance: chance })) return;
-                    hits++; total++;
-                    WorldFeedback.emit(scope, dischargeScene, 1, facts.position(),
-                        { moment: moment, target: ref, path: dischargeArc(centre, facts.position(), ref, seed++, bend),
-                          arcs: arcs, scale: scale, intensity: Math.max(0.5, Math.min(2, amount / 70)), count: Math.round(8 + amount * 0.2) }, 22);
-                });
-                return hits;
             }
 
             sound(action, "cobblemon:move.thunderbolt.actor");
             WorldFeedback.emit(world, dischargeScene, 1, centre,
-                { moment: "flash", radius: radius, arcs: arcs, scale: scale, intensity: Math.max(0.5, Math.min(2.2, power / 70)), flow: Math.round(60 + radius * 30) }, 24);
+                { moment: "flash", radius: radius, arcs: arcs, scale: scale, intensity: intensity, flow: Math.round(60 + radius * 30) }, 24);
             sound(action, "cobblemon:impact.electric");
-            strike(action, power, "surge", "hit", cap, false);
-            if (overcharge || echoPower <= 0) { finish(action); return; }
-            action.after(echoDelay, function (next: CombatAction) {
-                WorldFeedback.emit(next.world(), dischargeScene, 1, centre,
-                    { moment: "echo", radius: radius, arcs: Math.max(2, Math.round(arcs * 0.6)), scale: scale, flow: Math.round(40 + radius * 22) }, 22);
-                sound(next, "cobblemon:impact.electric");
-                strike(next, echoPower, "echo", "echo", cap, true);
-                finish(next);
+
+            // 一次身周有限球域放电：真实身体箱判定 + 统一视线；每人只结算一次伤害与一次麻痹掷。
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(centre, radius), function (enemy, facts) {
+                if (total >= cap) return;
+                const ref = String(enemy.ref());
+                if (ref === self || !world.valid(enemy) || world.friendly(enemy)) return;
+                const at = facts.position();
+                if (!world.clear(centre, at)) return;
+                if (!hurt(action, enemy, "discharge", power,
+                    { damage: damageSpec("discharge", "surge"), status: "paralysis", chance: chance })) return;
+                total++;
+                WorldFeedback.emit(world, dischargeScene, 1, at,
+                    { moment: "hit", target: ref, path: dischargeArc(centre, at, ref, seed++, bend),
+                        arcs: arcs, scale: scale, intensity: intensity, count: Math.round(8 + power * 0.2) }, 22);
             });
+
+            settle(world);
+            done(action);
         }
     });
 }

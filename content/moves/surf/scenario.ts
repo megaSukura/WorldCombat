@@ -44,7 +44,8 @@ Smoke.scenario("surf", function (stage) {
         return stage.casts("surf", caster) > 0 && stage.damageTo(foeA) > 0
             && (stage.hadMobEffect(foeA, soaked) || stage.hadMobEffect(foeB, soaked));
     }, function () {
-        stage.after(14, function () {
+        // 浪头逐环推进：命中与沤火发生在推进途中，等整道浪走完再读地面变化。
+        stage.after(24, function () {
             stage.expect(stage.casts("surf", caster) > 0, "lapras committed surf");
             stage.expect(stage.damageTo(foeA) > 0 || stage.damageTo(foeB) > 0, "the wave dealt damage to a foe inside the ring");
             stage.expect(stage.hadMobEffect(foeA, soaked) || stage.hadMobEffect(foeB, soaked), "the wave left a foe soaked");

@@ -1,15 +1,15 @@
 /**
  * 欺诈 / foulplay 的客户端表现。
  *
- * 一句话：施法者脚边聚起一团暗影，一条暗影手臂从身体顺瞄准方向逐刻伸长；第一个碰到的身体处，手爪反向一拧，
- *   对手物攻越高、腕纹越粗；纠缠式再拖着它往回滑一段。
- * 色相家族：暗紫一族（0x4B3FA0 主体 / 0x6C5CE0 棘与边缘 / 0xA99CFF 只做细碎高光，烟尘用近黑 0x2A2440）。
+ * 一句话：施法者身侧聚起一团暗影，一条暗影手臂顺瞄准方向逐刻伸长，细暗臂与真实手头同轴；
+ *   第一个碰到的身体处，手爪反向一拧（回执随对手物攻强弱强化）；纠缠式再拖着它往回滑一段。
+ * 色相家族：暗紫一族（0x4B3FA0 主体 / 0x6C5CE0 边缘 / 0xA99CFF 只做细碎高光，烟尘用近黑 0x2A2440）。
  * 拍子：起 coil（0-10t 聚影）→ 伸 crawl（暗手从身体逐刻伸到真实头部，时长由逐刻推进决定）→
- *   击 seize（在真实接触点竖起棘、向外炸开）→ 收 drag（纠缠拖拽）／miss（落空/撞墙散去）。
- * 范围：crawl 的线只画到**真实的暗手头** `data.path`（[-[-source-]-]，[头坐标]），不预画满射程；
- *   seize 与 drag 的棘与拖痕绑在真实被抓者身上——玩家一眼看出「线到哪、手就抓到哪」。
- * 运动：crawl 每刻由服务端更新头部顶点，线随真实伸长而变长；seize 的棘朝上竖起、碎片向外炸开。
- * 数：棘数绑定 `data.tendrils`（等级与目标物攻换算），抓握强度绑定 `data.intensity`（实际被反拧者的物攻换算），
+ *   击 seize（在真实接触点反拧一圈、向外炸开）→ 收 drag（纠缠拖拽）／miss（落空/撞墙散去）。
+ * 范围：crawl 的线只画到**真实的暗手头** `data.path`（[source]，[头坐标]），手头再由 `data.point` 标出；
+ *   seize 与 drag 的反拧与拖痕绑在真实被抓者身上——玩家一眼看出「线到哪、手就抓到哪」。
+ * 运动：crawl 每刻由服务端更新头部顶点，线随真实伸长而变长；seize 的反拧环向内收、碎片向外炸开。
+ * 数：碎点量绑定 `data.tendrils`（等级与目标物攻换算），抓握强度绑定 `data.intensity`（实际被反拧者的物攻换算），
  *   尺寸绑定 `data.scale`（抓握半径换算）。
  * 参照节：视觉语言第二、三、四、六、九节。
  */
@@ -51,6 +51,22 @@ const FoulplayDefinition: ParticleDefinition = {
                     color: 0x4B3FA0, alpha: [0.7, 0], light: "full", maxParticles: 140
                 },
                 {
+                    name: "arm_line", bind: "path", fit: "none", offset: [0, 0.08, 0],
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    shape: { kind: "polyline" },
+                    rate: 36, direction: "shape", speed: [0.0, 0.04],
+                    lifetime: [5, 10], size: [0.1, 0.02], sizeMode: "index",
+                    color: 0x2A2440, alpha: [0.75, 0], light: "world", maxParticles: 90
+                },
+                {
+                    name: "hand", bind: "point", fit: "none", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: 30, shape: { kind: "sphere", radius: 0.12 },
+                    direction: "outward", speed: [0.01, 0.06],
+                    lifetime: [5, 10], size: [0.1, 0.02],
+                    color: 0xA99CFF, alpha: [0.9, 0], light: "full", maxParticles: 40
+                },
+                {
                     name: "fume", bind: "path", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     shape: { kind: "polyline" },
@@ -73,12 +89,21 @@ const FoulplayDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "spikes", bind: "target", height: 0.2,
-                    particle: "world_combat_core:cobblemon/moves/shadowball_impact",
+                    name: "wrench", bind: "target", offset: [0, 0.15, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1, at: 1 },
+                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    direction: "inward", speed: [0.06, 0.2],
+                    lifetime: [7, 13], size: [0.3, 0.55],
+                    color: 0x6C5CE0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 24
+                },
+                {
+                    name: "grip_flecks", bind: "target", height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     burst: { count: { data: "tendrils", fallback: 6 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.3 },
-                    direction: "up", speed: [0.08, 0.3],
-                    lifetime: [8, 15], size: [0.22, 0.04], sizeMode: "index",
+                    direction: "outward", speed: [0.08, 0.3],
+                    lifetime: [8, 15], size: [0.12, 0.03], sizeMode: "index",
                     color: 0x6C5CE0, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 120
                 },
                 {

@@ -2,20 +2,16 @@
  * 断尾 / shedtail 的出手方式与工作效果。
  *
  * 念头的形状（两幕 + 持续）：
- *  1) 断——支付一半最大生命，在自己原来的位置留下一条真实的尾巴（`WorldBodies` 自持实体，脑
- *     `world_combat:move/shedtail/tail`），自己沿选定的方向抽身离开；撤走前先用原生 free-space 探针
- *     验一条连续可达的段，碰墙就缩短，逐刻走完并把这段真实路径交给表现；给施法者带上共享身份
+ *  1) 断——足额支付一半最大生命，在自己原来的位置留下一条真实的尾巴（`WorldBodies` 自持实体，脑
+ *     `world_combat:move/shedtail/tail`），自己沿选定的方向抽身离开；撤走前用原生 free-space 与真实支撑
+ *     逐点验一条连续可达的段，碰墙或踏空就缩短，逐刻走完并把这段真实路径交给表现；给施法者带上共享身份
  *     `world_combat:status/shed_tail`，只作为「这次已经断过尾」的短标记。
- *  2) 拖住——尾巴每 20 刻把牵引范围内的敌人重新引向自己（`world.target`）；只有真的被引动的敌人才画连线，
- *     免疫诱饵的目标不表现被控制，也不强行转 Boss 仇恨。替撤走的施法者拖住追兵。
- *  3) 结束——尾巴被打碎（break）或时间走完（expire）：清掉身份、放出收尾画面。
+ *  2) 拖住——尾巴每 20 刻对真实持有重定向租约的敌人维持一次 `world.targetLease`：只有原生接受者计入账本，
+ *     被外部真实请求接管后不再抢回，离界/换阵营/失去通视就交还自己的租约。只有真实持有租约的敌人才画连线。
+ *  3) 结束——尾巴被打碎（break）或时间走完（expire）：交还自己的租约、清掉身份、放出收尾画面。
  *
  * 尾巴属于它自己：施法者被收回、换手退场、区块卸载与重启都不再让它消失；它按自己的耐久挨打，到点或
- * 被打碎才结束。召回会带走施法者身上的短标记，但不会带走尾巴。召唤者（summoner）用于保留原生友敌关系；
- * 尾巴自身是独立实体，与施法者分开。
- *
- * 与同族的替身分开：替身是「你留下、影子挡在前面承伤」；断尾是「你走、尾巴留在原地把敌人引住」。
- * 提交前只观察并在 `windup` 预告；提交后才触碰世界。
+ * 被打碎才结束。召动者（summoner）保留原生友敌关系；尾巴自身是独立实体。与替身分开：替身承伤，断尾诱敌。
  */
 namespace PokemonSkills {
     const shedtailScene = "world_combat:move_shedtail";
@@ -25,26 +21,47 @@ namespace PokemonSkills {
     const shedtailBreakText = "world_combat.move.shedtail.text.break";
     const shedtailExpireText = "world_combat.move.shedtail.text.expire";
     const shedtailSwitchText = "world_combat.move.shedtail.text.switch";
+    const shedtailPreviewText = "world_combat.move.shedtail.text.preview";
+
+    /** 一个落脚点确有可站的地面：脚下短距向下探到真实方块。 */
+    function shedtailSupported(world: CombatWorld, feet: CombatPoint): boolean {
+        return WorldGeometry.blockHit(world, feet.plus(WorldCombat.point(0, 0.05, 0)),
+            feet.minus(WorldCombat.point(0, 0.7, 0))) !== null;
+    }
 
     /**
-     * How far the caster can actually walk from its feet before the first blocked foot-space, capped at `budget`.
-     * Uses the native free-space probe (via LivingActions) so the retreat never claims a reachable segment through a
-     * wall; when the host has no probe the authored budget is kept and native displace still stops at the first
-     * obstruction. The same number drives the visible trail, so mechanics and presentation read one path.
+     * How far the caster can actually walk from its feet before the first blocked or unsupported foot-space,
+     * capped at `budget`. Uses the native free-space probe plus a real support probe (via WorldGeometry.blockHit),
+     * and refuses an unobserved path. The visible trail follows the actual displacement.
      */
     export function shedtailClearReach(world: CombatWorld, feet: CombatPoint, heading: CombatPoint, budget: number,
         width: number, height: number): number {
         if (!(budget > 0) || heading.length() < 0.01) return 0;
-        if (!LivingActions.hasFreeSpace(world)) return budget;
+        if (!LivingActions.hasFreeSpace(world)) return 0;
         const fine = 0.4, count = Math.ceil(budget / fine);
         let clear = 0;
         for (let index = 1; index <= count; index++) {
             const distance = Math.min(index * fine, budget);
-            if (!LivingActions.freeSpace(world, feet.plus(heading.scale(distance)), width, height)) break;
+            const sample = feet.plus(heading.scale(distance));
+            if (!LivingActions.freeSpace(world, sample, width, height)) break;
+            if (!shedtailSupported(world, sample)) break;
             clear = distance;
             if (distance >= budget - 1e-6) break;
         }
         return clear;
+    }
+
+    function shedtailRoute(action: CombatAction, world: CombatWorld, body: CombatObservation): {
+        feet: CombatPoint; heading: CombatPoint; clear: number;
+    } {
+        const origin = body.position(), feet = partyFeet(body), offset = action.targetPosition().minus(origin);
+        const aimed = WorldCombat.point(offset.x(), 0, offset.z());
+        const facing = action.direction(), fallback = WorldCombat.point(facing.x(), 0, facing.z());
+        const direction = aimed.length() > 0.01 ? aimed : fallback;
+        const heading = direction.length() > 0.01 ? direction.unit() : WorldCombat.point(0, 0, 1);
+        const maximum = p("shedtail", "retreat", action);
+        const budget = Math.max(0, Math.min(maximum, aimed.length() > 0.01 ? aimed.length() : maximum));
+        return { feet: feet, heading: heading, clear: shedtailClearReach(world, feet, heading, budget, body.width(), body.height()) };
     }
 
     WorldBodies.define(shedtailTail, {
@@ -72,25 +89,83 @@ namespace PokemonSkills {
                 MobEffects.bind(world, caster, shedtailStatus);
             brain.schedule("lure", "lure", 20, "{}");
         },
-        operations: { "world_combat:dispel": function (brain) { brain.end(); } },
+        operations: {
+            "world_combat:dispel": function (brain) { brain.end(); },
+            "world_combat:shedtail/handoff": function (brain) {
+                const state = JSON.parse(brain.state());
+                if (String(brain.caller().ref()) !== state.owner || state.handoff) return;
+                state.handoff = JSON.parse(brain.input()); brain.state(JSON.stringify(state));
+                brain.schedule("handoff", "handoff", 1, "{}");
+            }
+        },
         handlers: {
+            handoff: function (brain) {
+                const world = brain.world(), state = JSON.parse(brain.state()), input = state.handoff;
+                delete state.handoff; brain.state(JSON.stringify(state));
+                const caster = state.owner ? world.actor(state.owner) : null;
+                if (!caster || !input || !Array.isArray(input.point) || input.point.length !== 3) return;
+                if (!partyRoster(world, caster).some(member => member.id === input.id && member.slot === input.slot
+                    && !member.fainted && !member.active && member.state === "inactive")) return;
+                const at = WorldCombat.point(input.point[0], input.point[1], input.point[2]);
+                const receipt = partySwitchOut(world, caster, input.slot, at);
+                if (!receipt.ok) return;
+                // The tail remains a valid source after the caster's native recall.
+                WorldFeedback.emit(world, shedtailScene, 1, at, { moment: "switch", scale: state.appearance }, 26);
+                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.1, 0)), shedtailSwitchText, [], 26);
+            },
             lure: function (brain) {
                 const world = brain.world(), state = JSON.parse(brain.state());
                 const tail = world.observe(brain.target());
                 if (tail === null) { brain.end(); return; }
-                const centre = tail.position(), actors = world.query(centre, state.lureRange, false);
-                const tailRef = String(brain.target().ref());
+                const centre = tail.position(), tailActor = brain.target(), tailRef = String(tailActor.ref());
+                state.point = [centre.x(), centre.y(), centre.z()];
+                const radius = Math.max(1, Number(state.lureRange) || 8);
+                const hold = Math.max(20, Math.round(brain.remaining()));
+                if (!state.seeded) {
+                    // 第一声：对真实可重定向的敌人各申请一次有限租约，原生接受者才计入账本，其余本次不再追写。
+                    state.seeded = true; state.accepted = [];
+                    const found = world.query(centre, radius, false);
+                    for (let index = 0; index < found.length; index++) {
+                        const other = found[index];
+                        if (String(other.ref()) === tailRef) continue;
+                        const facts = world.observe(other);
+                        if (facts === null || facts.friendly() || facts.health() <= 0 || facts.player()) continue;
+                        if (!world.clear(centre, facts.position())) continue;
+                        if (world.targetLease(other, tailActor, hold)) state.accepted.push(String(other.ref()));
+                    }
+                } else {
+                    // 之后只维持仍由本脑持有、且还在范围内有通视的响应者；被外部接管只清账本，不抢回。
+                    const kept: string[] = [];
+                    for (let index = 0; index < state.accepted.length; index++) {
+                        const ref = state.accepted[index], other = world.actor(ref);
+                        if (other === null) continue;
+                        const facts = world.observe(other);
+                        if (facts === null || facts.health() <= 0 || facts.player()) continue;
+                        if (world.friendly(other)) { world.targetLeaseRelease(other); continue; }
+                        if (facts.position().minus(centre).length() > radius) { world.targetLeaseRelease(other); continue; }
+                        const lease = JSON.parse(world.targetLeaseState(other));
+                        if (!lease.owned || !lease.active || lease.mode !== "redirect") continue;
+                        if (!world.clear(centre, facts.position())) { world.targetLeaseRelease(other); continue; }
+                        if (world.targetLease(other, tailActor, hold)) kept.push(ref);
+                    }
+                    state.accepted = kept;
+                }
+                brain.state(JSON.stringify(state));
+                // 逐敌单独一条尾巴连线：只有真实持有租约的敌人才可见，账本一变旧连线自然到期。
                 let lured = 0;
-                const links: (string | number[])[] = [];
-                for (let index = 0; index < actors.length; index++) {
-                    const other = actors[index], facts = world.observe(other);
-                    if (String(other.ref()) === tailRef) continue;
-                    if (facts === null || facts.friendly() || facts.health() <= 0) continue;
-                    // Only a real retarget is shown; a target that refuses the lure (immune Boss) draws nothing.
-                    if (world.target(other, brain.target())) { lured++; links.push(tailRef, String(other.ref())); }
+                for (let index = 0; index < state.accepted.length; index++) {
+                    const ref = state.accepted[index], other = world.actor(ref);
+                    if (other === null) continue;
+                    const facts = world.observe(other);
+                    if (facts === null || facts.health() <= 0 || facts.position().minus(centre).length() > radius) continue;
+                    const lease = JSON.parse(world.targetLeaseState(other));
+                    if (!lease.owned || !lease.active || lease.mode !== "redirect" || lease.target !== tailRef) continue;
+                    lured++;
+                    WorldFeedback.keep(world, "world_combat:move_shedtail/link/" + ref, shedtailScene, 1, centre,
+                        { moment: "link", path: [tailRef, ref], lured: lured }, Math.max(12, 28));
                 }
                 WorldFeedback.onEffect(world, brain.id(), "world_combat:move_shedtail:lure", shedtailScene, 1, centre,
-                    { moment: "lure", scale: state.lureRange / 8, intensity: Math.min(2, lured / 2), lured: lured, path: links });
+                    { moment: "lure", radius: radius, scale: 1, intensity: Math.min(2, lured / 2), lured: lured });
                 if (lured > 0) world.sound("minecraft:entity.phantom.flap", centre, 14, "{}");
                 brain.schedule("lure", "lure", 20, "{}");
             }
@@ -99,9 +174,10 @@ namespace PokemonSkills {
             const world = brain.world();
             let state: any = {};
             try { state = JSON.parse(brain.state()); } catch (error) { state = {}; }
-            // The brain's exact native carrier lease is released even when the body was killed.
+            // 自己的租约随脑作用域交还；这里只放收尾画面，不撤别人。
             if (!state.point || state.point.length !== 3) return;
-            const anchor = WorldCombat.point(state.point[0], state.point[1], state.point[2]);
+            let anchor = WorldCombat.point(state.point[0], state.point[1], state.point[2]);
+            try { const body = world.observe(brain.target()); if (body) anchor = body.position(); } catch (unavailable) { }
             const broken = brain.reason() !== "expired";
             WorldFeedback.emit(world, shedtailScene, 1, anchor, { moment: broken ? "break" : "expire", scale: state.appearance }, 24);
             WorldFeedback.text(world, anchor.plus(WorldCombat.point(0, 1.1, 0)),
@@ -114,7 +190,7 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "shedtail",
         name: "Shed Tail",
-        description: "削掉自己一半生命，在原地留下一条会拖住敌人的尾巴，自己沿选定方向抽身离场；有后备时直接与待命的一只换手。尾巴在被打碎或自行消散前，会把附近的敌人重新引向尾巴。",
+        description: "支付一半最大生命，留下可被打碎的尾巴，沿有支撑的退路抽身；有后备时在落点换手。尾巴短暂吸引附近看得见它的敌人，并维持已接受的追击。",
         uses: ["被打崩前脱身，把追兵留给一条尾巴", "在狭窄地形用尾巴堵住追路", "把敌人的目标从自己身上引开"],
         kind: "motion",
         range: 5,
@@ -144,42 +220,42 @@ namespace PokemonSkills {
             const world = action.sense(), actor = action.actor(), body = world.observe(actor);
             if (body === null) return "target-left";
             if (MobEffects.read(world, actor, shedtailStatus) !== null) return "already-shed";
+            // 手动施放的底线只是付得起这一半生命；AI 才额外保留 reserveHealth，二者不混同。
             const cost = body.maxHealth() * p("shedtail", "cost", action);
-            const reserve = config && config.ai && config.ai.reserveHealth !== undefined ? Number(config.ai.reserveHealth) : 0.15;
-            if (body.health() <= cost + body.maxHealth() * reserve) return "insufficient-health";
+            if (body.health() <= cost) return "insufficient-health";
             const destination = action.targetPosition();
             if (destination.minus(action.origin()).length() > p("shedtail", "retreat", action) + 0.5) return "out-of-range";
             return "";
         },
         windup: function (action, config, prepare) {
+            const world = action.sense(), actor = action.actor(), body = world.observe(actor);
             action.present("world_combat:move_shedtail:windup", shedtailScene, 1, action.origin(),
                 JSON.stringify({ moment: "windup" }));
+            // 预告实际会留下的尾巴耐久与自己能撤开的距离，与执行读同一份参数。
+            if (body !== null) {
+                const tail = Math.max(1, Math.round(body.maxHealth() * p("shedtail", "tail", action)));
+                const retreat = Math.round(shedtailRoute(action, world, body).clear * 10) / 10;
+                action.present("world_combat:move_shedtail:preview", "world_combat:feedback", 1, action.origin(),
+                    JSON.stringify({ kind: "world-text", start: world.tick(), duration: prepare + 6, key: shedtailPreviewText, args: [tail, retreat] }));
+            }
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             if (body === null) { done(action); return; }
-            const cost = body.maxHealth() * p("shedtail", "cost", action);
-            const paid = -world.health(actor, -cost, "world_combat:shedtail_cost");
-            if (paid < 1) { done(action); return; }
+            // A real health-cost receipt must cover the full half-health payment before a tail is spawned.
+            const due = body.maxHealth() * p("shedtail", "cost", action);
+            const paid = world.payHealth(due, "world_combat:shedtail_cost");
+            if (!(paid > 0) || paid < due - 1e-6) {
+                if (paid > 0 && world.valid(actor)) world.health(actor, paid, "world_combat:shedtail_refund");
+                done(action); return;
+            }
             const journey = WorldFeedback.actionScenes(shedtailScene);
-            const origin = action.origin(), destination = action.targetPosition();
-            const feet = WorldCombat.point(origin.x(), origin.y() - body.height() / 2, origin.z());
-            let direction = destination.minus(origin);
-            if (direction.length() < 0.01) direction = action.direction();
-            direction = direction.length() < 0.01 ? WorldCombat.point(0, 0, 1) : direction.unit();
-            const planar = WorldCombat.point(direction.x(), 0, direction.z());
-            const heading = planar.length() < 0.01 ? WorldCombat.point(0, 0, 1) : planar.unit();
-            const aimed = destination.minus(origin).length();
-            const retreatBudget = p("shedtail", "retreat", action);
-            const retreat = Math.max(0, Math.min(retreatBudget, aimed > 0.01 ? aimed : retreatBudget));
-            // Walk the segment first: the reachable length is the same true distance the visible trail will show.
-            const clear = shedtailClearReach(world, feet, heading, retreat, body.width(), body.height());
+            const route = shedtailRoute(action, world, body), feet = route.feet, heading = route.heading, clear = route.clear;
             const tailRatio = p("shedtail", "tail", action);
             const tailHealth = Math.max(1, body.maxHealth() * tailRatio);
             const tailTicks = Math.max(1, Math.round(p("shedtail", "tailTicks", action)));
             const appearance = Math.max(0.5, Math.min(1.3, tailRatio / 0.25));
-            // 尾巴是自持实体：召唤者是施法者（保留原生友敌关系），但尾巴本身独立，召回不会带走它。
             let tail: CombatActor | null = null;
             try {
                 tail = WorldBodies.spawn(world, feet, {
@@ -187,7 +263,7 @@ namespace PokemonSkills {
                     size: [0.9, 0.9], health: tailHealth, speed: 0, gravity: false, pushable: false,
                     invulnerable: false, silent: true, knockbackResistance: 0.35
                 }, shedtailTail, { owner: String(actor.ref()), point: [feet.x(), feet.y(), feet.z()],
-                    lureRange: p("shedtail", "lureRange", action), appearance: appearance }, tailTicks);
+                    lureRange: p("shedtail", "lureRange", action), appearance: appearance, seeded: false, accepted: [] }, tailTicks);
             } catch (error) { tail = null; }
             if (tail === null) {
                 if (world.valid(actor)) world.health(actor, paid, "world_combat:shedtail_refund");
@@ -195,7 +271,6 @@ namespace PokemonSkills {
                 return;
             }
             world.sound("cobblemon:move.quickattack.actor", feet, 16, "{}");
-            const bodyHeight = body.height();
             const path: number[][] = [[feet.x(), feet.y(), feet.z()]];
             const pace = clear <= 0.01 ? 0 : Math.max(0.8, clear / 4);
             let travelled = 0, elapsed = 0, settled = false;
@@ -210,15 +285,10 @@ namespace PokemonSkills {
                 if (settled) return;
                 settled = true;
                 const scope = current.world(), stand = scope.observe(actor);
-                const at = stand === null ? feet : stand.position();
-                // 有合法后备时真正换手：收回自己、让后备在撤离落点登场，尾巴留在原地。
+                const landing = stand === null ? feet : partyFeet(stand);
                 const reserve = partyReserve(partyRoster(scope, actor), partyActiveId(scope, actor));
-                if (reserve !== null) {
-                    WorldFeedback.emit(scope, shedtailScene, 1, at,
-                        { moment: "switch", direction: [heading.x(), 0, heading.z()], scale: appearance }, 26);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), shedtailSwitchText, [], 26);
-                    partySwitchOut(scope, actor, reserve.slot, at);
-                }
+                if (reserve !== null) WorldBodies.operate(scope, tail!, "world_combat:shedtail/handoff",
+                    { slot: reserve.slot, id: reserve.id, point: [landing.x(), landing.y(), landing.z()] });
                 journey.finish(current, done);
             }
             function advance(current: CombatAction): void {
@@ -226,11 +296,13 @@ namespace PokemonSkills {
                 if (remaining <= 0.02 || elapsed >= 20) { settle(current); return; }
                 const scope = current.world(), self = scope.observe(actor);
                 if (self === null) { settle(current); return; }
-                const applied = scope.displace(actor, heading.scale(Math.min(pace, remaining)));
+                const supported = shedtailClearReach(scope, partyFeet(self), heading, Math.min(pace, remaining), self.width(), self.height());
+                if (!(supported > 0.001)) { settle(current); return; }
+                const applied = scope.displace(actor, heading.scale(supported));
                 if (!(applied > 0.001)) { settle(current); return; }
                 travelled += applied; elapsed += 1;
                 const after = scope.observe(actor);
-                if (after !== null) path.push([after.position().x(), after.position().y() - bodyHeight / 2, after.position().z()]);
+                if (after !== null) { const actual = partyFeet(after); path.push([actual.x(), actual.y(), actual.z()]); }
                 sync(current);
                 current.after(1, function (next: CombatAction) { advance(next); });
             }

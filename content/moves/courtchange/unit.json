@@ -15,5 +15,8 @@
   ],
   "clientSources": [
     "presentation.ts"
+  ],
+  "scenarioFixtures": [
+    "content/moves/spikes"
   ]
 }

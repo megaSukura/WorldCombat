@@ -9,7 +9,7 @@
   "worldcombat.skill.mudslap.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.mudslap.value.splat": "泥团威力",
   "worldcombat.skill.mudslap.value.blind": "命中下降",
-  "worldcombat.skill.mudslap.value.mudTicks": "糊眼时长",
+  "worldcombat.skill.mudslap.value.mudTicks": "泥迹时长",
   "worldcombat.skill.mudslap.value.splash": "泥点数量",
   "worldcombat.skill.mudslap.value.arcSpeed": "抛掷速度",
   "worldcombat.skill.mudslap.value.gravity": "下坠",

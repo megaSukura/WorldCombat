@@ -7,8 +7,10 @@
  * 色相家族：冰蓝（0x9FE8FF / 0xB8F0FF）为主体，虹彩（shinesparkle_rainbow 原色）只在光带与强调层跳动。
  * 拍子：起 windup（折棱镜）→ 行 travel（光带冲刺）→ 击 beam/hit（光带与命中）→ 折 glint/prism（冰面折射）
  *   → 果 chill（降攻）与 rime（结霜）→ 收 miss。
- * 范围：beam 的光带用真实飞行段拼出的 `data.path` 画出「照到了哪」；rime 的霜斑按 `data.scale`（band / 10）铺开。
- * 运动：travel 绑 projectile 沿每段真实方向拖尾；beam 沿真实折线拉一条残余光带；rime 的霜点贴地向外扩。
+ * 范围：beam 的光带用真实飞行段拼出的 `data.path` 画出「照到了哪」；rime 不再用固定 box，而是按原生实际落下的
+ *   每一格各播一小簇贴地霜花。
+ * 运动：travel 绑 projectile 沿每段真实方向拖尾；beam 沿真实折线拉一条残余光带（入射段与反射段各一段）；
+ *   prism 的棱镜长度由剩余射程 `data.fold` 有界展示；rime 的霜点贴地向外扩。
  * 数：`data.shimmer`（特攻与等级派生）决定光带与命中虹光的密度，`data.intensity` 抬高亮度。
  */
 const AuroraBeamDefinition: ParticleDefinition = {
@@ -103,7 +105,7 @@ const AuroraBeamDefinition: ParticleDefinition = {
                     name: "fold", bind: "point", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
                     burst: { count: { data: "shimmer", fallback: 14 } },
-                    shape: { kind: "line", length: 0.7 },
+                    shape: { kind: "line", length: { data: "fold", fallback: 0.7 } },
                     direction: "shape", speed: [0.04, 0.16], spread: 22, spin: 14,
                     lifetime: [8, 16], size: [0.1, 0.02],
                     color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 50
@@ -168,26 +170,26 @@ const AuroraBeamDefinition: ParticleDefinition = {
             ]
         },
         rime: {
-            duration: 30,
-            exit: { stop: 14, drain: 20 },
+            duration: 20,
+            exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "frost", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "frost", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
-                    burst: { count: { data: "cells", fallback: 10 } },
-                    shape: { kind: "box", size: [1.6, 0.2, 1.6] },
+                    burst: { count: 6 },
+                    shape: { kind: "circle", radius: 0.5 },
                     direction: "up", speed: [0.01, 0.05],
-                    lifetime: [14, 26], size: [0.1, 0.02],
-                    color: 0xE8FBFF, alpha: [0.7, 0], light: "world", maxParticles: 60
+                    lifetime: [12, 22], size: [0.1, 0.02],
+                    color: 0xE8FBFF, alpha: [0.6, 0], light: "world", maxParticles: 20
                 },
                 {
-                    name: "sheen", bind: "point", fit: "none", offset: [0, 0.03, 0], orient: "fixed",
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: 0.5 },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [14, 22], size: [0.3, 0.8],
-                    color: 0x9FE8FF, alpha: [0.45, 0], light: "full", maxParticles: 5
+                    name: "shard", bind: "point", fit: "world", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    burst: { count: 3 },
+                    shape: { kind: "circle", radius: 0.35 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.08, 0.01],
+                    color: 0xD6F2FA, alpha: [0.5, 0], light: "world", maxParticles: 10
                 }
             ]
         },

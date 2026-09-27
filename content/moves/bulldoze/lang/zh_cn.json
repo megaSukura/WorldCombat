@@ -25,8 +25,9 @@
   "worldcombat.skill.bulldoze.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.bulldoze.preference.ai.maxChase.help": "超过这个距离就不主动踏入人堆，先朝目标走近。越大越愿意先接近再踏。",
   "worldcombat.skill.bulldoze.preference.ai.cluster": "成片时优先",
-  "worldcombat.skill.bulldoze.preference.ai.cluster.help": "开启后，自己本次射程内站着 2 个以上落地敌人时优先重踏，一次震住脚边一圈；关闭则只按普通攻击排序。",
+  "worldcombat.skill.bulldoze.preference.ai.cluster.help": "开启后，自己真实地震半径内、与自己同层实地相连的落地敌人有 2 个以上时优先重踏，一次震住脚边一圈；关闭则只按普通攻击排序。",
   "world_combat.move.bulldoze.text.hit": "踏中 %1$s 个",
   "world_combat.move.bulldoze.text.miss": "地裂落空",
+  "world_combat.move.bulldoze.text.slow": "震得发沉 −%1$s 级",
   "worldcombat.skill.bulldoze.description.ground": "你自己也必须站在地面上才能踏出这一击，腾空时无法施放；施放与收招期间会钉在原地。"
 }

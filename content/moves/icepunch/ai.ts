@@ -2,8 +2,9 @@
  * 冰冻拳 / icepunch 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑。
- * 对谁出手：`ai.finishFrozen`（默认开）打开时，已经带寒霜（`world_combat:status/chill`）或浸水的目标排得最前
- *   ——那一拳能把它们冻住；没结霜的目标排后，用来起手。
+ * 对谁出手：`ai.finishFrozen`（默认开）打开时，已经带寒霜（`world_combat:status/chill`）或湿身（原生 wet 或共享
+ *   `world_combat:status/soaked`）的目标排得最前——那一拳能把它们冻住；没结霜的目标排后，用来起手。
+ *   已经冻住的目标排后（再冻意义不大）。关闭该开关则只按普通近战排序，不再为霜或湿加分。
  * 够不到怎么办：冰拳射程短，reach 之内才动手，不够先贴近。
  * 放完之后：冻住的目标交回共享交战计划，让队友在冻结窗口里输出。
  */
@@ -31,8 +32,11 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 20;
-            if (CompanionBehavior.ai<boolean>(capability, "finishFrozen", true) && CompanionBehavior.status(context, target, "chill")) score += 18;
-            if (target.wet) score += 10;
+            const finish = CompanionBehavior.ai<boolean>(capability, "finishFrozen", true);
+            if (finish) {
+                if (CompanionBehavior.status(context, target, "chill")) score += 18;
+                if (target.wet || CompanionBehavior.status(context, target, "soaked")) score += 10;
+            }
             if (CompanionBehavior.status(context, target, "frozen")) score -= 12;
             return score;
         }

@@ -8,8 +8,10 @@
  * 层次：手（主体，`generic/grab` 帧条）／指痕（细节，沿路径的细光点与指痕线）／烟（余韵，低饱和暗烟）。
  * 拍子：brace（聚手 0–14t）→ reach（探手并等待）→ take（抽回，0–28t）／empty（攥空，0–18t）。
  * 范围：reach 的指痕线沿 `data.path`（对手 ↔ 施法者）画出，长度就是两只实际距离——站哪会被这只手够到，一眼可读。
- * 运动：手落到对手身上不动，指痕线在窗口里持续脉动；take 时细光点沿 `data.path` 从对手一侧抽回施法者。
- * 数：指痕与光点的数量绑 `data.grip`（特攻派生），窗口剩余比例由 `data.remaining` / `data.span` 写出节奏。
+ *   线、手与光点只在目标仍在射程内且视线畅通（`data.linked`）时发亮；越距或隔墙时只剩施法者身侧一簇微光表示失联，
+ *   连接恢复即重新亮起，剩余寿命由服务端按剩余比例算出的 `data.lineRate` / `data.moteCount` / `data.handRate` 渐弱写出。
+ * 运动：手落到对手身上不动，指痕线在有效连接里持续脉动；take 时细光点沿 `data.path` 从对手一侧抽回施法者。
+ * 数：指痕与光点的数量绑 `data.moteCount`（特攻派生并按剩余寿命缩放），失联时走 `data.lostRate`。
  */
 const SnatchDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -50,14 +52,14 @@ const SnatchDefinition: ParticleDefinition = {
                 {
                     name: "tendril", bind: "path", fit: "none", shape: { kind: "polyline" },
                     particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
-                    rate: 26, direction: "shape", speed: [0.02, 0.07],
+                    rate: { data: "lineRate", fallback: 26 }, direction: "shape", speed: [0.02, 0.07],
                     lifetime: [6, 11], size: [0.16, 0.02], sizeMode: "index",
                     color: 0x7B4FBF, alpha: [0.7, 0], light: "full", maxParticles: 90
                 },
                 {
                     name: "motes", bind: "path", fit: "none", shape: { kind: "polyline" },
                     particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    burst: { count: { data: "grip", fallback: 8 }, interval: 6, repeats: 40 },
+                    burst: { count: { data: "moteCount", fallback: 8 }, interval: 6, repeats: 40 },
                     direction: "shape", speed: [0.01, 0.04],
                     lifetime: [10, 18], size: [0.07, 0.01], sizeMode: "sin",
                     color: 0xC05CE0, alpha: [0.5, 0], light: "full", maxParticles: 40
@@ -65,10 +67,18 @@ const SnatchDefinition: ParticleDefinition = {
                 {
                     name: "waiting_hand", bind: "target", fit: "body", offset: [0, 0.7, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/grab",
-                    rate: 3, shape: { kind: "sphere", radius: 0.18 },
+                    rate: { data: "handRate", fallback: 3 }, shape: { kind: "sphere", radius: 0.18 },
                     direction: [0, 0.15, 0], speed: [0.01, 0.03],
                     lifetime: [8, 14], size: [0.3, 0.16], sizeMode: "index",
                     color: 0xE8D8FF, alpha: [0.55, 0], light: "full", maxParticles: 10
+                },
+                {
+                    name: "lost", bind: "source", offset: [0, 0.6, 0], height: 0.3,
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    rate: { data: "lostRate", fallback: 0 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "up", speed: [0.01, 0.03],
+                    lifetime: [10, 16], size: [0.06, 0.01], sizeMode: "sin",
+                    color: 0x6B5A78, alpha: [0.3, 0], light: "world", maxParticles: 24
                 }
             ]
         },

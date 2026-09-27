@@ -5,6 +5,7 @@
  *   这是本招相比同类提速招（直接加速、滑步）唯一的用法——它真的改变跳跃与下落。
  * 什么时候最想出手：威胁还在 ai.minGap 之外时抢在共享次序前——趁还没贴上脸先把速度与轻身拿到手；
  *   目标高出一小截（跨小高差）时优先级更高；已经贴身就交回普通次序，不站着挨打。
+ *   速度已经满级时只在确实有这一小级高差可借重力跨过时才卸，否则把出手让给别的选择。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
  * 放完之后：速度等级留在身上，轻身窗口内重力下调、跳得更高落得更慢；窗口内或换招前 30 秒内不再重复卸件。
  *   每一步都按当前决策帧重新读取共享身份，窗口结束后不会把已经还回去的重力当成还在，也不会据此误算落地节奏。
@@ -28,14 +29,19 @@ namespace PokemonSkills {
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
             if (context.facts.mounted) return false;
-            if (["spe"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "lightened")) return false;
             if (CompanionBehavior.recent(context, "move", "autotomize", 600)) return false;
             const gap = autotomizeThreatGap(context);
             if (gap < 0) return false;
             if (gap < CompanionBehavior.ai<number>(capability, "minGap", 3)) return false;
-            return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
+            if (gap > CompanionBehavior.ai<number>(capability, "maxChase", 14)) return false;
+            // A full Speed ladder is no reason to skip: the reduced gravity still lifts a step, so a threat a
+            // little higher up is exactly why the companion sheds even at +6.
+            const rise = autotomizeThreatRise(context);
+            const climb = rise >= 0.6 && rise <= 3.5;
+            if (CompanionBehavior.stage(context, self, "spe") >= 6 && !climb) return false;
+            return true;
         },
         accepts: function (context, _capability, target) { return target.ref === CompanionBehavior.source(context).ref; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },

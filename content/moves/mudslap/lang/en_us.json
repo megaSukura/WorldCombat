@@ -9,7 +9,7 @@
   "worldcombat.skill.mudslap.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.mudslap.value.splat": "Clod power",
   "worldcombat.skill.mudslap.value.blind": "Accuracy drop",
-  "worldcombat.skill.mudslap.value.mudTicks": "Mud duration",
+  "worldcombat.skill.mudslap.value.mudTicks": "Mud-mark duration",
   "worldcombat.skill.mudslap.value.splash": "Splash motes",
   "worldcombat.skill.mudslap.value.arcSpeed": "Throw speed",
   "worldcombat.skill.mudslap.value.gravity": "Drop",

@@ -7,7 +7,8 @@
  * 翻译：把回合制的「锁住 2～3 回合散落花瓣、然后混乱」落成**一次自驱动作里的旋舞**——
  *   原地旋转起舞，每一圈都从脚下卷起一层花瓣、向外卷成风暴，卷到的一圈敌人被割伤；舞步每转一步会漂开一点，
  *   走过的地方真的落下花瓣（`minecraft:pink_petals` 短租，到期原方块回来）。舞完自己晕头转向
- *   （共享身份 world_combat:status/confusion，载体本单元自己的 *_daze）。
+ *   （共享身份 world_combat:status/confusion，载体本单元自己的 *_daze）。从跳出第一圈起，本单元用一个独立的
+ *   actor 载体记下这份恍惚责任：正常收招、主动收手（input-stop）或被打断，都按已发圈在结束时兑现；首圈之前不收。
  *   花瓣舞独有的读法是**隔着一段距离用特攻削一圈、还会在地面留下花瓣**：它不像大闹一番那样贴身乱挥，
  *   画面本身就是一片旋转的花瓣风暴。
  *
@@ -26,7 +27,7 @@
  *   motes    花瓣点数：特攻与等级派生，表现按它发射。
  *   dazeTicks 恍惚时长：特攻与等级决定舞完晕多久，旋舞式更久。
  *   fumble   恍惚失手率：特攻决定这段时间出手被打散的概率，存进载体振幅。
- *   tempo／recover／recharge：速度决定起手／收招／冷却，旋舞式更慢。
+ *   tempo／steady／recharge：速度决定起手／收招／冷却，旋舞式更慢。
  *
  * 配置 drift（旋舞）双向取舍：开启＝漂得更远、风暴更宽、花瓣留得更久，但起手与冷却更久、恍惚更长；
  *   关闭（原地舞）＝转在原地、收放更快、失控更短，代价是范围与留痕都收窄。两个方向各有适用局面。
@@ -36,6 +37,8 @@
 namespace PokemonSkills {
     export const petaldanceId = "petaldance";
     export const petaldanceScene = "world_combat:move_petaldance";
+    export const petaldanceBandScene = "world_combat:move_petaldance_band";
+    export const petaldanceCommitment = "world_combat:move_petaldance/commitment";
     export const petaldanceDaze = "world_combat:petaldance_daze";
     export const petaldanceBloomText = "world_combat.move.petaldance.text.bloom";
     export const petaldanceStepText = "world_combat.move.petaldance.text.step";
@@ -139,8 +142,8 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("drift", text("worldcombat.skill.petaldance.preference.drift")), F.const(2), F.const(0)))
                 .clamp(6, 15).round(0),
             "起手", "屈膝起势、花瓣先在脚下聚拢的时间；速度越快越短，旋舞式多蓄一下。"),
-        /** 收招：基础 10 刻，速度每比 60 快 1 减 0.02 刻（夹 -3..4）；夹 6..16。 */
-        recover: seconds(
+        /** 收招：基础 10 刻，速度每比 60 快 1 减 0.02 刻（夹 -3..4）；夹 6..16。改名避开保留键 recover，resolve 才能读到这条公式。 */
+        steady: seconds(
             F.base(10).minus(F.stat("speed").minus(60).times(0.02).clamp(-3, 4)).clamp(6, 16).round(0),
             "收招", "舞停站定的收势；速度越快收得越快。"),
         /** 冷却：基础 40 刻，速度每比 60 快 1 减 0.05 刻（夹 -5..9），旋舞 +8；夹 26..60。 */

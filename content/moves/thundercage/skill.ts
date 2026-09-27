@@ -20,6 +20,7 @@
  */
 namespace PokemonSkills {
     const thundercageScene = "world_combat:move_thundercage";
+    const thundercageBarScene = "world_combat:move_thundercage/cage";
     const thundercageGrid = "world_combat:thundercage_grid";
     const thundercageBond = "world_combat:thundercage_bond";
     const thundercageCageKey = "thundercage:cage:";
@@ -31,7 +32,7 @@ namespace PokemonSkills {
     function thundercageBondData(json: string): string {
         const value = JSON.parse(json);
         if (!Array.isArray(value.point) || value.point.length !== 3) throw new Error("Invalid thunder cage anchor");
-        ["cage", "arc", "interval", "radius", "height", "push", "bars", "paralyzeChance", "escape", "next"].forEach(function (key) {
+        ["cage", "arc", "interval", "radius", "height", "push", "bars", "paralyzeChance", "escape", "floor", "next"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid thunder cage bond");
         });
         if (value.interval < 1 || value.radius <= 0 || value.height <= 0 || value.push <= 0 || value.escape <= 0) throw new Error("Invalid thunder cage bond");
@@ -66,9 +67,14 @@ namespace PokemonSkills {
         if (body === null) { effect.end(); return; }
         const anchor = thundercagePoint(data.point);
         const pos = body.position();
+        const min = body.boundsMin(), max = body.boundsMax();
         const dx = pos.x() - anchor.x(), dz = pos.z() - anchor.z();
         const horiz = Math.sqrt(dx * dx + dz * dz);
-        if (pos.y() - anchor.y() > data.height) { data.escaped = "over"; effect.state(JSON.stringify(data)); effect.end(); return; }
+        // 笼的竖直范围：底在施法时目标的脚点（anchor.y），顶在 +height，底沿在 -floor；越出即脱笼。
+        // 顶沿比较用整个身体的最低点：翻到脚底都高过顶沿才算跃出笼顶。
+        if (min.y() >= anchor.y() + data.height - 0.02) { data.escaped = "over"; effect.state(JSON.stringify(data)); effect.end(); return; }
+        // 下方脱出边界：整个身体落到笼底之下（掉进坑里/被压下去）也算脱身。
+        if (max.y() <= anchor.y() - data.floor + 0.02) { data.escaped = "below"; effect.state(JSON.stringify(data)); effect.end(); return; }
         if (horiz > data.escape) { data.escaped = "gone"; effect.state(JSON.stringify(data)); effect.end(); return; }
         let crossing = false;
         const inside = horiz <= data.radius;
@@ -117,6 +123,9 @@ namespace PokemonSkills {
         WorldFeedback.onEffect(world, effect.id(), thundercageCageKey + String(victim.ref()), thundercageScene, 1, anchor,
             { moment: "cage", target: String(victim.ref()), radius: data.radius, height: data.height, bars: Math.round(data.bars),
                 scale: data.radius / 1.6, flow: Math.round(16 + data.bars), push: data.push });
+        // 固定竖栅与顶沿交给自定义场景：按真实 radius/height/bars 每帧画出可识别的笼边界，电粒只作余辉。
+        WorldFeedback.onEffect(world, effect.id(), thundercageCageKey + String(victim.ref()) + "/bars", thundercageBarScene, 1, anchor,
+            { moment: "cage", target: String(victim.ref()), radius: data.radius, height: data.height, bars: Math.round(data.bars) });
         effect.schedule("arc", "arc", 2, "{}");
     });
     WorldCombat.effectHandler(thundercageBond, "end", function (effect) {
@@ -129,7 +138,8 @@ namespace PokemonSkills {
         }
         const body = world.observe(victim);
         if (body === null) return;
-        const payload: any = { target: String(victim.ref()) };
+        const payload: any = { target: String(victim.ref()), radius: data.radius, height: data.height,
+            bars: Math.round(data.bars), floor: data.floor };
         let at = body.position();
         if (data.breakout) {
             payload.moment = "shatter";
@@ -242,15 +252,18 @@ namespace PokemonSkills {
                     if (!CombatStatus.apply(scope, victim, "partiallytrapped", thundercageGrid, duration, 0, { unique: true })) return;
                     const carrier = MobEffects.read(scope, victim, thundercageGrid);
                     if (carrier === null) return;
-                    const anchor = body.position();
+                    const anchor = WorldCombat.point(body.position().x(), body.boundsMin().y(), body.position().z());
+                    const floor = Math.max(1.0, Math.round(height * 0.5 * 100) / 100);
                     const state = { point: [anchor.x(), anchor.y(), anchor.z()], cage: cage, arc: arc, interval: interval,
                         radius: radius, height: height, push: push, bars: bars, paralyzeChance: paralyzeChance,
-                        escape: radius + 2.5, next: scope.tick() + interval, pulses: 0, lastInside: true, breakout: false,
+                        escape: radius + 2.5, floor: floor, next: scope.tick() + interval, pulses: 0, lastInside: true, breakout: false,
                         carrier: MobEffects.anchor(carrier) };
                     const bond = scope.effect(thundercageBond, victim, JSON.stringify(state), duration + 30);
                     WorldFeedback.onEffect(scope, bond, thundercageCageKey + String(victim.ref()), thundercageScene, 1, anchor,
                         { moment: "cage", target: String(victim.ref()), radius: radius, height: height, bars: bars,
                             scale: scale, flow: Math.round(16 + bars), push: push });
+                    WorldFeedback.onEffect(scope, bond, thundercageCageKey + String(victim.ref()) + "/bars", thundercageBarScene, 1, anchor,
+                        { moment: "cage", target: String(victim.ref()), radius: radius, height: height, bars: bars });
                     WorldFeedback.emit(scope, thundercageScene, 1, anchor,
                         { moment: "enclose", target: String(victim.ref()), radius: radius, height: height, bars: bars, push: push, scale: scale }, 26);
                     WorldFeedback.text(scope, anchor.plus(WorldCombat.point(0, 1.2, 0)), thundercageEncloseText,

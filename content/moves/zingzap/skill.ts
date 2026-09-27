@@ -7,6 +7,8 @@
  * 三幕：
  *   起（windup，提交前）：蹲身、身周静电噼啪的预告。
  *   冲（charge）：提交后逐刻朝目标冲出去，每跑一格给这一击攒一份电，电花随冲程变密。
+ *       身体自移走 `world.displace`；每步用真实实体箱沿本步轨迹找最先撞上、且与自身之间通视的非友方，
+ *       撞到就停下结算，不会穿过挡在身前的身体或墙。
  *   放（discharge → arc）：撞上时按冲程放大威力并掷畏缩，目标身上留一小段电花；
  *       跳电开启时，命中点把电再跳向最近的一个敌人（按分摊比例结算、畏缩几率减半）。扑空则冲到头收势。
  *
@@ -96,52 +98,59 @@ namespace PokemonSkills {
             }
 
             /** 撞上的一刻：按冲程蓄电结算主击，再决定电要不要跳到旁边的人。 */
-            function discharge(current: CombatAction, hit: CombatImpact, direction: CombatPoint, charge: number): void {
+            function discharge(current: CombatAction, victim: CombatActor, point: CombatPoint, direction: CombatPoint, charge: number): void {
                 if (settled) return;
                 const scope = current.world();
-                const victim = hit.target();
                 if (victim === null || !scope.valid(victim)) { finish(current); return; }
                 const power = crash * (1 + charge);
                 const roll = chance * (1 + charge * 0.6);
                 const intensity = Math.max(0.5, Math.min(2.2, power / 80));
                 const landed = hurt(current, victim, "zingzap", power,
                     { damage: damageSpec("zingzap", "crash"), contact: true });
-                WorldFeedback.emit(scope, zingzapScene, 1, hit.position(),
+                if (!landed) {
+                    // 电没能真正放上目标：只在源体身上散掉，不播命中与跳电。
+                    const body = scope.observe(current.actor());
+                    if (body !== null) WorldFeedback.emit(scope, zingzapScene, 1, body.position(), { moment: "miss", scale: scale }, 16);
+                    finish(current);
+                    return;
+                }
+                WorldFeedback.emit(scope, zingzapScene, 1, point,
                     { moment: "discharge", target: String(victim.ref()), scale: scale, intensity: intensity,
                         charge: charge, sparks: Math.round(14 + charge * 60) }, 28);
                 sound(current, "cobblemon:impact.electric");
-                if (landed) {
-                    if (scope.valid(victim)) scope.hitDisplace(victim, direction.scale(0.7));
-                    WorldFeedback.keep(scope, "zingzap:static:" + String(victim.ref()), zingzapScene, 1, hit.position(),
-                        { moment: "static", target: String(victim.ref()), scale: scale, sparks: Math.round(6 + charge * 24) }, staticTicks);
-                    WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.3, 0)), zingzapHitText, [], 26);
-                    if (scope.random() < roll && zingzapFlinch(scope, victim, flinchTicks)) {
-                        WorldFeedback.emit(scope, zingzapScene, 1, hit.position(), { moment: "flinch", target: String(victim.ref()) }, 24);
-                        WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.1, 0)), zingzapFlinchText, [], 24);
-                    }
-                    if (arcShare > 0) {
-                        const contact = hit.position();
-                        const candidates: { actor: CombatActor; point: CombatPoint; distance: number }[] = [];
-                        WorldGeometry.selectEnemies(scope, WorldGeometry.ring(contact, 0, arcReach, { below: 1, above: 4 }),
-                            function (other, facts) {
-                                if (String(other.ref()) === String(victim.ref())) return;
-                                candidates.push({ actor: other, point: facts.position(), distance: facts.position().minus(contact).length() });
-                            });
-                        if (candidates.length) {
-                            let best = candidates[0];
-                            for (let i = 1; i < candidates.length; i++) if (candidates[i].distance < best.distance) best = candidates[i];
-                            const arcPower = power * arcShare;
-                            const arcLanded = hurt(current, best.actor, "zingzap", arcPower, { damage: damageSpec("zingzap", "crash") });
+                if (scope.valid(victim)) scope.hitDisplace(victim, direction.scale(0.7));
+                WorldFeedback.keep(scope, "zingzap:static:" + String(victim.ref()), zingzapScene, 1, point,
+                    { moment: "static", target: String(victim.ref()), scale: scale, sparks: Math.round(6 + charge * 24) }, staticTicks);
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), zingzapHitText, [], 26);
+                if (scope.random() < roll && zingzapFlinch(scope, victim, flinchTicks)) {
+                    WorldFeedback.emit(scope, zingzapScene, 1, point, { moment: "flinch", target: String(victim.ref()) }, 24);
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)), zingzapFlinchText, [], 24);
+                }
+                if (arcShare > 0) {
+                    const contact = point;
+                    const candidates: { actor: CombatActor; point: CombatPoint; distance: number }[] = [];
+                    WorldGeometry.selectEnemies(scope, WorldGeometry.ring(contact, 0, arcReach, { below: 1, above: 4 }),
+                        function (other, facts) {
+                            if (String(other.ref()) === String(victim.ref())) return;
+                            if (!facts.visible()) return;
+                            // 电只跳向中间无遮挡的敌体：隔墙的第二人不接电。
+                            if (!scope.clear(contact, facts.position())) return;
+                            candidates.push({ actor: other, point: facts.position(), distance: facts.position().minus(contact).length() });
+                        });
+                    if (candidates.length) {
+                        let best = candidates[0];
+                        for (let i = 1; i < candidates.length; i++) if (candidates[i].distance < best.distance) best = candidates[i];
+                        const arcPower = power * arcShare;
+                        const arcLanded = hurt(current, best.actor, "zingzap", arcPower, { damage: damageSpec("zingzap", "crash") });
+                        if (arcLanded) {
                             WorldFeedback.emit(scope, zingzapScene, 1, contact,
                                 { moment: "arc", target: String(best.actor.ref()), source: String(victim.ref()),
                                     path: [[contact.x(), contact.y() + 0.4, contact.z()], [best.point.x(), best.point.y() + 0.4, best.point.z()]],
                                     sparks: Math.round(10 + charge * 30), scale: scale }, 26);
                             sound(current, "minecraft:entity.lightning_bolt.thunder");
-                            if (arcLanded) {
-                                WorldFeedback.text(scope, best.point.plus(WorldCombat.point(0, 1.2, 0)), zingzapArcText, [], 24);
-                                if (scope.random() < roll * 0.6 && zingzapFlinch(scope, best.actor, flinchTicks)) {
-                                    WorldFeedback.emit(scope, zingzapScene, 1, best.point, { moment: "flinch", target: String(best.actor.ref()) }, 24);
-                                }
+                            WorldFeedback.text(scope, best.point.plus(WorldCombat.point(0, 1.2, 0)), zingzapArcText, [], 24);
+                            if (scope.random() < roll * 0.6 && zingzapFlinch(scope, best.actor, flinchTicks)) {
+                                WorldFeedback.emit(scope, zingzapScene, 1, best.point, { moment: "flinch", target: String(best.actor.ref()) }, 24);
                             }
                         }
                     }
@@ -153,9 +162,9 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const here = current.origin();
                 let direction = aim(current);
-                const victim = current.target();
-                if (victim !== null && scope.valid(victim)) {
-                    const at = scope.observe(victim);
+                const handle = current.target();
+                if (handle !== null && scope.valid(handle)) {
+                    const at = scope.observe(handle);
                     if (at !== null) {
                         const delta = at.position().minus(here);
                         if (delta.length() > 0.05) direction = delta.unit();
@@ -164,16 +173,26 @@ namespace PokemonSkills {
                 const remaining = rush - travelled;
                 if (remaining <= 0.001) { miss(current); return; }
                 const step = Math.min(pace, remaining);
-                const delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius);
-                const hit = swept.hit;
-                const charge = Math.min(chargeMax, (travelled + swept.moved) * chargeRate);
-                if (hit.hitEntity()) { discharge(current, hit, direction, charge); return; }
-                const moved = swept.moved;
+                const self = scope.observe(current.actor());
+                if (self === null) { finish(current); return; }
+                // A ground rush aims along the floor. A downward straight sweep would correctly hit
+                // that floor immediately when the enemy's body centre is shorter than the caster.
+                if (self.grounded()) direction = WorldGeometry.flatUnit(direction, current.direction());
+                const contact = current.moveSweep(direction.scale(step), radius);
+                const after = scope.observe(current.actor());
+                const moved = after === null ? 0 : after.position().minus(self.position()).length();
                 travelled += moved;
+                if (contact.hitEntity()) {
+                    const victim = contact.target();
+                    if (victim !== null && scope.valid(victim) && !scope.friendly(victim))
+                        discharge(current, victim, contact.position(), direction, Math.min(chargeMax, travelled * chargeRate));
+                    else miss(current);
+                    return;
+                }
+                if (contact.blocked()) { miss(current); return; }
                 movementScenes.show(current, "charge", here, { moment: "charge", scale: scale, charge: Math.min(1, travelled / Math.max(0.001, rush)),
                         sparks: Math.round(10 + Math.min(chargeMax, travelled * chargeRate) * 90) });
-                if (hit.blocked() || moved < 0.05) { miss(current); return; }
+                if (moved < 0.05) { miss(current); return; }
                 current.after(1, advance);
             }
 

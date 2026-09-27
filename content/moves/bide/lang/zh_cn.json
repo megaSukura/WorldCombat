@@ -8,7 +8,7 @@
   "worldcombat.skill.bide.description.1": "账本上限为自身最大生命的 %1$s；还手能打到 %2$s 格内的最后攻击者，够不到就打最近的敌人。",
   "worldcombat.skill.bide.description.2": "起手 %1$s 秒、收招 %2$s 秒，冷却 %3$s 秒。",
   "worldcombat.skill.bide.rooted.on": "扎根硬忍：忍耐时长 ×1.15、还手倍率 ×1.1，代价是整段架势定身不能走动。",
-  "worldcombat.skill.bide.rooted.off": "且战且忍：可以走位，代价是忍耐时长 ×0.8、还手倍率 ×0.9。",
+  "worldcombat.skill.bide.rooted.off": "且战且忍：仍在忍耐架势中、不能发动其他招式，但可以走位；代价是忍耐时长 ×0.8、还手倍率 ×0.9。",
   "worldcombat.skill.bide.timing": "自身招式，起手 %1$s 秒后消耗 %3$s PP 发动；结束后收招 %2$s 秒，提交起冷却 %4$s 秒。",
   "worldcombat.skill.bide.value.window": "忍耐时长",
   "worldcombat.skill.bide.value.capFraction": "账本上限",

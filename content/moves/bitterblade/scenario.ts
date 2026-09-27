@@ -37,7 +37,7 @@ Smoke.scenario("bitterblade", function (stage) {
             stage.expect(stage.casts("bitterblade", caster) > 0, "悔念剑被放出来了");
             stage.expect(stage.damageTo(foe) > 0, "悔念剑扫到了目标，造成了伤害");
             stage.expect(caster.health() > baseline + 2, "施法者从这一剑里回复了生命");
-            stage.note("命中率、暴击与弧内命中数不写死；回血走共享伤害载荷的 drain。张角、剑距、剑锋判定由公式决定，斩击威力与汲取比例随施法者已失去的生命比例上升。",
+            stage.note("剑弧由少片真实子弧逐刻扫过，每片先查墙、每个目标整趟只结算一次；回血走共享伤害载荷的 drain，按实际伤害计算（零伤害不伪回血）。命中率、暴击与弧内命中数不写死；张角、剑距、剑锋判定由公式决定，斩击威力与汲取比例随施法者已失去的生命比例上升。",
                 { casts: stage.casts("bitterblade", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
                   woundedHealth: Math.round(baseline * 10) / 10, casterHealth: Math.round(caster.health() * 10) / 10 });
             stage.done();

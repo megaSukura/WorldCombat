@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在自己 `ai.maxChase`（默认 11）格内。它是一记远程炮击，
  *   `priority` 在自身血量低于 `ai.healBelow`（默认 0.85）时抬一档（溅射到的每个目标都回一点），
- *   射程内挤着两个以上敌人时再加一档（茶汤一次烫到一片），目标被冻住时抬一档（热茶顺手解冻）。
+ *   实际落区内挤着两个以上可见敌人时再加一档（茶汤一次烫到一片），目标被冻住时抬一档（热茶顺手解冻）。
  *   更远的先手交给共享接近逻辑。
  * 对谁出手：当前威胁；友方、倒下或不可见的不接受。
  * 瞄哪里：不直接砸在某个人身上，而是取这一小撮敌人的水平中心、落到他们脚下的地面，茶圈把一圈人都罩进去；
@@ -11,13 +11,20 @@
  * 放完之后：落点周围一片都结算过，不占手，下一次决策就能再泼。
  */
 namespace CompanionBehavior {
-    function matchaGotchaCrowd(item: WorldBehavior.Capability, context: WorldBehavior.Context, self: CompanionBehavior.Entity): number {
-        const reach = item.data.range, nearby = context.facts.nearby as CompanionBehavior.Entity[];
+    /** 落区内可见敌人数：以选中目标为落点中心、按本招实际溅射半径和逐体视线计数，而不是数自己射程内的人数。 */
+    function matchaGotchaCrowd(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const self = CompanionBehavior.source(context), caster = world.actor(self.ref);
+        const burst = caster === null ? 1.4 : PokemonSkills.p("matchagotcha", "burst", { world: world, actor: caster });
+        const landing = CompanionBehavior.point(target.point);
+        const margin = typeof target.width === "number" ? target.width * 0.5 : 0.45;
         let count = 0;
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
             if (other.ref === self.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, self.point) <= reach) count++;
+            if (CompanionBehavior.distance(other.point, target.point) > burst + margin) continue;
+            if (WorldGeometry.blockHit(world, landing, CompanionBehavior.point(other.point)) !== null) continue;
+            count++;
         }
         return count;
     }
@@ -57,7 +64,7 @@ namespace CompanionBehavior {
             const self = CompanionBehavior.source(context);
             const dist = CompanionBehavior.distance(self.point, target.point);
             if (dist > CompanionBehavior.ai<number>(capability, "maxChase", 11)) return 0;
-            const crowd = matchaGotchaCrowd(capability, context, self);
+            const crowd = matchaGotchaCrowd(context, capability, target);
             let score = 17;
             if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "healBelow", 0.85)) score += 14;
             if (crowd >= 2) score += 6 + Math.min(12, crowd * 4);

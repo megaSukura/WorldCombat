@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 8）之内；更远交给共享接近逻辑。
  * 对谁出手：`ai.seekUnpoisoned`（默认开）打开时，还没中毒的目标排得更前——尾梢的毒抹在没中毒的人身上才有意义；
- *   圈里人越多排得越前；圈内敌人少于 `ai.minFoes`（默认 1）时降低优先级，仍保留普通攻击用途。
+ *   朝目标方向的贴地低扇里人越多排得越前；扇内敌人少于 `ai.minFoes`（默认 1）时降低优先级，仍保留普通攻击用途。
  *   毒免疫的目标只是抹不上毒，原扫击伤害照吃，所以它们仍是合格的选择。
  * 够不到怎么办：扫击半径交给 `reach`，共享任务把身位收进尾长范围再扫。
  * 放完之后：被扫到的人吃一记并可能带毒，交回共享交战计划；这是对多目标的一次清场，循环冷却短。
@@ -16,15 +16,26 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
     }
 
-    /** 扫击半径（含一点容差）内挤着几个敌人（含正对目标）。 */
-    function poisontailCrowd(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+    /** 低扇判读用的总角（度）：与扫描弧面量级一致，用来判断谁真正站在要扫的方向上。 */
+    const poisontailCrowdArc = 200;
+
+    /** 朝向 `heading` 的贴地低扇里挤着几个敌人（含正对目标）；不在扇内的不算，避免把绕身一圈都当成收益。 */
+    function poisontailCrowd(context: WorldBehavior.Context, capability: WorldBehavior.Capability, heading: number[]): number {
         const self = CompanionBehavior.source(context), reach = capability.data.range + 0.6;
         const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
+        const length = Math.sqrt(heading[0] * heading[0] + heading[2] * heading[2]);
+        if (!(length > 1e-6)) return 0;
+        const ux = heading[0] / length, uz = heading[2] / length;
+        const cosHalf = Math.cos(Math.min(180, poisontailCrowdArc / 2) * Math.PI / 180);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= reach) count++;
+            const dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
+            const gap = Math.sqrt(dx * dx + dz * dz);
+            if (gap > reach) continue;
+            if (gap < 1e-6) { count++; continue; }
+            if ((dx / gap) * ux + (dz / gap) * uz >= cosHalf) count++;
         }
         return count;
     }
@@ -44,7 +55,8 @@ namespace PokemonSkills {
             if (!target || !poisontailClose(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
-            const crowd = poisontailCrowd(context, capability);
+            const heading = [target.point[0] - self.point[0], target.point[1] - self.point[1], target.point[2] - self.point[2]];
+            const crowd = poisontailCrowd(context, capability, heading);
             let score = 26;
             if (crowd >= CompanionBehavior.ai<number>(capability, "minFoes", 1)) score += Math.min(16, crowd * 5);
             else score -= 18;

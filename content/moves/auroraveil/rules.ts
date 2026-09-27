@@ -30,6 +30,15 @@ namespace PokemonSkills {
                 path: [String(actor.ref()), [centre.x(), centre.y() + 0.1, centre.z()]],
                 ribbons: field.data.ribbons, ceiling: field.data.ceiling });
     }
+    /** 收回这名生物身上属于这一片幕的标记与共享身份；友敌关系变化、离区或隔墙都用同一条路。 */
+    function auroraVeilWithdraw(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
+        const views = world.effects(actor, auroraveilMark);
+        for (let i = 0; i < views.length; i++) {
+            const data = JSON.parse(String(views[i].data()));
+            if (data.fieldId === field.id) world.operation(views[i].id(), "world_combat:dispel", "{}");
+        }
+        if (!world.effects(actor, auroraveilMark).length) MobEffects.consume(world, actor, auroraveilEffect);
+    }
     function auroraVeilApply(world: CombatWorld, actor: CombatActor, ticks: number, field: WorldEffects.Field): boolean {
         if (MobEffects.apply(world, actor, auroraveilEffect, ticks, 0) === null) return false;
         const data: any = {};
@@ -71,10 +80,15 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(auroraveilMark, "end", function (effect) {
         const world = effect.world(), actor = effect.target(), body = world.observe(actor);
         if (body === null) return;
-        let ribbons = 6;
-        try { const state = JSON.parse(effect.state()); if (typeof state.ribbons === "number") ribbons = state.ribbons; } catch (error) { }
+        let ribbons = 6, radius = 4, ceiling = 3.4;
+        try {
+            const state = JSON.parse(effect.state());
+            if (typeof state.ribbons === "number") ribbons = state.ribbons;
+            if (typeof state.radius === "number") radius = state.radius;
+            if (typeof state.ceiling === "number") ceiling = state.ceiling;
+        } catch (error) { }
         WorldFeedback.emit(world, auroraveilScene, 1, body.position(),
-            { moment: "fade", target: String(actor.ref()), ribbons: ribbons }, 24);
+            { moment: "fade", target: String(actor.ref()), ribbons: ribbons, radius: radius, ceiling: ceiling }, 24);
     });
 
     WorldEffects.fieldRule(auroraveilField, {
@@ -87,24 +101,19 @@ namespace PokemonSkills {
                 { moment: "cover", target: String(actor.ref()), ribbons: field.data.ribbons }, 22);
         },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (!world.friendly(actor)) return;
+            // 站在幕里的活体如果不再是友方（改阵营等），立即收回它的旧 mark，避免白拿保护。
+            if (!world.friendly(actor)) { auroraVeilWithdraw(world, actor, field); return; }
             auroraVeilApply(world, actor, Math.max(40, Math.round(Number(field.data.margin) || 60)), field);
         },
         leave: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (!world.friendly(actor)) return;
-            const views = world.effects(actor, auroraveilMark);
-            for (let i = 0; i < views.length; i++) {
-                const data = JSON.parse(String(views[i].data()));
-                if (data.fieldId === field.id) world.operation(views[i].id(), "world_combat:dispel", "{}");
-            }
-            if (!world.effects(actor, auroraveilMark).length) MobEffects.consume(world, actor, auroraveilEffect);
+            auroraVeilWithdraw(world, actor, field);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = auroraVeilPoint(field);
-            WorldFeedback.keep(world, "world_combat:move_auroraveil/field/" + effect.id(), auroraveilScene, 1, centre,
-                { moment: "veil", ribbons: field.data.ribbons, scale: field.radius / 4,
-                    ceiling: field.data.ceiling, midHeight: field.data.midHeight,
-                    highRibbons: field.data.highRibbons, lowRibbons: field.data.lowRibbons }, 20);
+            // 背景随 field 生命周期：固定对象（横向虹带与区域轮廓）用 custom scene 逐帧绘制，判定与画面共用同一个 radius/ceiling。
+            WorldFeedback.keep(world, "world_combat:move_auroraveil/field/" + effect.id(), auroraveilFieldScene, 1, centre,
+                { radius: field.radius, ceiling: field.data.ceiling, ribbons: field.data.ribbons, low: field.data.low }, 20);
         }
     }, { tags: [WorldEffects.categories.screen], transferable: true });
 

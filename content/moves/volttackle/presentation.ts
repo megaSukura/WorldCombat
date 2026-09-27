@@ -4,8 +4,8 @@
  * 一句话：电荷从四周收拢、在全身蓄成一团越涨越大的电球，随后整个人裹着电爆冲出去；撞实的一刻积压的电荷
  * 从落点向四周炸开，沿地面把旁边的其他人一起缠上电弧；冲空则电荷在脚下泄放。
  * 色相家族：电黄（0xF2D03A）与冷白（0xEAF6FF），电弧的蓝（0x5AC8F0）只在放电与反噬层。
- * 拍子：蓄 charge（聚电成球）→ 冲 rush（带电爆冲）→ 行 wake（电痕）→ 爆 burst（命中主目标）→ 放 discharge（波及旁人）→ 噬 recoil（回路反噬）／ 泄 vent（冲空）。
- * 范围：rush 的冲刺线沿 `data.path` 两顶点铺成一条电带（横向按 `data.scale` 缩放）；discharge 的每道弧线用服务端给的 `data.path` 从真实接触点连向该被波及者，画出的就是这次放电真正走到的人。
+ * 拍子：蓄 charge（聚电成球）→ 冲 rush（只画真实走过的短尾迹）→ 行 wake（电痕）→ 爆 burst（命中主目标）→ 挡 blocked（被挡或撞友）→ 放 discharge（波及旁人）→ 噬 recoil（回路反噬）／ 泄 vent（冲空）。
+ * 范围：rush 的冲刺线沿 `data.path` 两顶点铺成一条电带，但服务端每刻只给刚走过的上一落点到当前落点，所以画的是真实短尾迹而非整条未来路线；discharge 的每道弧线用服务端给的 `data.path` 从真实接触点连向该被波及者，画出的就是这次放电真正走到的人。
  * 运动：电荷向身体中心收拢、冲锋时向后甩；放电从接触点向外扑。
  * 数：`data.sparks`（速度与特攻派生）决定蓄电、命中、放电与泄放的电花数量，`data.intensity`（本次伤害派生）决定各幕亮度，
  * `data.charged`（1 表示主目标还没麻痹）决定命中核心是否多一圈蓄能电弧，`data.discharge`（1 表示泄放式）决定蓄电足不足，
@@ -114,6 +114,30 @@ const VolttackleDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.34 }, direction: "outward", speed: [0.06, 0.22],
                     lifetime: [8, 14], size: [0.22, 0.03],
                     color: 0xEAF6FF, alpha: [0.9, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        blocked: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    // 被挡或撞到友体：电在接触点就地炸散、没有向旁的弧，也不出现命中的蓄能核心。
+                    name: "fizzle", bind: "point", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: { data: "sparks", fallback: 13 } },
+                    shape: { kind: "sphere", radius: 0.34 },
+                    direction: "outward", speed: [0.06, 0.22], spread: 24,
+                    lifetime: [6, 11], size: [0.22, 0.05], sizeMode: "index",
+                    color: 0xEAF6FF, alpha: [0.7, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "ground", bind: "point", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    burst: { count: 8 },
+                    shape: { kind: "ring", radius: 0.36 }, direction: "outward",
+                    speed: [0.05, 0.18], lifetime: [8, 14], size: [0.07, 0.02],
+                    color: 0xF2D03A, alpha: [0.5, 0], gravity: 0.03, drag: 0.9, light: "world", maxParticles: 20
                 }
             ]
         },

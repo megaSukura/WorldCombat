@@ -1,14 +1,14 @@
 /**
  * 水流尾 / aquatail 的客户端表现。
  *
- * 一句话：尾巴甩起、水光在身侧聚成一道弧 → 浪头从贴身一圈圈向前压出去，每一拍都有一道填满的弧形水墙，
+ * 一句话：尾巴甩起、水光在尾梢聚起 → 尾梢短扫点每拍扫过一道窄浪前，浪头从贴身一圈圈向前压出去，
  *   浪头拍到谁，谁身上炸开水花并被推走；被浇熄的火腾起水汽 → 浪推到头，地上只留一片湿痕。
  * 色相家族：水蓝的一族（0x6FC6E8 / 0x8FD4F0 为主体，0xE8F8FF 只做浪头高光，水汽用中性灰）。
- * 拍子：起 lash（甩尾聚水）→ 推 crest（每拍一道弧，叠成推进的浪）→ 击 hit（拍中）／浇 douse（水汽）→ 收 miss（空浪湿痕）。
- * 范围：crest 用与判定同一组 `data.path` 顶点填出弧形环带，玩家一眼看出站在哪条弧里会被拍到。
- * 运动：弧带随 `data.step`／`data.steps` 一站一站往外推，浪头朝 `data.direction` 向外翻卷；
- *   `data.outer` 同时驱动一条从尾根沿同一朝向扫到浪头的细水线，把这一挥的来路连出来，不留下持续水域。
- * 数：水花量绑定 `data.splash`（物攻与体重换算），弧带尺度绑定 `data.scale`（尾长换算），亮度绑定 `data.intensity`（浪威力换算）。
+ * 拍子：起 lash（甩尾聚水）→ 推 crest（同一 key 每拍更新命中带）／tail（尾梢短扫点带出窄浪前）→ 击 hit ／浇 douse → 收 miss。
+ * 范围：crest 用与判定同一组 `data.path` 顶点勾出弧形环带（外缘是当拍浪头），tail 用 `data.path` 勾出尾梢刚扫过的一小段。
+ * 运动：命中带随 `data.step`／`data.steps` 一站一站往外推，同一 key 更新，旧位置的粒子自然留下短暂余辉；
+ *   尾梢短扫点随 `data.tip`／`data.path` 移动，把这一挥的来路和窄浪前连出来，不留下持续水域。
+ * 数：水花量绑定 `data.splash`（物攻与体重换算），尺度绑定 `data.scale`（尾长换算），亮度绑定 `data.intensity`（浪威力换算）。
  */
 const AquaTailDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -18,10 +18,10 @@ const AquaTailDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "lash_water", bind: "source", offset: [0, 0.4, 0], height: 0.45,
+                    name: "lash_water", bind: "source", offset: [0, 0.45, 0], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
-                    rate: 26, shape: { kind: "arc", radius: 0.7, arcDegrees: 150, rotation: [0, 40, 0] },
-                    direction: "outward", speed: [0.04, 0.16],
+                    rate: 22, shape: { kind: "sphere", radius: 0.42 },
+                    direction: "up", speed: [0.04, 0.18], spread: 18,
                     lifetime: [7, 13], size: [0.14, 0.03],
                     color: 0x8FD4F0, alpha: [0.7, 0], light: "full", maxParticles: 40
                 },
@@ -43,9 +43,9 @@ const AquaTailDefinition: ParticleDefinition = {
                     name: "crest_sheet", bind: "path", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     shape: { kind: "polygon" },
-                    rate: 120, direction: "up", speed: [0.03, 0.12], spread: 20,
-                    lifetime: [7, 13], size: [0.14, 0.04],
-                    color: 0x6FC6E8, alpha: [0.45, 0], light: "world", maxParticles: 200
+                    rate: 52, direction: "up", speed: [0.03, 0.12], spread: 20,
+                    lifetime: [7, 13], size: [0.13, 0.04],
+                    color: 0x6FC6E8, alpha: [0.32, 0], light: "world", maxParticles: 200
                 },
                 {
                     name: "crest_edge", bind: "path", fit: "none", offset: [0, 0.15, 0],
@@ -72,6 +72,37 @@ const AquaTailDefinition: ParticleDefinition = {
                     burst: { count: 7, at: 0 }, direction: "shape", speed: [0.06, 0.22], spread: 8,
                     lifetime: [6, 12], size: [0.16, 0.04],
                     color: 0x8FD4F0, alpha: [0.6, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        tail: {
+            duration: 12,
+            exit: { stop: 8, drain: 10 },
+            emitters: [
+                {
+                    name: "tail_streak", bind: "path", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    shape: { kind: "polyline" },
+                    rate: 90, direction: "shape", speed: [0.05, 0.22], spread: 10,
+                    lifetime: [5, 10], size: [0.14, 0.03],
+                    color: 0x8FD4F0, alpha: [0.75, 0], light: "full", maxParticles: 70
+                },
+                {
+                    name: "tail_tip", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    rate: 30, shape: { kind: "sphere", radius: 0.26 },
+                    direction: "outward", speed: [0.08, 0.3], spread: 20,
+                    lifetime: [6, 12], size: [0.16, 0.04],
+                    color: 0xE8F8FF, alpha: [0.8, 0], light: "full", bloom: 0.15, maxParticles: 30
+                },
+                {
+                    name: "tail_drops", bind: "point", fit: "none", offset: [0, 0.06, 0],
+                    particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
+                    rate: { data: "splash", fallback: 14 }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.1, 0.34], spread: 28,
+                    gravity: 0.06, drag: 0.94,
+                    lifetime: [10, 18], size: [0.08, 0.02],
+                    color: 0xBFE8FA, alpha: [0.7, 0], light: "full", maxParticles: 60
                 }
             ]
         },

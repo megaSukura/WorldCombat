@@ -19,6 +19,9 @@
   "clientSources": [
     "presentation.ts"
   ],
+  "scenarioFixtures": [
+    "content/moves/powertrick"
+  ],
   "mobEffectIcons": {
     "world_combat:powershift_stance": "cobblemon:particle/generic/orb/energyorb"
   }

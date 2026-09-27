@@ -24,12 +24,13 @@ namespace PokemonSkills {
     export const electricGround = "world_combat:electricterrain_ground";
     export const electricChargeText = "world_combat.move.electricterrain.text.charge";
     export const electricAwakeText = "world_combat.move.electricterrain.text.awake";
+    export const electricMissText = "world_combat.move.electricterrain.text.miss";
 
     actionParameters.define("electricterrain", {
-        gather: seconds(F.base(13).plus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(9, 20),
+        gather: seconds(F.base(13).minus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(9, 20),
             "起手", "把电流按进地面需要多少时间；速度越快，电得越早。"),
-        settle: seconds(F.base(9).plus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
-            "收招", "电场亮起后收势需要多少时间。"),
+        settle: seconds(F.base(9).minus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
+            "收招", "电场亮起后收势需要多少时间；速度越快，收得越早。"),
         reach: formula(F.base(15).plus(F.level().minus(20).max(0).times(0.08)).clamp(11, 19).round(1),
             "施放距离", { unit: " 格", description: "能在多远的地面按进电流；等级越高够得越远。" }),
         fieldRadius: formula(

@@ -52,8 +52,22 @@ namespace PokemonSkills {
         const px = -dz / length, pz = dx / length;
         const options = [[self.point[0] + px * 3, self.point[1], self.point[2] + pz * 3],
             [self.point[0] - px * 3, self.point[1], self.point[2] - pz * 3]];
-        for (let i = 0; i < options.length; i++) if (access.clear(CompanionBehavior.point(options[i]), there)) return options[i];
+        // 侧步候选要真的站得住且两段都走得到：只核候选点到目标的视线不够。
+        for (let i = 0; i < options.length; i++) {
+            const candidate = CompanionBehavior.point(options[i]);
+            if (!speedswapStandable(access, candidate, self)) continue;
+            if (access.clear(here, candidate) && access.clear(candidate, there)) return options[i];
+        }
         return null;
+    }
+
+    /** 用原生 freeSpace 探整个身体（脚点坐标）放不放得下；宿主没有探针时保持中性。 */
+    function speedswapStandable(access: CombatWorld, candidate: CombatPoint, self: CompanionBehavior.Entity): boolean {
+        if (typeof (access as any).freeSpace !== "function") return true;
+        const width = typeof self.width === "number" ? self.width : 0.9;
+        const height = typeof self.height === "number" ? self.height : 1.4;
+        const feet = WorldCombat.point(candidate.x(), candidate.y() - height / 2, candidate.z());
+        try { return access.freeSpace(feet, width, height); } catch (error) { return true; }
     }
 
     CompanionBehavior.registerFact("world_combat:speedswap-rating", function (access: CombatWorld, actor: CombatActor): number {

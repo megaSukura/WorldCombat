@@ -1,17 +1,19 @@
 /**
  * 搏命 / finalgambit 的出手方式。
  *
- * 念头的形状：站定、把全身的气血往上提（windup，可被打断）→ 扑向对手（dash）→ 贴上去的一刻把此刻剩下的
- * 全部生命一次性炸出去（detonate）→ 自己倒下（faint）。打空或打不动（属性免疫）时使用者不倒——这是原生
- * selfdestruct: "ifHit" 的意思。留手式只押上一半生命，打完留下一口气。
+ * 念头的形状：站定、把全身的气血往上提（windup，可被打断；光与核心的体积随押上的生命比例增长）→ 扑向对手（dash）→
+ * 贴上去的一刻先按原生结算打出「等于自己当前生命的固定伤害」，真的打出回执后，再把这笔生命经 `world.payHealth`
+ * 自付掉（detonate）→ 自己倒下（faint）或留手留下一口气（spent）。打空、被属性免疫挡下或被原生拒绝时不倒、不付。
  *
- * 三幕：windup（charge）→ dash → detonate（+ 殒 / 留手 / 空响）。收招为 0，detonate 当刻动作即结束。
+ * 三幕：windup（charge）→ dash → detonate（+ 殒 / 留手 / 拒绝 / 空响）。收招为 0，detonate 当刻动作即结束。
+ * 代价走原生自付入口，吸取/无敌/减伤不替代价打折：实际支付不完整时不谎报「倒下」或「留手」。
  */
 namespace PokemonSkills {
     const finalgambitScene = "world_combat:move_finalgambit";
     const finalgambitHitText = "world_combat.move.finalgambit.text.hit";
     const finalgambitFaintText = "world_combat.move.finalgambit.text.faint";
     const finalgambitSpentText = "world_combat.move.finalgambit.text.spent";
+    const finalgambitUnpaidText = "world_combat.move.finalgambit.text.unpaid";
     const finalgambitMissText = "world_combat.move.finalgambit.text.miss";
 
     function finalgambitAim(action: CombatAction): CombatPoint {
@@ -20,6 +22,18 @@ namespace PokemonSkills {
     }
 
     function finalgambitVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
+
+    /** 原生布尔事实的安全读取（读不到按 false，不外推）。 */
+    function finalgambitNativeFlag(native: any, method: string): boolean {
+        if (native === null || native === undefined || typeof native[method] !== "function") return false;
+        try { return !!native[method](); } catch (error) { return false; }
+    }
+
+    /** 原生数值事实的安全读取（读不到按 0）。 */
+    function finalgambitNativeAmount(native: any, method: string): number {
+        if (native === null || native === undefined || typeof native[method] !== "function") return 0;
+        try { const value = Number(native[method]()); return isFinite(value) ? value : 0; } catch (error) { return 0; }
+    }
 
     define({
         freeMovement: true,
@@ -53,9 +67,11 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const body = action.sense().observe(action.actor());
             const spare = !!(config && config.spare);
+            const stake = body === null || body.maxHealth() <= 0 ? 0 : Math.max(0, Math.min(1, body.health() / body.maxHealth()));
+            // 起手的光量与本命核心的体积直接读押注比例（0..1），让"押多大"从画面读得出来。
             action.present("world_combat:move_finalgambit:charge", finalgambitScene, 1, action.origin(), JSON.stringify({
-                moment: "charge", spare: spare,
-                stake: body === null || body.maxHealth() <= 0 ? 0 : body.health() / body.maxHealth()
+                moment: "charge", spare: spare, stake: stake,
+                count: Math.round(6 + stake * 30), core: Math.round(3 + stake * 18), scale: 0.6 + stake * 0.8
             }));
             return prepare;
         },
@@ -79,14 +95,16 @@ namespace PokemonSkills {
             movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: finalgambitVector(direction), scale: radius / 0.5 });
             sound(action, "minecraft:entity.ravager.attack");
 
-            /** 结清自我牺牲：全力把当前生命全部花掉（陷入濒死），留手只花到剩一口气。 */
-            function spend(current: CombatAction): void {
+            /** 经原生自付入口结清自我牺牲：全力花掉当前生命，留手花到剩 1 点；返回实际支付。 */
+            function spend(current: CombatAction): { due: number; paid: number } {
                 const scope = current.world(), body = scope.observe(self);
-                if (body === null) return;
-                if (spare) scope.health(self, -(Math.max(0, body.health() - 1)), "world_combat:finalgambit_cost");
-                else scope.health(self, -body.health(), "world_combat:finalgambit_cost");
+                if (body === null) return { due: 0, paid: 0 };
+                const due = spare ? Math.max(0, body.health() - 1) : body.health();
+                const paid = due > 0 ? scope.payHealth(due, "world_combat:finalgambit_cost", spare ? 1 : 0) : 0;
+                return { due: due, paid: paid };
             }
 
+            /** 只结动作：扑空的对谈已在 finish 里写出；倒下与留手由 detonate 在支付回执后写。 */
             function finish(current: CombatAction, missed: boolean, at: CombatPoint): void {
                 if (settled) return;
                 settled = true;
@@ -94,38 +112,52 @@ namespace PokemonSkills {
                     WorldFeedback.emit(current.world(), finalgambitScene, 1, at, { moment: "miss", scale: radius / 0.5 }, 20);
                     WorldFeedback.text(current.world(), at.plus(WorldCombat.point(0, 1.2, 0)), finalgambitMissText, [], 20);
                     sound(current, "minecraft:entity.player.attack.sweep");
-                    movementScenes.finish(current, done);
-                    return;
                 }
-                spend(current);
-                const scope = current.world(), body = scope.observe(self);
-                if (body !== null)
-                    WorldFeedback.emit(scope, finalgambitScene, 1, body.position(), { moment: "fall", scale: blast / 1.2 }, 22);
                 movementScenes.finish(current, done);
             }
 
             function detonate(current: CombatAction, target: CombatActor, at: CombatPoint): void {
                 const scope = current.world();
                 const landed = finalgambitRawHit(current, target, damage, true);
-                WorldFeedback.emit(scope, finalgambitScene, 1, at,
-                    { moment: "detonate", target: String(target.ref()), count: Math.round(20 + share * 60), scale: blast / 1.2 }, 30);
-                sound(current, "minecraft:entity.generic.explode");
                 if (!landed) {
-                    // 打不动（属性免疫）：原生只有「打中」才自我牺牲，这里同样不倒。
+                    // 打不动（属性免疫）或原生拒绝：不播爆炸、不写自毁。
+                    WorldFeedback.emit(scope, finalgambitScene, 1, at, { moment: "miss", scale: radius / 0.5 }, 20);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), finalgambitMissText, [], 22);
                     settled = true;
                     movementScenes.finish(current, done);
                     return;
                 }
+                // 伤害回执成立后才播爆炸；这是单体撞击，冲击沿扑身方向压出，不画成环状群伤。
+                WorldFeedback.emit(scope, finalgambitScene, 1, at,
+                    { moment: "detonate", target: String(target.ref()), count: Math.round(20 + share * 60),
+                      scale: blast / 1.2, direction: finalgambitVector(direction) }, 30);
+                sound(current, "minecraft:entity.generic.explode");
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), finalgambitHitText, [Math.round(damage)], 26);
-                if (scope.valid(target)) scope.displace(target, direction.scale(stagger));
-                const body = scope.observe(self);
-                if (body !== null) {
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.1, 0)),
-                        spare ? finalgambitSpentText : finalgambitFaintText, [], 26);
-                    WorldFeedback.emit(scope, finalgambitScene, 1, body.position(), { moment: spare ? "spent" : "faint", scale: blast / 1.2 }, 26);
+                if (scope.valid(target)) scope.hitDisplace(target, direction.scale(stagger));
+                const selfBody = scope.observe(self);
+                const selfPoint = selfBody !== null ? selfBody.position() : at;
+                // 全力式支付成功身体即倒下，动作作用域随之失效，倒下回报必须趁身体还在时发出；
+                // 先据原生事实确认这具身体会被扣血（无无敌、无吸收），支付不完整时下面的存活性再改写为「未支付」。
+                const native = scope.valid(self) ? scope.nativeEntity(self) : null;
+                const canFall = !finalgambitNativeFlag(native, "isInvulnerable") && finalgambitNativeAmount(native, "getAbsorptionAmount") <= 1e-4;
+                if (!spare && canFall) {
+                    WorldFeedback.text(scope, selfPoint.plus(WorldCombat.point(0, 1.1, 0)), finalgambitFaintText, [], 26);
+                    WorldFeedback.emit(scope, finalgambitScene, 1, selfPoint, { moment: "faint", scale: blast / 1.2 }, 26);
                 }
-                finish(current, false, at);
+                const cost = spend(current);
+                const paidFull = cost.due <= 0 || cost.paid + 1e-4 >= cost.due;
+                if (scope.valid(self)) {
+                    if (paidFull && spare) {
+                        WorldFeedback.text(scope, selfPoint.plus(WorldCombat.point(0, 1.1, 0)), finalgambitSpentText, [], 26);
+                        WorldFeedback.emit(scope, finalgambitScene, 1, selfPoint, { moment: "spent", scale: blast / 1.2 }, 26);
+                    } else if (!paidFull) {
+                        // 实际没支付完整：改写为未支付，不谎报倒下或留手。
+                        WorldFeedback.text(scope, selfPoint.plus(WorldCombat.point(0, 1.1, 0)), finalgambitUnpaidText, [], 26);
+                        WorldFeedback.emit(scope, finalgambitScene, 1, selfPoint, { moment: "miss", scale: blast / 1.2 }, 24);
+                    }
+                }
+                settled = true;
+                movementScenes.finish(current, done);
             }
 
             function advance(current: CombatAction): void {

@@ -5,7 +5,8 @@
  *   向上卷成一根把整圈包住的火柱，火里翻涌着火星与黑烟；被卷到的人身上整个烧起来，烧完只剩一圈余火。
  * 色相家族：烈焰橙红（0xFF6A22）与热芯白（0xFFE08A）为主体，烟黑（0x2A1A14）衬托。
  * 拍子：起 kindle（聚火）→ 印 mark（焦痕预热）→ 涌 bloom（火柱）→ 裹 engulf（裹住目标）→ 熄 ember（余火）。
- * 范围：mark / bloom / ember 的地面盘按服务端传的 `data.radius`（真实火柱半径）画出，圈就是会被烧到的地。
+ * 范围：mark / bloom / ember 的地面盘与火柱都用 `fit: "world"`，按服务端传的 `data.radius`（真实火柱半径）、
+ *   火柱长度按 `data.height` 画出，圈就是会被烧到的地；`data.scale` 只缩放粒子大小，不再把半径二次放大。
  * 运动：火柱竖直上涌，火星向外、向上翻卷，余火贴地慢慢灭。
  * 数：火柱与外焰密度绑定 `data.embers`（特攻与等级换算），engulf 的火量绑定 `data.count`（威力派生），
  *   强度绑定 `data.intensity`（威力派生）；mark 的预热长度来自 `data.fuse`。
@@ -47,7 +48,7 @@ const InfernoDefinition: ParticleDefinition = {
             duration: 0,
             emitters: [
                 {
-                    name: "scorch_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "scorch_ring", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: { data: "embers", fallback: 14 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.1 } },
                     direction: "inward", speed: [0.0, 0.05],
@@ -55,7 +56,7 @@ const InfernoDefinition: ParticleDefinition = {
                     color: 0x2A1A14, alpha: [0.5, 0], light: "world", maxParticles: 60
                 },
                 {
-                    name: "heat_ring", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "heat_ring", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     rate: { data: "embers", fallback: 12 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.1 } },
                     direction: "up", speed: [0.01, 0.06], spread: 12,
@@ -69,23 +70,23 @@ const InfernoDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "column", bind: "point", fit: "none", offset: [0, 0, 0],
+                    name: "column", bind: "point", fit: "world", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    rate: { data: "embers", fallback: 40 }, shape: { kind: "cylinder", radius: 0.55, length: 2.8 },
+                    rate: { data: "embers", fallback: 40 }, shape: { kind: "cylinder", radius: { data: "radius", fallback: 2.1 }, length: { data: "height", fallback: 3 } },
                     direction: "up", speed: [0.08, 0.28], spread: 12,
                     lifetime: [8, 16], size: [0.28, 0.05],
                     color: 0xFF6A22, alpha: [0.92, 0], light: "full", bloom: 0.4, maxParticles: 180
                 },
                 {
-                    name: "core", bind: "point", fit: "none", offset: [0, 0, 0],
+                    name: "core", bind: "point", fit: "world", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    rate: { data: "embers", fallback: 20 }, shape: { kind: "cylinder", radius: 0.4, length: 2.6 },
+                    rate: { data: "embers", fallback: 20 }, shape: { kind: "cylinder", radius: { data: "core", fallback: 1.3 }, length: { data: "height", fallback: 3 } },
                     direction: "up", speed: [0.05, 0.2], spread: 8,
                     lifetime: [8, 14], size: [0.3, 0.06],
                     color: 0xFFE08A, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 120
                 },
                 {
-                    name: "burst", bind: "point", fit: "none", offset: [0, 0.15, 0],
+                    name: "burst", bind: "point", fit: "world", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
                     burst: { count: { data: "embers", fallback: 20 }, at: 1 },
                     shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 2.1 } },
@@ -94,7 +95,7 @@ const InfernoDefinition: ParticleDefinition = {
                     color: 0xFFF0C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 80
                 },
                 {
-                    name: "sparks", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    name: "sparks", bind: "point", fit: "world", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "embers", fallback: 24 }, at: 1 },
                     shape: { kind: "sphere", radius: { data: "radius", fallback: 2.1 } },
@@ -104,9 +105,9 @@ const InfernoDefinition: ParticleDefinition = {
                     color: 0xFFC24A, alpha: [0.9, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "smoke", bind: "point", fit: "none", offset: [0, 0.3, 0],
+                    name: "smoke", bind: "point", fit: "world", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 20, shape: { kind: "cylinder", radius: 0.9, length: 2.8 },
+                    rate: 20, shape: { kind: "cylinder", radius: { data: "radius", fallback: 2.1 }, length: { data: "height", fallback: 3 } },
                     direction: "up", speed: [0.05, 0.18], drag: 0.9,
                     lifetime: [14, 26], size: [0.38, 0.64],
                     color: 0x2A1A14, alpha: [0.42, 0], light: "world", maxParticles: 110
@@ -151,7 +152,7 @@ const InfernoDefinition: ParticleDefinition = {
             exit: { drain: 22 },
             emitters: [
                 {
-                    name: "embers", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "embers", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "embers", fallback: 12 }, interval: 6, repeats: 3, at: 1 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 2.1 } },
@@ -161,7 +162,7 @@ const InfernoDefinition: ParticleDefinition = {
                     color: 0xFF6A24, alpha: [0.7, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "low_smoke", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "low_smoke", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: 12, shape: { kind: "circle", radius: { data: "radius", fallback: 2.1 } },
                     direction: "up", speed: [0.01, 0.05], drag: 0.9,

@@ -3,14 +3,14 @@
  *
  * 核心念头：按住技能键，从身边探出一根**粗吸根**，照住当前瞄准方向；按固定拍数每隔 `cadence`
  *   刻沿当刻准线检查一次真实首碰。只有这一拍真的照到有效敌人、并造成真实伤害，才结算该拍伤害、
- *   把一半经共享 `drain` 转回自身，并让一股亮汁回流；照到空地、墙面或被友方挡断，这一拍就干抽。
- *   拍数是固定的：松手、被打断或用尽拍数立即收根，不补发剩余拍。移动Boss靠持续跟瞄维持吸取。
+ *   把一半经共享 `drain` 转回自身，并在「真实接触点 → 施法者」之间放出一股沿根回身的亮汁；
+ *   照到空地、墙面或被友方挡断，这一拍就干抽。拍数是固定的：松手、被打断或用尽拍数立即收根，不补发剩余拍。
  *
  * 两幕：
  *   起（windup，提交前）：身体四周绿光向地面与手心汇聚，只播预告。
  *   照（每拍 pulse）：从当刻身体位置沿当刻自由瞄准 `trace` 一条 `root` 粗的线；首碰是有效敌人就
  *      结算 `surge` 伤害并抽回 `sap` 比例的汁；首碰是友方或方块、或整条线落空，则该拍不结算、根尖干枯。
- *      每拍都重读当前aim与首碰者，不共用旧目标 ref。
+ *      每拍都重读当前aim与首碰者，不共用旧目标 ref；每拍有自己的 strike 身份 `pulse:<index>`，同一目标的后拍不会被去重拒绝。
  *
  * 与同族分开：吸取是藤不脱手的一啄、超级吸取把孢荚抛出去、木角用身体撞进去；只有终极吸取是
  *   **一根随时可转向的粗吸根、按固定拍数照准抽取**——画面上看得出根连在真实的射线终点上。
@@ -20,6 +20,7 @@
  */
 namespace PokemonSkills {
     const gigaDrainScene = "world_combat:move_gigadrain";
+    const gigaDrainFlowScene = "world_combat:move_gigadrain_flow";
     const gigaDrainGoreText = "world_combat.move.gigadrain.text.gore";
     const gigaDrainWaveText = "world_combat.move.gigadrain.text.wave";
     const gigaDrainMissText = "world_combat.move.gigadrain.text.miss";
@@ -35,6 +36,15 @@ namespace PokemonSkills {
         } catch (error) { }
         try { return action.targetPosition(); } catch (error) { }
         return action.origin().plus(action.direction());
+    }
+
+    /** 每拍真实伤害后的回流：从真实接触点向施法者放出一股固定数量的亮汁，0→1 走完即止。 */
+    function gigaDrainFlow(world: CombatWorld, actor: CombatActor, at: CombatPoint, motes: number, dur: number): void {
+        WorldFeedback.emit(world, gigaDrainFlowScene, 1, at, {
+            from: [at.x(), at.y(), at.z()], target: String(actor.ref()),
+            motes: Math.max(2, Math.min(12, Math.round(motes / 3))),
+            start: world.tick(), dur: dur
+        }, dur + 6);
     }
 
     define({
@@ -87,6 +97,9 @@ namespace PokemonSkills {
             const scenes = WorldFeedback.actionScenes(gigaDrainScene);
             let beat = 0, settled = false;
 
+            // 提交后不再依赖旧目标：新准心可换目标，旧目标死去也不取消整次后拍。
+            try { action.releaseTarget(); } catch (error) { }
+
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
@@ -123,8 +136,9 @@ namespace PokemonSkills {
                 if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                     const before = scope.observe(victim);
                     const previous = before === null ? 0 : before.health();
+                    // 每拍自己的 strike 身份：同一目标的后拍不会被 ActionContext 以 primary 去重拒绝。
                     const applied = impact(current, hit, "gigadrain", power,
-                        { damage: damageSpec("gigadrain", "surge"), drain: share });
+                        { damage: damageSpec("gigadrain", "surge"), drain: share }, "pulse:" + index);
                     const after = scope.valid(victim) ? scope.observe(victim) : null;
                     const actual = after === null ? previous : previous - after.health();
                     dealt = applied && (after === null || actual > 0);
@@ -144,11 +158,13 @@ namespace PokemonSkills {
                     scale: scale, motes: motes
                 });
                 if (dealt) {
+                    // 回流只当拍真实伤害后触发：从真实接触点沿根回到移动中的施法者。
+                    gigaDrainFlow(scope, actor, at, motes, Math.max(8, Math.round(cadence * 0.9)));
                     WorldFeedback.emit(scope, gigaDrainScene, 1, at, {
                         moment: "surge", path: ["source", [at.x(), at.y(), at.z()]],
                         direction: [back.x(), back.y(), back.z()], span: span,
                         scale: scale, motes: motes, wave: index, waves: waves
-                    }, 26);
+                    }, 16);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), gigaDrainWaveText, [index, waves], 20);
                     sound(current, "cobblemon:move.gigadrain.target");
                 } else {

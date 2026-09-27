@@ -28,13 +28,22 @@ public final class NativeProjectileChecks {
     private static int beforeUnload, beforeIntercept;
     public static void launch(ActionContext action) {
         action.commit(1);
+        String[] flightId = new String[1]; Point[] lastContact = new Point[1];
         var id = action.projectile(action.origin(), new Point(speed, 0, 0), 0, radius, 40, 80,
             (current, hit) -> {
                 impacts++;
+                lastContact[0] = hit.position();
                 if (hit.blocked()) require(hit.blockPosition() != null && !hit.blockFace().isEmpty(), "Native block contact lost its surface facts");
                 if (hit.hitEntity()) require(current.hit(hit, 4, "native", "{}"), "Native damage was rejected");
             },
-            current -> { completions++; current.finish(); }, options);
+            current -> {
+                var at = current.world().projectilePosition(flightId[0]);
+                require(at != null, "Removed native flight lost its terminal position before completion");
+                var expected = lastContact[0] == null ? MinecraftCombat.point(projectile.position()) : lastContact[0];
+                require(at.minus(expected).length() < 1e-6, "Completion did not retain the actual contact/removal point");
+                completions++; current.finish();
+            }, options);
+        flightId[0] = id;
         var level = (net.minecraft.server.level.ServerLevel) actor.level();
         projectile = (CombatProjectile) level.getEntity(UUID.fromString(id));
         require(projectile != null && projectile.getOwner() == actor, "Projectile is not a native tracked entity with ownership");
@@ -51,7 +60,14 @@ public final class NativeProjectileChecks {
                     prepare(server); NativeSweepChecks.run(combat, level); NativeHealingChecks.run(combat, level); NativeMobEffectChecks.run(combat, level); NativeCriticalChecks.run(combat, level); NativeHitMotionChecks.run(combat, level); NativeLocomotionChecks.run(combat, level); NativeDamageFloorChecks.run(combat, level); NativeTerrainFactsChecks.run(combat, level); NativeEquipmentSuppressionChecks.run(combat, level); NativeGroundLiftChecks.run(combat, level);
                     NativeEquipmentPickupChecks.run(combat, level);
                     NativeEffectTransferChecks.run(combat, level);
+                    NativeEffectTransformChecks.run(combat, level);
                     NativeDeathChecks.run(combat, level);
+                    NativeDamageReceiptChecks.run(combat, level);
+                    NativePreparedReceiptChecks.run(combat, level);
+                    NativeDamageRelationsChecks.run(combat, level);
+                    NativeTargetRequestChecks.run(combat, level);
+                    NativeAttackStartChecks.run(combat, level);
+                    NativeAttributeAppearanceChecks.run(level);
                     NativeProjectileObservationChecks.run(combat, level);
                     NativePierceChecks.run(combat, level);
                     actor = mob(EntityType.COW, level, 2); target = mob(EntityType.COW, level, 8);
@@ -131,6 +147,15 @@ public final class NativeProjectileChecks {
                 }
                 case 71 -> {
                     require(completions == beforeIntercept + 1, "Interception bypassed managed safe-boundary completion");
+                    clean(combat);
+                    wall(level, false);
+                    target.moveTo(8,100,2); target.setHealth(10); target.invulnerableTime = 0;
+                    speed = 1.5; options = "{\"pierce\":1,\"homing\":{\"target\":\"" + target.getStringUUID() + "\",\"turn\":90}}"; cast(combat);
+                }
+                case 83 -> {
+                    require(target.getHealth() == 6 && !projectile.isRemoved() && projectile.getX() > target.getX() + 2 && projectile.getDeltaMovement().x > 0,
+                        "Piercing homing projectile turned back toward an already hit target");
+                    combat.runtime().cancelActor(combat.bind(actor), "fixture-complete");
                     clean(combat);
                     done = true; mark("PASS native projectiles: tracking, sweep, impact cancellation, target block, radius, deflection attribution, homing, bounce, unload, scope cleanup and sound observations");
                 }

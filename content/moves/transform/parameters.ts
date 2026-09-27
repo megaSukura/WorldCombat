@@ -34,6 +34,8 @@ namespace PokemonSkills {
     export const transformEffect = "world_combat:transform_shift";
     /** 机读旁挂：记下这次临时层的 id 与复制来的形态信息，供收回与画面读取。 */
     export const transformMark = "world_combat:transform_mark";
+    /** 逐帧推进的扫描表现（自定义 scene）：静止的两端也能看到扫线掠过。 */
+    export const transformScanScene = "world_combat:move_transform_scan";
     export const transformShiftText = "world_combat.move.transform.text.shift";
     export const transformRevertText = "world_combat.move.transform.text.revert";
     export const transformFailText = "world_combat.move.transform.text.fail";

@@ -2,7 +2,7 @@
   "worldcombat.skill.refresh.summary": "站定净息，一次清除自己身上的中毒／剧毒、灼伤与麻痹，并留下一小段清爽窗口，窗口内新的中毒、灼伤与麻痹会被弹开；不解睡眠与冰冻，也不回复生命。",
   "worldcombat.skill.refresh.use.0": "烧着或中毒时把状态清掉，止住持续掉血",
   "worldcombat.skill.refresh.use.1": "在被麻痹锁住前挣脱，恢复正常行动",
-  "worldcombat.skill.refresh.use.2": "在对方下一次异常前预先净息，用清爽窗口挡住",
+  "worldcombat.skill.refresh.use.2": "净化后立刻用清爽窗口挡住紧接着的同类异常",
   "worldcombat.skill.refresh.description.0": "净息后获得 %1$s 的清爽窗口，期间再来的中毒、灼伤与麻痹会被弹开。",
   "worldcombat.skill.refresh.description.1": "站定 %1$s 才能把身上的中毒／剧毒、灼伤与麻痹一次抖落，准备期间不能移动。",
   "worldcombat.skill.refresh.stance.deep": "深息：起手 ×1.3、冷却 ×1.25，换来清爽窗口 ×1.5（一次更久的保护）。",

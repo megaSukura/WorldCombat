@@ -15,7 +15,7 @@
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
  *   flash       闪光威力 72 + 特攻偏移 + 等级偏移（特攻越强闪得越重）。
  *   radius      光浪半径 3.4 格 + 身高偏移 + 特攻偏移 + 等级偏移（身量大、特攻高的铺得越开）。
- *   falloff     边缘保留 0.58 − 特攻偏移（特攻越高光越均匀、衰减越小）。
+ *   falloff     边缘保留 0.58 − 特攻偏移（特攻越高中心越集中、外圈衰减越明显）。
  *   dazzleTicks 目眩时长 50 刻 + 特攻偏移 + 等级偏移（闪得越花眼，走得越慢越久）。
  *   rays        放射光道数 9 + 特攻偏移 + 等级偏移（同时驱动画面里放射的条数）。
  *   motes       光尘数量 26 + 特攻偏移（同时驱动画面密度）。
@@ -56,7 +56,7 @@ namespace PokemonSkills {
             F.base(0.58).minus(F.stat("specialAttack").minus(60).times(0.001).clamp(-0.08, 0.14))
                 .times(F.when(F.pref("wide", text("worldcombat.skill.dazzlinggleam.preference.wide")), F.const(1.06), F.const(0.85)))
                 .clamp(0.4, 0.78).round(2),
-            "边缘保留", "光浪推到最外圈时还剩多少威力；特攻高的个体光更均匀、衰减更小，散射式外圈更亮、凝聚式中心更集中。"),
+            "边缘保留", "光浪推到最外圈时还剩多少威力；特攻高的个体外圈衰减更明显、中心更集中，散射式外圈更亮、凝聚式中心更集中。"),
         /** 目眩时长：50 + 特攻偏移[−8,26] + 等级(≥25)偏移[0,10]；散射 ×0.85 / 凝聚 ×1.15；夹 30..96。 */
         dazzleTicks: seconds(
             F.base(50).plus(F.stat("specialAttack").minus(60).times(0.25).clamp(-8, 26))

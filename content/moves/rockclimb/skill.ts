@@ -31,7 +31,7 @@ namespace PokemonSkills {
         cooldownParameter: "recharge",
         name: "Rock Climb",
         description: "先短冲到真实壁面，再在冲程和攀升高度内向上攀；脚底越过墙沿且身体通得过才翻顶。顶棚会停攀，平地作一次低扑；只在身体真正接触敌人时重击并可能混乱。",
-        uses: ["贴身的一次重扑", "越过一小段距离砸进敌群", "用落地范围一次撞到两三个"],
+        uses: ["贴身的一次重扑", "沿真实短崖攀到高处", "翻过墙沿落到高台追击"],
         kind: "aim",
         range: 6,
         maxRange: 10,
@@ -65,17 +65,26 @@ namespace PokemonSkills {
             const world=action.world(),actor=action.actor(),first=world.observe(actor);if(!first){done(action);return;}
             const reach=p(rockclimbId,"reach",action),arc=p(rockclimbId,"arc",action),duration=Math.max(1,Math.round(p(rockclimbId,"leapTicks",action)));
             const power=p(rockclimbId,"ram",action),chance=p(rockclimbId,"confuseChance",action),daze=Math.round(p(rockclimbId,"dazeTicks",action)),fumble=Math.round(p(rockclimbId,"fumble",action)*100),motes=p(rockclimbId,"motes",action);
+            const radius=p(rockclimbId,"impactRadius",action),scuffCells=p(rockclimbId,"scuffCells",action);
             const direction=WorldGeometry.flatUnit(NativeSemantics.aim(action,move,WorldGeometry.flatUnit(aim(action)),p(rockclimbId,"spread",action)));
             const scenes=WorldFeedback.actionScenes(rockclimbScene);let phase="approach",age=0,used=0,crest=0,grip=0,ended=false;
-            const base=first.boundsMin().y(),height=arc,maximumTicks=duration+Math.ceil(height/.3)+4;
+            const base=first.boundsMin().y(),height=arc,maximumTicks=duration+Math.ceil(height/.3)+24;
             function finish(current:CombatAction):void{if(ended)return;ended=true;if(grip)current.world().operation(grip,"world_combat:dispel","{}");scenes.finish(current,done);}
             function contact(current:CombatAction,hit:CombatImpact):void{
                 const scope=current.world(),target=hit.target();if(target&&scope.valid(target)&&!scope.friendly(target)){
                     const landed=impact(current,hit,rockclimbId,power,{damage:damageSpec(rockclimbId,"ram"),contact:true});
-                    WorldFeedback.emit(scope,rockclimbScene,1,hit.position(),{moment:"slam",target:String(target.ref()),motes:motes,scale:1,intensity:power/90},20);
-                    if(landed&&scope.valid(target)&&scope.random()<chance)rockclimbDaze(scope,target,hit.position(),daze,fumble);
+                    if(landed){
+                        WorldFeedback.emit(scope,rockclimbScene,1,hit.position(),{moment:"slam",target:String(target.ref()),motes:motes,scale:1,radius:radius,intensity:power/90},20);
+                        if(scope.valid(target)&&scope.random()<chance)rockclimbDaze(scope,target,hit.position(),daze,fumble);
+                    }
                 }
                 finish(current);
+            }
+            /** 翻沿靠真实支撑收尾：脚底在短距离内落到实体方块、且身体站得下，才算翻上墙沿。 */
+            function supported(scope:CombatWorld,body:CombatObservation):boolean{
+                const feet=body.boundsMin();
+                const ground=scope.clipBlocks(WorldCombat.point(feet.x(),feet.y()-.03,feet.z()),WorldCombat.point(feet.x(),feet.y()-.35,feet.z()));
+                return ground!==null&&ground.blocked()&&scope.freeSpace(WorldCombat.point(feet.x(),ground.position().y(),feet.z()),body.width(),body.height());
             }
             function step(current:CombatAction):void{
                 const scope=current.world(),body=scope.observe(actor);if(!body||++age>maximumTicks||used>=reach){finish(current);return;}
@@ -83,11 +92,12 @@ namespace PokemonSkills {
                 const wall=scope.clipBlocks(feet,feet.plus(direction.scale(probeDistance)));
                 let delta:CombatPoint;
                 if(phase==="climb"){
-                    if(body.boundsMin().y()-base>=height-.02){finish(current);return;}
-                    if(wall&&!wall.blocked()){phase="crest";crest=0;}
+                    // 先判断真实墙沿：前方墙消失就是到顶，转入翻沿；仍贴墙且用尽攀升高度才停攀。
+                    if(!wall||!wall.blocked()){phase="crest";crest=0;}
+                    else if(body.boundsMin().y()-base>=height-.02){finish(current);return;}
                 }
                 if(phase==="climb")delta=WorldCombat.point(0,Math.min(.3,height-(body.boundsMin().y()-base),reach-used),0);
-                else if(phase==="crest")delta=direction.scale(Math.min(.35,reach-used));
+                else if(phase==="crest")delta=direction.scale(Math.min(Math.max(body.width()*.5+.2,.25),reach-used));
                 else delta=direction.scale(Math.min(reach/duration,reach-used)).plus(WorldCombat.point(0,age===1?Math.min(.3,arc):0,0));
                 const swept=sweepStep(current,delta,.01);used+=swept.moved;
                 if(swept.hit.hitEntity()){contact(current,swept.hit);return;}
@@ -95,13 +105,17 @@ namespace PokemonSkills {
                 if(phase==="approach"&&swept.hit.blocked()){
                     const actual=scope.clipBlocks(now.position(),now.position().plus(direction.scale(probeDistance)));
                     if(!actual||!actual.blocked()||actual.blockFace()==="up"||actual.blockFace()==="down"){finish(current);return;}
-                    phase="climb";grip=current.effect(rockclimbGrip,actor,"{}",maximumTicks);scope.motion(actor,WorldCombat.point(0,0,0),false);
+                    // 重力托管是攀壁的前提；载体没能落下就明确终止，不假装继续攀。
+                    const hold=current.effect(rockclimbGrip,actor,"{}",maximumTicks);
+                    if(hold<=0){finish(current);return;}
+                    grip=hold;phase="climb";scope.motion(actor,WorldCombat.point(0,0,0),false);
                 }else if(swept.hit.blocked()||swept.moved<.01){finish(current);return;}
                 if(phase==="climb"&&wall&&wall.blocked()){
-                    WorldFeedback.emit(scope,rockclimbScene,1,wall.position(),{moment:"grip",point:[wall.position().x(),wall.position().y(),wall.position().z()],motes:2},Math.min(20,p(rockclimbId,"scuffTicks",current)));
+                    WorldFeedback.emit(scope,rockclimbScene,1,wall.position(),{moment:"grip",point:[wall.position().x(),wall.position().y(),wall.position().z()],motes:2,cells:scuffCells},Math.min(14,p(rockclimbId,"scuffTicks",current)));
                 }
                 const after=current.origin();scenes.show(current,"route",after,{moment:"route",path:[[from.x(),from.y(),from.z()],[after.x(),after.y(),after.z()]],motes:motes});
-                if(phase==="crest"&&++crest>=3){finish(current);return;}current.after(1,step);
+                if(phase==="crest"&&(supported(scope,now)||++crest>=12)){finish(current);return;}
+                current.after(1,step);
             }
             action.releaseTarget();step(action);
         }

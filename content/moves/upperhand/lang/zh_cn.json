@@ -3,7 +3,7 @@
   "worldcombat.skill.upperhand.use.0": "打断对手的先制招",
   "worldcombat.skill.upperhand.use.1": "迎住贴身的近战抢攻并反打",
   "worldcombat.skill.upperhand.use.2": "在对手抢先手时把它按回原地",
-  "worldcombat.skill.upperhand.description.0": "读到对手正在出先制招时，朝它踏进并用掌根打出一记约 %1$s 点物理伤害；只有目标在最近 %2$s 内提交过先制攻击招式才会命中并把它按停，否则落空、PP 照常消耗。",
+  "worldcombat.skill.upperhand.description.0": "读到对手正在出先制招时，朝它踏进并用掌根打出一记约 %1$s 点物理伤害；只有目标在最近 %2$s 内提交过、且这次先制动作仍在进行时才会命中并把它按停，动作一结束就只剩落空、PP 照常消耗。",
   "worldcombat.skill.upperhand.description.1": "没有先制记录时改为正面架掌：在 %1$s 内以瞄准方向为正面、罩住 %2$s 度张角，接住敌人的第一次近身接触攻击，削掉这一次伤害的 %3$s 后立刻还一掌；背后与远程都不算，窗口一过只合掌。",
   "worldcombat.skill.upperhand.description.2": "掌击按停目标 %1$s：先打断它当前可被打断的动作，随后它在这段时间内无法发动新招或普通攻击；免疫畏缩的目标仍会正常挨掌击。",
   "worldcombat.skill.upperhand.description.3": "迎击与踏进的掌程 %1$s 格、每刻 %2$s 格，判定半径 %3$s 格；命中后把目标顶开 %4$s 格。",

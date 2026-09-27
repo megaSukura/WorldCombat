@@ -6,23 +6,10 @@ namespace PokemonSkills {
     const belchMissText = "world_combat.move.belch.text.miss";
     const belchPoisonText = "world_combat.move.belch.text.poison";
 
-    function belchCone(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number, arc: number): number[][] {
-        const forward = direction.unit(), half = arc * Math.PI / 360;
-        let side = WorldCombat.point(forward.z(), 0, -forward.x());
-        side = side.length() < 0.001 ? WorldCombat.point(1, 0, 0) : side.unit();
-        const up = WorldCombat.point(side.y() * forward.z() - side.z() * forward.y(), side.z() * forward.x() - side.x() * forward.z(), side.x() * forward.y() - side.y() * forward.x());
-        const path: number[][] = [];
-        function coordinates(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()].map(value => Math.round(value * 1000) / 1000); }
-        function ray(heading: CombatPoint): void {
-            const end = origin.plus(heading.scale(reach)), block = world.clipBlocks(origin, end), at = block ? block.position() : end;
-            path.push(coordinates(origin), coordinates(at));
-        }
-        ray(forward);
-        for (let ring = 1; ring <= 2; ring++) for (let i = 0; i < ring * 4; i++) {
-            const turn = i * Math.PI * 2 / (ring * 4), angle = half * ring / 2;
-            ray(forward.scale(Math.cos(angle)).plus(side.scale(Math.cos(turn) * Math.sin(angle))).plus(up.scale(Math.sin(turn) * Math.sin(angle))));
-        }
-        return path;
+    /** 沿弹道第一面真实墙的距离；畅通则到 reach。视觉锥在此截断，与命中视线一致（clipBlocks 畅通也返回 MISS，须看 blocked）。 */
+    function belchClearance(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number): number {
+        const wall = WorldGeometry.blockHit(world, origin, origin.plus(direction.scale(reach)));
+        return wall !== null ? Math.max(0.2, wall.position().minus(origin).length()) : reach;
     }
     function belchVictims(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number, arc: number,
         visit: (actor: CombatActor, facts: CombatObservation) => void): void {
@@ -114,7 +101,8 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const here = origin;
                 const grow = Math.min(1, count / steps);
-                const span = Math.max(0.6, reach * grow);
+                const span = Math.max(0.6, Math.min(reach * grow, belchClearance(scope, here, direction, reach)));
+                const half = arc / 2;
                 belchVictims(scope, here, direction, span, arc, function (enemy, facts) {
                     const key = String(enemy.ref());
                     if (hitRefs[key] || hits >= cap) return;
@@ -133,13 +121,21 @@ namespace PokemonSkills {
                         { moment: "hit", target: key, motes: Math.round(motes * 0.6),
                             intensity: Math.max(0.5, Math.min(2.0, power * gain / 110)) }, 26);
                 });
+                // 毒团体积与判定共用同一组方向/长度/半角；每刻只发当刻真实截面。
+                const heading = [direction.x(), direction.y(), direction.z()];
                 WorldFeedback.keep(scope, "world_combat:move_belch:gas", belchScene, 1, here,
-                    { moment: "belch", path: belchCone(scope, here, direction, span, arc), reach: span, arc: arc,
-                        scale: span / reach, motes: Math.round(motes * grow) }, 14);
+                    { moment: "belch", direction: heading, length: span, half: half,
+                        motes: Math.round(motes * grow), scale: span / reach }, 12);
+                // 明确前缘：锥底真实位置与真实张角，不随粒子飘散而变形。
+                const front = here.plus(direction.scale(span));
+                WorldFeedback.keep(scope, "world_combat:move_belch:front", belchScene, 1, front,
+                    { moment: "belch_front", direction: heading,
+                        radius: Math.max(0.12, span * Math.tan(half * Math.PI / 180) + 0.18),
+                        motes: Math.round(motes * grow), scale: span / reach }, 12);
                 if (count >= steps) {
                     WorldFeedback.keep(scope, "world_combat:move_belch:haze", belchScene, 1, here,
-                        { moment: "haze", path: belchCone(scope, here, direction, reach, arc), reach: reach, arc: arc, scale: 1,
-                            motes: motes, haze: hazeTicks }, hazeTicks);
+                        { moment: "haze", direction: heading, length: reach, half: half, reach: reach, arc: arc, scale: 1,
+                            motes: Math.round(motes * 0.5), haze: hazeTicks }, hazeTicks);
                     WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.4, 0)),
                         hits > 0 ? belchHitText : belchMissText, hits > 0 ? [hits] : [], 26);
                     sound(current, "cobblemon:move.poisongas.actor");

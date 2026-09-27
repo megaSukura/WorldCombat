@@ -4,11 +4,11 @@
  * 一句话：拳上聚起薄土，随后拳头沿施法者到目标的一条短线一记记打出去，每拳只在命中点留下一小段触痕；砸开缺口时
  * 目标身上崩开一圈石屑。
  * 色相家族：土黄与岩灰（large_rock／impact_rock 原色、tinydust 中性）＋一处近白高光（glowingsparkle）。
- * 拍子：起（windup 聚土）→ 击（strike 每记拳）→ 收（crack 缺口崩开）。
- * 范围：strike 用 path 画出服务端 trace 那一段命中点附近的短触痕，拳够到哪、触痕就落在哪；命中爆开在同一个落点上。
+ * 拍子：起（windup 聚土）→ 击（strike 每记拳的拳路与拳尖）→ 触（impact 只有打实才崩岩屑）→ 收（crack 缺口崩开）。
+ * 范围：strike 用 path 画出服务端 trace 那一段命中点附近的短触痕，拳够到哪、触痕就落在哪；impact 在同一个落点爆开。
  * 运动：碎石从落点朝外飞、受重力落地，土屑慢速下沉。
  * 数：`data.notes`（单拳威力换算）绑定碎石数量，`data.index`／`data.jabs` 让每一记拳有自己的节拍，
- * `data.hit` 让空拳不炸开碎石。
+ *   `data.hit` 让空拳不炸开碎石（服务端只在打实时另发 impact）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const RocksmashDefinition: ParticleDefinition = {
@@ -54,7 +54,13 @@ const RocksmashDefinition: ParticleDefinition = {
                     burst: { count: 1, at: 0 },
                     lifetime: [6, 10], size: [0.5, 0.2], sizeMode: "linear",
                     color: 0xE8D8B0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 6
-                },
+                }
+            ]
+        },
+        impact: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
                 {
                     name: "stone", bind: "point", offset: [0, 0.0, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",

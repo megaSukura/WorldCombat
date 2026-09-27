@@ -18,14 +18,14 @@
  *
  * 数据分散（每项读不同的精灵数据）：
  *   spike  单钉威力：物攻定钉的狠，等级定钉的熟。
- *   shots  钉数：物攻与等级决定这一梭有几发（夹 2..5；穿甲收在 3）。
- *   gap    间隔：速度决定炮响得多密（本族最慢）。
+ *   shots  钉数：物攻与等级决定这一梭有几发（夹 2..5；穿甲收在 3，成长台阶后仍收在 3）。
+ *   gap    间隔：速度决定前一枚落定后多快装填下一枚（本族最慢）。
  *   velocity 钉速：物攻决定打得多快。
  *   radius 钉判定：体型高度定单发的碰撞大小。
- *   reach  射程：物攻与等级决定贯得多远（本族最长），也是本招的实际射程来源。
+ *   reach  射程：物攻与等级决定贯得多远（本族最长），就是投射物的实际射程来源（不再额外多飞）。
  *   spread 首发偏角：速度与配置决定炮口锁定前的偏角（原生 100 命中的翻译：几乎没有偏角）。
- *   pierce 穿透：等级与配置决定一发能贯穿几个人。
- *   knock  顶退：物攻与配置决定命中后把人推开几格。
+ *   pierce 穿透人数：一发连同最后停下的那个最多贯穿几个人；原生落地时按「额外穿过」传 pierce−1。
+ *   knock  顶退：物攻与配置决定命中后把人推开几格（沿原生抗性/击退事件，可能被拒绝）。
  *   shards 碎钉量：物攻换算的碎屑量，驱动命中表现。
  *   tempo／aftercast／recharge：速度定节奏，穿甲更慢更长。
  *
@@ -50,7 +50,7 @@ namespace PokemonSkills {
                 description: "每一枚钉打上去的威力；总数乘起来才是这一梭的分量。物攻定狠度、等级让钉更熟。穿甲式更重。对手防御、相性与暴击在每发命中时另算。"
             }),
         /** 钉数：基础 2 + 物攻偏移[0,1.5] + 等级(≥25)偏移[0,1] + 速度偏移[0,0.8]；向下取整；
-         *  穿甲上限 3、连发上限 5；夹 2..5。 */
+         *  穿甲上限 3、连发上限 5；夹 2..5。成长台阶的加项在公式夹取之外，所以执行时再按配置收一次上限。 */
         shots: formula(
             F.base(2)
                 .plus(F.stat("attack").minus(55).times(0.012).clamp(0, 1.5))
@@ -61,14 +61,14 @@ namespace PokemonSkills {
                     F.when(F.pref("lance", text("worldcombat.skill.spikecannon.preference.lance")), F.const(3), F.const(5))),
             "钉数", {
                 unit: "发",
-                description: "这一梭打出几枚钉；物攻、速度与等级越高越多（原生 2～5）。穿甲式收在 3 发，连发式可到 5 发。"
+                description: "这一梭打出几枚钉；物攻、速度与等级越高越多（原生 2～5）。穿甲式收在 3 发，连发式可到 5 发；成长台阶也只抬到各自上限。"
             }),
         /** 间隔：基础 7 刻，速度每比 55 快 1 减 0.03（夹 −1..2）；穿甲 +2 / 连发 −1；夹 4..10。 */
         gap: seconds(
             F.base(7).minus(F.stat("speed").minus(55).times(0.03).clamp(-1, 2))
                 .plus(F.when(F.pref("lance", text("worldcombat.skill.spikecannon.preference.lance")), F.const(2), F.const(-1)))
                 .clamp(4, 10).round(0),
-            "间隔", "两发钉之间隔多久打出；速度越快越密，穿甲更沉、连发更急。它是本族里最慢的一梭。"),
+            "间隔", "前一枚钉落定后，装填并打出下一枚要等多久；速度越快越密，穿甲更沉、连发更急。它是本族里最慢的一梭。"),
         /** 钉速：基础 1.6，物攻每比 55 多 1 加 0.006（夹 −0.1..0.3）；夹 1.4..2.4。 */
         velocity: formula(
             F.base(1.6).plus(F.stat("attack").minus(55).times(0.006).clamp(-0.1, 0.3)).clamp(1.4, 2.4).round(2),
@@ -83,17 +83,17 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "单发钉飞行与命中的判定大小；体型越高钉越粗。画出的钉长与它一致。"
             }),
-        /** 射程：基础 8，物攻每比 55 多 1 加 0.04（夹 −1..3），等级每比 25 多 1 加 0.08（夹 0..2.5）；
-         *  穿甲 ×0.95；夹 7..15。 */
+        /** 射程：基础 11，物攻每比 55 多 1 加 0.04（夹 −1..3），等级每比 25 多 1 加 0.08（夹 0..2.5）；
+         *  穿甲 ×0.95；夹 10..18。它就是投射物的实际射程，不再额外多飞。 */
         reach: formula(
-            F.base(8)
+            F.base(11)
                 .plus(F.stat("attack").minus(55).times(0.04).clamp(-1, 3))
                 .plus(F.level().minus(25).times(0.08).clamp(0, 2.5))
                 .times(F.when(F.pref("lance", text("worldcombat.skill.spikecannon.preference.lance")), F.const(0.95), F.const(1.0)))
-                .clamp(7, 15).round(1),
+                .clamp(10, 18).round(1),
             "射程", {
                 unit: "格",
-                description: "钉能贯到多远；物攻与等级越高送得越远。它是本族里最长的一梭，也是本招的实际射程来源。"
+                description: "钉能贯到多远；物攻与等级越高送得越远。它是本族里最长的一梭，也是本招投射物的实际射程。"
             }),
         /** 散布：基础 1.2°，速度每比 55 快 1 加 0.01°（夹 0..0.8）；夹 0.5..2。 */
         spread: formula(
@@ -102,13 +102,14 @@ namespace PokemonSkills {
                 unit: "°",
                 description: "首发锁定炮身方向时的随机偏角；这是本族里最小的，因为原生命中 100。锁定之后的所有钉都沿这条线，不再转向。速度快的个体只多偏一点点。"
             }),
-        /** 穿透：基础 1 + 等级每比 25 多 1 加 0.03（夹 0..1），向下取整；上限穿甲 3 / 连发 2；夹 1..3。 */
+        /** 穿透人数：基础 2 + 等级每比 25 多 1 加 0.03（夹 0..1），向下取整；上限穿甲 4 / 连发 3；夹 2..4。
+         *  这是连同最后停下的那个在内的总人数；原生投射物按「额外穿过」接收 pierce−1。 */
         pierce: formula(
-            F.base(1).plus(F.level().minus(25).times(0.03).clamp(0, 1)).floor()
-                .clamp(1, F.when(F.pref("lance", text("worldcombat.skill.spikecannon.preference.lance")), F.const(3), F.const(2))),
+            F.base(2).plus(F.level().minus(25).times(0.03).clamp(0, 1)).floor()
+                .clamp(2, F.when(F.pref("lance", text("worldcombat.skill.spikecannon.preference.lance")), F.const(4), F.const(3))),
             "穿透", {
                 unit: "人",
-                description: "一发钉最多贯穿几个人；等级越高越多，穿甲式可到 3。贯穿的目标各吃一次伤害。"
+                description: "一发钉连同最后停下的那个、最多贯穿几个人；等级越高越多，穿甲式可到 4。贯穿的目标各吃一次伤害。"
             }),
         /** 顶退：基础 0.6 格，物攻每比 55 多 1 加 0.01（夹 −0.2..0.9）；穿甲 ×1.4；夹 0.4..2.2。 */
         knock: formula(
@@ -146,7 +147,7 @@ namespace PokemonSkills {
 
     stages("spikecannon", [
         { level: 30, values: { spike: 25, shots: 3 } },
-        { level: 44, values: { spike: 30, reach: 12 } }
+        { level: 44, values: { spike: 30, reach: 15 } }
     ]);
 
     defineDamage("spikecannon", "spike", {});

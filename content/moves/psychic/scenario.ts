@@ -12,7 +12,7 @@ Smoke.scenario("psychic", function (stage) {
         stage.expect(stage.damageTo(machop) > 0, "擒压打到了目标身上");
         var gripDamage = stage.damageTo(machop);
         stage.after(50, function () {
-            stage.note("特防下降（基础 10% 起）是随机结果；抓取成功后有一个 squeezeDelay 刻的操纵窗口，脚本/AI 没有手动锚点时默认朝施法者带，窗口结束只有抓取仍成立、目标仍在范围且通视才落挤压。窗口与挤压跑完后记录总伤害与目标位移。",
+            stage.note("特防下降（基础 10% 起）是随机结果；抓取成功后有一个 squeezeDelay 刻的操纵窗口，脚本/AI 没有手动锚点时把目标推离自己、拖到一侧，窗口结束只有抓取仍成立、目标仍在范围且通视才落挤压。定身是一份随本招 carrier 收回的短租约，松手/断视线/取消即提前放人。窗口与挤压跑完后记录总伤害与目标位移。",
                 { casts: stage.casts("psychic", abra), gripDamage: Math.round(gripDamage * 10) / 10,
                   totalDamage: Math.round(stage.damageTo(machop) * 10) / 10,
                   moved: Math.round(stage.travelled(machop) * 10) / 10 });

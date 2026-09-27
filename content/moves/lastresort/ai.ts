@@ -1,9 +1,9 @@
 /**
  * 珍藏 / lastresort 的伙伴 AI 用途。
  *
- * 什么局面下出手：只有账本攒满（其他已实装的招都出过一次）才进入候选——解锁前 `available` 直接 false，
- *   伙伴会照常去打别的招，把招式表走一遍，而不是为凑账乱刷同一招。目标可见、敌对、存活且在
- *   `ai.maxChase`（默认 9）格内。
+ * 什么局面下出手：只有账本攒满（当前表里其他已实装的招这一轮都出过一次）才进入候选——解锁前 `available` 直接 false。
+ *   同时另挂一份"补账"目标：账本还差、且缺的那一招此刻真的可用时，主动先把它排在其他交战之前，先规划缺少的招
+ *   而不是干等解锁；缺招不可用时照常交给共用交战计划。目标可见、敌对、存活且在 `ai.maxChase`（默认 9）格内。
  * 对谁出手：当前威胁；自己伤得越重，排序越靠前，因为这一记的威力随已损失生命上涨，正是翻盘的时机。
  * 长起手：本招直冲且起手全组最慢。`ai.steady`（默认开启）让伙伴对高速横移、且还没贴身的敌人先不掏，
  *   免得一头撞空；关闭则只要有目标就兑现，出手机会更多但更容易被侧身让开。
@@ -56,6 +56,57 @@ namespace PokemonSkills {
             const ratio = Math.max(0, Math.min(1, 1 - CompanionBehavior.ratio(CompanionBehavior.source(context))));
             return Math.min(100, Math.round(82 + ratio * 16));
         }
+    });
+
+    /** 当前装备表里还没提交的第一招（已实装）；只有带着珍藏的个体才有这一轮。 */
+    function lastresortFillMove(world: CombatWorld, actor: CombatActor): string {
+        if (!lastresortKnown(world, actor)) return "";
+        const ledger = lastresortLedger(world, actor);
+        return !ledger.unlocked && ledger.total > 0 && ledger.missing.length > 0 ? ledger.missing[0] : "";
+    }
+    /** 缺的这招此刻真的能对该威胁用出来才去规划它，免得反复尝试失败占住决策。 */
+    function lastresortFillCapability(context: WorldBehavior.Context, world: CombatWorld, actor: CombatActor): WorldBehavior.Capability | null {
+        const missing = lastresortFillMove(world, actor);
+        if (!missing) return null;
+        const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"] || null;
+        if (!threat) return null;
+        for (let i = 0; i < context.capabilities.length; i++) {
+            const item = context.capabilities[i];
+            if (item.data.move !== missing) continue;
+            for (let p = 0; p < item.protocols.length; p++)
+                if (CompanionBehavior.ready(context, item.protocols[p], threat).some(function (entry) { return entry.id === item.id; })) return item;
+            return null;
+        }
+        return null;
+    }
+
+    // 先规划缺少的招：账本还差且那一招此刻可用时，把它排在其他交战之前，主动走完整轮而不是干等解锁。
+    CompanionBehavior.registry.goal({ id: "world_combat:move_lastresort/fill", propose: function (context) {
+        const world = CompanionBehavior.world(context), actor = lastresortActor(context);
+        if (actor === null) return [];
+        const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"] || null;
+        if (!threat) return [];
+        const item = lastresortFillCapability(context, world, actor);
+        if (!item) return [];
+        return [{ id: "fill:" + item.data.move, kind: "world_combat:move_lastresort_fill", data: { ref: threat.ref, move: item.data.move } }];
+    } });
+    CompanionBehavior.registry.method({ id: "world_combat:move_lastresort/fill", propose: function (context, goal) {
+        if (goal.kind !== "world_combat:move_lastresort_fill") return [];
+        const world = CompanionBehavior.world(context), actor = lastresortActor(context);
+        if (actor === null) return [];
+        const item = lastresortFillCapability(context, world, actor);
+        if (!item || item.data.move !== goal.data.move) return [];
+        return [{ id: item.id, data: {}, capabilities: [item] }];
+    }, create: function (_context, choice) {
+        const item = choice.offer.capabilities![0];
+        const purpose = item.protocols && item.protocols.length ? item.protocols[0] : "world_combat:attack";
+        return CompanionBehavior.castNode(item.id, purpose, CompanionBehavior.goalEntity);
+    } });
+    CompanionBehavior.orderGoals("world_combat:move_lastresort/priority", function (context, order) {
+        const world = CompanionBehavior.world(context), actor = lastresortActor(context);
+        if (actor === null || !lastresortFillMove(world, actor)) return;
+        const index = order.indexOf("world_combat:defend");
+        order.splice(index < 0 ? order.length : index, 0, "world_combat:move_lastresort_fill");
     });
 
     addPreferences(lastresortId, {}, [

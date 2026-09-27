@@ -53,7 +53,7 @@ const NightdazeDefinition: ParticleDefinition = {
                     name: "dome", bind: "point", fit: "none", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     burst: { count: { data: "motes", fallback: 20 }, at: 0 },
-                    shape: { kind: "sphere_surface", radius: { data: "radius", fallback: 4.2 } },
+                    shape: { kind: "sphere_surface", radius: 0.9 },
                     direction: "outward", speed: [0.06, 0.24], spread: 16,
                     drag: 0.94,
                     lifetime: [10, 18], size: [0.44, 0.1], sizeMode: "sin",
@@ -62,8 +62,7 @@ const NightdazeDefinition: ParticleDefinition = {
             ]
         },
         wave: {
-            duration: 12,
-            exit: { stop: 8, drain: 15 },
+            duration: 0,
             emitters: [
                 {
                     name: "front", bind: "point", fit: "none", offset: [0, 0.3, 0],

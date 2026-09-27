@@ -16,7 +16,7 @@
   "worldcombat.skill.moonlight.preference.ai.healBelow": "Heal threshold",
   "worldcombat.skill.moonlight.preference.ai.healBelow.help": "Without a burn, below this health ratio the companion schedules Moonlight; lower endures longer, higher receives the moon at the first wound. While burned it ignores this and puts out the fire first.",
   "worldcombat.skill.moonlight.preference.ai.waitForSky": "Wait for moonlight",
-  "worldcombat.skill.moonlight.preference.ai.waitForSky.help": "On: only cast under a clear night, holding the move by day. Off: cast whenever wounded and accept the floor heal. A burn to cool overrides this.",
+  "worldcombat.skill.moonlight.preference.ai.waitForSky.help": "On: only stand and receive the moon under a clear night with a safe foothold, holding the move by day. Off: cast whenever wounded and accept the floor heal. A burn to cool, or health under half the threshold, overrides this.",
   "world_combat.move.moonlight.text.veil": "Moonlit",
   "world_combat.move.moonlight.text.dim": "Faint moonlight",
   "world_combat.move.moonlight.text.soothe": "Burn cooled",

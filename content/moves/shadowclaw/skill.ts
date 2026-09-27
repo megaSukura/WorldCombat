@@ -1,15 +1,17 @@
 /**
  * 暗影爪 / shadowclaw 的出手方式。
  *
- * 核心念头：脚下的影子先贴着真实地表扬到落点后面，绕过它、在它身后站起来；一只影爪从那一端反向抓回来，
- * 从对手照不到的一面抓进要害。正面挡没用，因为爪不是从正面来的。
+ * 核心念头：脚下的影子先贴着真实地表一格格朝落点身后爬过去，绕过它、在身后按 `depth` 站起来；一只影爪
+ * 从那一端反向抓回来，从对手照不到的一面抓进要害。正面挡没用，因为爪不是从正面来的。
  *
  * 两幕：
  *   起（windup，提交前）：影子在脚边聚拢，只播预告，可被打断。
- *   铺与抓（shade → rend，提交后）：影子从脚下沿真实地表铺到落点身后 `shade` 格处，一条暗带经过落点脚下；
- *       影带需要有效地表与通路，实墙或无地表都会把它裁断。约 `lag` 刻后，影爪从暗带末端**反向**抓向
- *       释放点方向，真实首碰决定目标：抓到的第一个非友方吃 `rend` 接触伤害。目标此刻正攻击别人（没在看
- *       施法者）时，这一爪吃满 `ambush` 加成，画面更深。不追已经移开的锁定目标——爪走的是那条真实回抓线。
+ *   铺与抓（shade → rend，提交后）：影子按 `lag` 逐刻用共享 `SurfacePaths` 沿原生地表推进，从脚下铺向落点身后
+ *       `shade` 格处；每个实际走出的短段都用同一组地面端点判定与表现。断崖、水面、实墙或缺地表都会让影头
+ *       停在实际锚点——这时不再冒充绕到背后，只在锚点附近收成一记短爪。约 `lag` 刻后，影爪从暗带末端按
+ *       `depth` 的高度反向抓向落点方向，真实首碰决定目标：抓到的第一个非友方吃 `rend` 接触伤害。目标此刻
+ *       正在攻击别人（当前攻击目标不是施法者）时，这一爪吃满 `ambush` 加成；空闲目标不算偷袭。不追已经
+ *       移开的锁定目标——爪走的是那条真实回抓线。
  *   空（miss）：回爪线上没有抓到任何非友方时，暗带照旧铺出，末端只留一道抓空的风。
  *   要害（crit）：共享结算判定为暴击时，由本单元的监听器在命中点补一记更亮的要害标记。
  *
@@ -17,42 +19,12 @@
  * 落点身后、再从那一端反向探爪，且专挑对手没看它的那一刻。
  */
 namespace PokemonSkills {
-    /** 落点下方是否有可承影的实体地表（空气、水、岩浆都不算）。 */
-    function shadowclawSurface(world: CombatWorld, point: CombatPoint): boolean {
-        const below = world.block(point.plus(WorldCombat.point(0, -1, 0)));
-        if (below === null) return false;
-        const id = String(below.id()).toLowerCase();
-        if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") return false;
-        return id.indexOf("water") < 0 && id.indexOf("lava") < 0;
-    }
-
-    /** 影带沿真实地表铺行：从 start 到 end，遇到无地表、实墙或陡坎就停在该点。返回同一组顶点供判定与表现共用。 */
-    function shadowclawBandPath(world: CombatWorld, start: CombatPoint, end: CombatPoint):
-        { points: number[][]; reached: CombatPoint; complete: boolean } {
-        const samples = WorldGeometry.along(start, end, 0.45);
-        const points: number[][] = [];
-        let previous: CombatPoint | null = null, reached = start, complete = false;
-        for (let index = 0; index < samples.length; index++) {
-            const spot = WorldGeometry.ground(world, samples[index], 4);
-            if (!shadowclawSurface(world, spot)) break;
-            if (previous !== null) {
-                if (!world.clear(previous, spot)) break;
-                if (Math.abs(spot.y() - previous.y()) > 1.1) break;
-            }
-            points.push([spot.x(), spot.y(), spot.z()]);
-            previous = spot;
-            reached = spot;
-            if (index === samples.length - 1) complete = true;
-        }
-        return { points: points, reached: reached, complete: complete };
-    }
-
     define({
         id: shadowclawId,
         cooldownParameter: "recharge",
         name: "Shadow Claw",
-        description: "影子先贴着地面铺到落点身后，再由那一端反向伸出一只影爪，从对手照不到的一面抓进要害：造成接触伤害，命中处留下一道短抓痕。影带走真实地表与通路，实墙会把影带裁断；没有地表时只收成一记近处短爪。对手当前没有在看着你时，这一爪更重；它的暴击率比同族高一档。",
-        uses: ["影子绕到落点背后反向伸爪", "对手没在看自己时这一爪更重", "沿用原生高暴击，命中留抓痕"],
+        description: "影子先贴着真实地表逐刻爬到落点身后，再由那一端反向伸出一只影爪，从对手照不到的一面抓进要害：造成接触伤害，命中处留下一道短抓痕。影带走真实地表与通路，断崖、水面、实墙会把影带截断；这时只在锚点附近收成一记短爪。对手当前正在打别人、没在看着你时，这一爪更重；它的暴击率比同族高一档。",
+        uses: ["影子绕到落点背后反向伸爪", "对手正打别人、没在看自己时这一爪更重", "沿用原生高暴击，命中留抓痕"],
         kind: "aim",
         range: 2.6,
         maxRange: 3.4,
@@ -104,25 +76,33 @@ namespace PokemonSkills {
             const heading = WorldGeometry.flatUnit(toward.minus(origin), direction);
             const distance = Math.min(reach, toward.minus(origin).length());
             const landing = origin.plus(heading.scale(distance));
-            const groundStart = WorldGeometry.ground(world, origin, 6);
-            const groundEnd = WorldGeometry.ground(world, landing.plus(heading.scale(shade)), 6);
-            const band = shadowclawBandPath(world, groundStart, groundEnd);
-            const grounded = band.points.length >= 2;
-            const anchor = grounded ? band.reached : groundStart;
-            let landed = false, unseen = false;
+            const feet = self === null ? origin : WorldCombat.point(origin.x(), self.boundsMin().y(), origin.z());
+            const start = SurfacePaths.support(world, feet, 0.6, 3);
+            const total = distance + shade;
+            let seen = false;
 
-            scenes.show(action, "shade", groundStart,
-                { moment: "shade", path: band.points, shade: shade, depth: depth, lag: lag, scale: scale,
-                    direction: [heading.x(), heading.y(), heading.z()], grounded: grounded ? 1 : 0 });
             sound(action, "cobblemon:move.shadowball.actor");
 
-            action.after(lag, function (current: CombatAction) {
-                scenes.stop(current, "shade");
+            function arr(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
+
+            /** 影头按 depth 从锚点站起，但不穿顶：有顶时贴到顶下方。 */
+            function rise(current: CombatAction, anchor: CombatPoint): CombatPoint {
                 const scope = current.world();
-                // 回爪：从暗带末端反向探向释放点方向，真实首碰决定目标；无地表时收成一记近处短爪。
-                const clawFrom = grounded ? WorldCombat.point(anchor.x(), Math.max(anchor.y(), landing.y()), anchor.z())
-                    : origin.plus(heading.scale(0.3));
-                const clawTo = grounded ? landing : origin.plus(heading.scale(Math.min(1.2, reach)));
+                const floor = Math.max(anchor.y(), landing.y());
+                const low = WorldCombat.point(anchor.x(), anchor.y() + 0.05, anchor.z());
+                const high = WorldCombat.point(anchor.x(), floor + depth, anchor.z());
+                const ceiling = WorldGeometry.blockHit(scope, low, high);
+                return ceiling === null ? high : WorldCombat.point(anchor.x(), Math.max(low.y(), ceiling.position().y() - 0.05), anchor.z());
+            }
+
+            /** 回爪：从暗带末端反向探向落点方向，真实首碰决定目标；没绕到背后时收成一记近处短爪。 */
+            function claw(current: CombatAction, anchor: CombatPoint, behind: boolean): void {
+                const scope = current.world();
+                scenes.stop(current, "shade");
+                const clawFrom = rise(current, anchor);
+                const clawTo = behind ? WorldCombat.point(landing.x(), landing.y(), landing.z())
+                    : WorldCombat.point(anchor.x() + heading.x() * Math.min(1.2, reach), anchor.y(),
+                        anchor.z() + heading.z() * Math.min(1.2, reach));
                 const hit = current.trace(clawFrom, clawTo, half, true);
                 const point = hit.position();
                 const contact = hit.hitEntity() ? hit.target() : null;
@@ -132,10 +112,10 @@ namespace PokemonSkills {
                     const facts = scope.observe(victim);
                     const at = facts === null ? point : facts.position();
                     const attacking = facts === null ? null : facts.attacking();
-                    // 分心加成只依据「目标当前的攻击目标不是施法者」，不假称做过视线检测。
-                    unseen = attacking === null || String(attacking.ref()) !== String(actor.ref());
-                    const power = unseen ? base * (1 + ambush) : base;
-                    landed = impact(current, hit, shadowclawId, power,
+                    // 暗算只认「目标当前正在攻击别人（攻击目标不是施法者）」；空闲目标不算背身。
+                    seen = attacking !== null && String(attacking.ref()) !== String(actor.ref());
+                    const power = seen ? base * (1 + ambush) : base;
+                    const landed = impact(current, hit, shadowclawId, power,
                         { damage: damageSpec(shadowclawId, "rend"), contact: true });
                     // 三道爪痕：从暗带末端反向划到真实接触点，判定与表现共用同一组端点。
                     const back = at.minus(clawFrom);
@@ -147,15 +127,15 @@ namespace PokemonSkills {
                             { moment: rake === 0 ? "rend" : "rake", target: rake === 0 ? String(victim.ref()) : "",
                                 path: [[clawFrom.x() + shift.x(), clawFrom.y() + shift.y(), clawFrom.z() + shift.z()],
                                     [at.x() + shift.x(), at.y() + shift.y(), at.z() + shift.z()]],
-                                unseen: unseen ? 1 : 0, shred: shred, notes: shred, scale: scale,
+                                unseen: seen ? 1 : 0, shred: shred, notes: shred, scale: scale,
                                 intensity: Math.max(0.6, Math.min(2.4, power / 70)) }, 24);
                     }
                     if (landed) {
-                        // 命中处只留一道短抓痕，不再拖一条持久无作用的尾。
+                        // 命中处留一道短抓痕，绑定目标随身跟随。
                         WorldFeedback.emit(scope, shadowclawScene, 1, at,
                             { moment: "gouge", target: String(victim.ref()), depth: depth, scale: scale }, 20);
-                        if (unseen) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), shadowclawAmbushText, [], 26);
-                        sound(current, unseen ? "cobblemon:impact.dark" : "cobblemon:impact.ghost");
+                        if (seen) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), shadowclawAmbushText, [], 26);
+                        sound(current, seen ? "cobblemon:impact.dark" : "cobblemon:impact.ghost");
                     }
                 } else {
                     WorldFeedback.emit(scope, shadowclawScene, 1, point,
@@ -165,7 +145,52 @@ namespace PokemonSkills {
                     sound(current, "minecraft:entity.player.attack.weak");
                 }
                 scenes.finish(current, done);
-            });
+            }
+
+            // 脚下没有可承影的地表：不铺影，只在身前收成一记近处短爪。
+            if (start === null || total <= 0.05) {
+                const anchor = origin.plus(heading.scale(0.3));
+                scenes.show(action, "shade", anchor,
+                    { moment: "shade", path: [], grounded: 0, shade: shade, depth: depth, lag: lag, scale: scale,
+                        direction: [heading.x(), heading.y(), heading.z()] });
+                action.after(lag, function (current: CombatAction) { claw(current, anchor, false); });
+                return;
+            }
+
+            const stepLength = total / lag;
+            let walked = 0, elapsed = 0;
+
+            /** 逐刻推进真实地表影头：每个短段都走一遍原生顶面，水面/断崖/实墙即截断。 */
+            function walk(current: CombatAction, head: CombatPoint): void {
+                const scope = current.world();
+                const want = Math.min(stepLength, total - walked);
+                if (!(want > 1e-6)) { claw(current, head, walked >= distance + 0.15); return; }
+                const advanced = SurfacePaths.advance(scope, head, heading, want,
+                    { up: 0.6, down: 1.2, spacing: 0.35, samples: Math.max(2, Math.ceil(want / 0.35) + 1) });
+                const accepted: CombatPoint[] = [head];
+                let cut = advanced.ended;
+                for (let i = 1; i < advanced.path.length; i++) {
+                    const fluid = scope.fluid(advanced.path[i]);
+                    if (fluid !== null && !fluid.empty()) { cut = true; break; }
+                    accepted.push(advanced.path[i]);
+                }
+                let next = accepted[accepted.length - 1];
+                for (let i = 1; i < accepted.length; i++) walked += accepted[i].minus(accepted[i - 1]).length();
+                if (cut && walked >= total - 0.01) cut = false;
+                scenes.show(current, "shade", next,
+                    { moment: "shade", point: arr(next), head: arr(next), path: [arr(head), arr(next)],
+                        direction: [heading.x(), heading.y(), heading.z()],
+                        shade: shade, depth: depth, lag: lag, scale: scale, grounded: 1,
+                        intensity: Math.max(0.5, Math.min(1.8, half / 0.55)) });
+                elapsed++;
+                if (cut || walked >= total - 0.01 || elapsed >= lag) {
+                    claw(current, next, !cut && walked >= distance + 0.15);
+                    return;
+                }
+                current.after(1, function (later: CombatAction) { walk(later, next); });
+            }
+
+            walk(action, start);
         }
     });
 

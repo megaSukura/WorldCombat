@@ -6,7 +6,8 @@
  * 两幕（一击完成）：
  *   睁眼（windup，提交前只观察与预告，可被打断，不花代价；起手极短，落成原生的 +1 先制）。
  *   看软（提交后）：按本次真实解析出的 gazeRange 重新复查距离、视线与敌我，只对一个看得见的合法目标
- *     挂共享身份 world_combat:status/charmed 的 world_combat:babydoll_eyes，并 NativeEffects.boost 下降攻击。
+ *     挂共享身份 world_combat:status/charmed 的 world_combat:babydoll_eyes，并以 NativeEffects.boostWindow
+ *     把攻击下降绑在这份心软载体上——载体到期或被清掉时等级随窗口精确复原，只撤本源。
  *     只有等级真的掉下去才垂下小攻势符号；心软标记与头顶余韵由载体效果轻量维持。
  * 视线与距离：要求 world.clear 通视且在射程内；起手后跑出范围或被掩体挡住都落空，不再远程结算。
  * 反制：躲到掩体后、或用距离换掉这一次；只有单体，也拦不住另一边的敌人。
@@ -113,7 +114,17 @@ namespace PokemonSkills {
                 color: 0xF7A8C4, label: config && config.stare ? "圆瞳·凝视" : "圆瞳" };
         },
         windup: function (action, config, prepare) {
-            const target = action.target();
+            const self = action.actor(), target = action.target(), sense = action.sense();
+            const body = sense.observe(self);
+            const at = target !== null && sense.valid(target) ? sense.observe(target) : null;
+            const origin = body === null ? action.origin() : body.position();
+            const direction = at !== null ? at.position().minus(origin) : action.direction();
+            const dir = direction.length() < 1e-4 ? WorldCombat.point(0, 0, 1) : direction.unit();
+            // 圆眼按朝向与体型贴在脸前开合：位置由客户端用这组方向 / 尺寸 / 起点刻算出，不再固定世界 X。
+            action.present("world_combat:move_babydolleyes:eyes", babydolleyesEyesScene, 1, origin,
+                JSON.stringify({ self: String(self.ref()), dir: [dir.x(), dir.y(), dir.z()],
+                    width: body === null ? 0.9 : body.width(), height: body === null ? 1.4 : body.height(),
+                    stare: config && config.stare ? 1 : 0, startTick: sense.tick(), duration: Math.max(1, prepare) }));
             action.present("world_combat:move_babydolleyes:windup", babydolleyesScene, 1, action.origin(),
                 JSON.stringify({ moment: "windup", stare: config && config.stare ? 1 : 0,
                     target: target === null ? "" : String(target.ref()) }));
@@ -149,6 +160,8 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
+            // 先读旧载体，供窗口刷新时精确撤掉本源的旧贡献。
+            const previous = MobEffects.read(world, target, babydolleyesEffect);
             const applied = MobEffects.apply(world, target, babydolleyesEffect, soften, 0);
             if (applied === null) {
                 WorldFeedback.emit(world, babydolleyesScene, 1, point, { moment: "blocked", target: String(target.ref()) }, 20);
@@ -156,8 +169,10 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            // 状态拒绝与等级实际下降分开：boost 返回本次真实落下的带符号级数，取绝对值才是降了几级。
-            const dropped = Math.abs(NativeEffects.boost(world, target, "atk", -drop));
+            // 状态拒绝与等级实际下降分开：窗口读数取前后有效等级差，才是本次真正落下的级数。
+            const before = NativeEffects.effectiveStage(world, target, "atk");
+            NativeEffects.boostWindow(world, target, { atk: -drop }, soften, "world_combat:move/babydolleyes", applied, previous);
+            const dropped = Math.max(0, before - NativeEffects.effectiveStage(world, target, "atk"));
             babydolleyesReleaseMark(world, target);
             world.effect(babydolleyesMark, target, JSON.stringify({ glints: glints, drop: dropped }), soften);
             if (world.effects(target, babydolleyesLingerMark).length === 0)

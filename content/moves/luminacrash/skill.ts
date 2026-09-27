@@ -73,7 +73,6 @@ namespace PokemonSkills {
             const dazzle = Math.max(24, Math.round(p("luminacrash", "dazzleTicks", action)));
             const rays = Math.max(8, Math.round(p("luminacrash", "rays", action)));
             const stages = Math.max(1, Math.round(p("luminacrash", "sunderStages", action)));
-            const scale = Math.max(0.6, Math.min(2.4, burstRadius / 2.0));
             const intensity = Math.max(0.5, Math.min(2.4, power / 68));
             const scenes = WorldFeedback.actionScenes(luminacrashScene);
             // 可跟踪的实体：坠落前段更新真实锚点；点选则从开始就固定。
@@ -85,75 +84,80 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
+            /** 实际柱顶：从锚点向上探，先撞到方块就在真实接触面截断，否则用引下高度；竖直柱用同一段端点。 */
+            function pillarTop(scope: CombatWorld): CombatPoint {
+                const wanted = anchor.plus(WorldCombat.point(0, height, 0));
+                const wall = WorldGeometry.blockHit(scope, anchor.plus(WorldCombat.point(0, 0.05, 0)), wanted);
+                return wall !== null ? wall.position() : wanted;
+            }
+
             function strike(current: CombatAction): void {
                 const scope = current.world();
-                let point = anchor, primary: CombatActor | null = null, landed = false;
-                if (tracking && scope.valid(target!)) {
-                    const at = scope.observe(target!);
-                    if (at !== null) {
-                        primary = target;
-                        if (at.position().minus(anchor).length() <= Math.max(burstRadius, 1.0)) point = at.position();
-                        else primary = null; // 冻结前没追上：不自动追到出范围者，只在最终锚点炸开。
-                    }
-                }
-                if (primary !== null) {
-                    const held = scope.observe(primary);
-                    if (held !== null && held.position().minus(point).length() <= Math.max(burstRadius, 1.0)
-                        && hurt(current, primary, "luminacrash", power, { damage: damageSpec("luminacrash", "core") })) {
-                        NativeEffects.boost(scope, primary, "spd", -stages);
-                        landed = true;
+                const point = anchor;
+                const top = pillarTop(scope);
+                const hitRefs: string[] = [];
+                // 直击：真在冻结光柱几何内的非友方；空放或落点埋进墙里就是没人在柱中，不再把重心挪回目标。
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(point, top, Math.max(0.35, radius)),
+                    function (victim, facts) {
+                        if (facts.friendly() || facts.health() <= 0 || String(victim.ref()) === String(current.actor().ref())) return;
+                        if (!hurt(current, victim, "luminacrash", power, { damage: damageSpec("luminacrash", "core") })) return;
+                        hitRefs.push(String(victim.ref()));
+                        const held = scope.observe(victim);
+                        if (held === null) return;
+                        if (NativeEffects.boost(scope, victim, "spd", -stages) !== 0)
+                            WorldFeedback.text(scope, held.position().plus(WorldCombat.point(0, 1.3, 0)), luminacrashSunderText, [stages], 30);
                         WorldFeedback.emit(scope, luminacrashScene, 1, held.position(),
-                            { moment: "hit", target: String(primary.ref()), rays: rays, scale: scale, intensity: intensity }, 26);
-                        WorldFeedback.text(scope, held.position().plus(WorldCombat.point(0, 1.3, 0)), luminacrashSunderText, [stages], 30);
-                    }
-                }
+                            { moment: "hit", target: String(victim.ref()), rays: rays, intensity: intensity }, 26);
+                        WorldFeedback.keep(scope, "luminacrash:dazzle:" + String(current.id()) + ":" + String(victim.ref()), luminacrashScene, 1,
+                            held.position(), { moment: "dazzle", target: String(victim.ref()), rays: rays,
+                                intensity: Math.max(0.4, Math.min(1.6, dazzle / 60)) }, dazzle);
+                    });
+                // 溅射：真实爆点圈内的其他非友方；被墙挡住的不算。
                 let splashed = 0;
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, burstRadius, { below: 2, above: 3 }), function (other, facts) {
-                    if (primary !== null && String(other.ref()) === String(primary.ref())) return;
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySphere(point, Math.max(0.5, burstRadius)), function (other, facts) {
+                    const ref = String(other.ref());
+                    if (facts.friendly() || facts.health() <= 0 || hitRefs.indexOf(ref) >= 0) return;
+                    if (WorldGeometry.blockHit(scope, point, facts.position()) !== null) return;
                     if (!hurt(current, other, "luminacrash", splashPower, { damage: damageSpec("luminacrash", "splash") })) return;
                     splashed++;
                     WorldFeedback.emit(scope, luminacrashScene, 1, facts.position(),
-                        { moment: "splash_hit", target: String(other.ref()), rays: rays, scale: scale,
+                        { moment: "splash_hit", target: ref, rays: rays,
                             intensity: Math.max(0.4, Math.min(1.8, splashPower / 26)) }, 20);
                 });
                 WorldFeedback.emit(scope, luminacrashScene, 1, point,
-                    { moment: "impact", target: primary === null ? "" : String(primary.ref()), rays: rays,
-                        radius: radius, burst: burstRadius, scale: scale, intensity: intensity, splash: splashed }, 28);
-                if (landed && primary !== null) {
-                    const held = scope.observe(primary);
-                    if (held !== null) WorldFeedback.keep(scope, "luminacrash:dazzle:" + String(current.id()), luminacrashScene, 1,
-                        held.position(), { moment: "dazzle", target: String(primary.ref()), rays: rays, scale: scale,
-                            intensity: Math.max(0.4, Math.min(1.6, dazzle / 60)) }, dazzle);
-                } else {
+                    { moment: "impact", target: hitRefs.length > 0 ? hitRefs[0] : "", rays: rays,
+                        radius: radius, burst: burstRadius, intensity: intensity, splash: splashed, hits: hitRefs.length }, 28);
+                if (hitRefs.length === 0)
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), luminacrashMissText, [], 24);
-                }
                 sound(current, "cobblemon:impact.psychic");
                 finish(current);
             }
 
             function step(current: CombatAction): void {
                 const scope = current.world();
-                if (elapsed < fall - lock) {
-                    // 坠落前段：跟住真实目标（超出 leash 就不再追），锚环仍是虚的。
-                    if (tracking && scope.valid(target!)) {
-                        const at = scope.observe(target!);
-                        if (at !== null && at.position().minus(baseAnchor).length() <= leash) anchor = at.position();
-                    }
-                    scenes.show(action, "charge", anchor.plus(WorldCombat.point(0, height, 0)),
-                        { moment: "charge", height: height, radius: radius, burst: burstRadius, rays: rays, scale: scale,
-                            intensity: intensity });
-                    scenes.show(action, "mark", anchor,
-                        { moment: "mark", height: height, radius: radius, burst: burstRadius, rays: rays, scale: scale,
-                            intensity: intensity });
+                const trackingNow = elapsed < fall - lock;
+                if (trackingNow && tracking && scope.valid(target!)) {
+                    // 坠落前段：跟住真实目标（超出 leash 就不再追），冻结后锚点绝不移动。
+                    const at = scope.observe(target!);
+                    if (at !== null && at.position().minus(baseAnchor).length() <= leash) anchor = at.position();
+                }
+                const top = pillarTop(scope);
+                const span = Math.max(0.5, top.y() - anchor.y());
+                if (trackingNow) {
+                    scenes.show(current, "charge", top,
+                        { moment: "charge", height: height, radius: radius, top: span, rays: rays, intensity: intensity });
+                    scenes.show(current, "fall", anchor,
+                        { moment: "fall", height: height, radius: radius, top: span, rays: rays, intensity: intensity });
+                    scenes.show(current, "mark", anchor,
+                        { moment: "mark", height: height, radius: radius, burst: burstRadius, rays: rays, intensity: intensity });
                 } else {
-                    // 最后一段冻结锚点：锚环由虚变实，给对手一个躲开的窗口。
-                    scenes.stop(action, "mark");
-                    scenes.show(action, "lock", anchor,
-                        { moment: "lock", height: height, radius: radius, burst: burstRadius, rays: rays, scale: scale,
-                            intensity: intensity });
-                    scenes.show(action, "fall", anchor.plus(WorldCombat.point(0, height, 0)),
-                        { moment: "fall", height: height, radius: radius, burst: burstRadius, rays: rays, scale: scale,
-                            intensity: intensity });
+                    // 最后一段冻结锚点：锚环由虚变实，光柱固定在同一段柱内。
+                    scenes.stop(current, "charge");
+                    scenes.stop(current, "mark");
+                    scenes.show(current, "lock", anchor,
+                        { moment: "lock", height: height, radius: radius, burst: burstRadius, rays: rays, intensity: intensity });
+                    scenes.show(current, "fall", anchor,
+                        { moment: "fall", height: height, radius: radius, top: span, rays: rays, intensity: intensity });
                 }
                 elapsed++;
                 if (elapsed >= fall) { strike(current); return; }

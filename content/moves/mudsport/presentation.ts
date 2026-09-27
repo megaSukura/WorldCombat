@@ -2,11 +2,12 @@
  * 玩泥巴 / mudsport 的客户端表现。
  *
  * 一句话：施法者把脚下的泥甩开 → 落点炸开一圈泥浆、泥泡贴地糊满一块地，一层薄泥面把真实范围标出来 →
- * 站进去的活体被泥糊住，电招被压。
+ * 真正脚踩进泥里的活体被泥糊住、脚步下陷，移动变慢、电招被压。
  * 色相家族：泥褐 0x6B4A2E 作主体、湿泥亮面 0x9C8460 作细节、灰绿 0x7A6B4F 作地表碎点；不用饱和色。
- * 起击收：起 windup 20t ／击 splash 48t ／持 field 每 5 刻续期 ／击 coat 22t。
+ * 起击收：起 windup 20t ／击 splash 48t ／持 field 每 5 刻续期 ／击 coat 22t（只在服务端确认接地的成员身上发）。
  * 持续状态：field 是贴地薄泥面加边圈与滚动泥泡，低密度、贴脚边，不遮视线；泥面半径跟着真实机制半径缩放，
- * 一眼读出「站哪里会被糊上泥」。地表方块不被替换，范围只由这层泥面表达。
+ * 一眼读出「站哪里会被糊上泥」。边界是贴地薄面而非球体，地表方块不被替换。离地或离场时服务端立即撤掉糊泥，
+ * 这里不会再发 coat；已经发出的粒子自然到期。
  * 机制驱动：泥滩半径决定泥面、边圈与泥花的实际大小（data.scale = 半径/3.2），薄泥面点数直接读 mudCover，
  * 泥泡数量读 mudDensity，落点翻起的泥量也用 mudCover。
  *
@@ -20,6 +21,7 @@
  * field  泥泡 mudbubble  圆面上浮     0.05-0.12 18-32 0.35→0 ≤180
  * coat   糊泥 mudsplash  球面外散     0.06-0.16 10-18 0.9→0 ≤40
  * coat   泥点 sludgesplash 环面外扩   0.04-0.1  10-18 0.9→0 ≤30
+ * coat   足迹 sludgesplash 贴地环外扩 0.16-0.28 10-16 0.7→0 ≤20
  */
 const MudsportDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -98,10 +100,29 @@ const MudsportDefinition: ParticleDefinition = {
                     burst: { count: 12 }, shape: { kind: "ring", radius: 0.35 },
                     direction: "outward", speed: [0.04, 0.12],
                     lifetime: [10, 18], size: [0.1, 0.03],
-                    color: 0x9C8460, alpha: [0.9, 0], light: "world", maxParticles: 30 }
+                    color: 0x9C8460, alpha: [0.9, 0], light: "world", maxParticles: 30 },
+                { name: "foot", bind: "target", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
+                    burst: { count: 8, at: 1 }, shape: { kind: "ring", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 16], size: [0.16, 0.05],
+                    color: 0x6B4A2E, alpha: [0.7, 0], light: "world", maxParticles: 20 }
             ]
         }
     }
 };
 
 WorldCombatParticles.scene("world_combat:move_mudsport", 1, MudsportDefinition);
+
+WorldCombatParticles.scene("world_combat:move_mudsport/tile", 1, {
+    interrupt: "drain", moments: { main: { exit: { drain: 30 }, emitters: [
+        { name: "mud_film", bind: "point", fit: "world", particle: "world_combat_core:cobblemon/generic/earth",
+          rate: { data: "rate", fallback: 0.4 }, burst: { count: 1 }, shape: { kind: "circle", radius: 0.36 },
+          speed: [0, 0.002], direction: "up", lifetime: [28, 36], size: [0.55, 0.48],
+          color: 0x6B4A2E, alpha: [0.65, 0], light: "world", maxParticles: 4 },
+        { name: "mud_glint", bind: "point", fit: "world", particle: "world_combat_core:cobblemon/generic/mud/mudbubble",
+          rate: { data: "rate", fallback: 0.4 }, shape: { kind: "circle", radius: 0.35 },
+          speed: [0.002, 0.008], direction: "up", lifetime: [10, 18], size: [0.06, 0.02],
+          color: 0x9C8460, alpha: [0.6, 0], light: "world", maxParticles: 3 }
+    ] } }
+});

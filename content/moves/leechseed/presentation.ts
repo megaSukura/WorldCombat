@@ -9,8 +9,9 @@
  * 层次：种子（主体，`generic/grass/seed`）／藤与汁流（细节，沿路径与方向的叶与光点）／土（余韵）。
  * 拍子：gather（聚种 0–16t）→ throw（抛种）→ root（生根 0–28t）→ bound（常驻细藤，随标记存续）→
  *   drain（每口真实失血，生命光沿 `data.direction`/`data.span` 从宿主流向施法者）→ heal（真回血才亮绿点）→ wither（枯萎 0–22t）。
- * 运动：种子沿弹道飞行；drain 的生命光是一条真实方向的线段，从宿主沿 `data.direction` 飞向施法者，
- *   `data.span` 就是两者当刻的实际距离，`data.flowSpeed` 由距离换算——光点真的走完这段线，而不是从中心向外的散点。
+ * 运动：种子沿弹道飞行；drain 的藤线沿 `data.path` 把宿主与施法者连住，两端随两者当刻移动，
+ *   生命光再从宿主沿 `data.direction` 飞向施法者；`data.span` 就是两者当刻的实际距离，`data.flowSpeed` 由距离换算——
+ *   光点真的走完这段线，而不是从中心向外的散点。
  * 数：藤蔓与光点数量绑 `data.vines`（特攻派生）；每口的实抽量由 `data.amount`、实际回量由 `data.healed` 写出，
  *   `data.intensity` 决定这一口的亮度；heal 只在服务端确认回血成功后才播。
  */
@@ -41,10 +42,10 @@ const LeechSeedDefinition: ParticleDefinition = {
         },
         throw: {
             duration: 60,
-            exit: { stop: 10, drain: 16 },
+            exit: { drain: 16 },
             emitters: [
                 {
-                    name: "trail", bind: "projectile", fit: "none",
+                    name: "trail", bind: "projectile", fit: "none", stop: { data: "flight", fallback: 40 },
                     particle: "world_combat_core:cobblemon/generic/grass/xsseed",
                     rate: 26, shape: { kind: "sphere", radius: 0.12 },
                     direction: "outward", speed: [0.01, 0.04],
@@ -52,7 +53,7 @@ const LeechSeedDefinition: ParticleDefinition = {
                     color: 0x6FBF3F, alpha: [0.75, 0], light: "full", maxParticles: 50
                 },
                 {
-                    name: "streak", bind: "projectile", fit: "none",
+                    name: "streak", bind: "projectile", fit: "none", stop: { data: "flight", fallback: 40 },
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
                     rate: 6, shape: { kind: "sphere", radius: 0.16 },
                     direction: "outward", speed: [0.01, 0.05],
@@ -129,9 +130,9 @@ const LeechSeedDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/orb/xsboost",
                     shape: { kind: "line", length: { data: "span", fallback: 3 } },
                     orient: "direction", direction: "shape",
-                    burst: { count: 1 }, speed: { data: "flowSpeed", fallback: 0.25 },
+                    rate: { data: "vines", fallback: 6 }, speed: { data: "flowSpeed", fallback: 0.25 },
                     lifetime: [10, 14], size: [0.11, 0.02], sizeMode: "sin",
-                    color: 0xC7F08A, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 4
+                    color: 0xC7F08A, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 14
                 },
                 {
                     name: "wobble", bind: "target", fit: "body", offset: [0, 0.05, 0], height: 0,

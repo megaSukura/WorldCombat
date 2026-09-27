@@ -12,7 +12,7 @@
  *   黏（snare→hold）：贴地、且脚部落到线带 band 距离内的非友方被黏——每名实体对这张网只降一次速度等级，
  *       并刷新 `stickywebbed` 拖慢；接在目标身上的拖丝挂在独立托管效果上，随状态或自身时长结束。
  *
- * 线按真实地表裁断：采样脚下地面，只保留与落点同层且未被实墙截断的线段，不穿楼板、不隔墙、不楼上楼下串判。
+ * 线按真实地表裁断：用原生碰撞面采样脚下顶面，只保留与落点同层且未被实墙截断的线段，不穿楼板、不隔墙、不楼上楼下串判。
  * 反制：绕开黏线走网孔、跳过丝线、等它到期（webTicks）；飞在半空的从上方过去。
  */
 namespace PokemonSkills {
@@ -20,15 +20,10 @@ namespace PokemonSkills {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
 
-    /** 落点收到地表上方一格；落在水面、岩浆或空中就返回 null。 */
+    /** 落点：用原生碰撞面找真实支撑（只认可站立的顶面），水面、岩浆、空中或不可用区块都返回 null。
+     * 不按方块 id 猜，也不把植物顶或上层地板当地面。 */
     function stickywebLanding(world: CombatWorld, raw: CombatPoint): CombatPoint | null {
-        const point = WorldGeometry.ground(world, raw, 6);
-        const below = world.block(WorldCombat.point(point.x(), point.y() - 1, point.z()));
-        if (below === null) return null;
-        const id = String(below.id());
-        if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") return null;
-        if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") return null;
-        return point;
+        return SurfacePaths.support(world, raw, 1.0, 6);
     }
 
     /** 脚部位置（碰撞箱底面中心）。 */
@@ -36,18 +31,10 @@ namespace PokemonSkills {
         return body.position().minus(WorldCombat.point(0, body.height() / 2, 0));
     }
 
-    /** 采样某点脚下一格的地表高度；没有合法支撑（水、岩浆、基岩、屏障、空中）返回 null。 */
+    /** 采样某点脚下一格的原生碰撞顶面高度；没有可站立支撑（水、岩浆、空中、不可用区块）返回 null。 */
     function stickywebSurfaceAt(world: CombatWorld, x: number, z: number, baseY: number): number | null {
-        const bx = Math.floor(x), bz = Math.floor(z), by = Math.floor(baseY);
-        for (let dy = 1; dy >= -3; dy--) {
-            const block = world.block(WorldCombat.point(bx, by + dy, bz));
-            if (block === null) return null;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") return null;
-            return by + dy + 1;
-        }
-        return null;
+        const at = SurfacePaths.support(world, WorldCombat.point(Math.floor(x) + 0.5, baseY, Math.floor(z) + 0.5), 1.0, 3);
+        return at === null ? null : at.y();
     }
 
     /** 沿一条候选线采样真实地表并裁剪：只留下与落点同层、且未被实墙截断的连续段。 */
@@ -153,9 +140,13 @@ namespace PokemonSkills {
         const ticks = Math.max(40, Math.round(Number(field.data.strand) || 100));
         const strands = Math.max(6, Math.round(Number(field.data.strands) || 12));
         const dropped = field.data.dropped || (field.data.dropped = {});
+        const applied = field.data.applied || (field.data.applied = {});
+        let shown = Math.max(0, Math.round(Number(applied[ref]) || 0));
         if (!dropped[ref]) {
             dropped[ref] = true;
-            NativeEffects.boost(world, actor, "spe", -stages);
+            // 真实降阶：能力免疫或已在低档时收益为 0，反馈不谎报级数。
+            shown = Math.abs(NativeEffects.boost(world, actor, "spe", -stages));
+            applied[ref] = shown;
         }
         if (MobEffects.apply(world, actor, stickywebEffect, ticks, 0) === null) return;
         stickywebCarry(world, actor, ticks, stages, strands);
@@ -164,7 +155,8 @@ namespace PokemonSkills {
                 { moment: "snare", target: ref, stages: stages, strands: strands,
                     band: Math.max(0.05, Number(field.data.band) || 0.34), scale: field.radius / 2.6 }, 24);
             world.sound("minecraft:block.cobweb.place", foot, 14, "{}");
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), stickywebSnareText, [stages], 26);
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)),
+                shown > 0 ? stickywebSnareText : stickywebSnareBlockedText, shown > 0 ? [shown] : [], 26);
         }
     }
 
@@ -247,7 +239,7 @@ namespace PokemonSkills {
             const band = Math.max(0.1, p(stickywebId, "band", action));
             const strands = Math.max(8, Math.round(p(stickywebId, "strands", action)));
             const scale = radius / 2.6;
-            let spread = false;
+            let spread = false, flight = "";
 
             function lay(current: CombatAction, raw: CombatPoint): void {
                 if (spread) return;
@@ -279,11 +271,16 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.stringshot.actor");
-            const flight = LivingActions.projectile(action, {
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.26, gravity: 0.03, lifetime: 100,
                 appearance: { sprite: "cobblemon:generic/cotton", scale: 0.75, tint: 0xF2EAC0 },
                 impact: function (current, hit) { lay(current, hit.position()); }
-            }, function (current) { lay(current, current.targetPosition()); });
+            }, function (current) {
+                // 飞尽：用真实弹体最后接触/结束点找合法支撑；读不到就不在假目标点铺网。
+                const end = current.world().projectilePosition(flight);
+                if (end === null) { done(current); return; }
+                lay(current, end);
+            });
             WorldFeedback.emit(world, stickywebScene, 1, action.origin(),
                 { moment: "throw", projectile: flight, strands: strands, scale: scale }, 26);
         }

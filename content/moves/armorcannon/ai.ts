@@ -4,19 +4,24 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 16）格之内；更远交给共享接近逻辑。
  *   这一发在提交那一刻就把铠甲烧掉（自降防特防），只有在自身生命比例不低于 `ai.minHealth`（默认 0＝不限制）时才起手。
  * 对谁出手：它是远距炮击，越能拉开站位越值——距离达到 `ai.standoff`（默认 5）格以上加一档，贴到 2 格以内减一档；
- *   `ai.finish`（默认开）打开时残血目标更高；散爆式遇到目标身边还挤着别人时再高一档。
+ *   `ai.finish`（默认开）打开时残血目标更高；散爆式在实际散爆半径内还有真实可达的别人时再高一档。
  * 够不到怎么办：reach 就是本招射程，先走到射程里；飞行途中目标消失就只留一下散火。
- * 放完之后：交回共享交战计划等冷却；落点焦地留在场上，但本招不因它改后续决策。
+ * 放完之后：交回共享交战计划等冷却；落点的短促热壳残屑只是表现，本招不因它改后续决策。
  */
 namespace PokemonSkills {
-    /** 目标身边 blast 格内还挤着几个别的敌人（散爆式的价值判断）。 */
+    /** 目标身边实际散爆半径内、且从接触点真实可达的别的敌人数（散爆式的价值判断）。 */
     function armorcannonClustered(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
+        if (!(radius > 0)) return 0;
+        const world = CompanionBehavior.world(context);
+        const centre = CompanionBehavior.point(target.point);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || other.ref === target.ref) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
+            if (CompanionBehavior.distance(other.point, target.point) > radius) continue;
+            if (!world.clear(centre, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -49,14 +54,22 @@ namespace PokemonSkills {
             if (distance >= CompanionBehavior.ai<number>(capability, "standoff", 5)) score += 6; else if (distance <= 2) score -= 8;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) < 0.45) score += 8;
             const config = capability.data.config || {};
-            if (config.burst === true && armorcannonClustered(context, target, 3) > 0) score += 6;
+            if (config.burst === true) {
+                // 只在实际散爆半径内有真实可达的第二目标时才算群体收益。
+                let blast = 0;
+                try {
+                    const world = CompanionBehavior.world(context);
+                    blast = Math.max(0, p(armorcannonId, "blast", { world: world, actor: world.source(), detail: { values: config } }));
+                } catch (error) { }
+                if (blast > 0 && armorcannonClustered(context, target, blast) > 0) score += 6;
+            }
             return score;
         }
     });
 
     addPreferences(armorcannonId, { burst: false, ai: { maxChase: 16, standoff: 5, finish: true, minHealth: 0 } }, [
         field(pathOf("burst"), "散爆式", "boolean", {
-            help: "开启：炮弹命中炸开一团半径数格的火，落点周围的其他敌人各吃一部分威力、焦地更大；代价是炮弹威力 ×0.8、收招 +3 刻、冷却 +5 刻。关闭（单发式）：全部集中在单个目标，威力更高、出手更快。"
+            help: "开启：炮弹命中在接触面炸开一团半径数格的火，范围内真实可达的其他敌人各吃一部分威力；代价是炮弹威力 ×0.8、收招 +3 刻、冷却 +5 刻。关闭（单发式）：全部集中在单个目标，威力更高、出手更快，只有局部壳碎。"
         }),
         field(pathOf("ai.maxChase"), "考虑距离", "number", {
             min: 6, max: 26, step: 1,

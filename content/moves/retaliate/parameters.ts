@@ -5,13 +5,14 @@
  *   「为倒下的同伴报仇。如果上一回合有同伴倒下，威力就会提高」（Cobblemon 1.8）。
  *
  * 翻译：即时战斗没有回合，本招把「上一回合有同伴倒下」落成**眼前真的有人倒下**——任何一个与施法者同阵营
- *   的战斗者被打死的那一刻，附近还活着的同伴都会带上「哀兵」状态（共享身份 world_combat:status/retaliate），
- *   并记住是谁下的手。带着这份哀兵之痛朝敌人撞上去时，这一记翻倍；命中后这口气就泄了。
- *   同伴关系用原生 `isAlliedTo`（与原版/世界假定的阵营一致）；倒下与凶手来自 world_combat:damage_applied。
+ *   的战斗者被打死的那一刻，附近 20 格内还活着的同伴都会带上「哀兵」状态（共享身份 world_combat:status/retaliate），
+ *   并记住是谁下的手。带着这份哀兵之痛朝敌人撞上去时，这一记加重；命中后这口气就泄了。
+ *   同伴关系与倒下位置来自 world_combat:actor_died 的观察者快照（event.actor 是活观察者，data.friendly 已判定阵营，
+ *   data.position 是真实倒下点，data.sourceActor 是凶手）；只把哀兵发给 20 格内的观察者，不把全图共享成一场报仇。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   vengeance 报仇威力：物攻定狠度、等级补；带哀兵时乘以 `revenge`。
- *   revenge   翻倍系数：等级与亲密度——越亲近的同伴倒下，这一记越重（1.8..2.4）。
+ *   revenge   加重倍率：等级与施法者与训练家的亲密度（1.8..2.4，最终威力有上限）。
  *   dash      冲撞距离：速度与等级；也是实际射程来源。
  *   charge    每刻位移：速度。
  *   collisionRadius 判定半径：身高。
@@ -37,8 +38,8 @@ namespace PokemonSkills {
     /** 每个哀兵记住的凶手，以及那名同伴真正倒下的位置（供 AI 追凶与起手「余光」读同一份事实）。 */
     var retaliateGrudges: { [ref: string]: string } = Object.create(null);
     var retaliateOrigins: { [ref: string]: { x: number; y: number; z: number } } = Object.create(null);
-    /** 已经结算过的倒下 ref；同一场倒下被多张伤害回执重复报告时只认第一次，不反复刷新哀兵窗口。 */
-    var retaliateDeaths: { [ref: string]: number } = Object.create(null);
+    /** 每个观察者已结算过的死亡 id；同一次倒下重复投递给同一观察者时只认第一次。 */
+    var retaliateDeaths: { [ref: string]: string } = Object.create(null);
 
     /** 同伴倒下时记下的凶手 ref，没有则空串。 */
     export function retaliateGrudge(ref: string): string { return retaliateGrudges[ref] || ""; }
@@ -49,10 +50,9 @@ namespace PokemonSkills {
         return origin === undefined ? null : [origin.x, origin.y, origin.z];
     }
 
-    /** 两名战斗者是否同阵营；用原生 isAlliedTo，与世界的阵营判断一致。 */
-    function retaliateAllied(world: CombatWorld, first: CombatActor, second: CombatActor): boolean {
-        const a = world.nativeEntity(first), b = world.nativeEntity(second);
-        return !!(a && b && typeof a.isAlliedTo === "function" && a.isAlliedTo(b));
+    /** 这份哀兵结束（自然到期、被解除或替换）后，把它带来的凶手与倒下位置一并清掉，不留下失效锚。 */
+    function retaliateForget(ref: string): void {
+        delete retaliateGrudges[ref]; delete retaliateOrigins[ref]; delete retaliateDeaths[ref];
     }
 
     actionParameters.define(retaliateId, {
@@ -71,7 +71,7 @@ namespace PokemonSkills {
                 .clamp(40, 185).round(1),
             "报仇威力", {
                 unit: "威力",
-                description: "这一记为同伴打出的基础威力；物攻越高越重、等级越高越稳。带着哀兵之痛时乘以翻倍系数（等级与亲密度越高越重）。对手防御、相性与暴击在命中时另算。"
+                description: "这一记为同伴打出的基础威力；物攻越高越重、等级越高越稳。带着哀兵之痛时乘以翻倍系数（等级与施法者与训练家的亲密度越高越重，倍率 1.8..2.4，最终威力有上限）。对手防御、相性与暴击在命中时另算。"
             }),
         /** 冲撞距离：基础 3.0 格，速度每比 60 快 1 加 0.02（夹 −0.5..1.4），等级每比 30 高 1 加 0.02（夹 −0.2..0.6）；哀兵式 ×1.12、直接式 ×0.9；夹 2.4..5.2。 */
         dash: formula(
@@ -144,32 +144,35 @@ namespace PokemonSkills {
         { key: "growth.1", values: ["tier.1.level", "tier.1.vengeance", "tier.1.dash"] }
     ]);
 
-    // ---- 记账：同伴倒下的那一刻，把哀兵与凶手记在附近同伴身上 ----
-    WorldCombat.on("world_combat:retaliate/fallen", "world_combat:damage_applied", "", function (event) {
-        const world = event.world(), victim = event.target();
-        if (victim === null || !world.valid(victim)) return;
+    // ---- 记账：同伴倒下的那一刻，看每个还活着的观察者的 actor_died 快照，把哀兵与凶手记在 20 格内的友方身上 ----
+    // 事件按观察者逐个投递，event.actor 是活着的观察者；死者只出现在快照的 victim/position 里，不再 valid/observe 它。
+    WorldCombat.on("world_combat:retaliate/fallen", "world_combat:actor_died", "", function (event) {
+        const world = event.world(), observer = event.actor();
+        if (!world.valid(observer)) return;
         const data = JSON.parse(String(event.data()));
-        if (!(data.actual > 0) || !(data.after <= 0)) return;
-        const victimRef = String(victim.ref()), now = world.tick();
-        const seen = retaliateDeaths[victimRef];
-        if (seen !== undefined && now - seen < retaliateWindow) return;
-        retaliateDeaths[victimRef] = now;
+        if (data.self === true || data.friendly !== true) return;
+        const deathId = String(data.deathId || "");
+        if (!deathId) return;
+        const observerRef = String(observer.ref());
+        if (retaliateDeaths[observerRef] === deathId) return;
+        const position = data.position;
+        if (!Array.isArray(position) || position.length !== 3 || !position.every(function (n: any) { return typeof n === "number" && isFinite(n); })) return;
+        const at = WorldCombat.point(Number(position[0]), Number(position[1]), Number(position[2]));
+        const body = world.observe(observer);
+        if (body === null || body.position().minus(at).length() > retaliateRadius) return;
+        retaliateDeaths[observerRef] = deathId;
         if (Object.keys(retaliateDeaths).length > 128) retaliateDeaths = Object.create(null);
-        const body = world.observe(victim);
-        if (body === null) return;
-        const killer = event.actor();
-        const centre = body.position();
-        const near = world.query(centre, retaliateRadius, false);
-        for (let index = 0; index < near.length; index++) {
-            const other = near[index];
-            if (String(other.ref()) === String(victim.ref())) continue;
-            if (killer !== null && String(killer.ref()) === String(other.ref())) continue;
-            if (!world.valid(other) || world.observe(other) === null) continue;
-            if (!retaliateAllied(world, victim, other)) continue;
-            const otherRef = String(other.ref());
-            CombatStatus.apply(world, other, retaliateStatus, retaliateEffect, retaliateWindow, 0, { unique: true });
-            retaliateGrudges[otherRef] = killer === null ? "" : String(killer.ref());
-            retaliateOrigins[otherRef] = { x: data.x, y: data.y, z: data.z };
-        }
+        if (!CombatStatus.apply(world, observer, retaliateStatus, retaliateEffect, retaliateWindow, 0, { unique: true })) return;
+        retaliateGrudges[observerRef] = String(data.sourceActor || "");
+        retaliateOrigins[observerRef] = { x: at.x(), y: at.y(), z: at.z() };
+    });
+
+    // 哀兵载体结束（到期、牛奶、/effect clear 或被替换）后清掉这份账；仍带着同名效果时不误清。
+    WorldCombat.on("world_combat:retaliate/forget", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== retaliateEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor) || MobEffects.read(world, actor, retaliateEffect) !== null) return;
+        retaliateForget(String(actor.ref()));
     });
 }

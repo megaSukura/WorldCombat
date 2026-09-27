@@ -7,7 +7,8 @@
  * 范围：carve 绑施法者自身，血肉向四周铺开的半径按 `data.scale`（散落半径 / 2）画出——铺多开就是甩出去多远。
  * 运动：横斩光扫过身体，血肉沿随机水平方向带重力抛出并落地，暖白轮廓向上缓慢离场。
  * 数：`data.intensity`（实际支付 / 最大生命 / 0.5）抬高斩光与血屑的量；服务端按体重逐块甩出，
- *     `data.chunks` 就是画面的块数——重个体削下的更多、甩得更远。
+ *     `data.chunks` 就是画面的块数——重个体削下的更多、甩得更远；`data.gained`（三项实际拿到的总阶段）
+ *     决定余韵轮廓的浓度——真的只补到一项时，轮廓也比三项全涨时更淡。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const FilletAwayDefinition: ParticleDefinition = {
@@ -76,7 +77,7 @@ const FilletAwayDefinition: ParticleDefinition = {
                 {
                     name: "light_body", bind: "source", offset: [0, 0.4, 0], height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/aura_white",
-                    rate: 5, shape: { kind: "sphere", radius: 0.35 },
+                    rate: { data: "gained", fallback: 6 }, shape: { kind: "sphere", radius: 0.35 },
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [20, 32], size: [0.14, 0.02], sizeMode: "sin",
                     color: 0xFFE2C8, alpha: [0.26, 0], alphaMode: "sin", light: "full", maxParticles: 18

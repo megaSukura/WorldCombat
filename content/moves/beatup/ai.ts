@@ -14,6 +14,8 @@ namespace PokemonSkills {
         const self = CompanionBehavior.source(context);
         const world = CompanionBehavior.world(context);
         const rally = p("beatup", "rally", world);
+        // 人数上限取本招实际算出的 crowd（等级与配置决定），不用写死的 6。
+        const crowd = Math.max(1, Math.min(6, Math.round(p("beatup", "crowd", world))));
         const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
         const goal = CompanionBehavior.point(target.point);
         let count = 1;
@@ -25,7 +27,7 @@ namespace PokemonSkills {
             if (!world.clear(CompanionBehavior.point(other.point), goal)) continue;
             count++;
         }
-        return Math.min(6, count);
+        return Math.min(crowd, count);
     }
 
     function beatupWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -53,8 +55,15 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 12 + beatupPack(context, target) * 8;
+            // 优先站定、被围住的目标；移动快的逃者不因人数多就值得追出去。
+            const velocity = CompanionBehavior.velocity(context, target);
+            const moving = !!velocity && (velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.0009;
+            if (moving) {
+                if (CompanionBehavior.distance(self.point, target.point) > 4) return 0;
+                score -= 10;
+            } else score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", true) && CompanionBehavior.ratio(target) <= 0.35) score += 14;
-            return score;
+            return Math.max(0, score);
         }
     });
 

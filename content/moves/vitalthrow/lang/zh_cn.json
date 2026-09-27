@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.vitalthrow.summary": "沉腰等待近身对手，再沿它的冲势反手甩开。正在出手的目标承受更重的一摔；成功抛起并在短时间内落地时，才接上落地压制。投掷受目标的抗击退和地形影响。",
-  "worldcombat.skill.vitalthrow.description.0": "摔击造成约 %1$s 点伤害；对手正处在出手动作中（扑进来）时，借力使这一摔的威力提高 %2$s。对手防御、相性与暴击在命中时另算。",
+  "worldcombat.skill.vitalthrow.description.0": "摔击造成约 %1$s 点伤害；抓到的对手此刻正朝使用者压过来（来势迎向使用者）时，借力使这一摔的威力提高 %2$s。对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.vitalthrow.description.1": "先站定等到 %1$s 秒后才出手，能抓住 %2$s 格内的目标；近处没有可抓的目标就扑空。",
-  "worldcombat.skill.vitalthrow.description.2": "沿目标当前的水平冲势追加 %1$s 格/刻投速；静止时朝远离使用者的方向。抗击退与地形决定实际移动，成功抛起并在短时间内落地后压制 %2$s。",
+  "worldcombat.skill.vitalthrow.description.2": "按实际抓到的目标体重沿它当前的水平冲势追加 %1$s 格/刻投速；静止时朝远离使用者的方向。抗击退与地形决定实际移动，成功抛起并在短时间内落地后压制 %2$s。",
   "worldcombat.skill.vitalthrow.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.vitalthrow.growth.0": "达到 %1$s 级，摔击威力提升至 %2$s，压制时长延长至 %3$s 秒。",
   "worldcombat.skill.vitalthrow.growth.1": "达到 %1$s 级，摔击威力提升至 %2$s，追加投速提升至 %3$s 格/刻。",

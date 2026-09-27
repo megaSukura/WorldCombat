@@ -5,15 +5,19 @@
  * （共享身份 `world_combat:status/snow`，只借身份、不带共享行为）。每片雪区为冰之躯拥有一个防御 +1 的临时窗口，
  * 离场或该雪区结束时只撤销本窗口。首趟扫描把地表盖上一层雪、把露天的水面冻成能站人的冰（world.terrain，linger
  * 让它们活过雪区本身）。雪景不造成伤害，只改地面与冰之躯的防御。
+ *
+ * 冰资格走共享战斗者事实 `PokemonDamage.combatants.read`，与伤害结算同一份类型，普通生物临时获得的冰属性也被算入。
+ * 覆雪／冻水改用 `world.terrainResult`：只把真正落成的格数记进反馈，落在实际改动的格上，不把被拒绝的请求算成已铺。
  */
 namespace PokemonSkills {
     function snowscapePoint(field: WorldEffects.Field): CombatPoint {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
 
+    /** 共享战斗者类型：冰属性在宝可梦、普通生物与临时改型上一致成立。 */
     export function snowscapeIce(world: CombatWorld, actor: CombatActor): boolean {
-        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return false;
-        return NativeEffects.types(CobblemonCombat.pokemon(actor), NativeEffects.read(world, actor)).indexOf("ice") >= 0;
+        if (!world.valid(actor)) return false;
+        return PokemonDamage.combatants.read(world, actor).types.indexOf("ice") >= 0;
     }
 
     function snowscapeSurface(world: CombatWorld, x: number, baseY: number, z: number): any {
@@ -32,42 +36,52 @@ namespace PokemonSkills {
             || id === "minecraft:snow" || id === "minecraft:ice" || id === "minecraft:packed_ice" || id === "minecraft:blue_ice";
     }
 
-    /** 首趟落雪、冻水；返回实际盖住的雪格与冻住的水格。 */
-    function snowscapeSeed(world: CombatWorld, field: WorldEffects.Field): { cover: number; ice: number } {
+    /** 一次批量铺格，返回真正落成的 [x,y,z]；被保护或占用的格在 bestEffort 下跳过。 */
+    function snowscapePlace(world: CombatWorld, cells: any[], life: number, ground: boolean): number[][] {
+        if (!cells.length) return [];
+        try {
+            const result = JSON.parse(world.terrainResult(JSON.stringify(
+                { cells: cells, replace: true, bestEffort: true, ground: ground, linger: true }), life));
+            return Array.isArray(result.placed) ? <number[][]>result.placed : [];
+        } catch (error) { return []; }
+    }
+
+    /** 首趟落雪、冻水；返回实际落成的雪格数与冻水格（含实际坐标供逐格反馈）。 */
+    function snowscapeSeed(world: CombatWorld, field: WorldEffects.Field): { cover: number; ice: number; iceCells: number[][] } {
         const centre = snowscapePoint(field), life = Math.max(80, Math.round(Number(field.data.groundTicks) || 240));
         const coverBudget = Math.max(4, Math.round(Number(field.data.cover) || 24));
         const freezeBudget = Math.max(1, Math.round(Number(field.data.freeze) || 4));
         const base = Math.floor(centre.y());
-        let cover = 0, ice = 0, attempts = 0;
-        while (cover < coverBudget && attempts < coverBudget * 4) {
+        const cover: any[] = [], coverSeen: { [key: string]: boolean } = {};
+        let attempts = 0;
+        while (cover.length < coverBudget && attempts < coverBudget * 4) {
             attempts++;
             const angle = world.random() * Math.PI * 2, distance = Math.sqrt(world.random()) * field.radius * 0.92;
             const x = Math.floor(centre.x() + Math.cos(angle) * distance), z = Math.floor(centre.z() + Math.sin(angle) * distance);
+            const key = x + "," + z; if (coverSeen[key]) continue;
             const surface = snowscapeSurface(world, x, base, z);
             if (surface === null || snowscapeSoft(String(surface.id))) continue;
-            try {
-                world.terrain(JSON.stringify({ cells: [{ x: x, y: surface.y + 1, z: z, block: "minecraft:snow" }], replace: true, linger: true }), life);
-                cover++;
-            } catch (error) { }
+            coverSeen[key] = true;
+            cover.push({ x: x, y: surface.y + 1, z: z, block: "minecraft:snow" });
         }
+        const ice: any[] = [], iceSeen: { [key: string]: boolean } = {};
         attempts = 0;
-        while (ice < freezeBudget && attempts < freezeBudget * 8) {
+        while (ice.length < freezeBudget && attempts < freezeBudget * 8) {
             attempts++;
             const angle = world.random() * Math.PI * 2, distance = Math.sqrt(world.random()) * field.radius * 0.92;
             const x = Math.floor(centre.x() + Math.cos(angle) * distance), z = Math.floor(centre.z() + Math.sin(angle) * distance);
+            const key = x + "," + z; if (iceSeen[key]) continue;
             const surface = snowscapeSurface(world, x, base, z);
             if (surface === null || String(surface.id) !== "minecraft:water") continue;
-            try {
-                world.terrain(JSON.stringify({ cells: [{ x: x, y: surface.y, z: z, block: "minecraft:ice" }], replace: true, linger: true }), life);
-                ice++;
-            } catch (error) { }
+            iceSeen[key] = true;
+            ice.push({ x: x, y: surface.y, z: z, block: "minecraft:ice" });
         }
-        return { cover: cover, ice: ice };
+        const coverCells = snowscapePlace(world, cover, life, true);
+        const iceCells = snowscapePlace(world, ice, life, false);
+        return { cover: coverCells.length, ice: iceCells.length, iceCells: iceCells };
     }
 
     function snowscapeLay(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-        const body = world.observe(actor);
-        if (body === null) return;
         const ticks = Math.max(40, Math.round(Number(field.data.powder) || 90)) + 20;
         MobEffects.apply(world, actor, snowscapeMark, ticks, 0);
     }
@@ -125,8 +139,11 @@ namespace PokemonSkills {
                     WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1, 0)), snowscapeCoverText, [placed.cover], 28);
                 }
                 if (placed.ice > 0) {
-                    WorldFeedback.emit(world, snowscapeScene, 1, centre,
-                        { moment: "lock", locks: placed.ice, scale: field.radius / 10 }, 28);
+                    for (let i = 0; i < placed.iceCells.length; i++) {
+                        const cell = placed.iceCells[i];
+                        WorldFeedback.emit(world, snowscapeScene, 1,
+                            WorldCombat.point(cell[0] + 0.5, cell[1] + 0.5, cell[2] + 0.5), { moment: "lock", locks: 1 }, 24);
+                    }
                     WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.2, 0)), snowscapeLockText, [placed.ice], 28);
                 }
             }

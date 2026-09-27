@@ -5,8 +5,8 @@
  * 第三只足形明显更大、迸出的尘也更多；踢空时只在真实踢线尽头散一小撮尘。
  * 色相家族：暖沙与米白（foot／hit）＋中性尘（tinydust）。
  * 拍子：起（windup 沉身）→ 踢（kick 逐脚踢线 + sole 足形）→ 中（hit 崩屑）→ 空（whiff）。
- * 范围：kick 的 polyline 直接消费服务端 `data.path`（身体中心 ↔ 当刻踢线尽头）与服务端真取的首碰位置；
- *   sole／hit／whiff 的 point 就是服务端实际结算的位置，不铺满地面矩形。
+ * 范围：kick 的 polyline 直接消费服务端 `data.path`（身体中心 ↔ 该脚真实首碰点，脚路截到接触处）；
+ *   sole／hit／whiff 的 point 就是服务端实际结算的位置，不铺满地面矩形。每脚由服务端留出至少可见帧再收势。
  * 运动：足形尺寸来自服务端 `data.foot`（第几脚决定），速度线与尘沿 `data.direction`。
  * 数：`data.sparks`（物攻派生）决定踢线与命中尘点，`data.intensity`（威力派生）缩放发射量。
  */

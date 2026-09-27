@@ -10,21 +10,30 @@
  * 方向：整段施放锁定第一声的朝向，连续声期间不会追着对象旋转；要改朝向就等这一段走完再出下一声。
  */
 namespace CompanionBehavior {
-    /** 朝威胁那条线的锥内、在射程里的非友方数量；声音不看视线。与参数公式的 zhang 角同源（约 55° 半张）。 */
+    /** 本个体真实的声压半角（弧度），读取与执行同一份 arc 公式：身高、体重与连斥/断喝配置都在内。 */
+    function snarlHalf(context: WorldBehavior.Context): number {
+        const angle = PokemonSkills.p("snarl", "arc", CompanionBehavior.world(context));
+        return Math.min(120, Math.max(30, angle)) / 2 * Math.PI / 180;
+    }
+
+    /** 目标方向为中线，判断 `other` 是否落在本个体当前真实的声压锥内（含高度带，与判定同一套几何）。 */
+    function snarlInCone(context: WorldBehavior.Context, reach: number, heading: number, half: number, other: Entity): boolean {
+        const self = source(context);
+        if (other.friendly || other.health <= 0 || !other.visible) return false;
+        if (distance(other.point, self.point) > reach) return false;
+        if (other.point[1] < self.point[1] - 2 || other.point[1] > self.point[1] + 3) return false;
+        let diff = Math.abs(Math.atan2(other.point[2] - self.point[2], other.point[0] - self.point[0]) - heading);
+        if (diff > Math.PI) diff = Math.PI * 2 - diff;
+        return diff <= half;
+    }
+
+    /** 朝威胁那条线的锥内、在射程里的非友方数量；声音不看视线。 */
     function snarlCaught(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): number {
         const self = source(context);
         const heading = Math.atan2(target.point[2] - self.point[2], target.point[0] - self.point[0]);
-        const half = 55 * Math.PI / 180, reach = item.data.range;
-        const nearby = context.facts.nearby as Entity[];
+        const half = snarlHalf(context), reach = item.data.range, nearby = context.facts.nearby as Entity[];
         let count = 0;
-        for (let i = 0; i < nearby.length; i++) {
-            const other = nearby[i];
-            if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (distance(other.point, self.point) > reach) continue;
-            let diff = Math.abs(Math.atan2(other.point[2] - self.point[2], other.point[0] - self.point[0]) - heading);
-            if (diff > Math.PI) diff = Math.PI * 2 - diff;
-            if (diff <= half) count++;
-        }
+        for (let i = 0; i < nearby.length; i++) if (snarlInCone(context, reach, heading, half, nearby[i])) count++;
         return count;
     }
 
@@ -32,15 +41,10 @@ namespace CompanionBehavior {
     function snarlCasts(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
         const self = source(context);
         const heading = Math.atan2(target.point[2] - self.point[2], target.point[0] - self.point[0]);
-        const half = 55 * Math.PI / 180, reach = item.data.range;
-        const nearby = context.facts.nearby as Entity[];
+        const half = snarlHalf(context), reach = item.data.range, nearby = context.facts.nearby as Entity[];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (distance(other.point, self.point) > reach) continue;
-            let diff = Math.abs(Math.atan2(other.point[2] - self.point[2], other.point[0] - self.point[0]) - heading);
-            if (diff > Math.PI) diff = Math.PI * 2 - diff;
-            if (diff > half) continue;
+            if (!snarlInCone(context, reach, heading, half, other)) continue;
             const stats = combatStats(context, other), values = stats && stats.stats;
             if (!values) continue;
             const atk = Number(values.atk || 0), spa = Number(values.spa || 0);
@@ -49,13 +53,15 @@ namespace CompanionBehavior {
         return false;
     }
 
-    /** 射程内是否还有一个还没被骂软的非友方；有的话才把这一轮留给它。 */
+    /** 当前扇面里是否还有一个还没被骂软的非友方（不含目标）；有的话才把这一轮留给它。 */
     function snarlFresh(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
-        const nearby = context.facts.nearby as Entity[];
+        const self = source(context);
+        const heading = Math.atan2(target.point[2] - self.point[2], target.point[0] - self.point[0]);
+        const half = snarlHalf(context), reach = item.data.range, nearby = context.facts.nearby as Entity[];
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (distance(other.point, source(context).point) > item.data.range) continue;
+            if (other.ref === target.ref) continue;
+            if (!snarlInCone(context, reach, heading, half, other)) continue;
             if (!status(context, other, "snarled")) return true;
         }
         return false;

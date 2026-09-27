@@ -34,8 +34,8 @@ namespace PokemonSkills {
         description: "扎稳下盘，把一排重型金属钉沿一条固定的准线一发接一发打出去：首发定下炮身方向，之后每发都沿同一条线贯穿一线的敌人、各结算一次伤害，并把命中的对象顶退。最慢最重、射程最长；可射空，墙会截断。穿甲式少而狠、能贯穿三人。",
         uses: ["远距离一梭直线重钉", "贯穿一线上的多个敌人", "把贴脸的目标顶退、拉开距离"],
         kind: "aim",
-        range: 8,
-        maxRange: 15,
+        range: 11,
+        maxRange: 18,
         prepare: 11,
         active: 0,
         recover: 9,
@@ -60,26 +60,30 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            const shots = Math.max(2, Math.min(5, Math.round(p("spikecannon", "shots", action))));
+            const lance = !!(config && config.lance);
+            const shots = Math.max(2, Math.min(lance ? 3 : 5, Math.round(p("spikecannon", "shots", action))));
             const facing = aim(action);
             action.present("spikecannon:brace", spikecannonScene, 1, action.origin(),
-                JSON.stringify({ moment: "brace", shots: shots, lance: config && config.lance === true ? 1 : 0,
+                JSON.stringify({ moment: "brace", shots: shots, lance: lance ? 1 : 0,
                     direction: [facing.x(), facing.y(), facing.z()] }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
             const power = p("spikecannon", "spike", action);
-            const shots = Math.max(2, Math.min(5, Math.round(p("spikecannon", "shots", action))));
+            const lance = !!(config && config.lance);
+            // 成长台阶的加项在公式夹取之外，所以这里再按配置收一次上限：穿甲收在 3、连发可到 5。
+            const shots = Math.max(2, Math.min(lance ? 3 : 5, Math.round(p("spikecannon", "shots", action))));
             const gap = Math.max(3, Math.round(p("spikecannon", "gap", action)));
             const speed = Math.max(0.8, p("spikecannon", "velocity", action));
             const radius = Math.max(0.12, p("spikecannon", "radius", action));
-            const reach = p("spikecannon", "reach", action);
+            const reach = Math.max(4, p("spikecannon", "reach", action));
             const spread = Math.max(0.3, p("spikecannon", "spread", action));
-            const pierce = Math.max(1, Math.min(3, Math.round(p("spikecannon", "pierce", action))));
+            // 参数是连同最后停下的那个在内的总人数；原生 pierce 是「额外穿过」，所以传 总人数−1。
+            const pierceTotal = Math.max(1, Math.min(lance ? 4 : 3, Math.round(p("spikecannon", "pierce", action))));
+            const pierce = Math.max(0, Math.min(3, pierceTotal - 1));
             const knock = Math.max(0.2, p("spikecannon", "knock", action));
             const shards = Math.max(6, Math.round(p("spikecannon", "shards", action)));
-            const lance = !!(config && config.lance);
             const scale = Math.max(0.5, Math.min(1.8, radius / 0.2));
             const intensity = Math.max(0.5, Math.min(2.0, power / 20));
             // 首发即固定炮身方向：之后每发都沿这条线，不再随目标移动转向。
@@ -87,16 +91,30 @@ namespace PokemonSkills {
             const pushDir = WorldCombat.point(line.x(), 0, line.z()).length() < 0.01 ? null : WorldCombat.point(line.x(), 0, line.z()).unit();
             const directionData = [line.x(), line.y(), line.z()];
             const scenes = WorldFeedback.actionScenes(spikecannonScene);
-            const lifetime = Math.max(24, Math.round((reach + 3) / Math.max(0.4, speed)) + 24);
+            // reach 就是真实射程，不再隐藏多飞；寿命只够覆盖这一段直线。
+            const lifetime = Math.max(24, Math.round(reach / Math.max(0.4, speed)) + 24);
             let shot = 0, settled = false, stopped = false;
 
             function finish(current: CombatAction): void { if (settled) return; settled = true; scenes.finish(current, done); }
-            // 移动／输入中断：停止尚未发出的钉；已经支付的 PP 不退回。
+            // 移动／输入中断：停止尚未发出的钉；已付的 PP 不退回。已发的这一梭在此收束，不留悬挂的 after。
             action.on("world_combat:interrupt", function () { stopped = true; });
             action.on("world_combat:input-stop", function () { stopped = true; });
 
+            /** 方块面 → 世界法线，墙闪沿真实接触法线喷出。 */
+            function spikecannonNormal(face: string): CombatPoint {
+                if (face === "up") return WorldCombat.point(0, 1, 0);
+                if (face === "down") return WorldCombat.point(0, -1, 0);
+                if (face === "north") return WorldCombat.point(0, 0, -1);
+                if (face === "south") return WorldCombat.point(0, 0, 1);
+                if (face === "west") return WorldCombat.point(-1, 0, 0);
+                if (face === "east") return WorldCombat.point(1, 0, 0);
+                return WorldCombat.point(0, 1, 0);
+            }
+
             function volley(current: CombatAction): void {
-                if (settled || stopped) return;
+                if (settled) return;
+                // 提前停火或中断：不再发新钉，直接进入收招/完成。
+                if (stopped) { finish(current); return; }
                 if (shot >= shots) { finish(current); return; }
                 const origin = current.origin();
                 const index = shot + 1;
@@ -105,7 +123,7 @@ namespace PokemonSkills {
                 let resolved = false;
                 sound(current, "minecraft:item.crossbow.shoot");
                 const flight = LivingActions.projectile(current, {
-                    speed: speed, range: reach + 3, radius: radius, direction: line,
+                    speed: speed, range: reach, radius: radius, direction: line,
                     lifetime: lifetime,
                     appearance: { sprite: "cobblemon:particle/generic/spike", tint: 0xC9CDD6, glow: true,
                         scale: Math.max(0.9, Math.min(1.8, radius / 0.2)), pierce: pierce },
@@ -115,13 +133,15 @@ namespace PokemonSkills {
                         const struck = hit.target();
                         const at = hit.position();
                         if (struck !== null && scope.valid(struck) && !scope.friendly(struck)) {
-                            const landed = impact(inner, hit, "spikecannon", power, { damage: damageSpec("spikecannon", "spike") });
+                            // 每枚钉一个唯一 strike，穿透多个目标时各自结算、同一发重复回执仍被原生去重。
+                            const landed = impact(inner, hit, "spikecannon", power,
+                                { damage: damageSpec("spikecannon", "spike") }, "spike" + index);
                             if (landed) {
-                                // 只有真正结算成功才顶退，被拒时不假装推开。
+                                // 只有真正结算成功才顶退；原生抗性/权限可拒绝，被拒时不假装推开。
                                 if (pushDir !== null && scope.valid(struck)) scope.hitDisplace(struck, pushDir.scale(knock));
                                 WorldFeedback.emit(scope, spikecannonScene, 1, at,
                                     { moment: "pierce", target: String(struck.ref()), shot: index, shots: shots, shards: shards,
-                                        scale: scale, intensity: intensity, pierce: pierce, knock: knock, lance: lance ? 1 : 0,
+                                        scale: scale, intensity: intensity, pierce: pierceTotal, knock: knock, lance: lance ? 1 : 0,
                                         direction: directionData }, 20);
                                 sound(inner, "cobblemon:impact.normal");
                                 sound(inner, "minecraft:block.metal.hit");
@@ -132,29 +152,35 @@ namespace PokemonSkills {
                             }
                             return;
                         }
-                        const cell = hit.blockPosition();
-                        WorldFeedback.emit(scope, spikecannonScene, 1, cell === null ? at : cell,
+                        // 墙／被挡：用真实接触点与真实接触法线，不再用方块格坐标假装接触点。
+                        const normal = spikecannonNormal(hit.blockFace());
+                        WorldFeedback.emit(scope, spikecannonScene, 1, at,
                             { moment: "spark", shot: index, shots: shots, shards: Math.round(shards * 0.5), scale: scale,
                                 intensity: Math.max(0.4, intensity * 0.7), face: hit.blockFace(), blocked: hit.blocked() ? 1 : 0,
-                                direction: directionData }, 16);
+                                direction: [normal.x(), normal.y(), normal.z()] }, 16);
                     }
                 }, function (inner: CombatAction) {
                     scenes.stop(inner, key);
-                    if (!resolved)
-                        WorldFeedback.emit(inner.world(), spikecannonScene, 1, origin.plus(line.scale(reach + 3)),
-                            { moment: "fade", shot: index, shots: shots, scale: scale, intensity: Math.max(0.3, intensity * 0.5) }, 14);
-                    if (stopped) return;
+                    const scope = inner.world();
+                    if (!resolved) {
+                        // 空飞的真实末点：读完成回调内仍有效的最后位置，不拿满射程点或发射原点假造终点。
+                        const end = scope.projectilePosition(flight);
+                        if (end !== null)
+                            WorldFeedback.emit(scope, spikecannonScene, 1, end,
+                                { moment: "fade", shot: index, shots: shots, scale: scale, intensity: Math.max(0.3, intensity * 0.5) }, 14);
+                    }
+                    if (stopped) { finish(inner); return; }
                     if (shot < shots) inner.after(gap, function (next: CombatAction) { volley(next); });
                     else finish(inner);
                 });
                 if (!settled) scenes.show(current, key, origin,
                     { moment: "volley", projectile: flight, shot: index, shots: shots, shards: shards, scale: scale,
-                        intensity: intensity, pierce: pierce, knock: knock, lance: lance ? 1 : 0, direction: directionData });
+                        intensity: intensity, pierce: pierceTotal, knock: knock, lance: lance ? 1 : 0, direction: directionData });
             }
 
             sound(action, "minecraft:block.anvil.place");
             WorldFeedback.emit(world, spikecannonScene, 1, action.origin(),
-                { moment: "brace", shots: shots, shards: shards, scale: scale, intensity: intensity, pierce: pierce, knock: knock,
+                { moment: "brace", shots: shots, shards: shards, scale: scale, intensity: intensity, pierce: pierceTotal, knock: knock,
                     lance: lance ? 1 : 0, direction: directionData, span: reach }, 16);
             volley(action);
         }

@@ -3,10 +3,11 @@
  *
  * 什么局面有意义：自己身上还没有封印，且有可见威胁在 `ai.maxChase`（默认 10）格以内。
  *   半径内（`item.data.range`）的敌对活体数达到 `ai.minTargets`（默认 1）时抬价（每个 +10）——关住的人越多越值；
- *   有正在逃跑的目标时额外加分（`ai.catchRunners` 默认开）：它正要离开，一圈光栅正好把出口封上。
+ *   有正在逃跑的目标、且它已经进入半径时额外加分（`ai.catchRunners` 默认开）：一圈光栅正好把出口封上。
+ *   同时考虑自己的近身风险：圈里关住 >=2 个敌人、圈内没有友方接应、敌人又已贴到近身时不用——落锁只会把自己一起关住。
  * 对谁出手：当前威胁；光栅以自身为中心，共享任务把身位收进封印半径后再放。
  * 够不到怎么办：reach 就是封印半径，超出先走近。
- * 放完之后：圈里的人（包括术者）都被钉住，交回共享交战顺序，由队友接手集火。
+ * 放完之后：圈内所有人（含术者）仍能正常走位，只有靠近边缘才被牵制、限制外撤；交回共享交战顺序。
  */
 namespace CompanionBehavior {
     function fairylockHostilesWithin(context: WorldBehavior.Context, radius: number, threat: Entity | null): number {
@@ -30,8 +31,28 @@ namespace CompanionBehavior {
         if (context.facts.focus !== threat.ref
             && distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
         const radius = item.data.range;
-        if (fairylockHostilesWithin(context, radius, threat) >= ai<number>(item, "minTargets", 1)) return true;
-        return ai<boolean>(item, "catchRunners", true) && fleeing(context, threat);
+        const caught = fairylockHostilesWithin(context, radius, threat);
+        // 自己近身风险：圈里关住 >=2 个敌人、圈内又没有任何友方接应、且已有敌人贴到近身时，
+        // 落锁主要是把自己和敌人一起关住，收益不足，不用。
+        if (caught >= 2 && fairylockAlliesWithin(context, radius) === 0
+            && distance(self.point, threat.point) <= 3) return false;
+        if (caught >= ai<number>(item, "minTargets", 1)) return true;
+        // 只因逃跑者在圈外就落空圈要降权：只有当它已经进入半径才把逃跑当成落锁理由。
+        return ai<boolean>(item, "catchRunners", true) && fleeing(context, threat)
+            && distance(self.point, threat.point) <= radius + 0.5;
+    }
+
+    /** 半径内（含一点余量）的友方活体数，用来衡量落锁后圈内还有没有人接应。 */
+    function fairylockAlliesWithin(context: WorldBehavior.Context, radius: number): number {
+        const nearby: Entity[] = context.facts.nearby || [];
+        const self = source(context);
+        let count = 0;
+        for (let index = 0; index < nearby.length; index++) {
+            const other = nearby[index];
+            if (!other.friendly || other.health <= 0 || other.ref === self.ref) continue;
+            if (distance(self.point, other.point) <= radius + 0.5) count++;
+        }
+        return count;
     }
 
     registerUse("fairylock", {
@@ -48,7 +69,9 @@ namespace CompanionBehavior {
             if (!target || !fairylockWants(context, item, target)) return 0;
             const caught = fairylockHostilesWithin(context, item.data.range, target);
             let score = 30 + caught * 10;
-            if (ai<boolean>(item, "catchRunners", true) && fleeing(context, target)) score += 14;
+            // 逃跑加分只在该目标其实进得了圈时给，避免为了圈外的人铺一张空网。
+            if (ai<boolean>(item, "catchRunners", true) && fleeing(context, target)
+                && distance(source(context).point, target.point) <= item.data.range + 0.5) score += 14;
             if (context.facts.focus === target.ref) score += 8;
             return Math.min(96, score);
         }

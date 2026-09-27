@@ -28,6 +28,7 @@
   "world_combat.move.toxicthread.text.latch": "Laced (Speed -%1$s)",
   "world_combat.move.toxicthread.text.noslow": "The thread caught it but drew no Speed",
   "world_combat.move.toxicthread.text.immune": "Poison had no effect, but the thread still caught it",
+  "world_combat.move.toxicthread.text.refresh": "Already poisoned; the thread just pulled tighter",
   "effect.world_combat.toxic_thread_laced": "Laced",
   "worldcombat.skill.toxicthread.description.blocked": "The thread is a projectile: terrain in its path blocks it, and a miss only leaves a small splash of venom with no effect.",
   "worldcombat.skill.toxicthread.description.laced": "A caught target carries a Laced mark for as long as the poison lasts; the mark itself adds no damage or slow, and the companion will not spit at an already-laced target again."

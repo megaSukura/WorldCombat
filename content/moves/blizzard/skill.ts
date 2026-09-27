@@ -33,7 +33,7 @@ namespace PokemonSkills {
         recover: 12,
         cooldown: 70,
         style: "storm",
-        defaults: { howl: false, ai: { maxChase: 14, cluster: true, clusterRadius: 4 } },
+        defaults: { howl: false, ai: { maxChase: 14, cluster: true } },
         fields: [flag("howl", "呼啸式")],
         indicator: function (config, pokemon) {
             return { radius: p("blizzard", "radius", pokemon), geometry: "area", style: "storm", color: 0xBFE9FF,
@@ -52,8 +52,11 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            // 预备圈与随后成立的风暴用同一个真实半径，画面里的圈就是判定圈。
+            const radius = Math.max(1.5, p("blizzard", "radius", action));
             action.present("blizzard:gather", blizzardScene, 1, action.targetPosition(),
-                JSON.stringify({ moment: "gather", howl: config && config.howl === true }));
+                JSON.stringify({ moment: "gather", radius: radius, scale: radius / 4.2,
+                    howl: config && config.howl === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -98,8 +101,15 @@ namespace PokemonSkills {
                 scenes.show(current, "storm", centre,
                     { moment: "storm", radius: radius, scale: scale, intensity: intensity, stormTicks: stormTicks,
                         rate: Math.max(18, Math.round(baseRate * Math.pow(0.85, index))) });
+                // 每一阵从风暴中心向外扑出一圈可见脉冲；密度与亮度随本阵威力与阵次走。
+                WorldFeedback.emit(scope, blizzardScene, 1, centre,
+                    { moment: "pulse", radius: radius, scale: scale, intensity: intensity, storm: storm ? 1 : 0,
+                        impactCount: impactCount, rake: index + 1, rakes: rakes }, Math.max(14, interval));
                 const region = WorldGeometry.ring(centre, 0, radius, { below: 2.5, above: 4 });
                 WorldGeometry.selectEnemies(scope, region, function (victim, facts) {
+                    // 雪风只扑到风暴中轴能直接吹到的空气里的人；被实心墙完全挡住的圈内目标不挨这一阵。
+                    const axis = WorldCombat.point(centre.x(), facts.position().y(), centre.z());
+                    if (WorldGeometry.blockHit(scope, axis, facts.position()) !== null) return;
                     const ref = String(victim.ref());
                     const ordinal = hit[ref] || 0;
                     const falloff = Math.max(0.5, Math.pow(0.85, ordinal));

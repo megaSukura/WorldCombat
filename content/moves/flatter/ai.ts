@@ -1,10 +1,11 @@
 /**
  * 吹捧 的伙伴 AI 用途：这是这招自己的一套出手计划，不是共享控制位的随手一放。
  *
- * 什么局面有意义：有可见威胁、目标还没被陶醉缠上、它在 ai.maxChase 以内。
+ * 什么局面有意义：有可见威胁、目标还没被陶醉缠上、它在 ai.maxChase 以内、且共享门禁允许挂上混乱。
  * 对谁出手：当前威胁；已经带着共享身份 confusion 的目标会被跳过。
  * 谨慎对待已知特殊输出者：目标当前有效特攻明显高于物攻时降低优先，因为把特攻礼物递给它等于资敌；
- * 普通生物没有已知特攻输出时只当一层混乱用。免混乱的目标同样降一档，别指望陶醉。
+ * 普通生物没有已知特攻输出时只当一层混乱用。
+ * 免混乱的目标直接不用：礼物照给而陶醉挂不上，这一手只是资敌，因此 available 就挡掉。
  * 放完之后：目标特攻更高、出手可能走神，伙伴交回共享顺序重新判断站位。
  */
 namespace PokemonSkills {
@@ -20,12 +21,13 @@ namespace PokemonSkills {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || target.friendly || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "confusion")) return false;
+        if (flatterControlImmune(context, target)) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(item, "maxChase", 14);
     }
 
-    /** 已知特殊输出者（有效特攻明显高于物攻）就少递礼物；免混乱再降一档。 */
+    /** 已知特殊输出者（有效特攻明显高于物攻）就少递礼物：免混乱的目标已由 available 挡掉。 */
     function flatterCaution(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         let score = 55;
         const facts = CompanionBehavior.combatStats(context, target), stats = facts && facts.stats;
@@ -34,7 +36,6 @@ namespace PokemonSkills {
             const special = isFinite(Number(stats.spa)) ? Number(stats.spa) : 0;
             if (special > 0 && special > attack * 1.15) score -= 25;
         }
-        if (flatterControlImmune(context, target)) score -= 30;
         return Math.max(0, score);
     }
 

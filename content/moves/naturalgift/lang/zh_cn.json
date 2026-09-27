@@ -12,7 +12,7 @@
   "worldcombat.skill.naturalgift.value.radius": "判定半径",
   "worldcombat.skill.naturalgift.value.push": "命中顶开",
   "worldcombat.skill.naturalgift.value.bursts": "果屑数量",
-  "worldcombat.skill.naturalgift.value.halo": "元素光晕",
+  "worldcombat.skill.naturalgift.value.halo": "元素光晕半径",
   "worldcombat.skill.naturalgift.preference.savor": "细嚼",
   "worldcombat.skill.naturalgift.preference.savor.help": "开启：咀嚼多花 0.4 秒，伤害威力 ×1.3，适合咬住一个硬目标；关闭：咀嚼更快、威力较低，适合抢先。",
   "worldcombat.skill.naturalgift.preference.ai.maxChase": "追击距离",

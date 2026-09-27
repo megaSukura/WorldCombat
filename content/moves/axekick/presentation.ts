@@ -4,10 +4,10 @@
  * 一句话：施法者短垫一步站定，把腿抬到高处、在面前竖起一条斧刃般的窄竖线，随即脚跟沿这条线直劈而下；
  * 劈实的一刻在对手头顶炸开紫白冲击，被劈晕的头顶绕起困惑飞鸟；竖带空着则脚跟砸地扬尘。
  * 色相家族：紫（0x9B6BE0）与钢白（0xE8E4F5）为主体，扬尘用中性 tinydust。
- * 拍子：起 windup（抬腿）→ 抬 raise（腿/脚跟高亮 + 竖带亮起）→ 劈 chop（竖带从上到下）→ 击 impact ＋ daze ／ 失 crash。
- * 范围：raise 的 `bind:"path"` 就是面前那条窄竖带的真实顶点（地面 → 抬起高度），chop 再把它从上到下劈一遍；
- *   判定与表现共用同一组顶点。impact 打在对手头顶的实触点，crash 落在竖带脚下的真地面。
- * 运动：raise 是绕脚跟收束的紫白高亮，chop 是沿 `data.direction`（竖直向下）的下劈速度线。
+ * 拍子：起 windup（抬腿）→ 抬 raise（腿/脚跟高亮 + 竖带亮起）→ 劈 chop（脚踵逐刻从带顶下扫）→ 击 impact ＋ daze ／ 失 crash。
+ * 范围：raise 的 `bind:"path"` 就是面前那条窄带的真实底面四个顶点（闭合四边形，长 × 宽），与 bodyPolygon 判定同一组
+ *   顶点；chop 每刻发当前那一层的下落端点，判定与表现共用同一段高度。impact 打在对手头顶的实触点，crash 落在带脚的真地面。
+ * 运动：raise 是绕脚跟收束的紫白高亮，chop 是沿 `data.direction`（竖直向下）逐刻推进的下劈速度线。
  * 数：`data.count`（劈劲派生）决定命中迸发量，`data.dust`（体重与物攻派生）决定扬尘密度，
  *   `data.intensity`（劈劲 / 120）抬高亮度，`data.chance`（恍惚概率）决定 daze 层的密度与亮度，
  *   `data.scale`（竖带半宽 / 0.42）放大尺寸。
@@ -60,7 +60,7 @@ const AxekickDefinition: ParticleDefinition = {
                 {
                     name: "band", bind: "path", offset: [0, 0.1, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/slash",
-                    shape: { kind: "polyline" },
+                    shape: { kind: "polyline", closed: true },
                     rate: 24, speed: [0.02, 0.08], spread: 6,
                     lifetime: [6, 11], size: [0.22, 0.05], sizeMode: "index",
                     color: 0xE8E4F5, alpha: [0.6, 0], light: "full", maxParticles: 70
@@ -76,7 +76,7 @@ const AxekickDefinition: ParticleDefinition = {
             ]
         },
         chop: {
-            duration: { data: "chopTicks", fallback: 18 },
+            duration: 0,
             exit: { drain: 12 },
             emitters: [
                 {

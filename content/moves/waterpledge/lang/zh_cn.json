@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.waterpledge.summary": "在选定地面立起一纸水之誓约：水柱涌地而起，把柱内敌人推开顶起，柱脚留下一圈短寿的誓约印（只作共鸣标记，本身不拖慢）。落点附近已有火或草的誓约印时共鸣——这一击更重，同一圈印当场变成彩虹（水＋火，持续为站入的友方回复）或湿地（水＋草，踩进去会被陷住并重度拖慢；对控制免疫的目标只留拖慢）。",
+  "worldcombat.skill.waterpledge.summary": "在选定地面立起一纸水之誓约：水柱从真实地面涌地而起，把柱内敌人沿离柱心方向推开顶起，柱脚留下一圈短寿的誓约印（只作共鸣标记，本身不拖慢）。落点附近已有同阵营、尚未参与过组合的火或草誓约印时共鸣——这一击更重，把参与的那枚印消费掉，同一圈印当场变成彩虹（水＋火，持续为站入的友方回复）或湿地（水＋草，踩进去会被陷住并重度拖慢；对控制免疫的目标只留拖慢）。",
   "worldcombat.skill.waterpledge.description.0": "水柱在选定点涌地而起，对柱体内最多 %2$s 个敌人各造成约 %1$s 点特殊伤害。",
-  "worldcombat.skill.waterpledge.description.1": "柱体半径 %1$s 格、高 %2$s 格。",
-  "worldcombat.skill.waterpledge.description.2": "柱内的敌人被水势沿离中心方向推开 %1$s 格、向上顶起 %2$s 格/刻；单水只做这一次推开，不施加长期拖慢。",
-  "worldcombat.skill.waterpledge.description.3": "柱脚留下一圈短寿的誓约印，半径 %1$s 格、持续 %2$s；它只是共鸣标记，本身不拖慢。柱脚地面浮起水痕粒子（只作视觉痕迹，不改动方块）。",
-  "worldcombat.skill.waterpledge.description.4": "落点 %1$s 格内若已有火或草的誓约印，两纸誓约共鸣：这一击威力 ×%2$s，同一圈印当场变成一片半径约为誓约印 %3$s 倍的组合场——彩虹（水＋火）或湿地（水＋草）。",
+  "worldcombat.skill.waterpledge.description.1": "柱体半径 %1$s 格、高 %2$s 格，从落点下方的真实地面涌起，上方撞到方块就停在接触面。",
+  "worldcombat.skill.waterpledge.description.2": "柱内的敌人被水势沿离柱心方向推开 %1$s 格、向上顶起 %2$s 格/刻；站在柱心正上方时推离方向退回施法朝向；单水只做这一次推开，不施加长期拖慢。",
+  "worldcombat.skill.waterpledge.description.3": "柱脚留下一圈短寿的誓约印，半径 %1$s 格、持续 %2$s；它只是共鸣标记，本身不拖慢，但会一直显示真实范围并在接近消散时变淡。柱脚地面浮起水痕粒子（只作视觉痕迹，不改动方块）。",
+  "worldcombat.skill.waterpledge.description.4": "落点 %1$s 格内若有同阵营、尚未参与过组合的火或草誓约印，且两者之间通路无阻，两纸誓约共鸣：这一击威力 ×%2$s，把参与的那枚印消费掉，同一圈印当场变成一片半径约为誓约印 %3$s 倍的组合场——彩虹（水＋火，升起真正的弧冠）或湿地（水＋草）。落点附近已经存在组合场时不再借旧印重复增幅。",
   "worldcombat.skill.waterpledge.description.5": "施放距离 %1$s 格，起手 %2$s。",
   "worldcombat.skill.waterpledge.deluge.on": "涌誓：水柱威力 ×1.10、誓约印共鸣窗口 ×1.2、推开 ×1.25、组合场半径 ×1.15，代价是射程 ×0.9、冷却 +12。",
   "worldcombat.skill.waterpledge.deluge.off": "缓流：射程 ×1.1、冷却 −4，代价是水柱威力 ×0.96、誓约印共鸣窗口 ×0.85、推开 ×0.9、组合场半径 ×0.95。",
@@ -37,6 +37,6 @@
   "world_combat.move.waterpledge.text.hit": "水之誓约 命中 %1$s",
   "world_combat.move.waterpledge.text.combo": "誓约共鸣 → %1$s",
   "world_combat.move.waterpledge.text.miss": "水柱落空",
-  "worldcombat.skill.waterpledge.description.combo": "彩虹会持续为站在里面的友方回复生命；湿地会把踩进来的敌人陷住约 1.5 秒（无法移动但仍能出手），并持续重度拖慢（移动速度降低约 45%），一次拖慢持续 %1$s；对控制免疫的目标控制尝试落不下时只留拖慢、不会反复重挂。组合场比誓约印多存在约六成时间。",
+  "worldcombat.skill.waterpledge.description.combo": "彩虹会持续为站在里面的友方回复生命，并升起真正的弧冠；湿地会把踩进来的敌人陷住约 1.5 秒（无法移动但仍能出手），并持续重度拖慢（移动速度降低约 45%），一次拖慢持续 %1$s；只有真正触地的敌人才会被尝试陷住，跳起或控制被拒绝时只留拖慢、不会反复重挂。组合场一直存在到它自己的时间结束并显示真实范围。",
   "worldcombat.skill.waterpledge.value.maxTargets": "最多命中"
 }

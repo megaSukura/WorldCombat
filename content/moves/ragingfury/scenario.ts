@@ -16,7 +16,7 @@ Smoke.scenario("ragingfury", function (stage) {
             stage.expect(stage.casts("ragingfury", caster) > 0, "ragingfury was committed");
             stage.expect(stage.damageTo(foe) > 0, "the flame charge damaged the foe");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/confusion"), "the user ended the rampage confused");
-            stage.note("大愤慨沿当刻瞄准喷 2~3 口火舌：每口从嘴端推进、遇墙截断，火束里的敌人被烧中、点着并推开；只有实际扫过的可支撑地面留下细短余火（world_combat:ragingfury/ember，同源重叠合并）；喷完自己恍惚（共享身份 confusion）", {
+            stage.note("大愤慨沿当刻瞄准喷 2~3 口火舌：每口从真实嘴端喷出、遇墙截断，火束里的敌人被烧中、点着并推开；只有真实打到、且落在火体半径内的可支撑地面留下细短余火（world_combat:ragingfury/ember，同源重叠合并；无支撑或上喷不落火）；喷完自己恍惚（共享身份 confusion）", {
                 casts: stage.casts("ragingfury", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 confused: stage.hadMobEffect(caster, "world_combat:status/confusion"),

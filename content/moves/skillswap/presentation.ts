@@ -51,14 +51,6 @@ const SkillSwapDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "trade_glyph", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    shape: { kind: "polyline" },
-                    rate: { data: "glyphs", fallback: 8 }, direction: "shape", speed: [0.12, 0.3], spread: 5,
-                    lifetime: [7, 13], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0xC24AE8, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 120
-                },
-                {
                     name: "trade_flare", bind: "source", fit: "body", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "glyphs", fallback: 8 }, interval: 2, repeats: 2 },
@@ -142,3 +134,79 @@ const SkillSwapDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_skillswap", 1, SkillSwapDefinition);
+
+// 真实对穿：两股反向符从两人身上沿各自点序推进、到对方身上落定——画的就是两份东西互换，而不是沿整条线一次采样。
+const SkillSwapStreamGlyph = "cobblemon:particle/generic/psychic/psyring1";
+const SkillSwapStreamBead = "cobblemon:particle/generic/sparkle/glowingsparkle";
+
+function skillswapColour(alpha: number, rgb: number): number {
+    return ((Math.round(255 * Math.max(0, Math.min(1, alpha))) << 24) | rgb) | 0;
+}
+function skillswapClamp(value: any, fallback: number, low: number, high: number): number {
+    const result = Number(value);
+    return isFinite(result) ? Math.max(low, Math.min(high, result)) : fallback;
+}
+
+WorldCombatClient.scene("world_combat:move_skillswap_stream", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (!data || data.lifecycle) return;
+    const self = JSON.parse(frame.anchor(String(data.self || entry.source)));
+    const foe = data.target ? JSON.parse(frame.anchor(String(data.target))) : null;
+    if (!self || !foe) return;
+    const now = frame.serverTick();
+    const start = Number(data.start), duration = Math.max(8, Number(data.duration) || 34);
+    const age = now - (isFinite(start) ? start : now);
+    if (age < 0 || age > duration) return;
+    const progress = Math.max(0, Math.min(1, age / duration));
+    const travel = Math.max(0, Math.min(1, (progress - 0.35) / 0.65));
+    const fade = age > duration - 8 ? Math.max(0, (duration - age) / 8) : 1;
+    const glyphs = Math.round(skillswapClamp(data.glyphs, 6, 2, 16));
+    const scale = skillswapClamp(data.scale, 1, 0.6, 2);
+    const ax = self.x, ay = self.y + Math.max(0.4, self.height) * 0.5, az = self.z;
+    const bx = foe.x, by = foe.y + Math.max(0.4, foe.height) * 0.5, bz = foe.z;
+    const dx = bx - ax, dz = bz - az, length = Math.sqrt(dx * dx + dz * dz) || 1;
+    const rx = -dz / length, rz = dx / length;
+    const bob = Math.sin(now * 0.25) * 0.05;
+    // 两端先立住各自的身份符。
+    frame.sprite(SkillSwapStreamGlyph, ax, ay + bob, az, 0.22 * scale, 0, skillswapColour(0.9 * fade, 0xC24AE8), Math.floor(now * 0.3) % 9, true);
+    frame.sprite(SkillSwapStreamGlyph, bx, by - bob, bz, 0.22 * scale, 0, skillswapColour(0.9 * fade, 0xF0E6FF), Math.floor(now * 0.3 + 3) % 9, true);
+    // 两股反向符各自推进：自→彼品红，彼→自青白。
+    for (let i = 0; i < glyphs; i++) {
+        const lane = (glyphs <= 1 ? 0 : (i / (glyphs - 1) - 0.5)) * 0.7;
+        const t = Math.max(0, Math.min(1, travel - i * 0.03));
+        frame.sprite(SkillSwapStreamBead, ax + dx * t + rx * lane, ay + (by - ay) * t, az + dz * t + rz * lane,
+            0.12 * scale, 0, skillswapColour(0.9 * fade, 0xC24AE8), Math.floor(now * 0.5 + i), true);
+        const q = Math.max(0, Math.min(1, travel - i * 0.03));
+        frame.sprite(SkillSwapStreamBead, bx - dx * q + rx * lane, by + (ay - by) * q, bz - dz * q + rz * lane,
+            0.12 * scale, 0, skillswapColour(0.85 * fade, 0x7FE8FF), Math.floor(now * 0.5 + i + 3), true);
+    }
+    // 各自身上落定一圈。
+    if (travel > 0.6) {
+        frame.ring(ax, ay - 0.1, az, 0.4 + scale * 0.15, skillswapColour(0.55 * fade, 0xF0E6FF));
+        frame.ring(bx, by - 0.1, bz, 0.4 + scale * 0.15, skillswapColour(0.55 * fade, 0xC24AE8));
+    }
+});
+
+// 常驻身份标记：按这一侧实际换到的特征显示名字，不只改颜色；挂在窗口效果上，窗口结束/被清除时同步消失。
+WorldCombatClient.scene("world_combat:move_skillswap_mark", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (!data || data.lifecycle) return;
+    const ref = String(data.target || entry.source);
+    const got = String(data.got || "");
+    const label = got === "native" ? frame.translate("world_combat.move.skillswap.text.attributes")
+        : (got ? frame.translate("cobblemon.ability." + got) : "");
+    if (!label) return;
+    frame.billboard(ref, 1.35, 0.014, function (surface: CombatClientFrame) {
+        surface.text(label, 0, 0, skillswapColour(0.85, 0xF0E6FF), 52);
+        const values = Array.isArray(data.values) ? data.values : [];
+        values.forEach((value: any, index: number) => {
+            const name = String(value.id).replace("minecraft:generic.", "");
+            const caption = frame.translate("world_combat.move.skillswap.attribute." + name);
+            surface.text(caption + " " + value.before + " → " + value.after, 0, 11 * (index + 1), skillswapColour(.85, 0xF0E6FF), 120);
+        });
+    });
+});

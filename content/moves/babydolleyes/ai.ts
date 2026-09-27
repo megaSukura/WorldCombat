@@ -1,10 +1,12 @@
 /**
  * 圆瞳 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没有本招真正留下的心软载体、视线畅通。
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没有本招真正留下的心软载体、攻击未封底、视线畅通。
  * 什么时候最想出手：对近身物攻威胁与低血自保最积极——自己血量低于一半时 priority 74、对手正打自己／主人时 66，
- *   平时按目标物攻倾向从 52 起抬（明显物系 +12、偏物系 +6）；ai.opening=迎击时只在对方正出手或自己刚受伤时睁眼。
- * 对谁出手：当前威胁；身上已有 world_combat:babydoll_eyes 的目标跳过，省下一次；别的来源的魅惑不算本招的标记。
+ *   平时按目标物攻倾向从 52 起抬（明显物系 +12、偏物系 +6），再按攻击数值抬一档（封顶 +12）；
+ *   ai.opening=迎击时只在对方正出手或自己刚受伤时睁眼。
+ * 对谁出手：当前威胁；身上已有 world_combat:babydoll_eyes 的目标跳过，省下一次；攻击已到 −6 的目标也跳过，
+ *   不再浪费先手；别的来源的魅惑不算本招的标记。
  * 够不到怎么办：reach 直接用本次能力解析出的真实射程（item.data.range，随体型与凝视配置变化），超出的先走近；
  *   视线被挡时交回共享接近逻辑。
  * 放完之后：目标掉攻击，伙伴交回共享顺序，再决定追击还是趁对方下不去手拉开。
@@ -27,6 +29,18 @@ namespace CompanionBehavior {
         return 1;
     }
 
+    /** 目标当前的有效攻击等级（含临时窗口）；已封底时再卸只剩标记，不再优先。 */
+    function babydolleyesBottomed(context: WorldBehavior.Context, target: Entity): boolean {
+        return stage(context, target, "atk") <= -6;
+    }
+
+    /** 攻击数值越高，削同样的级数收益越大；AI 据此抬高低血自保与迎击时的排序。 */
+    function babydolleyesAttack(context: WorldBehavior.Context, target: Entity): number {
+        const facts = combatStats(context, target), stats = facts && facts.stats;
+        const value = stats ? Number(stats.atk) : NaN;
+        return isFinite(value) && value > 0 ? value : 0;
+    }
+
     function babydolleyesWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
@@ -35,6 +49,8 @@ namespace CompanionBehavior {
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 6)) return false;
         // 只跳过本招真正留下的心软载体（那个 MobEffect）；别的来源的魅惑不阻止这次睁眼，避免误判。
         if (marker(context, threat, PokemonSkills.babydolleyesEffect)) return false;
+        // 攻击已经封底的目标再卸只剩标记，不浪费这一次先手。
+        if (babydolleyesBottomed(context, threat)) return false;
         if (!world(context).clear(point(self.point), point(threat.point))) return false;
         if (ai<string>(item, "opening", "anytime") !== "counter") return true;
         const owner = context.facts.owner;
@@ -50,9 +66,11 @@ namespace CompanionBehavior {
             if (!target || !babydolleyesWants(context, item, target)) return 0;
             const self = source(context), owner = context.facts.owner;
             const physical = babydolleyesPhysical(context, target);
-            if (self.health <= self.maximum * 0.5) return 74 + physical * 2;
-            if (target.attacking === self.ref || !!owner && target.attacking === owner.ref) return 66 + physical * 2;
-            return 52 + physical * 6;
+            // 对手攻击越高，同样两级下降的收益越大；用攻击数值再抬一档，封顶 +12。
+            const worth = Math.min(12, Math.round(babydolleyesAttack(context, target) / 12));
+            if (self.health <= self.maximum * 0.5) return 74 + physical * 2 + worth;
+            if (target.attacking === self.ref || !!owner && target.attacking === owner.ref) return 66 + physical * 2 + worth;
+            return 52 + physical * 6 + worth;
         }
     });
 }

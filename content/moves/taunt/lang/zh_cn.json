@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.taunt.summary": "当面挑衅对手，使其怒火上头；在怒火消失前，它只能使出会造成伤害的招式，能被转向的普通敌人还会把注意转向你。喊话要有一条通视直线，墙后与射程外都会落空。",
+  "worldcombat.skill.taunt.summary": "当面挑衅对手，使其怒火上头；在怒火消失前，它的变化招式会被封住，只能转为造成伤害的攻击，能被转向的普通敌人还会把注意转向你。喊话要有一条通视直线，墙后与射程外都会落空。",
   "worldcombat.skill.taunt.use.0": "逼治疗、增益、换场型的敌人只能打人",
   "worldcombat.skill.taunt.use.1": "让依赖变化招式的敌人只能转为硬拼",
   "worldcombat.skill.taunt.use.2": "给队友创造正面交战窗口",

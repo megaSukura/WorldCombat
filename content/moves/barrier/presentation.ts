@@ -7,12 +7,13 @@
  * 色相家族：冷蓝（0x9FC7FF）为主体，亮白（0xE8F3FF）做高光，深蓝（0x4E6FA8）做余韵；没有第二个色相。
  * 层次：向心聚拢的光尘（起）／墙面、顶边辉光、基座环、抽起的光柱（击）／墙顶微光（收）／下坠碎片（末）。
  * 起击收：focus（聚板）→ raise（立墙）→ hold（持壁）→ shatter（崩解）／fizzle（没立起来）。
- * 范围：墙面不再按理想矩形铺满——粒子沿 `data.path`（每个真实立起列的顶边折线）在边线上采样，
- *   被跳过或被破坏的列没有顶点，缺口就是真实缺口；基座环绑墙根点、fit none，半径按 `data.scale`（实际墙宽 / 2.4）推出。
- * 逐格描边：`world_combat:move_barrier_wall` 回调读服务端实际放下的格子（`data.cells`），只给每列最高的一格画顶面方框，
- *   空格自然留白；绑在墙的托管效果上（WorldFeedback.onEffect），随墙自然到期、被驱散或最后一格消失一起收。
+ * 范围：墙面不再按理想矩形铺满——`data.runs` 是服务端按相邻真实列切出的连通段，客户端只沿同段顶点连边，
+ *   被跳过或被破坏的列断开，缺口就是真实缺口；基座环绑墙根点、fit none，半径按 `data.scale`（实际墙宽 / 2.4）推出。
+ * 逐格描边：`world_combat:move_barrier_wall` 回调读服务端实际放下的格子（`data.cells`）与连通段（`data.runs`），
+ *   给每列最高的一格画顶面方框并点一枚辉光，再沿每段顶点连出真实顶边，空格自然留白；绑在墙的托管效果上
+ *   （WorldFeedback.onEffect），随墙自然到期、被驱散或最后一格消失一起收。
  * 运动：光板沿 +Y 从地表抽起；墙面沿顶点撑开；碎片受重力落下。
- * 数：顶边粒子数绑 `data.placed`（原生 terrainResult 真正放下的格数），列数绑 `data.columns`，`data.scale` 放大粒子尺寸。
+ * 数：顶边段与辉光点按 `data.placed`（原生 terrainResult 真正放下的格数）与 `data.columns`，`data.scale` 放大尺寸。
  */
 const BarrierDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -35,24 +36,6 @@ const BarrierDefinition: ParticleDefinition = {
             duration: 48,
             exit: { stop: 16, drain: 24 },
             emitters: [
-                {
-                    name: "raise_face", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/screen",
-                    burst: { count: { data: "placed", fallback: 6 }, interval: 2, repeats: 2 },
-                    shape: { kind: "polyline" },
-                    direction: "outward", speed: [0.02, 0.08], drag: 0.92,
-                    lifetime: [16, 28], size: [0.4, 0.7],
-                    color: 0x9FC7FF, alpha: [0.7, 0], light: "world", maxParticles: 90
-                },
-                {
-                    name: "raise_edge", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: { data: "placed", fallback: 6 }, interval: 3, repeats: 2 },
-                    shape: { kind: "polyline" },
-                    direction: "outward", speed: [0.03, 0.12], drag: 0.9,
-                    lifetime: [10, 18], size: [0.14, 0.02],
-                    color: 0xE8F3FF, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 64
-                },
                 {
                     name: "raise_ring", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
@@ -77,20 +60,12 @@ const BarrierDefinition: ParticleDefinition = {
             exit: { drain: 26 },
             emitters: [
                 {
-                    name: "hold_edge", bind: "path", fit: "none",
+                    name: "hold_base", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    rate: { data: "panels", fallback: 6 }, shape: { kind: "polyline" },
-                    direction: "outward", speed: [0.008, 0.03],
+                    rate: 2, shape: { kind: "ring", radius: 0.42 },
+                    direction: "up", speed: [0.008, 0.03],
                     lifetime: [12, 20], size: [0.08, 0.02],
-                    color: 0xE8F3FF, alpha: [0.4, 0], light: "full", bloom: 0.35, maxParticles: 24
-                },
-                {
-                    name: "hold_face", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/screen_color",
-                    rate: 3, shape: { kind: "polyline" },
-                    direction: "outward", speed: [0.005, 0.02],
-                    lifetime: [16, 26], size: [0.4, 0.4],
-                    color: 0x9FC7FF, alpha: [0.16, 0], light: "world", maxParticles: 20
+                    color: 0xE8F3FF, alpha: [0.3, 0], light: "world", maxParticles: 10
                 }
             ]
         },
@@ -146,15 +121,19 @@ const BarrierDefinition: ParticleDefinition = {
 
 WorldCombatParticles.scene("world_combat:move_barrier", 1, BarrierDefinition);
 
-// 逐格描边：只给每个真实立起列的最高一格画顶面方框——画出来的是实际放下的玻璃边缘，缺格自然留白。
-// 数据来自服务端 `terrainResult` 真正放下的格子；绑定在墙的托管效果上，墙消失时一起收。
+// 逐格描边 + 真实顶边 + 顶点辉光：只给每个真实立起列的最高一格画顶面方框，再沿服务端切好的连通段
+// （`data.runs`）把同段各列顶连成一条边——缺格处不同段，边自然断开，不再跨缺口连光。顶点辉光复用原生
+// 图集贴图逐点绘制，数量与位置就是真实列顶。数据来自 `terrainResult` 真正放下的格子；绑定在墙的托管效果上。
 WorldCombatClient.scene("world_combat:move_barrier_wall", 1, function (frame) {
-    const entry: CombatSceneEntry<{ cells: number[][]; columns: number; scale: number }> = JSON.parse(frame.data());
+    const entry: CombatSceneEntry<{ cells: number[][]; runs: number[][][]; columns: number; scale: number }> = JSON.parse(frame.data());
     if (entry.lifecycle) return;
     const cells = entry.data.cells || [];
+    const runs = entry.data.runs || [];
+    const scale = typeof entry.data.scale === "number" && entry.data.scale > 0 ? entry.data.scale : 1;
     const present: { [key: string]: boolean } = Object.create(null);
     for (let i = 0; i < cells.length; i++) present[cells[i][0] + "," + cells[i][1] + "," + cells[i][2]] = true;
     const color = 0xAA9FC7FF;
+    const glow = (0xE0 << 24 | 0xE8F3FF) | 0;
     for (let i = 0; i < cells.length; i++) {
         const cell = cells[i];
         if (present[cell[0] + "," + (cell[1] + 1) + "," + cell[2]]) continue;
@@ -163,5 +142,14 @@ WorldCombatClient.scene("world_combat:move_barrier_wall", 1, function (frame) {
         frame.line(x + 1, y, z, x + 1, y, z + 1, color);
         frame.line(x + 1, y, z + 1, x, y, z + 1, color);
         frame.line(x, y, z + 1, x, y, z, color);
+        frame.sprite("cobblemon:particle/generic/sparkle/glowingsparkle_cyan",
+            cell[0] + 0.5, cell[1] + 1.05, cell[2] + 0.5, 0.14 * scale, 0, glow, 0, true);
+    }
+    for (let r = 0; r < runs.length; r++) {
+        const run = runs[r];
+        for (let i = 1; i < run.length; i++) {
+            const a = run[i - 1], b = run[i];
+            frame.line(a[0], a[1], a[2], b[0], b[1], b[2], color);
+        }
     }
 });

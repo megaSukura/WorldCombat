@@ -34,8 +34,8 @@
  *   关（急泡）＝威力 ×1.12、速度 ×1.12、射程 +2 格、每轮 −1 泡；代价是打滑概率 −4%、打滑时长 ×0.8——快而脆。
  *
  * 伤害段 `spray`（参数同名）走共享换算（原生类别 Special／Water）；对手特防、相性与暴击命中时另算。
- * 速度下降用共享能力等级阶梯 NativeEffects.boost(..., "spe", -n)，对宝可梦、原版生物、玩家同一条路；
- * 效果只带共享身份 sudsy，不另加属性修饰（避免和速度阶梯重复扣速）。
+ * 速度下降用共享能力等级阶梯 NativeEffects.boostWindow(..., "spe", -n)，绑在 bubble_suds 载体上，对宝可梦、原版生物、
+ * 玩家同一条路；这次打滑自己的窗口到期或载体被清除时一并收回。效果只带共享身份 sudsy，不另加属性修饰（避免和速度阶梯重复扣速）。
  */
 namespace PokemonSkills {
     export const bubbleId = "bubble";

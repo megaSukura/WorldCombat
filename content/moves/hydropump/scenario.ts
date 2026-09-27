@@ -30,7 +30,7 @@ Smoke.scenario("hydropump", function (stage) {
         stage.expect(stage.damageTo(beside) > 0, "the deluge backwash doused the other foe at the stopping point");
         stage.expect(stage.hadMobEffect(near, "world_combat:status/soaked"), "one foe carried the shared soaked identity");
         stage.expect(stage.hadMobEffect(beside, "world_combat:status/soaked"), "the other foe carried the shared soaked identity");
-        stage.note("the column holds for 6 ticks and the first foe takes the torrent once; spread, flow, backwash radius, soak duration and push distance follow Sp. Atk/Speed/weight/level (design facts verified in the full assembly)", {
+        stage.note("the column holds for 6 ticks and the first foe takes the torrent once; its endpoint is the real trace result each tick, and it keeps pushing only while that foe is still the first body on the line, through native hitDisplace (iron golems resist the shove). Spread, flow, backwash radius, soak duration and push distance follow Sp. Atk/Speed/weight/level (design facts verified in the full assembly)", {
             casts: stage.casts("hydropump", caster),
             near: Math.round(stage.damageTo(near) * 10) / 10,
             beside: Math.round(stage.damageTo(beside) * 10) / 10,

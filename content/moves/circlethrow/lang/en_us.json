@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.circlethrow.summary": "Grab an adjacent opponent, deal one Fighting contact hit, then throw it over your shoulder to land behind you; the landing makes one action interrupt, and an opponent with a reserve is truly switched out.",
+  "worldcombat.skill.circlethrow.summary": "Grab the first opponent your aim actually touches, deal one Fighting contact hit, then throw it over your shoulder to land behind you; only a real carry to a legal landing makes one action interrupt and switches out an opponent with a reserve, while a fully carried-resistant target merely takes the damage.",
   "worldcombat.skill.circlethrow.use.0": "Throw an opponent that rushed you over your shoulder",
   "worldcombat.skill.circlethrow.use.1": "Counter in melee and clear an opponent out of your face",
   "worldcombat.skill.circlethrow.use.2": "Slam a sturdy target out of melee and hit it on the way",
-  "worldcombat.skill.circlethrow.description.0": "Grab one opponent within %2$s blocks with a clear line and, on a hit, slam it for about %1$s Fighting contact damage; if it leaves grab range or the slam misses, nothing is thrown.",
+  "worldcombat.skill.circlethrow.description.0": "Grab the first opponent your aim actually touches within %2$s blocks and with a clear line (no pre-selection; reaching at air or a wall grabs nothing), then slam it for about %1$s Fighting contact damage; if nothing is grabbed or the slam misses, nothing is thrown.",
   "worldcombat.skill.circlethrow.description.1": "On a hit the opponent is thrown over your head to land about %1$s blocks behind you on the far side, peaking around %2$s blocks high over %3$s seconds; the arc advances from its actual position each tick and lands in place when terrain blocks it.",
-  "worldcombat.skill.circlethrow.description.2": "The landing makes one action interrupt on the target and attempts a forced switch; a target that resists being carried only takes the slam and is not thrown. This move no longer clears its target over time.",
+  "worldcombat.skill.circlethrow.description.2": "Only a real carry to a legal landing makes one action interrupt at that spot and attempts a forced switch; a fully carry-resistant target (zero initial displacement) merely breaks free in place, and a target that hits a wall stops at the real contact point. Neither is interrupted or switched. This move no longer clears its target over time.",
   "worldcombat.skill.circlethrow.tight.on": "Tight grip on: slam x1.1 and grab reach x0.92 (must be closer), at the cost of x0.8 throw distance.",
   "worldcombat.skill.circlethrow.tight.off": "Tight grip off: throw distance x1.3 and slightly longer reach, at the cost of slam x0.95.",
   "worldcombat.skill.circlethrow.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",
@@ -29,5 +29,5 @@
   "world_combat.move.circlethrow.text.throw": "Threw the opponent over",
   "world_combat.move.circlethrow.text.miss": "Grabbed at nothing",
   "world_combat.move.circlethrow.text.switch": "Circle Throw · forced switch",
-  "worldcombat.skill.circlethrow.description.additional": "After landing, a thrown opponent that has an available reserve is forced out and the reserve enters at the landing spot; a wild or reserve-less target only stays there and then seeks enemies normally again."
+  "worldcombat.skill.circlethrow.description.additional": "After a full arc lands, a thrown opponent that has an available reserve is forced out and the reserve enters at the landing spot; a wild or reserve-less target only stays at the landing spot and then seeks enemies normally again. Hitting a wall or being fully carry-resistant never triggers a switch."
 }

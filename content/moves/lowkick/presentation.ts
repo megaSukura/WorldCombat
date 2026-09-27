@@ -5,7 +5,8 @@
  * 爆开一记钝击与一只脚影 → 被扫中的人腿边尘土一沉、整个人晃了一下。
  * 色相家族：暖土褐（earth / tinydust）与暖橙钝击（impact_fighting / foot）为主，速度线为浅米色，无饱和色。
  * 拍子：起（windup 压腿）→ 行（dash 俯冲）→ 击（impact 扫中）→ 收（trip 失衡、miss 踢空）。
- * 范围：impact 绑命中目标、画出的就是扫中的位置；这是一记贴身单体招，没有铺开的地面区域。
+ * 范围：impact 绑命中目标、画出的就是扫中的位置；follow 的腿弧按 data.arc 用本招实际扫堂半径（1.2–2.4 格），
+ * 副目标的冲击绑它自己的位置。这是一记贴身单体招，没有铺开的地面区域。
  * 运动：俯冲时速度线沿历史拖尾、脚尘向外炸；命中是短促的外爆加一只下压的脚影；失衡是腿边一沉。
  * 数：dash 的起步尘量绑 `data.stride`（突进距离派生），impact 的尘量绑 `data.intensity`（本击威力 / 70），脚影数绑 `data.coils`（掉速等级派生）。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -133,10 +134,10 @@ const LowKickDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "leg_arc", bind: "point", fit: "none", offset: [0, 0.14, 0], orient: "direction",
+                    name: "leg_arc", bind: "point", fit: "world", offset: [0, 0.14, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: 16, at: 1 },
-                    shape: { kind: "arc", radius: 1.6, arcDegrees: 150, rotation: [90, 0, 0] },
+                    shape: { kind: "arc", radius: { data: "arc", fallback: 1.6 }, arcDegrees: 150, rotation: [90, 0, 0] },
                     direction: "shape", speed: [0.06, 0.2],
                     gravity: 0.05, drag: 0.92,
                     lifetime: [8, 15], size: [0.1, 0.02], sizeMode: "index",

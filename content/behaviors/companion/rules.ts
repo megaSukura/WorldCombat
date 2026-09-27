@@ -38,6 +38,21 @@ namespace CompanionBehavior {
                     last = context.memory.focusObservation = { ref: ref, point: target.point.slice(), tick: context.tick };
                 return last && context.tick - last.tick <= 60 ? last : null;
             } });
+        registry.sense({ id: "world_combat:remembered-threat", after: ["world_combat:threat"], read: function (context) {
+                var facts = context.facts, scope = JSON.stringify([facts.intent, facts.focus, facts.protect, facts.capture]);
+                if (context.memory.observedCommand !== scope) {
+                    delete context.memory.observedPositions;
+                    context.memory.observedCommand = scope;
+                }
+                if (facts.intent === "hold" || facts.intent === "focus" && facts.focusIssue && facts.focusIssue !== "target-not-visible") {
+                    delete context.memory.observedPositions; return null;
+                }
+                // Record only the enemy this decision actually saw and selected. Hidden frames keep no live enemy facts.
+                var target = WorldMethods.observedAim(context, "threat", context.senses["world_combat:threat"], 60);
+                if (!target || target.ref === facts.capture || facts.intent === "focus" && target.ref !== facts.focus
+                    || target.ref !== facts.focus && distance(target.point, facts.anchor) > facts.range) return null;
+                return target;
+            } });
         registry.sense({ id: "world_combat:movement", read: function (context) { return WorldMethods.motion(context, "observedMotion"); } });
         registry.sense({ id: "world_combat:patient", after: ["world_combat:threat"], read: function (context) {
                 var self = source(context), patients: Entity[] = [self];
@@ -80,6 +95,9 @@ namespace CompanionBehavior {
                 var goals: WorldBehavior.Goal[] = [{ id: "command:" + facts.intent, kind: "world_combat:command", data: {} }];
                 if (facts.intent === "hold")
                     return goals;
+                var remembered: Entity | null = context.senses["world_combat:remembered-threat"];
+                if (!threat && remembered)
+                    goals.push({ id: "defend:" + remembered.ref, kind: "world_combat:defend", data: { ref: remembered.ref } });
                 if (threat) {
                     goals.push({ id: "defend:" + threat.ref, kind: "world_combat:defend", data: { ref: threat.ref } });
                     if (fleeing(context, threat) && !protectedControl(threat) && !threat.revealed)
@@ -314,6 +332,8 @@ namespace CompanionBehavior {
                     order.push("world_combat:care");
                 if (threat)
                     order.push("world_combat:bolster", "world_combat:drain", "world_combat:track", "world_combat:defend");
+                else if (context.senses["world_combat:remembered-threat"])
+                    order.push("world_combat:defend");
                 order.push("world_combat:care", "world_combat:fortify", "world_combat:prepare", "world_combat:travel-help", "world_combat:worksite", "world_combat:observe", "world_combat:command");
                 Object.keys(orderRules).forEach(id => orderRules[id](context, order));
                 for (var i = 0; i < order.length; i++) {

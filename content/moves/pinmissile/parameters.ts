@@ -39,7 +39,15 @@
  */
 namespace PokemonSkills {
     export const pinMissileQuills = "world_combat:pinmissile_quills";
+    /** 由钉刺载体拥有的移速窗口（见 skill.ts 的 fixedAttributes）；随载体存亡，3 针饱和。 */
+    export const pinMissileSlow = "world_combat:pinmissile_slow";
     export const pinMissileScene = "world_combat:move_pinmissile";
+    /** 身上针头的自定义场景：固定针位、数量等于实际钉数，不生成粒子。 */
+    export const pinMissilePinnedScene = "world_combat:move_pinmissile_pinned";
+    /** 每级钉刺对移速的乘算压低份额，与原生缓慢同量级；三档 1..3 得到 −15%/−30%/−45%，3 针后不再加深。 */
+    export const pinMissileSlowPerPin = 0.15;
+    /** 针在完成结算前的额外航程余量，用来给追踪留出转弯距离；实际最大航程就是 reach + 这个值。 */
+    export const pinMissileFlightMargin = 3;
 
     actionParameters.define("pinmissile", {
         /** 单针威力：基础 25；物攻每比 55 多 1 加 0.16（夹 −5..13）；等级每比 25 多 1 加 0.25（夹 0..7）；
@@ -105,7 +113,7 @@ namespace PokemonSkills {
                 .clamp(6, 13).round(1),
             "射程", {
                 unit: "格",
-                description: "针能追到多远；速度与等级越高送得越远。它也是本招的实际射程来源。"
+                description: "针的追踪射程；速度与等级越高送得越远。针实际最多可飞这个距离再加 3 格（给追踪留的转弯余量），本招宣称的射程与之一致。"
             }),
         /** 散布：基础 1.4°，速度每比 55 快 1 加 0.02°（夹 0..1.6）；倒钩 ×0.7 / 速射 ×1.15；夹 0.8..4。 */
         spread: formula(

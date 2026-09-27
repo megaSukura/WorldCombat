@@ -5,7 +5,9 @@
  *   站在青草场地收第二口更足。两朵加起来仍在原总上限之内，是「当场兑现的两拍」，不是一条会赶路的波。
  *
  * 出手：共享节奏。windup（提交前）只播预告——手边先拢起一小束花；准备可被打断，不花代价。
- * 第一朵（提交后）：花瓣沿施法者到伙伴的连线撒过去，落地即补第一半；绽放与文本读实际回复量。
+ * 第一朵（提交后）：先复核施放距离与可达线，够不到就只走 fade，不治疗也不撒花；够得到才把花瓣从施法者短程送到伙伴，
+ *   落地即补第一半。花苞在伙伴身上绽开（attach）总会出现，表示花已附着；真正补到生命的回复亮光（bloom）与浮字
+ *   只在实际回复量 > 0 时出现，满血或禁疗不会被当成成功回血。
  * 第二朵（`bloomDelay` 之后）：重新取得受益人——还活着、仍是友方就在它**当前所在位置**开第二朵，
  *   花簇跟着人走而不是留在地面；此刻带 shared 青草身份就按 `grassBoost` 开大。对象失效则取消剩余（fade）。
  *
@@ -14,6 +16,7 @@
  */
 namespace PokemonSkills {
     const floralhealingScene = "world_combat:move_floralhealing";
+    const floralhealingCarryScene = "world_combat:move_floralhealing_carry";
     const floralhealingTextBloom = "world_combat.move.floralhealing.text.bloom";
     const floralhealingTextGrass = "world_combat.move.floralhealing.text.grass";
 
@@ -67,7 +70,13 @@ namespace PokemonSkills {
             const target = action.target();
             if (target === null) return "invalid-target";
             if (String(target.ref()) === String(action.actor().ref())) return "invalid-target";
-            if (!action.sense().friendly(target)) return "invalid-target";
+            const world = action.sense();
+            if (!world.friendly(target)) return "invalid-target";
+            const body = world.observe(action.actor()), mate = world.observe(target);
+            if (body === null || mate === null) return "invalid-target";
+            // 第一口要先有到达伙伴的直线与射程；准备期跑开或躲到墙后就拒绝这一口。
+            if (body.position().minus(mate.position()).length() > p(floralhealingId, "reach", action)) return "out-of-range";
+            if (!world.clear(body.position(), mate.position())) return "target-not-visible";
             return "";
         },
         windup: function (action, _config, prepare) {
@@ -92,30 +101,54 @@ namespace PokemonSkills {
             const ref = String(target.ref());
             const origin = body.position();
 
-            function bloom(access: CombatWorld, actor: CombatActor, dose: number, share: number, grass: boolean): void {
+            /** 花瓣从施法者短程送到伙伴：源点撒一把，再沿真实连线把花心逐刻送过去。 */
+            function send(access: CombatWorld, fromBody: CombatObservation, toBody: CombatObservation): void {
+                access.sound("minecraft:block.flowering_azalea.place", fromBody.position(), 14, "{}");
+                WorldFeedback.emit(access, floralhealingScene, 1, fromBody.position(),
+                    { moment: "scatter", target: String(toBody.actor().ref()), petals: petals }, 24);
+                const from = fromBody.position(), to = toBody.position();
+                WorldFeedback.emit(access, floralhealingCarryScene, 1, from,
+                    { target: String(toBody.actor().ref()), start: access.tick(), travel: 3, petals: petals,
+                        from: [from.x(), from.y() + 0.55, from.z()], to: [to.x(), to.y() + 0.55, to.z()] }, 24);
+            }
+
+            /**
+             * 一拍的落点表现：`attach` 是花苞在受益人身上绽开（满血/禁疗也照常，表明花已附着）；
+             * `bloom` 是真正补到生命的回复亮光，只有 `healed` 为真才出现。
+             */
+            function bloom(access: CombatWorld, actor: CombatActor, dose: number, share: number, grass: boolean, healed: boolean): void {
                 const view = access.observe(actor);
                 const at = view === null ? origin : view.position();
                 const dosePetals = dose === 2 ? Math.round(petals * (grass ? 1.5 : 1.2)) : petals;
                 access.sound("minecraft:block.flowering_azalea.place", at, 14, "{}");
                 WorldFeedback.emit(access, floralhealingScene, 1, at,
-                    { moment: "bloom", target: String(actor.ref()), petals: dosePetals,
-                        healDust: Math.max(10, Math.round(dosePetals * (0.4 + share))),
-                        gold: grass ? Math.max(8, Math.round(dosePetals * 0.5)) : 0, radius: radius, scale: scale }, 34);
-                if (dose === 2 && budget > 0)
+                    { moment: "attach", target: String(actor.ref()), petals: dosePetals,
+                        flowers: dose === 2 ? budget : 0, grass: grass ? 1 : 0, radius: radius, scale: scale }, 30);
+                if (healed)
                     WorldFeedback.emit(access, floralhealingScene, 1, at,
-                        { moment: "residue", target: String(actor.ref()), flowers: budget, radius: radius }, 30);
+                        { moment: "bloom", target: String(actor.ref()), petals: dosePetals,
+                            healDust: Math.max(10, Math.round(dosePetals * (0.4 + share))),
+                            gold: grass ? Math.max(8, Math.round(dosePetals * 0.5)) : 0, radius: radius, scale: scale }, 34);
             }
 
-            sound(action, "minecraft:block.flowering_azalea.place");            WorldFeedback.emit(world, floralhealingScene, 1, origin,
-                { moment: "scatter", target: ref, path: [[origin.x(), origin.y() + 0.55, origin.z()], ref], petals: petals }, 30);
+            // 第一口先落实施放距离与可达线；伙伴已在准备期跑出射程或躲到墙后就不撒花、不治疗。
+            const reach = p(floralhealingId, "reach", action);
+            if (body.position().minus(mate.position()).length() > reach || !world.clear(body.position(), mate.position())) {
+                WorldFeedback.emit(world, floralhealingScene, 1, origin, { moment: "fade", radius: radius, scale: scale }, 22);
+                done(action);
+                return;
+            }
+
+            send(world, body, mate);
 
             const before1 = mate.health();
             floralhealingHeal(world, target, first, "floralhealing");
             const after1 = world.observe(target);
             const gained1 = after1 ? Math.max(0, after1.health() - before1) : 0;
             const share1 = mate.maxHealth() > 0 ? gained1 / mate.maxHealth() : 0;
-            bloom(world, target, 1, share1, false);
-            WorldFeedback.text(world, floralhealingAbove(mate.position()), floralhealingTextBloom, [Math.round(gained1 * 10) / 10], 30);
+            bloom(world, target, 1, share1, false, gained1 > 0.001);
+            if (gained1 > 0.001)
+                WorldFeedback.text(world, floralhealingAbove(mate.position()), floralhealingTextBloom, [Math.round(gained1 * 10) / 10], 30);
 
             action.after(delay, function (current: CombatAction) {
                 const access = current.world();
@@ -134,9 +167,11 @@ namespace PokemonSkills {
                 const after2 = access.observe(now);
                 const gained2 = after2 ? Math.max(0, after2.health() - before2) : 0;
                 const share2 = live.maxHealth() > 0 ? gained2 / live.maxHealth() : 0;
-                bloom(access, now, 2, share2, grass);
-                const shown = after2 === null ? live.position() : after2.position();
-                WorldFeedback.text(access, floralhealingAbove(shown), grass ? floralhealingTextGrass : floralhealingTextBloom, [Math.round(gained2 * 10) / 10], 30);
+                bloom(access, now, 2, share2, grass, gained2 > 0.001);
+                if (gained2 > 0.001) {
+                    const shown = after2 === null ? live.position() : after2.position();
+                    WorldFeedback.text(access, floralhealingAbove(shown), grass ? floralhealingTextGrass : floralhealingTextBloom, [Math.round(gained2 * 10) / 10], 30);
+                }
                 done(current);
             });
         }

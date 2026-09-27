@@ -1,17 +1,18 @@
 /**
  * 龙锤 / dragonhammer 的出手方式。
  *
- * 核心念头：把整个身体抡起来当锤子——先弓身扬起、再沿面前一道垂直弧从身体前上端砸到前下；
+ * 核心念头：抡起一道龙气锤影——先弓身把锤沿身体可达的举锤路径扬到面前高点、再沿一道垂直弧从身体前上端砸到前下；
  *   真实首个实体或地形的接触点决定落点。砸实的一下把目标沿接触方向撞飞、并砸得它一个趔趄、走慢一阵。
  *   没有反震、不裂地、不追加第二下，代价是起手慢、只砸一个点。
  *
  * 两幕（落空多一幕）：
  *   起（windup，提交前）：弓身扬起、龙气沿身体收紧，只播预告。
  *   砸（swing → impact / whiff，提交后）：锁定出手方向，必要时补一小靠步（总量不超过 `lunge`、受原生身体扫掠限制），
- *       随后整个身体沿垂直弧逐刻 trace 压下，路径宽度取**自己真实体宽**。先碰到实体就结算 `hammer` 接触伤害，
- *       伤害真的落地后才把目标沿真实接触方向撞飞 `shove` 格、挂上 `world_combat:knocked_down`（共享身份
- *       world_combat:status/knocked_down，移动速度大幅下降，仍可出手）；先碰到方块就停在墙面扬一小片尘，不伤墙后的人；
- *       整条弧都没碰上就在弧末端落空。盟友或伤害被拒时锤停在那一点，不算命中。
+ *       随后从身体可达的举锤起点沿垂直弧逐刻 trace 压下，**低顶/实墙首先截住举锤路径**；每刻先判定、再按实际到达处
+ *       画剩余的那一段。先碰到实体就结算 `hammer` 接触伤害，伤害真的落地后才把目标沿真实接触点方向撞飞 `shove` 格
+ *       （走 hitDisplace，尊重原生抗击退）、挂上 `world_combat:knocked_down`（共享身份 world_combat:status/knocked_down，
+ *       移动速度大幅下降，仍可出手；时长按**实际被砸中的目标**质量重算）；先碰到方块就停在墙面扬一小片尘，
+ *       不伤墙后的人；整条弧都没碰上就在弧末端落空。盟友或伤害被拒时锤停在那一点，不算命中。
  *
  * 与同为「身体当武器」的招分开：泰山压顶跃到落点、范围压中一圈、概率麻痹；木槌抬身砸下、裂开地表、反震自己；
  *   龙锤只沿垂直弧砸单个目标、不裂地不反震，把目标砸得趔趄。
@@ -30,7 +31,7 @@ namespace PokemonSkills {
         id: "dragonhammer",
         cooldownParameter: "recharge",
         name: "Dragon Hammer",
-        description: "把整个身体抡起来当锤子，沿面前一道垂直弧自上而下重砸一个目标：真实首个实体或地形的接触点决定落点，砸中后把它沿接触方向撞飞、并砸得趔趄一阵、移动大幅变慢（仍可出手）。重锤式更重、趔趄更久、击飞更短；疾锤式起手更快、抡得更快、撞得更远。",
+        description: "弓身抡起一道龙气锤影，沿面前一道垂直弧自上而下重砸一个目标：真实首个实体或地形的接触点决定落点，砸中后把它沿接触方向撞飞、并砸得趔趄一阵、移动大幅变慢（仍可出手）。重锤式更重、趔趄更久、击飞更短；疾锤式起手更快、抡得更快、撞得更远。",
         uses: ["把冲进来的目标砸得趔趄、断它一段走位", "对单个目标打一记重的龙属性接触伤害", "打断贴身后的追击节奏", "把目标撞开、为队友腾出身位"],
         kind: "aim",
         range: 2.9,
@@ -76,7 +77,6 @@ namespace PokemonSkills {
             const lunge = Math.max(0, p("dragonhammer", "lunge", action));
             const power = p("dragonhammer", "hammer", action);
             const shove = Math.max(0, p("dragonhammer", "shove", action));
-            const downTicks = Math.max(10, Math.round(p("dragonhammer", "downTicks", action)));
             const dust = Math.max(8, Math.round(p("dragonhammer", "dust", action)));
             const sweepTicks = Math.max(4, Math.min(6, Math.round(p("dragonhammer", "sweep", action))));
             const gauge = Math.max(0.3, body.width() * 0.5);
@@ -96,13 +96,22 @@ namespace PokemonSkills {
             const settled = world.observe(actor);
             const centre = settled === null ? centre0 : settled.position();
 
-            /** 弧上一点：从身体前上方沿垂直弧落到前下。 */
+            // 弧末高度：按瞄点高度与弧末脚下的真实合法地面明确，让近身矮目标也有可预期的落点。
+            const endX = centre.x() + heading.x() * reach, endZ = centre.z() + heading.z() * reach;
+            let lowY = Math.min(targetPoint.y(), centre.y() + topHeight);
+            const endGround = SurfacePaths.support(world, WorldCombat.point(endX, lowY + 0.2, endZ), 0.6, 3);
+            if (endGround !== null) lowY = endGround.y();
+
+            /** 弧上一点：从身体前上方沿垂直弧落到前下的合法地面高度。 */
             function tipAt(t: number): CombatPoint {
                 const distance = reach * (0.35 + 0.65 * t);
                 return WorldCombat.point(centre.x() + heading.x() * distance,
-                    centre.y() + topHeight * Math.pow(1 - t, 1.4) + 0.15,
+                    lowY + topHeight * Math.pow(1 - t, 1.4),
                     centre.z() + heading.z() * distance);
             }
+
+            // 举锤起点：身体可达的前上端；低顶会在举锤段先被截住，而不是把有效起点丢到顶的另一侧。
+            const raised = WorldCombat.point(centre.x(), centre.y() + height * 0.9, centre.z());
 
             /** 落空：短尘 + 一声轻响；不推动任何人、不声称命中。 */
             function whiff(current: CombatAction, at: CombatPoint, face: string): void {
@@ -123,15 +132,19 @@ namespace PokemonSkills {
                     if (victim !== null && (String(victim.ref()) === String(actor.ref()) || scope.friendly(victim))) victim = null;
                     if (victim !== null && hurt(current, victim, "dragonhammer", power,
                         { damage: damageSpec("dragonhammer", "hammer"), contact: true })) {
-                        const now = scope.observe(victim);
-                        const at = now === null ? contact.position() : now.position();
+                        // 命中表现落在**真实接触点**，不是被砸者的体心。
+                        const at = contact.position();
                         scope.sound("minecraft:item.mace.smash_ground_heavy", at, 18, "{}");
-                        // 伤害真的落地后才撞飞、才申请趔趄；状态被拒（控免）照吃主伤，只是不亮趔趄反馈。
+                        // 撞飞走 hitDisplace：尊重原生抗击退与击退事件；大抗推体拒绝位移不否定主伤与趔趄。
                         if (scope.valid(victim)) {
                             const away = WorldCombat.point(at.x() - centre.x(), 0, at.z() - centre.z());
-                            if (away.length() > 0.05) scope.displace(victim, away.unit().scale(shove));
+                            if (away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(shove));
                         }
-                        const staggered = scope.valid(victim) && MobEffects.apply(scope, victim, dragonhammerDowned, downTicks, 0) !== null;
+                        // 趔趄时长按实际被砸中的目标质量重算，不沿用原锁定目标。
+                        const victimDown = scope.valid(victim)
+                            ? Math.max(10, Math.round(p("dragonhammer", "downTicks", withTarget(factContext(current), victim))))
+                            : Math.max(10, Math.round(p("dragonhammer", "downTicks", current)));
+                        const staggered = scope.valid(victim) && MobEffects.apply(scope, victim, dragonhammerDowned, victimDown, 0) !== null;
                         WorldFeedback.emit(scope, dragonhammerScene, 1, at,
                             { moment: "impact", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity,
                               stagger: staggered ? 8 : 0 }, 26);
@@ -151,20 +164,23 @@ namespace PokemonSkills {
                 whiff(current, arcEnd, "");
             }
 
-            /** 沿真实垂直弧逐刻 trace 压下；首个实体或方块接触就落地，否则挥到弧末端落地。 */
-            function swing(current: CombatAction, tick: number, from: CombatPoint): void {
-                const progress = sweepTicks <= 1 ? 1 : (tick + 1) / sweepTicks;
-                const tip = tipAt(progress);
-                scenes.show(current, "swing", tip,
-                    { moment: "swing", path: [[from.x(), from.y(), from.z()], [tip.x(), tip.y(), tip.z()]],
-                        direction: [forward.x(), forward.y(), forward.z()], scale: scale, intensity: intensity, dust: dust });
+            /**
+             * 从身体可达的举锤起点出发：index 0 = 扬到初始高点，随后 index 1..sweepTicks 沿垂直弧逐刻压下。
+             * 每刻先 trace 判定，再按实际到达处画这一段；首个实体或方块接触就落地，否则挥到弧末端落地。
+             */
+            function swing(current: CombatAction, index: number, from: CombatPoint): void {
+                const tip = index === 0 ? tipAt(0) : tipAt(index / sweepTicks);
                 const contact = current.trace(from, tip, gauge, true);
-                if (contact.hitEntity() || contact.blocked()) { land(current, contact, tip); return; }
-                if (tick + 1 >= sweepTicks) { land(current, null, tip); return; }
-                current.after(1, function (next: CombatAction) { swing(next, tick + 1, tip); });
+                const reached = contact.hitEntity() || contact.blocked() ? contact.position() : tip;
+                scenes.show(current, "swing", reached,
+                    { moment: "swing", path: [[from.x(), from.y(), from.z()], [reached.x(), reached.y(), reached.z()]],
+                        direction: [forward.x(), forward.y(), forward.z()], scale: scale, intensity: intensity, dust: dust });
+                if (contact.hitEntity() || contact.blocked()) { land(current, contact, reached); return; }
+                if (index >= sweepTicks) { land(current, null, reached); return; }
+                current.after(1, function (next: CombatAction) { swing(next, index + 1, reached); });
             }
 
-            swing(action, 0, tipAt(0));
+            swing(action, 0, raised);
         }
     });
 }

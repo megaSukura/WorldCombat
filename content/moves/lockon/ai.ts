@@ -1,6 +1,6 @@
 /** Lock a visible mobile threat once, using the same resolved range as execution. */
 namespace CompanionBehavior {
-    PokemonSkills.addPreferences("lockon", { ai: { maxChase: 10, leaveStation: false } }, [
+    PokemonSkills.addPreferences("lockon", { ai: { maxChase: 10, leaveStation: true } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 20, 1),
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
@@ -10,7 +10,7 @@ namespace CompanionBehavior {
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (context.facts.mounted) return false;
         if (status(context, self, "lockon")) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", true)) return false;
         if (distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
         return !!world(context).clear(point(self.point), point(threat.point));
     }

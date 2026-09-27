@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.acidspray.summary": "Spray a short, wide acid mist: every enemy in the wedge takes special damage and immediately loses 2 stages of Sp. Def, and it disperses at once with no lingering damage or repeated drops. Spray in a free direction at close range or pick an entity; an empty spray still plays. The focused nozzle is narrower and longer; the wide spray covers a whole group.",
+  "worldcombat.skill.acidspray.summary": "Spray a short, wide acid mist from the front of the body along the aim: every enemy in the wedge takes special damage and immediately loses 2 stages of Sp. Def, though a wall stops the mist; it disperses at once with no lingering damage or repeated drops. Spray in a free direction at close range or pick an entity; an empty spray still plays. The focused nozzle is narrower and longer; the wide spray covers a whole group.",
   "worldcombat.skill.acidspray.use.0": "Strip two stages of Sp. Def off a group in front at close range",
   "worldcombat.skill.acidspray.use.1": "Grind Sp. Def with the cheapest possible cast",
   "worldcombat.skill.acidspray.use.2": "Spray the chokepoint as foes try to push through",
@@ -20,6 +20,6 @@
   "worldcombat.skill.acidspray.preference.ai.maxChase": "Approach distance",
   "worldcombat.skill.acidspray.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it approach from further away before spraying.",
   "worldcombat.skill.acidspray.preference.ai.crowd": "Prefer unlowered",
-  "worldcombat.skill.acidspray.preference.ai.crowd.help": "On: the more enemies in range still at full Sp. Def, the higher it ranks the spray, opening the way for the team's special attackers. Off: it sorts like an ordinary attack.",
+  "worldcombat.skill.acidspray.preference.ai.crowd.help": "On: the more enemies still at full Sp. Def inside the wedge in the aimed direction, the higher it ranks the spray, opening the way for the team's special attackers. Off: it sorts like an ordinary attack.",
   "world_combat.move.acidspray.text.sunder": "Sp. Def -%1$s"
 }

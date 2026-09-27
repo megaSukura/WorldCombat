@@ -16,6 +16,8 @@
  */
 namespace PokemonSkills {
     const flailScene = "world_combat:move_flail";
+    /** 每拍短横挥的客户端回执；每拍更新同一个 key，前摇不会与下一拍叠加成长寿命扇面。 */
+    const flailSwipeScene = "world_combat:move_flail_swipe";
     const flailHitText = "world_combat.move.flail.text.hit";
     const flailMissText = "world_combat.move.flail.text.miss";
     const flailRecklessText = "world_combat.move.flail.text.reckless";
@@ -80,8 +82,8 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             const reckless = !!(config && config.reckless);
             action.present("flail:windup", flailScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", tricky: reckless ? 1 : 0, reach: p("flail", "reach", action),
-                    moves: Math.round(p("flail", "swings", action)) }));
+                JSON.stringify({ moment: "windup", tricky: reckless ? 1 : 0, windup: prepare,
+                    reach: p("flail", "reach", action), moves: Math.round(p("flail", "swings", action)) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -99,11 +101,14 @@ namespace PokemonSkills {
             const reckless = !!(config && config.reckless);
             const recoil = reckless ? Math.max(0.01, p("flail", "recoil", action)) : 0;
             const scale = Math.max(0.6, Math.min(2.0, reach / 2.0));
+            // 每拍短横挥由同一个 key 更新：下一拍开始时上一拍的挥臂立刻收住，不再留下整片长寿命扇面。
+            const swipes = WorldFeedback.actionScenes(flailSwipeScene, 1);
             let index = 0, total = 0, settled = false;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
+                swipes.stop(current);
                 const scope = current.world();
                 const self = scope.observe(current.actor());
                 const at = self !== null ? self.position().plus(WorldCombat.point(0, self.height() + 0.3, 0)) : current.origin();
@@ -130,6 +135,8 @@ namespace PokemonSkills {
                 const intensity = Math.max(0.6, Math.min(2.2, power / 22));
                 const rage = Math.round(Math.max(0, 1 - self.health() / Math.max(1, self.maxHealth())) * 46);
                 const fan = flailFan(origin, swung, reach, angle);
+                // 挥臂起点落在身体前部：短横挥从身前扫出，而不是从身体中心铺满整片。
+                const front = origin.plus(swung.scale(Math.max(0.25, self.width() * 0.5)));
                 let hits = 0;
 
                 WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, swung, reach, angle, { below: 1.4, above: 2.2 }),
@@ -139,18 +146,22 @@ namespace PokemonSkills {
                         if (!scope.clear(origin, facts.position())) return;
                         if (!hurt(current, enemy, "flail", power, { damage: damageSpec("flail", "swipe"), contact: true })) return;
                         hits++; total++;
-                        const away = facts.position().minus(origin);
+                        // 背离位移只取水平分量；纯竖向（目标正上方/正下方）没有可推的水平向，不硬算。
+                        const away = WorldCombat.point(facts.position().x() - origin.x(), 0, facts.position().z() - origin.z());
                         if (scope.valid(enemy) && away.length() > 0.15)
-                            scope.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                            scope.hitDisplace(enemy, away.unit().scale(push));
                         WorldFeedback.emit(scope, flailScene, 1, facts.position(),
                             { moment: "hit", target: String(enemy.ref()), index: index, swings: swings,
                                 sparks: sparks, rage: rage, scale: scale, intensity: intensity }, 18);
                     });
 
-                WorldFeedback.emit(scope, flailScene, 1, origin,
-                    { moment: "swing", path: fan, index: index, swings: swings,
-                        direction: [swung.x(), swung.y(), swung.z()], sparks: sparks, rage: rage, scale: scale,
-                        intensity: intensity, miss: hits === 0 ? 1 : 0 }, 16);
+                // 这一拍的扇区回执交给客户端短横挥：判定用的同一组扇面端点（fan）与身体前部起点。
+                swipes.show(current, "swing", origin,
+                    { moment: "swing", path: fan, front: [front.x(), front.y(), front.z()],
+                        direction: [swung.x(), swung.y(), swung.z()], arc: Math.round(angle),
+                        reach: Math.round(reach * 100) / 100, index: index, swings: swings, sparks: sparks,
+                        rage: rage, scale: scale, intensity: intensity, miss: hits === 0 ? 1 : 0,
+                        start: scope.tick(), duration: gap });
                 sound(current, index === swings - 1 ? "minecraft:entity.player.attack.strong" : "minecraft:entity.player.attack.weak");
 
                 if (reckless && recoil > 0 && scope.valid(current.actor())) {

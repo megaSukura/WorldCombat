@@ -1,15 +1,17 @@
 /**
  * 挺住 / endure 的出手方式。
  *
- * 念头的形状：咬紧牙关（brace），窗口内任何把你打到倒下的攻击都被截停在 1 HP（save），用光次数或时间走完，
- * 坚持纹散去；屹立取向下，用掉次数后还会短暂力竭（spent → 定身）。三幕：咬牙 → 承击 → 力竭／到期。
- * 窗口不额外定身：普通伤害照常承受，可以边走边挺；只有真正的一记 save 才闪一下，也没有额外的无敌期。
+ * 念头的形状：咬紧牙关（raise），窗口内任何把你打到倒下的攻击都被截停在 1 HP（save），用光次数或时间走完，
+ * 坚持纹散去；屹立取向下整个窗口定身，用掉次数后再接一段力竭（spent → 30 刻定身）。三幕：咬牙 → 承击 → 力竭／到期。
+ * 挣扎取向下窗口内可以边走边挺；两种取向的普通伤害都照常承受，只有真正的一记 save 才闪一下，也没有额外的无敌期。
+ * 持续轮廓与剩余心绑在真正的 guard 托管效果上（onEffect），随它存续、结束或驱散一起收，不用固定时长的假持续。
  * 承击复用共享 GuardEffects 的 survive 模式：不减免普通伤害，只在致命一击处截断。
  */
 namespace PokemonSkills {
     const endureScene = "world_combat:move_endure";
+    const endureGuardScene = "world_combat:move_endure_guard";
+    const endureGuardKey = "world_combat:move_endure:guard";
     export const EndureRule = "world_combat:endure";
-    const endureBraceKey = "world_combat:move_endure:brace";
     const endureSaveText = "world_combat.move.endure.text.save";
     const endureSpentText = "world_combat.move.endure.text.spent";
 
@@ -27,9 +29,11 @@ namespace PokemonSkills {
             const world = effect.world(), body = world.observe(effect.target());
             if (body === null) return;
             const custom: any = state;
-            WorldFeedback.keep(world, endureBraceKey, endureScene, 1, body.position(), {
-                moment: "brace", target: String(effect.target().ref()), intensity: endureIntensity(state.charges, custom.initial || 1)
-            }, 20);
+            // 持续轮廓与剩余心绑在真正的 guard 托管效果上，随它存续、随它结束或驱散一起收，不用固定时长的假持续。
+            WorldFeedback.onEffect(world, effect.id(), endureGuardKey, endureGuardScene, 1, body.position(), {
+                actor: String(effect.target().ref()), charges: state.charges, initial: custom.initial || 1,
+                intensity: endureIntensity(state.charges, custom.initial || 1), scramble: custom.scramble ? 1 : 0
+            });
         },
         guarded: function (effect, state, amount, incoming) {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
@@ -76,13 +80,18 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:move_endure:brace", endureScene, 1, action.origin(), JSON.stringify({ moment: "brace", intensity: 1 }));
+            action.present("world_combat:move_endure:raise", endureScene, 1, action.origin(), JSON.stringify({ moment: "raise", intensity: 1 }));
             return prepare;
         },
         ready: function (action, config) {
             const key = "endure_fizzle", stored = action.data(key);
             if (stored !== null) return JSON.parse(stored).failed ? "world_combat:fizzle" : "";
-            const failed = action.sense().random() < p("endure", "fizzle", action);
+            const world = action.sense(), actor = action.actor();
+            // 连用计数按共享的 stallReset 窗口先复位：超过这么久没用过就归零，不拿旧计数继续掷。
+            const previous = state(world, actor, GuardEffects.stallKey);
+            const count = GuardEffects.stall(previous, world.tick(), p("endure", "stallReset", action));
+            const chance = count <= 0 ? 0 : p("endure", "fizzle", action);
+            const failed = world.random() < chance;
             action.data(key, JSON.stringify({ failed: failed }));
             return failed ? "world_combat:fizzle" : "";
         },
@@ -92,13 +101,15 @@ namespace PokemonSkills {
             const charges = p("endure", "charges", action);
             const scramble = !!(config && config.scramble);
             const previous = state(world, actor, GuardEffects.stallKey), now = world.tick();
-            const count = previous && typeof previous.stall === "number" && now - (previous.at || 0) <= p("endure", "stallReset", action) ? previous.stall : 0;
+            const count = GuardEffects.stall(previous, now, p("endure", "stallReset", action));
             setState(world, actor, GuardEffects.stallKey, { stall: count + 1, at: now });
             const guard: any = { rule: EndureRule, mode: "survive", capacity: 0, fraction: 0,
                 minimumHealth: 1, charges: charges, linkRange: 0, initial: charges, scramble: scramble, grit: p("endure", "grit", action) };
-            GuardEffects.apply(world, actor, guard, window);
+            const guardId = GuardEffects.apply(world, actor, guard, window);
+            // 屹立取向：整个窗口由本招自己的 root 托管定身；挣扎取向窗口内仍可走动。
+            // 耗尽力竭的 30 刻 root 由 guarded 在次数归零时追加，与这条窗口一起表达整段定身。
+            if (!scramble && guardId) world.effect("world_combat:rooted", actor, "{}", Math.max(1, Math.round(window)));
             sound(action, "minecraft:entity.warden.heartbeat");
-            action.present("world_combat:move_endure:brace2", endureScene, 1, action.origin(), JSON.stringify({ moment: "brace", intensity: 1 }));
             done(action);
         }
     });

@@ -28,7 +28,7 @@
   "worldcombat.skill.round.preference.ai.maxChase.help": "超过这个距离就不起唱，先走近；越大越愿意从更远处开腔。",
   "worldcombat.skill.round.preference.ai.joinRound": "接同伴的轮唱",
   "worldcombat.skill.round.preference.ai.joinRound.help": "开启：附近有同伴带着余韵时优先起唱接续合唱；关闭：只在真正接到余韵时优先，否则当普通远程攻击排序。",
-  "world_combat.move.round.text.join": "轮唱·接上",
+  "world_combat.move.round.text.join": "轮唱·余韵 %1$s 秒",
   "world_combat.move.round.text.verse": "接唱！%1$s",
   "world_combat.move.round.text.miss": "轮唱唱空了",
   "effect.world_combat.round_carol": "轮唱·余韵",

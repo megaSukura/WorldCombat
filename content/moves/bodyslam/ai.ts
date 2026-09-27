@@ -25,12 +25,19 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 20;
             if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true)) {
+                // 用本招公式的真实落点半径围住目标（计划落点），而不是固定圈：身板大的个体会罩得更开。
+                const world = CompanionBehavior.world(context);
+                let radius = 2.4;
+                try {
+                    radius = Math.max(1.2, PokemonSkills.p("bodyslam", "landRadius", { world: world, actor: world.source(),
+                        skill: PokemonSkills.skills["bodyslam"], detail: { values: capability.data.config || {} } }));
+                } catch (ignored) { }
                 let crowd = 1;
                 const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                    if (CompanionBehavior.distance(other.point, target.point) <= 2.4) crowd++;
+                    if (CompanionBehavior.distance(other.point, target.point) <= radius) crowd++;
                 }
                 if (crowd >= 2) score += 20;
             }

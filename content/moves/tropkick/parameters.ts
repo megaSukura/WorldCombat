@@ -16,7 +16,7 @@
  *   stages  掉攻级数：原生固定 1 级。
  *   retreat 收脚后撤：**速度**派生，踢完往回收步的距离；受原生可站空间限制。
  *   embers  火星数量：物攻与速度派生，直接驱动画面发射量。
- *   tempo/recover/recharge：速度与等级定时序。
+ *   tempo/aftercast/recharge：速度与等级定时序。
  *
  * 本招没有配置开关：低踢、掉攻与收脚后撤是同一个动作过程。
  *
@@ -84,8 +84,8 @@ namespace PokemonSkills {
         tempo: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.04).clamp(-2.3, 3)).clamp(3, 11).round(0),
             "起手", "沉身垫步、把热浪裹上脚的时间；速度越快起脚越快，是本组最短的起手。"),
-        /** 收招：基础 6 − 速度偏移[−1.5,2.5]；夹 3..11。 */
-        recover: seconds(
+        /** 收招：基础 6 − 速度偏移[−1.5,2.5]；夹 3..11。自定义名 aftercast 避开动作保留时序键 recover。 */
+        aftercast: seconds(
             F.base(6).minus(F.stat("speed").minus(60).times(0.03).clamp(-1.5, 2.5)).clamp(3, 11).round(0),
             "收招", "踢完收腿站稳的时间；速度越快收得越利落。"),
         /** 冷却：基础 22 − 等级偏移[−3,5]；夹 12..38。 */
@@ -106,7 +106,7 @@ namespace PokemonSkills {
         { key: "description.1", values: ["lunge","cruise","radius"] },
         { key: "description.2", values: ["stages"] },
         { key: "description.3", values: ["retreat"] },
-        { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
+        { key: "timing", values: ["range", "tempo", "aftercast", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.kick"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.kick"] }
     ]);

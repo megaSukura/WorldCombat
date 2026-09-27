@@ -5,11 +5,12 @@
  * 真实的射线终点上——照到有效敌人就亮起一口亮汁沿根回身，照到空地／墙面／友方则根尖干枯。
  *
  * 色相家族：深草绿（0x5C9E2E／0x3E7A1F）与嫩黄绿（0xC7E86A），近白只给每拍命中的核心；无第二色相。
- * 拍子：起 windup（聚光）→ root（连续粗根，逐拍更新真实终点）→ surge（有效敌人那一拍的亮汁回流）
+ * 拍子：起 windup（聚光）→ root（连续粗根，逐拍更新真实终点）→ surge（有效敌人那一拍根身一亮）
  *   ／ dry、block（空照、被墙或友方挡断的干抽）→ retract（收根）。
+ * 回流：命中那一拍另注册 `world_combat:move_gigadrain_flow` 自定义场景，用固定数量的原版图集贴图沿
+ *   「真实接触点 → 移动中的施法者」按 0→1 走完；只在该拍真实伤害后由服务端发出，松手即不再有新回流。
  * 范围：`data.scale`（吸根半径 / 0.9）铺开根须与根尖；`data.motes`（每拍威力与抽取比例换算）决定根须密度。
- * 运动：root 的 path 发射器用 `data.path` 把施法者与真实终点连成实线；flow 用 orient=direction、line 形状
- *   沿「终点→自身」把亮汁送回；这些位置与判定、trace 读的是同一份点。
+ * 运动：root 的 path 发射器用 `data.path` 把施法者与真实终点连成实线；这些位置与判定、trace 读的是同一份点。
  * 数：`data.flowRate`／`data.dryRate` 让「这一拍是否真的抽到」从画面读出；`data.wave`／`data.waves` 数得出拍子。
  */
 const GigaDrainDefinition: ParticleDefinition = {
@@ -58,15 +59,6 @@ const GigaDrainDefinition: ParticleDefinition = {
                     color: 0xC7E86A, alpha: [1, 0], light: "full", bloom: 0.38, maxParticles: 22
                 },
                 {
-                    name: "flow", bind: "point", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    shape: { kind: "line", length: { data: "span", fallback: 8 } },
-                    rate: { data: "flowRate", fallback: 0 },
-                    direction: "shape", speed: [0.18, 0.40], spread: 8,
-                    lifetime: [8, 16], size: [0.12, 0.02],
-                    color: 0xC7E86A, alpha: [0.85, 0], light: "full", maxParticles: 80
-                },
-                {
                     name: "tip_dry", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     shape: { kind: "sphere", radius: 0.22 }, rate: { data: "dryRate", fallback: 0 },
@@ -78,8 +70,8 @@ const GigaDrainDefinition: ParticleDefinition = {
             ]
         },
         surge: {
-            duration: 26,
-            exit: { stop: 14, drain: 16 },
+            duration: 14,
+            exit: { stop: 8, drain: 12 },
             emitters: [
                 {
                     name: "surge_orbs", bind: "point",
@@ -92,19 +84,10 @@ const GigaDrainDefinition: ParticleDefinition = {
                 {
                     name: "surge_line", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    shape: { kind: "polyline" }, rate: { data: "motes", fallback: 12 },
+                    shape: { kind: "polyline" }, burst: { count: { data: "motes", fallback: 12 } },
                     direction: "shape", speed: [0.16, 0.38], spread: 8,
                     lifetime: [7, 14], size: [0.13, 0.02], sizeMode: "index",
                     color: 0x8FC63F, alpha: [0.8, 0], light: "full", maxParticles: 70
-                },
-                {
-                    name: "surge_flow", bind: "point", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    shape: { kind: "line", length: { data: "span", fallback: 8 } },
-                    rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.20, 0.44], spread: 8,
-                    lifetime: [8, 16], size: [0.12, 0.02],
-                    color: 0xC7E86A, alpha: [0.85, 0], light: "full", maxParticles: 80
                 },
                 {
                     name: "surge_pips", bind: "point", offset: [0, 0.3, 0],
@@ -179,3 +162,36 @@ const GigaDrainDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_gigadrain", 1, GigaDrainDefinition);
+
+/**
+ * 终极吸取每拍命中后的回流：服务端给出真实接触点 `from`、施法者 ref 与走完时长 `dur`；
+ * 这里用固定数量的一枚原版图集贴图沿「接触点 → 当前施法者」按 0→1 走完，随进度收束。
+ * 只在该拍真实伤害后发出，松手即不再有新回流；固定图形，不生成粒子或实体。
+ */
+WorldCombatClient.scene("world_combat:move_gigadrain_flow", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry<{ from?: number[]; target?: string; motes?: number; start?: number; dur?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data;
+    const from = data && Array.isArray(data.from) && data.from.length === 3 ? data.from : null;
+    if (!from) return;
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const duration = typeof data.dur === "number" && data.dur > 0 ? data.dur : 12;
+    const elapsed = frame.serverTick() - start;
+    if (elapsed < 0 || elapsed > duration) return;
+    const caster = data.target ? JSON.parse(frame.anchor(data.target)) : null;
+    const to = caster
+        ? { x: caster.x, y: caster.y + (typeof caster.height === "number" ? caster.height : 1.4) * 0.55, z: caster.z }
+        : { x: entry.position[0], y: entry.position[1], z: entry.position[2] };
+    const count = Math.max(2, Math.min(12, Math.round(typeof data.motes === "number" ? data.motes : 6)));
+    const progress = Math.max(0, Math.min(1, elapsed / duration));
+    for (let index = 0; index < count; index++) {
+        // 每枚贴图错开一点起步相位，形成一串回身的亮汁，而不是整段一起闪。
+        const phase = Math.max(0, Math.min(1, progress - index * (0.5 / count)));
+        const t = phase * phase * (3 - 2 * phase);
+        const x = from[0] + (to.x - from[0]) * t;
+        const y = from[1] + (to.y - from[1]) * t + Math.sin(phase * Math.PI) * 0.18;
+        const z = from[2] + (to.z - from[2]) * t;
+        const alpha = Math.max(0, Math.min(255, Math.round(235 * (1 - phase * 0.5))));
+        frame.sprite("cobblemon:particle/generic/grass/xsseed", x, y, z, 0.22, phase * 30 + index * 7, (alpha << 24) | 0xC7E86A, 0, true);
+    }
+});

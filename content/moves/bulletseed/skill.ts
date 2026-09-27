@@ -20,14 +20,19 @@
 namespace PokemonSkills {
     const bulletseedScene = "world_combat:move_bulletseed";
 
-    /** 当刻自由瞄准：按住技能键时读控制点（逐发可转向），AI 或未声明的输入回退到动作选点。 */
-    function bulletseedAim(action: CombatAction): CombatPoint {
+    /** 当刻玩家持续控制的瞄点；没有新输入（AI 提交或未引导）时为 null。 */
+    function bulletseedControlPoint(action: CombatAction): CombatPoint | null {
         try {
             const parsed = JSON.parse(action.control());
             const samples = parsed && parsed.samples;
             if (samples && samples.length && samples[0].point && samples[0].point.length === 3)
                 return WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]);
         } catch (error) { }
+        return null;
+    }
+
+    /** 无持续控制输入时的回退瞄点：动作选点，取不到就用身体正前方。 */
+    function bulletseedAim(action: CombatAction): CombatPoint {
         try { return action.targetPosition(); } catch (error) { }
         return action.origin().plus(WorldCombat.point(0, 0, 1));
     }
@@ -110,9 +115,11 @@ namespace PokemonSkills {
                 const origin = body !== null ? body.position() : current.origin();
                 const index = fired + 1;
                 fired++;
-                let aimed = bulletseedAim(current);
+                // 有持续控制瞄点就直接按玩家当刻准心；只有无新输入的原目标自动瞄准才加其速度预估。
+                const control = bulletseedControlPoint(current);
+                let aimed = control !== null ? control : bulletseedAim(current);
                 const watched = current.target();
-                if (watched !== null && scope.valid(watched)) {
+                if (control === null && watched !== null && scope.valid(watched)) {
                     const state = scope.observe(watched);
                     if (state !== null) {
                         const delta = state.position().minus(origin);
@@ -140,8 +147,9 @@ namespace PokemonSkills {
                         scenes.stop(inner, key);
                         const stage = inner.world(), victim = hit.target(), at = hit.position();
                         if (victim !== null && stage.valid(victim) && !stage.friendly(victim)) {
+                            // 每个真实弹有独立伤害预算：按发序给唯一 strike，同一发重复回执仍被原生去重。
                             const landed = impact(inner, hit, "bulletseed", power,
-                                { damage: damageSpec("bulletseed", "pellet"), flags: { bullet: true } });
+                                { damage: damageSpec("bulletseed", "pellet"), flags: { bullet: true } }, "shot" + index);
                             WorldFeedback.emit(stage, bulletseedScene, 1, at,
                                 { moment: landed ? "hit" : "husk", target: String(victim.ref()), shot: index, shots: shots,
                                     husk: landed ? husk : Math.round(husk * 0.5), scale: scale,
@@ -157,9 +165,12 @@ namespace PokemonSkills {
                 }, function (inner: CombatAction) {
                     if (!resolved) {
                         scenes.stop(inner, key);
-                        WorldFeedback.emit(inner.world(), bulletseedScene, 1, origin.plus(direction.scale(range)),
-                            { moment: "husk", shot: index, shots: shots, husk: Math.round(husk * 0.5),
-                                scale: scale, intensity: Math.max(0.4, intensity * 0.7) }, 18);
+                        // 空飞的真实末点：读该弹完成回调内仍有效的最后位置，不拿旧瞄准点或满射程点假造终点。
+                        const end = inner.world().projectilePosition(flight);
+                        if (end !== null)
+                            WorldFeedback.emit(inner.world(), bulletseedScene, 1, end,
+                                { moment: "husk", shot: index, shots: shots, husk: Math.round(husk * 0.5),
+                                    scale: scale, intensity: Math.max(0.4, intensity * 0.7) }, 18);
                     }
                     if (!closed) { closed = true; release(inner); }
                 });

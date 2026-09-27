@@ -1,14 +1,14 @@
 /**
  * 催眠术 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者眼眶亮起紫光、脑侧攒起一圈暗示光环 → 一条通视细线把自身与目标连起来，一道暗示波沿它真实
- *   飞过去 → 压过去的目标头顶浮起 Z 与一圈逐渐收拢的余韵环；压不过去则光环在它身上散成一撮困意的雾。
+ * 一句话：施法者眼眶亮起紫光、脑侧攒起一圈暗示光环 → 一道暗示波（真实投射物）带着光环与短尾飞向目标 →
+ *   压过去的目标头顶浮起 Z 与一圈逐渐收拢的余韵环；压不过去则光环在它身上散成一撮困意的雾。
  *
  * 色相家族：靛紫（0x7D5BD8）为主体与推进光环，深紫（0x3B2A6B）只压在核心，近白紫（0xE8D9FF）只给眼与余韵高光。
- * 拍子：起 windup（攒环）→ 送 wave（细线相连、真实投射物沿它飞）→ 落 sleep（头顶 Z）／散 resist（散雾）／断 immune；余韵 linger 随时间收拢。
- * 范围：wave 的细线沿 `data.path`（自身与目标/空放落点两个真实顶点）连线，长度即真实凝视距离；飞行的前沿是真实投射物，细线本身不做沿线飞行。
- * 运动：暗示波由真实投射物承载、沿细线推进；sleep 的 Z 自下而上升起，resist 的环向外弹散。
- * 数：`data.rings`（特攻换算）决定细线密度、枪口爆发与落点 Z 的数量；`data.scale` 随落点半径缩放宽窄；`data.ringRadius`（剩余睡眠比例换算）决定余韵环大小。
+ * 拍子：起 windup（攒环）→ 送 wave（真弹带队，光环随它转向）→ 落 sleep（头顶 Z）／散 resist（散雾）／断 immune；余韵 linger 随时间收拢。
+ * 范围：wave 的光环与短尾都绑真实投射物 `data.projectile`，跟着它实际飞行的位置和朝向，不预铺整条直线；飞行结束由动作 stop 收圈。
+ * 运动：暗示波由真实投射物承载、有限追踪锁定目标；sleep 的 Z 自下而上升起，resist 的环向外弹散。
+ * 数：`data.rings`（特攻换算）决定光环密度、枪口爆发与落点 Z 的数量；`data.scale` 随落点半径缩放宽窄；`data.ringRadius`（剩余睡眠比例换算）决定余韵环大小。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const HypnosisDefinition: ParticleDefinition = {
@@ -37,17 +37,26 @@ const HypnosisDefinition: ParticleDefinition = {
             ]
         },
         wave: {
-            duration: 26,
-            exit: { stop: 12, drain: 16 },
+            duration: 0,
+            exit: { stop: 0, drain: 16 },
             emitters: [
                 {
-                    // 通视细线：沿线采样的静态线，表示这一波要走的路线；真实飞行由投射物承担。
-                    name: "thread", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
-                    shape: { kind: "polyline" }, rate: { data: "rings", fallback: 6 },
-                    direction: "shape", speed: [0.01, 0.04], spread: 6, spin: 30,
+                    // 暗示光环绑在真实投射物上，随它转向一起飞；到达/结束时由动作 stop 收圈，不预铺整条线。
+                    name: "ring", bind: "projectile", orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    rate: { data: "rings", fallback: 6 }, shape: { kind: "ring", radius: 0.28 },
+                    direction: "shape", speed: [0.01, 0.04], spin: 30,
                     lifetime: [8, 14], size: [0.1, 0.02], sizeMode: "index",
                     color: 0x7D5BD8, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 70
+                },
+                {
+                    // 短尾：贴着真弹的轨迹留下少量碎光。
+                    name: "trail", bind: "projectile", orient: "velocity", trail: { minDistance: 0.3 },
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 8, shape: { kind: "point" },
+                    direction: "velocity", speed: [0, 0.03],
+                    lifetime: [6, 12], size: [0.07, 0.02],
+                    color: 0x7D5BD8, alpha: [0.5, 0], light: "full", maxParticles: 40
                 },
                 {
                     // 起手：眼眶与头侧攒出的紫光，暗示波从这里送出。

@@ -85,6 +85,7 @@ class PokemonScriptApi {
     fun statusMirror(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, expected: String) = NativeMechanics.statusMirror(world, actor, expected)
     fun consumeHeld(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, key: String, count: Int) = NativeMechanics.consumeHeld(world, actor, key, count)
     fun pp(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, slot: Int, move: String, expected: Int, value: Int) = NativeMechanics.pp(world, actor, slot, move, expected, value)
+    fun replaceMove(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, slot: Int, expectedMove: String, id: String) = NativeMechanics.replaceMove(world, actor, slot, expectedMove, id)
     fun statusLease(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle) = NativeMechanics.statusLease(world, actor)
     fun statusRelease(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle) = NativeMechanics.statusRelease(world, actor)
     fun record(world: dev.worldcombat.core.runtime.WorldAccess, actor: ActorHandle, id: String, amount: Int) = NativeMechanics.record(world, actor, id, amount)

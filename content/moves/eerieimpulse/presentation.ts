@@ -1,14 +1,14 @@
 /**
  * 怪异电波 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者身上攒起一圈吱吱作响的电弧 → 一道绿黄色的电波以它为中心贴地铺开、扫过整块地皮 →
- *   被扫到的敌人身上炸开一记电火花、身上挂着抽动的干扰电弧。
+ * 一句话：施法者身上攒起一圈电弧 → 绿黄色的电波一拍就铺满以它为中心的真实一圈，整块地皮同时被扰乱 →
+ *   被扰乱者身上炸开一记电火花、身上挂着抽动的干扰电弧。
  *
  * 色相家族：电黄绿（0xF0E86A／0xA8D84A）为主体，近白（0xF8F8D8）只给放电的高光；没有第二个色相。
- * 层次：身上攒电（起手）→ 贴地扫开的电波圈＋地面电纹（击）→ 每个目标身上的电火花（结果）→ 抽动的余电（持续）。
- * 起击收：windup（攒电）→ pulse（电波放开、只播一次）→ jam（逐目标）→ linger（余电慢慢散去）。
- * 范围：pulse 的圆环半径就是判定用的电波半径（`data.radius`），铺到哪就是会被扰乱到哪；玩家一眼看出站在哪圈里。
- * 运动：电波从中心沿地面向外推；被扫中者身上的电弧在原地抽动。
+ * 层次：身上攒电（起手）→ 一瞬铺满整圈的电波＋地面电纹（击）→ 每个目标身上的电火花（结果）→ 抽动的余电（持续）。
+ * 起击收：windup（攒电）→ pulse（电波一拍覆盖真实圈）→ jam（逐目标）→ linger（余电慢慢散去）。
+ * 范围：pulse 的圆环与圆面半径就是判定用的电波半径（`data.radius`），画到哪就是会被扰乱到哪；玩家一眼看出站在哪圈里。
+ * 运动：整圈电弧一次性落在真实边界上并微微外推；被扰乱者身上的电弧在原地抽动。不用麻痹电花，避免暗示额外打断。
  * 数：电波的密度绑 `data.arcs`（速度派生），圆环半径绑 `data.radius`（体型与等级派生），掉级绑 `data.drop`。
  */
 const EerieImpulseDefinition: ParticleDefinition = {
@@ -28,7 +28,7 @@ const EerieImpulseDefinition: ParticleDefinition = {
                 },
                 {
                     name: "charge_core", bind: "source", offset: [0, 0.24, 0], height: 0.62,
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     burst: { count: 8, interval: 4, repeats: 3 },
                     shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.05, 0.16], spread: 24,
@@ -42,28 +42,30 @@ const EerieImpulseDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 18 },
             emitters: [
                 {
-                    name: "field_wave", bind: "point", height: 0.2, fit: "none",
+                    // 电波一拍就覆盖真实圈：电弧直接落在机制半径的圆周上，与那一瞬的降级同拍，不再从小环慢慢飞开。
+                    name: "field_ring", bind: "point", height: 0.2, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
-                    rate: { data: "arcs", fallback: 12 },
-                    shape: { kind: "ring", radius: 0.35 },
-                    direction: "outward", speed: [0.35, 0.85], spread: 6, gravity: 0.0,
+                    burst: { count: { data: "arcs", fallback: 12 }, at: 1 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4 }, thickness: 0.1 },
+                    direction: "outward", speed: [0.06, 0.2], spread: 6,
                     lifetime: [6, 12], size: [0.18, 0.04],
                     color: 0xA8D84A, alpha: [0.7, 0], light: "full", maxParticles: 300
                 },
                 {
-                    name: "field_ground", bind: "point", height: 0.06, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    // 圈内整块地皮同时被扰乱：填满真实半径的圆面。
+                    name: "field_ground", bind: "point", height: 0.06, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     rate: { data: "arcs", fallback: 12 },
-                    shape: { kind: "ring", radius: 0.4 },
-                    direction: "outward", speed: [0.25, 0.6], spread: 12,
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 4 } },
+                    direction: "up", speed: [0.02, 0.1], spread: 18,
                     lifetime: [6, 12], size: [0.1, 0.02],
                     color: 0xF8F8D8, alpha: [0.8, 0], light: "full", maxParticles: 260
                 },
                 {
-                    name: "field_edge", bind: "point", height: 0.12, fit: "none",
+                    name: "field_edge", bind: "point", height: 0.12, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1, interval: 3, repeats: 4 },
-                    shape: { kind: "ring", radius: 0.3 },
+                    burst: { count: 1, at: 1 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 4 } },
                     direction: "outward", speed: [0.0, 0.05],
                     lifetime: [8, 14], size: [0.28, 0.8],
                     color: 0xA8D84A, alpha: [0.5, 0], light: "world", maxParticles: 20
@@ -94,7 +96,7 @@ const EerieImpulseDefinition: ParticleDefinition = {
                 },
                 {
                     name: "jam_arcs", bind: "target", height: 0.55,
-                    particle: "world_combat_core:cobblemon/generic/status/paralysis_spark",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     burst: { count: { data: "drop", fallback: 2 }, interval: 2, repeats: 4 },
                     shape: { kind: "circle", radius: 0.3 },
                     direction: "outward", speed: [0.03, 0.14], spin: 20,

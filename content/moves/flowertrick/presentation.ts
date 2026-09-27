@@ -1,13 +1,13 @@
 /**
  * 千变万花 / flowertrick 的客户端表现。
  *
- * 一句话：施法者理好一束花、扬手掷出；花束翻飞着拐弯追上门，碰到目标的一瞬整束绽开、花瓣向四面扑开，
- *   落点铺下一片粉色花瓣。
- * 色相家族：花粉（0xF0A6C8 / 0xF6D6E6）为主体，近白（0xFFF2F6）在花瓣与强调；草绿（0x8CC24E）只在茎叶的小面积。
- * 拍子：起 windup（理花）→ 行 flight（花束翻飞追人）→ 击 bloom（命中绽开）→ 果 petalbed（落点花瓣）→ 收 miss（撞墙散花）。
- * 范围：bloom 的花瓣圈按 `data.bloomRadius` 铺开，玩家看出这一束能波及多大一圈。
- * 运动：flight 由动作拥有的 actionScenes 绑定真实弹体；有目标时由引擎追踪，空投时沿 `data.direction` 直飞。bloom 的花瓣沿 `direction: "outward"` 扑开并受重力落回。
- * 数：`data.petals`（物攻与等级派生）决定飞行与绽开的花瓣密度，`data.cells`（terrainResult 真正放下的花瓣格数）决定地面花瓣数量。
+ * 一句话：施法者理好一束花、扬手锁定落点掷出；花束沿真实抛物线翻飞（高抛时飞得更高、更慢），第一次碰到敌人
+ *   就整束绽开、花瓣向四面扑开；碰到地面或墙则只散瓣。
+ * 色相家族：花粉（0xF0A6C8 / 0xF6D6E6）为主体，近白（0xFFF2F6）在花瓣与强调，草绿（0x8CC24E）只在茎叶的小面积。
+ * 拍子：起 windup（理花）→ 行 flight（花束沿真实弧线飞行）→ 击 bloom（碰到敌人绽开）→ 收 miss（碰地/墙或飞尽散花）。
+ * 范围：bloom 的绽开半径由判定半径与花瓣密度决定，只画真实碰到的那一点，不铺大圈、不留花地。
+ * 运动：flight 由动作拥有的 actionScenes 绑定真实弹体，弧线由服务端解出的初速决定；没有追踪，也没有二次爆。
+ * 数：`data.petals`（物攻与等级派生）决定飞行与绽开的花瓣密度，`data.intensity`（绽开威力派生）决定强弱。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FlowertrickDefinition: ParticleDefinition = {
@@ -81,15 +81,6 @@ const FlowertrickDefinition: ParticleDefinition = {
                     color: 0xFFF2F6, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 12
                 },
                 {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.3, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: { data: "bloomRadius", fallback: 2.2 } },
-                    direction: "outward", speed: [0.05, 0.18],
-                    lifetime: [12, 20], size: [0.4, 0.9],
-                    color: 0xF6D6E6, alpha: [0.55, 0], light: "full", bloom: 0.25
-                },
-                {
                     name: "confetti", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/confetti",
                     burst: { count: 6 },
@@ -98,30 +89,6 @@ const FlowertrickDefinition: ParticleDefinition = {
                     gravity: 0.04, drag: 0.93,
                     lifetime: [14, 26], size: [0.12, 0.03],
                     color: 0xFFF2F6, alpha: [0.9, 0], light: "full", maxParticles: 24
-                }
-            ]
-        },
-        petalbed: {
-            duration: 30,
-            exit: { stop: 14, drain: 20 },
-            emitters: [
-                {
-                    name: "bed", bind: "point", fit: "none", offset: [0, 0.05, 0],
-                    particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
-                    burst: { count: { data: "cells", fallback: 5 } },
-                    shape: { kind: "box", size: [2.0, 0.15, 2.0] },
-                    direction: "up", speed: [0.01, 0.05],
-                    lifetime: [14, 26], size: [0.1, 0.02],
-                    color: 0xF6D6E6, alpha: [0.7, 0], light: "world", maxParticles: 50
-                },
-                {
-                    name: "sprout", bind: "point", fit: "none", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/grass/sprout",
-                    burst: { count: 4 },
-                    shape: { kind: "sphere", radius: 0.6 },
-                    direction: "up", speed: [0.02, 0.08],
-                    lifetime: [12, 22], size: [0.1, 0.02],
-                    color: 0x8CC24E, alpha: [0.6, 0], light: "world", maxParticles: 20
                 }
             ]
         },

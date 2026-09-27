@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.axekick.summary": "A short step into a raised-leg chop: the heel drives straight down a fixed narrow band in front, dealing damage and possibly dazing the target; an empty band drives the heel into the ground and hurts the user.",
+  "worldcombat.skill.axekick.summary": "A short step into a raised-leg chop: the heel sweeps down the length of a fixed narrow band in front tick by tick, dealing damage and possibly dazing the target; a fully empty band drives the heel into the ground and hurts the user.",
   "worldcombat.skill.axekick.description.0": "The falling heel deals about %1$s contact damage; the target's defence, type match-up and crits are settled on the hit.",
   "worldcombat.skill.axekick.description.1": "Raise the leg %1$s blocks at %2$s blocks per tick, chopping down at %3$s blocks per tick, after stepping %4$s blocks toward the aim.",
   "worldcombat.skill.axekick.description.2": "The band in front reaches %1$s blocks with a %2$s block half-width; the leg hangs %3$s ticks before the chop falls; an empty band costs %4$s of the user's maximum health.",
@@ -33,6 +33,8 @@
   "worldcombat.skill.axekick.preference.high.help": "On: a higher leg raise, a faster chop, x1.08 chop power and a wider band, at +2 ticks of wind-up, +4 ticks of cooldown, 0.3 blocks less reach, a shorter step, a longer hang before the chop and +0.03 self-hurt on a miss. Off: a low quick chop, faster, farther, a longer step and lighter on a miss, but weaker and narrower.",
   "worldcombat.skill.axekick.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.axekick.preference.ai.maxChase.help": "Only chop a target within this distance; closer in otherwise. Larger starts sooner, and whiffs more often.",
+  "worldcombat.skill.axekick.preference.ai.minSelf": "Minimum own health",
+  "worldcombat.skill.axekick.preference.ai.minSelf.help": "Below this health ratio the user stops using Axe Kick (a whiff's self-hurt can be lethal). Higher is more cautious; lower takes more risk.",
   "worldcombat.skill.axekick.preference.ai.spareConfused": "Spare the dazed",
   "worldcombat.skill.axekick.preference.ai.spareConfused.help": "On: do not Axe Kick a target that is already dazed; off: chop anyway as plain damage.",
   "effect.world_combat.axekick_ring": "Dazed",

@@ -188,3 +188,61 @@ const SilkTrapDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_silktrap", 1, SilkTrapDefinition);
+
+function silkTrapNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+function silkTrapBlend(alpha: number, color: number): number {
+    return (Math.max(0, Math.min(255, Math.round(alpha))) << 24) | color;
+}
+
+// 围身交织丝线：根数与半径都取护池的真实值（`threads` 由降速级数派生、`radius` 是铺开的网半径），
+// 由服务端 `WorldFeedback.onEffect` 绑在护池上，护池收回或净化即同步消失，不留残网。
+WorldCombatClient.scene("world_combat:move_silktrap_web", 1, function (frame) {
+    const entry: CombatSceneEntry<{ radius?: number; threads?: number; height?: number; intensity?: number }> = JSON.parse(frame.data());
+    const data = entry.data || {};
+    if (entry.lifecycle) return;
+    const radius = Math.max(0.4, silkTrapNumber(data.radius, 1.6));
+    const threads = Math.max(6, Math.min(24, Math.round(silkTrapNumber(data.threads, 8))));
+    const intensity = Math.max(0.1, Math.min(1, silkTrapNumber(data.intensity, 1)));
+    const height = Math.max(0.6, silkTrapNumber(data.height, 1.4));
+    const cx = entry.position[0], cz = entry.position[2], base = entry.position[1] - height / 2 + 0.06, top = base + height * 0.5;
+    const thread = silkTrapBlend(90 + 120 * intensity, 0xF0E9D2);
+    frame.ring(cx, base, cz, radius, silkTrapBlend(70 * intensity, 0xE8E1C8));
+    frame.ring(cx, top, cz, radius * 0.55, silkTrapBlend(60 * intensity, 0xE2D9BE));
+    for (let i = 0; i < threads; i++) {
+        const a = i * Math.PI * 2 / threads, x = cx + Math.cos(a) * radius, z = cz + Math.sin(a) * radius;
+        frame.line(cx, base, cz, x, base, z, thread);
+        frame.line(x, base, z, cx + Math.cos(a) * radius * 0.55, top, cz + Math.sin(a) * radius * 0.55, thread);
+    }
+});
+
+// 第一记接触的收束：受击处先凹陷（收小的环），线头从受击点随真实进度牵向来犯者，线数读实际降速级数。
+WorldCombatClient.scene("world_combat:move_silktrap_cinch", 1, function (frame) {
+    const entry: CombatSceneEntry<{ start?: number; duration?: number; point?: number[]; path?: (string | number[])[]; drop?: number }> = JSON.parse(frame.data());
+    const data = entry.data || {};
+    if (entry.lifecycle) return;
+    const duration = Math.max(1, silkTrapNumber(data.duration, 24));
+    const progress = Math.max(0, Math.min(1, (frame.serverTick() - silkTrapNumber(data.start, frame.serverTick())) / duration));
+    const point = Array.isArray(data.point) ? data.point : entry.position;
+    const path = data.path || [];
+    let target: number[] | null = null;
+    if (path.length > 1) {
+        const ref = path[1];
+        if (typeof ref === "string") {
+            const anchor = JSON.parse(frame.anchor(ref));
+            if (anchor) target = [anchor.x, anchor.y + silkTrapNumber(anchor.height, 1.4) * 0.55, anchor.z];
+        } else if (Array.isArray(ref)) target = ref as number[];
+    }
+    if (!target) return;
+    const drop = silkTrapNumber(data.drop, 1);
+    const threads = Math.max(3, Math.min(12, Math.round(drop * 2 + 3)));
+    frame.ring(point[0], point[1], point[2], Math.max(0.06, 0.5 * (1 - progress)), silkTrapBlend(150 * (1 - progress), 0xE2D9BE));
+    for (let i = 0; i < threads; i++) {
+        const spread = 0.14, ox = (i % 2 ? 1 : -1) * spread, oy = ((i >> 1) % 2 ? 0.1 : -0.1);
+        const sx = point[0] + ox, sy = point[1] + 0.18 + oy, sz = point[2] + ox * 0.5;
+        const tip = Math.min(1, Math.max(0, progress * 1.15 - i * 0.05));
+        frame.line(sx, sy, sz, sx + (target[0] - sx) * tip, sy + (target[1] - sy) * tip, sz + (target[2] - sz) * tip,
+            silkTrapBlend(200 * (1 - progress * 0.5), drop > 1 ? 0xFFF4E0 : 0xF0E9D2));
+    }
+});

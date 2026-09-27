@@ -1,11 +1,19 @@
-/** 反射壁：领域自己保存时长与参数，受护者按领域实例持有独立贡献；物理减伤与镜面反弹由本招聚合。 */
+/** 反射壁：领域自己保存时长与参数，受护者按领域实例持有独立贡献；多面壁叠加时只取减伤最强的一份，
+ * 物理减伤与镜面反弹都读这同一份，坚壁不反弹、镜面才把挡下的部分弹回。 */
 namespace PokemonSkills {
     StatusContributions.define(reflectEffect);
     const reflectCounter = "world_combat:reflect_counter";
     function reflectAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
+    /** 多面壁叠加在同一个受护者身上时，只挑减伤最强的一份：避免旧弱壁盖住新强壁，也避免最强护配最强反弹。
+     * 物理减伤与镜面反弹都读这同一份，所以反弹只会来自真正生效的那面壁。 */
     function reflectContribution(world: CombatWorld, actor: CombatActor): StatusContributions.Contribution | null {
         const contributions = StatusContributions.list(world, actor, reflectEffect);
-        return contributions.length ? contributions[0] : null;
+        let best: StatusContributions.Contribution | null = null, bestCut = -1;
+        for (let i = 0; i < contributions.length; i++) {
+            const cut = Number(contributions[i].payload && contributions[i].payload.cut) || 0;
+            if (best === null || cut > bestCut) { best = contributions[i]; bestCut = cut; }
+        }
+        return best;
     }
     function reflectMarkOf(world: CombatWorld, actor: CombatActor): any {
         const contribution = reflectContribution(world, actor);
@@ -75,9 +83,19 @@ namespace PokemonSkills {
         const contribution = reflectContribution(world, target);
         if (!contribution || contribution.token !== String(effect.id()) || String(contribution.source.key()) !== String(effect.source().key())) return;
         const back = Number(facts.amount);
-        if (!(back > 0) || !isFinite(back) || !world.hurt(attacker, back, JSON.stringify({ kind: "reflection", reflected: true, type: facts.type || "" }))) return;
+        // 反弹标记为 indirect 且 reflected：既不记进原生攻击记忆，也不会被任一方的反射规则再次接住递归。
+        if (!(back > 0) || !isFinite(back) || !world.hurt(attacker, back, JSON.stringify({ kind: "reflection", reflected: true, indirect: true, type: facts.type || "" }))) return;
         const body = world.observe(target);
         if (body !== null) {
+            const payload: any = { moment: "rebound", target: String(target.ref()), blocked: Math.round(back * 10) / 10,
+                plates: Number(contribution.payload && contribution.payload.plates) || 8 };
+            const from = world.observe(attacker);
+            if (from !== null) {
+                const away = from.position().minus(body.position());
+                if (away.length() > 0.01) { const dir = away.unit(); payload.direction = [dir.x(), dir.y(), dir.z()]; }
+            }
+            // 只有这一次真实反弹（world.hurt 成功）才返光，坚壁不会被拒也不播。
+            WorldFeedback.emit(world, reflectScene, 1, body.position(), payload, 26);
             WorldFeedback.text(world, reflectAbove(body.position()), reflectReboundText, [Math.round(back * 10) / 10], 26);
             world.sound("minecraft:block.amethyst_block.hit", body.position(), 12, "{}");
         }
@@ -139,9 +157,10 @@ namespace PokemonSkills {
         if (!world.valid(actor) || world.tick() % 20 !== 0) return;
         const mark = reflectMarkOf(world, actor), body = world.observe(actor);
         if (mark === null || body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_reflect/hold/" + String(actor.ref()), reflectScene, 1, body.position(),
-            { moment: "hold", target: String(actor.ref()), plates: mark.plates,
-                scale: Math.max(0.6, Math.min(2, (Number(mark.radius) || 3) / 3)) }, 40);
+        // 持续场景交给投影 carrier 自己拥有：驱散、余效走完或自然到期随其实例清理，同 key 更新不重置 clock。
+        StatusContributions.present(world, actor, reflectEffect, "world_combat:move_reflect/hold/" + String(actor.ref()),
+            reflectScene, 1, body.position(), { moment: "hold", target: String(actor.ref()), plates: mark.plates,
+                scale: Math.max(0.6, Math.min(2, (Number(mark.radius) || 3) / 3)) });
     });
 
     define({

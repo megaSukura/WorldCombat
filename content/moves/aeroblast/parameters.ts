@@ -6,32 +6,34 @@
  *   原生描述：「发射空气旋涡进行攻击。容易击中要害。」
  *
  * 翻译：把「发射空气旋涡」落成**一条拧紧的短促细束**——空气被拧成一束涡流，蓄足后朝锁定方向连续压出三拍；
- *   每一拍沿这条射线只咬住第一个可见敌人，把它沿弹道推开一点点，撞墙即截束。它不是炸开一圈的炮弹，
- *   而是四记里射程最远、单发最重的一记近专招；高暴击沿用原生 critRatio 2 的共享结算。
+ *   每一拍从身体到枪口先核遮挡，再从枪口沿这条射线只咬住第一个可见敌人，把它沿弹道推开一点点，撞墙即截束。
+ *   它是四记里射程最远、单发最重的一记近专招；高暴击沿用原生 critRatio 2 的共享结算。
  *
  * 与同族分开：空气利刃是瞬发宽扇面（范围、轻）；飞叶快刀是窄带连发（连续、多波）；叶刃是贴身重斩（接触、单体）。
  *   气旋攻击是唯一**远距钉住一条射线、连续三拍只打首敌**的一记细束——玩家从「束不长眼、挡墙即断」把它认出来。
  * 与其他风招分开（airslash／hurricane／gust）：空气斩是一道月牙直线贯穿；暴风是宽域风场；
- *   气旋攻击是一条短促的三拍涡流细束，不产生圆形溅射。
+ *   气旋攻击是一条短促的三拍涡流细束。
  *
  * 数值分散（每个参数读不同的精灵数据）：
  *   blast   涡流总威力：特攻定空气拧得多紧，速度与等级定冲势；命中时按拍数拆成三份结算。
- *   reach   射程：等级与特攻决定细束能钉多远不散（它也是本招实际射程）。
+ *   reach   射程：等级与特攻决定细束能钉多远不散（它也是本招实际射程，四记里最远）。
  *   pulse   脉冲间隔：速度决定三拍之间多急。
  *   radius  涡流判定：碰撞箱高度决定细束有多粗。
  *   push    合计推距：特攻决定整束把首个目标推多远；按拍数拆开，合计不因三拍而增加。
- *   spiral  螺旋量：特攻换算，驱动表现密度。
+ *   spiral  螺旋量：特攻换算，驱动沿轴截面的密度。
  *   beats   拍数：固定 3（协议常量），总威力与总推距按它拆开。
  *   tempo／aftercast／recharge：速度定节奏；蓄力式更慢更重、冷却更长。
  *
- * 配置 `charge`（蓄力式）双向取舍：开＝威力 ×1.18、射程 +2.5、涡流判定 ×1.15，
- *   但起手 +6、收招 +2、冷却 +14、脉冲间隔 ×1.15；关（速射式，默认）＝拍得更急（间隔 ×0.85）、冷却 −8、射程 −0.5，但威力 ×0.94。
+ * 配置 `charge`（蓄力式）双向取舍：开＝威力 ×1.18、射程 +2.5、涡流判定 ×1.15、脉冲间隔 ×1.15，
+ *   但起手 +6、收招 +2、冷却 +14；关（速射式，默认）＝拍得更急（间隔 ×0.85）、冷却 −8，但威力 ×0.94、射程 −0.5。
  *
  * 伤害段 `blast` 与参数同名，走共享换算（原生类别 Special，Flying 属性，非接触）。
  */
 namespace PokemonSkills {
     export const aeroblastId = "aeroblast";
     export const aeroblastScene = "world_combat:move_aeroblast";
+    /** 每拍单独的涡流细束主体：客户端按这一拍的真实起点/端点与剩余寿命画旋转截面，短于拍隙即消失。 */
+    export const aeroblastVortexScene = "world_combat:move_aeroblast_vortex";
     export const aeroblastBurstText = "world_combat.move.aeroblast.text.burst";
     export const aeroblastMissText = "world_combat.move.aeroblast.text.miss";
     export const aeroblastCritText = "world_combat.move.aeroblast.text.crit";
@@ -89,7 +91,7 @@ namespace PokemonSkills {
             F.base(30).plus(F.stat("specialAttack").minus(60).times(0.3).clamp(-8, 24)).clamp(18, 70).round(0),
             "螺旋量", {
                 unit: "圈",
-                description: "涡流锥拧出的螺旋密度，由特攻换算；它驱动飞行与爆发的画面密度。"
+                description: "涡流沿轴拧出的螺旋密度，由特攻换算；它驱动每拍细束旋转截面的圈数与密度。"
             }),
         /** 起手：基础 12 刻，速度每比 55 快 1 减 0.05（夹 −2..4）；蓄力 +6；夹在 8..22。 */
         tempo: seconds(

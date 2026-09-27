@@ -31,7 +31,7 @@ WorldCombat.on("world_combat:effects_incoming", "world_combat:damage_incoming", 
     var target = event.target();
     if (target !== null) {
         if (JSON.parse(event.data()).bypassesInvulnerability) return;
-        var world = event.world(), incoming = DamageSemantics.normalize(JSON.parse(event.data()));
+        var world = event.world(), incoming = DamageSemantics.normalize(JSON.parse(event.data()), world, event.actor(), target);
         var data = JSON.parse(world.signal("world_combat:incoming", 1, target, JSON.stringify(incoming)));
         if (data.redirect && !JSON.parse(event.data()).redirected) {
             var recipient = world.actor(data.redirect); delete data.redirect;

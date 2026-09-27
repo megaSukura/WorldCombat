@@ -6,14 +6,15 @@
  * 此后出手会打偏、还会被自己的力气带倒。它的身份是「节拍」，不是某一记重拳。
  *
  * 选取：`kind: "aim"`——短前方方向、世界点或实体都行；提交与执行都不要求存在敌人，
- * 空挥只会打在空气里。判定用 `WorldGeometry.sector`，与画面里的扇面是同一组角度。
+ * 空挥只会打在空气里。判定用 `WorldGeometry.sector`，与画面的小扇面是同一组角度；扇面内逐个目标再做墙阻检查。
  *
  * 三幕：
  *   起（windup，提交前）：双拳交替摆动、脚下踏出节拍，只播预告。
- *   打（swing → hit，提交后）：按 `interval` 刻一拍，每拍朝瞄准方向扫一个小扇面（reach／arc），
- *       扇面里的非友方各吃一记 flurry 接触+拳伤害，共打 `beats` 拍；**只有真正造成伤害的人**才被记下，
- *       也才在他身上迸出拳击的命中反馈。
- *   晕（daze）：整串结束时，被真正打到的人按 chance 陷入混乱（本单元的共享身份载体）；受击者头顶冒出星星。
+ *   打（fist → hit，提交后）：按 `interval` 刻一拍，每拍朝瞄准方向扫一个小扇面（reach／arc），
+ *       一只拳影按 `side` 从局部左／右递到可达接触面（最近目标近身面、墙或满射程）；扇面里的非友方各吃一记
+ *       flurry 接触+拳伤害，共打 `beats` 拍；**只有真正造成伤害的人**才被记下，也才在他身上迸出命中反馈。
+ *   晕（daze）：整串结束时，被真正打到的人按 chance 陷入混乱（本单元的共享身份载体）；混乱只给单独的鸟形回执，
+ *       普通星星缩为受击闪，避免把每一拍误读成已经混乱。
  *
  * 混乱行为（本单元自己的变体）：目标每次想出手都可能被打散（失手概率存在载体振幅里），
  * 打中非友方时按自身攻击反噬——这是迷昏拳「被打懵会打到自己」区别于水之波动「只是耳鸣」的地方。
@@ -23,6 +24,8 @@
  */
 namespace PokemonSkills {
     const dizzypunchScene = "world_combat:move_dizzypunch";
+    /** 每一拍的主体：一只左右交替的拳影从局部侧位递到可达接触面，由自定义场景逐帧绘制。 */
+    const dizzypunchFistScene = "world_combat:move_dizzypunch_fist";
     const dizzypunchDazeEffect = "world_combat:dizzypunch_daze";
     /** 托管载体：把眩晕的持续表现绑在真实混乱效果的生命周期上，驱散即停。 */
     const dizzypunchDazeMark = "world_combat:move_dizzypunch/daze_mark";
@@ -43,18 +46,6 @@ namespace PokemonSkills {
         WorldFeedback.emit(world, dizzypunchScene, 1, at, { moment: "daze", target: String(victim.ref()), fumble: fumblePct }, 26);
         WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.3, 0)), dizzypunchDazeText, [], 28);
         return true;
-    }
-
-    /** 小扇面的有序顶点：原点 + 从瞄准方向左右各半个张角间采样的弧点。判定与画面用同一组顶点。 */
-    function dizzypunchFan(origin: CombatPoint, direction: CombatPoint, reach: number, arcDegrees: number, samples: number): number[][] {
-        const half = Math.min(180, Math.max(5, arcDegrees)) * Math.PI / 360;
-        const base = Math.atan2(direction.x(), direction.z());
-        const points: number[][] = [[origin.x(), origin.y() + 0.05, origin.z()]];
-        for (let index = 0; index <= samples; index++) {
-            const angle = base - half + 2 * half * index / samples;
-            points.push([origin.x() + Math.sin(angle) * reach, origin.y() + 0.05, origin.z() + Math.cos(angle) * reach]);
-        }
-        return points;
     }
 
     define({
@@ -107,8 +98,10 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.4, perBeat / 24));
             const victims: string[] = [];
             let beat = 0, settled = false;
+            // 每拍一只拳影：同一个 key 持续更新，保证一拍一拳，而不是整片扇面同时开花。
+            const fists = WorldFeedback.actionScenes(dizzypunchFistScene, 1);
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; fists.stop(current); done(current); } }
 
             function dazePass(current: CombatAction): void {
                 const scope = current.world();
@@ -134,26 +127,43 @@ namespace PokemonSkills {
                 if (body === null) { finish(current); return; }
                 const origin = body.position();
                 const direction = aim(current);
+                const heading = WorldGeometry.flatUnit(direction, WorldCombat.point(0, 0, 1));
+                const basis = WorldGeometry.basis(heading, WorldCombat.point(0, 0, 1));
                 beat++;
-                const from = beat % 2 === 0 ? 1 : -1;
-                const path = dizzypunchFan(origin, direction, reach, arc, 8);
-                WorldFeedback.emit(scope, dizzypunchScene, 1, origin,
-                    { moment: "swing", beat: beat, beats: beats, arc: arc, reach: reach, side: from, path: path,
-                        flows: Math.max(18, Math.round(20 + arc * 0.6)),
-                        direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity }, 14);
-                let landed = false;
+                const side = beat % 2 === 0 ? 1 : -1;
+                // 小扇面内的非友方逐个做墙阻检查；被墙挡住的这一拍够不到。可达接触面取最近目标的近身面。
+                const reachable: { target: CombatActor; point: CombatPoint }[] = [];
+                let contact = reach;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, direction, reach, arc, { below: 1.2, above: 2.4 }),
                     function (victim, facts) {
-                        const ref = String(victim.ref());
-                        // 只有真正造成伤害的才登记、也才迸出命中反馈；免伤者不进入收尾的混乱名单。
-                        if (!hurt(current, victim, "dizzypunch", perBeat,
-                            { damage: damageSpec("dizzypunch", "flurry"), contact: true, punch: true })) return;
-                        landed = true;
-                        if (victims.indexOf(ref) < 0) victims.push(ref);
-                        WorldFeedback.emit(scope, dizzypunchScene, 1, facts.position(),
-                            { moment: "hit", target: ref, beat: beat, beats: beats, stars: stars,
-                                side: from, scale: scale, intensity: intensity }, 16);
+                        const at = facts.position();
+                        if (WorldGeometry.blockHit(scope, origin, at) !== null) return;
+                        const along = WorldGeometry.dot(WorldCombat.point(at.x(), origin.y(), at.z()).minus(origin), heading);
+                        const surface = Math.max(0.2, Math.min(reach, along - Math.max(0, facts.width()) * 0.5));
+                        if (surface < contact) contact = surface;
+                        reachable.push({ target: victim, point: at });
                     });
+                if (reachable.length === 0) {
+                    // 空放或正前方是墙：拳影也递到真实可达处，而不是画满整片扇。
+                    const wall = WorldGeometry.blockHit(scope, origin, origin.plus(heading.scale(reach)));
+                    if (wall !== null) contact = Math.max(0.2, Math.min(reach, wall.position().minus(origin).length()));
+                }
+                fists.show(current, "fist", origin,
+                    { moment: "fist", beat: beat, beats: beats, side: side, contact: Math.round(contact * 100) / 100, reach: reach, arc: arc,
+                        direction: [heading.x(), heading.y(), heading.z()], right: [basis.right.x(), basis.right.y(), basis.right.z()],
+                        start: scope.tick(), duration: Math.min(10, Math.max(6, interval + 2)), scale: scale, intensity: intensity });
+                let landed = false;
+                for (let index = 0; index < reachable.length; index++) {
+                    const victim = reachable[index].target, ref = String(victim.ref());
+                    // 只有真正造成伤害的才登记、也才迸出命中反馈；免伤者不进入收尾的混乱名单。
+                    if (!hurt(current, victim, "dizzypunch", perBeat,
+                        { damage: damageSpec("dizzypunch", "flurry"), contact: true, punch: true })) continue;
+                    landed = true;
+                    if (victims.indexOf(ref) < 0) victims.push(ref);
+                    WorldFeedback.emit(scope, dizzypunchScene, 1, reachable[index].point,
+                        { moment: "hit", target: ref, beat: beat, beats: beats, hitStars: Math.max(2, Math.round(stars * 0.3)),
+                            side: side, scale: scale, intensity: intensity }, 16);
+                }
                 if (landed) sound(current, "cobblemon:impact.fighting");
                 if (beat >= beats) { dazePass(current); return; }
                 current.after(interval, punch);
@@ -173,6 +183,8 @@ namespace PokemonSkills {
         if (victim === null || String(actor.key()) === String(victim.key()) || world.friendly(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
+        // 反噬只跟真实直接攻击：残伤／间接回冲不触发，避免被环境伤害白扣。
+        if (!DamageSemantics.directOffense(data)) return;
         if (dizzypunchDazeCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body === null) return;

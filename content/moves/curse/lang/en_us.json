@@ -30,7 +30,8 @@
   "effect.world_combat.cursed_hex": "Cursed debt",
   "effect.world_combat.curse_pact": "Cursed pact",
   "world_combat.move.curse.text.hex": "Debt marked - %1$s tolls left",
-  "world_combat.move.curse.text.pact": "Attack and Defence +%1$s, Speed -%2$s",
+  "world_combat.move.curse.text.pact": "Attack +%1$s, Defence +%2$s, Speed -%3$s",
+  "world_combat.move.curse.text.nogain": "Already capped; the trade gains nothing",
   "world_combat.move.curse.text.toll": "The debt is collected",
   "world_combat.move.curse.text.lift": "The debt is cleared"
 }

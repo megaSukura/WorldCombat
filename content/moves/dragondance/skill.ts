@@ -1,5 +1,9 @@
-/*     * 龙之舞：物攻与速度由同一个载体拥有各自的临时贡献，结束时只撤去这一舞。
-     * 升势用真实位移回执：顶棚压住时本舞变扁、不再穿顶；收势落在实际走完环绕的位置，抬升交还重力。 */
+/**
+ * 龙之舞 / dragondance —— 执行组织。
+ *
+ * 物攻与速度由同一次 boostWindow 拥有、挂在 dragondance_airy 载体上；载体到期、被驱散或重施替换时只撤去这一舞。
+ * 盘旋是真实过程：按真实刻进度每刻移动一小步，总转角精确等于 `turns` 圈（不再用一个圆的采样点冒充圈数）；
+ * 每刻读位移回执，撞墙或顶棚即缩短，不做整点跳。收势只报真实净高度与实际接触位置，不宣称落地。 */
 namespace PokemonSkills {
     const dragondanceScene = "world_combat:move_dragondance";
     const dragondanceAiry = "world_combat:dragondance_airy";
@@ -73,48 +77,58 @@ namespace PokemonSkills {
             WorldFeedback.onEffect(world, owned, "world_combat:move_dragondance/airy", dragondanceScene, 1, body.position(),
                 { moment: "airy", gyre: gyre, scale: scale, turns: turns, drakes: drakes,
                     intensity: Math.max(0.7, Math.min(2.2, (gift * 2 + turns) / 4)) });
-            let index = 0, settled = false, ceiling = false, risen = 0;
+            const scenes = WorldFeedback.actionScenes(dragondanceScene);
+            const totalTicks = Math.max(1, Math.round(turns * beat));
+            const totalLift = soar ? Math.max(0, lift * turns) : 0;
+            let step = 0, settled = false, ceiling = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-            function land(current: CombatAction): void {
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
+
+            // 收势：不宣称落地，只报这次舞真实走过的净高度与实际接触位置；真正踩在地面时才带落地回执与地环。
+            function settle(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
-                // 收势落在实际走完环绕的位置；抬升由重力自然交还，不在这里宣称已经落地。
-                WorldFeedback.emit(scope, dragondanceScene, 1, here.position(),
+                const at = here.position(), landed = here.grounded();
+                WorldFeedback.emit(scope, dragondanceScene, 1, at,
                     { moment: "settle", gyre: gyre, scale: scale, turns: turns, drakes: drakes, gift: gift,
-                        lift: risen, flat: ceiling ? 1 : 0,
+                        lift: at.y() - home.y(), flat: ceiling ? 1 : 0, landed: landed ? 1 : 0, ring: landed ? 10 : 0,
                         intensity: Math.max(0.7, Math.min(2.2, (gift * 2 + turns) / 4)) }, 30);
-                WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), dragondanceText, [attackGain, speedGain], 30);
-                scope.sound("cobblemon:impact.dragon", here.position(), 18, "{}");
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), dragondanceText, [attackGain, speedGain], 30);
+                scope.sound("cobblemon:impact.dragon", at, 18, "{}");
                 finish(current);
             }
-            function riseNow(current: CombatAction): void {
+            // 连续小螺旋：每刻按真实刻进度走到圆周的下一点并沿螺旋上升，总转角精确表示 turns 圈；
+            // 位移读真实回执，撞墙/顶棚即缩短，不做整点跳。
+            function spiral(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
-                const angle = (index + 1) * (Math.PI * 2) / turns;
+                step++;
+                const progress = Math.min(1, step / totalTicks);
+                const angle = progress * Math.PI * 2 * turns;
                 const at = here.position();
-                const target = WorldCombat.point(home.x() + Math.sin(angle) * gyre, at.y(), home.z() + Math.cos(angle) * gyre);
-                scope.displace(actor, WorldCombat.point(target.x() - at.x(), 0, target.z() - at.z()));
-                // 升势读真实位移回执：顶棚压住时只升到实际高度，之后的圈变扁，不做穿顶假盘升。
+                const targetX = home.x() + Math.sin(angle) * gyre;
+                const targetZ = home.z() + Math.cos(angle) * gyre;
+                scope.displace(actor, WorldCombat.point(targetX - at.x(), 0, targetZ - at.z()));
                 let lifted = 0;
-                if (soar && lift > 0 && !ceiling) {
-                    const up = scope.displace(actor, WorldCombat.point(0, lift, 0));
+                if (totalLift > 0 && !ceiling) {
+                    const want = home.y() + totalLift * progress - at.y();
+                    const up = scope.displace(actor, WorldCombat.point(0, want, 0));
                     lifted = up;
-                    if (up < lift * 0.5) ceiling = true;
-                    else risen += up;
+                    // 期望抬升在真实回执里被明显压低，说明上方受阻：之后的圈变扁，不再穿顶。
+                    if (want > 0.01 && up < want * 0.5) ceiling = true;
                 }
-                const now = scope.observe(actor), point = now === null ? at : now.position();
-                WorldFeedback.emit(scope, dragondanceScene, 1, point,
-                    { moment: "rise", gyre: gyre, scale: scale, turns: turns, index: index + 1, drakes: drakes,
-                        soar: soar ? 1 : 0, soarMotes: soar ? Math.max(6, Math.round(drakes / 3)) : 0,
-                        lift: lifted, flat: ceiling ? 1 : 0, height: risen,
-                        intensity: Math.max(0.6, Math.min(2.2, drakes / 28)) }, 22);
-                scope.sound(index === 0 ? "minecraft:entity.ender_dragon.flap" : "minecraft:entity.ender_dragon.growl", point, 14, "{}");
-                index++;
-                if (index >= turns) { current.after(beat, land); return; }
-                current.after(beat, riseNow);
+                const now = scope.observe(actor), spot = now === null ? at : now.position();
+                const riseMotes = Math.max(2, Math.round(drakes / Math.max(1, totalTicks)));
+                scenes.show(current, "rise-" + step, spot,
+                    { moment: "rise", gyre: gyre, scale: scale, turns: turns, step: step, drakes: drakes, riseMotes: riseMotes,
+                        soar: soar ? 1 : 0, lift: lifted, flat: ceiling ? 1 : 0, height: spot.y() - home.y(),
+                        intensity: Math.max(0.6, Math.min(2.2, drakes / 28)) });
+                if (step === 1) scope.sound("minecraft:entity.ender_dragon.flap", spot, 14, "{}");
+                else if (step % beat === 0) scope.sound("minecraft:entity.ender_dragon.growl", spot, 14, "{}");
+                if (step >= totalTicks) { current.after(beat, settle); return; }
+                current.after(1, spiral);
             }
-            riseNow(action);
+            spiral(action);
         }
     });
 

@@ -2,8 +2,8 @@
  * 缝影 / spiritshackle 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活、在 `ai.maxChase`（默认 14）格以内。它是一记中远距离的定身箭：
- * `ai.catchRunners`（默认开）在目标正在逃跑时加分——一箭钉住影子，谁也跑不掉；对已经被缝住的目标大幅降分，
- * 不浪费一次箭去钉同一个目标。
+ * `ai.catchRunners`（默认开）在目标正在逃跑时加分——一箭钉住影子，谁也跑不掉；对已经被缝住的目标不再为
+ * 控制价值加分，只按普通远程伤害估值，不浪费一次控制去钉同一个目标。
  * 对谁出手：当前威胁；正在逃跑、距离较远、还没被缝住的优先，焦点目标另加一档。
  * 够不到怎么办：交给共享接近逻辑；它射程很长，多数时候不需要贴身。
  * 放完之后：目标被钉住一段时间，伙伴交回共享顺序决定继续射击还是走位。
@@ -28,8 +28,8 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || !spiritshackleWants(context, capability, target)) return 0;
-            const trapped = CompanionBehavior.status(context, target, "trapped");
-            if (trapped) return 0;
+            // 已经被缝住的目标不重复为控制加价，但仍按普通远程伤害排序（这一箭只值它的伤害）。
+            if (CompanionBehavior.status(context, target, "trapped")) return 18;
             // 空中目标没有可缝的地表影子：这一箭只按它自身的伤害估值，不为钉住加分。
             if (target.grounded === false) return 18;
             const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);

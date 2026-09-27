@@ -1,7 +1,6 @@
-// 指导的执行性设计说明：这是一招必须选一个伙伴的整队强化，所以场面要有伙伴、也要有让 AI 出手的威胁。
-// 前排两个伙伴挨在一起，AI 才会选到「身边有未受教友方」的对象，指导以受教者为阵心再传给旁边的人。
-// 必然事实：施法者提交过指导；被指导的伙伴与它身边的伙伴都出现过共享身份 world_combat:status/coaching。
-// 具体抬到几级、向旁边传开几人随数据与走位变化，写进 note。
+// 指导的执行性设计说明：这是一招必须选一个伙伴的定点强化。前排两个伙伴挨在一起，主受教者身边的伙伴会一起领会。
+// 必然事实：施法者提交过指导；被指导的伙伴与它身边的伙伴都出现过共享身份 world_combat:status/coaching；
+// 老师自己绝不进入旁听范围（不会隔墙自吃回授）。具体抬到几级、旁听几人随数据与走位变化，写进 note。
 Smoke.scenario("coaching", function (stage) {
     stage.weather("clear");
     stage.time("day");
@@ -23,7 +22,8 @@ Smoke.scenario("coaching", function (stage) {
         stage.expect(stage.casts("coaching", caster) > 0, "coaching was cast");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/coaching"), "the coached ally carried the shared coaching identity");
         stage.expect(stage.hadMobEffect(mate, "world_combat:status/coaching"), "the mate beside the coached ally learned too");
-        stage.note("指导必须选一个伙伴；提交后受教者攻防各抬一档，以受教者为阵心、身边传授半径内听清的友方一起领会。两个伙伴挨在一起，无论先教到谁，另一个都在同一圈里。实际级数与传开的人数随等级/防御/特攻与走位变化，留给完整装配试玩核对。", {
+        stage.expect(!stage.hadMobEffect(caster, "world_combat:status/coaching"), "the coach never took the lesson back");
+        stage.note("指导必须选一个伙伴；提交后把一段 boostWindow 挂在受教者这次的 carrier 上，攻防各抬一档，然后以受教者为阵心、对通视且在旁听名额内的友方同样处理。两个伙伴挨在一起，无论先教到谁，另一个都在同一圈里；老师自己不在旁听之列。实际级数与传开的人数随等级/防御/特攻与走位变化，留给完整装配试玩核对。", {
             casts: stage.casts("coaching", caster), casterHp: caster.health(), allyHp: ally.health(),
             mateHp: mate.health(), tick: stage.tick()
         });

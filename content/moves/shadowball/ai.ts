@@ -39,7 +39,7 @@ namespace PokemonSkills {
 
     addPreferences("shadowball", {}, [
         field(pathOf("dense"), "凝影形态", "boolean", {
-            help: "开启：影球威力 ×1.12、判定 ×1.15，但飞行 ×0.84、射程 −2 格、冷却 +4 刻，起手多 1 刻，适合贴身硬砸。关闭：更快更远但更轻，适合中距离点射。"
+            help: "开启：影球威力 ×1.12，但飞行 ×0.84、射程 −2 格、起手多 1 刻、冷却 +4 刻，适合贴身硬砸。关闭：更快更远但更轻，适合中距离点射。判定半径不随配置变化。"
         }),
         field(pathOf("ai.maxChase"), "点射距离", "number", {
             min: 5, max: 26, step: 1,

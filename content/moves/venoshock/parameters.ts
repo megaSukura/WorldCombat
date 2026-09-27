@@ -47,7 +47,7 @@ namespace PokemonSkills {
             F.base(300).plus(F.level().minus(20).max(0).times(6))
                 .times(F.when(F.pref("corrode"), F.const(1.6), F.const(1)))
                 .clamp(240, 640).round(0),
-            "毒性持续", "命中已中毒目标时，那份毒被升格为剧毒后持续多久；侵蚀取向挂得更久。"),
+            "毒性持续", "命中已中毒目标时，那份毒被升格为剧毒后持续多久；侵蚀取向挂得更久。续时以本招这项预算为上限（最多约 1.5 倍），反复命中不会无限叠加。"),
         /** 冲退距离：基础 0.26 格，体重每 10 加 0.01（上限 0.5），侵蚀取向 ×0.8，夹在 0.1..0.9。 */
         push: formula(
             F.base(0.26).plus(F.body("weight").div(10).times(0.01).min(0.5))

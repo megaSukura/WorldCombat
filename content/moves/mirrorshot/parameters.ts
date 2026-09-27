@@ -31,8 +31,9 @@
  *   关（聚光）＝威力 ×1.12、射程 +1.5 格、晃眼概率 +8%、起手更短——点掉一个人。
  *
  * 伤害段 `flash`（主目标）与 `refract`（反射溅射）走共享换算（原生类别 Special／Steel）；对手特防、
- * 相性与暴击命中时另算。命中下降：真实 MobEffect 让任何战斗者「打不准」（攻击变弱），宝可梦那一层再用
- * NativeEffects.boost 下降原生命中等级。
+ * 相性与暴击命中时另算。命中下降：真实 MobEffect 带 glared／aim_impaired 身份，宝可梦那一层用
+ * NativeEffects.boostWindow(..., "accuracy", -n) 绑在它上面下降原生命中等级、其他战斗者落到共享命中阶梯；
+ * 载体结束即收回，不额外挂攻击属性修饰。
  */
 namespace PokemonSkills {
     export const mirrorshotId = "mirrorshot";

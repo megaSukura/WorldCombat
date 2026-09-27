@@ -1,11 +1,12 @@
 /**
  * 龙箭 / dragondarts 的客户端表现。
  *
- * 一句话：施法者身侧聚起两团龙气 → 两支拖着龙紫尾迹的箭先后飞出去、各自拐向要追的那只 →
+ * 一句话：施法者身侧聚起两团箭形龙气 → 两支拖着龙紫尾迹的箭先后飞出去、各自拐向要追的那只 →
  *   命中处炸开一团龙色冲击与龙气碎点；发射时还会从真实出箭点画到各自要追的落点，一眼看出分头还是集火。
  * 色相家族：龙紫（0x7C6BE8）与冷蓝（0x5A8CE8）为主体，近白青（0xE8F0FF）只给箭尖与击点，烟色收尾。
- * 拍子：起 aim（聚气）→ 射 first/second（两箭，各自画发射线）→ 击 strike（命中）/ graze（掠过没打中、目标离场或空放）→ 收 done。
- * 范围：first/second 沿各自投射物本部走并消费 `data.path` 画发射线；strike/graze 都用 `data.point` 落到真实接触点。
+ * 拍子：起 aim（两侧各一箭形光核，自定义场景）→ 射 first/second（两箭，各自画发射线，各自随真实弹体生命周期）→
+ *   击 strike（命中）/ graze（掠过没打中、目标离场或空放）→ 收 done。
+ * 范围：first/second 沿各自投射物本部走并消费 `data.path` 画发射线（服务端已把线裁到墙面）；strike/graze 都用 `data.point` 落到真实接触点。
  * 运动：两支箭沿追踪轨迹飞向各自目标，命中向外爆龙气；没有目标的箭飞到尽头就地掠过。
  * 数：`data.motes`（物攻派生）绑定命中龙气量，`data.index`（第几支）驱动命中冲击的层数，`data.dart` 决定聚气的两团。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -78,8 +79,8 @@ const DragondartsMoveDefinition: ParticleDefinition = {
             ]
         },
         second: {
-            duration: 16,
-            exit: { stop: 12, drain: 12 },
+            duration: 0,
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "dart", bind: "projectile", fit: "none", height: 0.0,
@@ -176,3 +177,29 @@ const DragondartsMoveDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_dragondarts", 1, DragondartsMoveDefinition);
+
+/**
+ * 起手两侧各一箭形光核：服务端给出本次朝向与出手分距，回调每帧在施法者身体两侧各画一枚箭形光核，
+ * 沿朝向拖出一道短光，读得懂「两支箭会从各自一侧出发」。随动作结束清理。
+ */
+WorldCombatClient.scene("world_combat:move_dragondarts_aim", 1, function (frame) {
+    const entry: CombatSceneEntry<{ direction?: number[]; spread?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    const self = JSON.parse(frame.anchor(entry.source));
+    if (!self) return;
+    const raw = Array.isArray(data.direction) ? data.direction : [0, 0, 1];
+    let fx = raw[0], fy = raw[1], fz = raw[2];
+    const length = Math.sqrt(fx * fx + fy * fy + fz * fz) || 1;
+    fx /= length; fy /= length; fz /= length;
+    let rx = -fz, rz = fx;
+    const rl = Math.sqrt(rx * rx + rz * rz);
+    if (rl < 1e-3) { rx = 1; rz = 0; } else { rx /= rl; rz /= rl; }
+    const spread = typeof data.spread === "number" ? data.spread : 0.45;
+    const oy = self.y + Math.max(0.5, (self.height || 1) * 0.55);
+    for (let side = -1; side <= 1; side += 2) {
+        const ox = self.x + rx * spread * side, oz = self.z + rz * spread * side;
+        frame.sprite("cobblemon:particle/generic/orb/energyorb", ox, oy, oz, 0.28, 0, 0xE07C6BE8, 0, true);
+        frame.line(ox - fx * 0.4, oy - fy * 0.4, oz - fz * 0.4, ox + fx * 0.4, oy + fy * 0.4, oz + fz * 0.4, 0xCCE8F0FF);
+    }
+});

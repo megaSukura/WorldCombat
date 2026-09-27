@@ -60,8 +60,10 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            action.present("world_combat:move_courtchange:sigil", courtChangeScene, 1, action.origin(),
-                JSON.stringify({ moment: "sigil", swift: config && config.swift === true ? 1 : 0 }));
+            const radius = Math.max(2, p(courtChangeId, "field", action));
+            action.present("world_combat:move_courtchange:sigil", courtChangeScene, 1, action.targetPosition(),
+                JSON.stringify({ moment: "sigil", scale: radius / courtChangeReferenceRadius,
+                    swift: config && config.swift === true ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -72,26 +74,36 @@ namespace PokemonSkills {
             const waves = Math.max(2, Math.min(5, Math.round(p(courtChangeId, "waves", action))));
             const scale = radius / courtChangeReferenceRadius;
             const fields = courtChangeScan(world, center, radius);
-            const pathPoints: number[][] = [];
+            const cases: { x: number; y: number; z: number; r: number; taken: number; ox: number; oy: number; oz: number }[] = [];
             let taken = 0, given = 0, refused = 0;
             for (let index = 0; index < fields.length; index++) {
                 const entry = fields[index];
-                const before = taken + given;
                 if (entry.friendly) {
                     const enemy = courtChangeNearestEnemy(world, entry.point, radius + 6);
-                    if (enemy !== null && WorldEffects.reassign(world, entry.id, enemy)) given++;
-                    else refused++;
+                    if (enemy !== null && WorldEffects.reassign(world, entry.id, enemy)) {
+                        const holder = world.observe(enemy);
+                        given++;
+                        if (holder !== null) cases.push({ x: entry.point.x(), y: entry.point.y(), z: entry.point.z(), r: entry.radius, taken: 0,
+                            ox: holder.position().x(), oy: holder.position().y(), oz: holder.position().z() });
+                    } else refused++;
                 } else {
-                    if (WorldEffects.reassign(world, entry.id, actor)) taken++;
-                    else refused++;
+                    if (WorldEffects.reassign(world, entry.id, actor)) {
+                        const holder = world.observe(actor);
+                        taken++;
+                        if (holder !== null) cases.push({ x: entry.point.x(), y: entry.point.y(), z: entry.point.z(), r: entry.radius, taken: 1,
+                            ox: holder.position().x(), oy: holder.position().y(), oz: holder.position().z() });
+                    } else refused++;
                 }
-                if (taken + given > before) pathPoints.push([entry.point.x(), entry.point.y(), entry.point.z()]);
             }
 
-            if (taken + given > 0) WorldFeedback.emit(world, courtChangeScene, 1, center,
-                { moment: "swap", path: pathPoints, motes: motes, waves: waves, fields: fields.length,
-                    taken: taken, given: given, refused: refused, scale: scale,
-                    intensity: Math.max(0.8, Math.min(1.8, 0.8 + fields.length / 3)) }, 44);
+            if (taken + given > 0) {
+                WorldFeedback.emit(world, courtChangeScene, 1, center,
+                    { moment: "swap", motes: motes, waves: waves, fields: fields.length,
+                        taken: taken, given: given, refused: refused, scale: scale,
+                        intensity: Math.max(0.8, Math.min(1.8, 0.8 + fields.length / 3)) }, 44);
+                WorldFeedback.emit(world, courtChangeOwnerScene, 1, center,
+                    { cases: cases, scale: scale, intensity: Math.max(0.8, Math.min(1.8, 0.8 + cases.length / 3)) }, 44);
+            }
             if (taken + given === 0) {
                 WorldFeedback.emit(world, courtChangeScene, 1, center,
                     { moment: "empty", motes: motes, scale: scale }, 24);

@@ -7,7 +7,7 @@
   "worldcombat.skill.odorsleuth.description.1": "基础位置记忆为 %1$s，含经验加成后最长5秒。只在目标可见时刷新；遮挡后留下的是逐渐散去的旧位置。",
   "worldcombat.skill.odorsleuth.keen.on": "敏锐：起手 %1$s、冷却 %2$s，换更长的追踪与更远的嗅闻。",
   "worldcombat.skill.odorsleuth.keen.off": "迟钝：窗口短、起手快、冷却短、距离近，适合频繁地咬一口。",
-  "worldcombat.skill.odorsleuth.description.2": "临时削去最多 %1$s 级正闪避，嗅闻距离 %2$s 格，起手 %3$s、收招 %4$s。必须先看见对象；结束只撤本次闪避贡献。",
+  "worldcombat.skill.odorsleuth.description.2": "临时削去最多 %1$s 级正闪避，嗅闻距离 %2$s 格，起手 %3$s、收招 %4$s。必须先看见对象；对已带气味的对象再次施放只续追踪、不重复剥已重叠的闪避，结束只撤本次闪避贡献。",
   "worldcombat.skill.odorsleuth.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.odorsleuth.value.window": "追踪窗口",
   "worldcombat.skill.odorsleuth.value.reveal": "位置记忆",

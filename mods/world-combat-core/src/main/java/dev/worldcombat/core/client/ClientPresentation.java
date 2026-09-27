@@ -52,7 +52,7 @@ public final class ClientPresentation {
             try { handler.run(); }
             catch (RuntimeException failure) { WorldCombatCore.LOGGER.error("Client content cleanup failed", failure); }
         }
-        cleanup.clear(); ticks.clear(); scenes.clear(); hud.clear(); world.clear(); markers.clear(); failures.clear(); failureNotified.clear(); localEntries.clear(); ClientFrame.resetBuffers();NativeUiHost.reset(); dev.worldcombat.core.client.particles.ParticleDirector.INSTANCE.reset();
+        cleanup.clear(); ticks.clear(); scenes.clear(); hud.clear(); world.clear(); markers.clear(); failures.clear(); failureNotified.clear(); localEntries.clear(); ClientFrame.resetBuffers();NativeEntityEcho.reset();NativeUiHost.reset(); dev.worldcombat.core.client.particles.ParticleDirector.INSTANCE.reset();
     }
     public static void cleanup(String id, Runnable handler) {
         dev.worldcombat.core.runtime.effect.EffectData.id(id);
@@ -102,7 +102,7 @@ public final class ClientPresentation {
         markers.values().removeIf(value -> value.expires < clientTick);
         if (!localEntries.isEmpty()) localEntries.removeIf(value -> value.expires < clientTick);
         var current = Minecraft.getInstance().getConnection();
-        if (current != connection) { connection = current; latest = null; inbox.clear(); markers.clear(); failures.clear(); failureNotified.clear(); ClientFrame.resetBuffers(); }
+        if (current != connection) { connection = current; latest = null; inbox.clear(); markers.clear(); failures.clear(); failureNotified.clear(); ClientFrame.resetBuffers();NativeEntityEcho.reset(); }
         age++;
         for (var key : List.copyOf(ticks.keySet())) {
             var handler = ticks.get(key);
@@ -139,5 +139,6 @@ public final class ClientPresentation {
         if (!Minecraft.getInstance().options.hideGui)
             for (var key : List.copyOf(world.keySet())) invoke(world, key, new ClientFrame(controlData.get(), null, event));
         Minecraft.getInstance().renderBuffers().bufferSource().endBatch(RenderType.lines());
+        NativeEntityEcho.endFrame();
     }
 }

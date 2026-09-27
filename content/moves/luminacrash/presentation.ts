@@ -2,12 +2,13 @@
  * 琉光冲激 / luminacrash —— 客户端表现。
  *
  * 一句话：施法者头顶聚起怪光 → 目标头顶点起一根怪光柱、地面浮出一圈虚的落点环 → 坠落前段光柱跟住目标、落点环跟着移动
- * → 最后锚环由虚变实、光柱往下一路压到锚点 → 砸出光圈，目标身上残留怪光残影。
+ * → 最后锚环由虚变实、光柱冻结在同一段柱内 → 砸出光圈，目标身上残留怪光残影。
  * 色相家族：精神怪光的紫（0xB7A8FF）与冷星青（0x8FE8FF），近白只给砸中的一下。
- * 拍子：起 windup（聚光）→ 落 charge（空中点光，跟随）→ 标 mark（地面虚环跟随）→ 锁 lock（地面实环，锚点冻结）→ 坠 fall（光柱下压）
+ * 拍子：起 windup（聚光）→ 落 charge（柱顶聚光，跟随）→ 标 mark（地面虚环跟随）→ 锁 lock（地面实环，锚点冻结）→ 坠 fall（光柱）
  *   → 砸 impact（只在最终锚点炸开）→ 击 hit／残 dazzle／旁 splash_hit。
- * 范围：impact 的炸落圈半径绑定 `data.burst`，光柱粗细绑定 `data.radius`，mark/lock 的地面环同样绑 `data.burst`。
- * 运动：charge/fall 使用服务端同步的真实锚点（同一位置与阶段数据）；mark/lock 在锚点地面，lock 表示已锁点。
+ * 范围：impact 与 mark/lock 的圈半径绑定 `data.burst`，光柱粗细绑 `data.radius`、长度绑 `data.top`（服务端按上空阻挡截断后的真实柱高），
+ *   判定用的 `bodySegment/bodySphere` 读同一组锚点与半径，画面与命中同形。
+ * 运动：charge/fall/mark/lock 都跟随服务端同步的真实锚点；`fit:"none"` 的形状按世界单位取 `data`，不再二次乘 body 尺度。
  * 数：光束数绑定 `data.rays`（特攻与等级换算），强弱绑定 `data.intensity`（光柱威力 / 68）。
  */
 const LuminaCrashDefinition: ParticleDefinition = {
@@ -36,8 +37,7 @@ const LuminaCrashDefinition: ParticleDefinition = {
             ]
         },
         charge: {
-            duration: 12,
-            exit: { stop: 6, drain: 14 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "sky_gather", bind: "point", fit: "none", offset: [0, -0.2, 0],
@@ -58,8 +58,7 @@ const LuminaCrashDefinition: ParticleDefinition = {
             ]
         },
         mark: {
-            duration: 12,
-            exit: { stop: 4, drain: 8 },
+            exit: { drain: 8 },
             emitters: [
                 {
                     name: "mark_ring", bind: "point", fit: "none", offset: [0, 0.05, 0],
@@ -72,8 +71,7 @@ const LuminaCrashDefinition: ParticleDefinition = {
             ]
         },
         lock: {
-            duration: 16,
-            exit: { stop: 6, drain: 14 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "lock_ring", bind: "point", fit: "none", offset: [0, 0.07, 0],
@@ -95,14 +93,13 @@ const LuminaCrashDefinition: ParticleDefinition = {
             ]
         },
         fall: {
-            duration: 24,
-            exit: { stop: 10, drain: 18 },
+            exit: { drain: 18 },
             emitters: [
                 {
                     name: "pillar_body", bind: "point", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
                     rate: { data: "rays", fallback: 10 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.9 }, length: { data: "height", fallback: 9 } },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.9 }, length: { data: "top", fallback: 9 } },
                     direction: "down", speed: [0.35, 0.9], spin: 30,
                     lifetime: [8, 14], size: [0.18, 0.03],
                     color: 0xB7A8FF, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 140
@@ -111,7 +108,7 @@ const LuminaCrashDefinition: ParticleDefinition = {
                     name: "pillar_dust", bind: "point", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "rays", fallback: 10 },
-                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.9 }, length: { data: "height", fallback: 9 } },
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.9 }, length: { data: "top", fallback: 9 } },
                     direction: "down", speed: [0.4, 1.1],
                     lifetime: [8, 14], size: [0.05, 0.01],
                     color: 0x8FE8FF, alpha: [0.7, 0], light: "full", maxParticles: 160

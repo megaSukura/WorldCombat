@@ -1,16 +1,18 @@
 /**
  * 广域防守 / wideguard — 执行组织与结算。
  *
- * 核心念头：施法者把身体一沉，向身周推出一面横贯的宽光墙；墙横着摊开，替身边的每个伙伴把从远处拍过来的
- *   成片攻击整片卸掉。它不加防、不加血，只在极短的一瞬里当一层会磨穿的墙——挡几下就散。
+ * 核心念头：施法者把身体一沉，替自己与身边的每个伙伴各推起一层横在身前、会磨穿的随身护板；成片拍过来的
+ *   远程／范围攻击先撞在这层板上被卸掉。它不加防、不加血，只在极短的一瞬里挡住几拍——挡完就散。
  *
  * 两幕：
  *   沉（windup 播「按地聚板」，提交前只观察与预告，打断不花代价）。
- *   张（提交后）：施法者与半径内的友方各挂共享身份 world_combat:status/wideguard 的真实 MobEffect，
- *     并各自领到一层共享 GuardEffects 的 pool（规则 world_combat:move_wideguard）：只截非接触（远程／范围）
- *     的敌对伤害，按总量磨穿。贴着身子的近战穿得过——这就是它与反射壁、守住的区分。
- * 持续：每约 8 刻由池的 pulse 续一次墙面；目标还带着身份才继续立着。
- * 结束：任一人的池磨穿或到时，身份与池一起收；离开施法者太远的人随共享连接断开而失去。
+ *   张（提交后）：施法者与视线可达、半径内的友方各挂共享身份 world_combat:status/wideguard 的真实 MobEffect，
+ *     并各自领到一层共享 GuardEffects 的 pool（规则 world_combat:move_wideguard）：只截真正交付到目标身上的直接攻击
+ *     （DamageSemantics.directOffense）里属于真实 area 标注或非接触（远程）的那一类，按总量磨穿。
+ *     贴着身子的普通近战带 contact 旗标穿得过——这就是它与反射壁、守住的区分。
+ * 持续：池本身精确绑定这个人身上那次载体 revision（state.carrier）；身份被人清、被重放顶掉或换了实例，
+ *   移除事件当刻撤掉这层池，pulse 只负责巡检续画。每个队友各自一份有限容量、限时。
+ * 结束：任一人的池磨穿或到时，身份与池一起收；离开施法者太远、与施法者之间失去视线的人随共享连接断开而失去。
  */
 namespace PokemonSkills {
     const wideguardScene = "world_combat:move_wideguard";
@@ -22,32 +24,40 @@ namespace PokemonSkills {
     /** 表现里的参考半径：`data.scale = 实际遮蔽半径 / 这个数`。 */
     const wideguardReferenceRadius = 3.6;
 
-    // 宽墙的结算点：只截敌对来源的非接触（远程／范围）伤害，按 pool 磨穿；磨穿即收掉该人身上的身份。
+    // 宽墙的结算点：只截敌对来源、真正在场的 directOffense 伤害，且属于真实 area 或非接触（远程）的那一类，
+    // 按 pool 磨穿；磨穿即收掉该人身上的身份。贴身的普通近战穿得过——这就是它与反射壁、守住的区分。
     GuardEffects.register(wideguardRule, {
         accepts: function (effect: CombatEffect, state: GuardEffects.State, incoming: GuardEffects.Incoming): boolean {
             const world = effect.world();
             if (!incoming.source || String(incoming.source.ref()) === String(effect.target().ref())) return false;
             if (world.friendly(incoming.source)) return false;
-            // 贴身近战带 contact 旗标，穿得过这面墙；远程与范围不带，正是要挡的那类。
-            if (incoming.data && !incoming.data.area && DamageSemantics.read(incoming.data).contact) return false;
-            return true;
+            // 只挡真正交付到目标身上的直接攻击；残留／间接伤害不靠整类推断当作「成片攻击」。
+            if (!DamageSemantics.directOffense(incoming.data)) return false;
+            const area = !!(incoming.data && incoming.data.area === true);
+            // 真实标注的 area 交付可以带接触；其余情况只有非接触（远程）才被卸掉，贴身近战带 contact 旗标穿得过。
+            return area || !DamageSemantics.read(incoming.data).contact;
         },
         pulse: function (effect: CombatEffect, state: GuardEffects.State): void {
             const world = effect.world(), target = effect.target();
-            // 身份被人清掉时，池也一并收；这就是「解除」的路。
-            if (MobEffects.read(world, target, wideguardEffect) === null) { effect.end(); return; }
+            const carrier = (state as any).carrier;
+            // 精确绑定本次载体 revision：身份被清、被重放顶掉或换了实例，都当刻收池，不再等 8 刻巡检。
+            if (!carrier || !MobEffects.matches(world, target, carrier)) { effect.end(); return; }
             const body = world.observe(target);
             if (body === null) return;
             const custom: any = state;
-            WorldFeedback.keep(world, "wideguard:hold:" + String(target.ref()), wideguardScene, 1, body.position(),
-                { moment: "hold", target: String(target.ref()), plates: custom.plates, remaining: state.capacity,
-                    scale: custom.scale, intensity: wideguardIntensity(state.capacity, custom.initial) }, 20);
+            const strength = wideguardIntensity(state.capacity, custom.initial);
+            // 持续护板挂在这层真实按量吸收池上：池磨穿、身份被清或连接断开时随它一起收；余量越少护板越小。
+            WorldFeedback.onEffect(world, effect.id(), "wideguard:hold:" + String(target.ref()), wideguardScene, 1, body.position(),
+                { moment: "hold", target: String(target.ref()), plates: custom.plates, motes: custom.motes,
+                    remaining: state.capacity, initial: custom.initial, plateSize: Math.max(0.08, 0.34 * strength), intensity: strength });
         },
         guarded: function (effect: CombatEffect, state: GuardEffects.State, amount: number, incoming: GuardEffects.Incoming): void {
             const world = effect.world(), target = effect.target(), body = world.observe(target);
             if (body === null) return;
+            const custom: any = state;
             const data: any = { moment: "block", target: String(target.ref()), blocked: Math.round(amount * 10) / 10,
-                remaining: Math.round(state.capacity * 10) / 10, scale: 1,
+                remaining: Math.round(state.capacity * 10) / 10, plates: custom.plates, motes: custom.motes,
+                scale: custom.scale, plateSize: Math.max(0.08, 0.34 * wideguardIntensity(state.capacity, custom.initial)),
                 intensity: Math.max(0.6, Math.min(2, amount / Math.max(1, body.maxHealth() * 0.1))) };
             const attacker = incoming.source ? world.observe(incoming.source) : null;
             if (attacker !== null) {
@@ -65,6 +75,18 @@ namespace PokemonSkills {
         }
     });
 
+    /** 收掉一个人身上的本招宽墙池：身份被清或重放前调用；只收归属这招的池。 */
+    function wideguardDrop(world: CombatWorld, actor: CombatActor): number {
+        let dropped = 0;
+        world.effects(actor, "world_combat:guard").forEach(function (view: CombatEffectView) {
+            let state: any;
+            try { state = JSON.parse(String(view.data())); } catch (error) { return; }
+            if (!state || state.rule !== wideguardRule) return;
+            if (world.operation(view.id(), "world_combat:dispel", "{}")) dropped++;
+        });
+        return dropped;
+    }
+
     /** 池的余量换算成画面强度：满墙 1、见底趋近 0.15。 */
     function wideguardIntensity(capacity: number, initial: number): number {
         return Math.max(0.15, Math.min(1, initial > 0 ? capacity / initial : 0));
@@ -81,9 +103,13 @@ namespace PokemonSkills {
         const scale = wideguardScale(radius);
         const covered: CombatActor[] = [];
         function protect(actor: CombatActor): void {
-            if (MobEffects.apply(world, actor, wideguardEffect, ticks, 0) === null) return;
+            // 重放前先撤掉这个人身上的旧池，避免刷新时新旧两层混在一起。
+            wideguardDrop(world, actor);
+            const carrier = MobEffects.apply(world, actor, wideguardEffect, ticks, 0);
+            if (carrier === null) return;
             GuardEffects.apply(world, actor, { rule: wideguardRule, mode: "pool", capacity: capacity, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: linkRange, initial: capacity, plates: plates, motes: motes, scale: scale } as any, ticks);
+                minimumHealth: 0, charges: 0, linkRange: linkRange, initial: capacity, plates: plates, motes: motes, scale: scale,
+                carrier: MobEffects.anchor(carrier) } as any, ticks);
             covered.push(actor);
         }
         protect(caster);
@@ -91,7 +117,10 @@ namespace PokemonSkills {
         for (let i = 0; i < actors.length; i++) {
             const other = actors[i];
             if (String(other.key()) === String(caster.key())) continue;
-            if (!world.friendly(other) || world.observe(other) === null) continue;
+            const seen = world.observe(other);
+            if (!world.friendly(other) || seen === null) continue;
+            // 初始只授予实际连通的队友：和施法者之间要有一条清视线。
+            if (!world.clear(body.position(), seen.position())) continue;
             protect(other);
         }
         return covered;
@@ -152,18 +181,18 @@ namespace PokemonSkills {
             const linkRange = Math.min(32, radius * 1.6 + 1);
             const covered = wideguardCover(world, actor, radius, window, capacity, plates, motes, linkRange);
             const scale = wideguardScale(radius);
-            const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
-            // 地面环只画一次，标记的是墙真罩到的整块范围。
-            WorldFeedback.emit(world, wideguardScene, 1, feet,
-                { moment: "cover", target: String(actor.ref()), radius: radius, scale: scale,
-                    intensity: Math.max(0.8, Math.min(2, plates / 14 + 0.4)) }, 30, "wideguard:cover:" + String(actor.ref()));
-            // 起墙只连到实际受益者：每个被罩住的人身上各亮一次，没罩到的伙伴不闪。
+            // 起墙只连到实际受益者：每人身上亮一次护板；不是施法者本人的，再牵一条施法者→本人的短连线。
+            // 不画地面大环／实体墙——这招真正成立的是每人一层会磨穿的随身护板。
             for (let i = 0; i < covered.length; i++) {
                 const person = covered[i], at = world.observe(person);
                 if (at === null) continue;
                 WorldFeedback.emit(world, wideguardScene, 1, at.position(),
                     { moment: "raise", target: String(person.ref()), plates: plates, motes: motes, scale: scale,
                         intensity: Math.max(0.7, Math.min(2, plates / 16 + 0.4)) }, 34, "wideguard:raise:" + String(person.ref()));
+                if (String(person.key()) === String(actor.key())) continue;
+                WorldFeedback.emit(world, wideguardScene, 1, at.position(),
+                    { moment: "link", target: String(person.ref()), plates: plates, motes: motes, scale: scale,
+                        path: [String(actor.ref()), String(person.ref())] }, 26, "wideguard:link:" + String(person.ref()));
             }
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), wideguardRaiseText,
                 [Math.round(capacity), covered.length, Math.round(window / 20)], 34);
@@ -173,12 +202,14 @@ namespace PokemonSkills {
         }
     });
 
-    // 墙散：身份到期或被清除时，播一次收束留痕（读操作，任何作用域都能发）。
+    // 墙散：身份确实不再存在（到期或被清除）时，当刻撤掉这个人身上的吸收池（不等 8 刻巡检），再播一次收束留痕。
+    // 刷新过程中的旧 revision 不在这里误撤；旧的池由 pulse 的精确锚检查在 8 刻内自行收掉。
     WorldCombat.on("world_combat:move_wideguard/fall", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== wideguardEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        if (MobEffects.read(world, actor, wideguardEffect) === null) wideguardDrop(world, actor);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, wideguardScene, 1, body.position(), { moment: "fall", target: String(actor.ref()) }, 22);

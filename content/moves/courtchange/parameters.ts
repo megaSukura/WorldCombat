@@ -2,6 +2,7 @@
 namespace PokemonSkills {
     export const courtChangeId = "courtchange";
     export const courtChangeScene = "world_combat:move_courtchange";
+    export const courtChangeOwnerScene = "world_combat:move_courtchange_owners";
     export const courtChangeSwapText = "world_combat.move.courtchange.text.swap";
     export const courtChangeEmptyText = "world_combat.move.courtchange.text.empty";
 

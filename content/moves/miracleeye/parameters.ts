@@ -7,8 +7,9 @@
  *
  * 世界化（两端分开，各自到期）：把「心眼穿透恶的屏障」落到两件独立的事上——
  *   目标端：留下 world_combat:miracleeye_mark（共享身份 world_combat:status/miracleeye 与伞身份
- *     world_combat:status/identified），一次剥掉当前正闪避并在窗口结束还回；PokemonDamage.metadata 在结算前
- *     读这层身份，把目标属性里的 dark 摘掉，超能因此接得上。
+ *     world_combat:status/identified）；一次剥掉当前正闪避，做法是「印记载体拥有的临时负贡献」
+ *     （NativeEffects.boostWindow），随印记到期或被清除一起原样收回，只撤本招这一份。PokemonDamage.metadata
+ *     在结算前读这层身份，把目标属性里的 dark 摘掉，超能因此接得上。
  *   施法者端：挂 world_combat:miracleeye_focus（共享身份 world_combat:status/miracleeye_focus），把命中等级
  *     抬 insight 级。这段命中是一个临时等级窗口（NativeEffects.boostWindow），绑定到这条真实 MobEffect 上，
  *     在自己的窗口里到期；目标印记被驱散、目标离场都不会带走它，反之亦然。
@@ -37,6 +38,7 @@
 namespace PokemonSkills {
     export const miracleeyeId = "miracleeye";
     export const miracleeyeScene = "world_combat:move_miracleeye";
+    export const miracleeyeEyeScene = "world_combat:move_miracleeye_eye";
     export const miracleeyeMarkEffect = "world_combat:miracleeye_mark";
     export const miracleeyeFocusEffect = "world_combat:miracleeye_focus";
     export const miracleeyeRecordEffect = "world_combat:miracleeye_record";

@@ -3,18 +3,21 @@
  *
  * 什么局面下出手：目标可见、敌对、存活、**站在地上**，且在 `ai.maxChase`（默认 7）格内；够不到交给共享接近逻辑。
  *   它是一记贴地旋转冲撞，空中的对手不在候选里。
- * 对谁出手：`ai.clearTerrain`（默认开）打开时，身上带着任一场地身份（共享身份 world_combat:status/<场地名>，
- *   读法与其他状态一致）且冲刺路线可达的目标排最前——旋过去顺手把场地刮掉；路线被墙或窄缝挡住则退回普通近战排序。
+ * 对谁出手：`ai.clearTerrain`（默认开）打开时，真实站在同层场地上（共享 areasWithTag + surfaceTouches 按脚点判定，
+ *   与大地波动/铁滚轮同源）且冲刺路线可达的目标排最前——旋过去顺手把场地刮掉；路线被墙或窄缝挡住则退回普通近战排序。
  *   路线用只读世界入口 `CompanionBehavior.world(context)` 的 `freeSpace` 逐点探测，不凭空判定可达。
  * 够不到怎么办：reach 就是本招实际冲距，先走近。
  * 放完之后：交回共享交战计划；冲过的冰面与刮掉的场地都是它留下的结果。
  */
 namespace PokemonSkills {
-    const icespinnerTerrains = ["electricterrain", "grassyterrain", "mistyterrain", "psychicterrain"];
-
+    /** 目标是否真的站在同层场地上：用共享 areasWithTag + surfaceTouches 判断真实脚点，不看旧字符串身份。 */
     function icespinnerOnTerrain(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        for (let i = 0; i < icespinnerTerrains.length; i++)
-            if (CompanionBehavior.status(context, target, icespinnerTerrains[i])) return true;
+        if (target.grounded === false) return false;
+        const world = CompanionBehavior.world(context);
+        const feet = CompanionBehavior.point([target.point[0], target.point[1] - (target.height || 1.4) / 2, target.point[2]]);
+        const areas = WorldEffects.areasWithTag(world, WorldEffects.categories.terrain);
+        for (let i = 0; i < areas.length; i++)
+            if (WorldEffects.surfaceTouches(areas[i], feet, 0, 1)) return true;
         return false;
     }
 

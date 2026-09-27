@@ -77,7 +77,7 @@ const RockthrowDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "burst", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "burst", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "sphere", radius: 0.28 },
@@ -86,7 +86,7 @@ const RockthrowDefinition: ParticleDefinition = {
                     alpha: [1, 0], light: "full", bloom: 0.3, maxParticles: 8
                 },
                 {
-                    name: "chips", bind: "point", fit: "none", offset: [0, 0.5, 0],
+                    name: "chips", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "shards", fallback: 8 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.28 },
@@ -96,7 +96,7 @@ const RockthrowDefinition: ParticleDefinition = {
                     color: 0xA98C6A, alpha: [0.9, 0], light: "world", maxParticles: 34
                 },
                 {
-                    name: "dust", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    name: "dust", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: { data: "shards", fallback: 8 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.24 },
@@ -111,7 +111,7 @@ const RockthrowDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "tick", bind: "point", fit: "none", offset: [0, 0.08, 0], orient: "direction",
+                    name: "tick", bind: "point", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "shards", fallback: 5 }, at: 0 },
                     shape: { kind: "circle", radius: 0.42 },
@@ -121,7 +121,7 @@ const RockthrowDefinition: ParticleDefinition = {
                     color: 0xA98C6A, alpha: [0.8, 0], light: "world", maxParticles: 22
                 },
                 {
-                    name: "puff", bind: "point", fit: "none", offset: [0, 0.1, 0], orient: "direction",
+                    name: "puff", bind: "point", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 7, at: 0 },
                     shape: { kind: "circle", radius: 0.42 },

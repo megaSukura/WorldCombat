@@ -1,11 +1,11 @@
 {
   "effect.world_combat.throat_chop": "咽喉被封",
-  "worldcombat.skill.throatchop.summary": "一记直取咽喉的突刺。命中造成物理伤害，并让目标在一段时间内无法使出任何声音类招式。",
+  "worldcombat.skill.throatchop.summary": "一记直取咽喉的突刺。命中造成物理伤害，并让目标在一段时间内无法使出任何声音类攻击：宝可梦的声音类招式在出手时被封，原版生物的原生音攻（如 Warden 的声波）在命中结算时被封；普通近战不受影响。",
   "worldcombat.skill.throatchop.use.0": "封住对手的吼叫与音波",
   "worldcombat.skill.throatchop.use.1": "惩罚依赖声音类招式的对手",
   "worldcombat.skill.throatchop.use.2": "近身压制远程施法者",
   "worldcombat.skill.throatchop.description.0": "命中造成约 %1$s 点接触物理伤害。",
-  "worldcombat.skill.throatchop.description.1": "命中并造成伤害后，目标在 %1$s 内无法使出任何声音类招式；到期或被清除后恢复。",
+  "worldcombat.skill.throatchop.description.1": "命中并造成伤害后，目标在 %1$s 内无法使出任何声音类攻击：宝可梦的声音类招式在出手时被顶回，原生音攻按真实声音语义在命中结算时被顶回，普通近战与未知攻击照常；到期或被清除后恢复。",
   "worldcombat.skill.throatchop.description.2": "突刺距离 %1$s 格、判定半径 %2$s 格；起手 %3$s 秒、收招 %4$s 秒，冷却 %5$s 秒。",
   "worldcombat.skill.throatchop.choke.on": "锁喉：封声时长 ×1.25，代价是威力 ×0.9、起手多 2 刻、冷却多 6 刻。",
   "worldcombat.skill.throatchop.choke.off": "割喉：出手更快、威力 ×1.15，代价是封声只有 ×0.75。",

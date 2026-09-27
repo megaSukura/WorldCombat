@@ -5,10 +5,19 @@
  *   它便宜、冷却短，是常规中远距离输出，不必等特殊局面。
  * 对谁出手：一个看得见、还活着的非友方；在射程内排普通远程攻击的价，并按目标防御把伤害期望算进去——
  *   本招按物防结算，因此特防高、物防低的目标更值；未知模组目标按原生可读的防御事实给中性价。
+ *   同时用本招实际的弹速与下坠检查真实重力路线是否够得到，并对贴得很近、值得顶离正面的目标小幅加价。
  * 够不到怎么办：reach 就是本招实际射程，先走近再掷。
  * 放完之后：交回共享交战计划；命中的击退交给共享处理。
  */
 namespace PokemonSkills {
+    /** 本招当前实际参数（含重棱与成长）；读不到就退回中性值。 */
+    function psyshockScope(context: WorldBehavior.Context, capability: WorldBehavior.Capability): NumberContext {
+        const world = CompanionBehavior.world(context);
+        return <NumberContext>{ world: world, actor: world.source(), skill: skills[psyshockId], detail: { values: capability.data.config } };
+    }
+    function psyshockNumber(scope: NumberContext, key: string, fallback: number): number {
+        try { const value = p(psyshockId, key, scope); return isFinite(value) ? value : fallback; } catch (error) { return fallback; }
+    }
     /** 本招按物防结算，理想目标是「特防高、物防低」；只有原生可读的防御事实参与，读不到就不偏。 */
     function psyshockDefenceScore(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const stats = CompanionBehavior.combatStats(context, target);
@@ -17,6 +26,15 @@ namespace PokemonSkills {
         const def = table.def, spd = table.spd;
         if (typeof def !== "number" || !isFinite(def) || typeof spd !== "number" || !isFinite(spd)) return 0;
         return Math.round(Math.max(-6, Math.min(8, (spd - def) * 0.05)));
+    }
+    /** 用实际的弹速与下坠算真实低弧是否够得到目标；无法判断时按够得到处理。 */
+    function psyshockRoute(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const self = CompanionBehavior.source(context), scope = psyshockScope(context, capability);
+        const velocity = Math.max(0.1, psyshockNumber(scope, "velocity", 1.15));
+        const gravity = Math.max(0.001, psyshockNumber(scope, "gravity", 0.02));
+        try {
+            return LivingActions.ballistic(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point), velocity, gravity) !== null;
+        } catch (error) { return true; }
     }
     function psyshockWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
@@ -39,8 +57,12 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !psyshockWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
-            const score = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 22 : 0;
-            return score + psyshockDefenceScore(context, target) + Math.round(CompanionBehavior.ratio(target) * 4);
+            const reach = Number(capability.data.range) || 0, distance = CompanionBehavior.distance(self.point, target.point);
+            let score = distance <= reach ? 22 : 0;
+            score += psyshockDefenceScore(context, target) + Math.round(CompanionBehavior.ratio(target) * 4);
+            if (!psyshockRoute(context, capability, target)) score -= 6;
+            else if (distance <= reach * 0.5) score += 3;
+            return Math.max(0, score);
         }
     });
 

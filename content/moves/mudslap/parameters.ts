@@ -10,7 +10,7 @@
  * 数值来源（每项读不同的个体数据）：
  *   splat     特攻与等级决定泥团轻重；厚泥再乘 1.18。
  *   blind     特攻每满 100 加 1 级，基础 1 级；厚泥再多 1 级（夹 1..3）。
- *   mudTicks  体重与等级决定泥在脸上停留多久，也是致盲画面的时长。
+ *   mudTicks  体重与等级决定脸上泥迹画面停留多久，是反馈时长；命中下降本身不会随泥迹干掉恢复。
  *   splash    体重与等级决定溅出的泥点数量，同时驱动表现的密度。
  *   arcSpeed  速度决定出手快慢，厚泥更沉更慢。
  *   radius    体型高度决定泥团判定大小。
@@ -39,7 +39,7 @@ namespace PokemonSkills {
             }),
         mudTicks: seconds(
             F.base(40).plus(F.body("weight").times(0.12)).plus(F.level().times(0.4)).clamp(30, 96).round(),
-            "糊眼时长", "泥在目标脸上停留多久，也是脸上泥迹画面的持续时间；越重、等级越高的个体糊得越久。"),
+            "泥迹时长", "脸上泥迹画面停留多久（反馈）；它淡出不代表命中等级恢复。越重、等级越高的个体泥迹留得越久。"),
         splash: formula(
             F.base(14).plus(F.body("weight").times(0.12)).plus(F.level().times(0.35)).clamp(12, 72).round(),
             "泥点数量", {

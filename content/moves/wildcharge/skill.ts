@@ -8,9 +8,10 @@
  *
  * 三幕：
  *   起（windup，提交前）：电流从四周收拢、火花向内卷，只播预告表现；顺带把湿身读进预告。
- *   冲（charge → impact / conduct / discharge）：提交后逐刻沿瞄准方向推进；trace 撞上活体即按 surge 结算接触伤害，
- *       再兑现一次传导：目标湿透时必定灌入麻痹，干燥时按 paralyze 概率；命中后原地短放电收势，按 recoil 比例反伤自己。
- *       冲到底、撞墙或推不动都算冲空，积蓄的电流就地（或墙前）泄放，不伤自己。
+ *   冲（charge → impact / conduct / contact / discharge）：提交后逐刻沿地平面推进；表现只发当前身体与已走短尾的真实子段，
+ *       判定与表现共用同一组端点。trace 撞上活体即以真实首体重算 surge 结算接触伤害，再兑现一次传导：目标湿透时必定灌入麻痹，
+ *       干燥时按 paralyze 概率；命中后原地短放电收势，按 recoil 比例反伤自己。伤害或传导被拒、或撞到友方时只在接触处轻接触，不冒充命中。
+ *       冲到底、撞墙或推不动都算冲空，积蓄的电流就在真实接触点（或起点）泄放，不伤自己。
  *
  * 与同族分开：猛撞干净、无状态；地狱翻滚是抓住再摔；爆炸头突击撞得更长更重还能串人。
  * 疯狂伏特独有的是一身电光与「湿身传导」，玩家凭这道蓝色电弧把它一眼认出来。
@@ -74,25 +75,35 @@ namespace PokemonSkills {
             const shove = p("wildcharge", "shove", action);
             const spark = Math.round(p("wildcharge", "spark", action));
             const minimumMove = p("wildcharge", "minimumMove", action);
-            const direction = aim(action);
+            // 贴地冲锋：把瞄准方向压成水平，避免竖直分量让身体扫进地面而被挡停。
+            const aimed = aim(action);
+            const level = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const flat = level.length() > 0.001 ? level : WorldCombat.point(action.direction().x(), 0, action.direction().z());
+            const direction = flat.length() > 0.001 ? flat.unit() : WorldCombat.point(0, 0, 1);
+            // 方向冻结：目标离场后这一冲仍沿提交朝向走完，空放照常放电。
+            action.releaseTarget();
             const scale = radius / 0.5;
             const intensity = Math.max(0.6, Math.min(2.4, power / 90));
             const start = action.origin();
-            const end = start.plus(direction.scale(length));
             let travelled = 0;
 
+            // 每刻只发当前身体与已走短尾：path 用判定同一段真实子段的两个端点，不再把整段预定路径提前撒满。
+            function showStride(current: CombatAction, from: CombatPoint, to: CombatPoint): void {
+                movementScenes.show(current, "charge", from,
+                    { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
+                        path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]],
+                        spark: spark, scale: scale, intensity: intensity, soaked: soaked ? 1 : 0 });
+            }
+
             sound(action, "minecraft:block.beacon.activate");
-            movementScenes.show(action, "charge", start, { moment: "charge", direction: [direction.x(), direction.y(), direction.z()],
-                    path: [[start.x(), start.y(), start.z()], [end.x(), end.y(), end.z()]],
-                    spark: spark, scale: scale, intensity: intensity, soaked: soaked ? 1 : 0 });
-            // 自己湿透的漏电成本在起冲这一刻就明确：脚下漏一小段弧，提示这一趟回路更狠。
+            // 自己湿透的漏电成本在起冲这一刻就明确：脚下漏一小段弧，提示这一趟回路更狠（漏电是泄散警示，真正反噬在命中结算时）。
             if (soaked) {
                 WorldFeedback.emit(world, wildchargeScene, 1, start,
                     { moment: "leak", spark: spark, scale: scale, intensity: intensity }, 22);
                 WorldFeedback.text(world, start.plus(WorldCombat.point(0, 1.3, 0)), wildchargeLeakText, [], 22);
             }
 
-            /** 冲空：把积蓄的电流就地（或墙前）泄放，不造成伤害，也不反噬。 */
+            /** 冲空：把积蓄的电流就地（或墙前真实接触点）泄放，不造成伤害，也不反噬。 */
             function discharge(current: CombatAction, at: CombatPoint | null, blocked: boolean): void {
                 const scope = current.world();
                 const point = at !== null ? at : current.origin();
@@ -112,13 +123,22 @@ namespace PokemonSkills {
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
+                // 逐步扫过：只发当前真实子段，端点与判定同源。
+                showStride(current, origin, current.origin());
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
                     const body = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
                     const already = body !== null && victim !== null && CombatStatus.has(scope, victim, "paralysis");
                     const wet = body !== null && body.wet();
-                    const landed = impact(current, hit, "wildcharge", power,
+                    // 命中时按真实首体重算威力：对方湿身倍率取实际受害者，自己湿身用提交时的快照。
+                    let landedPower = power;
+                    if (victim !== null) {
+                        const hitContext: FactContext = withTarget(factContext(current), victim);
+                        hitContext.variables = { "state.wet": soaked };
+                        landedPower = Math.max(0, p("wildcharge", "surge", hitContext));
+                    }
+                    const landed = impact(current, hit, "wildcharge", landedPower,
                         { damage: damageSpec("wildcharge", "surge"), contact: true, recoil: recoil });
                     // 一次传导：湿透的目标必然灌入（仍尊重免疫门），干燥的目标按概率掷。
                     const attempted = landed && victim !== null && scope.valid(victim) && !already && (wet || scope.random() < chance);
@@ -127,11 +147,18 @@ namespace PokemonSkills {
                     const from = self !== null ? self.position() : origin;
                     const path = [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]];
                     const hits = Math.round(12 + spark * 0.7);
-                    // 电流沿真实身体走到接触侧；湿目标沿躯体扩散，干燥目标在接触点炸开。
-                    WorldFeedback.emit(scope, wildchargeScene, 1, point,
-                        { moment: wet ? "conduct" : "impact", target: victim ? String(victim.ref()) : "", spark: spark,
-                            scale: scale, intensity: intensity, hits: hits, conducted: conducted ? 1 : 0, path: path }, 30);
-                    sound(current, "cobblemon:impact.electric");
+                    if (landed) {
+                        // 真实结算成功：真正传导进麻痹才播湿身强导电，否则在接触点炸开。
+                        WorldFeedback.emit(scope, wildchargeScene, 1, point,
+                            { moment: conducted ? "conduct" : "impact", target: victim ? String(victim.ref()) : "", spark: spark,
+                                scale: scale, intensity: intensity, hits: hits, conducted: conducted ? 1 : 0, path: path }, 30);
+                        sound(current, "cobblemon:impact.electric");
+                    } else {
+                        // 友方或伤害被拒：只在接触处轻接触，不冒充命中、不播强导电。
+                        WorldFeedback.emit(scope, wildchargeScene, 1, point,
+                            { moment: "contact", target: victim ? String(victim.ref()) : "", spark: Math.max(6, Math.round(spark * 0.5)),
+                                scale: scale, intensity: Math.max(0.4, intensity * 0.6) }, 16);
+                    }
                     if (landed && victim !== null && scope.valid(victim)) {
                         scope.hitDisplace(victim, direction.scale(shove));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), wildchargeHitText, [], 26);
@@ -151,11 +178,10 @@ namespace PokemonSkills {
                 const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) {
-                    const blockAt = hit.blocked() ? hit.blockPosition() : null;
-                    discharge(current, blockAt !== null ? blockAt : origin, hit.blocked());
+                    // 撞墙用真实接触点 hit.position()，不拿方块格坐标 blockPosition()。
+                    discharge(current, hit.blocked() ? hit.position() : origin, hit.blocked());
                     return;
                 }
-                movementScenes.show(current, "wake", origin, { moment: "wake", motes: Math.round(3 + spark * 0.12), scale: scale });
                 current.after(1, advance);
             }
 

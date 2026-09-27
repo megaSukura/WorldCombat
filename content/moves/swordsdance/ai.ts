@@ -1,12 +1,3 @@
-/**
- * 剑舞 / swordsdance 的伙伴 AI 用途：这是这招自己的一套出手计划。
- *
- * 什么局面有意义：有威胁、且在 ai.maxChase 内、且有交战需求时，先磨一轮再打。
- * 什么时候最想出手：威胁还在 ai.minGap 之外时 priority 105——这支舞会自己往前压，正好用来切进对手身边，
- *   所以它越过共享交战次序抢先发动；已经贴身（小于 minGap）就让位给普通攻击，不为强化站着挨打。
- * 对谁出手：自己；不需要接近，由共用任务直接施放。会给动作一个指向威胁的明确瞄向，让前压朝真实对手走。
- * 放完之后：物攻 +2、身上挂着磨刃窗口；窗口还在时不再重复起舞，交回共享交战计划。
- */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("swordsdance", {
         protocols: ["world_combat:fortify"],
@@ -32,7 +23,9 @@ namespace PokemonSkills {
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
             const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, threat.point);
-            return gap < CompanionBehavior.ai<number>(capability, "minGap", 3) ? 0 : 105;
+            const level=CompanionBehavior.stage(context,CompanionBehavior.source(context),"atk");
+            const safe=CompanionBehavior.ai<number>(capability,"minGap",3)+(level>0?3:0);
+            return gap<safe?0:level>0?22:65;
         }
     });
 

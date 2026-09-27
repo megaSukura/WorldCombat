@@ -39,8 +39,8 @@ Smoke.scenario("gigadrain", function (stage) {
                 stage.expect(stage.casts("gigadrain", caster) > 0, "终极吸取被放出来了");
                 stage.expect(stage.damageTo(foe) > 0, "吸根沿线照到目标，造成了伤害");
                 stage.expect(caster.health() > baseline + 3, "施法者从连抽里回复了生命");
-                stage.note("每拍从当刻原点沿当刻瞄准检查真实首碰，只有有效敌人才结算并回流；拍数固定、松手或受打断即收根。射程、吸根粗细与每拍威力由特攻、速度、等级与体型公式决定；这里等 90 刻让几拍跑完，累积伤害读得到拍数。",
-                    { casts: stage.casts("gigadrain", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
+                stage.note("每拍从当刻原点沿当刻瞄准检查真实首碰，只有有效敌人才结算并回流；每拍有自己的 strike 身份（pulse:<index>），同一目标的后拍不会被去重拒绝；拍数固定、松手或受打断即收根。射程、吸根粗细与每拍威力由特攻、速度、等级与体型公式决定；这里等 90 刻让几拍跑完，累积伤害与命中次数读得到拍数。",
+                    { casts: stage.casts("gigadrain", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10, hitsOnFoe: stage.hits(foe, true),
                       woundedHealth: Math.round(baseline * 10) / 10, casterHealth: Math.round(caster.health() * 10) / 10,
                       travelled: Math.round(stage.travelled(caster) * 10) / 10 });
                 stage.done();

@@ -4,7 +4,8 @@
  * 什么局面下出手：一个以自身为中心、360° 覆盖的近距扫场。`available` 要求有可见、敌对、存活且落在
  *   `ai.maxChase`（默认 8）格内的目标；空中的对手也会被这一圈扫到（不筛 grounded）。
  *   `ready` 要求身边 `ai.minFoes`（默认 1）格内至少站着这么多可见敌人——它可以只对一个人转，也可以
- *   被围住时一次扫一圈；把人数调高就只在人群里才转。人数按**本招实际 reach 内**计，不再借用追击距离。
+ *   被围住时一次扫一圈；把人数调高就只在人群里才转。人数按**本招实际 reach 内、且刃路没被实心墙挡住**的敌人计，
+ *   不再借用追击距离，也不把墙后的目标算作收益。
  * 对谁出手：谁的优先度取决于身边挤着多少人，不区别目标身份。
  * 够不到怎么办：reach 就是本招半径，共享接近逻辑先把身位送进人堆。
  * 放完之后：扫过的人各带一次伤害与被甩开的位移；交回共享交战计划等冷却。
@@ -12,12 +13,17 @@
 namespace PokemonSkills {
     function brutalswingCount(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
+        const access = CompanionBehavior.world(context);
         const reach = typeof capability.data.range === "number" && isFinite(capability.data.range) ? capability.data.range : 3.0;
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= reach) count++;
+            if (CompanionBehavior.distance(self.point, other.point) > reach) continue;
+            // 刃路被实心墙挡住的目标扫不到，不计入这次收益。
+            const axis = WorldCombat.point(self.point[0], other.point[1], self.point[2]);
+            if (WorldGeometry.blockHit(access, axis, CompanionBehavior.point(other.point)) !== null) continue;
+            count++;
         }
         return count;
     }

@@ -40,7 +40,7 @@ Smoke.scenario("healorder", function (stage) {
         stage.expect(stage.casts("healorder", caster) >= 1, "the wounded vespiquen called its retainers below the threshold");
         stage.after(240, function () {
             stage.expect(caster.health() > woundedAt + 5, "the surviving retainers paid their shares back to the caster");
-            stage.note("手下面数（等级驱动，默认 3-6 只，精锐档减半）、环绕半径（体型驱动）与交付时刻（速度驱动的引导时间）是设计事实，由完整装配的人工试玩核对。本场景附近没有敌人，手下不会被清掉，全部幸存时总回复约最大生命的一半；若施术者一直站着不动，读数里还能看到它高于压血后的最低值。", {
+            stage.note("手下面数（等级驱动，默认 3-6 只，精锐档减半）、环绕半径（体型驱动）与交付时刻（速度驱动的引导时间）是设计事实，由完整装配的人工试玩核对。本场景附近没有敌人、施术者不移动，手下绕身引导后回到身边并有通视，所以全部幸存时总回复约最大生命的一半；若把手下打掉或带施术者穿过墙，到点未归的那只不再远程送血——这一分支需带墙/带伤害的夹具或人工试玩。", {
                 casterCasts: stage.casts("healorder", caster),
                 woundedHealth: Math.round(woundedAt * 10) / 10,
                 casterHealthNow: Math.round(caster.health() * 10) / 10,

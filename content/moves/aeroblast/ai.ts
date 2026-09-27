@@ -1,13 +1,45 @@
 /**
  * 气旋攻击 / aeroblast 的伙伴 AI 用途。
  *
- * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 20）格内。它是本族射程最远、钉住一条
- *   射线只打首敌的招，所以越远越先被考虑（在对手进入自己射程前先手压束）；贴身后仍然可用，但让位给更便宜
- *   的近战。`ai.finishLow`（默认开）在对手血量偏低时抬优先级，用这一束尝试收掉。细束打不散横向铺开的敌群，
- *   当首敌左右还挤着多个横向错开的敌人时降权，把范围留给空气利刃这类扇面招。
+ * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 20）格内，并且枪口前方没有被墙堵住。
+ *   它是本族射程最远、钉住一条射线只打首敌的招，所以越远、前方走廊越干净越先被考虑（在对手进入自己射程前
+ *   先手压束）；贴身后仍然可用，但让位给更便宜的近战。`ai.finishLow`（默认开）在对手血量偏低时抬优先级。
+ *   方向开火后锁定，目标横向移动越大越容易躲开，所以横移快的目标降权；细束打不散横向铺开的敌群，当首敌左右
+ *   还挤着多个横向错开的敌人时降权，把范围留给空气利刃这类扇面招。
  * 放完之后：交回共享交战计划；它是站定的单体远程，掷完不改变站位。
  */
 namespace PokemonSkills {
+    /** 枪口前一小段有没有墙：贴墙时枪口已被墙挡住，不出手。探针缺失保持中性。 */
+    function aeroblastMuzzleClear(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        if (!world || typeof world.clear !== "function") return true;
+        try {
+            const width = typeof self.width === "number" && self.width > 0 ? self.width : 0.9;
+            const dx = target.point[0] - self.point[0], dy = target.point[1] - self.point[1], dz = target.point[2] - self.point[2];
+            const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (length < 0.01) return true;
+            const muzzle = Math.min(1.4, width * 0.5 + 0.25);
+            const from = CompanionBehavior.point(self.point);
+            const at = CompanionBehavior.point([self.point[0] + dx / length * muzzle, self.point[1] + dy / length * muzzle, self.point[2] + dz / length * muzzle]);
+            return world.clear(from, at);
+        } catch (error) { return true; }
+    }
+
+    /** 自己到目标之间有没有可用的远距走廊（无实墙）；越远越依赖它。 */
+    function aeroblastCorridor(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        if (!world) return true;
+        try { return WorldGeometry.blockHit(world, CompanionBehavior.point(self.point), CompanionBehavior.point(target.point)) === null; }
+        catch (error) { return true; }
+    }
+
+    /** 目标相对准线的横向速度（blocks/tick）：越大越容易在锁定方向开火前/后躲开。 */
+    function aeroblastLateral(target: CompanionBehavior.Entity): number {
+        const v = target.velocity;
+        if (!v || v.length < 3) return 0;
+        return Math.abs(Number(v[0] || 0)) + Math.abs(Number(v[2] || 0));
+    }
+
     /** 首敌近旁、横向错开、细束扫不到的敌人数量（供单体远程降权）。 */
     function aeroblastSpread(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
@@ -34,7 +66,8 @@ namespace PokemonSkills {
             if (!target) return true;
             return !target.friendly && target.health > 0 && target.visible
                 && CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                    <= CompanionBehavior.ai<number>(capability, "maxChase", 20);
+                    <= CompanionBehavior.ai<number>(capability, "maxChase", 20)
+                && aeroblastMuzzleClear(context, target);
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
@@ -46,6 +79,11 @@ namespace PokemonSkills {
             if (distance > Number(capability.data.range)) return 0;
             let base = distance > 8 ? 32 : 22;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", true) && CompanionBehavior.ratio(target) <= 0.4) base += 18;
+            // 偏好远距走廊：前方无实墙时加分，被墙挡住时降权。
+            base += aeroblastCorridor(context, target) ? 6 : -10;
+            // 目标横向移动越大，锁定方向的细束越容易落空。
+            const lateral = aeroblastLateral(target);
+            if (lateral > 0.08) base -= Math.min(14, Math.round(lateral * 80));
             // 横向铺开的敌群细束只能打到一个：降权，交给空气利刃那样的扇面招。
             const spread = aeroblastSpread(context, target);
             if (spread >= 3) base -= 10;
@@ -56,7 +94,7 @@ namespace PokemonSkills {
 
     addPreferences(aeroblastId, {}, [
         field(pathOf("charge"), "蓄力式", "boolean", {
-            help: "开启：威力 ×1.18、射程 +2.5 格、涡流判定 ×1.15、气环 ×1.1，但起手 +6 刻、收招 +2 刻、冷却 +14 刻、飞行 ×0.9，适合预判远距目标。关闭（速射式，默认）：飞得更快（×1.12）、冷却少 8 刻，但威力 ×0.94、射程略短，适合贴身也敢放。"
+            help: "开启：威力 ×1.18、射程 +2.5 格、涡流判定 ×1.15、脉冲间隔 ×1.15，但起手 +6 刻、收招 +2 刻、冷却 +14 刻，适合预判远距目标。关闭（速射式，默认）：三拍更紧凑（间隔 ×0.85）、冷却少 8 刻，但威力 ×0.94、射程略短，适合贴身也敢放。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 4, max: 28, step: 1,

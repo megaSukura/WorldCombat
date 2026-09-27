@@ -13,10 +13,13 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 
+    /** 水属性或湿透：属性走通用伤害事实，Soak 过后的普通生物也能读到临时水属性，不只宝可梦。 */
     function freezedryTargetSoaked(context: WorldBehavior.Context, target: Entity): boolean {
         if (target.wet) return true;
-        const facts = pokemonFacts(context, target);
-        return !!facts && facts.types.indexOf("water") >= 0;
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(target.ref);
+        if (!actor) return false;
+        return PokemonDamage.combatants.read(world, actor).types.indexOf("water") >= 0;
     }
 
     registerUse("freezedry", {

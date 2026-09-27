@@ -1,4 +1,4 @@
-/** 用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。宝可梦按属性同频，普通生物按身体种类判定。 */
+/** 用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。按有效属性同频（含临时属性变化），无类型事实的普通生物按身体种类判定。 */
 namespace PokemonSkills {
     const synchronoiseScene = "world_combat:move_synchronoise";
     const synchronoiseResonance = "world_combat:resonance";
@@ -6,9 +6,13 @@ namespace PokemonSkills {
     const synchronoiseHitText = "world_combat.move.synchronoise.text.hit";
     const synchronoisePassText = "world_combat.move.synchronoise.text.pass";
 
-    /** Content frequencies for native bodies; these choose recipients and do not assign damage types to Minecraft mobs. */
+    /**
+     * 一个战斗者的频率：**先读有效战斗类型**——宝可梦的原生属性、以及任何身体上的临时属性层（浸水、加草、模组自声明）
+     * 都算数；只有普通生物没有任何类型事实时，才回落到明确的种类映射（mod 也可用 world_combat:resonance/<名> 标签自声明）。
+     */
     export function synchronoiseFrequencies(world: CombatWorld, actor: CombatActor): string[] {
-        if (String(actor.domain()) === "cobblemon") return PokemonDamage.combatants.read(world, actor).types;
+        const facts = PokemonDamage.combatants.read(world, actor);
+        if (facts.types && facts.types.length) return facts.types.slice();
         const type = world.entityType(actor);
         if (type === null) return [];
         const declared = Object.keys(synchronoisePalette).filter(name => type.tagged("world_combat:resonance/" + name));
@@ -40,17 +44,17 @@ namespace PokemonSkills {
     }
 
     /**
-     * 同频目标的显形：一个与「同频」记号同寿的托管效果。它把目标照亮，并在本效果作用域内租下这次发光——
-     * 结束时只撤自己租的那一次；目标身上已有更久或更亮的发光则原样留着。记号被牛奶／清除时随效果一起收走。
+     * 同频目标的显形：一个与这次「同频」载体同寿的托管效果。它记录该载体的锚，载体被替换、驱散或到期时随它一起收；
+     * 它在作用域内租下这一次发光——结束时只撤自己租的那一次；目标身上已有更久或更亮的发光则原样留着。
      */
     WorldCombat.effect(synchronoiseReveal, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
-        if (typeof value.glow !== "string") throw new Error("Invalid synchronoise reveal");
+        if (typeof value.glow !== "string" || !MobEffects.validAnchor(value.carrier)) throw new Error("Invalid synchronoise reveal");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(synchronoiseReveal, "start", function (effect) {
         const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(target) || !CombatStatus.has(world, target, "resonance")) { effect.end(); return; }
+        if (!world.valid(target) || !MobEffects.matches(world, target, data.carrier)) { effect.end(); return; }
         const current = MobEffects.read(world, target, data.glow);
         // 别人已经照得更久就不去碰它；否则补一次并租下自己的这一次发光。
         if (!current || current.duration() >= 0 && current.duration() < effect.remaining()) {
@@ -63,7 +67,7 @@ namespace PokemonSkills {
     });
     WorldCombat.effectHandler(synchronoiseReveal, "hold", function (effect) {
         const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
-        if (!world.valid(target) || !CombatStatus.has(world, target, "resonance")
+        if (!world.valid(target) || !MobEffects.matches(world, target, data.carrier)
             || data.lease && !MobEffects.present(world, data.lease)) { effect.end(); return; }
         effect.schedule("hold", "hold", 4, "{}");
     });
@@ -80,7 +84,7 @@ namespace PokemonSkills {
     define({
         id: "synchronoise",
         name: "Synchronoise",
-        description: "用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。宝可梦按属性同频，普通生物按身体种类判定。",
+        description: "用同频电波攻击周围与自己频率相同的敌人，并暂时照亮它们。频率取有效属性（含临时属性变化），无类型事实的普通生物按身体种类判定。",
         uses: ["对同属性的敌人一次扫到一圈", "在混战里专挑与自己同频的人打", "给同频目标留下记号，方便接着追", "在属性对不上的局里确认谁才是同频的那一个"],
         kind: "self",
         range: 5.2,
@@ -150,12 +154,15 @@ namespace PokemonSkills {
                 if (!hurt(action, enemy, "synchronoise", power, { damage: damageSpec("synchronoise", "pulse") })) return;
                 linked++;
                 if (world.valid(enemy)) {
-                    MobEffects.apply(world, enemy, synchronoiseResonance, resonanceTicks, 0);
-                    // 显形与被锁住的记号同寿：托管效果结束或提前被清除时，发光和持续表现一起收走。
-                    const reveal = world.effect(synchronoiseReveal, enemy,
-                        JSON.stringify({ glow: "minecraft:glowing" }), resonanceTicks + 2);
-                    if (reveal > 0) WorldFeedback.onEffect(world, reveal, "resonance:" + ref, synchronoiseScene, 1,
-                        facts.position(), { moment: "resonance", target: ref, tint: tint, intensity: intensity });
+                    const resonance = MobEffects.apply(world, enemy, synchronoiseResonance, resonanceTicks, 0);
+                    // 显形与这次共振载体绑定：载体被替换、驱散或到期时，发光和持续表现一起收走。
+                    if (resonance !== null) {
+                        const reveal = world.effect(synchronoiseReveal, enemy,
+                            JSON.stringify({ glow: "minecraft:glowing", carrier: MobEffects.anchor(resonance) }),
+                            Math.max(1, resonance.duration()));
+                        if (reveal > 0) WorldFeedback.onEffect(world, reveal, "resonance:" + ref, synchronoiseScene, 1,
+                            facts.position(), { moment: "resonance", target: ref, tint: tint, intensity: intensity });
+                    }
                 }
                 WorldFeedback.emit(world, synchronoiseScene, 1, facts.position(),
                     { moment: "lock", target: ref, tint: tint, path: [String(actor.ref()), ref],

@@ -101,10 +101,10 @@ const HealBellDefinition: ParticleDefinition = {
                 {
                     name: "fade_halo", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 4, shape: { kind: "circle", radius: 5.0, thickness: 0.9 },
-                    direction: "up", speed: [0.004, 0.014],
-                    lifetime: [18, 30], size: [0.16, 0.04], alphaMode: "sin",
-                    color: 0xCFE8FF, alpha: [0.22, 0.02], light: "world", maxParticles: 24
+                    burst: { count: 2, interval: 9 }, shape: { kind: "ring", radius: 5.0, thickness: 1.3 },
+                    direction: "outward", speed: [0.05, 0.16],
+                    lifetime: [16, 28], size: [0.2, 0.72], sizeMode: "sin", alphaMode: "sin",
+                    color: 0xCFE8FF, alpha: [0.28, 0], light: "world", maxParticles: 20
                 }
             ]
         }

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.icespinner.summary": "脚上结起薄冰，朝任意方向旋转着冲出去（也可以只朝地上一处划过场地，不需要敌人）：沿途把场地整片刮掉，冲过的地面留下一圈会滑、会化掉的冰面，撞到目标时按接触结算冰系伤害并把它顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
+  "worldcombat.skill.icespinner.summary": "脚上结起薄冰，朝任意方向旋转着冲出去（也可以只朝地上一处划过场地，不需要敌人）：沿实际冲过的地面把场地刮掉，冲过处留下一圈会滑、会化掉的冰面，撞到目标时按接触结算冰系伤害并把它顶开。冰面式滑得更远留得更久，碎冰式旋得更狠。",
   "worldcombat.skill.icespinner.use.0": "压进一个贴地的目标并把它顶开",
   "worldcombat.skill.icespinner.use.1": "把对手依赖的场地一次刮掉",
   "worldcombat.skill.icespinner.use.2": "在冲过的地面留下一圈临时冰面",
   "worldcombat.skill.icespinner.description.0": "沿瞄准方向贴地旋转冲出最多 %1$s 格（每刻 %2$s 格），撞上的第一个目标受到一记约 %3$s 点冰系接触伤害。",
-  "worldcombat.skill.icespinner.description.1": "旋进途中把路径 %1$s 格内的所有场地整片刮除（不分敌我）；旋转的命中判定半径 %2$s 格，撞中后把目标沿冲击方向顶开最多 %3$s 格。",
+  "worldcombat.skill.icespinner.description.1": "旋进途中把实际冲过地面 %1$s 格内的场地整片刮除（不分敌我、同层才算），尚未冲到的远处不会提前生效；旋转的命中判定半径 %2$s 格，撞中后把目标沿冲击方向顶开最多 %3$s 格。",
   "worldcombat.skill.icespinner.description.2": "冲过的地面铺下约 %1$s 格会滑的冰面，存留 %2$s；到期原方块回来。",
   "worldcombat.skill.icespinner.slick.on": "当前为冰面：冲距 ×1.25、冲速 ×1.2、冰面存留 ×1.5、击退 ×0.7，滑得远、留得久；代价是本击 ×0.85、冷却 +4 刻。",
   "worldcombat.skill.icespinner.slick.off": "当前为碎冰：本击 ×1.15、刮除半径 ×1.3、击退 ×1.4，旋得更狠；代价是冲距 ×0.8、冰面存留 ×0.6、起手 +2 刻。",
@@ -28,7 +28,7 @@
   "worldcombat.skill.icespinner.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.icespinner.preference.ai.maxChase.help": "目标离自己这么远以内才旋过去；调大愿意主动逼近更远的目标。",
   "worldcombat.skill.icespinner.preference.ai.clearTerrain": "优先刮场地",
-  "worldcombat.skill.icespinner.preference.ai.clearTerrain.help": "开启：身上带着场地身份的目标优先，旋过去顺手把场地刮掉；关闭则只按普通近战排序。",
+  "worldcombat.skill.icespinner.preference.ai.clearTerrain.help": "开启：真实站在同层场地上的目标优先，旋过去顺手把场地刮掉；关闭则只按普通近战排序。",
   "world_combat.move.icespinner.text.hit": "冰旋撞上",
   "world_combat.move.icespinner.text.clear": "刮掉场地 -%1$s",
   "world_combat.move.icespinner.text.miss": "冰旋落空"

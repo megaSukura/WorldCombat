@@ -30,7 +30,7 @@
   "worldcombat.skill.tailslap.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.tailslap.preference.ai.maxChase.help": "超过这个距离就不主动起旋，先走近。",
   "worldcombat.skill.tailslap.preference.ai.crowd": "瞄准扎堆",
-  "worldcombat.skill.tailslap.preference.ai.crowd.help": "开启：目标近旁还站着别的敌人时更愿意起旋，因为整圈能一次扫到好几个；关闭则只按普通近身攻击排序。",
+  "worldcombat.skill.tailslap.preference.ai.crowd.help": "开启：自己的真实扫区（旋扫整圈／砸尾前向扇面）里还站着别的敌人时更愿意起旋，因为一次能照顾到好几个；关闭则只按普通近身攻击排序。",
   "worldcombat.skill.tailslap.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.tailslap.preference.ai.leaveStation.help": "开启后，驻守命令下也会为扫尾离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.tailslap.text.tally": "扫了 %1$s 圈，拍实 %2$s 下"

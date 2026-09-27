@@ -1,8 +1,9 @@
 /**
  * 污泥炸弹 / sludgebomb —— 可执行设计说明。
  *
- * 一句话：把一枚延时污泥炸弹丢到落点；动作掷完就结束，引信由挂在施法者身上的有限托管效果在**真实碰撞点**走完，
- * 然后爆心一圈一起挨伤、被推开、可能中毒。墙前落弹不会穿到墙后，飞行空放只安全散去。
+ * 一句话：把一枚延时污泥炸弹丢到落点；动作掷完就结束，弹壳顺重力落到真实支撑，引信由挂在施法者身上的
+ * 有限托管效果在**真实落点**走完，然后爆心一圈一起挨伤、被推开、可能中毒。墙前落弹不会穿到墙后，
+ * 飞行空放只安全散去，够不到支撑则散落不炸。
  *
  * 场面：一只臭臭泥带着这一招，站在 5 格外对一只慢吞吞的卡比兽投弹；卡比兽走得慢，大概率留在爆心内，
  * 让"引信烧完→炸到"这条链可复现。卡比兽用撞击还手。
@@ -22,7 +23,7 @@ Smoke.scenario("sludgebomb", function (stage) {
     }, function () {
         stage.expect(stage.casts("sludgebomb", caster) >= 1, "muk committed sludge bomb");
         stage.expect(stage.damageTo(target) > 0, "the fuse in the managed effect burst for damage after the throw ended");
-        stage.note("the throw action ends when the shell hits; the fuse visual and the single burst are owned by a managed effect on the real impact point; staying inside the radius, the poison roll and crits are random/positional", {
+        stage.note("the throw action ends when the shell hits; it settles onto the first supported top face under the contact, and the fuse shell plus the single burst are owned by a managed effect on that real point (no support means the shell scatters instead); staying inside the radius, the poison roll and crits are random/positional", {
             casts: stage.casts("sludgebomb", caster),
             targetDamage: Math.round(stage.damageTo(target) * 10) / 10,
             poisoned: stage.hadMobEffect(target, "world_combat:status/poison"),

@@ -15,7 +15,7 @@
   "worldcombat.skill.terrainpulse.value.bursts": "Burst count",
   "worldcombat.skill.terrainpulse.value.ring": "Ground ring radius",
   "worldcombat.skill.terrainpulse.preference.resonate": "Resonate",
-  "worldcombat.skill.terrainpulse.preference.resonate.help": "On: a second ground ring follows the first, each wave at x0.7, good for covering a patch; Off: a single wave at full power, good against one target. Both directions trade area for damage.",
+  "worldcombat.skill.terrainpulse.preference.resonate.help": "On: send adjacent narrow and wide waves together in the same direction, each at x0.7, good for covering a patch; Off: a single wave at full power, good against one target. Both directions trade area for damage.",
   "worldcombat.skill.terrainpulse.preference.ai.maxChase": "Wave distance",
   "worldcombat.skill.terrainpulse.preference.ai.maxChase.help": "Only send the wave within this distance; farther targets are left to the shared approach logic.",
   "worldcombat.skill.terrainpulse.preference.ai.leaveStation": "Leave station",

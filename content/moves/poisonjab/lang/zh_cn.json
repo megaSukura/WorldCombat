@@ -31,6 +31,6 @@
   "worldcombat.skill.poisonjab.preference.ai.leaveStation.help": "开启后，驻守命令下也会为刺到目标离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.poisonjab.text.hit": "刺中",
   "world_combat.move.poisonjab.text.venom": "扎中，留下毒",
-  "world_combat.move.poisonjab.text.immune": "对手免疫中毒",
+  "world_combat.move.poisonjab.text.blocked": "这一记没能扎进去",
   "world_combat.move.poisonjab.text.whiff": "刺了个空"
 }

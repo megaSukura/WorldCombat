@@ -4,21 +4,22 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 const hooks = {}, handlers = {};
-let tick = 0, serial = 0, native = '', nativeKey = '', seconds = 0, stored = null, effect = null;
+let tick = 0, serial = 0, revision = 0, native = '', nativeKey = '', seconds = 0, stored = null, effect = null;
 let ref = 'entity/1', ability = '', type = 'normal', health = 60, failures = false, markerCalls = 0, writes = 0;
 let individual;
 const actor = { domain: () => new String('cobblemon'), ref: () => ref };
 const pokemon = { status: () => new String(native), statusKey: () => nativeKey, statusSeconds: () => seconds, wild: () => false,
   ability: () => new String(ability), typeCount: () => 1, type: () => new String(type), health: () => health, maxHealth: () => 100,
   species: () => 'cobblemon:bulbasaur', heldTag: () => false, healthScale: () => 1, heldItem: () => '', heldKey: () => '' };
-const effectView = () => effect && ({ id: () => 'minecraft:poison', duration: () => effect.end - tick, amplifier: () => effect.amplifier,
-  key: () => JSON.stringify({ id: 'minecraft:poison', duration: effect.end, amplifier: effect.amplifier, hidden_effect: effect.hidden }),
+const effectView = () => effect && ({ id: () => 'minecraft:poison', duration: () => effect.end === -1 ? -1 : effect.end - tick, amplifier: () => effect.amplifier,
+  key: () => `${effect.revision ??= ++revision}:` + JSON.stringify({ id: 'minecraft:poison', duration: effect.end, amplifier: effect.amplifier, hidden_effect: effect.hidden }),
   tags: () => 'world_combat:status/poison', tagged: tag => tag === 'world_combat:status/poison' });
 const world = { valid: () => true, tick: () => tick, random: () => 0.5,
+  matchesMobEffect(actor, id, key) { const value = this.valid(actor) && this.mobEffect(actor, id); return !!value && String(value.key()) === key; },
   effects: () => [{ id: () => 1, data: () => JSON.stringify(individual) }],
   operation: (_id, _op, data) => { individual = JSON.parse(data); return true; },
   mobEffect: () => effectView(), mobEffects: () => effectView() ? [effectView()] : [], observe: () => ({ maxHealth: () => 100 }), marker: (_actor, _id, duration, amplifier) => {
-    markerCalls++; effect = { end: tick + duration, amplifier, hidden: null };
+    markerCalls++; effect = { end: duration === -1 ? -1 : tick + duration, amplifier, hidden: null };
   }, removeMobEffect: (_actor, _id, expected) => {
     if (effectView()?.key() !== expected) return false; effect = null; return true;
   }, health: (_actor, delta) => { health += delta; return delta; } };
@@ -89,6 +90,16 @@ effect = null; ref = 'replacement/2'; nativeKey = 'restored-container';
 ({ native, seconds, stored } = JSON.parse(saved)); reconcile();
 assert.equal(effect.end, tick + 720, 'Recall and native serialization restore the remaining native duration');
 nativeCure(); assert.equal(effect, null);
+
+reset(); effect = { end: -1, amplifier: 3, hidden: null }; reconcile();
+assert.equal(JSON.parse(stored).amplifier, 3); assert.equal(JSON.parse(stored).infinite, true);
+effect = null; ref = 'replacement/2'; nativeKey = 'restored-container'; reconcile();
+assert.equal(effect.amplifier, 3, 'Recall uses the saved explicit strength, not the opaque comparison token');
+assert.equal(effect.end, -1, 'Infinite native effect remains infinite after a new entity binding');
+
+reset(); apply(); const originalEffect = effect;
+effect = { end: originalEffect.end, amplifier: originalEffect.amplifier, hidden: originalEffect.hidden };
+reconcile(); nativeCure(); assert(effect, 'An identical externally reapplied effect has its own revision and is preserved');
 
 reset(); ability = 'poisonheal'; apply(); application(); assert.equal(health, 61, 'Poison Heal converts the same native application clock once');
 reset(); ability = 'magicguard'; apply(); application(); assert.equal(health, 60);

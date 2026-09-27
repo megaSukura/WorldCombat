@@ -8,8 +8,8 @@
  * 幕：
  *   起（windup，提交前）：指尖攒电的预告（`action.present`）。
  *   击（bolt → jolt / immune / shielded / blocked / air）：提交后瞬发。`action.trace(..., true)` 沿直线做权威判定，
- *       谁在线上的第一个，电流就落在谁身上：非友方先按当前转换后的属性与已安装的吸收能力核对电击免疫，
- *       再过麻痹免疫门槛，全部通过才挂共享的 `world_combat:status/paralysis`（宝可梦那一层由共享默认效果同步成原生麻痹）；
+ *       谁在线上的第一个，电流就落在谁身上：非友方先按所有生物的实际当前类型（含普通生物身上的临时类型层）与原生个体的
+ *       吸收能力核对电击免疫，再过麻痹免疫门槛，全部通过才挂共享的 `world_combat:status/paralysis`（宝可梦那一层由共享默认效果同步成原生麻痹）；
  *       友方替它把电流引走，只有墙时电流在墙面炸开，什么都没有时电流在空中散掉。
  *       表现画出的那条线用 `hit.position()`——就是判定真正停下的地方。
  *
@@ -45,21 +45,23 @@ namespace PokemonSkills {
 
     /**
      * 电击沿直线走，即使本招不造成伤害，目标对「电属性招式」的原生免疫仍然生效。
-     * 属性免疫按当前转换后的类型算（`NativeEffects.read` + `NativeEffects.types`，含特性/效果改过的类型），
-     * 相性乘积为 0 就是被导进地里；吸收类能力调用共享只读查询 `NativeAbilities.absorbsType`（与 actual
-     * incoming 规则同源，由已安装的 absorption trait 登记 absorbedTypes），它不模拟伤害/回血/增益，只判有效性。
+     * 属性免疫读所有生物的实际当前类型（`PokemonDamage.combatants.read`，含普通生物身上的临时类型层），
+     * 相性乘积为 0 就是被导进地里；吸收类能力只存在于原生个体，调用共享只读查询 `NativeAbilities.absorbsType`
+     * （与 actual incoming 规则同源，由已安装的 absorption trait 登记 absorbedTypes），它不模拟伤害/回血/增益，只判有效性。
      * 麻痹本身的免疫（电属性、免麻痹能力等）仍由共享 `CombatStatus.inflict` 的门槛另行核对，两者都不绕过。
      */
     function thunderwaveElectricImmune(world: CombatWorld, actor: CombatActor): boolean {
-        if (String(actor.domain()) !== "cobblemon" || !world.valid(actor)) return false;
-        const pokemon = CobblemonCombat.pokemon(actor);
-        const state = NativeEffects.read(world, actor);
-        const types = NativeEffects.types(pokemon, state);
+        if (!world.valid(actor)) return false;
+        const types = PokemonDamage.combatants.read(world, actor).types;
         let factor = 1;
         for (let i = 0; i < types.length; i++) {
             factor *= CobblemonCombat.typeEffectiveness("electric", String(types[i]));
         }
-        return factor === 0 || NativeAbilities.absorbsType(pokemon, state, "electric");
+        if (factor === 0) return true;
+        // Absorption abilities exist only on native individuals; ordinary bodies keep the type result above.
+        if (String(actor.domain()) !== "cobblemon") return false;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        return NativeAbilities.absorbsType(pokemon, NativeEffects.read(world, actor), "electric");
     }
 
     define({
@@ -108,7 +110,7 @@ namespace PokemonSkills {
             const selected = action.targetPosition();
             const lockTicks = Math.max(40, Math.round(p(thunderwaveId, "lockTicks", action)));
             const radius = Math.max(0.18, p(thunderwaveId, "shockRadius", action));
-            const arcs = Math.max(3, Math.round(p(thunderwaveId, "arcs", action)));
+            const sparkDensity = Math.max(3, Math.round(p(thunderwaveId, "sparkDensity", action)));
             const speed = Math.max(0.8, p(thunderwaveId, "joltSpeed", action));
             const intensity = Math.max(0.6, Math.min(2.4, lockTicks / 200));
             const bend = Math.max(0.05, Math.min(0.32, radius * 0.9));
@@ -120,8 +122,8 @@ namespace PokemonSkills {
             const landed = hit.hitEntity() ? hit.target() : null;
             const ref = landed === null ? "" : String(landed.ref());
             WorldFeedback.emit(world, thunderwaveScene, 1, origin,
-                { moment: "bolt", path: thunderwavePath(origin, endpoint, 5, bend), target: ref, arcs: arcs,
-                    flux: Math.round(24 + speed * 12), intensity: intensity, scale: scale }, 22);
+                { moment: "bolt", path: thunderwavePath(origin, endpoint, 5, bend), target: ref, sparkDensity: sparkDensity,
+                    flux: Math.round(24 + speed * 12), intensity: intensity, scale: scale }, 18);
 
             if (landed !== null && String(landed.key()) !== String(self.key())) {
                 const at = world.observe(landed);
@@ -138,7 +140,7 @@ namespace PokemonSkills {
                     world.sound("minecraft:block.amethyst_block.resonate", point, 14, "{}");
                 } else {
                     WorldFeedback.emit(world, thunderwaveScene, 1, point,
-                        { moment: "jolt", target: ref, arcs: arcs, intensity: intensity, scale: scale }, 28);
+                        { moment: "jolt", target: ref, sparkDensity: sparkDensity, intensity: intensity, scale: scale }, 28);
                     WorldFeedback.text(world, point, thunderwaveJoltText, [], 26);
                     world.sound("cobblemon:impact.electric", point, 16, "{}");
                     sound(action, "cobblemon:move.thunderwave.target");
@@ -150,7 +152,7 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, point, thunderwaveBlockedText, [], 22);
                 world.sound("minecraft:block.amethyst_block.resonate", point, 14, "{}");
             } else {
-                WorldFeedback.emit(world, thunderwaveScene, 1, endpoint, { moment: "air", arcs: arcs, scale: scale }, 18);
+                WorldFeedback.emit(world, thunderwaveScene, 1, endpoint, { moment: "air", sparkDensity: sparkDensity, scale: scale }, 18);
                 WorldFeedback.text(world, endpoint, thunderwaveMissText, [], 20);
             }
             done(action);

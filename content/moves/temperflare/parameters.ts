@@ -5,9 +5,10 @@
  *   「以自暴自弃的气势进行攻击。如果上一回合招式没有命中，威力就会翻倍」（Cobblemon 1.8）。
  *
  * 翻译：即时战斗没有回合，本招把「上一回合招式没有命中」落成**一次真实的失手**——施法者上一次进攻
- *   出手没打出伤害时，身上留下「豁出去」的状态（共享身份 world_combat:status/temperflare）；带着这股
+ *   真正判空后，身上留下「豁出去」的状态（共享身份 world_combat:status/temperflare）；带着这股
  *   自暴自弃的劲再冲，这一撞翻倍、火炸得更大、还会把撞到的人点着。任何命中都会把这股劲消掉。
- *   记账与跺脚同源（world_combat:committed 记出手，damage_applied 记有没有打中），是同一家族的两张脸：
+ *   判定与跺脚同源共享的 ExecutionOutcomes 账本（previous/latest），不自己猜时间戳：长弹在飞时是 pending
+ *   而非落空，旧招的迟到伤也不会重写当前这次冲锋；提示 identity 由世界贡献转成可见状态。
  *   跺脚把悔恨跺进地里，豁出去把自己整个人烧着撞出去。
  *
  * 数据分散（每项读不同的精灵数据）：
@@ -36,17 +37,22 @@ namespace PokemonSkills {
     export const temperMissText = "world_combat.move.temperflare.text.miss";
     /** 豁出去持续：够下一次出手用掉。 */
     export const temperRageTicks = 110;
-    var temperSwingWindow = { min: 6, max: 150 };
-    var temperSwings: { [ref: string]: { attempt: number; land: number } } = Object.create(null);
 
-    /** 施法者上一次出手是否打空（供 AI 与表现读同一份事实）。 */
-    export function temperWhiffed(world: CombatWorld, actor: CombatActor): boolean {
-        const swing = temperSwings[String(actor.ref())];
-        if (swing === undefined) return false;
-        const now = world.tick();
-        return (swing.land || -1000) < swing.attempt
-            && now - swing.attempt >= temperSwingWindow.min && now - swing.attempt <= temperSwingWindow.max;
+    /**
+     * 施法者上一次出手是否真的打空：读共享 ExecutionOutcomes 账本。
+     * 提交时用 `previous(action)` 的冻结快照（当前冲锋不会被旧弹体迟到伤或别的间接伤重写）；
+     * 预览与 AI 用 `latest`。只有真正已判定的 miss 才算，长弹仍在飞时是 pending，不算落空。
+     */
+    export function temperWhiffed(world: CombatWorld, actor: CombatActor, action?: CombatAction | null): boolean {
+        const sameActor = !!action && String(action.actor().ref()) === String(actor.ref());
+        const result = sameActor ? ExecutionOutcomes.previous(action!, temperRageTicks)
+            : ExecutionOutcomes.latest(world, actor, temperRageTicks);
+        return result !== null && result.status === "miss";
     }
+    defineFacts(temperId, context => ({ read: id => {
+        if (id !== "temperflare.previousMiss") return undefined;
+        return !!context.world && !!context.actor && temperWhiffed(context.world, context.actor, context.action);
+    } }));
 
     actionParameters.define(temperId, {
         /** 撞上威力：基础 75，物攻每比 60 多 1 加 0.3（夹 −14..32），速度每比 60 快 1 加 0.12（夹 −6..18），等级每比 30 高 1 加 0.4（夹 −4..10）；带豁出去 ×2、豁出去式 ×0.95；夹 38..190。 */
@@ -55,7 +61,7 @@ namespace PokemonSkills {
                 .plus(F.stat("attack").minus(60).times(0.3).clamp(-14, 32))
                 .plus(F.stat("speed").minus(60).times(0.12).clamp(-6, 18))
                 .plus(F.level().minus(30).times(0.4).clamp(-4, 10))
-                .times(F.when(F.status(temperStatus).gt(0), F.const(2), F.const(1)).as(text("worldcombat.skill.temperflare.value.rage")))
+                .times(F.when(F.var("temperflare.previousMiss", text("worldcombat.skill.temperflare.value.rage")), F.const(2), F.const(1)).as(text("worldcombat.skill.temperflare.value.rage")))
                 .times(F.when(F.pref("reckless"), F.const(0.95), F.const(1)))
                 .clamp(38, 190).round(1),
             "撞上威力", {
@@ -159,23 +165,16 @@ namespace PokemonSkills {
         { key: "growth.1", values: ["tier.1.level","tier.1.flare","tier.1.blast"] }
     ]);
 
-    // ---- 记账：与跺脚同源，独立身份，两个单元互不干扰 ----
-    WorldCombat.on("world_combat:temperflare/swing", "world_combat:committed", "", function (event) {
-        const action = event.action();
-        if (action === null || action.targetKind() !== "enemy") return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.observe(actor) === null) return;
-        const ref = String(actor.ref()), now = world.tick(), previous = temperSwings[ref];
-        const spent = previous !== undefined && (previous.land || -1000) < previous.attempt
-            && now - previous.attempt >= temperSwingWindow.min && now - previous.attempt <= temperSwingWindow.max;
-        if (spent) CombatStatus.apply(world, actor, temperStatus, temperEffect, temperRageTicks, 0, { unique: true });
-        temperSwings[ref] = { attempt: now, land: previous === undefined ? -1000 : previous.land };
-    });
-    WorldCombat.on("world_combat:temperflare/land", "world_combat:damage_applied", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (data.kind !== "move" || !(data.actual > 0)) return;
-        const world = event.world(), actor = event.actor(), swing = temperSwings[String(actor.ref())];
-        if (swing !== undefined) swing.land = world.tick();
-        CombatStatus.cure(world, actor, temperStatus);
-    });
+    // 可见提示随共享账本走：latest 结算为真正的 miss 时挂上「豁出去」凭据，任何后续命中或超时都收掉。
+    // 提示 identity 由 startup.ts 的 world_combat:temperflare_frustration 提供；公式与 AI 读同一份 temperWhiffed。
+    ExecutionOutcomes.views.define({ id: "world_combat:temperflare/cue", apply: view => {
+        const world = view.world, actor = view.actor;
+        if (!NativeLoadout.hasEquipped(world, actor, temperId)) return;
+        const result = ExecutionOutcomes.latest(world, actor, temperRageTicks);
+        const cue = MobEffects.read(world, actor, temperEffect);
+        if (result && result.status === "miss" && result.ended !== null) {
+            const remaining = Math.max(1, temperRageTicks - (world.tick() - result.ended));
+            if (!cue) MobEffects.apply(world, actor, temperEffect, remaining, 0);
+        } else if (cue) MobEffects.consume(world, actor, temperEffect);
+    } });
 }

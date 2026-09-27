@@ -32,16 +32,13 @@ namespace PokemonSkills {
     });
 
     addPreferences("superfang", {}, [
-        field(pathOf("patient"), "潜咬式", "boolean", {
-            help: "开启：捎带的碎肉 ×1.6、咬住更久，但起手多 3 刻、冷却多 8 刻；关闭：掠咬式，出手更快、收招更短，但捎带的伤害 ×0.8。"
-        }),
         field(pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 14, step: 1,
             help: "超过这个距离就不主动扑咬，先走近；越大追得越执着。"
         }),
         field(pathOf("ai.halfAt"), "最低削血比例", "number", {
             min: 0.1, max: 0.6, step: 0.05,
-            help: "目标当前生命比例低于这个数时就不再用愤怒门牙，把出手让给别的招。调高＝只在目标还厚时削；调低＝残血也照样削（收益很小）。"
+            help: "目标当前生命比例低于这个数时优先级大幅降低，把出手让给别的招（仍可能对残血目标使用，只是收益很小）。调高＝只在目标还厚时优先；调低＝残血也照样考虑。"
         })
     ]);
 }

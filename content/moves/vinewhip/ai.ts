@@ -42,8 +42,8 @@ namespace PokemonSkills {
             min: 2, max: 10, step: 1,
             help: "超过这个距离就不主动抽鞭，先靠近。这是一记贴身快抽，调大只在追击时更容易扑空。"
         }),
-        field(pathOf("ai.interrupt"), "先打断出手的", "boolean", {
-            help: "开启：正在攻击自己的目标排得更前——一记快抽正好打断它的节奏；关闭：只按威胁与距离排序。"
+        field(pathOf("ai.interrupt"), "优先还击攻击者", "boolean", {
+            help: "开启：正在攻击自己的目标排得更前；关闭：只按威胁与距离排序。这是一记快抽，抢先回敬而不是打断对方的动作。"
         }),
         field(pathOf("ai.finish"), "优先收残", "boolean", {
             help: "开启：目标生命低于三成时优先补这一鞭；关闭：只按普通近身候选参与排序。"

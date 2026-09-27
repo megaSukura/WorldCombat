@@ -114,6 +114,9 @@ namespace PokemonSkills {
     CombatStatus.gate.define({ id: "world_combat:move_safeguard/ward", apply: function (context) {
         if (!context.allowed || !context.harmful) return;
         if (!CombatStatus.has(context.world, context.actor, safeguardStatus)) return;
+        // 同来源的自愿代价不走这层保护：例如睡觉由施法者自己施加睡眠，world.source 与受护者是同一个体。
+        // 只豁免本单元这一层，原生免眠/类型免疫/其它 gate 仍照常参与，也不会抹去真正的原生拒绝事实。
+        if (String(context.world.source().key()) === String(context.actor.key())) return;
         context.allowed = false; context.reason = "safeguard";
         const world = context.world, actor = context.actor, body = world.observe(actor);
         if (body === null) return;
@@ -139,7 +142,8 @@ namespace PokemonSkills {
         const scale = Math.max(0.6, Math.min(2, field / 3.2));
         StatusContributions.present(world, actor, safeguardEffect, "world_combat:move_safeguard/veiled/" + ref, safeguardScene, 1,
             body.position(), { moment: "warded", target: ref, motes: safeguardMotes(payload), field: field, scale: scale });
-        const anchoring = world.effects(actor, safeguardMark).some(function (view) { return String(view.source().key()) === ref; });
+        // 统一按 key 比较：source 就是这份标记的来源，等于自己才是这条光罩的锚；ref/key 混比会永远不相等而漏显示。
+        const anchoring = world.effects(actor, safeguardMark).some(function (view) { return String(view.source().key()) === String(actor.key()); });
         if (anchoring) StatusContributions.present(world, actor, safeguardEffect, "world_combat:move_safeguard/boundary/" + ref, safeguardScene, 1,
             body.position(), { moment: "boundary", target: ref, motes: safeguardMotes(payload), field: field });
     });
@@ -154,7 +158,7 @@ namespace PokemonSkills {
         const ref = String(actor.ref()), views = world.effects(actor, safeguardMark);
         let anchor = false;
         for (let i = 0; i < views.length; i++) {
-            if (String(views[i].source().key()) === ref) { anchor = true; world.operation(views[i].id(), "world_combat:dispel", "{}"); }
+            if (String(views[i].source().key()) === String(actor.key())) { anchor = true; world.operation(views[i].id(), "world_combat:dispel", "{}"); }
         }
         if (anchor) return;
         const body = world.observe(actor);
@@ -166,7 +170,7 @@ namespace PokemonSkills {
         id: safeguardId,
         cooldownParameter: "recharge",
         name: "神秘守护",
-        description: "张开随自己移动的守护光，为自己和附近队友抵挡新施加的有害异常。守护以施法者为锚补给自己与走进范围的队友；离开范围后按各自剩余的守护时间短暂保留。多个神秘守护各自维持，一个结束不会撤掉另一个。",
+        description: "张开随自己移动的守护光，为自己和附近队友抵挡新施加的有害异常；不会挡下你自己主动施加的状态代价（例如睡觉让自己入睡）。守护以施法者为锚补给自己与走进范围的队友；离开范围后按各自剩余的守护时间短暂保留。多个神秘守护各自维持，一个结束不会撤掉另一个。",
         uses: ["挡住成片的灼伤、中毒、麻痹", "在对方铺异常前先一步张罩", "护住正要进场的队友"],
         kind: "self",
         range: 1,

@@ -7,11 +7,9 @@
  * 对会飞的目标 priority 明显更高（这是它唯一不可替代的用途）；够不到交给共享接近逻辑。
  */
 namespace PokemonSkills {
-    /** 目标是否离地/会飞：贴地观察、飞行属性或共享浮空身份。 */
+    /** 目标是否真实离地或带着共享浮空身份：与执行层一致，不从飞行属性推断它正在飞。 */
     function smackdownFlies(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         if (target.grounded === false) return true;
-        const facts = target.facts;
-        if (facts && Array.isArray(facts.types) && facts.types.indexOf("flying") >= 0) return true;
         return CompanionBehavior.status(context, target, "fly") || CompanionBehavior.status(context, target, "magnetrise")
             || CompanionBehavior.status(context, target, "telekinesis");
     }
@@ -47,7 +45,7 @@ namespace PokemonSkills {
 
     addPreferences("smackdown", { ai: { maxChase: 14, flyersOnly: false } }, [
         field(pathOf("ai.flyersOnly"), "只打空中的", "boolean", {
-            help: "开启：只对离地、会飞或浮空的敌人才投石（这一记留作防空，不浪费在走地的目标上）。关闭：也当普通远程石击用，什么目标都砸。"
+            help: "开启：只对真实离地或带共享浮空的敌人才投石（这一记留作防空，不浪费在走地的目标上）。关闭：也当普通远程石击用，什么目标都砸。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 4, max: 22, step: 1,

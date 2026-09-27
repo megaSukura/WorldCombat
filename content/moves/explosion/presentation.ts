@@ -1,22 +1,9 @@
-/**
- * 大爆炸 / explosion 的客户端表现。
- *
- * 一句话：地面从施法者脚下裂开、光从缝里漏出并向内收拢；提交后身上带着一圈看得见的引信朝爆点压进，
- * 三道引信环由外向内逐一熄灭、爆圈贴着真实半径跟随身体，引信烧完才炸成一朵顶天立地的火球，最后留下焦黑弹坑。
- * 色相家族：近白金做爆心高光（0xFFF6E0），暖橙火球作主体（cloudyfire_white / flame），
- * 浓烟用中性深灰，土黄只给飞散的燃烧碎屑。比自爆更大、更亮、烟更多。
- * 拍子：起 charge 蓄力 ／ 引 fuse 引信推进 ／ 爆 detonate 火球 ／ 冲 shock 冲击环 ／ 击 hit 逐处 ／ 收 crater 或空爆 miss。
- * 范围：fuse 的爆圈与 detonate / crater 的球与地面圈按 `data.radius`（真实爆心半径）画出，圈就是会被炸到的地。
- * 运动：光与尘向内收拢 → 引信环随身体移动并逐一熄灭 → 火球从爆心向外炸开 → 冲击环贴地横扫 → 浓烟上腾、碎屑回落。
- * 数：`data.debris`（体重与物攻派生）决定火球、碎屑与浓烟的量，`data.intensity`（威力派生）抬高亮度与密度，
- *   `data.cells`（弹坑块数）驱动地面余烬，`data.scale`（爆心/5.6）放大尺度；`data.remaining/total` 驱动引信熄灭。
- */
 const ExplosionDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         charge: {
-            duration: 22,
-            exit: { stop: 6, drain: 16 },
+            duration: { data: "windup", fallback: 16 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "sink", bind: "source", height: 0.35,
@@ -48,7 +35,7 @@ const ExplosionDefinition: ParticleDefinition = {
         },
         fuse: {
             duration: 0,
-            exit: { stop: 3, drain: 14 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "coverage", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
@@ -196,8 +183,8 @@ const ExplosionDefinition: ParticleDefinition = {
             ]
         },
         crater: {
-            duration: 30,
-            exit: { stop: 13, drain: 26 },
+            duration: { data: "ticks", fallback: 60 },
+            exit: { drain: 26 },
             emitters: [
                 {
                     name: "residue", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",

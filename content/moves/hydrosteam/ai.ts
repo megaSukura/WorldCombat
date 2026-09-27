@@ -15,10 +15,11 @@ namespace CompanionBehavior {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 13);
     }
 
-    /** 以目标方向为中线，数一数实际扇面里还挤着几个非友方（含目标），按本个体真实的 reach/angle 判定。 */
+    /** 以目标方向为中线，数一数实际扇面里还挤着几个非友方（含目标），按本个体真实的 reach/angle 判定，并只数通视且落在同一高度带里的。 */
     function hydrosteamFanCount(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const world = CompanionBehavior.world(context);
         const self = CompanionBehavior.source(context).point;
+        const origin = CompanionBehavior.point(self);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         const reach = Math.max(4, PokemonSkills.p(PokemonSkills.hydrosteamId, "reach", world));
         const angle = Math.max(20, Math.min(100, PokemonSkills.p(PokemonSkills.hydrosteamId, "angle", world)));
@@ -30,9 +31,14 @@ namespace CompanionBehavior {
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
             if (other.friendly || other.health <= 0 || other.ref === String(context.actor)) continue;
+            // 与 execute 的扇面高度带一致：脚底到头顶都落在 (origin.y-2, origin.y+3) 内才算被罩住。
+            if (other.point[1] < self[1] - 2 || other.point[1] > self[1] + 3) continue;
             const ox = other.point[0] - self[0], oz = other.point[2] - self[2], distance = Math.sqrt(ox * ox + oz * oz);
             if (distance > reach || distance < 1e-6) continue;
-            if ((ox / distance) * ux + (oz / distance) * uz >= cosHalf - 1e-12) count++;
+            if ((ox / distance) * ux + (oz / distance) * uz < cosHalf - 1e-12) continue;
+            // 墙后不算：群体计数与判定共用通视条件（execute 里同样按 clear 过滤）。
+            if (!world.clear(origin, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }

@@ -187,6 +187,7 @@ function harness() {
         nativeEvents.push({ target, id, topic: 'world_combat:mob_effect_added' }); return true;
       },
       marker, mobEffect: nativeView, mobEffects: target => [...target.markers.keys()].map(id => nativeView(target, id)).filter(Boolean), sound() {}, motion() {}, displace() { return 0; },
+      matchesMobEffect(target, id, key) { const value = this.valid(target) && this.mobEffect(target, id); return !!value && String(value.key()) === key; },
       removeMobEffect(target, id, key) { return nativeView(target, id)?.key() === key && clear(target, id); },
       leaseMobEffect(target, id, key) {
         assert(owner !== 0, 'Native ownership requires a managed effect or action');

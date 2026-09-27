@@ -44,7 +44,7 @@ namespace PokemonSkills {
                 .clamp(4, 7).round(1),
             "伸出距离", {
                 unit: " 格",
-                description: "触手能伸到多远咬住目标；特攻越高够得越远，缠紧式收近 1 格。它也是本招的实际射程：指定敌人就用它，只给方向就沿短方向抓最近的敌人。"
+                description: "触手能伸到多远咬住目标；特攻越高够得越远，缠紧式收近 1 格。它也是本招的实际射程，按施法者中心到目标碰撞箱最近点判定；指定敌人就用它，只给方向就沿短方向抓最近且视线通的敌人。"
             }),
         grip: formula(
             F.base(4).plus(F.body("width").times(1.2).as("身宽")).plus(F.body("height").times(0.4).as("身高"))

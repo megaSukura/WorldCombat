@@ -13,14 +13,20 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 7);
     }
 
-    /** 目标近旁（3.0 格内）还聚着几个别的站立敌人；踩踏的震波能一次波及一圈。 */
-    function stompCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 本个体当前配置下的真实震波半径：与出手结算读同一份公式，不另存近似常数。 */
+    function stompShockRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return p("stomp", "shock", { world: world, actor: world.source(), skill: skills["stomp"], detail: { values: item.data.config } });
+    }
+
+    /** 目标近旁（实际震波半径内）还聚着几个别的站立敌人；踩踏的震波能一次波及一圈。 */
+    function stompCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible || other.grounded !== true) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.0) count++;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
         }
         return count;
     }
@@ -40,8 +46,11 @@ namespace PokemonSkills {
             if (!target || !stompWants(context, capability, target)) return 0;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.35) return 55;
             var score = CompanionBehavior.status(context, target, "flinch") ? 30 : 26;
-            // 聚堆的地面敌人更值得一脚；脚下很快的敌人容易在起手时溜出脚印，降低权重。
-            if (stompCluster(context, target) >= 2) score += 8;
+            // 聚堆的地面敌人更值得一脚；半径取本个体真实的震波半径，脚下很快的敌人容易在起手时溜出脚印，降低权重。
+            var shockRadius = Math.max(0.6, stompShockRadius(context, capability));
+            var cluster = stompCluster(context, target, shockRadius);
+            if (cluster >= 2) score += 8;
+            if (cluster >= 4) score += 4;
             var velocity = CompanionBehavior.velocity(context, target);
             if (velocity !== null) {
                 var speed = Math.sqrt(velocity[0] * velocity[0] + velocity[1] * velocity[1] + velocity[2] * velocity[2]);

@@ -6,7 +6,7 @@
  * 场面：一只只带这一招的相扑手（Hariyama）贴身对一只开场就睡着的、血厚等级更高的陪练（Snorlax）；
  *   睡眠用原生状态设成 sleep，经共享镜像落成身份 world_combat:status/sleep。
  * 必然事实：本招被提交过；对手吃到过伤害；对手身上出现过睡眠身份；命中后睡眠身份被清除（被拍醒）。
- * 翻倍是否生效、是否触发余震写进 note，供读轨迹判断。
+ * 翻倍是否生效写进 note，供读轨迹判断；这一掌只打实际拍中的那一个人，没有余震扩散。
  */
 Smoke.scenario("wakeupslap", function (stage) {
     stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");

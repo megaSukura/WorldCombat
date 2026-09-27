@@ -20,7 +20,7 @@ Smoke.scenario("icefang", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("icefang", caster) > 0, "icefang was committed");
             stage.expect(stage.damageTo(foe) > 0, "the ice fang dealt damage");
-            stage.note("the freeze is rolled a beat after the bite (frostDelay), not on impact; the shatter segment needs an already frozen target", {
+            stage.note("the freeze is rolled on the bite itself; the shatter segment needs a target frozen before this bite", {
                 casts: stage.casts("icefang", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 moved: Math.round(stage.travelled(caster) * 10) / 10,

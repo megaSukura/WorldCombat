@@ -40,15 +40,19 @@ namespace PokemonSkills {
         return free <= 1;
     }
 
-    /** 目标当前横移速度是否足以在引信烧完前走出爆心。 */
+    /** 目标当前的整套逃离窗口：出手弹道飞过去的时间加上引信时间，够不够它走出爆心。 */
     function sludgebombCanLeave(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         var world = CompanionBehavior.world(context);
         var radius = Math.max(1.6, p("sludgebomb", "burstRadius", world));
-        var seconds = Math.max(0.2, p("sludgebomb", "fuseTicks", world) / 20);
+        // fuseTicks 是刻，velocity 是格/刻：窗口直接按刻相乘，不再把「刻」当成「秒」而低估 20 倍。
+        var fuseTicks = Math.max(8, p("sludgebomb", "fuseTicks", world));
+        var reach = Math.max(1, p("sludgebomb", "reach", world));
+        var toss = Math.max(0.2, p("sludgebomb", "tossSpeed", world));
+        var deliveryTicks = reach / toss;
         var motion = CompanionBehavior.velocity(context, target);
         if (motion === null) return false;
         var pace = Math.sqrt(motion[0] * motion[0] + motion[2] * motion[2]);
-        return pace * seconds >= radius;
+        return pace * (fuseTicks + deliveryTicks) >= radius;
     }
 
     CompanionBehavior.registerUse("sludgebomb", {

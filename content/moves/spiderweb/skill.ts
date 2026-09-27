@@ -18,17 +18,29 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    /** 找到目标的茧并取它这一次的每层减速；没有茧时用兜底值。 */
-    function spiderwebSlow(world: CombatWorld, victim: CombatActor): number {
+    /** 找到目标当前 carrier 对应的茧并取它这一次的每层减速；旧茧或没有茧时用兜底值。 */
+    function spiderwebSlow(world: CombatWorld, victim: CombatActor, carrier: MobEffects.Anchor | null): number {
+        if (carrier === null) return spiderwebSlowFallback;
         const cocoons = world.effects(victim, spiderwebCocoon);
         for (let i = 0; i < cocoons.length; i++) {
             try {
                 const state = JSON.parse(String(cocoons[i].data()));
-                if (state && typeof state.slow === "number" && isFinite(state.slow)) return state.slow;
+                if (state && state.carrier && typeof state.carrier.key === "string" && state.carrier.key === carrier.key
+                    && typeof state.slow === "number" && isFinite(state.slow)) return state.slow;
             } catch (error) { }
         }
         return spiderwebSlowFallback;
     }
+    // 层×本次 slow 统一写进移动/飞行属性：窗口跟随当前 carrier，层数或 carrier 变化时重新解析，旧茧不影响新强度。
+    // 导航速度读同一个值（见下方 navigate 监听），因此公布减速与普通生物移动一致，不再由 startup 固定叠加。
+    MobEffects.dynamicAttributes("world_combat:spiderweb_attributes", spiderwebWrapped, function (world, victim, carrier) {
+        const layers = carrier.amplifier() + 1;
+        const slow = spiderwebSlow(world, victim, MobEffects.anchor(carrier));
+        return [
+            { id: "minecraft:generic.movement_speed", amount: -layers * slow, operation: "add_multiplied_total" },
+            { id: "minecraft:generic.flying_speed", amount: -layers * slow, operation: "add_multiplied_total" }
+        ];
+    }, 10);
 
     WorldCombat.effect(spiderwebCocoon, 1, 600, "actor", spiderwebCocoonData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(spiderwebCocoon, "start", function (effect) {
@@ -38,7 +50,8 @@ namespace PokemonSkills {
         if (!state.carrier || !MobEffects.matches(world, victim, state.carrier)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body) WorldFeedback.onEffect(world, effect.id(), spiderwebKey + effect.id(), spiderwebScene, 1, body.position(),
-            { moment: "cocoon", target: String(victim.ref()), layers: state.layers, threads: state.threads, scale: state.scale });
+            { moment: "cocoon", target: String(victim.ref()), layers: state.layers, threads: state.threads, scale: state.scale,
+                cocoonRate: Math.max(8, Math.round(state.layers * 12)) });
         effect.schedule("weave", "weave", 4, "{}");
     });
     WorldCombat.effectHandler(spiderwebCocoon, "weave", function (effect) {
@@ -88,7 +101,7 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         const web = MobEffects.read(world, actor, spiderwebWrapped);
         if (web === null) return;
-        const factor = Math.max(0, 1 - (web.amplifier() + 1) * spiderwebSlow(world, actor));
+        const factor = Math.max(0, 1 - (web.amplifier() + 1) * spiderwebSlow(world, actor, MobEffects.anchor(web)));
         const data = JSON.parse(String(event.data()));
         data.speed = Math.max(0, (typeof data.speed === "number" ? data.speed : 0.2) * factor);
         event.data(JSON.stringify(data));
@@ -139,47 +152,84 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(spiderwebHeat, "start", function () {});
     WorldCombat.effect(spiderwebSurface, 1, 600, "actor", json => json, EffectProtocols.unchanged);
     function spiderwebPoint(v: number[]): CombatPoint { return WorldCombat.point(v[0], v[1], v[2]); }
+    function spiderwebSolid(block: CombatBlock | null): boolean {
+        if (block === null) return false;
+        const id = String(block.id());
+        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
+            && id !== "minecraft:water" && id !== "minecraft:lava" && !block.tagged("minecraft:fire");
+    }
     function spiderwebTouch(body: CombatObservation, state: any): boolean {
         const delta = body.position().minus(spiderwebPoint(state.centre)), n = state.normal, u = state.u, v = state.v;
         const dot = function (axis: number[]) { return delta.x() * axis[0] + delta.y() * axis[1] + delta.z() * axis[2]; };
         const extent = function (axis: number[]) { return Math.abs(axis[0]) * body.width() / 2 + Math.abs(axis[1]) * body.height() / 2 + Math.abs(axis[2]) * body.width() / 2; };
-        return Math.abs(dot(n)) <= .16 + extent(n) && Math.abs(dot(u)) <= state.half + extent(u) && Math.abs(dot(v)) <= state.half + extent(v);
+        const du = dot(u), dv = dot(v);
+        return Math.abs(dot(n)) <= .16 + extent(n)
+            && du >= state.uMin - extent(u) && du <= state.uMax + extent(u)
+            && dv >= state.vMin - extent(v) && dv <= state.vMax + extent(v);
     }
     WorldCombat.effectHandler(spiderwebSurface, "start", effect => effect.schedule("contact", "contact", 1, "{}"));
     WorldCombat.effectHandler(spiderwebSurface, "contact", function (effect) {
         const world = effect.world(), state = JSON.parse(effect.state()), centre = spiderwebPoint(state.centre);
-        let burned = false;
-        for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) {
-            const p = centre.plus(spiderwebPoint(state.u).scale(a * state.half)).plus(spiderwebPoint(state.v).scale(b * state.half));
-            const block = world.block(p), fluid = world.fluid(p);
-            if (block && block.tagged("minecraft:fire") || fluid && fluid.tagged("minecraft:lava")) burned = true;
+        // 失去支撑就整片退场：背后那一格不再是实心方块。
+        if (!spiderwebSolid(world.block(centre.minus(spiderwebPoint(state.normal).scale(0.15))))) {
+            state.burned = false; effect.state(JSON.stringify(state)); effect.end(); return;
         }
-        const nearby = world.query(centre, Math.min(12, state.half * 2 + 4), false);
-        for (let i = 0; i < nearby.length; i++) {
+        const span = Math.max(state.uMax, -state.uMin, state.vMax, -state.vMin);
+        const at = function (a: number, b: number): CombatPoint {
+            return centre.plus(spiderwebPoint(state.u).scale(a)).plus(spiderwebPoint(state.v).scale(b));
+        };
+        // 先完成火判定：网面本身触火或熔岩，或任何贴着网的身体带火，都直接烧掉整片丝，不给谁加层。
+        let burned = false;
+        for (let a = 0; a < 3 && !burned; a++) for (let b = 0; b < 3 && !burned; b++) {
+            const p = at(state.uMin + (state.uMax - state.uMin) * a / 2, state.vMin + (state.vMax - state.vMin) * b / 2);
+            const block = world.block(p), fluid = world.fluid(p);
+            if ((block && block.tagged("minecraft:fire")) || (fluid && fluid.tagged("minecraft:lava"))) burned = true;
+        }
+        const nearby = world.query(centre, Math.min(12, span * 2 + 4), false);
+        for (let i = 0; i < nearby.length && !burned; i++) {
             const actor = nearby[i], body = world.observe(actor); if (!body || !spiderwebTouch(body, state)) continue;
-            if (CombatStatus.has(world, actor, "burn") || world.effects(actor, spiderwebHeat).length) { burned = true; break; }
-            if (world.friendly(actor)) continue;
+            if (CombatStatus.has(world, actor, "burn") || world.effects(actor, spiderwebHeat).length) burned = true;
+        }
+        if (burned) { state.burned = true; effect.state(JSON.stringify(state)); effect.end(); return; }
+        // 火判定完成、丝面仍活时才给接触者加层。
+        for (let i = 0; i < nearby.length; i++) {
+            const actor = nearby[i], body = world.observe(actor); if (!body || !spiderwebTouch(body, state) || world.friendly(actor)) continue;
             const ref = String(actor.ref());
             if ((state.next[ref] || 0) > world.tick()) continue;
             spiderwebWrap(world, actor, state.options); state.next[ref] = world.tick() + 40;
         }
-        if (burned) { state.burned = true; effect.state(JSON.stringify(state)); effect.end(); return; }
         effect.state(JSON.stringify(state)); effect.schedule("contact", "contact", 2, "{}");
     });
     WorldCombat.effectHandler(spiderwebSurface, "end", function (effect) {
         const state = JSON.parse(effect.state());
         WorldFeedback.emit(effect.world(), spiderwebScene, 1, spiderwebPoint(state.centre),
-            { moment: state.burned ? "burn" : "fade", path: state.path, layers: 1 }, 22);
+            { moment: state.burned ? "web_burn" : "web_fade", path: state.path }, 24);
     });
+    /** 支撑面沿一条轴还能延伸多远：背后还有实心、前方没有障碍（墙角/实体）为止。 */
+    function spiderwebEdge(world: CombatWorld, centre: CombatPoint, axis: number[], sign: number, normal: number[], half: number): number {
+        const step = 0.1; let reach = 0;
+        while (reach + step <= half + 1e-6) {
+            const point = centre.plus(spiderwebPoint(axis).scale(sign * (reach + step)));
+            if (!spiderwebSolid(world.block(point.minus(spiderwebPoint(normal).scale(0.15))))) break;
+            if (spiderwebSolid(world.block(point.plus(spiderwebPoint(normal).scale(0.4))))) break;
+            reach += step;
+        }
+        return reach;
+    }
     function spiderwebLay(world: CombatWorld, hit: CombatImpact, half: number, ticks: number, options: any): void {
         const normals: any = { up: [0, 1, 0], down: [0, -1, 0], north: [0, 0, -1], south: [0, 0, 1], east: [1, 0, 0], west: [-1, 0, 0] };
         const normal = normals[hit.blockFace()]; if (!normal || !hit.blockPosition()) return;
         const u = normal[1] ? [1, 0, 0] : [normal[2], 0, -normal[0]], v = normal[1] ? [0, 0, 1] : [0, 1, 0];
         const centre = hit.position().plus(spiderwebPoint(normal).scale(.04));
-        const path = [[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]].map(function (pair) {
-            const p = centre.plus(spiderwebPoint(u).scale(pair[0] * half)).plus(spiderwebPoint(v).scale(pair[1] * half)); return [p.x(), p.y(), p.z()];
-        });
-        const effect = world.effect(spiderwebSurface, world.source(), JSON.stringify({ centre: [centre.x(), centre.y(), centre.z()], normal, u, v, half, path, options, next: {} }), ticks);
+        const uMin = -spiderwebEdge(world, centre, u, -1, normal, half), uMax = spiderwebEdge(world, centre, u, 1, normal, half);
+        const vMin = -spiderwebEdge(world, centre, v, -1, normal, half), vMax = spiderwebEdge(world, centre, v, 1, normal, half);
+        if (Math.max(uMax - uMin, vMax - vMin) < 0.2) return;
+        const corner = function (a: number, b: number): number[] {
+            const p = centre.plus(spiderwebPoint(u).scale(a)).plus(spiderwebPoint(v).scale(b)); return [p.x(), p.y(), p.z()];
+        };
+        const path = [corner(uMin, vMin), corner(uMax, vMin), corner(uMax, vMax), corner(uMin, vMax), corner(uMin, vMin)];
+        const effect = world.effect(spiderwebSurface, world.source(),
+            JSON.stringify({ centre: [centre.x(), centre.y(), centre.z()], normal, u, v, uMin, uMax, vMin, vMax, path, options, next: {} }), ticks);
         WorldFeedback.onEffect(world, effect, "spiderweb:surface:" + effect, spiderwebScene, 1, centre, { moment: "web", path: path, threads: options.threads });
     }
     define({
@@ -248,7 +298,9 @@ namespace PokemonSkills {
                     scope.sound("minecraft:block.cobweb.break", hit.position(), 12, "{}");
                 }
             }, function (current: CombatAction) {
-                WorldFeedback.emit(current.world(), spiderwebScene, 1, current.targetPosition(), { moment: "splat", scale: splat / 0.8 }, 18);
+                // 空射末点取真实弹体位置，而不是原始瞄准点。
+                const scope = current.world(), end = scope.projectilePosition(flight);
+                WorldFeedback.emit(scope, spiderwebScene, 1, end !== null ? end : current.targetPosition(), { moment: "splat", scale: splat / 0.8 }, 18);
                 finish(current);
             });
             WorldFeedback.emit(world, spiderwebScene, 1, action.origin(),

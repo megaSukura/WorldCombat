@@ -8,8 +8,8 @@
  * 范围：roar 的锥形地面顶点即判定用的锥面（`data.path`），铺到哪就是会被吼到的地；锥体沿 `data.direction` 张开，
  *   与 `WorldGeometry.sector` 读同一组 origin/heading/reach/arc。
  * 运动：声压沿锥轴向外推、沿着顶点连线填满锥面；被压者的光点往下沉、短符从上压下。
- * 数：声浪量绑 `data.volume`（体重派生），锥的张角绑 `data.halfArc`，锥长按 5 格参考值书写、
- *   由服务端 `data.scale = reach / 5` 缩放到机制射程，掉级绑 `data.cow`，短符次数绑 `data.cow`。
+ * 数：声浪量绑 `data.volume`（体重派生），锥的张角绑 `data.halfArc`、锥长直接绑 `data.reach`（与判定同值，
+ *   不再依赖参考长度换算），掉级绑 `data.cow`，沉降星点只在真正压低双攻的目标上出现。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const NobleRoarDefinition: ParticleDefinition = {
@@ -42,10 +42,10 @@ const NobleRoarDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "cone_air", bind: "source", offset: [0, 0, 0], height: 0.7, fit: "none", orient: "direction",
+                    name: "cone_air", bind: "source", offset: [0, 0, 0], height: 0.7, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "volume", fallback: 30 },
-                    shape: { kind: "cone_volume", radius: 0.35, length: 5, angleDegrees: { data: "halfArc", fallback: 35 } },
+                    shape: { kind: "cone_volume", radius: 0.35, length: { data: "reach", fallback: 5 }, angleDegrees: { data: "halfArc", fallback: 35 } },
                     direction: "shape", speed: [0.08, 0.26], spread: 8, spin: 10,
                     lifetime: [8, 16], size: [0.24, 0.05],
                     color: 0xC9A24A, alpha: [0.35, 0], light: "world", maxParticles: 320

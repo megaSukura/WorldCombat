@@ -22,13 +22,15 @@ namespace PokemonSkills {
     const psychoboostScene = "world_combat:move_psychoboost";
     const psychoboostDisperseText = "world_combat.move.psychoboost.text.disperse";
 
-    /** 在一点内爆：把半径内的敌人各结算一次；返回命中数。 */
+    /** 在锁定点的小球内爆：真被球罩到的敌人各结算一次，按出手时的攻击快照打出第一发；返回命中数。 */
     function psychoboostImplode(current: CombatAction, at: CombatPoint, amount: number, rings: number,
-        scale: number, intensity: number, radius: number): number {
+        scale: number, intensity: number, radius: number, attack: PokemonDamage.AttackSnapshot): number {
         const scope = current.world();
         let hits = 0;
-        WorldGeometry.selectEnemies(scope, WorldGeometry.ring(at, 0, Math.max(0.3, radius), { below: 2.5, above: 3.5 }), function (enemy, facts) {
-            if (!hurt(current, enemy, "psychoboost", amount, { damage: damageSpec("psychoboost", "focus") })) return;
+        WorldGeometry.selectBodies(scope, WorldGeometry.bodySphere(at, Math.max(0.3, radius)), function (enemy, facts) {
+            if (facts.friendly() || facts.health() <= 0) return;
+            if (!hurt(current, enemy, "psychoboost", amount,
+                { damage: damageSpec("psychoboost", "focus"), attackSnapshot: attack })) return;
             hits++;
             WorldFeedback.emit(scope, psychoboostScene, 1, facts.position(),
                 { moment: "burst", target: String(enemy.ref()), rings: rings, scale: scale, intensity: intensity }, 22);
@@ -91,15 +93,17 @@ namespace PokemonSkills {
             const locked = action.targetPosition();
             const selected = action.target();
             const targetRef = selected !== null ? String(selected.ref()) : "";
+            // 本发攻击快照：在耗竭前读，第一发内爆用的是降级前的特攻；之后每一次才真实读取降级后的阶段。
+            const attack = PokemonDamage.snapshotAttack(world, actor, "spa");
             let settled = false;
 
-            // 精神力压成一点：反作用力在提交那一刻付。
+            // 精神力压成一点：反作用力在提交那一刻付，中与不中都一样。
             NativeEffects.boost(world, actor, "spa", -insightLoss);
             WorldFeedback.emit(world, psychoboostScene, 1, origin,
                 { moment: "gather", target: targetRef, rings: rings, scale: scale, intensity: intensity, hold: hold ? 1 : 0 }, 22);
             sound(action, "cobblemon:move.psychic.actor");
             scenes.show(action, "charge", locked,
-                { moment: "charge", target: targetRef, rings: rings, reach: reach, scale: scale, intensity: intensity });
+                { moment: "charge", target: targetRef, rings: rings, reach: reach, burst: burstRadius, intensity: intensity });
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -107,27 +111,35 @@ namespace PokemonSkills {
                 scenes.finish(current, done);
             }
 
-            action.after(converge, function (current: CombatAction) {
+            function implode(current: CombatAction): void {
+                const scope = current.world();
+                scenes.stop(current, "charge");
+                WorldFeedback.emit(scope, psychoboostScene, 1, locked,
+                    { moment: "implode", target: targetRef, rings: rings, burst: burstRadius, intensity: intensity, hold: hold ? 1 : 0 }, 26);
+                sound(current, "cobblemon:impact.psychic");
+                psychoboostImplode(current, locked, power, rings, scale, intensity, burstRadius, attack);
+                finish(current);
+            }
+
+            // 合拢期间短频率保持通视：视线被挡就在实际遮挡处散环，不在远端爆；走完整段才撞合。
+            function guard(current: CombatAction, elapsed: number): void {
                 const scope = current.world();
                 const body = scope.observe(actor);
                 const from = body !== null ? body.position() : origin;
-                scenes.stop(current, "charge");
-                // 合拢期间要保持通视：视线被遮断就在遮挡处散环，不在远端爆。
-                if (!scope.clear(from, locked)) {
-                    const clip = scope.clipBlocks(from, locked);
-                    const stop = clip !== null && clip.blocked() ? clip.position() : locked;
+                const wall = WorldGeometry.blockHit(scope, from, locked);
+                if (wall !== null) {
+                    scenes.stop(current, "charge");
+                    const stop = wall.position();
                     WorldFeedback.emit(scope, psychoboostScene, 1, stop,
-                        { moment: "disperse", rings: rings, scale: scale, intensity: intensity }, 24);
+                        { moment: "disperse", rings: rings, burst: burstRadius, intensity: intensity }, 24);
                     WorldFeedback.text(scope, stop.plus(WorldCombat.point(0, 1.1, 0)), psychoboostDisperseText, [], 22);
                     finish(current);
                     return;
                 }
-                WorldFeedback.emit(scope, psychoboostScene, 1, locked,
-                    { moment: "implode", target: targetRef, rings: rings, scale: scale, intensity: intensity, hold: hold ? 1 : 0 }, 26);
-                sound(current, "cobblemon:impact.psychic");
-                psychoboostImplode(current, locked, power, rings, scale, intensity, burstRadius);
-                finish(current);
-            });
+                if (elapsed >= converge) { implode(current); return; }
+                current.after(1, function (next: CombatAction) { guard(next, elapsed + 1); });
+            }
+            guard(action, 0);
         }
     });
 }

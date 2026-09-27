@@ -21,11 +21,11 @@ Smoke.scenario("pinmissile", function (stage) {
             stage.expect(stage.casts("pinmissile", caster) > 0, "pinmissile was committed");
             stage.expect(stage.damageTo(foe) > 0, "the quill volley dealt damage to the foe");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/quills"), "a landed quill left the shared quills identity on the foe");
-            stage.note("the volley length (2-5 quills), per-quill power, homing turn and stick duration follow Speed/Attack/level and the barbed choice; quills stack the world_combat:pinmissile_quills amplitude and up to slowness II", {
+            stage.note("the volley length (2-5 quills), per-quill power, homing turn and stick duration follow Speed/Attack/level and the barbed choice; quills stack the world_combat:pinmissile_quills amplitude and the carrier owns the slow (movement-speed modifier, saturating at 3 quills), removed the moment the quills are cleansed", {
                 casts: stage.casts("pinmissile", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 quilled: stage.hadMobEffect(foe, "world_combat:status/quills"),
-                slowed: stage.hasMobEffect(foe, "minecraft:slowness"),
+                foeSpeed: stage.attribute(foe, "minecraft:generic.movement_speed"),
                 foeAlive: foe.alive()
             });
             stage.done();

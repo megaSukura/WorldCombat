@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.axekick.summary": "朝任意方向短垫一步后原地抬腿，脚跟沿一条固定的窄竖带往下劈，命中造成伤害并有几率使目标恍惚；竖带空着时脚踵砸地、自己受伤。",
+  "worldcombat.skill.axekick.summary": "朝任意方向短垫一步后原地抬腿，脚跟从面前一条固定窄带的顶端逐刻下扫，命中造成伤害并有几率使目标恍惚；整条带扫空时脚踵砸地、自己受伤。",
   "worldcombat.skill.axekick.description.0": "脚跟劈中造成约 %1$s 点接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.axekick.description.1": "抬腿高度 %1$s 格、起腿速度 %2$s 格每刻、下劈速度 %3$s 格每刻，劈前向准心垫步 %4$s 格。",
   "worldcombat.skill.axekick.description.2": "面前竖带最远到 %1$s 格、半宽 %2$s 格；抬腿亮出竖带后停 %3$s 刻才劈下；竖带空着就按自身最大生命的 %4$s 比例自伤。",
@@ -33,6 +33,8 @@
   "worldcombat.skill.axekick.preference.high.help": "开启：抬腿更高、下劈更快、劈劲 ×1.08、竖带更宽，但起手 +2 刻、冷却 +4 刻、射程 -0.3 格、垫步更短、抬腿延迟更久、劈偏自伤 +0.03。关闭：低位快劈，出手快、够得远、垫步更远、自伤轻，但劈不狠也不够宽。",
   "worldcombat.skill.axekick.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.axekick.preference.ai.maxChase.help": "目标在这个距离以内才主动下劈，否则先走近。越大越早发起，也越容易劈空。",
+  "worldcombat.skill.axekick.preference.ai.minSelf": "最低自身血量",
+  "worldcombat.skill.axekick.preference.ai.minSelf.help": "自身生命比例低于这个值时不再下压踢（劈空的自伤可能致命）。调高更保守，调低更愿意冒险。",
   "worldcombat.skill.axekick.preference.ai.spareConfused": "跳过已恍惚目标",
   "worldcombat.skill.axekick.preference.ai.spareConfused.help": "开启：目标已经带着恍惚时不再下压踢；关闭：照常下劈，只当普通输出。",
   "effect.world_combat.axekick_ring": "恍惚",

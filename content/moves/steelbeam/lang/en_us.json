@@ -24,7 +24,7 @@
   "worldcombat.skill.steelbeam.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.steelbeam.preference.ai.maxChase.help": "Above this distance the companion closes in before firing. Higher fires sooner and wastes the health cost more often.",
   "worldcombat.skill.steelbeam.preference.ai.minHealth": "Health threshold",
-  "worldcombat.skill.steelbeam.preference.ai.minHealth.help": "Below this health fraction the companion stops firing (unless the target is nearly down). Lower spends health more freely and risks stripping itself to the danger line.",
+  "worldcombat.skill.steelbeam.preference.ai.minHealth.help": "Below this health fraction the companion usually stops firing; it makes an exception only when the target is nearly down and its health would still hold after paying the cost. Lower spends health more freely and risks stripping itself to the danger line.",
   "world_combat.move.steelbeam.text.hit": "Knocked %1$s",
   "world_combat.move.steelbeam.text.miss": "Lance missed",
   "world_combat.move.steelbeam.text.shed": "Cost %1$s%%"

@@ -3,7 +3,8 @@
  *
  * 什么局面下出手：挂在共享 attack 位上；这是**以自己为圆心**的一整圈横扫，够不到时交给共享接近逻辑把身位收进圈子。
  * 对谁出手：`accepts` 只排除友方、已死、看不见的；`ai.crowd`（默认开）在半径内可选目标 ≥2 时显著抬分——
- *   一次抡开一圈才是它的本行；`ai.breakGuard`（默认开）在目标有正面防御等级时抬分（本招无视这些涨防）。
+ *   一次抡开一圈才是它的本行；`ai.breakGuard`（默认开）在目标有正面物防等级时抬分（本招无视这些涨防；仅特防
+ *   强化与本招的物理结算无关，不加分）。
  * 出手位置：站到目标身边、让整圈把侧后方的人一起框进来。
  * 放完之后：交回共享交战计划；被抡开的人离开了贴身距离。
  */
@@ -22,9 +23,20 @@ namespace PokemonSkills {
         return typeof value === "number" ? value : 0;
     }
 
+    /** 与出招同一棵公式的实际扫击半径（身高、速度与广旋配置），AI 不再用静态射程代替。 */
+    function darkestlariatReach(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            return Math.max(2.0, PokemonSkills.p(darkestlariatId, "radius",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills.darkestlariat, detail: { values: capability.data.config || {} } }));
+        } catch (error) {
+            return typeof capability.data.range === "number" && isFinite(capability.data.range) ? capability.data.range : 2.6;
+        }
+    }
+
     CompanionBehavior.registerUse(darkestlariatId, {
         protocols: ["world_combat:attack"],
-        reach: function (context, capability) { return capability.data.range; },
+        reach: function (context, capability) { return darkestlariatReach(context, capability); },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
@@ -33,17 +45,19 @@ namespace PokemonSkills {
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 8);
         },
         accepts: function (context, capability, target) { return darkestlariatValid(target); },
+        // 自施放整圈：把目标当作接近点，由共享任务把身位收进实际扫击半径再原地抡开，不再在 8 格外空转。
+        approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            const self = CompanionBehavior.source(context);
+            const self = CompanionBehavior.source(context), radius = darkestlariatReach(context, capability);
             const distance = CompanionBehavior.distance(self.point, target.point);
-            if (distance > capability.data.range) return 0;
+            if (distance > radius) return 0;
             let score = 16;
             if (CompanionBehavior.ai<boolean>(capability, "crowd", true)) {
                 let count = 0;
                 const nearby = (context.facts.nearby || []) as CompanionBehavior.Entity[];
                 nearby.forEach(function (other) {
-                    if (darkestlariatValid(other) && CompanionBehavior.distance(self.point, other.point) <= capability.data.range) count++;
+                    if (darkestlariatValid(other) && CompanionBehavior.distance(self.point, other.point) <= radius) count++;
                 });
                 if (count >= 2) score += 14;
             }

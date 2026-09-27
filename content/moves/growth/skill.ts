@@ -52,14 +52,13 @@ namespace PokemonSkills {
             if (body === null) { done(action); return; }
             const sun = sunlight(world, body.position()) >= growthSunlight;
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            // One growth burst driven by the real boosts that landed; a capped or blocked growth shows a smaller one.
+            const gift = actualAtk + actualSpa;
             WorldFeedback.emit(world, growthScene, 1, feet,
                 { moment: "swell", actor: String(actor.ref()), scale: scale, blades: blades,
-                    gift: atk + spa, sun: sun ? 1 : 0, sunGold: sun ? blades : 0, reach: spread,
-                    intensity: Math.max(0.8, Math.min(2, (atk + spa) / 2)) }, 34);
-            WorldFeedback.emit(world, growthScene, 1, feet,
-                { moment: "sprout", actor: String(actor.ref()), scale: scale, blades: blades, sun: sun ? 1 : 0 }, 30);
-            WorldFeedback.emit(world, growthScene, 1, feet,
-                { moment: "settle", actor: String(actor.ref()), scale: scale, blades: blades }, 24);
+                    gift: gift, atk: actualAtk, spa: actualSpa, sun: sun ? 1 : 0,
+                    sunGold: sun && gift > 0 ? blades : 0, reach: spread,
+                    intensity: Math.max(0.6, Math.min(2, gift / 2 + 0.4)) }, 34);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)),
                 sun ? growthSunText : growthText, [actualAtk > 0 ? "+" + actualAtk : String(actualAtk), actualSpa > 0 ? "+" + actualSpa : String(actualSpa)], 34);
             world.sound(sun ? "minecraft:block.moss.place" : "minecraft:item.bone_meal.use", body.position(), 16, "{}");

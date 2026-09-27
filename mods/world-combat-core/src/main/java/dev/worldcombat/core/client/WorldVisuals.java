@@ -33,7 +33,7 @@ public final class WorldVisuals {
     private static float spin(Appearance appearance, Level level, int seed) {
         if (!appearance.spin()) return 0f;
         float partial = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
-        return ((level.getGameTime() + seed) % 360 + partial) * 4f;
+        return appearance.spinAngle(level == null ? 0 : level.getGameTime(), partial, seed);
     }
     private static void block(Appearance appearance, PoseStack pose, MultiBufferSource buffers, int packedLight, Level level, int seed) {
         var id = ResourceLocation.tryParse(appearance.block());
@@ -80,6 +80,7 @@ public final class WorldVisuals {
         float aspect = height > 0 ? (float) width / height : 1f;
         pose.pushPose();
         pose.mulPose(dispatcher.cameraOrientation());
+        pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(spin(appearance, level, seed)));
         float halfH = appearance.scale() * 0.5f, halfW = halfH * aspect;
         Matrix4f matrix = pose.last().pose();
         VertexConsumer consumer = buffers.getBuffer(appearance.glow()
@@ -96,7 +97,32 @@ public final class WorldVisuals {
             .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(0, 0, 1);
     }
     private record Found(TextureAtlasSprite sprite, ResourceLocation location) {}
+    /** One explicitly positioned atlas sprite. The caller owns its trajectory, frame and lifetime. */
+    public static void spriteAt(String texture, PoseStack pose, MultiBufferSource buffers,
+                                org.joml.Quaternionf cameraRotation, double height, double roll, int argb, int frame, int light) {
+        var found = resolve(ResourceLocation.tryParse(texture), frame);
+        if (found == null) return;
+        var sprite = found.sprite();
+        float halfHeight = (float)height * .5f;
+        float halfWidth = halfHeight * sprite.contents().width() / Math.max(1, sprite.contents().height());
+        float alpha = (argb >>> 24) / 255f, red = (argb >> 16 & 255) / 255f,
+            green = (argb >> 8 & 255) / 255f, blue = (argb & 255) / 255f;
+        pose.pushPose();
+        try {
+            pose.mulPose(cameraRotation);
+            pose.mulPose(com.mojang.math.Axis.ZP.rotationDegrees((float)roll));
+            var matrix = pose.last().pose();
+            var consumer = buffers.getBuffer(RenderType.entityTranslucent(found.location()));
+            vertex(consumer, matrix, -halfWidth, -halfHeight, sprite.getU0(), sprite.getV1(), red, green, blue, alpha, light);
+            vertex(consumer, matrix, halfWidth, -halfHeight, sprite.getU1(), sprite.getV1(), red, green, blue, alpha, light);
+            vertex(consumer, matrix, halfWidth, halfHeight, sprite.getU1(), sprite.getV0(), red, green, blue, alpha, light);
+            vertex(consumer, matrix, -halfWidth, halfHeight, sprite.getU0(), sprite.getV0(), red, green, blue, alpha, light);
+        } finally { pose.popPose(); }
+    }
     private static Found resolve(ResourceLocation requested, Level level, int seed) {
+        return resolve(requested, (level == null ? 0 : level.getGameTime()) / TICKS_PER_FRAME + seed);
+    }
+    private static Found resolve(ResourceLocation requested, long frameIndex) {
         if (requested == null) return null;
         var mc = Minecraft.getInstance();
         String path = requested.getPath();
@@ -105,8 +131,7 @@ public final class WorldVisuals {
             String particlePath = path.startsWith("particle/") ? path.substring("particle/".length()) : path;
             var layout = ParticleTypes.layout(particlePath);
             if (layout != null) {
-                long time = level == null ? 0 : level.getGameTime();
-                int index = (int) Math.floorMod(time / TICKS_PER_FRAME + seed, (long) layout.frames());
+                int index = (int) Math.floorMod(frameIndex, (long) layout.frames());
                 var frameId = ResourceLocation.fromNamespaceAndPath("world_combat_core", layout.path() + "/" + index);
                 var frame = lookup(mc, TextureAtlas.LOCATION_PARTICLES, frameId);
                 if (frame != null) return frame;

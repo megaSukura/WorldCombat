@@ -24,8 +24,10 @@
  * 伤害段 `shriek` 与参数同名，走共享换算（原生类别 Physical，Ghost 属性）；接触标记写在 defineDamage 上。
  */
 namespace PokemonSkills {
-    /** 环境昏暗（方块光 < 7）；未知一律按暗处理，让没有现场数据的悬浮说明也偏保守。 */
-    const astonishDark: Formula.Node = F.world("blockLight", text("worldcombat.skill.astonish.value.darkness")).lt(7);
+    /** 环境昏暗：方块光 < 7 且含天空/天气的日光 < 0.5（白天地表无灯也不算暗）；未知一律按暗处理，偏保守。 */
+    const astonishDark: Formula.Node = F.and(
+        F.world("blockLight", text("worldcombat.skill.astonish.value.darkness")).lt(7),
+        F.world("sunlight", text("worldcombat.value.sunlight")).lt(0.5));
 
     actionParameters.define("astonish", {
         /** 尖啸威力：攻击每比 50 多 1 加 0.26（上限 +28），速度每比 55 快 1 加 0.08（上限 +10）；
@@ -46,8 +48,8 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("lurk", text("worldcombat.skill.astonish.preference.lurk")), F.const(0.5), F.const(1)))
                 .clamp(0.5, 2.2).round(2),
             "贴近距离", {
-                unit: "格",
-                description: "施法者最多靠近到多近才把尖叫砸出去，也是本招的实际射程来源；潜吓式几乎不扑近，只够贴身的对手。"
+                unit: " 格",
+                description: "疾呼式最多靠近到多近才把尖叫砸出去，也是本招的实际射程来源；潜吓式原地不动，只够贴身的对手。"
             }),
         /** 惊吓判定：基础 0.38 格，碰撞箱每比 1.4 高 1 格加 0.12（上限 +0.25）；夹在 0.3..0.65。 */
         burst: formula(

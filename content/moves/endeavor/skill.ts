@@ -2,9 +2,10 @@
  * 蛮干 / endeavor 的出手方式。
  *
  * 念头的形状：压低身子站定，在两人之间拉出一根「量尺」（windup，提交前只播预告，读双方生命差）→
- * 沿量尺方向扑出去（dash）→ 撞上的一刻把对手的血线拽到自己这条线上（equalize：直接结算一段等于生命差的伤害）。
+ * 贴地沿水平方向扑出去（dash，画面每刻沿真实身体子段铺线）→ 撞上的一刻把对手的血线拽到自己这条线上
+ * （equalize：按**实际撞上的身体**的生命差直接结算）。
  * 自己更健康时量尺为零，扑上去也只擦出一记空响（flat）——这招只有在「你落后」时才有形状。
- * 越身式撞实后从对手身侧穿过去换位，代价是几乎不顶开。
+ * 越身式撞实后全身扫掠、沿原方向直直穿过对手换位，实墙或第二个身体会真实截停；代价是几乎不顶开。
  *
  * 选取：`kind: "aim"`——方向、世界点或敌人辅助瞄准都行，允许空扑；提交时不要求存在敌人。
  * 命中后显示的是原生受伤入口实际扣掉的生命，被免疫、护盾或伤害上限挡下时显示「被挡」，没有虚假平血。
@@ -69,19 +70,28 @@ namespace PokemonSkills {
             const speed = p("endeavor", "lungeSpeed", action);
             const radius = p("endeavor", "collisionRadius", action);
             const shove = p("endeavor", "shove", action);
-            const direction = aim(action);
+            const minimumMove = p("endeavor", "minimumMove", action);
+            // 地面扑身投影到水平移动平面：站立的身体带向下分量会被地板判成初始接触。
+            const direction = WorldGeometry.flatUnit(aim(action), action.direction());
+            const directionData = endeavorVector(direction);
+            const scale = radius / 0.45;
             const start = world.observe(self);
             if (start === null) { movementScenes.finish(action, done); return; }
-            let travelled = 0, settled = false;
+            let travelled = 0, settled = false, struckRef = "";
 
-            movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: endeavorVector(direction), scale: radius / 0.45 });
             sound(action, "minecraft:entity.player.attack.weak");
+
+            /** 沿真实身体轨迹铺一道扑身线；每刻只发当刻实际移动的那一小段，判定与画面共用端点。 */
+            function showDash(current: CombatAction, from: CombatPoint, to: CombatPoint): void {
+                movementScenes.show(current, "dash", from, { moment: "dash", direction: directionData, scale: scale,
+                    path: to.minus(from).length() > 0.001 ? [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]] : [] });
+            }
 
             /** 收势：落点播 settle，miss 时补一行浮字。命中/空响的浮字已在各自幕里写出。 */
             function settle(current: CombatAction, missed: boolean, at: CombatPoint): void {
                 if (settled) return;
                 settled = true;
-                WorldFeedback.emit(current.world(), endeavorScene, 1, at, { moment: "settle", scale: radius / 0.45 }, 22);
+                WorldFeedback.emit(current.world(), endeavorScene, 1, at, { moment: "settle", scale: scale }, 22);
                 if (missed) {
                     const body = current.world().observe(current.actor());
                     if (body !== null) WorldFeedback.text(current.world(), body.position().plus(WorldCombat.point(0, 1.2, 0)), endeavorMissText, [], 22);
@@ -90,18 +100,27 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
+            /** 撞实后的越身滑行：全身扫掠、逐刻计总距离；已撞中的身体被排除，实墙或第二个身体会真实截停。 */
             function slide(current: CombatAction, remaining: number, left: number): void {
                 if (settled) return;
                 const scope = current.world();
                 if (remaining <= 0.02 || left <= 0) { settle(current, false, current.origin()); return; }
-                const moved = scope.displace(current.actor(), direction.scale(Math.min(remaining, speed * 0.7)));
-                if (moved < p("endeavor", "minimumMove", current)) { settle(current, false, current.origin()); return; }
+                const before = current.origin();
+                const hit = current.moveSweep(direction.scale(Math.min(remaining, speed * 0.7)), radius,
+                    struckRef === "" ? undefined : JSON.stringify([struckRef]));
+                const after = current.origin(), moved = after.minus(before).length();
+                travelled += moved;
+                showDash(current, before, after);
+                if (hit.blocked() || hit.hitEntity() || moved < minimumMove) { settle(current, false, after); return; }
                 current.after(1, function (next: CombatAction) { slide(next, remaining - moved, left - 1); });
             }
 
             function strike(current: CombatAction, target: CombatActor, at: CombatPoint): void {
                 const scope = current.world();
-                const damage = p("endeavor", "damage", current);
+                const selfBody = scope.observe(self), targetBody = scope.observe(target);
+                // 拉平伤害读的是实际撞上的这个身体，而不是当初选中的目标：拦截者按它自己的生命差结算。
+                const damage = selfBody === null || targetBody === null ? 0
+                    : Math.max(0, Math.round((targetBody.health() - selfBody.health()) * 10) / 10);
                 const actual = endeavorRawHit(current, target, damage, true);
                 if (actual > 0) {
                     const body = scope.observe(target);
@@ -109,37 +128,39 @@ namespace PokemonSkills {
                     const intensity = maximum <= 0 ? 0.6 : Math.min(2.6, 0.4 + actual / maximum * 3.2);
                     WorldFeedback.emit(scope, endeavorScene, 1, at,
                         { moment: "equalize", target: String(target.ref()),
-                            count: Math.round(14 + intensity * 26), scale: radius / 0.45 }, 28);
+                            count: Math.round(14 + intensity * 26), scale: scale }, 28);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), endeavorHitText, [Math.round(actual)], 26);
                     sound(current, "cobblemon:impact.fighting");
-                    if (vault) { slide(current, length * 0.6, 8); return; }
-                    if (scope.valid(target)) scope.displace(target, direction.scale(shove));
+                    if (vault) { struckRef = String(target.ref()); slide(current, length * 0.6, 8); return; }
+                    // 目标推力走原生受击位移，保留抗击退与事件。
+                    if (scope.valid(target)) scope.hitDisplace(target, direction.scale(shove));
                     settle(current, false, at);
                     return;
                 }
                 // 伤害为零：要么是彼此血量已持平（flat），要么是属性免疫/护盾/伤害上限把这一记挡下（blocked）。
                 const blocked = damage > 0.01;
                 WorldFeedback.emit(scope, endeavorScene, 1, at,
-                    { moment: blocked ? "blocked" : "flat", target: String(target.ref()), scale: radius / 0.45 }, 22);
+                    { moment: blocked ? "blocked" : "flat", target: String(target.ref()), scale: scale }, 22);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), blocked ? endeavorBlockText : endeavorFlatText, [], 22);
                 settle(current, false, at);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world();
-                const origin = current.origin();
+                const before = current.origin();
                 const step = Math.min(speed, Math.max(0, length - travelled));
-                if (step <= 0.001) { settle(current, true, origin); return; }
+                if (step <= 0.001) { settle(current, true, before); return; }
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
+                showDash(current, before, current.origin());
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target)) { strike(current, target, hit.position()); return; }
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
-                if (hit.blocked() || moved < p("endeavor", "minimumMove", current) || travelled >= length) {
-                    settle(current, true, origin);
+                if (hit.blocked() || moved < minimumMove || travelled >= length) {
+                    settle(current, true, before);
                     return;
                 }
                 current.after(1, advance);

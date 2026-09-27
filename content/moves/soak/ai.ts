@@ -1,20 +1,22 @@
 /**
- * 浸水 / soak 的伙伴 AI 用途：这招自己的一套出手计划，敌我两面。
+ * 浸水 / soak 的伙伴 AI 用途：敌我两面都用共享的有效类型事实（含玩家与普通／模组生物）。
  *
- * 对敌（world_combat:control）：有一个看得见、够得着（ai.maxChase 内）、视线畅通的宝可梦威胁，而且它不是纯水属性——
- *   只有这种目标才浇得进去。没有属性的生物（原版生物、玩家）没有可换的属性，跳过。
- * 什么时候最想出手：目标带地面属性时 priority 抬到 78——浇成水就摘掉它的电免疫，是队友电招的口子；
- *   带火或岩石时 70，浇成水直接打开雷／草的弱点、同时封掉它自己的火／地本系；其余单／双属性目标 58。
- *   身边有草／电队友时再抬 10（弱点有人吃）；只有火／地／岩队友时压低 12（浇水反而把水本系送给敌人）。
- * 对友（world_combat:bolster）：身边有看得见、正在挨打的队友，且它还没被浇、也不是纯水。浇成水替它挡下
- *   火／水／冰／钢；只有当前的威胁恰好带这几属性时才出手，避免把伙伴浇成怕雷怕草的样子帮了敌人。
- * 对谁出手：敌人是当前威胁；友方是共享伙伴感官挑来的伙伴；已经带着 soak 身份的目标跳过，避免浪费 20 发 PP。
- * 够不到怎么办：reach 就是浇淋距离，由共享接近逻辑把身体带进范围；视线被挡或距离不够时不急。
+ * 对敌（world_combat:control）：目标有效类型还不是纯水、属性未被锁、视线畅通、在考虑距离内就值得浇。
+ *   意愿按**本队实际能打出的进攻属性**算出把目标冲成单一水之后的相性净收益：打开本队能吃的雷／草弱点
+ *   为正，把本队的火／地／岩进路挡掉为负；不再用「身边有没有草／电队友」的粗代理。
+ * 对友（world_combat:bolster）：身边正在挨打、还没被浇、也不是纯水的伙伴；只有当前威胁带火／水／冰／钢时才出手，
+ *   替它挡住这些打击，避免把伙伴浇成怕雷怕草的样子。
  * 配置：ai.maxChase 限制考虑距离；ai.leaveStation 决定驻守时是否离位。
  */
 namespace CompanionBehavior {
+    registerFact("world_combat:move_soak/types", function (access, actor) {
+        return access.valid(actor) ? { types: PokemonDamage.combatants.read(access, actor).types } : null;
+    });
+    function soakTypeFacts(context: WorldBehavior.Context, target: Entity): { types: string[] } | null {
+        return fact<{ types: string[] }>(context, "world_combat:move_soak/types", target);
+    }
     const soakFlood = PokemonSkills.flag("flood", "漫流");
-    soakFlood.help = "开启＝漫流：一次浇透目标与同一阵营的一圈人，但每只维持更短、起手与冷却更久；关闭＝细浇：只盯一个目标，维持更久、出手更快更便宜。覆盖与持续互相取舍。";
+    soakFlood.help = "开启＝漫流：一次浇透目标与同一阵营的一圈人，但每只维持更短、冷却更久；关闭＝细浇：只盯一个目标，维持更久、出手更快更便宜。覆盖与持续互相取舍。";
     const soakChase = PokemonSkills.number("ai.maxChase", "考虑距离", 2, 18, 1);
     soakChase.help = "伙伴只在威胁离自己这么远以内时才考虑浇它；调小只在贴身时用，调大愿意先追过去。";
     const soakStation = PokemonSkills.flag("ai.leaveStation", "驻守时离位");
@@ -23,31 +25,53 @@ namespace CompanionBehavior {
     PokemonSkills.addPreferences("soak", { flood: false, ai: { maxChase: 11, leaveStation: false } },
         [soakFlood, soakChase, soakStation]);
 
-    /** 有属性可换、且不是纯水的宝可梦才浇得进去；事实缺失（非宝可梦）一律跳过。 */
+    /** Every living domain can receive a Water layer, including an empty original type list. */
     function soakEligible(context: WorldBehavior.Context, target: Entity): boolean {
-        const facts = pokemonFacts(context, target);
-        if (!facts || !Array.isArray(facts.types) || facts.types.length === 0) return false;
+        const facts = soakTypeFacts(context, target);
+        if (!facts || !Array.isArray(facts.types)) return false;
         return facts.types.join(",") !== "water";
     }
 
     /** 威胁是不是在用火／水／冰／钢打人：给伙伴披水抗性才真的挡得住，不帮敌人打开雷／草弱点。 */
     function soakDampens(context: WorldBehavior.Context, threat: Entity | null): boolean {
         if (!threat) return false;
-        const facts = pokemonFacts(context, threat);
+        const facts = soakTypeFacts(context, threat);
         if (!facts || !Array.isArray(facts.types)) return false;
         return facts.types.some(type => ["fire", "water", "ice", "steel"].indexOf(type) >= 0);
     }
 
-    /** 身边有没有带这些属性的队友，用来判断把对手浇成水是帮自己还是帮敌人。 */
-    function soakAllyHasType(context: WorldBehavior.Context, wanted: string[]): boolean {
-        const self = source(context), nearby = (context.facts.nearby || []) as Entity[];
+    /** 本队当前能打出的进攻属性：施法者与身边存活友军的有效类型，去重。 */
+    function soakTeamTypes(context: WorldBehavior.Context): string[] {
+        const self = source(context), result: string[] = [];
+        const own = soakTypeFacts(context, self);
+        if (own) own.types.forEach(function (type) { if (result.indexOf(type) < 0) result.push(type); });
+        const nearby = (context.facts.nearby || []) as Entity[];
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
-            if (!other.friendly || other.ref === self.ref || other.health <= 0) continue;
-            const facts = pokemonFacts(context, other);
-            if (facts && Array.isArray(facts.types) && facts.types.some(type => wanted.indexOf(type) >= 0)) return true;
+            if (!other.friendly || other.ref === self.ref || !(other.health > 0)) continue;
+            const facts = soakTypeFacts(context, other);
+            if (!facts) continue;
+            facts.types.forEach(function (type) { if (result.indexOf(type) < 0) result.push(type); });
         }
-        return false;
+        return result;
+    }
+
+    /** 一种进攻属性对一组属性的相性倍率。 */
+    function soakMatchup(attack: string, types: string[]): number {
+        let factor = 1;
+        for (let index = 0; index < types.length; index++) factor *= CobblemonCombat.typeEffectiveness(attack, types[index]);
+        return factor;
+    }
+
+    /** 把目标冲成单一水之后本队进攻的相性净收益：正＝打开本队能吃的雷／草弱点，负＝把本队的火／地／岩进路挡掉。 */
+    function soakNetGain(context: WorldBehavior.Context, target: Entity): number {
+        const facts = soakTypeFacts(context, target);
+        if (!facts || !Array.isArray(facts.types)) return 0;
+        const before = facts.types, after = ["water"], team = soakTeamTypes(context);
+        let gain = 0;
+        for (let index = 0; index < team.length; index++)
+            gain += soakMatchup(team[index], after) - soakMatchup(team[index], before);
+        return gain;
     }
 
     function soakWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
@@ -89,16 +113,8 @@ namespace CompanionBehavior {
             if (!target || target.health <= 0) return 0;
             if (target.friendly) return soakSupports(context, item, target) ? 44 : 0;
             if (!soakWants(context, item, target)) return 0;
-            const facts = pokemonFacts(context, target);
-            if (!facts || !Array.isArray(facts.types)) return 0;
-            // 己方有草或电才能吃到水的弱点；己方只有火／地／岩时浇水反而把水本系送给敌人，压低意愿。
-            const exploit = soakAllyHasType(context, ["grass", "electric"]);
-            const harmed = soakAllyHasType(context, ["fire", "ground", "rock"]);
-            let score = facts.types.indexOf("ground") >= 0 ? 78
-                : facts.types.indexOf("fire") >= 0 || facts.types.indexOf("rock") >= 0 ? 70 : 58;
-            if (exploit) score += 10;
-            if (harmed && !exploit) score -= 12;
-            return Math.max(1, score);
+            const gain = soakNetGain(context, target);
+            return Math.max(1, 58 + Math.max(-20, Math.min(20, Math.round(gain * 8))));
         }
     });
 }

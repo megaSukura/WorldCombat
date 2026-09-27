@@ -50,29 +50,29 @@ const SweetScentDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 无 duration：云一直铺到场地效果结束，后段不再隐形；口径读实际半径并 fit:world，按世界单位铺，不叠 scale。
         cloud: {
-            duration: 40,
             emitters: [
                 {
-                    name: "cloud_base", bind: "point", height: 0.12,
+                    name: "cloud_base", bind: "point", fit: "world", height: 0.12,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 26, shape: { kind: "circle", radius: { data: "scale", fallback: 1 } }, direction: "up",
+                    rate: 26, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } }, direction: "up",
                     speed: [0.01, 0.06],
                     lifetime: [16, 28], size: [0.14, 0.03],
                     color: 0xE8A93A, alpha: [0.5, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "cloud_haze", bind: "point", height: 0.25,
+                    name: "cloud_haze", bind: "point", fit: "world", height: 0.25,
                     particle: "world_combat_core:cobblemon/vanilla/big_smoke_white",
-                    rate: 10, shape: { kind: "circle", radius: { data: "scale", fallback: 1 } },
+                    rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [24, 40], size: [0.3, 0.5],
                     color: 0xF0C64B, alpha: [0.18, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "cloud_motes", bind: "point", height: 0.2,
+                    name: "cloud_motes", bind: "point", fit: "world", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 40, shape: { kind: "circle", radius: { data: "scale", fallback: 1 } }, direction: "up",
+                    rate: 40, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } }, direction: "up",
                     speed: [0.02, 0.09],
                     lifetime: [12, 20], size: [0.06, 0.01],
                     color: 0xFFF3C4, alpha: [0.7, 0], light: "full", maxParticles: 90

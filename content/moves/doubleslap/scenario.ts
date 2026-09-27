@@ -20,7 +20,7 @@ Smoke.scenario("doubleslap", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("doubleslap", caster) > 0, "doubleslap was committed");
             stage.expect(stage.damageTo(foe) > 0, "the slap string dealt damage to the foe");
-            stage.note("slap count (2-5) follows Speed/level and the crossing/straight choice; each slap rolls 85% and only crossing mode nudges the target sideways (design facts verified in the full assembly)", {
+            stage.note("slap count (2-5) follows Speed/level and the crossing/straight choice; each slap rolls its own accuracy and re-checks the real palm-to-body contact and any wall in between; only crossing mode nudges the target sideways and alternates sides, straight mode keeps the same hand; a whiff shows an empty swing with no target spark", {
                 casts: stage.casts("doubleslap", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

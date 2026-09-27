@@ -4,11 +4,12 @@
  * 一句话：施法者身侧先盘起一圈紫晶螺旋气，随即这股力沿瞄准方向扫出一条窄线、缠上第一个碰到的敌人，
  *   由脚到头越拧越紧，一道道流光被从身体里绞出、向上散开；双绞式会再反向拧一记，第二圈朝相反方向收、更亮更密。
  * 色相家族：紫晶（0x9A7BFF）主体、淡紫（0xD8CCFF）细节、深紫（0x5A3FA8）余韵；单一色相。
- * 拍子：起 coil（盘螺旋）→ 击 squeeze（第一拧，向右收）→ 再击 squeeze2（双绞式第二拧，向左收）→ 空 whiff / 撞墙 wall。
+ * 拍子：起 coil（盘螺旋，随实际起手 `data.windup`）→ 击 squeeze（第一拧，向右收紧）→ 再击 squeeze2（双绞式第二拧，向左收紧）→ 空 whiff / 撞墙 wall。
  * 范围：squeeze 的螺旋环半径按 `data.scale`（实际螺旋半径 / 1.2）铺开，画出的圈就是被缠住的范围。
- * 运动：螺旋贴目标向内旋紧；第一拧与第二拧的旋转方向相反（squeeze 的 spin 为正、squeeze2 为负），读作一紧一松的反拧；
- *   被绞出的流光沿目标向上飞出；收拢时环向内收；撞墙时窄线沿 `data.path` 停在接触面。
- * 数：`data.motes`（特攻与等级派生）决定螺旋点与流光量，`data.coil`（等级派生）决定扭转时长，
+ * 运动：每拧是一记**短暂**的收紧脉冲，不是持续握持——幕时长按真实 `data.coil` 收束，spiral 的寿命也压短，
+ *   目标仍可自由移动；第一拧与第二拧的旋转方向相反（squeeze 的 spin 为正、squeeze2 为负），读作一紧一松的反拧；
+ *   被绞出的流光沿目标向上短暂飞出；收拢时环向内收；撞墙时窄线沿 `data.path` 停在接触面。
+ * 数：`data.motes`（特攻与等级派生）决定螺旋点与流光量，`data.coil`（等级派生）决定这一拧收紧持续多久，
  *   `data.girth`（命中当刻的目标生命比例派生）决定威力环与螺旋管的粗细——血越满环越粗、血越少环越细；
  *   `data.intensity`（本拧威力 / 95）抬高亮度，`data.pulse` 区分第一／第二拧。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -17,8 +18,8 @@ const WringoutDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         coil: {
-            duration: 14,
-            exit: { stop: 6, drain: 14 },
+            duration: { data: "windup", fallback: 8 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "spin_up", bind: "source", offset: [0, 0, 0], height: 0.6, fit: "none",
@@ -39,25 +40,25 @@ const WringoutDefinition: ParticleDefinition = {
             ]
         },
         squeeze: {
-            duration: 32,
-            exit: { stop: 14, drain: 22 },
+            duration: { data: "coil", fallback: 22 },
+            exit: { drain: 20 },
             emitters: [
                 {
                     name: "spiral", bind: "target", offset: [0, 0, 0], height: 0.5, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
-                    rate: 40, shape: { kind: "torus", radius: { data: "scale", fallback: 1 }, thickness: { data: "girth", fallback: 0.5 } },
+                    rate: 24, shape: { kind: "torus", radius: { data: "scale", fallback: 1 }, thickness: { data: "girth", fallback: 0.5 } },
                     direction: "inward", speed: [0.02, 0.1], spin: 26,
-                    lifetime: [10, 20], size: [0.3, 0.05],
-                    color: 0x9A7BFF, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 160
+                    lifetime: [8, 14], size: [0.3, 0.05],
+                    color: 0x9A7BFF, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
                     name: "squeeze_ring", bind: "target", offset: [0, 0, 0], height: 0.2, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 3, interval: 6, repeats: 3 },
+                    burst: { count: 3, interval: 6, repeats: 2 },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, thickness: { data: "girth", fallback: 0.4 }, rotation: [90, 0, 0] },
                     direction: "inward", speed: [0.04, 0.14],
-                    lifetime: [10, 18], size: [0.36, 0.6], sizeMode: "index",
-                    color: 0xD8CCFF, alpha: [0.55, 0], light: "full", maxParticles: 30
+                    lifetime: [8, 14], size: [0.36, 0.6], sizeMode: "index",
+                    color: 0xD8CCFF, alpha: [0.55, 0], light: "full", maxParticles: 24
                 },
                 {
                     name: "stream", bind: "target", offset: [0, 0, 0], height: 0.6, fit: "none",
@@ -65,8 +66,8 @@ const WringoutDefinition: ParticleDefinition = {
                     burst: { count: { data: "motes", fallback: 16 } },
                     shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1 } },
                     direction: "up", speed: [0.06, 0.2], gravity: -0.01, drag: 0.95, spin: 12,
-                    lifetime: [10, 20], size: [0.09, 0.02],
-                    color: 0xD8CCFF, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 120
+                    lifetime: [8, 16], size: [0.09, 0.02],
+                    color: 0xD8CCFF, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 90
                 },
                 {
                     name: "flash", bind: "target", offset: [0, 0.4, 0], height: 0.4, fit: "body",
@@ -80,16 +81,16 @@ const WringoutDefinition: ParticleDefinition = {
             ]
         },
         squeeze2: {
-            duration: 32,
-            exit: { stop: 14, drain: 22 },
+            duration: { data: "coil", fallback: 22 },
+            exit: { drain: 20 },
             emitters: [
                 {
                     name: "spiral2", bind: "target", offset: [0, 0, 0], height: 0.5, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
-                    rate: 60, shape: { kind: "torus", radius: { data: "scale", fallback: 1 }, thickness: { data: "girth", fallback: 0.55 } },
+                    rate: 30, shape: { kind: "torus", radius: { data: "scale", fallback: 1 }, thickness: { data: "girth", fallback: 0.55 } },
                     direction: "inward", speed: [0.03, 0.14], spin: -32,
-                    lifetime: [10, 20], size: [0.34, 0.06],
-                    color: 0xB79CFF, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 220
+                    lifetime: [8, 14], size: [0.34, 0.06],
+                    color: 0xB79CFF, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 110
                 },
                 {
                     name: "stream2", bind: "target", offset: [0, 0, 0], height: 0.6, fit: "none",
@@ -97,8 +98,8 @@ const WringoutDefinition: ParticleDefinition = {
                     burst: { count: { data: "motes", fallback: 14 } },
                     shape: { kind: "sphere_surface", radius: { data: "scale", fallback: 1 } },
                     direction: "up", speed: [0.08, 0.24], gravity: -0.01, drag: 0.95, spin: -14,
-                    lifetime: [10, 20], size: [0.1, 0.02],
-                    color: 0xE6DEFF, alpha: [0.75, 0], light: "full", bloom: 0.35, maxParticles: 140
+                    lifetime: [8, 16], size: [0.1, 0.02],
+                    color: 0xE6DEFF, alpha: [0.75, 0], light: "full", bloom: 0.35, maxParticles: 90
                 },
                 {
                     name: "flash2", bind: "target", offset: [0, 0.4, 0], height: 0.4, fit: "body",

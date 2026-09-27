@@ -15,6 +15,31 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 18);
     }
 
+    /**
+     * 用本次实际振鸣半径、目标脚高与真实遮挡估这一发能扫到几个敌人：
+     * blast 与执行同一条公式；水平距离之外、脚高差过远或被墙挡住的对象不算。
+     */
+    function waterpulseClusterCount(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const access = CompanionBehavior.world(context);
+        const blast = Math.max(0.5, p("waterpulse", "blast", access));
+        const self = CompanionBehavior.source(context);
+        const feet = function (entity: CompanionBehavior.Entity): number {
+            return entity.point[1] - (typeof entity.height === "number" ? entity.height : 1.4) / 2;
+        };
+        const targetFeet = feet(target), nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref || other.ref === self.ref) continue;
+            const dx = other.point[0] - target.point[0], dz = other.point[2] - target.point[2];
+            if (Math.sqrt(dx * dx + dz * dz) > blast) continue;
+            if (Math.abs(feet(other) - targetFeet) > 2.8) continue;
+            if (!access.clear(CompanionBehavior.point(target.point), CompanionBehavior.point(other.point))) continue;
+            count++;
+        }
+        return count;
+    }
+
     CompanionBehavior.registerUse("waterpulse", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -30,14 +55,7 @@ namespace PokemonSkills {
             if (!target || !waterpulseWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
             let score = CompanionBehavior.distance(self.point, target.point) <= capability.data.range ? 20 : 0;
-            if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
-                const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
-                for (let i = 0; i < nearby.length; i++) {
-                    const other = nearby[i];
-                    if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref || other.ref === self.ref) continue;
-                    if (CompanionBehavior.distance(other.point, target.point) <= 3.2) { score += 10; break; }
-                }
-            }
+            if (CompanionBehavior.ai<boolean>(capability, "cluster", true) && waterpulseClusterCount(context, target) > 0) score += 10;
             if (CompanionBehavior.ai<boolean>(capability, "fresh", true) && CompanionBehavior.status(context, target, "confusion")) score -= 6;
             return score;
         }

@@ -84,13 +84,16 @@ namespace PokemonSkills {
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         const landed = impact(current, hit, quickattackId, power,
                             { damage: damageSpec(quickattackId, "strike"), contact: true });
+                        // 原生拒绝这次伤害时只收势，不播撞实的成功爆点与浮字。
                         if (landed) {
                             const away = hit.position().minus(origin);
                             if (scope.valid(victim) && away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
+                            WorldFeedback.emit(scope, quickattackScene, 1, hit.position(),
+                                { moment: "strike", scale: scale, backward: backward, intensity: intensity }, 8);
+                            finish(current, hit.position(), "strike", quickattackHitText);
+                        } else {
+                            finish(current, hit.position(), "miss", quickattackMissText);
                         }
-                        WorldFeedback.emit(scope, quickattackScene, 1, hit.position(),
-                            { moment: "strike", scale: scale, backward: backward, intensity: intensity }, 8);
-                        finish(current, hit.position(), "strike", quickattackHitText);
                     } else {
                         finish(current, current.origin(), "miss", quickattackMissText);
                     }

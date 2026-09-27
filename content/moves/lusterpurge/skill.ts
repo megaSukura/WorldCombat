@@ -47,18 +47,21 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
-            // 预告细亮芯：与稍后 execute 的第一阶段同向、同长；只读 local 计算，随动作清理。
-            const body = action.sense().observe(action.actor());
+            // 预告细亮芯：与稍后 execute 的第一阶段同向、同长，并在同一处被墙截断，所以预备芯和实际芯停在同一面墙上。
+            const sense = action.sense();
+            const body = sense.observe(action.actor());
             const origin = body === null ? action.origin() : body.position();
             let direction = action.targetPosition().minus(origin);
             if (direction.length() < 0.05) direction = action.direction();
             direction = direction.length() < 0.02 ? action.direction() : direction.unit();
             const preview = p("lusterpurge", "beamLength", action.sense());
-            const end = origin.plus(direction.scale(preview));
+            let end = origin.plus(direction.scale(preview));
+            const clip = WorldGeometry.blockHit(sense, origin, end);
+            if (clip !== null) end = clip.position();
             action.present("world_combat:lusterpurge:" + action.id(), lusterpurgeScene, 1, origin,
                 JSON.stringify({ moment: "windup", direction: [direction.x(), direction.y(), direction.z()],
                     path: [[origin.x(), origin.y(), origin.z()], [end.x(), end.y(), end.z()]],
-                    length: preview, focus: config && config.focus ? 1 : 0 }));
+                    length: end.minus(origin).length(), focus: config && config.focus ? 1 : 0 }));
             return prepare;
         },
         execute: function (action, move, config, done) {

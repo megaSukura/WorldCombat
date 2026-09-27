@@ -7,9 +7,10 @@
  * 三幕：
  *   起（windup，提交前）：收拢翅膀、屈腿压低，只播预告。
  *   腾（execute 前半）：提交后垂直弹起到 altitude 高度；头顶被压住时用原生空域探针沿实际能升到的高度起跳。
- *   冲（execute 后半 → impact / land）：从最高点沿一条穿过所选落点的斜线俯冲，逐刻推进并 trace；
- *       线上遇到的非友方依次结算 dive 接触伤害、各按 recoil 反伤自己、沿俯冲方向被带开 push 格；
- *       最多穿 pierceCount 个人（共享结算按每次命中分别反震）。落地或走完 swoop 即收势。
+ *   冲（execute 后半 → impact / land）：从最高点沿一条穿过所选落点的斜线俯冲，逐剩余短段用整副身体扫掠；
+ *       只略过已经触及的实体，紧邻的第二个身体仍会被撞到；线上遇到的非友方依次结算 dive 接触伤害、
+ *       各按 recoil 反伤自己、沿俯冲方向被带开 push 格；最多穿 pierceCount 个人（共享结算按每次命中分别反震）。
+ *       走完 swoop、撞墙或被身体挡下就停止推进；若此时仍在空中则正常落下，落地一刻才开始收势起尘。
  *
  * 选取：kind 为 aim，可点选落点或只给方向空掠；落点只预告可达路线，实际受原生碰撞限制，不穿顶/墙。
  * 终点反馈取落地一刻的真实身体位置，而不是最初的瞄准点。
@@ -79,6 +80,7 @@ namespace PokemonSkills {
             const scale = radius / 0.6;
             const intensity = Math.max(0.6, Math.min(2.4, power / 115));
             const stuck: { [ref: string]: boolean } = {};
+            const stuckList: string[] = [];
             const target: CombatActor | null = action.target();
             let struck = 0, settled = false, travelled = 0, climbedTo = 0;
             let direction = action.direction();
@@ -87,7 +89,8 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.aerialace.actor_1");
             sound(action, "cobblemon:animation.plumage.wing_flap.medium");
 
-            function finish(current: CombatAction): void {
+            /** 落地：只在身体真正着地时收势并起尘；停在空中不算落地。 */
+            function land(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world(), body = scope.observe(current.actor());
@@ -101,33 +104,65 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
+            /** 俯冲走完/穿满后停止推进；仍在空中就正常落下，落地才收势起尘。 */
+            function settle(current: CombatAction, guard: number): void {
+                if (settled) return;
+                const scope = current.world(), body = scope.observe(actor);
+                if (body === null) { settled = true; movementScenes.finish(current, done); return; }
+                if (body.grounded() || guard >= 100) { land(current); return; }
+                current.after(1, function (next) { settle(next, guard + 1); });
+            }
+
+            /** 单一接触的结算：有效伤害才计命中并播成功爆点；被拒绝/免疫只记接触预算，不再命中计。 */
+            function strikeContact(current: CombatAction, scope: CombatWorld, victim: CombatActor, hit: CombatImpact): boolean {
+                const ref = String(victim.ref());
+                if (stuck[ref]) return false;
+                stuck[ref] = true;
+                stuckList.push(ref);
+                if (struck >= pierceCount) return false;
+                const landed = impact(current, hit, "bravebird", power,
+                    { damage: damageSpec("bravebird", "dive"), contact: true, recoil: recoil });
+                if (!landed) return false;
+                struck++;
+                WorldFeedback.emit(scope, bravebirdScene, 1, hit.position(),
+                    { moment: "impact", target: ref, feathers: feathers, scale: scale,
+                        intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 28);
+                sound(current, "cobblemon:move.aerialace.target");
+                if (scope.valid(victim)) {
+                    scope.hitDisplace(victim, direction.scale(push));
+                    WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.4, 0)), bravebirdHitText, [], 26);
+                }
+                return true;
+            }
+
             function dive(current: CombatAction): void {
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { finish(current); return; }
-                const step = Math.min(pace, Math.max(0, swoop - travelled));
-                if (step <= 0.001 || struck >= pierceCount) { finish(current); return; }
-                const origin = self.position(), delta = direction.scale(step);
-                const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.hitEntity()) {
-                    const victim = hit.target(), point = hit.position();
-                    if (victim !== null && !scope.friendly(victim) && !stuck[String(victim.ref())]) {
-                        stuck[String(victim.ref())] = true;
-                        const landed = impact(current, hit, "bravebird", power,
-                            { damage: damageSpec("bravebird", "dive"), contact: true, recoil: recoil });
-                        WorldFeedback.emit(scope, bravebirdScene, 1, point,
-                            { moment: "impact", target: String(victim.ref()), feathers: feathers, scale: scale,
-                                intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 28);
-                        sound(current, "cobblemon:move.aerialace.target");
-                        if (landed && scope.valid(victim)) {
-                            scope.hitDisplace(victim, direction.scale(push));
-                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), bravebirdHitText, [], 26);
+                if (self === null) { settle(current, 0); return; }
+                if (struck >= pierceCount) { settle(current, 0); return; }
+                let budget = Math.min(pace, Math.max(0, swoop - travelled));
+                if (budget <= 0.001) { settle(current, 0); return; }
+                const origin = self.position();
+                let stop = false, guard = 0;
+                // 逐剩余短段用整副身体扫掠：只略过已触及实体，紧邻的第二个身体仍会被撞到；不裸走 remaining 漏后体。
+                while (budget > 0.001 && guard++ < 16) {
+                    const before = current.origin();
+                    const hit = current.moveSweep(direction.scale(budget), radius, JSON.stringify(stuckList));
+                    const after = current.origin();
+                    const moved = after.minus(before).length();
+                    travelled += moved; budget -= moved;
+                    if (hit.hitEntity()) {
+                        const victim = hit.target();
+                        if (victim !== null && !scope.friendly(victim) && !stuck[String(victim.ref())]) {
+                            strikeContact(current, scope, victim, hit);
+                            if (struck >= pierceCount) { stop = true; break; }
+                            continue;
                         }
-                        struck++;
+                        stop = true; break;   // 友体或无法再推进的身体：真实停住
                     }
+                    if (hit.blocked()) { stop = true; break; }
+                    if (moved < minimumMove) { stop = true; break; }
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < minimumMove || travelled >= swoop) { finish(current); return; }
+                if (stop || travelled >= swoop) { settle(current, 0); return; }
                 movementScenes.show(current, "dive", origin, { moment: "dive", feathers: feathers, scale: scale, intensity: intensity,
                         direction: [direction.x(), direction.y(), direction.z()], height: climbedTo,
                         ratio: Math.min(1, travelled / Math.max(0.001, swoop)) });
@@ -137,7 +172,7 @@ namespace PokemonSkills {
             function beginDive(current: CombatAction): void {
                 movementScenes.stop(current, "climb");
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { finish(current); return; }
+                if (self === null) { settled = true; movementScenes.finish(current, done); return; }
                 const from = self.position();
                 const observed = target !== null ? scope.observe(target) : null;
                 const aimPoint = observed !== null ? observed.position() : action.targetPosition();
@@ -148,19 +183,19 @@ namespace PokemonSkills {
 
             function climb(current: CombatAction, climbed: number): void {
                 const scope = current.world(), self = scope.observe(actor);
-                if (self === null) { finish(current); return; }
+                if (self === null) { settled = true; movementScenes.finish(current, done); return; }
                 climbedTo = climbed;
                 if (climbed >= altitude - 0.05) { beginDive(current); return; }
                 const rise = Math.min(pace, altitude - climbed);
-                const from = self.position();
-                // 头顶被压住时用原生空域探针沿实际高度起跳，不做虚假升高。
+                // 头顶被压住时用原生空域探针沿实际高度起跳，不做虚假升高；探针用完整身体的真实脚点。
+                const feet = self.position().minus(WorldCombat.point(0, self.height() / 2, 0));
                 if (LivingActions.hasFreeSpace(scope) && !LivingActions.freeSpace(scope,
-                    from.plus(WorldCombat.point(0, rise + 0.35, 0)), Math.max(0.5, self.width() * 0.8), Math.max(0.8, self.height() * 0.8))) {
+                    feet.plus(WorldCombat.point(0, rise + 0.35, 0)), Math.max(0.5, self.width() * 0.8), Math.max(0.8, self.height() * 0.8))) {
                     beginDive(current); return;
                 }
                 const moved = scope.displace(actor, WorldCombat.point(0, rise, 0));
                 if (moved < rise * 0.5) { beginDive(current); return; }   // 头顶被压住：弹不起来就从这里俯冲
-                movementScenes.show(current, "climb", from, { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0, height: climbed + moved });
+                movementScenes.show(current, "climb", self.position(), { moment: "climb", feathers: feathers, scale: scale, intensity: intensity, high: high ? 1 : 0, height: climbed + moved });
                 current.after(1, function (next) { climb(next, climbed + moved); });
             }
 

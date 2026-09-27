@@ -12,7 +12,7 @@ Smoke.scenario("aurorabeam", function (stage) {
         stage.expect(stage.casts("aurorabeam", seel) > 0, "极光束被射出来了");
         stage.expect(stage.damageTo(machop) > 0, "虹光打到了目标身上");
         stage.after(15, function () {
-            stage.note("降攻（基础 10% 起）是随机结果；落点会租出一小片霜（minecraft:packed_ice），到期原方块回来。冰面折射只在真实撞到已有雪/冰表面且有有效 blockFace 时发生，且总路程不超过射程——这段几何依赖具体瞄准，不在 smoke 内硬断言。",
+            stage.note("降攻（基础 10% 起）是随机结果，且只按原生实际接受的 delta 报告（到下限或免疫时不假报）；落点按真实顶面逐格租出一小片霜（minecraft:packed_ice），到期原方块回来。冰面折射只在真实撞到已有雪/冰表面且有有效 blockFace 时发生，折射起点偏移也计入总路程、总路程不超过射程——这段几何依赖具体瞄准，不在 smoke 内硬断言。",
                 { casts: stage.casts("aurorabeam", seel), damage: Math.round(stage.damageTo(machop) * 10) / 10,
                   blocks: stage.changedBlocks().length });
             stage.done();

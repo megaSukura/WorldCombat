@@ -7,16 +7,18 @@
  *
  * 两幕：
  *   起（read，提交前）：缩颈、喙尖聚一点微光，只播预告。
- *   啄（jab → hit / plummet / whiff，提交后）：朝目标垫进 `lunge` 格，沿身前 `reach` 格长、`beak` 为半径的短线
- *       取第一个非友方结算 `peck` 接触伤害；离地目标乘 `airBonus`，再以受原生碰撞与击退抗性约束的下压把它按回地面
- *       （实际下降才播「啄落」，免疫或抗性挡下时不补写位移）；没啄中只留一点乱羽。
+ *   啄（jab → hit / plummet / whiff，提交后）：朝目标垫进 `lunge` 格，随后从真实头部高度朝身前送出
+ *       `reach` 格的一条短喙线，被墙截断到接触面；沿这条线取最近的一个非友方结算 `peck` 接触伤害。
+ *       离地目标乘 `airBonus`，再以受原生碰撞与击退抗性约束的下压把它按回地面；实际下降才播「啄落」，
+ *       免疫或抗性挡下时不补写位移；没啄中只留一点乱羽。墙外的目标不在截断后的线上。
  *
  * 选取：`kind: "aim"`——可点任意阵营实体或一个世界点，朝方向也能空啄；命中权限仍由命中层判断。
  *
  * 与同族分开：啄钻是原地旋转、连续几口把目标往后顶的钻孔，龙爪是宽弧重斩，角撞是顶住推走，木枝突刺是从最远处直刺；
  * 啄凭「贴脸、单发、对空下压」认出来。
  *
- * 配置 `dive` 由公式改威力、射程、前探与对空，由 resolve 改时序；提交后才触碰世界。
+ * 配置 `dive` 由公式改威力、射程、前探与对空，由 resolve 改时序；提交后才触碰世界。该选项是**前探式**
+ * （整个人探身扑出），不是下俯。
  */
 namespace PokemonSkills {
     const peckScene = "world_combat:move_peck";
@@ -28,16 +30,6 @@ namespace PokemonSkills {
     function peckHeading(direction: CombatPoint): CombatPoint {
         const flat = WorldCombat.point(direction.x(), 0, direction.z());
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
-    }
-
-    /** 啄线判定与画面共用的四个顶点：从身体高度沿方向铺 `reach` 格、半宽 `half` 的窄带。 */
-    function peckLane(origin: CombatPoint, heading: CombatPoint, reach: number, half: number): number[][] {
-        const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const near = origin.plus(WorldCombat.point(0, -0.05, 0));
-        const far = near.plus(heading.scale(reach));
-        const a = near.plus(side.scale(half)), b = near.minus(side.scale(half));
-        const c = far.minus(side.scale(half)), d = far.plus(side.scale(half));
-        return [[a.x(), a.y(), a.z()], [b.x(), b.y(), b.z()], [c.x(), c.y(), c.z()], [d.x(), d.y(), d.z()]];
     }
 
     define({
@@ -59,7 +51,7 @@ namespace PokemonSkills {
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("peck", "reach", pokemon), geometry: "line", style: "peck", color: 0xCFE8FF,
-                label: config && config.dive === true ? "俯冲啄" : "啄" };
+                label: config && config.dive === true ? "探身啄" : "啄" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon: pokemon, skill: skills["peck"], detail: { values: config },
@@ -80,7 +72,6 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const dive = config && config.dive === true;
             const heading = peckHeading(aim(action));
             const reach = Math.max(1.4, p("peck", "reach", action));
             const beak = Math.max(0.22, p("peck", "beak", action));
@@ -103,26 +94,37 @@ namespace PokemonSkills {
             }
             const moved = world.observe(actor);
             const origin = moved === null ? action.origin() : moved.position();
-            const path = peckLane(origin, heading, reach, beak);
+            // 真实喙线：从实际头部高度朝身前送出 reach 格，被墙截断到接触面。
+            const head = origin.plus(WorldCombat.point(0, moved === null ? 0.4 : Math.max(0, Math.min(0.7, moved.height() * 0.3)), 0));
+            let tip = head.plus(heading.scale(reach));
+            const wall = WorldGeometry.blockHit(world, head, tip);
+            if (wall !== null) tip = wall.position();
+            const path = [[head.x(), head.y(), head.z()], [tip.x(), tip.y(), tip.z()]];
 
             sound(action, "minecraft:entity.player.attack.weak");
-            WorldFeedback.emit(world, peckScene, 1, origin,
-                { moment: "jab", path: path, direction: [heading.x(), heading.y(), heading.z()],
-                    reach: reach, feathers: feathers, scale: scale, intensity: intensity }, 16);
+            WorldFeedback.emit(world, peckScene, 1, tip,
+                { moment: "jab", path: path, tip: [tip.x(), tip.y(), tip.z()], from: [head.x(), head.y(), head.z()],
+                    direction: [heading.x(), heading.y(), heading.z()], reach: reach, feathers: feathers, scale: scale, intensity: intensity }, 16);
 
-            const found: CombatActor[] = [];
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(origin, heading, reach, beak, { below: 1.0, above: 1.6 }),
-                function (candidate) { if (found.length === 0) found.push(candidate); });
+            // 沿真实喙线取最近的一个非友方；被墙截断后，墙外的目标不在线上。
+            const found: { actor: CombatActor; facts: CombatObservation; distance: number }[] = [];
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(head, tip, beak),
+                function (candidate: CombatActor, facts: CombatObservation) {
+                    if (facts.friendly() || String(candidate.ref()) === String(actor.ref())) return;
+                    const contact = WorldGeometry.closestOnSegment(facts.position(), head, tip);
+                    found.push({ actor: candidate, facts: facts, distance: contact.minus(head).length() });
+                });
+            found.sort(function (a, b) { return a.distance - b.distance; });
 
             if (found.length === 0) {
-                WorldFeedback.emit(world, peckScene, 1, origin.plus(heading.scale(reach * 0.8)),
+                WorldFeedback.emit(world, peckScene, 1, tip,
                     { moment: "whiff", feathers: Math.round(feathers * 0.6), scale: scale }, 16);
-                WorldFeedback.text(world, origin.plus(heading.scale(reach * 0.8)).plus(WorldCombat.point(0, 1.0, 0)), peckMissText, [], 20);
+                WorldFeedback.text(world, tip.plus(WorldCombat.point(0, 1.0, 0)), peckMissText, [], 20);
                 done(action);
                 return;
             }
 
-            const victim = found[0];
+            const victim = found[0].actor;
             const foe = world.observe(victim);
             if (foe === null) { done(action); return; }
             const airborne = !foe.grounded();

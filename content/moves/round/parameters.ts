@@ -78,7 +78,7 @@ namespace PokemonSkills {
             F.base(1.1).plus(F.stat("speed").minus(60).times(0.004)).clamp(0.8, 1.6).round(2),
             "歌速", {
                 unit: "格/刻",
-                description: "这句歌掠过路径的速度；快的个体唱得越急，画面里的音符也走得越快。"
+                description: "唱出这句时音符从身体散开的速度；快的个体散得越急。它只驱动画面，声音的伤害在出手一刻瞬时结算，不由它决定抵达。"
             }),
         /** 落点半径：基础 1.0 格，碰撞箱每比 1.4 高 1 格加 0.35，夹在 0.7..1.8。 */
         splash: formula(

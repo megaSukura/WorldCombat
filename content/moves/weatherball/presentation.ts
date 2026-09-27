@@ -5,7 +5,8 @@
  * 球沿直线飞出、拖一条同色尾迹 → 命中处炸开一口同色元素与一圈扩散环；无天气时球是灰白色、光点也少。
  * 色相家族：收来的元素色（data.tint）为主，细节近白。数量由机制值驱动：聚气光点 = data.motes，
  * 命中粒子 = data.bursts，光环直径 = data.halo，天色是否可收由 data.charged 改变亮度与密度。
- * 拍子：预告（windup）→ 聚（gather）→ 飞（flight）→ 击（impact）／空（fizzle）。
+ * 拍子：预告（windup）→ 聚（gather）→ 飞（flight）→ 击（impact，颜色与属性都用发射快照）／哑（immune，被免疫）／空（fizzle，撞块）。
+ * impact／immune 都绑命中点（data.point），目标被击杀或免疫后仍在实际接触处收尾；halo 用 data.ring 画成直径。
  */
 const WeatherBallDefinition: ParticleDefinition = {
     moments: {
@@ -64,7 +65,7 @@ const WeatherBallDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 28 },
             emitters: [
                 {
-                    name: "burst", bind: "target", height: 0.5,
+                    name: "burst", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/scaling",
                     burst: { count: { data: "bursts", fallback: 16 } }, shape: { kind: "sphere", radius: 0.35 },
                     direction: "outward", speed: [0.12, 0.32], gravity: 0.015,
@@ -72,7 +73,7 @@ const WeatherBallDefinition: ParticleDefinition = {
                     color: { data: "tint", fallback: 0xA8A878 }, alpha: [1, 0], light: "full", maxParticles: 140
                 },
                 {
-                    name: "flash", bind: "target", height: 0.5,
+                    name: "flash", bind: "point", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: 3 }, shape: { kind: "sphere", radius: 0.2 },
                     direction: "outward", speed: [0.0, 0.04],
@@ -80,12 +81,34 @@ const WeatherBallDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 6
                 },
                 {
-                    name: "ring", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    name: "ring", bind: "point", offset: [0, 0.05, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1 }, shape: { kind: "ring", radius: { data: "scale", fallback: 0.9 } },
+                    burst: { count: 1 }, shape: { kind: "ring", radius: { data: "ring", fallback: 0.45 } },
                     direction: "outward", speed: [0.0, 0.0],
                     lifetime: [10, 20], size: [0.6, 0.2],
                     color: { data: "tint", fallback: 0xA8A878 }, alpha: [0.7, 0], light: "full", maxParticles: 4
+                }
+            ]
+        },
+        immune: {
+            duration: 26,
+            exit: { stop: 8, drain: 20 },
+            emitters: [
+                {
+                    name: "dull", bind: "point", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.03, 0.09], gravity: 0.02,
+                    lifetime: [8, 16], size: [0.07, 0.02],
+                    color: { data: "tint", fallback: 0xA8A878 }, alpha: [0.45, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "ward_ring", bind: "point", offset: [0, 0.05, 0], fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.4 },
+                    direction: "outward", speed: [0.0, 0.0],
+                    lifetime: [10, 18], size: [0.4, 0.16],
+                    color: 0xBFD8F0, alpha: [0.35, 0], light: "world", maxParticles: 3
                 }
             ]
         },

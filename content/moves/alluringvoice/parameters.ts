@@ -10,8 +10,10 @@ namespace PokemonSkills {
     export const alluringvoiceRecoilFraction = 0.05;
     /** 表现里的参考半径：`data.scale = 实际声场半径 / 这个数`。 */
     export const alluringvoiceReferenceReach = 7;
+    /** 错乱存续的托管表现：绑在真实载体的生命周期上，载体一收，飞鸟同时停。 */
+    export const alluringvoiceLingerMark = "world_combat:move_alluringvoice/confusion_linger";
 
-    /** 目标当前正面能力等级合计；0 表示它此刻没有正在生效的强化。 */
+    /** 目标当前正面能力等级合计；0 表示它此刻没有正在生效的强化。追击与近期攻击对宝可梦和普通生物一视同仁。 */
     export function alluringVoiceBoost(world: CombatWorld, actor: CombatActor): number {
         if (!world.valid(actor)) return 0;
         const stages = NativeEffects.effectiveStages(world, actor);
@@ -22,10 +24,10 @@ namespace PokemonSkills {
             if (value > 0) total += value;
         }
         total += MobEffects.levels(world, actor, "beneficial");
-        // 普通生物正追击、玩家刚命中过人时也会被歌声扰乱；强化仍按实际层数延长混乱。
-        if (total === 0 && String(actor.domain()) !== "cobblemon") {
+        // 两个域同一套追击定义：任何战斗者正追击，或过去 4 秒内真正命中过人，都按 1 层触发。强化仍按实际层数延长混乱。
+        if (total === 0) {
             const body = world.observe(actor);
-            if (body && body.attacking() !== null || DamageSemantics.recentAttack(world, actor, 80) !== null) total = 1;
+            if (body !== null && body.attacking() !== null || DamageSemantics.recentAttack(world, actor, 80) !== null) total = 1;
         }
         return total;
     }

@@ -33,7 +33,7 @@ public final class NativePierceChecks {
             require(endless.isRemoved() && ended[0] == 1, "Continuing pierce passed through a block or completed twice");
             endless.discard(); require(ended[0] == 1, "Removed flight completed twice");
 
-            var numbered = flight(combat, level, source, "{\"pierce\":65}", 40, 80, new int[]{0}, new int[]{0}); flights.add(numbered);
+            var numbered = flight(combat, level, source, "{\"homing\":{\"target\":\"\"},\"pierce\":65}", 40, 80, new int[]{0}, new int[]{0}); flights.add(numbered);
             for (int i = 0; i < 65; i++) impact.invoke(numbered, new EntityHitResult(bodies.get(i), bodies.get(i).position()));
             require(!numbered.isRemoved(), "Explicit pierce count was truncated before its final contact");
             impact.invoke(numbered, new EntityHitResult(bodies.get(65), bodies.get(65).position()));

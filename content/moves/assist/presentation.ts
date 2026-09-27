@@ -1,28 +1,28 @@
 /**
  * Client definition for Assist.
  *
- * 一句话：一声呼唤从身体向四周铺开一圈青绿回声与伙伴印记，覆盖到呼唤半径（data.radius），同时按服务端
- * 查到的候选伙伴拉出稀疏连线（world_combat:move_assist_thread 自定义场景）；选定后一条白色传递线从被选中的
- * 伙伴闪到自身，借来的招式随即接手。印记数量随施法者的特攻（data.bonds）增长，落成爆发的数量取实际候选池
- * （data.pool）。
+ * 一句话：一声呼唤在身体四周亮起一圈固定的青绿边界（半径 = data.radius），边界上按候选伙伴拉出稀疏连线
+ * （world_combat:move_assist_thread 自定义场景）；选定后那一条伙伴线收亮成白色、一颗亮点沿真实连线送向自身，
+ * 借来的招式随即接手。印记数量随施法者的特攻（data.bonds）增长，落成爆发的数量取实际候选池（data.pool）。
  *
  * 色相家族：青绿 0x5FD0A0 与淡青 0x8FE8C8（伙伴），白色只用在借来招式落成的一闪与传递线。
- * 拍子：call 0–30t（起：环与印记由近及远）→ borrow 0–22t（击：白闪，收：青环与传递线散开）。
- * 贴图与帧尺寸来自 particle_types.txt。呼唤环绑 point，按机制半径铺开，不随体型缩放。
+ * 拍子：call 与本次实际呼唤同长（data.call，3–18 刻；起：边界环与印记几乎停在呼唤半径上）→ borrow 0–22t
+ * （击：白闪，收：青环散开）。呼唤一结束就交棒，边界环不盖住借来的招式。贴图与帧尺寸来自 particle_types.txt。
+ * 呼唤环绑 point，按机制半径铺开，不随体型缩放。
  */
 const assistDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         call: {
-            duration: 30,
-            exit: { stop: 24, drain: 24 },
+            duration: { data: "call", fallback: 8 },
+            exit: { stop: { data: "call", fallback: 8 }, drain: 24 },
             emitters: [
                 {
                     name: "call_ring", bind: "point", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 20, interval: 6, repeats: 2 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 8 } },
-                    direction: "outward", speed: [0.35, 0.55], spread: 2,
+                    direction: "outward", speed: [0.0, 0.04], spread: 2,
                     lifetime: [16, 22], size: [0.3, 0.08],
                     color: 0x5FD0A0, alpha: [0.55, 0], light: "full", maxParticles: 120
                 },
@@ -31,7 +31,7 @@ const assistDefinition: ParticleDefinition = {
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
                     burst: { count: { data: "bonds", fallback: 6 }, interval: 5, repeats: 3 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 8 } },
-                    direction: "outward", speed: [0.18, 0.34], spread: 8,
+                    direction: "outward", speed: [0.02, 0.07], spread: 8,
                     lifetime: [12, 18], size: [0.14, 0.02],
                     color: 0x8FE8C8, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 160
                 },
@@ -76,14 +76,6 @@ const assistDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.3, 0.5], spread: 2,
                     lifetime: [14, 20], size: [0.3, 0.06],
                     color: 0x8FE8C8, alpha: [0.7, 0], light: "full", maxParticles: 60
-                },
-                {
-                    name: "borrow_thread", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    rate: { data: "pool", fallback: 4 }, trail: { minDistance: 0.25 },
-                    shape: { kind: "polyline" }, direction: "shape", speed: [0.05, 0.14],
-                    lifetime: [7, 12], size: [0.12, 0.03],
-                    color: 0xFFFFFF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 80
                 }
             ]
         }
@@ -93,16 +85,30 @@ const assistDefinition: ParticleDefinition = {
 WorldCombatParticles.scene("world_combat:move_assist", 1, assistDefinition);
 
 /**
- * Sparse candidate threads for Assist. The server lists the partner refs it actually queried; the callback draws
- * one dim line per candidate and the real call radius, then goes quiet once the borrow is settled.
+ * Assist threads. The server lists the partner refs it actually queried (clear line, inside the call radius): the
+ * callback draws the fixed boundary ring and one dim line per candidate. On handover the same entry becomes a single
+ * bright provider→caller line with one mote travelling along the real segment, so the transfer reads directionally.
  */
 WorldCombatClient.scene("world_combat:move_assist_thread", 1, function (frame) {
-    const entry: CombatSceneEntry<{ phase?: string; radius?: number; candidates?: string[]; provider?: string }> = JSON.parse(frame.data());
+    const entry: CombatSceneEntry<{ phase?: string; radius?: number; candidates?: string[]; provider?: string;
+        path?: string[]; start?: number; duration?: number }> = JSON.parse(frame.data());
     if (entry.lifecycle) return;
     const data = entry.data || {};
-    if (data.phase === "handover") return;
     const anchor = JSON.parse(frame.anchor(entry.source));
     if (!anchor) return;
+    if (data.phase === "handover") {
+        const provider = Array.isArray(data.path) && data.path.length ? JSON.parse(frame.anchor(data.path[0])) : null;
+        if (!provider) return;
+        const sx = anchor.x, sy = anchor.y + 0.55, sz = anchor.z;
+        const px = provider.x, py = provider.y + 0.55, pz = provider.z;
+        frame.line(sx, sy, sz, px, py, pz, 0xFFFFFFFF);
+        const start = typeof data.start === "number" ? data.start : frame.serverTick();
+        const span = typeof data.duration === "number" && data.duration > 0 ? data.duration : 18;
+        const t = Math.max(0, Math.min(1, (frame.serverTick() - start) / span));
+        frame.sprite("cobblemon:particle/generic/sparkle/glowingsparkle_cyan",
+            px + (sx - px) * t, py + (sy - py) * t, pz + (sz - pz) * t, 0.36, 0, 0xFFFFFFFF, 0, true);
+        return;
+    }
     const radius = typeof data.radius === "number" ? data.radius : 0;
     if (radius > 0) frame.ring(anchor.x, anchor.y + 0.1, anchor.z, radius, 0x885FD0A0);
     const candidates = Array.isArray(data.candidates) ? data.candidates : [];

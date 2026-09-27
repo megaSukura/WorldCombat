@@ -4,7 +4,8 @@
  * 一句话：低着头、把爆炸头鼓到最大，沿一条线长驱直入；撞中谁就在谁身上炸开一团头毛与尘屑，身体不停继续冲，
  * 直到冲程尽头才收势；一条直线没人就让开，冲过去什么也不碰。
  * 色相家族：深棕（0x6B5236）是爆炸头的毛色，米白（0xE8DFC9）是撞实一刻的冲击，尘土黄（0x9A8A6B）铺在脚下。
- * 拍子：起 windup（鼓毛蓄势）→ 冲 charge（长距离冲刺）＋ track（跟随轨迹的地面尘带）→ impact（每个目标各一次）→ end（收势）。
+ * 拍子：起 windup（鼓毛蓄势）→ 冲 charge（每刻按真实 heading 同步朝向）＋ track（跟随轨迹的地面尘带）→
+ *   impact（每个目标各一次，只在真实落伤时）→ recoil（撞实后朝身后的短震颤）→ end（收势）。
  * 范围：track 的尘带跟着身体走，`data.direction` 给出它朝哪，画的就是这一冲扫过的区域；锁定式转弯时尘带跟着弯。
  * 运动：速度线沿冲撞方向掠过；撞中后头毛与碎屑沿冲撞方向撒开，目标被顶开。
  * 数：`data.hits`（这一冲累计撞中几个）决定命中迸发的头毛数，`data.afro`（体型与速度派生）决定冲线与尘带的密度，
@@ -101,6 +102,29 @@ const HeadchargeDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.08, 0.22], spread: 8,
                     lifetime: [10, 17], size: [0.34, 0.08],
                     color: 0xCFC7BC, alpha: [0.6, 0], light: "world"
+                }
+            ]
+        },
+        recoil: {
+            duration: 16,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    // 撞实后反噬自身：一记朝身后（data.direction 取反）的短速度线震颤。
+                    name: "aftershake", bind: "source", offset: [0, 0.45, 0], height: 0.3, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 10 }, shape: { kind: "box", size: [0.32, 0.24, 0.32] },
+                    direction: "shape", speed: [0.06, 0.22], spread: 16,
+                    lifetime: [5, 10], size: [0.16, 0.03],
+                    color: 0xE8DFC9, alpha: [0.7, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "dust", bind: "source", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 8 }, shape: { kind: "ring", radius: 0.32 },
+                    direction: "outward", speed: [0.04, 0.14], spread: 12,
+                    lifetime: [8, 14], size: [0.09, 0.02],
+                    color: 0x9A8A6B, alpha: [0.5, 0], gravity: 0.03, drag: 0.92, light: "world", maxParticles: 24
                 }
             ]
         },

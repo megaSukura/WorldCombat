@@ -3,7 +3,8 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 9）格内；更远交给共享接近逻辑。
  * 对谁出手：本族最快的一口，最适合截住正在跑动的近身进攻者——对速度快的目标抬一档；
- *   已经完全麻痹的目标按普通伤害价值排序，只按主伤刷，不再为控链加分。
+ *   已经麻痹的目标、以及合法可读到的电属性天生抗麻者，把这口的控制价值调低（伤害与畏缩照常），
+ *   过载式本来就是把预算花在控制上，遇到这两种目标更不该重复投入。
  * 够不到怎么办：牙很短，reach 之内才动手，不够先贴近。
  * 放完之后：麻痹交给共享交战计划，继续按主伤输出。
  */
@@ -13,6 +14,14 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 9);
+    }
+
+    /** 这一口还能带来多少控制收益：已麻不再叠加，电属性天生不麻；非宝可梦缺少类型事实时不加不减。 */
+    function thunderfangControl(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        if (CompanionBehavior.status(context, target, "paralysis")) return -10;
+        const facts = CompanionBehavior.pokemonFacts(context, target);
+        if (facts && facts.types && facts.types.indexOf("electric") >= 0) return -12;
+        return 0;
     }
 
     CompanionBehavior.registerUse("thunderfang", {
@@ -31,6 +40,10 @@ namespace PokemonSkills {
             let score = 21;
             const velocity = CompanionBehavior.velocity(context, target);
             if (velocity && (velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.0025) score += 6;
+            const control = thunderfangControl(context, target);
+            score += control;
+            // 过载式把预算压在控制上，目标已麻或抗麻时再降一档，避免重复花同一份控制收益。
+            if (control < 0 && capability.data.config && capability.data.config.overload === true) score -= 6;
             return score;
         }
     });

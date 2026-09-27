@@ -1,56 +1,80 @@
 /**
  * 大扫除 / tidyup 的出手方式。
  *
- * 核心念头：原地扫开一圈，把身边这片场地里别人留下的陷阱（撒菱、隐形岩、黏黏网、毒菱）连根拔起，
+ * 核心念头：原地一次扫开一圈，把身边这片场地里别人留下的陷阱（撒菱、隐形岩、黏黏网、毒菱）连根拔起，
  *   把近处的替身一并扫走；扫完自己轻快起来，攻击与速度各抬一档。它是本族里唯一移走世界里已有东西的一招。
  *
- * 三幕：
+ * 两幕：
  *   起势（windup，提交前）：把扫具拢到身前、压低身形，尘屑在脚边打转；可被打断，不消耗任何东西。
- *   扫（提交后）：按 sweep 半径扫开——同一片场地里声明为入场陷阱的场地效果整片收走，替身按承载效果结束；
- *     只有真正被 dispel 成功的才算清掉（被拒绝的不计入已清）。随后攻击与速度各抬起（原生 +1），
- *     挂上共享身份 world_combat:status/tidyup 的轻快窗口。等级由 boostWindow 拥有并绑在这层轻快载体上。
- *   收（收势）：扬起的一圈尘落下，浮出结果；窗口走完或被清除时，这次抬起的攻与速随窗口收回。
+ *   扫（提交后一次完成）：按 sweep 半径扫开——同一片场地里声明为入场陷阱的场地效果整片收走，替身按各自身体
+ *     的真实位置收走；只有真正被 dispel 成功的才算清掉（被拒绝的不计入已清）。这一扫瞬时完成，之后只播一段
+ *     短促的扬尘回执，不重放没有行为的扫动。随后攻击与速度各抬起（原生 +1），挂上共享身份
+ *     world_combat:status/tidyup 的轻快窗口。等级由 boostWindow 拥有并绑在这层轻快载体上。
+ *   收（收势）：窗口走完或被清除时，这次抬起的攻与速随窗口收回。
  *
  * 与同族分开：其他三支只是调整自己；大扫除会**改变世界**——把对手花时间布下的陷阱一次抹掉，这也是它最大的价值。
- * 没有陷阱可扫时它仍然抬攻速，所以也是一支可用的整备招。
+ * 没有可清的敌方布置时它仍然抬攻速，所以也是一支可用的整备招。
  */
 namespace PokemonSkills {
     function tidyupScan(radius: number): number { return Math.min(32, Math.max(4, Math.ceil(radius) + 2)); }
 
+    /** 一个可被扫掉的场地陷阱：真实位置、类别，以及是否属于敌方（决定 AI 是否值得拆）。 */
+    export interface TidyHazard { id: number; rule: string; position: number[]; foreign: boolean; }
+
     /**
      * 这片场地里的入场陷阱：只按生产者声明的类别识别，不枚举规则 id，新陷阱自动可扫。
-     * 位置与维度由共享查询按真实场地提供。
+     * 位置与维度由共享查询按真实场地提供；边缘相交的大陷阱整片收走。
+     * `foreign` 由陷阱归属者与施法者的关系得出：查不到归属者时按外部威胁处理，不谎报为己方。
      */
-    export function tidyupHazardsNear(world: CombatWorld, centre: CombatPoint, radius: number): { id: number; rule: string; position: number[] }[] {
-        const areas = WorldEffects.hazards(world, centre, radius), result: { id: number; rule: string; position: number[] }[] = [];
-        for (let index = 0; index < areas.length; index++) result.push({ id: areas[index].id, rule: areas[index].rule, position: areas[index].position });
+    export function tidyupHazardsNear(world: CombatWorld, centre: CombatPoint, radius: number): TidyHazard[] {
+        const areas = WorldEffects.hazards(world, centre, radius), result: TidyHazard[] = [];
+        for (let index = 0; index < areas.length; index++) {
+            const owner = world.actor(areas[index].source);
+            result.push({ id: areas[index].id, rule: areas[index].rule, position: areas[index].position,
+                foreign: owner === null ? true : !world.friendly(owner) });
+        }
         return result;
     }
 
-    /** 这片场地里的替身：承载效果挂在主人身上，替身身体半径内或主人半径内部的都算；位置取实际被扫的身体。 */
-    export function tidyupWardsNear(world: CombatWorld, centre: CombatPoint, radius: number): { id: number; position: number[] }[] {
-        const result: { id: number; position: number[] }[] = [], seen: string[] = [];
-        function consider(owner: CombatActor | null, at: number[]): void {
+    /** 一个可被扫掉的替身：真实承载体位置，以及它是否属于敌方。 */
+    export interface TidyWard { id: number; position: number[]; foreign: boolean; }
+
+    /**
+     * 这片场地里的替身：承载效果挂在主人身上，但每个替身有自己真实的身体位置（状态里的 `point`）。
+     * 逐个替身按自己的身体位置过滤，够不到的不算；近处 helper 的远主人不再把所有替身一起纳入。
+     */
+    export function tidyupWardsNear(world: CombatWorld, centre: CombatPoint, radius: number): TidyWard[] {
+        const result: TidyWard[] = [], seen: string[] = [];
+        function consider(owner: CombatActor | null): void {
             if (owner === null) return;
             const ref = String(owner.ref());
             if (seen.indexOf(ref) >= 0) return;
             const wards = world.effects(owner, tidyupWard);
             if (!wards.length) return;
             seen.push(ref);
-            for (let index = 0; index < wards.length; index++) result.push({ id: wards[index].id(), position: at });
+            const foreign = !world.friendly(owner);
+            for (let index = 0; index < wards.length; index++) {
+                let point: number[] | null = null;
+                try {
+                    const state = JSON.parse(String(wards[index].data()));
+                    if (Array.isArray(state.point) && state.point.length === 3
+                        && typeof state.point[0] === "number" && typeof state.point[1] === "number" && typeof state.point[2] === "number")
+                        point = [state.point[0], state.point[1], state.point[2]];
+                } catch (error) { point = null; }
+                if (point === null) continue;
+                const dx = point[0] - centre.x(), dz = point[2] - centre.z();
+                if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+                result.push({ id: wards[index].id(), position: point, foreign: foreign });
+            }
         }
         if (!world.valid(world.source())) return result;
         const actors = world.query(centre, tidyupScan(radius), false);
         for (let index = 0; index < actors.length; index++) {
-            const actor = actors[index], body = world.observe(actor);
-            if (body === null || body.position().minus(centre).length() > radius) continue;
-            const at = [body.position().x(), body.position().y(), body.position().z()];
-            consider(actor, at);
-            const owner = world.helperSource(actor);
-            if (owner !== null) consider(owner, at);
+            consider(actors[index]);
+            const owner = world.helperSource(actors[index]);
+            if (owner !== null) consider(owner);
         }
-        const self = world.observe(world.source());
-        consider(world.source(), self === null ? [centre.x(), centre.y(), centre.z()] : [self.position().x(), self.position().y(), self.position().z()]);
+        consider(world.source());
         return result;
     }
 
@@ -97,7 +121,6 @@ namespace PokemonSkills {
             const haste = Math.max(1, Math.min(2, Math.round(p(tidyupId, "haste", action))));
             const sweep = Math.max(1.5, p(tidyupId, "sweep", action));
             const window = Math.max(80, Math.round(p(tidyupId, "kit", action)));
-            const sweeps = Math.max(2, Math.round(p(tidyupId, "sweeps", action)));
             const debris = Math.max(8, Math.round(p(tidyupId, "debris", action)));
             const here = body.position(), scale = sweep / tidyupReference;
             // 只把真正被 dispel 成功的算作已清；被拒绝的请求不计入，也不显示为已清。
@@ -131,8 +154,8 @@ namespace PokemonSkills {
             }
             if (!windowId) MobEffects.consume(world, actor, tidyupKit);
             WorldFeedback.emit(world, tidyupScene, 1, here,
-                { moment: "sweep", actor: String(actor.ref()), sweep: sweep, scale: scale, sweeps: sweeps, debris: debris,
-                    cleared: cleared, intensity: Math.max(0.8, Math.min(2, debris / 30 + cleared / 3)) }, 34);
+                { moment: "sweep", actor: String(actor.ref()), sweep: sweep, scale: scale, debris: debris,
+                    cleared: cleared, intensity: Math.max(0.8, Math.min(2, debris / 30 + cleared / 3)) }, 18);
             WorldFeedback.emit(world, tidyupScene, 1, here,
                 { moment: "rise", actor: String(actor.ref()), sweep: sweep, scale: scale,
                     rise: gainedRise, haste: gainedHaste, shine: Math.max(0, (gainedRise + gainedHaste) * 7) }, 30);

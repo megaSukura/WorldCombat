@@ -7,55 +7,68 @@
  * 三幕：
  *   腾（windup 播「聚香」）。
  *   铺（提交后）：把香雾送到选定点，用 WorldEffects.field 租借一片会停留的云；云每 5 刻扫一次。
- *   养（持续）：雾里的友方按共享身份 world_combat:status/aromaticmist 挂上真实 MobEffect，特防写入公共能力阶梯；
- *     留在雾里香气不断续上，离雾后香随留香窗口自己走完。
- * 结束：留香窗口到期或被清除时，按该效果等级把特防原样收回。
+ *   养（持续）：雾里的友方按共享身份 world_combat:status/aromaticmist 挂上真实 MobEffect，特防由绑定这份载体的
+ *     boostWindow 临时窗口写入公共能力阶梯；留在雾里香气不断续上，离雾后香随留香窗口自己走完。
+ * 结束：留香窗口到期或被清除时，载体一收，boostWindow 只收回自己这一份贡献；表现随窗口一起停。
  * 反制：香雾只在落点一小片、绕开即可；带走的是有限的一小段窗口，清掉留香即可解。
  */
 namespace PokemonSkills {
     const aromaticScene = "world_combat:move_aromaticmist";
     const aromaticEffect = "world_combat:aromatic_veil";
     const aromaticField = "world_combat:field/aromaticmist";
+    const aromaticContribution = "world_combat:move/aromaticmist";
     const aromaticVeiledText = "world_combat.move.aromaticmist.text.veiled";
     const aromaticSettleText = "world_combat.move.aromaticmist.text.settle";
     const aromaticFadeText = "world_combat.move.aromaticmist.text.fade";
     /** 表现里的参考半径：`data.scale = 实际香雾半径 / 这个数`。 */
     const aromaticReferenceRadius = 3.6;
+    /** 留香低于这个剩余量就再续一次，让载体与 boostWindow 从头同步，避免窗口早于香散而留下失效锚。 */
+    const aromaticRefreshBelow = 30;
 
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function aromaticStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function aromaticRaise(world: CombatWorld, actor: CombatActor, stat: string, want: number): number {
-        const before = aromaticStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, want);
-        return Math.max(0, aromaticStage(world, actor, stat) - before);
+    /** 最近被特殊伤害打中的友方，供 AI 优先照顾；有界清理。 */
+    var aromaticBraced: { [ref: string]: number } = Object.create(null);
+    export function aromaticBracedRecently(world: CombatWorld, ref: string): boolean {
+        var tick = aromaticBraced[ref];
+        if (tick === undefined) return false;
+        if (world.tick() - tick > 120) { delete aromaticBraced[ref]; return false; }
+        return true;
     }
 
-    // 香云的行为：续播画面；对雾里的友方按节流续上留香，第一次进入才真正抬起特防。
+    /**
+     * 给雾里的一个友方续上留香：同一份真实 MobEffect 载体拥有一段 boostWindow，特防贡献随载体成立、
+     * 随载体结束原样收回。重复进入只续载体并让 boostWindow 接管旧窗口（previous），不叠同一来源。
+     */
+    function aromaticVeil(world: CombatWorld, actor: CombatActor, gift: number, veil: number, motes: number): void {
+        const before = NativeEffects.effectiveStage(world, actor, "spd");
+        const previous = MobEffects.read(world, actor, aromaticEffect);
+        const carrier = MobEffects.apply(world, actor, aromaticEffect, veil, 0);
+        if (carrier === null) return;
+        const windowId = NativeEffects.boostWindow(world, actor, { spd: gift }, Math.max(1, carrier.duration()),
+            aromaticContribution, carrier, previous);
+        const granted = Math.max(0, NativeEffects.effectiveStage(world, actor, "spd") - before);
+        const body = world.observe(actor);
+        if (body === null) return;
+        // 贴身薄壳的真实生命周期由 boostWindow 自己拥有：窗口一收，壳就停。
+        if (windowId > 0)
+            WorldFeedback.onEffect(world, windowId, "aromatic:veiled:" + String(actor.ref()), aromaticScene, 1, body.position(),
+                { moment: "veiled", target: String(actor.ref()), gift: granted, motes: motes });
+        // 满 stage 时 granted 可能为 0：保留被雾裹住的身份，但不谎报又加了级数。
+        if (granted > 0)
+            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), aromaticVeiledText, [granted], 28);
+    }
+
+    // 香云的行为：续播画面；对雾里的友方续上留香与特防窗口，只在留香将尽或初进来时才重挂。
     WorldEffects.fieldRule(aromaticField, {
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (!world.friendly(actor)) return;
             const body = world.observe(actor);
             if (body === null) return;
+            const view = MobEffects.read(world, actor, aromaticEffect);
+            if (view !== null && view.duration() > aromaticRefreshBelow) return;
             const gift = Math.max(1, Math.min(2, Math.round(Number(field.data.gift) || 1)));
             const veil = Math.max(40, Math.round(Number(field.data.veilTicks) || 100));
             const motes = Math.max(8, Math.round(Number(field.data.motes) || 20));
-            const view = MobEffects.read(world, actor, aromaticEffect);
-            if (view === null) {
-                const granted = aromaticRaise(world, actor, "spd", gift);
-                MobEffects.apply(world, actor, aromaticEffect, veil, granted);
-                WorldFeedback.emit(world, aromaticScene, 1, body.position(),
-                    { moment: "veiled", target: String(actor.ref()), gift: granted, motes: motes,
-                        intensity: Math.max(0.7, Math.min(2, granted / 2 + 0.4)) }, 24);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), aromaticVeiledText, [granted], 28);
-            } else {
-                // 已在香里：只续时间，不动已记下的等级，避免结算错乱。
-                MobEffects.apply(world, actor, aromaticEffect, veil, view.amplifier());
-            }
+            aromaticVeil(world, actor, gift, veil, motes);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             const centre = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
@@ -135,30 +148,29 @@ namespace PokemonSkills {
         }
     });
 
-    // 留香期：每 20 刻在被裹住的友方身边续一次香点，低密度、慢节奏。
-    WorldCombat.on("world_combat:move_aromaticmist/veiled", "world_combat:mob_effect_tick", "", function (event) {
+    // 携香者挨到特殊伤害时贴身薄壳短闪一下；读实际结算的 damage_applied，只对真正打中的特殊伤反应。
+    WorldCombat.on("world_combat:move_aromaticmist/brace", "world_combat:damage_applied", "", function (event) {
+        const target = event.target();
+        if (target === null) return;
+        const world = event.world();
+        if (!world.valid(target) || MobEffects.read(world, target, aromaticEffect) === null) return;
         const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== aromaticEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 20 !== 0) return;
-        const body = world.observe(actor);
+        if (!(Number(data.actual) > 0) || !CombatStages.special(data)) return;
+        aromaticBraced[String(target.ref())] = world.tick();
+        const body = world.observe(target);
         if (body === null) return;
-        WorldFeedback.keep(world, "aromatic:veiled:" + String(actor.ref()), aromaticScene, 1, body.position(),
-            { moment: "veiled", target: String(actor.ref()), motes: 12, gift: 1 }, 40);
+        WorldFeedback.emit(world, aromaticScene, 1, body.position(), { moment: "brace", target: String(target.ref()) }, 14);
     });
 
-    // 香散：按实际抬到的级数把特防原样收回。
+    // 香散：特防贡献已随载体上的 boostWindow 自行收回，这里只做退场反馈。
     WorldCombat.on("world_combat:move_aromaticmist/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== aromaticEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const loss = Math.min(Math.max(0, Math.round(Number(data.amplifier) || 0)), Math.max(0, aromaticStage(world, actor, "spd")));
-        if (loss > 0) NativeEffects.boost(world, actor, "spd", -loss);
         const body = world.observe(actor);
         if (body === null) return;
-        WorldFeedback.emit(world, aromaticScene, 1, body.position(),
-            { moment: "fade", target: String(actor.ref()), lost: loss }, 22);
+        WorldFeedback.emit(world, aromaticScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 22);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), aromaticFadeText, [], 22);
     });
 }

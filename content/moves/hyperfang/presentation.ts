@@ -2,12 +2,12 @@
  * 必杀门牙 / hyperfang 的客户端表现。
  *
  * 一句话：兽首张大、门牙泛白 → 沿直线扑出、脚边扬尘 → 咬死的一刻炸开骨白牙影与迸溅 →
- * 咬住后目标真实沿选定侧被带三刻、甩线按每刻 actual 位移画 → 被甩懵的目标头顶转起一圈星子。
+ * 咬住后目标真实沿选定侧被甩出一段、甩线按真实位移画 → 被甩懵的目标头顶转起一圈星子。
  * 色相家族：骨白（0xF4EEDC）与暖琥珀（0xF0C878）＋中性尘；饱和琥珀只出现在甩动的弧线与咬中峰值的小面积。
  * 拍子：起 windup（口边聚光）→ 扑 pounce → 咬 bite（峰值）／ miss → 甩 shake（按真实位移，可能没有）→ 懵 stun。
- * 范围：bite／shake／stun 都绑命中目标，画出的就是这一口咬中的位置与大小（data.scale 来自咬合判定）。
- * 运动：pounce 的尘迹沿施法者实际走过的直线铺开；shake 的线沿 data.direction（选定侧）取向、长度取 data.reach（该刻真实位移），
- *      免位移目标不会画甩线，只留咬痕；stun 的星子绕头顶转。
+ * 范围：bite／stun 绑命中目标，画出的就是这一口咬中的位置与大小（data.scale 来自咬合判定）；shake 绑 data.path 的真实位移段。
+ * 运动：pounce 的尘迹沿施法者实际走过的直线铺开；shake 沿 data.path 的真实 from→to 顶点连成侧甩拖痕（bind:"path" + polyline），
+ *      长度就是该次实际位移，免位移目标不会画甩线，只留咬痕；stun 的星子绕头顶转。
  * 数：`data.morsels`（咬合威力派生）决定咬中迸溅量，`data.sparks`（每次侧甩量派生）决定甩动碎屑量，
  * `data.stun`（畏缩持续刻数）决定懵圈的星子量，`data.intensity`（威力 / 84）抬高亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -89,12 +89,11 @@ const HyperfangDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "whip_arc", bind: "target", height: 0.5, offset: [0, 0, 0],
+                    name: "whip_arc", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/scratch_yellow",
                     burst: { count: { data: "sparks", fallback: 20 }, at: 0 },
-                    shape: { kind: "line", length: { data: "reach", fallback: 0.5 } },
-                    orient: "direction", direction: "shape",
-                    speed: [0.12, 0.32], spread: 14,
+                    shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.12, 0.32], spread: 14,
                     lifetime: [5, 10], size: [0.22, 0.04], sizeMode: "index",
                     color: 0xF0C878, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },

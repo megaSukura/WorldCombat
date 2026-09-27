@@ -24,7 +24,7 @@
   "worldcombat.skill.grassyglide.preference.ai.finish.help": "开启：残血目标排得更前，用一记瞬发先手铲收尾；关闭则所有目标同价。",
   "worldcombat.skill.grassyglide.preference.ai.onGrass": "草地上优先",
   "worldcombat.skill.grassyglide.preference.ai.onGrass.help": "开启：自己站在青草场地上时优先出这一招（起手归零、射程与速度更高）；关闭则只按普通近战候选排序。",
-  "world_combat.move.grassyglide.text.plant": "草叶在滑落处扬起",
+  "world_combat.move.grassyglide.text.wake": "滑落处只扬起一撮草叶",
   "world_combat.move.grassyglide.text.miss": "滑空了",
   "worldcombat.skill.grassyglide.description.grass": "本招自己不铺青草场地：它借环境里已经在的青草（青草场地招式、青草制造者特性等都算）。站在真青草上时起手归零、滑得更远更快；草属性招式威力 ×1.3、自己的地震与重踏威力减半这些结算由青草场地本身承担，离地不算。"
 }

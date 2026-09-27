@@ -15,15 +15,17 @@ namespace PokemonSkills {
         return Math.sqrt(target.velocity[0] * target.velocity[0] + target.velocity[2] * target.velocity[2]) > 0.05;
     }
 
-    /** 该点附近已经埋着一只夹子：别再往同一处叠，换个位置或先用手上的招。 */
+    /** 该点附近已经埋着己方一只夹子：按它的实际触发半径去重，别再往同一处叠，换个位置或先用手上的招。 */
     function snaptrapArmedNear(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
         const world = CompanionBehavior.world(context);
         const views = world.effectsOfType("world_combat:snaptrap_armed");
         for (let i = 0; i < views.length; i++) {
+            if (!world.friendly(views[i].source())) continue;
             try {
                 const state = JSON.parse(String(views[i].data())), point = state.point;
+                const radius = typeof state.trigger === "number" && isFinite(state.trigger) ? state.trigger : 1.1;
                 const dx = point[0] - target.point[0], dz = point[2] - target.point[2];
-                if (dx * dx + dz * dz <= 9) return true;
+                if (dx * dx + dz * dz <= (radius + 0.5) * (radius + 0.5)) return true;
             } catch (error) { }
         }
         return false;

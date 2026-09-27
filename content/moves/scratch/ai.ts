@@ -2,7 +2,7 @@
  * 抓 / scratch 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活且在 `ai.maxChase`（默认 4）格内；抓的射程最短，更远先交给共享接近逻辑。
- * 对谁出手：`ai.huntBig`（默认开）把体型宽的对手排得更前——一爪能同时抓中更多道痕；残血目标再加一档收尾。
+ * 对谁出手：`ai.huntBig`（默认开）按目标体宽与实际齿距估算一次能同时抓中几道平行痕，覆盖越多排得越前；残血目标再加一档收尾。
  * 贴到近处时对任何目标都有基础分，可作为低耗填充随手甩出，不挑目标宽窄。
  * 够不到怎么办：这是全族最便宜的招，够不到就先贴近，不急着换别的。
  * 放完之后：目标掉一层血，交回共享顺序决定继续贴脸还是等冷却；它是持续压制时最顺的一记。
@@ -13,6 +13,17 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 4);
+    }
+
+    /** 按当前齿数与总宽算出的齿距，估计这一爪在目标横向宽度上能同时覆盖几道痕。 */
+    function scratchCoverage(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        const world = CompanionBehavior.world(context);
+        const lines = Math.max(2, Math.min(7, Math.round(p("scratch", "lines", world))));
+        const span = Math.max(0.9, Math.min(2.6, p("scratch", "span", world)));
+        if (lines <= 1) return 1;
+        const spacing = Math.max(0.2, span / (lines - 1));
+        const covered = Math.floor((target.width || 0.9) / spacing) + 1;
+        return Math.max(1, Math.min(lines, covered));
     }
 
     CompanionBehavior.registerUse("scratch", {
@@ -32,7 +43,7 @@ namespace PokemonSkills {
             const distance = CompanionBehavior.distance(self.point, target.point);
             if (distance > capability.data.range) return 0;
             let score = 16;
-            if (CompanionBehavior.ai<boolean>(capability, "huntBig", true) && (target.width || 0.9) >= 1.2) score += 8;
+            if (CompanionBehavior.ai<boolean>(capability, "huntBig", true)) score += Math.min(10, (scratchCoverage(context, target) - 1) * 3);
             if (CompanionBehavior.ratio(target) < 0.4) score += 6;
             // 它也是全族最便宜、冷却最短的一记：贴到近处就能当低耗填充，不挑目标宽窄。
             if (distance <= 1.4) score += 3;
@@ -42,7 +53,7 @@ namespace PokemonSkills {
 
     addPreferences("scratch", {}, [
         field(pathOf("sweep"), "宽搔式", "boolean", {
-            help: "开启：爪痕道数 +2、张角放宽，一爪扫到并排或大体型的对手，代价是每道威力 ×0.86、探距更近、起手与冷却更久。关闭（直搔式）：痕少而长、每道更重、出手更快，适合点杀小目标。"
+            help: "开启：爪痕道数 +2、整排加宽，一爪扫到并排或大体型的对手，代价是每道威力 ×0.86、探距更近、起手与冷却更久。关闭（直搔式）：痕少而长、每道更重、出手更快，适合点杀小目标。"
         }),
         number("ai.maxChase", "出手距离", 2, 10, 1),
         flag("ai.huntBig", "优先大体型")

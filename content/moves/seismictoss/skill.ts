@@ -25,6 +25,7 @@ namespace PokemonSkills {
     const seismictossHoldText = "world_combat.move.seismictoss.text.hold";
     const seismictossSlamText = "world_combat.move.seismictoss.text.slam";
     const seismictossMissText = "world_combat.move.seismictoss.text.miss";
+    const seismictossSlipText = "world_combat.move.seismictoss.text.slip";
 
     function seismictossVector(direction: CombatPoint): number[] { return [direction.x(), direction.y(), direction.z()]; }
 
@@ -66,8 +67,6 @@ namespace PokemonSkills {
             const damage = p("seismictoss", "damage", action);
             const radius = p("seismictoss", "collisionRadius", action);
             const holdTicks = Math.max(1, Math.round(p("seismictoss", "holdTicks", action)));
-            const hurlXZ = p("seismictoss", "hurlXZ", action);
-            const hurlUp = p("seismictoss", "hurlUp", action);
             const slamDelay = Math.max(3, Math.round(p("seismictoss", "slamDelay", action)));
             const shockwave = p("seismictoss", "shockwave", action);
             const pinTicks = Math.max(1, Math.round(p("seismictoss", "pinTicks", action)));
@@ -92,11 +91,15 @@ namespace PokemonSkills {
 
             const victimRef = String(victim!.ref());
             const flat = WorldCombat.point(hit.position().x() - body.position().x(), 0, hit.position().z() - body.position().z());
-            const throwDirection = flat.length() < 0.01 ? direction : flat.unit();
+            const grabDirection = flat.length() < 0.01 ? direction : flat.unit();
             const landed = seismictossRawHit(action, victim!, damage, true);
             if (!landed) { done(action); return; }
             const victimBody = world.observe(victim!);
             const grip = victimBody === null ? hit.position() : victimBody.position();
+            // Throw force reads the body actually grabbed, not the originally locked target.
+            const thrownContext = withTarget({ world: world, actor: self, skill: skills["seismictoss"], detail: { values: config } }, victim!);
+            const hurlXZ = p("seismictoss", "hurlXZ", thrownContext);
+            const hurlUp = p("seismictoss", "hurlUp", thrownContext);
             WorldFeedback.emit(world, seismictossScene, 1, grip,
                 { moment: "seize", target: victimRef, count: Math.round(10 + Math.min(40, damage * 0.6)), scale: radius / 0.5 }, 26);
             WorldFeedback.text(world, grip.plus(WorldCombat.point(0, 1.2, 0)), seismictossHoldText, [Math.round(damage)], 26);
@@ -107,14 +110,30 @@ namespace PokemonSkills {
                 done(current);
             }
 
+            /** The pause is an escape window: a foe that moved off or resisted is released, never flown. */
+            function slip(current: CombatAction, at: CombatPoint): void {
+                const scope = current.world();
+                WorldFeedback.emit(scope, seismictossScene, 1, at, { moment: "slip", target: victimRef, scale: radius / 0.5 }, 18);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), seismictossSlipText, [], 20);
+                finish(current);
+            }
+
             function hurl(current: CombatAction): void {
                 const scope = current.world();
                 const thrown = scope.actor(victimRef);
-                const self = scope.observe(current.actor()), facts = thrown === null ? null : scope.observe(thrown);
-                if (thrown === null || facts === null || self === null || facts.position().minus(self.position()).length() > reach + radius
-                    || !scope.clear(self.position(), facts.position())) { finish(current); return; }
-                if (!scope.hitImpulse(thrown, WorldCombat.point(throwDirection.x() * hurlXZ, hurlUp, throwDirection.z() * hurlXZ))) { finish(current); return; }
-                scope.effect(seismictossLanding, thrown, JSON.stringify({ direction: seismictossVector(throwDirection), scale: radius / .5,
+                const selfBody = scope.observe(current.actor()), facts = thrown === null ? null : scope.observe(thrown);
+                if (thrown === null || facts === null || selfBody === null) { finish(current); return; }
+                // Re-verify real body contact after the pause using the native box and the grab envelope, not the locked aim.
+                const closest = scope.closestPoint(thrown, selfBody.position());
+                const touched = closest.minus(selfBody.position()).length() <= reach + radius;
+                const open = WorldGeometry.blockHit(scope, selfBody.position(), closest) === null;
+                if (!touched || !open) { slip(current, facts.position()); return; }
+                const nowFlat = WorldCombat.point(facts.position().x() - selfBody.position().x(), 0, facts.position().z() - selfBody.position().z());
+                const heading = nowFlat.length() < 0.01 ? grabDirection : nowFlat.unit();
+                if (!scope.hitImpulse(thrown, WorldCombat.point(heading.x() * hurlXZ, hurlUp, heading.z() * hurlXZ))) {
+                    slip(current, facts.position()); return;
+                }
+                scope.effect(seismictossLanding, thrown, JSON.stringify({ direction: seismictossVector(heading), scale: radius / .5,
                     shockwave: shockwave, slam: slam, pin: pinTicks }), slamDelay + pinTicks + holdTicks);
                 sound(current, "minecraft:entity.wind_charge.throw");
                 finish(current);

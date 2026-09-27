@@ -7,9 +7,11 @@
  *
  * 三幕：
  *   起式（windup，提交前）：收翅、压低身体，翅上的鳞粉开始松动；可被打断，打断不消耗任何东西。
- *   扬鳞（提交后）：用来源独立的 boostWindow 把特攻、特防、速度各抬起并挂成可见窗口；随后按 flutters 拍
- *     抖落鳞粉，每一拍向左／右交替点踏短侧步——位移读真实回执，遇墙按实际净空缩步，不做无敌或额外躲避。
- *   垂幕（收势）：鳞粉在身周悬停成一圈贴身的幕，浮出结果；窗口走完时鳞粉散落，这三项只收回这一舞的那笔。
+ *   扬鳞（提交后）：按 flutters 拍抖落鳞粉，每一拍向左／右交替点踏短侧步——只做水平侧步，位移读真实回执，
+ *     探到墙或脚底没有支撑就折半缩步，不做无敌或额外躲避。此阶段只有舞迹，没有任何强化。
+ *   垂幕（末拍完成）：最后一拍落定才立起载体、用来源独立的 boostWindow 把特攻、特防、速度各抬起并挂成
+ *     可见窗口，浮出实际 delta；鳞粉在身周悬停成一圈贴身的幕。窗口走完时鳞粉散落，这三项只收回这一舞的那笔。
+ *   舞步被打断、或还没跳完就被取消时，本次强化尚未获得，只留下未完成的舞迹。
  *
  * 与同族分开：剑舞前压连斩、龙之舞螺旋上升、胜利之舞踏步立冠；蝶舞是**左右点踏的扬鳞**，最轻最快、
  * 抬特攻特防速度。
@@ -23,6 +25,15 @@ namespace PokemonSkills {
     /** 表现里的参考半径：`data.scale = 实际鳞幕半径 / 这个数`。 */
     const quiverdanceVeil = 1.1;
     const quiverdanceStats = ["spa", "spd", "spe"];
+
+    /** 侧步落点是否有脚底支撑：探脚下那一格是不是空气／液体之外的真实方块，避免临崖点出半步。 */
+    function quiverdanceSupport(world: CombatWorld, feet: CombatPoint): boolean {
+        const block = world.block(WorldCombat.point(feet.x(), Math.floor(feet.y()) - 1 + 0.5, feet.z()));
+        if (block === null) return false;
+        const id = String(block.id());
+        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
+            && id !== "minecraft:water" && id !== "minecraft:lava" && id !== "minecraft:barrier";
+    }
 
     define({
         freeMovement: true,
@@ -43,8 +54,8 @@ namespace PokemonSkills {
         defaults: { veil: false, ai: { maxChase: 16, minGap: 2 } },
         fields: [flag("veil", "厚幕")],
         indicator: function (config, pokemon) {
-            return { radius: Math.max(1.2, p("quiverdance", "veil", pokemon) + 0.6), geometry: "area", style: "bloom", color: 0xE8B0D8,
-                label: config && config.veil ? "蝶舞 · 厚幕" : "蝶舞" };
+            return { radius: Math.max(0.9, p("quiverdance", "veil", pokemon)), geometry: "circle", style: "bloom", color: 0xE8B0D8,
+                label: config && config.veil ? "蝶舞 · 厚幕（自身鳞幕）" : "蝶舞（自身鳞幕）" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["quiverdance"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -73,51 +84,54 @@ namespace PokemonSkills {
             const beat = Math.max(3, Math.round(p("quiverdance", "beat", action)));
             const span = Math.max(80, Math.round(p("quiverdance", "span", action)));
             const scale = veil / quiverdanceVeil;
-            // 绕当前朝向的侧向：与瞄向垂直，每拍左右交替。
-            const heading = action.direction();
-            const side = heading.length() > 0.01
-                ? WorldCombat.point(-heading.z(), 0, heading.x()).unit()
-                : WorldCombat.point(1, 0, 0);
-            // 三项各自由同一个来源窗口记录实际贡献：到期或提前清除只撤这一舞的那笔，不误扣别处等级。
-            const before = NativeEffects.effectiveStages(world, actor);
-            const previous = MobEffects.read(world, actor, quiverdanceBloom);
-            const carrier = MobEffects.apply(world, actor, quiverdanceBloom, span, 0);
-            if (carrier === null) { done(action); return; }
-            const owned = NativeEffects.boostWindow(world, actor, { spa: gift, spd: gift, spe: gift }, carrier.duration(),
-                quiverdanceContribution, carrier, previous);
-            if (!owned) { world.removeMobEffect(actor, carrier.id(), carrier.key()); done(action); return; }
-            const raised = NativeEffects.effectiveStages(world, actor);
-            const gains = quiverdanceStats.map(stat => Math.max(0, (raised[stat] || 0) - (before[stat] || 0)));
+            // 侧向按水平朝向取：竖直瞄准先归一成平面方向，避免零向量；侧步只做左右点踏。
+            const forward = WorldGeometry.flatUnit(action.direction(), WorldGeometry.facing(world, actor) || undefined);
+            const side = WorldCombat.point(-forward.z(), 0, forward.x());
             const intensity = Math.max(0.6, Math.min(2, scales / 26));
-            // 鳞幕绑在这次真正的三项窗口上，随窗口自然到期或提前清除一起收，贴身跟随而不是铺成地场。
-            WorldFeedback.onEffect(world, owned, "world_combat:move_quiverdance/veil", quiverdanceScene, 1, body.position(),
-                { moment: "veil", actor: String(actor.ref()), scales: Math.max(8, Math.round(scales / 3)), veil: veil, scale: scale });
             const perFlutter = Math.max(4, Math.round(scales / flutters));
             let index = 0, settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            // 末拍真正完成才兑现：先立载体与真实来源窗口，按实际三项 delta 反馈，再把鳞幕绑到这次窗口上。
             function bloom(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
+                const before = NativeEffects.effectiveStages(scope, actor);
+                const previous = MobEffects.read(scope, actor, quiverdanceBloom);
+                const carrier = MobEffects.apply(scope, actor, quiverdanceBloom, span, 0);
+                let gains: number[] = [0, 0, 0];
+                if (carrier !== null) {
+                    const owned = NativeEffects.boostWindow(scope, actor, { spa: gift, spd: gift, spe: gift }, carrier.duration(),
+                        quiverdanceContribution, carrier, previous);
+                    if (owned) {
+                        const raised = NativeEffects.effectiveStages(scope, actor);
+                        gains = quiverdanceStats.map(stat => Math.max(0, Math.round((raised[stat] || 0) - (before[stat] || 0))));
+                        WorldFeedback.onEffect(scope, owned, "world_combat:move_quiverdance/veil", quiverdanceScene, 1, here.position(),
+                            { moment: "veil", actor: String(actor.ref()), scales: Math.max(8, Math.round(scales / 3)), veil: veil, scale: scale });
+                    } else {
+                        scope.removeMobEffect(actor, carrier.id(), carrier.key());
+                    }
+                }
                 WorldFeedback.emit(scope, quiverdanceScene, 1, here.position(),
-                    { moment: "bloom", veil: veil, scale: scale, scales: scales, gift: gift, drift: drift,
+                    { moment: "bloom", veil: veil, scale: scale, scales: scales, gift: gift, gains: gains, drift: drift,
                         intensity: intensity }, 34);
-                WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), quiverdanceText, [gift], 30);
+                WorldFeedback.text(scope, here.position().plus(WorldCombat.point(0, 1.4, 0)), quiverdanceText, gains, 30);
                 scope.sound("minecraft:block.beehive.shear", here.position(), 14, "{}");
                 finish(current);
             }
             function flutterNow(current: CombatAction): void {
                 const scope = current.world(), here = scope.observe(actor);
                 if (here === null) { finish(current); return; }
-                // 短交替侧步：总偏移限制在体宽附近；探针看到墙就折半缩步，读真实位移回执。
+                // 短交替侧步：只查水平净空与脚底支撑，探到墙或临空就折半缩步，读真实位移回执。
                 const lean = index % 2 === 0 ? 1 : -1;
                 let want = sidestep, moved = 0;
                 const self = scope.observe(actor);
                 if (self !== null && want > 0) {
                     const feet = self.position().minus(WorldCombat.point(0, self.height() / 2, 0));
+                    const width = Math.max(0.4, self.width()), height = Math.max(0.6, self.height());
                     for (let attempt = 0; attempt < 2 && want > 0.04; attempt++) {
                         const probe = feet.plus(side.scale(want * lean));
-                        if (scope.freeSpace(probe, Math.max(0.4, self.width()), Math.max(0.6, self.height()))) {
+                        if (scope.freeSpace(probe, width, height) && quiverdanceSupport(scope, probe)) {
                             moved = scope.displace(actor, side.scale(want * lean));
                             break;
                         }

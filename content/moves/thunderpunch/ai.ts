@@ -3,6 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 6）格内；更远交给共享接近逻辑。
  * 对谁出手：`ai.preferCrowd`（默认开）打开时，目标身边还挤着别的敌人就优先——电弧能一起点亮；
+ *   群体估值按配置近似 `chainRange`（基础 3.0，超载式 ×1.3）并确认与目标之间有真实通视（`world.clear`）；
  *   已经在麻痹的目标排得更后（再电它收益小）。
  * 够不到怎么办：快拳射程短，reach 之内才动手，不够先贴近。
  * 放完之后：把挂上麻痹的目标交回共享交战计划，让队友接手减速窗口。
@@ -33,11 +34,17 @@ namespace PokemonSkills {
             let score = 21;
             let crowd = 0;
             if (CompanionBehavior.ai<boolean>(capability, "preferCrowd", true)) {
+                const world = CompanionBehavior.world(context);
+                const over = !!(capability.data.config && capability.data.config.overcharge === true);
+                // 电弧跳跃距离基础 3.0，超载式 ×1.3；这里按配置近似，实际公式在服务端结算。
+                const chainReach = over ? 3.9 : 3.0;
+                const anchor = CompanionBehavior.point(target.point);
                 const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                    if (CompanionBehavior.distance(other.point, target.point) <= 3.2) crowd++;
+                    if (CompanionBehavior.distance(other.point, target.point) <= chainReach
+                        && world.clear(anchor, CompanionBehavior.point(other.point))) crowd++;
                 }
                 if (crowd > 0) score += Math.min(18, crowd * 9);
             }

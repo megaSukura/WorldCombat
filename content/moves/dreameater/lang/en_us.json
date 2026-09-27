@@ -13,7 +13,7 @@
   "worldcombat.skill.dreameater.value.dream": "Dream power",
   "worldcombat.skill.dreameater.value.sap": "Drain share",
   "worldcombat.skill.dreameater.value.reach": "Dream reach",
-  "worldcombat.skill.dreameater.value.mist": "Dream radius",
+  "worldcombat.skill.dreameater.value.mist": "Dream smoke width",
   "worldcombat.skill.dreameater.value.motes": "Dream smoke",
   "worldcombat.skill.dreameater.value.draw": "Wind-up",
   "worldcombat.skill.dreameater.value.settle": "Recovery",
@@ -26,9 +26,12 @@
   "worldcombat.skill.dreameater.preference.ai.maxChase.help": "Only reaches for a sleeping target inside this distance; larger opens from further away.",
   "worldcombat.skill.dreameater.preference.ai.healBelow": "Heal priority threshold",
   "worldcombat.skill.dreameater.preference.ai.healBelow.help": "Below this health ratio the user prefers dream eater as sustain; higher leans on it for healing sooner.",
+  "worldcombat.skill.dreameater.preference.ai.minSleep": "Wind-up sleep margin",
+  "worldcombat.skill.dreameater.preference.ai.minSleep.help": "Only reaches for a sleeper whose remaining sleep is at least this many ticks, so the wind-up can finish before it wakes; higher is pickier, lower grabs short sleeps.",
   "world_combat.move.dreameater.text.feast": "Devoured the dream",
   "world_combat.move.dreameater.text.sap": "Dream restored %1$s",
   "world_combat.move.dreameater.text.wake": "Awake - no dream to eat",
   "world_combat.move.dreameater.text.fade": "The dream slipped out of reach",
+  "world_combat.move.dreameater.text.refused": "The dream mouthful was resisted",
   "worldcombat.skill.dreameater.description.additional": "The target must be asleep; dealing damage wakes it, so a single sleep window usually feeds only one draw."
 }

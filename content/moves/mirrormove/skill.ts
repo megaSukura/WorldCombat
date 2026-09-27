@@ -73,22 +73,42 @@ namespace PokemonSkills {
             const target = action.target();
             const mirrors = Math.max(1, Math.round(p(mirrormoveId, "mirrors", action)));
             const keen = read(config, ["keen"]) === true;
-            action.present("world_combat:move_mirrormove:brace", mirrorScene, 1, action.origin(),
-                JSON.stringify({ moment: "brace", target: target === null ? "" : String(target.ref()), mirrors: mirrors, keen: keen ? 1 : 0 }));
+            const origin = action.origin();
+            let heading = action.targetPosition().minus(origin);
+            if (heading.length() < 0.001) heading = action.direction();
+            const unit = heading.length() > 0.001 ? heading.unit() : action.direction();
+            // 镜屏立在身体前方、朝向对手：按真实碰撞箱沿瞄准方向取身体前点，作为发射器偏移。
+            const body = action.sense().observe(action.actor());
+            let front: number[] = [0, 0, 0];
+            if (body !== null) {
+                const min = body.boundsMin(), max = body.boundsMax();
+                const hx = (max.x() - min.x()) / 2, hz = (max.z() - min.z()) / 2;
+                const along = Math.abs(unit.x()) * hx + Math.abs(unit.z()) * hz + 0.08;
+                front = [unit.x() * along, 0, unit.z() * along];
+            }
+            action.present("world_combat:move_mirrormove:brace", mirrorScene, 1, origin,
+                JSON.stringify({ moment: "brace", target: target === null ? "" : String(target.ref()), mirrors: mirrors,
+                    keen: keen ? 1 : 0, direction: [unit.x(), unit.y(), unit.z()], front: front }));
             action.after(Math.max(1, Math.round(p(mirrormoveId, "tempo", action))), function (current) {
                 const world = current.sense();
                 if (target !== null && String(target.domain()) !== "cobblemon") {
                     const replay = NativeAttackProjection.recent(world, target, p(mirrormoveId, "focus", current));
                     const at = world.observe(target);
-                    if (!replay || !at || !world.clear(current.origin(), world.closestPoint(target, current.origin()))) { current.reject("no-mirror"); return; }
+                    const closest = at === null || target === null ? null : world.closestPoint(target, current.origin());
+                    if (!replay || closest === null || !world.clear(current.origin(), closest)) { current.reject("no-mirror"); return; }
                     NativeAttackProjection.prepare(current, replay);
                     current.commit(p(mirrormoveId, "recharge", current));
                     playNativeCopy(current, replay, mirrormoveId, p(mirrormoveId, "edge", current), mirrorScene,
                         p(mirrormoveId, "aftercast", current), replay.kind === "contact" ? "world_combat.move.mirrormove.text.native_contact" : "world_combat.move.mirrormove.text.native_projectile");
                     return;
                 }
+                // 正式招与原生分支用同一套距离/视线核对，再真正消费；目标脱视、过期或隔墙一律不折。
                 const found = mirrorRead(world, target);
-                const options = found ? mirrorCall(current, found, target) : null;
+                const echoBody = target === null ? null : world.observe(target);
+                const closest = echoBody === null || target === null ? null : world.closestPoint(target, current.origin());
+                const reach = p(mirrormoveId, "reach", current);
+                const options = found !== "" && closest !== null && closest.minus(current.origin()).length() <= reach
+                    && world.clear(current.origin(), closest) ? mirrorCall(current, found, target) : null;
                 if (found === "" || options === null) {
                     current.present("world_combat:move_mirrormove:dull", mirrorScene, 1, current.origin(),
                         JSON.stringify({ moment: "dull", mirrors: mirrors }));

@@ -41,8 +41,9 @@ namespace PokemonSkills {
         if (expired) WorldFeedback.text(world, psychicNoiseAbove(body.position()), psychicNoiseFadeText, [], 28);
     });
 
-    // 封疗桥：带着 healblock 身份的目标，任何原生／跨 Mod 的合法治疗都在这里被清零，走原生取消规则，
-    // 不直接改生命；实际拦下一次回复时在目标耳侧补一记短断音，让玩家看出「这口奶被堵住了」。
+    // 封疗闸口：带着 healblock 身份的目标，任何原生／跨 Mod 的合法治疗都在这里被清零，走原生取消规则，
+    // 不直接改生命。身份是共享的，所以闸口对所有同名封锁生效；但耳侧的断音反馈只属于本单元的杂音载体，
+    // 读实际最强 carrier 的 id，避免另一招施加 healblock 时错误播放精神噪音的回执。
     WorldCombat.on("world_combat:move_psychicnoise/seal", "world_combat:healing_incoming", "", function (event: CombatWorldEvent) {
         var actor = event.actor(), world = event.world();
         if (actor === null || !world.valid(actor)) return;
@@ -51,6 +52,8 @@ namespace PokemonSkills {
         if (!(data.originalAmount > 0) || !(data.amount > 0)) return;
         data.amount = 0;
         event.data(JSON.stringify(data));
+        var carrier = CombatStatus.representative(world, actor, psychicNoiseStatus);
+        if (carrier === null || String(carrier.id()) !== psychicNoiseEffect) return;
         var body = world.observe(actor);
         if (body !== null) WorldFeedback.emit(world, psychicNoiseScene, 1, body.position(),
             { moment: "mute", target: String(actor.ref()) }, 20);
@@ -98,14 +101,15 @@ namespace PokemonSkills {
             const discharge = Math.max(8, Math.round(p(psychicNoiseId, "dissonance", action)));
             sound(action, "cobblemon:move.psychic.actor");
             const appearance: any = { sprite: "cobblemon:generic/psychic/psyswirl", tint: 0xE06AD0, glow: true, scale: 0.9 };
-            if (pierce) appearance.pierce = 4;
-            // 按真实发射几何预计算飞行末点：无重力直线，射程即是实际终点；完成时用它散音，不再用可能过期的目标点。
-            const launch = action.origin(), heading = aim(action);
-            const endPoint = launch.plus(heading.scale(reach));
+            // 原生 pierce 是「首个命中之后还能继续穿过的实体数」；要最多命中 4 体就设 3。
+            if (pierce) appearance.pierce = 3;
+            const heading = aim(action);
+            // 实际飞行时长 = 射程 ÷ 速度；尾迹和音环按它绑定整个飞程，不再飞一半就熄、后程只剩实体。
+            const flightTicks = Math.max(16, Math.round(reach / Math.max(0.2, speed)) + 2);
             let resolved = false;
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius, direction: heading, gravity: 0,
-                lifetime: Math.max(40, Math.round(reach / speed) + 40),
+                lifetime: Math.max(40, flightTicks + 20),
                 appearance: appearance,
                 impact: function (current, hit, age) {
                     const scope = current.world(), target = hit.target();
@@ -117,22 +121,27 @@ namespace PokemonSkills {
                     const landed = impact(current, hit, psychicNoiseId, power, { damage: damageSpec(psychicNoiseId, "noise"), sound: true });
                     if (!landed) return;
                     resolved = true;
-                    CombatStatus.apply(scope, target, psychicNoiseStatus, psychicNoiseEffect, ticks, 0, { unique: true });
+                    // 只有这次真的挂上本单元的杂音载体才报封疗；被免疫或同名身份优先时只结算伤害。
+                    const sealed = CombatStatus.apply(scope, target, psychicNoiseStatus, psychicNoiseEffect, ticks, 0, { unique: true });
                     const point = hit.position();
                     WorldFeedback.emit(scope, psychicNoiseScene, 1, point,
-                        { moment: "hit", target: String(target.ref()), motes: discharge,
+                        { moment: "hit", target: String(target.ref()), motes: discharge, sealed: sealed ? 1 : 0,
                             intensity: Math.max(0.5, Math.min(2.2, power / 75)) }, 28);
-                    WorldFeedback.text(scope, psychicNoiseAbove(point), psychicNoiseText, [Math.round(ticks / 20)], 32);
+                    if (sealed) WorldFeedback.text(scope, psychicNoiseAbove(point), psychicNoiseText, [Math.round(ticks / 20)], 32);
                     scope.sound("cobblemon:impact.psychic", point, 16, "{}");
                     scope.sound("minecraft:entity.warden.attack_impact", point, 10, "{}");
                 }
             }, function (current) {
-                // 只有整条波从未接触任何目标时才算落空，且落点用实际末点，不在未命中的目标身上假散音。
-                if (!resolved) WorldFeedback.emit(current.world(), psychicNoiseScene, 1, endPoint, { moment: "fizzle" }, 18);
+                // 只有整条波从未接触任何目标时才算落空，且落点用弹体的实际末点；读不到就不补画，不假造终点。
+                if (!resolved) {
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null) WorldFeedback.emit(current.world(), psychicNoiseScene, 1, end, { moment: "fizzle" }, 18);
+                }
                 done(current);
             });
             WorldFeedback.emit(world, psychicNoiseScene, 1, action.origin(),
-                { moment: "wave", projectile: flight, reach: reach, discharge: discharge, pierce: pierce ? 1 : 0 }, 40);
+                { moment: "wave", projectile: flight, reach: reach, discharge: discharge, pierce: pierce ? 1 : 0,
+                    trailTicks: flightTicks }, flightTicks + 10);
         }
     });
 }

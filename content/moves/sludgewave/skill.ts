@@ -49,18 +49,23 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("sludgewave:gurgle", sludgewaveScene, 1, action.origin(),
-                JSON.stringify({ moment: "gurgle", surge: config && config.surge === true }));
+                JSON.stringify({ moment: "gurgle", prepare: prepare, surge: config && config.surge === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
-            const body = world.observe(action.actor());
+            const actor = action.actor();
+            const body = world.observe(actor);
             const centre = body !== null ? body.position() : action.origin();
+            // 泥幕从真实脚面起、升到身体中心以上 height；判定高度带与可见泥幕共用这组原点与跨度。
+            const half = body !== null ? body.height() / 2 : 0.7;
+            const drop = body !== null ? body.boundsMin().y() - centre.y() : -half;
+            const height = Math.max(0.8, p("sludgewave", "curtainHeight", action));
+            const span = Math.max(0.5, -drop + height);
             const radius = Math.max(2.2, p("sludgewave", "waveRadius", action));
             const power = p("sludgewave", "sludge", action);
             const chance = p("sludgewave", "toxinChance", action);
             const push = p("sludgewave", "push", action);
-            const height = Math.max(0.8, p("sludgewave", "curtainHeight", action));
             const cap = Math.max(1, Math.round(p("sludgewave", "maxTargets", action)));
             const scale = radius / 3.4;
             let total = 0;
@@ -68,12 +73,14 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.sludgebomb.actor");
             sound(action, "minecraft:entity.slime.squish");
             WorldFeedback.emit(world, sludgewaveScene, 1, centre,
-                { moment: "splash", radius: radius, height: height, scale: scale, flow: Math.round(48 + radius * 26), marks: Math.round(14 + power * 0.18), intensity: Math.max(0.5, Math.min(2.2, power / 75)) }, 24);
+                { moment: "splash", radius: radius, height: height, drop: drop, span: span, scale: scale,
+                    flow: Math.round(48 + radius * 26), marks: Math.round(14 + power * 0.18), intensity: Math.max(0.5, Math.min(2.2, power / 75)) }, 24);
 
-            // 一次选敌：泼到的人各结算一记，飞得低的人落在 height 的高度带内，高处的够不到。
-            WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: 2, above: height }), function (enemy, facts) {
+            // 一次选敌：泼到的人各结算一记。飞得低的人落在这片泥幕高度带内，高处的够不到，墙后的被挡。
+            WorldGeometry.selectEnemies(world, WorldGeometry.ring(WorldCombat.point(centre.x(), centre.y() + drop, centre.z()), 0, radius, { below: 0.5, above: span }), function (enemy, facts) {
                 const ref = String(enemy.ref());
-                if (ref === String(action.actor().ref()) || total >= cap) return;
+                if (ref === String(actor.ref()) || total >= cap) return;
+                if (!world.clear(centre, facts.position())) return;
                 const alreadyPoisoned = CombatStatus.has(world, enemy, "poison") || CombatStatus.has(world, enemy, "toxic");
                 if (!hurt(action, enemy, "sludgewave", power,
                     { damage: damageSpec("sludgewave", "sludge"), status: "poison", chance: chance })) return;
@@ -82,9 +89,11 @@ namespace PokemonSkills {
                     { moment: "hit", target: ref, scale: scale, intensity: Math.max(0.5, Math.min(2, power / 75)), count: Math.round(10 + power * 0.22) }, 22);
                 if (!alreadyPoisoned && CombatStatus.has(world, enemy, "poison"))
                     WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), sludgewavePoisonText, [], 26);
-                const away = facts.position().minus(centre);
-                if (world.valid(enemy) && away.length() > 0.2)
-                    world.displace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                if (world.valid(enemy)) {
+                    // 水平分量接近零时只省水平推，避免对纯上/下受体做 unit() 抛错。
+                    const side = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
+                    if (side.length() > 0.2) world.hitDisplace(enemy, side.unit().scale(push));
+                }
             });
 
             if (total === 0)

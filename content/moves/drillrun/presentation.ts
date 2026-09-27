@@ -1,13 +1,13 @@
 /**
  * 直冲钻 / drillrun 的客户端表现。
  *
- * 一句话：脚下的尘土先旋转升起，随后一支旋转的钻头贴地冲出，钻身沿冲程甩出一串螺旋粒子与速度线；
- * 命中处迸出石屑，钻过的地方地面犁开一条粗土沟，暴击时钻花更亮。
+ * 一句话：脚下的尘土先旋转升起，随后一支旋转的钻头贴地冲出、钻轴对准行进方向、锥形钻尖在前，
+ * 钻身沿冲程甩出一串螺旋粒子与速度线；命中处迸出石屑，钻过的路线扬起一道贴地短尘，暴击时钻花更亮。
  * 色相家族：土黄与岩灰（earth／large_rock／impact_ground／tinydust）＋白亮钻尖（smallsparkle／glowingsparkle_yellow）。
- * 拍子：起（windup 起旋扬尘）→ 钻（spin 旋转冲刺、沿 path 甩粒子、bore 命中）→ 犁（furrow 地面沟与余尘）→ 强调（crit）。
- * 范围：`data.scale` 与钻头判定同源；spin 的 `trail` 正好沿施法者实际冲过的路线铺开，画面即那条冲刺走廊。
- * 运动：钻头贴着地面直线前进、钻身自转，命中石屑向外迸，落点余尘慢慢沉下。
- * 数：`data.sparks`（物攻换算的碎屑量）绑定命中与钻身的量；`data.cells` 绑定犁沟扬尘的量；`data.progress` 让钻花随冲程变亮。
+ * 拍子：起（windup 起旋扬尘）→ 钻（spin 旋转冲刺、沿 path 甩粒子、bore 命中）→ 尘（dust 贴地余尘）→ 强调（crit）。
+ * 范围：`data.scale` 与钻头判定同源；dust 的 path 是服务端真实走过的地面采样点，画面即那条冲程。
+ * 运动：钻头贴着地面沿 `data.direction` 直线前进、钻身自转，命中石屑向外迸，落点余尘慢慢沉下。
+ * 数：`data.sparks`（物攻换算的碎屑量）绑定命中与钻身的量；`data.dustTicks` 决定余尘留多久；`data.progress` 让钻花随冲程变亮。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const DrillrunDefinition: ParticleDefinition = {
@@ -44,6 +44,15 @@ const DrillrunDefinition: ParticleDefinition = {
                     orient: "direction", direction: "shape", speed: [0.06, 0.22], spread: 20,
                     lifetime: [5, 10], size: [0.4, 0.12], spin: 30,
                     color: 0xE0C98E, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 130
+                },
+                {
+                    name: "drill_tip", bind: "source", offset: [0, 0.35, 0], height: 0.35,
+                    orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    rate: { data: "sparks", fallback: 16 }, shape: { kind: "cone", radius: 0.26, angleDegrees: 18 },
+                    direction: "shape", speed: [0.05, 0.22], spread: 18,
+                    lifetime: [4, 8], size: [0.28, 0.08], spin: 24,
+                    color: 0xFFF4D0, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 60
                 },
                 {
                     name: "dash_trail", bind: "source", offset: [0, 0.4, 0], height: 0.4,
@@ -87,29 +96,22 @@ const DrillrunDefinition: ParticleDefinition = {
                 }
             ]
         },
-        furrow: {
-            duration: 34,
-            exit: { stop: 8, drain: 16 },
+        dust: {
+            duration: { data: "dustTicks", fallback: 120 },
+            exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "furrow_line", bind: "path", fit: "none", offset: [0, 0.06, 0],
+                    name: "dust_line", bind: "path", fit: "none", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polyline" }, rate: { data: "sparks", fallback: 16 }, direction: "up", speed: [0.01, 0.05],
+                    shape: { kind: "polyline" }, rate: { data: "sparks", fallback: 16 }, stop: 10, direction: "up", speed: [0.01, 0.05],
                     lifetime: [10, 18], size: [0.1, 0.03],
                     color: 0x8A744C, alpha: [0.55, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "ground_burst", bind: "point", offset: [0, 0.08, 0],
-                    particle: "world_combat_core:cobblemon/generic/earth",
-                    burst: { count: { data: "cells", fallback: 8 }, at: 0 },
-                    shape: { kind: "ring", radius: 0.7 }, direction: "outward", speed: [0.05, 0.2], gravity: 0.1, drag: 0.9,
-                    lifetime: [12, 22], size: [0.12, 0.03],
-                    color: 0x8A744C, alpha: [0.6, 0], light: "world", maxParticles: 60
-                },
-                {
-                    name: "settle_dust", bind: "point", offset: [0, 0.15, 0],
+                    name: "settle_dust", bind: "point", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 16, shape: { kind: "sphere", radius: 0.6 }, direction: "outward", speed: [0.02, 0.08], drag: 0.9,
+                    rate: 10, stop: { data: "dustTicks", fallback: 120 },
+                    shape: { kind: "sphere", radius: 0.6 }, direction: "outward", speed: [0.02, 0.08], drag: 0.9,
                     lifetime: [16, 28], size: [0.07, 0.02],
                     color: 0x8E8064, alpha: [0.32, 0], light: "world", maxParticles: 50
                 },

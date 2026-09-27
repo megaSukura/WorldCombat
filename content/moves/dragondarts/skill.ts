@@ -8,12 +8,12 @@
  * 选取：`kind: "aim"`——可指定敌人，也可朝一个方向/世界点发射；手动方向空放不强选近敌。
  *
  * 幕：
- *   起（windup，提交前）：身侧聚起两团龙气的预告（`action.present`，可被打断、不花 PP）。
- *   射（first → second）：提交后先放第一支，飞完/落定后隔 `gap` 放第二支。第一支照提交时的选择：
- *     选中非友方实体就带追踪（`homing`）追它，只选地点/方向就沿该朝向直飞。第二支在**发射那一刻**
- *     才决定：分头式且场上还有另一只活敌就改追第二只，否则原对象还活着就继续追它，都没有就沿最后朝向
- *     射空——固定两箭，不增加箭数、不无限重定向。每支命中结算一次 `dart` 物理伤害，目标在两箭之间
- *     倒下时那支就地掠过（graze）。
+ *   起（windup，提交前）：两侧各聚起一团箭形龙气预告（`action.present`，可被打断、不花 PP）。
+ *   射（first → second）：提交后立刻放第一支；第二支在首发射后 `gap`（3~8 刻）**独立**发出，不等第一支飞完。
+ *     第一支照提交时的选择：选中非友方实体就带追踪（`homing`）追它，只选地点/方向就沿该朝向直飞。第二支在
+ *     发射那一刻才决定：分头式且存在可见、通视的第二只活敌就改追它，否则原对象还活着就继续追它，都没有就沿
+ *     最后朝向射空——固定两箭，不增加箭数、不无限重定向。每支命中结算一次 `dart` 物理伤害，目标在两箭之间
+ *     倒下时那支就地掠过（graze）。两弹都结算/消散后才收招。
  *   收：两箭各自结算完毕才收招。
  *
  * 配置 `volley`（分头式）由公式改每支威力、由 execute 决定第二支的目标分配：开启＝有两只时各追一只；
@@ -21,6 +21,7 @@
  */
 namespace PokemonSkills {
     const dragondartsScene = "world_combat:move_dragondarts";
+    const dragondartsAimScene = "world_combat:move_dragondarts_aim";
 
     /** 水平侧向单位向量：把两支箭摊到身体两侧；方向接近竖直时退化为世界 X 轴。 */
     function dragondartsSide(direction: CombatPoint): CombatPoint {
@@ -55,9 +56,14 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const heading = aim(action);
+            const direction = [heading.x(), heading.y(), heading.z()];
             action.present("dragondarts:aim:" + action.id(), dragondartsScene, 1, action.origin(),
                 JSON.stringify({ moment: "aim",
-                    dart: Math.max(1, Math.min(2, Math.round(p("dragondarts", "darts", action)))) }));
+                    dart: Math.max(1, Math.min(2, Math.round(p("dragondarts", "darts", action)))),
+                    spread: p("dragondarts", "spread", action), direction: direction }));
+            action.present("dragondarts:aim-core:" + action.id(), dragondartsAimScene, 1, action.origin(),
+                JSON.stringify({ direction: direction, spread: p("dragondarts", "spread", action) }));
             return prepare;
         },
         indicator: function (config, pokemon) {
@@ -82,13 +88,24 @@ namespace PokemonSkills {
             const split = !!(config && config.volley === true);
             const intensity = Math.max(0.6, Math.min(2, power / 24));
             let lastHeading = aim(action);
-            let settled = false;
+            let settled = 0, finished = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finishOnce(current: CombatAction): void {
+                if (finished) return;
+                finished = true;
+                const selfBody = current.world().observe(current.actor());
+                WorldFeedback.emit(current.world(), dragondartsScene, 1,
+                    selfBody === null ? current.origin() : selfBody.position(), { moment: "done", motes: motes }, 16);
+                done(current);
+            }
+            function onSettled(current: CombatAction): void {
+                settled++;
+                if (settled >= darts) finishOnce(current);
+            }
 
-            /** 距施法者最近的、活着且不是 excludeRef 的非友方；第二支发射时用它改派。 */
+            /** 距施法者最近、活着、可见、通视且不是 excludeRef 的非友方；第二支发射时用它改派。 */
             function secondTarget(scope: CombatWorld, from: CombatPoint, excludeRef: string): CombatActor | null {
-                const nearby = scope.query(from, reach, false);
+                const nearby = scope.query(from, reach, true);
                 let best: CombatActor | null = null, bestDistance = Infinity;
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
@@ -96,28 +113,19 @@ namespace PokemonSkills {
                     const ref = String(other.ref());
                     if (ref === String(actor.ref()) || ref === excludeRef) continue;
                     const at = scope.observe(other);
-                    if (at === null) continue;
+                    if (at === null || !at.visible()) continue;
+                    // 新目标必须通视：被墙挡住就不算有效第二路。
+                    if (!scope.clear(from, at.position())) continue;
                     const d = at.position().minus(from).length();
                     if (d <= reach && d < bestDistance) { bestDistance = d; best = other; }
                 }
                 return best;
             }
 
-            function next(current: CombatAction, i: number): void {
-                if (i + 1 >= darts) {
-                    const selfBody = current.world().observe(current.actor());
-                    WorldFeedback.emit(current.world(), dragondartsScene, 1,
-                        selfBody === null ? current.origin() : selfBody.position(), { moment: "done", motes: motes }, 16);
-                    finish(current);
-                    return;
-                }
-                current.after(gap, function (inner: CombatAction) { launch(inner, i + 1); });
-            }
-
             function launch(current: CombatAction, i: number): void {
                 const scope = current.world();
                 const selfBody = scope.observe(current.actor());
-                if (selfBody === null) { next(current, i); return; }
+                if (selfBody === null) { onSettled(current); return; }
                 const from = selfBody.position();
                 const primaryRef = primary === null ? "" : String(primary.ref());
                 let victim: CombatActor | null = null;
@@ -132,7 +140,7 @@ namespace PokemonSkills {
                     }
                     if (victim === null) endpoint = current.targetPosition();
                 } else {
-                    // 第二支此刻才决定：分头式优先改追另一只活敌；否则原对象还活着就继续追它。
+                    // 第二支此刻才决定：分头式优先改追另一只通视活敌；否则原对象还活着就继续追它。
                     if (primary !== null && split) victim = secondTarget(scope, from, primaryRef);
                     if (victim === null && primary !== null && scope.valid(primary) && !scope.friendly(primary)) victim = primary;
                     if (victim !== null) {
@@ -154,7 +162,9 @@ namespace PokemonSkills {
                 lastHeading = heading;
 
                 const side = dragondartsSide(heading);
-                const origin = from.plus(side.scale(i === 0 ? spread : -spread)).plus(WorldCombat.point(0, i * 0.12, 0));
+                let origin = from.plus(side.scale(i === 0 ? spread : -spread)).plus(WorldCombat.point(0, i * 0.12, 0));
+                // 双侧起点不越墙：侧向出箭点被墙挡回时退回身体中心，箭不会从墙里冒出来。
+                if (WorldGeometry.blockHit(scope, from, origin) !== null) origin = from.plus(WorldCombat.point(0, i * 0.12, 0));
                 const aimDelta = endpoint.minus(origin);
                 if (aimDelta.length() > 0.05) heading = aimDelta.unit();
 
@@ -164,8 +174,9 @@ namespace PokemonSkills {
                 const lifetime = Math.max(40, Math.round(current.range() / Math.max(0.2, speed) + 40));
                 const end = origin.plus(heading.scale(current.range()));
                 let connected = false;
+                let flight = "";
 
-                const flight = current.projectile(origin, heading.scale(speed), 0, 0.2, current.range(), lifetime,
+                flight = current.projectile(origin, heading.scale(speed), 0, 0.2, current.range(), lifetime,
                     function (inner: CombatAction, hit: CombatImpact) {
                         const innerWorld = inner.world();
                         const struck = hit.target();
@@ -184,25 +195,29 @@ namespace PokemonSkills {
                     },
                     function (inner: CombatAction) {
                         if (!connected) {
-                            // 飞到尽头没碰到任何东西（目标离场/空放）：在轨迹尽头掠过。
-                            WorldFeedback.emit(inner.world(), dragondartsScene, 1, end,
-                                { moment: "graze", point: LivingActions.coordinates(end), index: i + 1, motes: motes, intensity: intensity }, 20);
+                            // 飞到尽头没碰到任何东西（目标离场/空放）：用真实弹体末点掠过。
+                            const at = inner.world().projectilePosition(flight);
+                            const point = at === null ? end : at;
+                            WorldFeedback.emit(inner.world(), dragondartsScene, 1, point,
+                                { moment: "graze", point: LivingActions.coordinates(point), index: i + 1, motes: motes, intensity: intensity }, 20);
                         }
-                        next(inner, i);
+                        onSettled(inner);
                     },
                     JSON.stringify(appearance));
 
-                // 发射线：从真实出箭点画到这一刻要追的落点，两支各奔哪里一眼可读。
-                const line: number[][] = [[origin.x(), origin.y(), origin.z()], [endpoint.x(), endpoint.y(), endpoint.z()]];
+                // 发射线：从真实出箭点画到这一刻要追的落点，被墙截断时收到墙的接触点，两支各奔哪里一眼可读。
+                const blocker = WorldGeometry.blockHit(scope, origin, endpoint);
+                const shown = blocker === null ? endpoint : blocker.position();
+                const line: number[][] = [[origin.x(), origin.y(), origin.z()], [shown.x(), shown.y(), shown.z()]];
                 sound(current, "minecraft:entity.ender_dragon.flap");
                 WorldFeedback.emit(scope, dragondartsScene, 1, origin,
                     { moment: i === 0 ? "first" : "second", index: i + 1, projectile: flight, path: line,
                         motes: motes, scale: 0.9, intensity: intensity }, lifetime + 10);
             }
 
-            WorldFeedback.emit(world, dragondartsScene, 1, body.position(),
-                { moment: "aim", dart: darts, motes: motes, intensity: intensity }, 18);
+            // 两发按发射时刻独立起飞：第二支只等首个 gap，不等第一支飞完或撞上。
             launch(action, 0);
+            if (darts > 1) action.after(gap, function (current: CombatAction) { launch(current, 1); });
         }
     });
 }

@@ -29,6 +29,8 @@
 namespace PokemonSkills {
     export const icespinnerId = "icespinner";
     export const icespinnerScene = "world_combat:move_icespinner";
+    /** 绕脚冰刃的独立自定义场景：固定数量冰片贴真实身体绕脚旋转，尺寸读机制判定半径。 */
+    export const icespinnerBladeScene = "world_combat:move_icespinner/blades";
     export const icespinnerHitText = "world_combat.move.icespinner.text.hit";
     export const icespinnerClearText = "world_combat.move.icespinner.text.clear";
     export const icespinnerMissText = "world_combat.move.icespinner.text.miss";

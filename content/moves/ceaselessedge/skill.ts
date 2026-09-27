@@ -21,17 +21,30 @@ namespace PokemonSkills {
         return WorldCombat.point(field.position[0], field.position[1], field.position[2]);
     }
     /** 找同一片地上自己留下的贝壳碎片，把锋利度并进新的一层（最多 max 层），旧圈收回。 */
-    function ceaselessedgeSharpen(world: CombatWorld, point: CombatPoint, radius: number, max: number): number {
-        const own = String(world.source().ref()), found = WorldEffects.areas(world, ceaselessedgeRule);
-        let sharpen = 1;
+    function ceaselessedgePlant(world: CombatWorld, point: CombatPoint, radius: number, data: any, ticks: number): number {
+        const own = String(world.source().ref()), found = WorldEffects.areas(world, ceaselessedgeRule, point, radius);
+        let host: WorldEffects.Area | null = null, extra: WorldEffects.Area[] = [], sharpen = 1, remaining = 0;
         for (let i = 0; i < found.length; i++) {
             const entry = found[i];
             if (entry.source !== own) continue;
             const centre = WorldCombat.point(entry.position[0], entry.position[1], entry.position[2]);
             if (centre.minus(point).length() > radius + entry.radius) continue;
-            sharpen = Math.min(max, Math.max(sharpen, (Number(entry.data.sharpen) || 1) + 1));
-            world.operation(entry.id, "world_combat:dispel", "{}");
+            sharpen = Math.min(Math.max(1, Number(data.maxSharpen) || 1), Math.max(sharpen, (Number(entry.data.sharpen) || 1) + 1));
+            remaining = Math.max(remaining, Number(entry.remaining) || 0);
+            if (host === null) host = entry; else extra.push(entry);
         }
+        if (host !== null) {
+            // 合并成功才迁移：沿用旧的每敌间隔与至少不缩短的剩余时间，再磨利一层；其余同源圈随后收回。
+            const merged = { shard: data.shard, gain: data.gain, share: data.share, interval: data.interval,
+                shards: data.shards, maxSharpen: data.maxSharpen, sharpen: sharpen, next: host.data.next || {} };
+            if (WorldEffects.update(world, host.id, { data: merged, radius: radius, ticks: Math.max(ticks, remaining) })) {
+                for (let j = 0; j < extra.length; j++) world.operation(extra[j].id, "world_combat:dispel", "{}");
+                return sharpen;
+            }
+        }
+        WorldEffects.field(world, ceaselessedgeRule, point, radius,
+            { shard: data.shard, gain: data.gain, share: data.share, sharpen: sharpen, interval: data.interval,
+                shards: data.shards, maxSharpen: data.maxSharpen, next: {} }, ticks);
         return sharpen;
     }
     /** 踩在碎片上：踏入/跨过边界第一刀按锋利度满额（tread），留在圈里按 standShare 轻割（graze）。只对贴地的非友方生效。 */
@@ -39,7 +52,8 @@ namespace PokemonSkills {
         const body = world.observe(actor);
         if (body === null || !body.grounded()) return;
         const ref = String(actor.ref()), next = field.data.next || (field.data.next = {}), now = world.tick();
-        if (!fresh && now < (next[ref] || 0)) return;
+        // 踏入与驻留共用每敌最短间隔：反复进出边界不会连环重割。
+        if (now < (next[ref] || 0)) return;
         next[ref] = now + Math.max(6, Math.round(Number(field.data.interval) || 20));
         const sharpen = Math.max(1, Math.round(Number(field.data.sharpen) || 1));
         const gain = Math.max(0, Number(field.data.gain) || 0);
@@ -68,7 +82,11 @@ namespace PokemonSkills {
     }
 
     // 贝壳碎片圈：踏进来/跨过边界重割一次，留在圈里轻割；圈自己低频提示还在，锋利度越亮。规则登记一次，全场共用。
+    // 登记 hazard 身份，其他单元和陷阱消费者都能按类别读到；只让与碎片同层的贴地非友方成为成员。
     WorldEffects.fieldRule(ceaselessedgeRule, {
+        accepts: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): boolean {
+            return !world.friendly(actor) && WorldEffects.groundedContact(world, actor, field);
+        },
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             if (world.friendly(actor)) return;
             ceaselessedgeTread(world, actor, field, true);
@@ -78,14 +96,14 @@ namespace PokemonSkills {
             ceaselessedgeTread(world, actor, field, false);
         },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
-            // 持续表现挂在本效果的 id 上，随碎片圈自然到期或提前驱散一起收掉。
+            // 持续表现挂在本效果的 id 上，随碎片圈自然到期或提前驱散一起收掉。圈径只按实际半径画，锋利只改密度亮度。
             WorldFeedback.onEffect(world, effect.id(), "ceaselessedge:field", ceaselessedgeScene, 1, ceaselessedgePoint(field),
-                { moment: "hum", radius: field.radius, layerRadius: field.radius * (1 + 0.14 * (Math.max(1, Math.round(Number(field.data.sharpen) || 1)) - 1)),
+                { moment: "hum", radius: field.radius,
                     layers: Math.max(1, Math.round(Number(field.data.sharpen) || 1)),
                     gleam: Math.min(1, 0.35 + Math.max(1, Math.round(Number(field.data.sharpen) || 1)) * 0.2),
                     shards: Math.max(12, Math.round(Number(field.data.shards) || 22)), scale: field.radius / ceaselessedgeReference });
         }
-    });
+    }, { identity: WorldEffects.hazard("shellshards"), tags: [WorldEffects.categories.hazard] });
 
     define({
         id: ceaselessedgeId,
@@ -153,8 +171,8 @@ namespace PokemonSkills {
             const contact = action.trace(origin, tip, 0.7, false);
             const struck = contact.hitEntity() ? contact.target() : null;
             const blocked = contact.blocked() && !contact.hitEntity();
-            const body = struck !== null && world.valid(struck) ? world.observe(struck) : null;
-            const centre = body !== null ? body.position() : tip;
+            const struckBody = struck !== null && world.valid(struck) ? world.observe(struck) : null;
+            const centre = struckBody !== null ? struckBody.position() : contact.position();
 
             sound(action, "minecraft:entity.player.attack.sweep");
             WorldFeedback.emit(world, ceaselessedgeScene, 1, centre,
@@ -170,17 +188,13 @@ namespace PokemonSkills {
                 WorldFeedback.text(world, tip.plus(WorldCombat.point(0, 0.9, 0)), ceaselessedgeMissText, [], 20);
             }
 
-            // 刀锋落点：斩中实体就落在它脚下；空斩就落在刀刃前方地面；被墙挡住则不在墙后摆碎片。
+            // 刀锋落点：以这一刀的真实接触点落地铺圈；击杀后不再退回满射程端点。被墙挡住则不在墙后摆碎片。
             if (!blocked) {
-                const dropBody = struck !== null && world.valid(struck) ? world.observe(struck) : null;
-                const drop = dropBody !== null ? dropBody.position() : tip;
-                const point = WorldGeometry.ground(world, drop);
-                const sharpen = ceaselessedgeSharpen(world, point, radius, maxSharpen);
-                WorldEffects.field(world, ceaselessedgeRule, point, radius,
-                    { shard: shard, gain: gain, share: share, sharpen: sharpen, interval: interval, shards: shards,
-                        maxSharpen: maxSharpen, next: {} }, ticks);
+                const point = WorldGeometry.ground(world, contact.position());
+                const sharpen = ceaselessedgePlant(world, point, radius,
+                    { shard: shard, gain: gain, share: share, interval: interval, shards: shards, maxSharpen: maxSharpen }, ticks);
                 WorldFeedback.emit(world, ceaselessedgeScene, 1, point,
-                    { moment: "lay", radius: radius, layerRadius: radius * (1 + 0.14 * (sharpen - 1)),
+                    { moment: "lay", radius: radius,
                         layers: sharpen, gleam: Math.min(1, 0.35 + sharpen * 0.2), shards: shards, scale: scale }, 30);
                 WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.6, 0)), ceaselessedgeLayText, [sharpen], 30);
                 world.sound("cobblemon:impact.dark", point, 14, "{}");

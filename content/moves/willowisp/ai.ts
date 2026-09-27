@@ -2,8 +2,9 @@
  * 鬼火 / willowisp 的 AI 用途。
  *
  * 什么局面下出手：挂在共享的 control 位上；带鬼火的伙伴在没有攻击可用时用它。
- * 只对还没被点着的目标出手（读共享身份 burn，别人点的火也算）；共享门禁判定这个目标烧不上
- * （火属性、免灼特性、守护等）就不出手，免得白飞一趟。够不到就先交给共享接近逻辑走近。
+ * 只对还没被点着的目标出手（读共享身份 burn，别人点的火也算）；近期已经对它放过控制（含没追上的那一发）
+ * 也不再重复，免得浪费一团鬼火。共享门禁判定这个目标烧不上（火属性、免灼特性、守护等）就不出手，免得白飞一趟。
+ * 够不到就先交给共享接近逻辑走近。
  *
  * 对谁出手：优先“已知的物理/近战输出”。读目标当前有效物攻与特攻（`combatStats`）：物攻明显高于特攻
  * 的目标最值得先烧；正在贴上来或正在攻击施法者的近战威胁再加一档。纯法系目标优先级回落。
@@ -45,6 +46,8 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             if (!target) return true;
             if (CompanionBehavior.status(context, target, "burn")) return false;
+            // 近期已经对它放过控制（含没追上的那一发）：不重复浪费一团鬼火。
+            if (CompanionBehavior.recent(context, "control", target.ref, 240)) return false;
             if (!willowispBurnAllowed(context, target)) return false;
             return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 14);

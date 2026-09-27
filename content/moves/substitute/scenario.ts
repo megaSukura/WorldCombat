@@ -1,10 +1,11 @@
 /**
  * 替身的可执行设计说明。
  *
- * 场面：一只只会「替身」的伙伴面对一只僵尸。伙伴有威胁就会先立替身（默认 ai.useBelow=1.0），
+ * 场面：一只只会「替身」的伙伴面对一只僵尸。伙伴有威胁就会先立替身（默认 ai.useBelow=1.0，满血也立），
  * 僵尸随后打上来的伤害应被 redirect 转到替身身上。
  * 必然事实：本招被提交过、施法者身上出现过共享身份 world_combat:status/substitute。
  * 随机与走位结果（僵尸是否真的打到、承伤多少、替身几时碎）写进 note 供读轨迹判断。
+ * 耐久驱动的轮廓与 towardThreat／nearOwner 落点是客户端表现，读轨迹无法覆盖，留给人工试玩。
  */
 Smoke.scenario("substitute", function (stage) {
     var a = stage.pokemon({ species: "Eevee", level: 30, moves: ["substitute"], at: [-2, 0, 0] });
@@ -28,7 +29,10 @@ Smoke.scenario("substitute", function (stage) {
                     stage.hurt(a, 5, "minecraft:generic", { source: b });
                     stage.after(2, function () {
                         stage.expect(a.health() < unguarded, "clearing the carrier also ended damage redirection");
-                        stage.note("Linked damage redirection and native-carrier cleanup verified; connection visuals remain manual.");
+                        stage.note("默认 AI 在满血、仅有威胁时就该立起替身（不再要求残血），已连接的分身替你吃掉这一下伤害，清除共享载体后重定向随之结束；耐久/连线/落点的观感按表现层验收。", {
+                            casts: stage.casts("substitute"), casterHealth: Math.round(a.health() * 10) / 10,
+                            targetHealth: Math.round(b.health() * 10) / 10, tick: stage.tick()
+                        });
                         stage.done();
                     });
                 });

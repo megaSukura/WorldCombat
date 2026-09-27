@@ -1,7 +1,7 @@
 /**
  * 猛扑 / lunge —— 可执行设计说明。
  *
- * 一句话：把整个身体朝目标抛出去的一记跳扑，撞实后把目标顶开并压低它的攻击。
+ * 一句话：把整个身体贴着地面朝目标推出去的一记重撞，撞实后把目标顶开并压低它的攻击。
  *
  * 场面：石头地面、晴夜。一只只会「猛扑」的飞天螳螂（技能表只给这一招，AI 就只会用它）对上一只铁傀儡——
  *   铁傀儡目标大、血厚，够撑过这一记重撞，好让掉攻落到它的攻击属性上被读到。
@@ -26,7 +26,7 @@ Smoke.scenario("lunge", function (stage) {
             stage.expect(stage.damageTo(golem) > 0, "the pounce dealt damage to the target");
             stage.expect(stage.attribute(golem, "minecraft:generic.attack_damage") < baseAttack,
                 "the pounce lowered the target's attack attribute through the shared stat ladder");
-            stage.note("lunge is a forward leap that ends the cast at the landing spot; the attack drop is one stage and lands on any combatant (here the iron golem's generic.attack_damage). Random parts: damage roll and crit.", {
+            stage.note("lunge is a forward ground drive that ends the cast at the landing spot; the attack drop is one stage and lands on any combatant (here the iron golem's generic.attack_damage). Random parts: damage roll and crit.", {
                 casts: stage.casts("lunge", mantis),
                 baseAttack: Math.round(baseAttack * 100) / 100,
                 attackNow: Math.round(stage.attribute(golem, "minecraft:generic.attack_damage") * 100) / 100,

@@ -20,6 +20,7 @@
   "worldcombat.skill.bellydrum.preference.ai.healthFloor": "起鼓下限",
   "worldcombat.skill.bellydrum.preference.ai.healthFloor.help": "自身生命高于该比例才起鼓；调低更敢用半条命去换，调高则只在满血附近强化。",
   "effect.world_combat.bellydrum": "鼓胀力量",
-  "world_combat.move.bellydrum.text.surge": "物攻拉满",
-  "world_combat.move.bellydrum.text.fade": "鼓劲消退"
+  "world_combat.move.bellydrum.text.surge": "鼓劲 · 物攻 %1$s 级",
+  "world_combat.move.bellydrum.text.fade": "鼓劲消退",
+  "world_combat.move.bellydrum.text.unpaid": "鼓声落空 · 生命未能支付"
 }

@@ -4,7 +4,7 @@
  * 一句话：脚下涌起一圈水，水幕顺着身体合拢（gather→veil）→ 之后每隔一会儿，脚下炸开一环水花、身上浮起水光（pulse）→
  *   水幕走完或被清除时，水滴慢慢落回地面散去（fade）。
  * 色相家族：水青 0x4FC3E8 为主体，泡沫白 0xE8FBFF 做高光，深水蓝 0x1C6E8C 只做环底。
- * 拍子：起 gather 0–14t ／ 持 veil ／ 涌 pulse 0–22t（每 interval 一次）／ 收 fade 0–24t。
+ * 拍子：起 gather 持续到实际准备结束（随动作释放而收）／ 持 veil（绑标记效果）／ 涌 pulse 0–22t（每 interval 一次）／ 收 fade 0–24t。
  * 范围：veil 与 pulse 的环半径随 `data.scale`（服务端按水幕半径算出的倍率）缩放，环画到哪水幕就到哪。
  * 运动：水花自脚下向外炸、水光沿身体向上浮、水幕层缓缓旋转。
  * 数：水光点数绑 `data.motes`（特防派生），涌起的强度随 `data.healed`（这一口的实回量）变化。
@@ -13,8 +13,8 @@ const AquaRingDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         gather: {
-            duration: 14,
-            exit: { stop: 6, drain: 12 },
+            duration: 0,
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "swirl_in", bind: "source", offset: [0, 0.1, 0], height: 0, fit: "none",

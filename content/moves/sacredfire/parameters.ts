@@ -6,8 +6,8 @@
  *
  * 翻译：把「用神秘的火焰烧尽对手」落成**送出一团沿瞄准方向前进的净化虹火**——施法者本人留在原地，
  * 虹火逐段飞出，真实首碰实体或方块；碰到敌人是实打实的一记物理重击并高概率点燃（非接触、不触发接触反伤），
- * 碰到友方只解开其冰封、不造成伤害。这一击压过冰霜（defrost 解冻自身），圣火式在撞击点留下一片
- * 对友方无伤的虹彩余焰，天罚式只取更重的一击。
+ * 碰到友方只解开其冰封、不造成伤害。这一击压过冰霜（defrost 解冻自身），只在真正撞上的那一个身上结算，
+ * 不留下额外的通用持续伤害区。
  *
  * 数据分散（每项读不同的精灵数据）：
  *   strike     撞击威力：物攻定这一击有多重，等级给成长；天罚式更重。
@@ -15,16 +15,14 @@
  *   travel     航程：速度决定能送多远。
  *   radius     判定半径：体型高度决定虹火包多大的身。
  *   burnChance 点燃概率：原生 50% 起，物攻提高；天罚式压低换威力。
- *   flame      落点余焰每跳威力：物攻派生（仅圣火式）。
- *   flameRadius/flameTicks/flamePulse 余焰范围、时长与间隔（读物攻与等级）。
  *   sparks     火星数：物攻与等级派生，表现按它发射。
  *   tempo/aftercast/recharge：速度决定起手与冷却。
  *
- * 配置 `smite`（天罚式）双向取舍：开启＝撞击威力 ×1.15、击退更强、冷却更短，但点燃概率 ×0.55 且落点不留余焰；
- * 关闭（圣火式）＝点燃概率拉满、落点留下一片虹彩余焰反复烫人，代价是威力略低、冷却更久——两向分别对应点杀与封地。
+ * 配置 `smite`（天罚式）双向取舍：开启＝撞击威力 ×1.15、冷却更短，但点燃概率 ×0.55、命中更偏向爆发点杀；
+ * 关闭（圣火式）＝点燃概率拉满，代价是威力略低、冷却更久。两向分别对应点杀与压制。
  *
- * 伤害段 `strike`（撞击）与 `flame`（余焰）各自成段；`strike` 现在是**非接触**的远程火击，
- * 不再触发目标的接触反伤；灼伤经 `impact` 的 `status: "burn"` 落到任何目标上。
+ * 伤害段只有 `strike`（撞击）：是**非接触**的远程火击，不再触发目标的接触反伤；灼伤经 `impact` 的
+ * `status: "burn"` 落到任何目标上。
  */
 namespace PokemonSkills {
     actionParameters.define("sacredfire", {
@@ -65,28 +63,6 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("smite", text("worldcombat.skill.sacredfire.preference.smite")), F.const(0.55), F.const(1)))
                 .clamp(0.25, 0.68).round(3),
             "点燃概率", "命中的圣火把目标点着的概率；原生 50% 起，物攻越高越容易，天罚式压低换威力。"),
-        /** 余焰威力：15 + 物攻偏移[−4,12]；夹 8..30（仅圣火式）。 */
-        flame: formula(
-            F.base(15).plus(F.stat("attack").minus(60).times(0.05).clamp(-4, 12)).clamp(8, 30).round(1),
-            "余焰威力", {
-                unit: "威力",
-                description: "圣火式落在撞击点的虹彩余焰每跳对圈内每个敌人造成的伤害；踩在还烧着的地上就会再挨。友方踏入不受伤害。"
-            }),
-        /** 余焰范围：2.0 + 物攻偏移[−0.3,0.8]；夹 1.4..3.2（仅圣火式）。 */
-        flameRadius: formula(
-            F.base(2.0).plus(F.stat("attack").minus(60).times(0.008).clamp(-0.3, 0.8)).clamp(1.4, 3.2).round(2),
-            "余焰范围", {
-                unit: "格",
-                description: "圣火式留在撞击点的虹彩余焰有多大；站在里面的敌人会被反复烫到。"
-            }),
-        /** 余焰时长：70 + 等级(≥30)偏移[0,30]；夹 50..110（仅圣火式）。 */
-        flameTicks: seconds(
-            F.base(70).plus(F.level().minus(30).times(0.8).clamp(0, 30)).clamp(50, 110).round(0),
-            "余焰时长", "圣火式留下的虹彩余焰在地上烧多久；这段时间里站在圈内的敌人会反复挨烫。"),
-        /** 余焰间隔：10 − 速度偏移[−2,3]；夹 7..15（仅圣火式）。 */
-        flamePulse: seconds(
-            F.base(10).minus(F.stat("speed").minus(60).times(0.02).clamp(-2, 3)).clamp(7, 15).round(0),
-            "余焰间隔", "虹彩余焰两跳之间隔多久；速度快的个体烫得更密。"),
         /** 火星数：24 + 物攻偏移[−6,30] + 等级(≥30)偏移[0,16]；夹 16..64。 */
         sparks: formula(
             F.base(24).plus(F.stat("attack").minus(60).times(0.3).clamp(-6, 30))
@@ -106,12 +82,10 @@ namespace PokemonSkills {
             F.base(44).minus(F.stat("speed").minus(60).times(0.04).clamp(-4, 6))
                 .plus(F.when(F.pref("smite", text("worldcombat.skill.sacredfire.preference.smite")), F.const(-6), F.const(8)))
                 .clamp(28, 58).round(0),
-            "冷却", "再次送出圣火前的间隔；速度越快回得越快，圣火式蓄得更久、天罚式更快。"),
-        maxTargets: hidden(6)
+            "冷却", "再次送出圣火前的间隔；速度越快回得越快，圣火式蓄得更久、天罚式更快。")
     });
 
     defineDamage("sacredfire", "strike", {});
-    defineDamage("sacredfire", "flame", {});
 
     stages("sacredfire", [
         { level: 43, values: { strike: 116, sparks: 34 } },
@@ -121,7 +95,6 @@ namespace PokemonSkills {
     describe("sacredfire", [
         { key: "description.0", values: ["strike", "travel", "pace"] },
         { key: "description.1", values: ["radius","burnChance"] },
-        { key: "description.2", values: ["flame","flameRadius","flameTicks","flamePulse","maxTargets"] },
         { key: "description.3", values: [] },
         { key: "smite.on", values: [], when: function (context) { return read(context.detail.values, ["smite"]) === true; } },
         { key: "smite.off", values: [], when: function (context) { return read(context.detail.values, ["smite"]) !== true; } },

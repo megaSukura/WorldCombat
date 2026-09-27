@@ -5,16 +5,17 @@
  *   近身撞上来的人会被这些棱角划伤。它是自我强化族里唯一把身体本身变成武器的一招。
  *
  * 三幕：
- *   蓄角（windup 播「起锋」，提交前只观察与预告，可被打断，打断不花代价）。
+ *   蓄角（windup 播「起锋」，提交前只观察与预告，可被打断，打断不花代价；起锋时长覆盖实际 prepare）。
  *   弹出（提交后）：这层「棱角」载体拥有本次实际抬起的物攻（NativeEffects.boostWindow 绑在载体上），
- *     挂上共享身份 world_combat:status/sharpened；一片片棱角从体表弹出、地面的石屑被带起。
+ *     挂上共享身份 world_combat:status/sharpened；一片片棱角从体表弹出、脚底的石屑被带起。
  *     载体的实际贡献只有本次差额：窗口走完、被牛奶／/effect clear 拿掉，或再次施放刷新时，只会撤去这一份。
+ *     申请载体被拒，或窗口没建起来又不是因为封顶，就不放成功表现；顶到 +6 无升攻时棱角仍在、仍可反划。
  *   反击（窗口内）：任何**真实原生近身接触**攻击落到身上时，攻击者在接触点被棱角划一记 `edge` 伤害——
  *     射弹、状态掉血或脚本附加伤害都不算接触，不会误触。
  * 结束：棱角窗口走完（或被清除）时棱角钝去，物攻由载体窗口自行收回；这里只收尾表现。
  *
  * 与同族分开：瑜伽姿势是慢、静、内在的唤醒，不被打扰更深、且留住；棱角化是快、外长棱角、带接触反击的窗口，到点收回。
- * 视觉与数值同源：cut 打在伤害回执给出的真实接触点；持续棱光绑在这层 boostWindow 上，窗口一收表现即收。
+ * 视觉与数值同源：cut 打在伤害回执给出的真实接触点；持续棱光绑在棱角标记/载体窗口上，窗口一收表现即收。
  */
 namespace PokemonSkills {
     const sharpenScene = "world_combat:move_sharpen";
@@ -23,8 +24,10 @@ namespace PokemonSkills {
     const sharpenContribution = "world_combat:move/sharpen";
     const sharpenText = "world_combat.move.sharpen.text.jagged";
     const sharpenCappedText = "world_combat.move.sharpen.text.capped";
+    const sharpenRejectedText = "world_combat.move.sharpen.text.rejected";
     const sharpenCutText = "world_combat.move.sharpen.text.cut";
     const sharpenDullText = "world_combat.move.sharpen.text.dull";
+    const sharpenDullPlainText = "world_combat.move.sharpen.text.dullplain";
     const sharpenCounter = "world_combat:sharpen_counter";
     /** 表现里的参考半径：`data.scale = 实际棱角半径 / 这个数`。 */
     const sharpenReferenceRadius = 1.0;
@@ -103,7 +106,7 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_sharpen:charge", sharpenScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", quick: config && config.quick === true ? 1 : 0 }));
+                JSON.stringify({ moment: "charge", quick: config && config.quick === true ? 1 : 0, prepare: prepare }));
             return prepare;
         },
         execute: function (action, _move, config, done) {
@@ -117,25 +120,35 @@ namespace PokemonSkills {
             const scale = spread / sharpenReferenceRadius;
             // 载体拥有这份物攻贡献：刷新先按 previous 结束同招旧窗口，只续上本招自己那一份，结束只撤本次差额。
             const before = NativeEffects.effectiveStages(world, actor);
+            const atCap = (before.atk || 0) >= 6;
             const previous = MobEffects.read(world, actor, sharpenEffect);
             const carrier = MobEffects.apply(world, actor, sharpenEffect, window, previous ? previous.amplifier() : 0);
-            let windowId = 0, gained = 0;
-            if (carrier) {
-                windowId = NativeEffects.boostWindow(world, actor, { atk: gift }, carrier.duration(),
-                    sharpenContribution, carrier, previous);
-                const raised = NativeEffects.effectiveStages(world, actor);
-                gained = Math.max(0, (raised.atk || 0) - (before.atk || 0));
+            // 载体申请被拒：本招没发动成功，不放顶角、不冒充成功也不冒充封顶。
+            if (carrier === null) {
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), sharpenRejectedText, [], 22);
+                done(action); return;
+            }
+            let gained = 0;
+            const windowId = NativeEffects.boostWindow(world, actor, { atk: gift }, carrier.duration(),
+                sharpenContribution, carrier, previous);
+            if (windowId) gained = Math.max(0, (NativeEffects.effectiveStages(world, actor).atk || 0) - (before.atk || 0));
+            // 窗口没建起来又不是因为封顶：本次没有真实提升，不留只能显示的空棱角。
+            if (!windowId && !atCap) {
+                MobEffects.consume(world, actor, sharpenEffect);
+                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), sharpenRejectedText, [], 22);
+                done(action); return;
             }
             sharpenClear(world, actor);
-            if (carrier) world.effect(sharpenMark, actor,
+            // 机读标记与身份、窗口同寿；持续棱光绑在它上面，因此封顶（无升攻窗口）时棱角仍可见、仍可反划。
+            const mark = world.effect(sharpenMark, actor,
                 JSON.stringify({ gift: gift, applied: gained, edge: edge, spikes: spikes, spread: spread, window: window }), carrier.duration());
-            WorldFeedback.emit(world, sharpenScene, 1, body.position(),
+            const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+            WorldFeedback.emit(world, sharpenScene, 1, feet,
                 { moment: "jag", actor: String(actor.ref()), gift: gained, spikes: spikes, edge: Math.round(edge), spread: spread, scale: scale,
                     capped: gained > 0 ? 0 : 1,
                     intensity: Math.max(0.7, Math.min(2, 0.7 + spikes / 26 + edge / 60)) }, 28);
-            if (windowId > 0)
-                // 持续棱光绑在这层 boostWindow 上：窗口到期或被清除，表现随窗口一起收。
-                WorldFeedback.onEffect(world, windowId, "world_combat:move_sharpen/edge", sharpenScene, 1, body.position(),
+            if (mark > 0)
+                WorldFeedback.onEffect(world, mark, "world_combat:move_sharpen/edge", sharpenScene, 1, body.position(),
                     { moment: "edge", actor: String(actor.ref()), spikes: spikes, scale: scale });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)),
                 gained > 0 ? sharpenText : sharpenCappedText, gained > 0 ? [gained] : [], 28);
@@ -177,11 +190,14 @@ namespace PokemonSkills {
         // 刷新／替换时旧载体被移除而新载体仍在：不是真的结束，不播散去。
         if (MobEffects.read(world, actor, sharpenEffect)) return;
         const mark = sharpenRead(world, actor);
-        const lost = mark ? Math.max(0, Math.round(Number(mark.applied) || 0)) : 0;
+        // 载体申请被拒时本就没有棱角标记，不播钝去。
+        if (mark === null) return;
+        const lost = Math.max(0, Math.round(Number(mark.applied) || 0));
         sharpenClear(world, actor);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, sharpenScene, 1, body.position(), { moment: "dull", actor: String(actor.ref()) }, 22);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), sharpenDullText, [lost], 22);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)),
+            lost > 0 ? sharpenDullText : sharpenDullPlainText, lost > 0 ? [lost] : [], 22);
     });
 }

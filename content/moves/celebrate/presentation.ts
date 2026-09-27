@@ -104,13 +104,14 @@ const CelebrateDefinition: ParticleDefinition = {
             ]
         },
         march: {
-            duration: 20,
+            // 不写固定 duration：这束风线要铺满整段 40–140 刻的行进劲，随持有它的托管效果一起结束。
             exit: { drain: 14 },
             emitters: [
                 {
                     name: "march_wake", bind: "target", offset: [0, 0.05, 0], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     trail: { minDistance: 0.18 },
+                    rate: 4,
                     burst: { count: { data: "motes", fallback: 10 }, at: 1 },
                     shape: { kind: "circle", radius: { data: "scale", fallback: 1 } },
                     direction: "away", speed: [0.03, 0.1], spread: 18,

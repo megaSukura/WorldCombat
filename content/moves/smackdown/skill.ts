@@ -27,18 +27,12 @@ namespace PokemonSkills {
     const smackdownDropText = "world_combat.move.smackdown.text.drop";
     const smackdownMissText = "world_combat.move.smackdown.text.miss";
 
-    /** 目标是否被托离地面：贴地观察、共享浮空身份，或宝可梦层的飞行属性/浮空特性。 */
+    /** 目标是否真的离地或带着共享浮空身份：只认实际碰撞事实与共享标记，不从飞行属性/特性推断它正在飞。 */
     function smackdownAirborne(world: CombatWorld, actor: CombatActor): boolean {
         const body = world.observe(actor);
         if (body === null) return false;
         if (!body.grounded()) return true;
-        if (CombatStatus.has(world, actor, "fly") || CombatStatus.has(world, actor, "magnetrise") || CombatStatus.has(world, actor, "telekinesis")) return true;
-        if (String(actor.domain()) === "cobblemon") {
-            const pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(world, actor);
-            if (NativeEffects.types(pokemon, state).indexOf("flying") >= 0) return true;
-            if (String(NativeEffects.ability(pokemon, state)).indexOf("levitate") >= 0) return true;
-        }
-        return false;
+        return CombatStatus.has(world, actor, "fly") || CombatStatus.has(world, actor, "magnetrise") || CombatStatus.has(world, actor, "telekinesis");
     }
 
     /** 拔掉目标身上的浮空身份；返回是否拔掉了任何一样。清除权限由原生 removeMobEffect 判定。 */
@@ -57,12 +51,13 @@ namespace PokemonSkills {
         return withTarget(factContext(action), victim);
     }
 
-    // 真实下坠过程：跨过施放动作，用独立托管效果驱动；所有权随目标与拘束身份结束。
+    // 真实下坠过程：跨过施放动作，用独立托管效果驱动；绑定命中时那枚 pin 的实际载体，随它一起结束。
     WorldCombat.effect(smackdownFall, 1, 300, "actor", function (json) {
         const value = JSON.parse(json);
         ["fall", "scale"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] <= 0) throw new Error("Invalid smackdown fall");
         });
+        if (typeof value.pin !== "string" || !value.pin) throw new Error("Invalid smackdown fall pin");
         if (value.refused === undefined) value.refused = 0;
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
@@ -74,8 +69,9 @@ namespace PokemonSkills {
     });
     WorldCombat.effectHandler(smackdownFall, "fall", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
-        // 拘束身份被清除（牛奶／/effect clear／驱散）后，下坠压力随之结束，不残留。
-        if (!world.valid(victim) || !CombatStatus.has(world, victim, "smackdown")) { effect.end(); return; }
+        // 命中时申请的 pin 载体被清除或替换（牛奶／/effect clear／重施）后，这一段下坠随之结束，不借新标记延续。
+        const pin = world.valid(victim) ? MobEffects.read(world, victim, smackdownPin) : null;
+        if (pin === null || String(pin.key()) !== String(data.pin)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
         if (!body.grounded()) {
@@ -84,7 +80,7 @@ namespace PokemonSkills {
             if (delta < -0.02) {
                 if (world.hitImpulse(victim, WorldCombat.point(0, Math.max(-4, delta), 0))) {
                     data.refused = 0;
-                    WorldFeedback.onEffect(world, effect.id(), "smackdown:drag", smackdownScene, 1, body.position(),
+                    WorldFeedback.onEffect(world, effect.id(), "smackdown:fall", smackdownScene, 1, body.position(),
                         { moment: "drag", target: String(victim.ref()), fall: data.fall, drops: Math.round(18 + data.fall * 20), scale: data.scale });
                 } else {
                     // 原生抗推/权限连续拒绝就不再空耗，免疫控制的 Boss 只受主伤。
@@ -98,11 +94,12 @@ namespace PokemonSkills {
             effect.schedule("fall", "fall", 1, "{}");
             return;
         }
-        // 真实落地：只有观察到 grounded 才播落地尘环与文字。
-        WorldFeedback.onEffect(world, effect.id(), "smackdown:land", smackdownScene, 1, body.position(),
+        // 真实落地：同一逻辑 key 切到 land，停掉上一条拖拽；尘环落在脚底，只有观察到 grounded 才播。
+        const feet = body.position().minus(WorldCombat.point(0, body.height() / 2, 0));
+        WorldFeedback.onEffect(world, effect.id(), "smackdown:fall", smackdownScene, 1, feet,
             { moment: "land", target: String(victim.ref()), scale: data.scale });
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.0, 0)), smackdownDropText, [], 24);
-        world.sound("minecraft:block.anvil.land", body.position(), 12, "{}");
+        WorldFeedback.text(world, feet.plus(WorldCombat.point(0, 1.0, 0)), smackdownDropText, [], 24);
+        world.sound("minecraft:block.anvil.land", feet, 12, "{}");
         effect.remaining(20);
     });
     WorldCombat.effectHandler(smackdownFall, "operation:world_combat:dispel", function (effect) { effect.end(); });
@@ -110,7 +107,7 @@ namespace PokemonSkills {
     define({
         id: "smackdown",
         name: "Smack Down",
-        description: "朝一个目标投出系着配重的岩弹：砸中离地/会飞的对手就持续用向下的原生受击冲量把它拽回地面、拔掉浮空身份并钉住一段；站在地上的普通对手只挨这一记石头。可点实体，也可点空中的落点。",
+        description: "朝一个目标投出系着配重的岩弹：砸中真实离地或带共享浮空的对手就持续用向下的原生受击冲量把它拽回地面、拔掉共享浮空身份并钉住一段；站在地上的普通对手只挨这一记石头。可点实体，也可点空中的落点。",
         uses: ["把飞在空中的对手打落地面", "打断对手的飞扑与浮空", "远距离先手砸一下"],
         kind: "aim",
         range: 12,
@@ -141,18 +138,21 @@ namespace PokemonSkills {
             const radius = Math.max(0.15, p("smackdown", "collisionRadius", action));
             const appearance: any = { item: "minecraft:cobblestone", scale: Math.max(0.35, Math.min(0.8, radius * 1.6)), spin: true };
             if (target !== null) appearance.homing = { target: String(target.ref()), turn: 5, delay: 2, range: action.range() + 2 };
-            let settled = false, impacted = false;
+            let settled = false, impacted = false, flightId = "";
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
             function miss(current: CombatAction, hit: CombatImpact | null): void {
                 const scope = current.world();
-                const at = hit !== null && hit.blockPosition() !== null ? hit.blockPosition()! : hit !== null ? hit.position() : aimPoint;
+                // 有真实接触用接触点；超程/到寿则读弹体自己的最后位置，不用旧瞄点假造终点。
+                const at = hit !== null && hit.blockPosition() !== null ? hit.blockPosition()!
+                    : hit !== null ? hit.position()
+                    : (flightId ? scope.projectilePosition(flightId) : null) || aimPoint;
                 WorldFeedback.emit(scope, smackdownScene, 1, at, { moment: "miss", face: hit !== null ? hit.blockFace() : "" }, 18);
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.6, 0)), smackdownMissText, [], 20);
             }
 
             sound(action, "cobblemon:move.rockthrow.actor");
-            const flight = LivingActions.projectile(action, {
+            flightId = LivingActions.projectile(action, {
                 speed: speed, range: action.range() + 3, radius: radius, lifetime: 120, appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     impacted = true;
@@ -175,8 +175,11 @@ namespace PokemonSkills {
                         const scale = Math.max(0.6, Math.min(2, pull / 0.8));
                         // 先申请正常的部分拘束身份；被拒（免疫/权限）就只留主伤，不谎报控制。
                         const pinned = CombatStatus.apply(scope, victim, "partiallytrapped", smackdownPin, pinTicks, 0);
-                        if (pinned && aloft) {
-                            scope.effect(smackdownFall, victim, JSON.stringify({ fall: pull, scale: scale, refused: 0 }), 300);
+                        const pin = pinned ? MobEffects.read(scope, victim, smackdownPin) : null;
+                        // 只有真实离地才真的拉下来；在地的浮空目标只被钉住，不能再起飞，不报「被打落」。
+                        if (pin !== null && aloft) {
+                            scope.effect(smackdownFall, victim,
+                                JSON.stringify({ fall: pull, scale: scale, refused: 0, pin: String(pin.key()) }), 300);
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.0, 0)), smackdownDropText, [], 26);
                         } else {
                             WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.0, 0)), smackdownHitText, [], 24);
@@ -190,12 +193,13 @@ namespace PokemonSkills {
                 if (!impacted) { miss(current, null); finish(current); }
             });
             WorldFeedback.keep(world, "smackdown:bolt:" + action.id(), smackdownScene, 1, origin,
-                { moment: "flight", projectile: flight, scale: Math.max(0.5, Math.min(1.6, radius / 0.32)) }, 120);
+                { moment: "flight", projectile: flightId, scale: Math.max(0.5, Math.min(1.6, radius / 0.32)) }, 120);
         }
     });
 
-    // 贴地身份存续期：每 10 刻把目标身上新出现的浮空身份再拔掉一次（清除权限仍由 removeMobEffect 判定），
-    // 让它无法重新起飞；这里不再叠加任何强制位移，免控 Boss 只受允许的主伤。低密度画面续期。
+    // 贴地身份存续期：每 10 刻把目标身上新出现的共享浮空身份再拔掉一次（清除权限仍由 removeMobEffect 判定），
+    // 让它难以借共享浮空重新起飞；这里不再叠加任何强制位移，免控 Boss 只受允许的主伤。低密度画面续期。
+    // 本招只覆盖共享浮空身份与真实受击下拉，不冒称停住任意模组私有的飞行行为。
     WorldCombat.on("world_combat:move_smackdown/pin", "world_combat:mob_effect_tick", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== smackdownPin) return;

@@ -28,7 +28,7 @@ Smoke.scenario("thunderbolt", function (stage) {
             stage.expect(stage.casts("thunderbolt", caster) >= 1, "the caster committed thunderbolt");
             stage.expect(stage.damageTo(foe) > 0, "the main beam dealt damage to the foe");
             stage.expect(stage.damageTo(neighbour) > 0, "the spread chain reached the adjacent foe");
-            stage.note("spread mode is staged on; crit and the ~10% paralysis roll stay random, and how many further branches grow depends on what is still within reach", {
+            stage.note("spread mode is staged on; the main beam really traces each newly advanced segment, so its endpoint is the first real obstruction, and a damaging main hit is what starts the chain; crit and the ~10% paralysis roll stay random, and how many further branches grow depends on what is still within the actual chain step", {
                 casts: stage.casts("thunderbolt", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 chainDamage: Math.round(stage.damageTo(neighbour) * 10) / 10,

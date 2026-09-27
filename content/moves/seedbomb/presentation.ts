@@ -1,20 +1,22 @@
 /**
  * 种子炸弹 / seedbomb 的客户端表现。
  *
- * 一句话：脚边把硬种收进荚里、高抛过顶，种荚在目标头顶散开，一颗颗硬种从上方落下砸进一小圈地面，崩开一蓬碎壳。
+ * 一句话：脚边把硬种收进荚里、高抛过顶，一枚真实种荚落地浅弹，随后在原地裂壳一次。
  * 色相家族：草绿与枯黄（grass/seed／xsseed／impact_grass 原色）＋中性尘（tinydust）＋一点近白高光（glowingsparkle）。
- * 拍子：起（windup 收种）→ 抛（toss 弧线）→ 落（rain 从上落下、burst 砸实／miss 落空）→ 收（余韵淡出）。
- * 范围：rain 的 `circle` 发射器半径（作者值 1.5 格）按 `data.scale = 实际落点半径 / 1.5` 缩放，
- *   与服务端判定同一圈；玩家看种雨盖住哪一圈，就知道站哪会被砸到。
- * 运动：种荚沿高抛弧线飞过顶；硬种在头顶散开、带重力垂直落下；砸实时碎壳向外、种子向上再落回。
- * 数：`data.seeds`（物攻与等级换算的落种数）绑定种雨 rate 与散射种子量，`data.chaff`（物攻换算的碎壳量）绑定碎屑量，
- *   `data.intensity`（整荚威力 / 80）放大整幕，`data.scale` 让重荚比散荚更小更密。
+ * 拍子：起（windup 收种）→ 抛（toss 弧线）→ 滚（rolling 引信逐刻裂痕）→ 爆（burst／miss 开壳）→ 收（余韵淡出）。
+ * 范围：burst 的落点球半径（`data.scale = 实际爆点半径 / 1.5`）与服务端判定同一球；墙能遮挡。
+ * 运动：种荚沿高抛弧线飞过顶、落地浅弹；引信在荚上逐刻加深裂痕，到点原地开壳。
+ * 数：`data.crackRate`/`data.crackSize`（引信进度换算）驱动滚动裂痕的密度与大小，`data.seeds`（物攻与等级换算的碎种数）
+ *   绑定散种量，`data.chaff`（物攻换算的碎壳量）绑定碎屑量，`data.intensity`（整荚威力 / 80）放大整幕。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const SeedbombDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
-        rolling:{emitters:[{name:"shell_cracks",bind:"projectile",fit:"none",particle:"world_combat_core:cobblemon/generic/spike",rate:20,shape:{kind:"sphere_surface",radius:.18},lifetime:[2,4],size:[.08,.02],color:0xAAB84A,alpha:[.8,.1]}]},
+        rolling:{emitters:[
+            {name:"shell_cracks",bind:"projectile",fit:"none",particle:"world_combat_core:cobblemon/generic/spike",rate:{data:"crackRate",fallback:8},shape:{kind:"sphere_surface",radius:.18},lifetime:[2,4],size:[{data:"crackSize",fallback:.06},0.02],color:0xAAB84A,alpha:[.8,.1],maxParticles:60},
+            {name:"shell_flicker",bind:"projectile",fit:"none",particle:"world_combat_core:cobblemon/generic/sparkle/glowingsparkle",rate:{data:"crackRate",fallback:8},shape:{kind:"sphere",radius:.14},lifetime:[2,5],size:[.06,.01],color:0xDCEFA0,alpha:[{data:"crack",fallback:0},0],light:"full",bloom:.3,maxParticles:48}
+        ]},
         windup: {
             duration: 11,
             exit: { stop: 4, drain: 12 },
@@ -49,37 +51,6 @@ const SeedbombDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.02, 0.1], gravity: 0.04, drag: 0.9,
                     lifetime: [8, 15], size: [0.13, 0.03],
                     alpha: [0.8, 0], light: "full", maxParticles: 90
-                }
-            ]
-        },
-        rain: {
-            duration: 28,
-            exit: { stop: 12, drain: 18 },
-            emitters: [
-                {
-                    name: "seed_fall", bind: "point", offset: [0, 0, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/grass/seed",
-                    rate: { data: "seeds", fallback: 14 }, shape: { kind: "circle", radius: 1.5 },
-                    direction: "down", speed: [0.03, 0.09], gravity: 0.05, drag: 0.995,
-                    lifetime: [16, 26], size: [0.14, 0.04], sizeMode: "index",
-                    alpha: [0.95, 0], light: "full", maxParticles: 220
-                },
-                {
-                    name: "chaff_fall", bind: "point", offset: [0, 0, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    rate: 10, shape: { kind: "circle", radius: 1.35 },
-                    direction: "down", speed: [0.02, 0.07], gravity: 0.045, drag: 0.995,
-                    lifetime: [18, 30], size: [0.08, 0.02],
-                    color: 0xC9C07A, alpha: [0.7, 0], light: "world", maxParticles: 160
-                },
-                {
-                    name: "canopy_spark", bind: "point", offset: [0, 0, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "seeds", fallback: 14 }, at: 0 },
-                    shape: { kind: "ring", radius: 1.5 },
-                    direction: "down", speed: [0.01, 0.05],
-                    lifetime: [8, 14], size: [0.1, 0.02],
-                    color: 0xDCEFA0, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 60
                 }
             ]
         },
@@ -120,6 +91,24 @@ const SeedbombDefinition: ParticleDefinition = {
             duration: 20,
             exit: { stop: 8, drain: 12 },
             emitters: [
+                {
+                    name: "shell_burst", bind: "point", offset: [0, 0.35, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_grass",
+                    burst: { count: { data: "chaff", fallback: 14 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.36 },
+                    direction: "outward", speed: [0.06, 0.24], spread: 22,
+                    lifetime: [7, 14], size: [0.28, 0.06], sizeMode: "index",
+                    alpha: [1, 0], light: "full", bloom: 0.35, maxParticles: 80
+                },
+                {
+                    name: "shell_spike", bind: "point", offset: [0, 0.3, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/spike",
+                    burst: { count: { data: "seeds", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.3 },
+                    direction: "outward", speed: [0.08, 0.26], gravity: 0.06, drag: 0.93,
+                    lifetime: [10, 18], size: [0.12, 0.03],
+                    color: 0xAAB84A, alpha: [0.9, 0], light: "full", maxParticles: 80
+                },
                 {
                     name: "land_scatter", bind: "point", offset: [0, 0.12, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/grass/seed",

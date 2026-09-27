@@ -2,12 +2,6 @@
 namespace PokemonSkills {
     function curseAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
-    /** 幽灵形态按当前属性判定（含别的单元改过属性的情况），玩家与原版生物没有属性，走非幽灵分支。 */
-    function curseIsGhost(world: CombatWorld, actor: CombatActor): boolean {
-        const types = PokemonDamage.combatants.read(world, actor).types;
-        return types.indexOf("ghost") >= 0;
-    }
-
     WorldCombat.effect(cursedBind, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         ["interval", "share", "left"].forEach(function (key) {
@@ -57,6 +51,32 @@ namespace PokemonSkills {
         if (body !== null) WorldFeedback.emit(world, curseScene, 1, body.position(), { moment: "lift", target: String(effect.target().ref()) }, 24);
     });
 
+    /** 非幽灵契约印记的看守：交换期间持续显示沉脚，印记到期/被清时收势。 */
+    WorldCombat.effect(cursePactBind, 1, 900, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        ["up", "down"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid curse pact bind: " + key);
+        });
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(cursePactBind, "start", function (effect) {
+        const data = JSON.parse(effect.state());
+        data.lease = MobEffects.bind(effect.world(), effect.target(), cursePact); effect.state(JSON.stringify(data));
+        effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(cursePactBind, "watch", function (effect) {
+        const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state()), body = world.observe(target);
+        if (body === null || !MobEffects.present(world, data.lease)) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_curse:pact_hold", curseScene, 1, body.position(),
+            { moment: "pact_hold", target: String(target.ref()), up: data.up, down: data.down });
+        effect.schedule("watch", "watch", 1, "{}");
+    });
+    WorldCombat.effectHandler(cursePactBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    WorldCombat.effectHandler(cursePactBind, "end", function (effect) {
+        const world = effect.world(), body = world.observe(effect.target());
+        if (body !== null) WorldFeedback.emit(world, curseScene, 1, body.position(), { moment: "pact_lift", target: String(effect.target().ref()) }, 20);
+    });
+
     define({
         id: curseId,
         cooldownParameter: "recharge", name: "诅咒",
@@ -68,10 +88,10 @@ namespace PokemonSkills {
         fields: [flag("bloodpact", "血契")],
         resolve: function (pokemon, config, world, actor) {
             const context: NumberContext = { pokemon, skill: skills[curseId], detail: { values: config }, world: world || null, actor: actor || null };
-            const ghost = curseGhostType(pokemon), blood = !!(config && config.bloodpact);
+            const ghost = curseIsGhost(world, actor, pokemon), blood = !!(config && config.bloodpact);
             return {
                 prepare: Math.max(3, Math.round(p(curseId, "tempo", context)) + (ghost ? 0 : -1)),
-                recover: Math.round(p(curseId, "aftercast", context)),
+                recover: Math.round(p(curseId, "aftercast", context)) + (ghost ? 0 : 2),
                 cooldown: Math.round(p(curseId, "recharge", context)) + (ghost ? 6 : blood ? 4 : 0),
                 active: 0, range: p(curseId, "reach", context)
             };
@@ -87,6 +107,11 @@ namespace PokemonSkills {
                 if (CombatStatus.has(world, target, curseStatus)) return "already-cursed";
                 const cost = p(curseId, "bloodCost", action);
                 if (body.health() <= body.maxHealth() * cost + 0.5) return "too-weak";
+            } else {
+                // 物攻/防御已封顶且速度已触底时这笔交换没有收益，不白施。
+                if (NativeEffects.effectiveStage(world, self, "atk") >= 6
+                    && NativeEffects.effectiveStage(world, self, "def") >= 6
+                    && NativeEffects.effectiveStage(world, self, "spe") <= -6) return "no-effect";
             }
             return "";
         },
@@ -136,15 +161,27 @@ namespace PokemonSkills {
                 }
             } else {
                 const gain = Math.max(1, Math.round(p(curseId, "pactGain", action)));
-                NativeEffects.boost(world, self, "atk", gain);
-                NativeEffects.boost(world, self, "def", gain);
-                NativeEffects.boost(world, self, "spe", -gain);
+                // 只认三个 boost 实际发生的等级变化：封顶/免疫吃掉的级数不回执成成功。
+                const atk = NativeEffects.boost(world, self, "atk", gain);
+                const def = NativeEffects.boost(world, self, "def", gain);
+                const spe = Math.max(0, -NativeEffects.boost(world, self, "spe", -gain));
+                if (atk + def + spe <= 0) {
+                    WorldFeedback.emit(world, curseScene, 1, body.position(), { moment: "nogain", target: String(self.ref()) }, 20);
+                    WorldFeedback.text(world, curseAbove(body.position()), curseTextNogain, [], 24);
+                    done(action);
+                    return;
+                }
                 const pactTicks = 40 + gain * 10;
-                MobEffects.apply(world, self, cursePact, pactTicks, gain);
+                const pact = MobEffects.apply(world, self, cursePact, pactTicks, gain);
+                if (pact !== null) {
+                    const existing = world.effects(self, cursePactBind);
+                    for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
+                    world.effect(cursePactBind, self, JSON.stringify({ up: atk + def, down: spe }), pactTicks + 5);
+                }
                 sound(action, "minecraft:entity.evoker.cast_spell");
                 WorldFeedback.emit(world, curseScene, 1, body.position(),
-                    { moment: "pact", target: String(self.ref()), gain: gain, burst: gain * 16 }, 30);
-                WorldFeedback.text(world, curseAbove(body.position()), curseTextPact, [gain, gain], 30);
+                    { moment: "pact", target: String(self.ref()), gain: Math.max(atk, def), burst: atk + def + 1, down: spe }, 30);
+                WorldFeedback.text(world, curseAbove(body.position()), curseTextPact, [atk, def, spe], 30);
             }
             done(action);
         }

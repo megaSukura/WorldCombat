@@ -43,14 +43,24 @@ namespace CompanionBehavior {
         for (let i = 0; i < nearby.length; i++) examine(nearby[i]);
         return best;
     }
-    /** 附近的草属性按敌我计数（同一只不重复）；用来判断敌方草是否占多数。 */
-    function rototillerGrass(context: WorldBehavior.Context): { allies: number; enemies: number } {
+    /** 这一次实际会翻出的半径：垄作/急耕与体型、特攻一起算，用于局部收益评估。 */
+    function rototillerPatch(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        const raw = PokemonSkills.p(PokemonSkills.rototillerId, "patch", {
+            world: world, actor: world.source(), skill: PokemonSkills.skills[PokemonSkills.rototillerId],
+            detail: { values: item.data.config }
+        });
+        return Math.max(1.2, raw);
+    }
+    /** 附近的草属性按敌我计数（同一只不重复），只算落在这次耕地范围内、真正站得住的那些。 */
+    function rototillerGrass(context: WorldBehavior.Context, centre: number[], radius: number): { allies: number; enemies: number } {
         const self = source(context), seen: string[] = [];
         let allies = 0, enemies = 0;
         const examine = function (other: Entity): void {
             const ref = String(other.ref);
             if (seen.indexOf(ref) >= 0) return;
             seen.push(ref);
+            if (distance(other.point, centre) > radius) return;
             if (!rototillerIsGrass(context, other)) return;
             if (other.friendly === false) enemies++;
             else if (other.health > 0) allies++;
@@ -82,6 +92,8 @@ namespace CompanionBehavior {
             if (context.facts.mounted) return false;
             const pick = rototillerPick(context, item);
             if (!pick) return false;
+            // 先预检落点真的翻得动（自然土、没有作物），别对石头排一趟空计划。
+            if (!PokemonSkills.rototillerTillable(CompanionBehavior.world(context), CompanionBehavior.point(pick.point))) return false;
             const threat = context.senses["world_combat:threat"];
             if (threat && distance(source(context).point, threat.point) <= ai<number>(item, "maxChase", 12)) return true;
             return rototillerWork(context, pick);
@@ -92,7 +104,7 @@ namespace CompanionBehavior {
         priority: function (context, item, _target) {
             const pick = rototillerPick(context, item);
             if (!pick) return 0;
-            const self = source(context), counts = rototillerGrass(context);
+            const self = source(context), counts = rototillerGrass(context, pick.point, rototillerPatch(context, item));
             // 翻给敌方草属性占多数的局面：慎用，压低到只在没有更合适选择时出手。
             if (counts.enemies > counts.allies) return 18;
             if (String(pick.ref) === String(self.ref)) return 62;

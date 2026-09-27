@@ -5,8 +5,9 @@
  *   扫过的每一段都亮起一层叶与刺，扫到的人身上迸出草屑。
  * 色相家族：草绿与叶黄（razorleaf / smallleaf / seed / impact_grass 为主体，0x8FC63A、0xB6D84A），近白只给命中那一闪。
  * 拍子：起（coil 拢刺）→ 扑（drive 扑上）→ 扫（rake 三段真实扇面从右到左）→ 中（strike 命中迸刺）→ 懵（flinch）／空（miss）。
- * 范围：rake 的三段各自绑服务端传来的 `data.path`（与 WorldGeometry.sector 同一组顶点），弧面盖到哪就是扫到哪；
- *   `data.scale`（挥扫半径 / 参考值）缩放粒子，`data.intensity` 抬高亮度。
+ * 范围：rake 每刻只绑服务端当前这一小段弧面的 `data.path`（与判定共用 needlearmTurn 的同一偏角端点），弧面盖到哪就是扫到哪；
+ *   每段只活几刻、随下一段替换，同拍臂端由右向左扫过，不会留下三块常亮的旧扇。`data.scale`（挥扫半径 / 参考值）缩放粒子，
+ *   `data.intensity` 抬高亮度。
  * 运动：起手尖刺向臂上收拢；扑上时向前拖叶；每段扇面沿弧由内向外扫开；命中时朝外迸刺。
  * 数：`data.thorns`（物攻与等级派生）决定每段扇面的密度与命中迸刺量。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -49,29 +50,29 @@ const NeedlearmDefinition: ParticleDefinition = {
             ]
         },
         rake: {
-            duration: 20,
-            exit: { stop: 6, drain: 12 },
+            duration: 8,
+            exit: { stop: 3, drain: 6 },
             emitters: [
                 {
                     name: "rake_fill", bind: "path", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    rate: { data: "thorns", fallback: 22 }, shape: { kind: "polygon" }, direction: "shape", speed: [0.06, 0.24], spread: 16, spin: 14,
-                    lifetime: [8, 14], size: [0.14, 0.03],
-                    color: 0x8FC63A, alpha: [0.4, 0], light: "world", maxParticles: 110
+                    rate: { data: "thorns", fallback: 14 }, shape: { kind: "polygon" }, direction: "shape", speed: [0.06, 0.24], spread: 16, spin: 14,
+                    lifetime: [5, 9], size: [0.14, 0.03],
+                    color: 0x8FC63A, alpha: [0.4, 0], light: "world", maxParticles: 50
                 },
                 {
                     name: "rake_edge", bind: "path", offset: [0, 0.16, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: 26, shape: { kind: "polyline" }, direction: "shape", speed: [0.08, 0.3], spread: 12,
-                    lifetime: [6, 11], size: [0.16, 0.03], sizeMode: "index",
-                    color: 0xB6D84A, alpha: [0.75, 0], light: "world", maxParticles: 90
+                    rate: 16, shape: { kind: "polyline" }, direction: "shape", speed: [0.08, 0.3], spread: 12,
+                    lifetime: [4, 8], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0xB6D84A, alpha: [0.75, 0], light: "world", maxParticles: 40
                 },
                 {
                     name: "rake_thorns", bind: "path", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    rate: 18, shape: { kind: "polygon" }, direction: "shape", speed: [0.05, 0.18], gravity: 0.04, drag: 0.92,
-                    lifetime: [10, 18], size: [0.09, 0.02],
-                    color: 0x7FB03A, alpha: [0.5, 0], light: "world", maxParticles: 80
+                    rate: 12, shape: { kind: "polygon" }, direction: "shape", speed: [0.05, 0.18], gravity: 0.04, drag: 0.92,
+                    lifetime: [7, 13], size: [0.09, 0.02],
+                    color: 0x7FB03A, alpha: [0.5, 0], light: "world", maxParticles: 36
                 }
             ]
         },

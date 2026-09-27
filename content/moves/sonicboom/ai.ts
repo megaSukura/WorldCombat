@@ -8,6 +8,15 @@
  * 回响式不改变出手条件，只把第二声与更长的冷却带进来。
  */
 namespace PokemonSkills {
+    /** 本个体这一次的固定伤害；AI 与出招共用同一条 damage 公式，收残按绝对生命判断。 */
+    function sonicboomFixed(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            return Math.max(1, PokemonSkills.p("sonicboom", "damage",
+                { world: world, actor: world.source(), skill: skills["sonicboom"], detail: { values: capability.data.config || {} } }));
+        } catch (error) { return 20; }
+    }
+
     CompanionBehavior.registerUse("sonicboom", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
@@ -25,7 +34,12 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 16;
-            if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) <= 0.35) score += 22;
+            // 收残用绝对生命与固定伤害比较（不看目标上限，也不会把高血 Boss 误判成残血），而不是按比例判断。
+            if (CompanionBehavior.ai<boolean>(capability, "finish", true)) {
+                const fixed = sonicboomFixed(context, capability);
+                if (target.health <= fixed) score += 26;
+                else if (target.health <= fixed * 1.5) score += 12;
+            }
             // 裂痕在起手窗口里即时落点：移动慢的目标更可能仍停在准线上，回响式的第二声尤其吃这一点。
             const velocity = target.velocity;
             if (velocity) {
@@ -38,7 +52,7 @@ namespace PokemonSkills {
 
     addPreferences("sonicboom", {}, [
         field(pathOf("reverb"), "回响式", "boolean", {
-            help: "开启：第一声之后隔一小段沿同一方向再爆一声，对当时还在线上的人再削固定的 20（适合仍停在准线上的目标）；代价是第二声把施法者多定住一段、冷却更长。关闭（单声式，默认）：一声了事，更快更省。"
+            help: "开启：第一声之后隔一小段，从当时的位置沿原方向再裂一次，对那时仍在新线上的人再削固定的 20（适合仍停在准线上的目标）；代价是多一段收势、冷却更长。关闭（单声式，默认）：一声了事，更快更省。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 16, step: 1,

@@ -14,9 +14,15 @@ namespace MoveExecutions {
         if (action === null || !world.originInstance() || read(world, initialized)) return;
         const declaration = declarations.apply({ world: world, actor: event.actor(), action: action,
             move: String(event.actor().domain()) === "cobblemon" ? NativeLoadout.executing(action) : null, features: [] });
-        if (declaration.move === null) return;
-        const features = declaration.features.length ? declaration.features : [{}];
-        const metadata = features.map(value => PokemonDamage.sourceMetadata(world, event.actor(), declaration.move!, value, action));
+        // Every committed action is observable. Non-loadout content may declare its own facts; an undeclared
+        // action keeps an empty list rather than borrowing an unrelated Pokemon move or guessed attack type.
+        const features = declaration.features.length ? declaration.features : declaration.move ? [{}] : [];
+        const metadata = features.map(value => {
+            if (declaration.move) return PokemonDamage.sourceMetadata(world, event.actor(), declaration.move, value, action);
+            const data: any = { kind: "move" };
+            Object.keys(value).forEach(key => data[key] = (value as any)[key]);
+            return data;
+        });
         write(world, initialized, true);
         committed.apply({ world: world, actor: event.actor(), action: action, metadata: metadata, native: false });
     });

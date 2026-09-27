@@ -20,7 +20,7 @@
  *   radius     判定半径：体型（碰撞箱高度）。
  *   push       撞开：物攻。
  *   sparks     碎光数量：速度与物攻派生，直接驱动画面发射量。
- *   tempo/recover/recharge：速度与等级定时序；实招式更慢更费。
+ *   tempo/settle/recharge：速度与等级定时序；实招式更慢更费（收招用 settle 命名，避开 recover 保留键）。
  *
  * 配置 `commit`（实招，默认关）双向取舍：开＝把假动作收掉真打——威力 ×1.35、每层破绽 +0.1、掀护 +1 层、
  *   突进 ×1.1，代价是起手 +3 刻、收招 +2 刻、冷却 +10 刻；关（佯攻）＝出手极快、冷却短，掀掉守护是它唯一
@@ -114,8 +114,8 @@ namespace PokemonSkills {
             F.base(4).minus(F.stat("speed").minus(60).times(0.015).clamp(-1, 2))
                 .plus(F.when(F.pref("commit"), F.const(3), F.const(0))).clamp(3, 10).round(0),
             "起手", "虚晃到扑出去之间的时间；速度快的个体起手更短，这一拍就是原生优先度 +2 的对位。实招式先收势再打，多花三刻。"),
-        /** 收招：基础 5 − 速度偏移[−1.5,2]；实招 +2；夹 3..10。 */
-        recover: seconds(
+        /** 收招：基础 5 − 速度偏移[−1.5,2]；实招 +2；夹 3..10。用 settle 避开 recover 这一保留键，否则 resolve 会读到基准 5。 */
+        settle: seconds(
             F.base(5).minus(F.stat("speed").minus(60).times(0.02).clamp(-1.5, 2))
                 .plus(F.when(F.pref("commit"), F.const(2), F.const(0))).clamp(3, 10).round(0),
             "收招", "扑完把重心收回来的时间；速度越快收得越利落。"),
@@ -139,7 +139,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["radius","push"] },
         { key: "commit.on", values: [], when: function (context) { return read(context.detail.values, ["commit"]) === true; } },
         { key: "commit.off", values: [], when: function (context) { return read(context.detail.values, ["commit"]) !== true; } },
-        { key: "timing", values: ["range", "tempo", "recover", "pp", "recharge"] },
+        { key: "timing", values: ["range", "tempo", "settle", "pp", "recharge"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.jab", "tier.0.wardBreak"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.jab", "tier.1.reach"] }
     ]);

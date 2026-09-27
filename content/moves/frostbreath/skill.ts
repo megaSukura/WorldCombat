@@ -6,17 +6,19 @@
  *
  * 两幕：
  *   起（windup，提交前）：深吸一口气、嘴边凝起白霜，只播预告。
- *   呼（exhale → burst，提交后）：冷雾从口中铺出，按 `cloudSpeed` 用 `reach / cloudSpeed` 刻漫到呼程末端；
- *       到点后罩住扇形内的每个敌人，各按 `breath` 结算一次**必定要害**的冰属性特殊伤害、冻僵 `chillTicks`、
- *       并在各自脚下结出一层霜（租借，linger，到期原方块回来）。一个也没罩到就只留一层薄霜与浮字。
+ *   呼（advance → touch → burst，提交后）：冷雾的当前前沿从固定源点按 `cloudSpeed` 每刻推进一口雾带，雾带由
+ *       `origin` 与 `spread`/`reach` 计算的同一组扇环顶点同时驱动判定与表现。每个非友方在小腿高度身体箱第一次
+ *       与某口雾带相交时被触及一次：各按 `breath` 结算一次**必定要害**的冰属性特殊伤害、冻僵 `chillTicks`；
+ *       每个被罩住的脚下结霜（租借，linger，到期原方块回来），总格数受 `frost` 预算约束。走到呼程末端即停，
+ *       余雾散去。原生拒绝这次伤害时那一口既不上冻僵、也不留霜，也不发成功提示。
  *
- * 与同族／近邻分开：极光束是一条细快的直线光（点名最前一个、压攻击、留霜斑）；冰息是一片宽而慢的扇形冷雾
- *   （罩住一片、必暴、冻僵、留霜）；冰砾是一枚瞬发物理碎冰；冰冻光束是贯穿一条线。冷雾的形状本身就是判定区，
- *   表现用同一组扇形顶点画出（path + polygon）。
+ * 与同族／近邻分开：极光束是一条细快的直线光（点名最前一个、压攻击、留霜斑）；冰息是一片宽而慢、逐刻推进的
+ *   扇形冷雾（罩住一片、必暴、冻僵、留霜）；冰砾是一枚瞬发物理碎冰；冰冻光束是贯穿一条线。雾带形状本身就是判定区，
+ *   表现用同一组扇环顶点画出（path + polygon）。
  *
- * 选取 `kind: "aim"`：可朝任意方向或世界点呼出，也能点任意阵营实体；提交后方向锁死，冷雾沿这条方向铺开。
- *   目标是空、离场或空呼都不提前结束——照样把这一口呼完、在真实到达的位置留一层薄雪。攻击许可仍由命中层按敌我
- *   关系判断；墙后的对象被 `world.clear` 排除（墙替它挡住冷雾），阵前站着的人才吃这一口。
+ * 选取 `kind: "aim"`：可朝任意方向或世界点呼出，也能点任意阵营实体；提交后方向锁死，冷雾沿这条方向推进。
+ *   目标是空、离场或空呼都不提前结束——照样把这一口呼完，雾在真实到达的位置散去、不留霜。攻击许可仍由命中层按
+ *   敌我关系判断；墙后的对象被 `world.clear` 排除（墙替它挡住冷雾），阵前站着的人才吃这一口。
  */
 namespace PokemonSkills {
     /** 在落点地表上方空格结出一层霜，租约到期清去薄雪；返回实际铺出的格数。 */
@@ -49,6 +51,25 @@ namespace PokemonSkills {
                 Math.max(40, Math.round(ticks)))).placed.length;
         }
         catch (error) { return 0; }
+    }
+
+    /**
+     * 当前推进雾带的顶点（判定与表现共用）：从 `inner` 到 `outer`、张角 `spread` 的扇环；
+     * `inner` 为 0 时是一条从源点起的扇形。所有顶点在同一高度 `y`。
+     */
+    function frostbreathBand(origin: CombatPoint, heading: CombatPoint, inner: number, outer: number, spread: number, y: number): CombatPoint[] {
+        const half = spread * Math.PI / 360, yaw = Math.atan2(heading.z(), heading.x()), steps = 6, points: CombatPoint[] = [];
+        function at(angle: number, radius: number): CombatPoint {
+            return WorldCombat.point(origin.x() + Math.cos(angle) * radius, y, origin.z() + Math.sin(angle) * radius);
+        }
+        if (inner > 0.05) {
+            for (let i = 0; i <= steps; i++) points.push(at(yaw - half + (i / steps) * 2 * half, outer));
+            for (let i = steps; i >= 0; i--) points.push(at(yaw - half + (i / steps) * 2 * half, inner));
+        } else {
+            points.push(WorldCombat.point(origin.x(), y, origin.z()));
+            for (let i = 0; i <= steps; i++) points.push(at(yaw - half + (i / steps) * 2 * half, outer));
+        }
+        return points;
     }
 
     /** 水平朝向：瞄准目标，没有目标就朝面前。 */
@@ -109,61 +130,75 @@ namespace PokemonSkills {
             const chillTicks = Math.max(20, Math.round(p(frostbreathId, "chillTicks", action)));
             const motes = Math.max(12, Math.round(p(frostbreathId, "motes", action)));
             const heading = frostbreathHeading(action);
-            const half = spread * Math.PI / 360;
-            const yaw = Math.atan2(heading.z(), heading.x());
-            const delay = Math.max(6, Math.min(30, Math.round(reach / speed)));
             const size = Math.max(0.08, radius * 0.16);
             const intensity = Math.max(0.5, Math.min(2.2, power / 58));
+            // 每刻推进的一口雾带；判定与表现共用这组顶点。
+            const bandDepth = Math.max(0.6, speed * 2);
+            const scenes = WorldFeedback.actionScenes(frostbreathScene);
+            const touched: { [ref: string]: boolean } = {};
+            let distance = 0, hits = 0, rimeBudget = frost, settled = false;
 
-            // 判定与表现读同一组扇形顶点：扇心 + 弧上若干顶点。
-            const path: number[][] = [[origin.x(), origin.y(), origin.z()]];
-            const segment = 12;
-            for (let step = 0; step <= segment; step++) {
-                const angle = yaw - half + (step / segment) * 2 * half;
-                path.push([origin.x() + Math.cos(angle) * reach, origin.y() + 0.12, origin.z() + Math.sin(angle) * reach]);
+            function frontAt(at: number): CombatPoint {
+                return WorldCombat.point(origin.x() + heading.x() * at, origin.y(), origin.z() + heading.z() * at);
+            }
+
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                const scope = current.world(), end = frontAt(reach);
+                scenes.stop(current, "front");
+                scope.sound("minecraft:entity.player.hurt_freeze", end, 16, "{}");
+                if (hits > 0) {
+                    WorldFeedback.emit(scope, frostbreathScene, 1, end,
+                        { moment: "burst", motes: motes, size: size * 1.4, hits: hits, intensity: intensity }, 26);
+                } else {
+                    // 空呼：冷雾在真实呼程末端散去，不在任何地方留霜。
+                    WorldFeedback.emit(scope, frostbreathScene, 1, end, { moment: "miss", motes: motes, size: size, reach: reach }, 22);
+                    WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.0, 0)), frostbreathMissText, [], 22);
+                }
+                done(current);
+            }
+
+            function advance(current: CombatAction): void {
+                if (settled) return;
+                const scope = current.world();
+                distance = Math.min(reach, distance + speed);
+                const front = frontAt(distance), inner = Math.max(0, distance - bandDepth);
+                const vertices = frostbreathBand(origin, heading, inner, distance, spread, origin.y());
+                scenes.show(current, "front", front,
+                    { moment: "front", path: vertices.map(function (point) { return [point.x(), point.y(), point.z()]; }),
+                        direction: [heading.x(), 0, heading.z()], halfAngle: spread / 2, radius: radius,
+                        length: Math.max(0.6, speed), motes: motes, size: size, progress: distance / reach });
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodyPolygon(vertices, origin.y() - 2.5, origin.y() + 3),
+                    function (enemy, facts) {
+                        const ref = String(enemy.ref());
+                        if (touched[ref] || scope.friendly(enemy)) return;
+                        const at = facts.position();
+                        // 墙替它挡住冷雾：中间隔着实墙的对象不算被罩住。
+                        if (!scope.clear(origin, at)) return;
+                        touched[ref] = true;
+                        // 原生拒绝这次伤害时不发成功提示、不上冻僵，也不留霜。
+                        if (!hurt(current, enemy, frostbreathId, power, { damage: damageSpec(frostbreathId, "breath"), critical: true })) return;
+                        hits++;
+                        CombatStatus.apply(scope, enemy, "chill", frostbreathChillEffect, chillTicks, 0, { unique: true });
+                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), frostbreathChillText, [], 24);
+                        WorldFeedback.emit(scope, frostbreathScene, 1, at,
+                            { moment: "hit", target: ref, motes: motes, size: size * 1.3, intensity: intensity }, 24);
+                        if (rimeBudget > 0) {
+                            const share = Math.max(3, Math.round(frost / 2));
+                            const cells = frostbreathRime(scope, at, Math.min(rimeBudget, share), frostTicks);
+                            if (cells > 0) {
+                                rimeBudget -= cells;
+                                WorldFeedback.emit(scope, frostbreathScene, 1, at, { moment: "rime", cells: cells, size: size * 0.8 }, 28);
+                            }
+                        }
+                    });
+                if (distance >= reach - 1e-6) { finish(current); return; }
+                current.after(1, function (next: CombatAction) { advance(next); });
             }
 
             sound(action, "minecraft:block.powder_snow.break");
-            WorldFeedback.emit(world, frostbreathScene, 1, origin,
-                { moment: "exhale", path: path, direction: [heading.x(), 0, heading.z()], reach: reach,
-                    halfAngle: spread / 2, radius: radius, motes: motes, size: size, delay: delay, intensity: intensity }, delay + 40);
-
-            let settled = false;
-            action.after(delay, function (current) {
-                const scope = current.world();
-                const region = WorldGeometry.sector(origin, heading, reach, spread, { below: 2.5, above: 3 });
-                let hits = 0;
-                WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                    const at = facts.position();
-                    // 墙替它挡住冷雾：不在扇面里或中间隔着实墙的对象不算被罩住。
-                    if (!scope.clear(origin, at)) return;
-                    hits++;
-                    const landed = hurt(current, enemy, frostbreathId, power,
-                        { damage: damageSpec(frostbreathId, "breath"), critical: true });
-                    WorldFeedback.emit(scope, frostbreathScene, 1, at,
-                        { moment: "hit", target: String(enemy.ref()), motes: motes, size: size * 1.3, intensity: intensity }, 24);
-                    if (landed) {
-                        CombatStatus.apply(scope, enemy, "chill", frostbreathChillEffect, chillTicks, 0, { unique: true });
-                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), frostbreathChillText, [], 24);
-                    }
-                    const cells = frostbreathRime(scope, at, frost, frostTicks);
-                    if (cells > 0)
-                        WorldFeedback.emit(scope, frostbreathScene, 1, at, { moment: "rime", cells: cells, size: size * 0.8 }, 28);
-                });
-                const far = origin.plus(heading.scale(reach));
-                scope.sound("minecraft:entity.player.hurt_freeze", far, 16, "{}");
-                WorldFeedback.emit(scope, frostbreathScene, 1, origin.plus(heading.scale(reach * 0.62)),
-                    { moment: "burst", motes: motes, size: size * 1.5, hits: hits, intensity: intensity }, 26);
-                if (hits === 0) {
-                    // 空呼：冷雾在真实呼程末端散去；只在实际结出薄雪的位置留痕，放不下就不画霜。
-                    WorldFeedback.emit(scope, frostbreathScene, 1, far, { moment: "miss", motes: motes, size: size }, 22);
-                    const cells = frostbreathRime(scope, far, Math.max(4, Math.round(frost * 0.5)), frostTicks);
-                    if (cells > 0)
-                        WorldFeedback.emit(scope, frostbreathScene, 1, far, { moment: "rime", cells: cells, size: size * 0.7 }, 24);
-                    WorldFeedback.text(scope, far.plus(WorldCombat.point(0, 1.0, 0)), frostbreathMissText, [], 22);
-                }
-                if (!settled) { settled = true; done(current); }
-            });
+            advance(action);
         }
     });
 }

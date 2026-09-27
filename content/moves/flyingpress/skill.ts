@@ -21,30 +21,24 @@ namespace PokemonSkills {
     const flyingpressHitText = "world_combat.move.flyingpress.text.hit";
     const flyingpressMissText = "world_combat.move.flyingpress.text.miss";
 
-    /** 正下方最近地表的顶面高度；找不到就返回脚底当前高度。 */
-    function flyingpressSurface(world: CombatWorld, body: CombatObservation): number {
-        const from = body.position(), feet = from.y() - body.height() * 0.5;
-        for (let step = 0; step <= 24; step++) {
-            const block = world.block(WorldCombat.point(from.x(), feet - step, from.z()));
-            if (block === null) break;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            return Math.floor(feet - step) + 1;
-        }
-        return feet;
+    /** Native support includes slabs and collision shapes; no surface is not a landing. */
+    function flyingpressSurface(world: CombatWorld, body: CombatObservation): number | null {
+        const from = body.position(), feet = WorldCombat.point(from.x(), body.boundsMin().y(), from.z());
+        const support = SurfacePaths.support(world, feet, 0.1, 24);
+        return support === null ? null : support.y();
     }
 
     /** 头顶到最近顶板之间的真实净空（按方块判定，忽略自身碰撞箱）；顶板/方块把它截短，返回真实可升程。 */
     function flyingpressRise(world: CombatWorld, body: CombatObservation, desired: number): number {
-        const centre = body.position(), head = centre.y() + body.height() * 0.5;
-        let clearance = desired + 1;
-        for (let step = 0; step <= Math.ceil((desired + 1) / 0.5); step++) {
-            const block = world.block(WorldCombat.point(centre.x(), head + step * 0.5, centre.z()));
-            if (block === null) { clearance = step * 0.5; break; }
-            const id = String(block.id());
-            if (id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air" && id !== "minecraft:water") { clearance = step * 0.5; break; }
+        const centre = body.position();
+        let clearance = 0;
+        for (let step = 0.2; step <= desired + 0.2; step += 0.2) {
+            const up = Math.min(step, desired);
+            if (!world.freeSpace(WorldCombat.point(centre.x(), body.boundsMin().y() + up, centre.z()), body.width(), body.height())) break;
+            clearance = up;
+            if (up === desired) break;
         }
-        return Math.max(1.0, Math.min(desired, clearance - 0.2));
+        return clearance;
     }
 
     define({
@@ -81,10 +75,11 @@ namespace PokemonSkills {
                 range: p("flyingpress", "reach", context)
             };
         },
-        windup: function (action, config) {
+        windup: function (action, config, prepare) {
             action.present("flyingpress:crouch", flyingpressScene, 1, action.origin(),
                 JSON.stringify({ moment: "crouch", highDive: config && config.highDive === true }));
-            return p("flyingpress", "prepare", action);
+            // 保留 resolve 已经算进高低档成本的起手，不再退回公式原值。
+            return prepare;
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(flyingpressScene);
@@ -113,21 +108,24 @@ namespace PokemonSkills {
                 const facts = live.observe(victim);
                 if (facts === null) return;
                 const away = facts.position().minus(at);
-                if (away.length() > 0.2 && push > 0)
-                    live.hitDisplace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                const horizontal = WorldCombat.point(away.x(), 0, away.z());
+                if (horizontal.length() > 0.2 && push > 0)
+                    live.hitDisplace(victim, horizontal.unit().scale(push));
                 if (crush > 0) live.hitImpulse(victim, WorldCombat.point(0, -crush, 0));
             }
             /** 落地收束：压到实体才结算主伤与压制；撞墙只擦尘；压到落点只扬尘。都不回头补打原目标。 */
             function landed(current: CombatAction, at: CombatPoint, hit: CombatImpact | null, victim: CombatActor | null, mode: string): void {
                 movementScenes.stop(current);
                 const live = current.world();
+                // 先记住受击者身份：这一击可能把它打倒，成功反馈不能因为 valid 变 false 而丢失。
+                const victimRef = victim !== null ? String(victim.ref()) : "";
                 let applied = false;
                 if (mode === "press" && hit !== null && victim !== null && live.valid(victim) && !live.friendly(victim))
                     applied = impact(current, hit, "flyingpress", power, { damage: damageSpec("flyingpress", "press"), contact: true });
-                if (applied && victim !== null && live.valid(victim)) {
-                    knockdown(live, victim, at);
+                if (applied) {
+                    if (victim !== null && live.valid(victim)) knockdown(live, victim, at);
                     WorldFeedback.emit(live, flyingpressScene, 1, at,
-                        { moment: "press", target: String(victim.ref()), scale: scale,
+                        { moment: "press", target: victimRef, scale: scale,
                             intensity: Math.max(0.6, Math.min(2.2, power / 100)), count: Math.round(18 + power * 0.35) }, 30);
                     sound(current, "cobblemon:impact.fighting");
                     sound(current, "minecraft:entity.player.attack.strong");
@@ -140,32 +138,45 @@ namespace PokemonSkills {
                         { moment: "whiff", scale: scale, intensity: Math.max(0.5, Math.min(1.6, power / 120)) }, 18);
                     WorldFeedback.text(live, at.plus(WorldCombat.point(0, 1.0, 0)), flyingpressMissText, [], 22);
                 }
-                ground(current, 0, function () { finish(current); });
+                ground(current, 0, finish);
             }
-            function ground(current: CombatAction, guard: number, complete: () => void): void {
+            function ground(current: CombatAction, guard: number, complete: (current: CombatAction) => void): void {
                 const live = current.world(), self = live.observe(actor);
-                if (self === null || guard > 30) { complete(); return; }
-                const feet = self.position().y() - self.height() * 0.5, floor = flyingpressSurface(live, self);
-                if (feet > floor + 0.15) {
-                    live.displace(actor, WorldCombat.point(0, -Math.max(0.4, feet - floor + 0.4), 0));
+                if (self === null || guard > 60) { complete(current); return; }
+                const feet = self.boundsMin().y(), floor = flyingpressSurface(live, self);
+                if (floor === null) { complete(current); return; }
+                if (feet > floor + 0.05) {
+                    // 归地逐短段，贴近真实支撑面下落，不一步跨过。
+                    live.displace(actor, WorldCombat.point(0, -Math.max(0.25, Math.min(0.6, feet - floor + 0.1)), 0));
                     current.after(1, function (next: CombatAction) { ground(next, guard + 1, complete); });
                     return;
                 }
+                // 只有脚真正落到支撑面才播落地。
                 WorldFeedback.emit(live, flyingpressScene, 1, self.position(), { moment: "land" }, 16);
-                complete();
+                complete(current);
             }
             /** 到顶后仅此一次重新定向：取当前目标位置或锁定瞄点，按 reach 预算截断后锁死。 */
             function beginDive(current: CombatAction): void {
-                const live = current.world();
+                const live = current.world(), self = live.observe(actor);
+                if (self === null) { finish(current); return; }
                 const t = target !== null ? live.observe(target) : null;
-                const at = t !== null && t.health() > 0 ? t.position() : aimPoint;
+                const locked = t !== null && t.health() > 0;
+                const at = locked ? t!.position() : aimPoint;
                 const flat = WorldCombat.point(at.x() - start.x(), 0, at.z() - start.z());
                 const distance = flat.length();
-                diveEnd = distance > reach
-                    ? WorldCombat.point(start.x() + flat.unit().scale(reach).x(), at.y(), start.z() + flat.unit().scale(reach).z())
-                    : at;
-                movementScenes.show(current, "mark", diveEnd,
+                // 俯压只能向下：锁点高于当刻身体时压不到，止于当刻高度，成为一次贴低压/空过。
+                const pressedY = Math.min(at.y(), self.position().y());
+                const toward = distance > reach
+                    ? WorldCombat.point(start.x() + flat.unit().scale(reach).x(), pressedY, start.z() + flat.unit().scale(reach).z())
+                    : WorldCombat.point(at.x(), pressedY, at.z());
+                diveEnd = toward;
+                // 脚点预告：锁到实体时钉在它脚下，否则落在锁定水平位置的真实支撑面上；与实际下压终点同一水平位置。
+                const foot = locked && t !== null ? WorldCombat.point(at.x(), t.boundsMin().y(), at.z()) : WorldGeometry.ground(live, toward, 8);
+                movementScenes.show(current, "mark", foot,
                     { moment: "mark", scale: scale, intensity: Math.max(0.5, Math.min(1.6, power / 100)) });
+                // 持续俯冲姿态：源绑定的尾迹沿身体的真实下压路线发射。
+                movementScenes.show(current, "dive", self.position(),
+                    { moment: "dive", scale: scale, intensity: Math.max(0.6, Math.min(2, power / 100)) });
                 dive(current);
             }
             function dive(current: CombatAction): void {

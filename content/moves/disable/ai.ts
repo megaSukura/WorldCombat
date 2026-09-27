@@ -13,6 +13,13 @@ namespace PokemonSkills {
         return String(state.used);
     });
 
+    /** 目标这一手连续重复了几次（宝可梦按原生记忆；普通生物没有这项事实时记 0）。 */
+    CompanionBehavior.registerFact("world_combat:move_disable/repeats", function (access, actor, _argument) {
+        if (String(actor.domain()) !== "cobblemon") return 0;
+        const state = NativeEffects.read(access, actor);
+        return typeof state.repeats === "number" && isFinite(state.repeats) ? state.repeats : 0;
+    });
+
     /** 本次决策读出的真实记忆窗口：特攻越高读得越远；AI 用它读对手的手，误差与执行层一致。 */
     function disableMemory(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const cached = context.scratch.disableMemory;
@@ -51,7 +58,14 @@ namespace PokemonSkills {
         priority: function (context, item, target) {
             if (target === null || !disableWants(context, item, target)) return 0;
             const last = CompanionBehavior.fact<string>(context, "world_combat:move_disable/last", target, disableMemory(context, item));
-            return String(last).indexOf(":") >= 0 || CobblemonCombat.moveTemplate(String(last)).power() >= 60 ? 50 : 35;
+            if (last === null || last === "" || last === "struggle") return 30;
+            // 按这一手的具体威胁与它被重复使用的频率评分：冒号只说明它是原生伤害签名，本身不是高权理由。
+            const native = String(last).indexOf(":") >= 0;
+            let power = 0;
+            if (native) power = disableKind(String(last)) === "other" ? 0 : 55;
+            else { try { power = CobblemonCombat.moveTemplate(String(last)).power(); } catch (error) { power = 0; } }
+            const repeats = CompanionBehavior.fact<number>(context, "world_combat:move_disable/repeats", target) || 0;
+            return 30 + (power >= 80 ? 16 : power >= 50 ? 10 : power > 0 ? 6 : 4) + Math.min(8, Math.round(repeats) * 2);
         }
     });
 

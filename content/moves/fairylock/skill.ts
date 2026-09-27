@@ -9,6 +9,12 @@ namespace PokemonSkills {
         }
         delete state.carriers[ref];
     }
+    /** 真正脱锁（被拉出范围或原生拒绝牵制）才给这一位短解锁反馈；整场到期收束走 end，不走这里。 */
+    function fairyEscape(world: CombatWorld, ref: string, state: any, body: CombatObservation | null): void {
+        fairyRelease(world, ref, state);
+        if (body !== null) WorldFeedback.emit(world, fairyScene, 1, body.position(),
+            { moment: "freed", target: ref, bars: state.bars, lattice: state.lattice }, 16);
+    }
     WorldCombat.effect(fairyNet, 1, 600, "actor", json => json, EffectProtocols.unchanged);
     WorldCombat.effectHandler(fairyNet, "start", effect => effect.schedule("scan", "scan", 1, "{}"));
     WorldCombat.effectHandler(fairyNet, "scan", function (effect) {
@@ -18,19 +24,27 @@ namespace PokemonSkills {
             const actor = found[i], body = world.observe(actor); if (!body) continue;
             const ref = String(actor.ref()), delta = body.position().minus(centre), distance = Math.sqrt(delta.x() * delta.x() + delta.z() * delta.z());
             present.push(ref);
-            if (distance > state.radius + .4 || Math.abs(delta.y()) > 3) { fairyRelease(world, ref, state); delete state.refused[ref]; continue; }
+            if (distance > state.radius + .4 || Math.abs(delta.y()) > 3) {
+                if (state.carriers[ref]) fairyEscape(world, ref, state, body); else fairyRelease(world, ref, state);
+                delete state.refused[ref]; continue;
+            }
             if (state.refused[ref]) continue;
-            if (!state.carriers[ref]) {
+            const current = MobEffects.read(world, actor, fairySeal);
+            if (!current) {
                 if (distance > state.radius) continue;
+                // 只在能直连到场地中心时才加入：隔墙、隔层不算同一连通场地，不会被锁进去。
+                if (!world.clear(centre, body.position())) { state.refused[ref] = true; continue; }
                 const carrier = MobEffects.apply(world, actor, fairySeal, effect.remaining(), 0);
                 if (!carrier) { state.refused[ref] = true; continue; }
                 state.carriers[ref] = MobEffects.anchor(carrier);
                 WorldFeedback.emit(world, fairyScene, 1, body.position(), { moment: "caught", target: ref, bars: state.bars, lattice: state.lattice }, 18);
+            } else {
+                // 另一场刷新过的载体（新 revision）也照样采纳并继续牵制，不能因旧 anchor 偶然失效就放人。
+                state.carriers[ref] = MobEffects.anchor(current);
             }
-            if (!MobEffects.matches(world, actor, state.carriers[ref])) { state.refused[ref] = true; fairyRelease(world, ref, state); continue; }
             const result = WorldBoundaries.contain(world, actor, { centre, radius: state.radius, margin: .4, height: 3, step: .45 },
                 function (target, delta) { return world.friendly(target) ? world.displace(target, delta) : world.hitDisplace(target, delta); });
-            if (result === "escaped" || result === "refused") { fairyRelease(world, ref, state); state.refused[ref] = true; continue; }
+            if (result === "escaped" || result === "refused") { fairyEscape(world, ref, state, body); state.refused[ref] = true; continue; }
             members.push(ref);
         }
         Object.keys(state.carriers).forEach(ref => { if (present.indexOf(ref) < 0) fairyRelease(world, ref, state); });
@@ -84,8 +98,11 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "charge", deep: config && config.deep === true ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) {
-            return { radius: p(fairyId, "radius"), geometry: "area", style: "fairy", color: 0xF7A8D8,
+        indicator: function (config, pokemon, inspection) {
+            const context: NumberContext | null = pokemon ? { pokemon, skill: skills[fairyId], detail: { values: config },
+                world: inspection && inspection.world, actor: inspection && inspection.actor,
+                attributes: inspection && inspection.attributes, state: inspection && inspection.state } : null;
+            return { radius: context ? p(fairyId, "radius", context) : p(fairyId, "radius"), geometry: "area", style: "fairy", color: 0xF7A8D8,
                 label: config && config.deep === true ? "妖精之锁 · 深锁" : "妖精之锁" };
         },
         execute: function (action, move, config, done) {
@@ -107,6 +124,9 @@ namespace PokemonSkills {
             const net = world.effect(fairyNet, self, JSON.stringify(state), sealTicks);
             WorldFeedback.onEffect(world, net, "fairy:net:" + net, fairyScene, 1, centre,
                 { moment: "net", radius, bars, lattice, scale });
+            // 稳定立柱沿实际半径与固定上下高度画，不吃 data.scale；少而固定的根数比一团柱状粒子更像一道边界。
+            WorldFeedback.onEffect(world, net, "fairy:posts:" + net, fairyPostsScene, 1, centre,
+                { radius, bars, height: 3, scale });
             sound(action, "minecraft:block.beacon.activate");
             sound(action, "minecraft:block.amethyst_block.chime");
             done(action);

@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.forestscurse.summary": "Keep the target's existing types and add Grass: open weaknesses on a foe, or shelter an ally. The roots only show that layer and never bind the target.",
   "worldcombat.skill.forestscurse.use.0": "add Grass and open Fire, Ice, Bug and Flying weaknesses",
-  "worldcombat.skill.forestscurse.use.1": "force a four-times Grass weakness on Water and Ground foes",
+  "worldcombat.skill.forestscurse.use.1": "add Grass to a Water or Ground foe: it gains Ice, Bug and Flying weaknesses while its old quadruple Grass weakness drops to double",
   "worldcombat.skill.forestscurse.use.2": "add Grass to an ally to shelter it from Water, Electric, Grass and Ground, longer with deep roots",
   "worldcombat.skill.forestscurse.description.0": "Add the Grass type to the target for %1$s; the roots only show that layer and never bind or root it in place.",
   "worldcombat.skill.forestscurse.description.1": "Curse range %1$s blocks, wind-up %2$s, recovery %3$s, following speed and size.",
@@ -27,8 +27,8 @@
   "world_combat.move.forestscurse.text.curse": "Cursed by the forest, Grass type added",
   "world_combat.move.forestscurse.text.lift": "The forest curse lifts; the Grass type fades",
   "world_combat.move.forestscurse.text.noroom": "Already Grass or type layer full, no room for the curse",
-  "world_combat.move.forestscurse.text.fizzle": "No type to add to, the curse falls flat",
+  "world_combat.move.forestscurse.text.fizzle": "Its types are locked; the curse falls flat",
   "world_combat.move.forestscurse.text.empty": "Only a few leaves stir; no target to curse",
   "effect.world_combat.forest_curse": "Cursed by the forest (Grass added)",
-  "worldcombat.skill.forestscurse.description.restrictions": "It only works on a non-Grass Pokemon that currently has fewer than three types (so there is room to add one more): a target already Grass, whose type layer is full, or whose types are locked by an ability is not cursed. No curse zone is left on the ground, and an ally must be chosen explicitly."
+  "worldcombat.skill.forestscurse.description.restrictions": "It works on any living foe or ally (ordinary mobs included): a target already Grass, whose types are already three, or whose types are locked by an ability is not cursed. No curse zone is left on the ground, and an ally must be chosen explicitly."
 }

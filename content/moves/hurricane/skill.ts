@@ -84,8 +84,6 @@ namespace PokemonSkills {
             const power = p("hurricane", "gale", action);
             const advanceBase = p("hurricane", "advance", action);
             const travel = p("hurricane", "travel", action);
-            const toss = p("hurricane", "toss", action);
-            const lift = p("hurricane", "lift", action);
             const confuseChance = p("hurricane", "confuseChance", action);
             const confuseTicks = Math.max(20, Math.round(p("hurricane", "confuseTicks", action)));
             const drift = p("hurricane", "drift", action);
@@ -93,8 +91,9 @@ namespace PokemonSkills {
             const env = WorldEnvironment.read(world, origin);
             const rain = !!env && typeof env.rain === "number" && env.rain > 0.2;
             const sun = !!env && env.day === true && env.skyVisible === true && !rain;
-            const radius = radius0 * (rain ? 1.15 : sun ? 0.82 : 1);
-            const speed = advanceBase * (rain ? 1.2 : sun ? 0.85 : 1);
+            // 天气修正已在 vortexRadius/advance 的公式里算过一次，这里直接采用解析值，避免重复加成。
+            const radius = radius0;
+            const speed = advanceBase;
             const scale = radius / 2.6;
             const intensity = Math.max(0.5, Math.min(2.4, power / 95));
             const forward = landing.minus(origin);
@@ -104,22 +103,22 @@ namespace PokemonSkills {
             const heading = flat.length() < 0.6
                 ? (fallbackAxis.length() < 0.05 ? WorldCombat.point(0, 0, 1) : fallbackAxis.unit())
                 : flat.unit();
-            const distance = Math.max(travel, flat.length() + radius);
+            // 实际总程封在 travel：风墙走完这一段，不再额外延伸到目标距离 + 半径。
+            const distance = travel;
             const steps = Math.max(1, Math.round(distance / Math.max(0.05, speed)));
             const phase = world.random() * Math.PI * 2;
             const flow = Math.round(swathes * 14 * Math.max(0.6, scale));
             const scatter = swathes * 4;
             const struck: { [ref: string]: boolean } = {};
-            let step = 0;
+            let step = 0, lastCentre = origin;
             sound(action, "minecraft:entity.breeze.whirl");
             scenes.show(action, "gather", origin,
                 { moment: "gather", scale: scale, intensity: intensity, spin: swathes, radius: radius, flow: flow, rain: rain ? 1 : 0, sun: sun ? 1 : 0 });
 
             function finish(current: CombatAction): void {
                 const scope = current.world();
-                const body = scope.observe(current.actor());
-                const at = body === null ? origin.plus(heading.scale(distance)) : body.position();
-                WorldFeedback.emit(scope, hurricaneScene, 1, at,
+                // 消散留在最后的风心，而不是施法者身边。
+                WorldFeedback.emit(scope, hurricaneScene, 1, lastCentre,
                     { moment: "dissipate", scale: scale, intensity: intensity, radius: radius, spin: swathes, flow: flow, scatter: scatter }, 30);
                 sound(current, "minecraft:entity.breeze.wind_burst");
                 scenes.finish(current, done);
@@ -134,17 +133,26 @@ namespace PokemonSkills {
                     const wobble = Math.sin(phase + step * 0.7) * drift;
                     centre = centre.plus(WorldCombat.point(-heading.z() * wobble, 0, heading.x() * wobble));
                 }
+                lastCentre = centre;
                 if (step === 1) scenes.stop(current, "gather");
                 const region = WorldGeometry.ring(centre, 0, radius, { below: 2.5, above: 4 });
                 WorldGeometry.selectEnemies(scope, region, function (victim, facts) {
                     const ref = String(victim.ref());
                     if (struck[ref]) return;
+                    // 整宽推进也要裁墙：涡心与目标之间隔着墙（或站在下层）就不吃这一卷。
+                    if (WorldGeometry.blockHit(scope, centre, facts.position()) !== null) return;
                     struck[ref] = true;
                     if (!hurt(current, victim, "hurricane", power,
                         { damage: damageSpec("hurricane", "gale"), flags: { wind: true } })) return;
-                    const away = facts.position().minus(centre);
-                    const push = away.length() < 0.05 ? heading : away.unit();
-                    if (scope.valid(victim)) scope.hitDisplace(victim, push.scale(toss).plus(WorldCombat.point(0, lift, 0)));
+                    // 抛高抛远逐敌重算：目标越轻，沿风向抛得越远、抬得越高。
+                    const aimed = withTarget(factContext(current), victim);
+                    const toss = Math.max(0, p("hurricane", "toss", aimed));
+                    const lift = Math.max(0, p("hurricane", "lift", aimed));
+                    if (scope.valid(victim)) {
+                        // 抛远方向统一沿风的行进方向；竖直抬升单独取原生抗推后的冲量。
+                        scope.hitDisplace(victim, heading.scale(toss));
+                        if (scope.valid(victim)) scope.hitImpulse(victim, WorldCombat.point(0, lift, 0));
+                    }
                     let confused = false;
                     // 状态真落上才挂托管表现；同一目标已有载体时不重复挂。
                     if (scope.random() < confuseChance
@@ -174,6 +182,8 @@ namespace PokemonSkills {
         if (victim === null || String(actor.key()) === String(victim.key()) || world.friendly(victim)) return;
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
+        // 只有新的直接进攻才触发混乱自损：普通药水、旧毒等余伤不在这里反噬。
+        if (!DamageSemantics.directOffense(data)) return;
         if (hurricaneCarrier(world, actor) === null) return;
         const body = world.observe(actor);
         if (body === null) return;

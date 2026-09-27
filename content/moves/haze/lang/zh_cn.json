@@ -3,10 +3,10 @@
   "worldcombat.skill.haze.use.0": "把对手攒起来的能力一波抹平",
   "worldcombat.skill.haze.use.1": "在对方刚加满级时把局面拉回原点",
   "worldcombat.skill.haze.use.2": "顺手清掉自己和队友身上被压低的等级",
-  "worldcombat.skill.haze.description.0": "黑雾覆盖半径 %1$s 格；受影响目标的正负能力等级归零，药水、信标等增益被清除。",
+  "worldcombat.skill.haze.description.0": "黑雾覆盖半径 %1$s 格，需要一条不被实体墙挡住的通路；受影响目标的正负能力等级归零，药水、信标等增益被清除。",
   "worldcombat.skill.haze.focused.on": "定向式：只抹圈内非友方的等级，自己与队友的增益留住；但半径 ×0.8、起手 +4 刻、冷却 ×1.2，而且自己身上的减益也不会被清掉。",
   "worldcombat.skill.haze.focused.off": "尽抹式：圈内所有活体一起归零，包括你自己与队友的增益；换来的是一口气更广、更快、更便宜的雾。",
-  "worldcombat.skill.haze.description.1": "起手 %1$s、收招 %2$s、冷却 %3$s。「被抹平」图标提示强化已清除，没有额外减速或伤害。",
+  "worldcombat.skill.haze.description.1": "起手 %1$s、收招 %2$s、冷却 %3$s。「黑雾过身」图标只表示刚被黑雾扫过，强化已清除，没有额外减速或伤害。",
   "worldcombat.skill.haze.timing": "雾的施放射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒、消耗 %4$s PP、提交起冷却 %5$s 秒。起手可被打断，打断不消耗任何东西。",
   "worldcombat.skill.haze.growth.0": "等级 %1$s 起：黑雾半径提升到 %2$s 格。",
   "worldcombat.skill.haze.growth.1": "等级 %1$s 起：黑雾半径提升到 %2$s 格。",
@@ -23,5 +23,5 @@
   "worldcombat.skill.haze.preference.ai.minStages.help": "对手正面等级合计达到这么多时，才把吐雾抬到高于普通交战；调 1 见一丝增益就优先抹，调大只在对手攒大了才优先。",
   "world_combat.move.haze.text.cleared": "抹平 %1$s 人 · %2$s 级",
   "world_combat.move.haze.text.empty": "黑雾散去（%1$s 人无可抹）",
-  "effect.world_combat.haze_veil": "被抹平"
+  "effect.world_combat.haze_veil": "黑雾过身"
 }

@@ -7,7 +7,7 @@
   "worldcombat.skill.odorsleuth.description.1": "Base position memory is %1$s, capped at five seconds after the experience bonus. Only visible observations refresh it; occlusion leaves a fading old position.",
   "worldcombat.skill.odorsleuth.keen.on": "Keen: %1$s wind-up and %2$s cooldown buy a longer trail and a longer smell range.",
   "worldcombat.skill.odorsleuth.keen.off": "Dull: shorter window, faster wind-up and cooldown, closer range, good for frequent bites.",
-  "worldcombat.skill.odorsleuth.description.2": "Temporarily remove up to %1$s positive evasion stages at range %2$s, with %3$s preparation and %4$s recovery. First establish a visible subject; ending removes only this contribution.",
+  "worldcombat.skill.odorsleuth.description.2": "Temporarily remove up to %1$s positive evasion stages at range %2$s, with %3$s preparation and %4$s recovery. First establish a visible subject; recasting on an already-scented subject only refreshes tracking without re-stripping the overlapping evasion, and ending removes only this contribution.",
   "worldcombat.skill.odorsleuth.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.odorsleuth.value.window": "Track window",
   "worldcombat.skill.odorsleuth.value.reveal": "Position memory",

@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 16）格内；更远交给共享接近逻辑。
  * 对谁出手：`ai.fresh`（默认开）打开时，已经带着共享恍惚身份的目标排后；`ai.line`（默认关）打开且开了回响时，
- *   目标身后还连着别的敌人排前——一束紫光能穿两个。
+ *   目标身后还在剩余射程内、无遮挡地连着别的敌人排前——一束紫光能穿两个；被墙挡住或射程不够的排线不加分。
  * 够不到怎么办：reach 就是本招射程，不够先走近。
  * 放完之后：交回共享交战计划；恍惚期间目标每次想反打都可能被幻影再缠一层。
  */
@@ -15,18 +15,26 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 16);
     }
 
-    /** 目标身后是否还连着别人：粗略判断目标背后 3 格内有没有另一个敌人。 */
+    /** 目标身后是否还连着别人：只在回响下有意义，且第二个目标必须还在剩余射程内、与目标之间无遮挡。 */
     function psybeamBehind(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (!CompanionBehavior.ai<boolean>(capability, "line", false)) return false;
+        if (!(capability.data.config && capability.data.config.echo === true)) return false;
         const self = CompanionBehavior.source(context), nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz) || 1, ux = dx / length, uz = dz / length;
+        const reach = typeof capability.data.range === "number" && isFinite(capability.data.range) ? capability.data.range : 0;
+        if (length > reach) return false;
+        const world = CompanionBehavior.world(context), from = CompanionBehavior.point(self.point), at = CompanionBehavior.point(target.point);
+        if (!world.clear(from, at)) return false;
+        const remaining = Math.min(3, reach - length);
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
             const ox = other.point[0] - target.point[0], oz = other.point[2] - target.point[2];
             const along = ox * ux + oz * uz, side = Math.abs(ox * -uz + oz * ux);
-            if (along > 0.4 && along <= 3 && side <= 1.2) return true;
+            if (along <= 0.4 || along > remaining || side > 1.2) continue;
+            if (!world.clear(at, CompanionBehavior.point(other.point))) continue;
+            return true;
         }
         return false;
     }

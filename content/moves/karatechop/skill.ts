@@ -11,7 +11,7 @@
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器在刀口补一发亮白强调与浮字。
  *
  * 与同族分开：暗袭要害会读空门、旋风刀要蓄力铺扇、气场之翼顺带提速——空手劈是唯一「零起手、
- *   贴身单点、能边走边劈」的一记。玩家从「一道竖线紧贴拳距瞬间落下、人不用停」认出它。
+ *   贴身单点、能边走边劈」的一记。玩家从「抬手就把一道暖白刀光压到刀口、人不用停」认出它。
  *
  * 配置 `knife` 由 resolve 改射程，由公式改威力，提交后才触碰世界。
  */
@@ -19,17 +19,30 @@ namespace PokemonSkills {
     /** 手刀刀路的接触半径（格）；几何常量，不随个体变化。 */
     const karatechopEdge = 0.3;
 
-    /** 手刀落下的竖线：从落点上方 depth 压到落点；判定与表现共用。 */
-    function karatechopStroke(point: CombatPoint, depth: number): number[][] {
-        const top = point.plus(WorldCombat.point(0, depth, 0));
-        return [[top.x(), top.y(), top.z()], [point.x(), point.y(), point.z()]];
+    function karatechopVertex(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
+
+    /**
+     * 手刀真实落下的刀路：从施法者前上臂区压向真实接触点。碰到实体时再沿同一刀向越过一点，让余痕跨在
+     * 接触点上下；越过的一小段先被真实墙面裁掉。判定与表现共用这一组端点。
+     */
+    function karatechopBlade(world: CombatWorld, body: CombatObservation, contact: CombatPoint, blocked: boolean,
+                             direction: CombatPoint, depth: number): CombatPoint[] {
+        const frame = WorldGeometry.basis(direction, WorldCombat.point(0, 0, 1));
+        const arm = body.position()
+            .plus(frame.forward.scale(Math.max(0.15, body.width() * 0.45)))
+            .plus(frame.up.scale(Math.max(0.3, Math.min(depth, body.height() * 0.6))));
+        const line = contact.minus(arm);
+        if (blocked || line.length() < 0.05) return [arm, contact];
+        const beyond = contact.plus(line.unit().scale(Math.min(0.4, depth * 0.3)));
+        const clip = WorldGeometry.blockHit(world, contact, beyond);
+        return [arm, contact, clip ? clip.position() : beyond];
     }
 
     define({
         id: karatechopId,
         cooldownParameter: "recharge",
         name: "Karate Chop",
-        description: "抬手一记手刀，几乎没有起手：朝瞄准方向递出极短的一刀，刀路只碰到的第一个非友方，一道竖直的白线紧贴拳距落下，把它劈开并崩出碎屑。它够得极近、只打一个、冷却极短，前排的身体和墙会先截住它；刀口专找护甲的缝，对高防御目标衰减更慢，暴击率比同族高一档。",
+        description: "抬手一记手刀，几乎没有起手：朝瞄准方向递出极短的一刀，刀路只碰到的第一个非友方，一道暖白刀光从抬手处压到刀口，把它劈开并崩出碎屑。它够得极近、只打一个、冷却极短，前排的身体和墙会先截住它；刀口专找护甲的缝，对高防御目标衰减更慢，暴击率比同族高一档。",
         uses: ["抬手就是一记手刀，没有起手", "只打贴身的一个目标，冷却极短", "刀口专找护甲的缝，暴击率高一档"],
         kind: "aim",
         range: 1.9,
@@ -75,7 +88,7 @@ namespace PokemonSkills {
             const at = contact.position();
             const lander = contact.hitEntity() ? contact.target() : null;
             const victim = lander !== null && String(lander.ref()) !== String(actor.ref()) && !world.friendly(lander) ? lander : null;
-            const stroke = karatechopStroke(at, depth);
+            const stroke = karatechopBlade(world, self, at, contact.blocked(), direction, depth).map(karatechopVertex);
 
             // 无论中不中，刀都完整落下：竖线紧贴实际拳距。
             WorldFeedback.emit(world, karatechopScene, 1, at,

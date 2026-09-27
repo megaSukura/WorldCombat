@@ -8,6 +8,7 @@
  *
  * 必然事实：本招被提交过（`stage.casts`）；目标受到过至少一根针的伤害（`stage.damageTo`）。
  * 随机量写进 note：两针各自的命中与中毒掷签、第二针命中同一目标时才有的伤口加成、暴击；
+ *   毒成提示只在 `CombatStatus.inflict` 回执成立时出现，免疫时没有；两针各自结束后才收招。
  *   两针分别被墙或前排挡下、交叉夹角与固定出手间隔留待人工观察。
  */
 Smoke.scenario("twineedle", function (stage) {
@@ -23,7 +24,7 @@ Smoke.scenario("twineedle", function (stage) {
         stage.after(80, function () {
             stage.expect(stage.casts("twineedle", caster) >= 1, "the caster committed twineedle");
             stage.expect(stage.damageTo(foe) > 0, "twineedle dealt damage to the foe");
-            stage.note("each needle rolls poison separately (native 20%%); the second gains a wound bonus if the first landed; crit is variable", {
+            stage.note("each needle resolves its damage and poison separately (native 20%%); the second gains a wound bonus if the first landed; the venom visual/text only plays when the inflict receipt lands; crit is variable", {
                 casts: stage.casts("twineedle", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foePoisoned: stage.hadMobEffect(foe, "world_combat:status/poison"),

@@ -1,13 +1,13 @@
 /**
  * 冰息 / frostbreath 的客户端表现。
  *
- * 一句话：施法者深吸一口气、嘴边凝起霜，随后一整片冷雾从口中铺开、慢慢漫过扇形的每一个角落，
- *   罩住的人身上炸开冰色冲击、脚边结出霜点；没罩到人时冷雾在末端散去。
+ * 一句话：施法者深吸一口气、嘴边凝起霜，随后冷雾的前沿从口边一格一格漫出去，当前那一口雾带亮着，
+ *   罩住的人身上炸开冰色冲击、脚边结出霜点；没罩到人时冷雾在呼程末端散去。
  * 色相家族：冰蓝（0xCFEAF8 / 0xDCF4FF）为主体，近白（0xF2FBFF）在强调与霜点；饱和只出现在命中核心的小面积。
- * 拍子：起 inhale（吸气凝霜）→ 呼 exhale（冷雾铺开）→ 击 burst/hit（罩住与冰爆）→ 果 rime（结霜）→ 收 miss。
- * 范围：exhale 的 region 用与判定同一组 `data.path` 顶点、按 `polygon` 填满整个扇形——玩家一眼看出站哪会被罩住。
- * 运动：front 绑施法者、orient:direction 沿 `data.direction` 铺出 `data.reach` 长的锥形雾，到 `data.delay` 停下；
- *   region 在冷雾漫到的那一刻（burst.at = delay）把整片区域点亮。
+ * 拍子：起 inhale（吸气凝霜）→ 呼 front（逐刻推进的当前雾带）→ 击 hit（罩住）→ 果 rime（结霜）→ 收 burst/miss。
+ * 范围：front 的 `data.path` 是当前那一口扇环的顶点（与判定同一组），按 `polygon` 填满；前沿走到哪，哪才亮。
+ * 运动：雾带随服务端逐刻推进的同一 key 更新，前沿用 `bind: point` + `orient: direction` 的短锥沿 `data.direction` 带出；
+ *   上一层雾带已经交给粒子系统，会自己淡去，前后相接读成一片漫过去的冷雾。
  * 数：`data.motes`（特攻与等级派生）决定雾点密度，`data.cells`（结霜格数）决定霜点数量，`data.size` 随雾团半径。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -36,36 +36,34 @@ const FrostbreathDefinition: ParticleDefinition = {
                 }
             ]
         },
-        exhale: {
-            duration: 64,
-            exit: { stop: 54, drain: 20 },
+        front: {
+            duration: 0,
+            exit: { stop: 4, drain: 12 },
             emitters: [
                 {
-                    name: "front", bind: "source", offset: [0, 0.05, 0], height: 0.72, fit: "none",
-                    orient: "direction",
+                    name: "band", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
+                    rate: { data: "motes", fallback: 20 }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.02, 0.1], spread: 12,
+                    lifetime: [10, 20], size: { data: "size", fallback: 0.14 }, sizeMode: "linear",
+                    color: 0xCFEAF8, alpha: [0.42, 0], light: "world", maxParticles: 140
+                },
+                {
+                    name: "crest", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
+                    rate: { data: "motes", fallback: 18 }, shape: { kind: "polyline" },
+                    direction: "up", speed: [0.03, 0.12], spread: 18, spin: 20,
+                    lifetime: [7, 14], size: { data: "size", fallback: 0.14 }, sizeMode: "sin",
+                    color: 0xDCF4FF, alpha: [0.6, 0], light: "full", maxParticles: 130
+                },
+                {
+                    name: "puff", bind: "point", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
                     rate: { data: "motes", fallback: 20 },
-                    shape: { kind: "cone_volume", radius: { data: "radius", fallback: 0.9 }, length: { data: "reach", fallback: 8 }, angleDegrees: { data: "halfAngle", fallback: 29 } },
-                    direction: "shape", speed: [0.12, 0.34], spread: 8, spin: 30,
-                    stop: { data: "delay", fallback: 14 },
+                    shape: { kind: "cone_volume", radius: { data: "radius", fallback: 0.9 }, length: { data: "length", fallback: 0.8 }, angleDegrees: { data: "halfAngle", fallback: 29 } },
+                    direction: "shape", speed: [0.08, 0.24], spread: 8, spin: 30,
                     lifetime: [7, 14], size: { data: "size", fallback: 0.14 }, sizeMode: "sin",
-                    color: 0xDCF4FF, alpha: [0.55, 0], light: "full", maxParticles: 160
-                },
-                {
-                    name: "region", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    burst: { count: { data: "motes", fallback: 20 }, at: { data: "delay", fallback: 14 } },
-                    shape: { kind: "polygon" }, direction: "shape", speed: [0.02, 0.1], spread: 10,
-                    lifetime: [16, 28], size: { data: "size", fallback: 0.14 }, sizeMode: "linear",
-                    color: 0xCFEAF8, alpha: [0.4, 0], light: "world", maxParticles: 120
-                },
-                {
-                    name: "region_glints", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "motes", fallback: 18 }, at: { data: "delay", fallback: 14 } },
-                    shape: { kind: "polygon" }, direction: "shape", speed: [0.04, 0.16], spread: 24, spin: 20,
-                    lifetime: [8, 16], size: { data: "size", fallback: 0.14 }, sizeMode: "sin",
-                    color: 0xF2FBFF, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 90
+                    color: 0xDCF4FF, alpha: [0.5, 0], light: "full", maxParticles: 120
                 }
             ]
         },
@@ -80,14 +78,6 @@ const FrostbreathDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.6 }, direction: "outward", speed: [0.08, 0.26],
                     lifetime: [10, 20], size: [0.16, 0.04], sizeMode: "index",
                     color: 0xDCF4FF, alpha: [0.85, 0], light: "full", maxParticles: 120
-                },
-                {
-                    name: "core", bind: "point", fit: "none", offset: [0, 0.35, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: 0.4 }, direction: "outward", speed: [0.06, 0.2],
-                    lifetime: [10, 18], size: [0.4, 0.9],
-                    color: 0xCFEAF8, alpha: [0.55, 0], light: "full"
                 }
             ]
         },

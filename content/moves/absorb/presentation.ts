@@ -7,9 +7,9 @@
  * 色相家族：草绿（0x7CB342／0x5C9E2E）与嫩白（0xDCE775），近白只给命中核心；无第二色相。
  * 拍子：起 windup（聚点）→ 抽 reach（藤尖画到真实首碰点）→ 汲 sip（命中峰值＋回流）／空 miss（藤尖空甩）。
  * 范围：reach 的藤读 `data.path`（施法者到真实首碰点的折线），藤尖读 `data.point`（同一个首碰点）——判定走到哪，藤就画到哪；
- *   墙或友方截停时藤尖就停在接触处。sip 的线发射器 orient=direction 沿「目标→自身」把汁点抽回来，
- *   path 发射器把目标与施法者连成一条实线，读得出它在抽谁。
- * 数：`data.motes`（威力与抽取比例换算）决定探藤与回流的密度，`data.scale`（藤尖判定 / 0.36）放大光点尺寸。
+ *   墙或友方截停时藤尖就停在接触处。sip 只做「目标→自身」一次定向闪连：线发射器 orient=direction、fit=world，
+ *   沿真实跨度把汁点抽回施法者，端点就是两张身体；只有实际回血时才发射，读得到它在抽谁。
+ * 数：`data.motes`（实际回血量换算）决定闪连与回流的密度，`data.scale`（藤尖判定 / 0.36）放大光点尺寸。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const AbsorbDefinition: ParticleDefinition = {
@@ -65,19 +65,14 @@ const AbsorbDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 16 },
             emitters: [
                 {
-                    name: "link", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    shape: { kind: "polyline" }, rate: { data: "motes", fallback: 12 },
-                    direction: "shape", speed: [0.01, 0.05], spread: 14,
-                    lifetime: [8, 16], size: [0.10, 0.02], sizeMode: "index",
-                    color: 0x5C9E2E, alpha: [0.7, 0], light: "world", maxParticles: 80
-                },
-                {
-                    name: "flow", bind: "point", orient: "direction",
+                    // 一次闪连＋定向亮点：点在「目标→自身」这条真实跨度的线上出生，并沿该方向收回施法者。
+                    // fit:world 让线的长度就是实际 span（不再被拳头判定 scale 拉长）；只有实际回血时才发射。
+                    name: "flow", bind: "point", orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     shape: { kind: "line", length: { data: "span", fallback: 4 } },
-                    rate: { data: "motes", fallback: 12 },
-                    direction: "shape", speed: [0.10, 0.30], spread: 10,
+                    burst: { count: { data: "motes", fallback: 8 } },
+                    rate: { data: "motes", fallback: 8 },
+                    direction: "shape", speed: [0.14, 0.34], spread: 8,
                     lifetime: [6, 14], size: [0.08, 0.01],
                     color: 0xDCE775, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 70
                 },

@@ -3,6 +3,7 @@
  *
  * 核心念头：从脚下掀起一道潮墙——水先在地上兜起来，再整圈漫出去；潮头扫过谁，谁就挨一次浪、
  * 被推着走、浇得湿透，身上的火也被浇熄。满血时水势最大，下雨时更盛。
+ * 发出当刻定死波源：本体之后被推走或移动都不挪动潮头，回卷式也从同一处往内收。
  *
  * 两式方向相反、都从一端扫到另一端：
  *   推涌式（默认）：潮头从中心 0 一格格外推到 `distance`，扫到的目标被沿背离方向推走。
@@ -103,25 +104,25 @@ namespace PokemonSkills {
             function advance(current: CombatAction, step: number): void {
                 if (settled) return;
                 const scope = current.world();
-                const self = scope.observe(current.actor());
-                const here = self !== null ? self.position() : centre;
+                // 发出后固定中心：本体被推走或移动都不再挪动潮头，整道浪从同一处扫到结束。
                 // 推涌式向外（0 → distance），回卷式向内（distance → 0）；两端都扫到。
                 const front = undertow ? distance - step * stepDistance : step * stepDistance;
                 const inner = Math.max(0, front - thickness);
                 const outer = Math.min(distance, front + thickness);
                 const surge = p("waterspout", "surge", current);
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(here, inner, outer, band), function (enemy, facts) {
+                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, inner, outer, band), function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === actorRef || hitRefs[ref]) return;
                     // 方向被完整实墙截住的水路浇不中。
-                    if (!scope.clear(here, facts.position())) return;
+                    if (!scope.clear(centre, facts.position())) return;
                     hitRefs[ref] = true;
                     if (!hurt(current, enemy, "waterspout", surge, { damage: damageSpec("waterspout", "surge") })) return;
                     scanned++;
-                    const away = facts.position().minus(here);
+                    const away = facts.position().minus(centre);
                     if (scope.valid(enemy) && away.length() > 0.2) {
                         const direction = WorldCombat.point(away.x(), 0, away.z()).unit();
-                        scope.displace(enemy, direction.scale(undertow ? -carry : carry));
+                        // 受击位移走 hitDisplace：原生抗击退与事件在这里生效，Boss 照常吃伤害但推不动。
+                        scope.hitDisplace(enemy, direction.scale(undertow ? -carry : carry));
                     }
                     const wasBurning = CombatStatus.has(scope, enemy, "burn");
                     if (wasBurning && CombatStatus.cure(scope, enemy, "burn")) {
@@ -141,17 +142,17 @@ namespace PokemonSkills {
                 });
                 const midway = Math.abs(front - distance * 0.5);
                 const flow = Math.max(18, Math.round(volume * 0.7 + (distance * 0.5 - midway) * 16));
-                scenes.show(current, "surge", here,
+                // 推涌式：主水向外；回卷式：主水沿半径向内收，只留少量外溅。
+                const outward = undertow ? Math.round(flow * 0.25) : flow;
+                const inward = undertow ? flow : 0;
+                scenes.show(current, "surge", centre,
                     { moment: "surge", radius: Math.max(0.6, front), volume: volume, waveTicks: waveTicks,
-                        flow: undertow ? Math.round(flow * 0.35) : flow,
-                        inward: undertow ? volume : 0, scale: scale });
+                        flow: flow, outward: outward, inward: inward, scale: scale });
                 if (step >= steps) { finish(current); return; }
                 current.after(perStep, function (next: CombatAction) { advance(next, step + 1); });
             }
 
             sound(action, "minecraft:entity.dolphin.splash");
-            WorldFeedback.emit(world, waterspoutScene, 1, centre,
-                { moment: "gather", undertow: undertow ? 1 : 0, distance: distance, volume: volume, scale: scale }, 20);
             advance(action, 0);
         }
     });

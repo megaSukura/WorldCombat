@@ -20,7 +20,7 @@
   "worldcombat.skill.electroball.value.collisionRadius": "判定半径",
   "worldcombat.skill.electroball.value.sparks": "电火花量",
   "worldcombat.skill.electroball.value.tempo": "起手",
-  "worldcombat.skill.electroball.value.recover": "收招",
+  "worldcombat.skill.electroball.value.aftercast": "收招",
   "worldcombat.skill.electroball.value.recharge": "冷却",
   "worldcombat.skill.electroball.preference.overcharge": "过载式",
   "worldcombat.skill.electroball.preference.overcharge.help": "开启：威力与判定半径更高，但电团更重、飞得更慢（对手更容易走开）、起手与冷却更久。关闭（默认）：轻快式，飞得快、出手快、回得干净，单发略低。",

@@ -26,7 +26,7 @@
   "worldcombat.skill.petalblizzard.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.petalblizzard.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑落英缤纷；调小只在贴身转风，调大愿意先追进去。",
   "worldcombat.skill.petalblizzard.preference.ai.minFoes": "卷到人数",
-  "worldcombat.skill.petalblizzard.preference.ai.minFoes.help": "考虑距离内至少站着这么多可见、敌对的敌人才转风；调大只被围住时用，调 1 见一个也转。",
+  "worldcombat.skill.petalblizzard.preference.ai.minFoes.help": "实际风暴半径内至少站着这么多可见、敌对、且从中心通视的敌人才转风（隔墙的不计）；调大只被围住时用，调 1 见一个也转。是否先追进去仍由「考虑距离」决定。",
   "world_combat.move.petalblizzard.text.hit": "割中 %1$s 次",
   "world_combat.move.petalblizzard.text.miss": "落英落空"
 }

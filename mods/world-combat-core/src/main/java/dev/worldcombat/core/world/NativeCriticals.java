@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.event.entity.player.CriticalHitEvent;
 
-/** Exposes the native critical decision before Player.attack computes its damage. */
+/** Exposes the native critical decision before the single NeoForge event post and native damage arithmetic. */
 public final class NativeCriticals {
     private NativeCriticals() {}
     public static void apply(CriticalHitEvent event) {
@@ -15,14 +15,19 @@ public final class NativeCriticals {
             || !CombatServices.domain(target).available(target) || !CombatServices.domain(event.getEntity()).available(event.getEntity())) return;
         var combat = CombatServices.get(level.getServer());
         var data = new JsonObject();
+        facts(data, event);
+        var result = combat.runtime().event("world_combat:critical_hit", combat.bind(event.getEntity()), combat.bind(target), data.toString(), true);
+        if (!result.rejection().isEmpty()) { event.setCriticalHit(false); return; }
+        update(event, JsonParser.parseString(result.data()).getAsJsonObject());
+    }
+    static void facts(JsonObject data, CriticalHitEvent event) {
         data.addProperty("critical", event.isCriticalHit());
         data.addProperty("multiplier", (double) event.getDamageMultiplier());
         data.addProperty("vanillaCritical", event.isVanillaCritical());
         data.addProperty("vanillaMultiplier", (double) event.getVanillaMultiplier());
         data.addProperty("disableSweep", event.disableSweep());
-        var result = combat.runtime().event("world_combat:critical_hit", combat.bind(event.getEntity()), combat.bind(target), data.toString(), true);
-        if (!result.rejection().isEmpty()) { event.setCriticalHit(false); return; }
-        var updated = JsonParser.parseString(result.data()).getAsJsonObject();
+    }
+    static void update(CriticalHitEvent event, JsonObject updated) {
         double multiplier = updated.get("multiplier").getAsDouble();
         if (!Double.isFinite(multiplier) || multiplier < 0 || multiplier > Float.MAX_VALUE) return;
         event.setDamageMultiplier((float) multiplier);

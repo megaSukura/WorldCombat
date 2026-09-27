@@ -5,17 +5,18 @@
  * 火顺着反震自己身上也回烧一下；冲空则火在脚下熄灭。
  * 色相家族：橙红（0xF2601E 与 0xC03818），白热核心（0xFFE8A0），烟灰（0x6A5B52）只在余韵出现。
  * 拍子：燃 ignite（烧身）→ 冲 charge（火线直线）→ 行 wake（余焰）→ 撞 impact（爆火）→ 反 recoil（回烧）／ 熄 skid（空冲熄灭）。
- * 范围：charge 的冲刺线沿 `data.path` 两顶点铺成一条火带，画的就是冲程覆盖到的区域（横向按 `data.scale` 缩放）。
+ * 范围：charge 的 track 只接服务端每刻给出的「刚冲过的那一小段」两个顶点，火沿真实冲程铺开；未到与墙后不显。
  * 运动：火焰贴向身体、火星向后甩；wake 沿路径留下会慢慢暗下去的余焰。
  * 数：`data.embers`（速度与物攻派生）决定火星与爆火的密度，`data.intensity`（本次伤害派生）决定命中核心的亮度，
- * `data.burn`（1 表示目标被点着）决定命中核心是否多一圈燃烧辉光，`data.afterburn`（1 表示余焰式）在起手多烧一圈余烬。
+ * `data.burn`（1 表示这一次真的点着了目标）决定命中核心是否多一圈燃烧辉光，`data.afterburn`（1 表示余焰式）在起手多烧一圈余烬。
+ * 回烧 recoil 只由 recoilApplied 真付生命的回执触发，免反伤或拒绝时不出现。
  */
 const FlareblitzDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         ignite: {
-            duration: 18,
-            exit: { stop: 7, drain: 14 },
+            duration: { data: "windup", fallback: 18 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "cloak", bind: "source", offset: [0, 0.45, 0], height: 0.45,

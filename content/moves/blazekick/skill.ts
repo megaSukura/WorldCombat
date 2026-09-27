@@ -1,17 +1,18 @@
 /**
  * 火焰踢 / blazekick 的出手方式。
  *
- * 核心念头：拧身而起，把裹火的腿沿一条上扬的弧线挑过去——把对手**踢得离地**，火顺着弧线舔上伤口。
- *   它是本族唯一把人挑起来的一招：命中的人被挑到空中一小段，在落地前动不了手；火则按概率留在身上。
+ * 核心念头：拧身而起，把裹火的腿从脚侧低点沿一条上扬的短弧挑到身前高点——一记近身上挑踢。
+ *   它是本族唯一把目标挑起的一招：命中时按原生击飞给一个向上的速度冲量（能否离地由击飞抗性与事件决定），
+ *   火则按概率留在身上。
  *
  * 两幕：
  *   起（windup，提交前）：身体拧起来、火从脚跟裹到脚尖，只播预告。
- *   踢（execute → kick / ignite / launch / miss）：提交后裹火的腿沿那道弧线向上挑，沿弧线分段做权威首碰；
- *       踢中最先碰到的非友方才结算 `kick` 接触伤害，按 `burnChance` 点燃（共享身份 world_combat:status/burn，
- *       宝可梦同步为原生灼伤），并尝试用原生击飞把目标挑离地面 `launch` 格——被抗性/事件拒绝就只保留伤害、
- *       不画升空轨迹。踢空、先碰到友方或撞墙都只留一道划过空气的火弧。
+ *   踢（execute → sweep / kick / ignite / launch / miss）：提交后腿在 2～3 刻内扫过脚侧低点→身前中点→前上点；
+ *       每段做权威首碰，最先碰到的实体或墙就是落点并立即停扫。只对最先碰到的非友方结算一次 `kick` 接触伤害，
+ *       按 `burnChance` 点燃（共享身份 world_combat:status/burn，宝可梦同步为原生灼伤），并尝试用原生击飞挑离地面。
+ *       命中点、判定的落点与表现的火脚头共用同一组真实端点；踢空、先碰友方或撞墙只留划过空气的火弧。
  *
- * 选取 kind: "aim"：可点敌人，也可只朝一个方向近身空踢；判定与画出的火弧共用同一个首碰落点。
+ * 选取 kind: "aim"：可点敌人，也可只朝一个方向近身空踢；目标点被截进 2.1～3.4 的真实踢程内，够不到不会隔空踢。
  *
  * 与同族分开：火焰拳是直拳点火、火会蔓延到旁边的人；闪焰冲锋是整身撞过去、自己也受反震；
  *   火焰踢是单腿的上挑弧线，把人挑起来才是它的价值，代价是这一脚不重。
@@ -24,39 +25,12 @@ namespace PokemonSkills {
     const blazekickBurnText = "world_combat.move.blazekick.text.burn";
     const blazekickMissText = "world_combat.move.blazekick.text.miss";
 
-    /** 裹火的腿划过的那道弧：从身后低位起，越过头顶，落到目标身上。 */
-    function blazekickArc(origin: CombatPoint, heading: CombatPoint, reach: number, bulge: number, end: CombatPoint): number[][] {
-        const behind = origin.plus(heading.scale(-0.4)).plus(WorldCombat.point(0, 0.2, 0));
-        const under = origin.plus(WorldCombat.point(0, 0.9, 0));
-        const apex = origin.plus(heading.scale(reach * 0.55)).plus(WorldCombat.point(0, reach * 0.4 + bulge, 0));
-        const above = end.plus(WorldCombat.point(0, 0.5 + bulge * 0.4, 0));
-        return [
-            [behind.x(), behind.y(), behind.z()],
-            [under.x(), under.y(), under.z()],
-            [apex.x(), apex.y(), apex.z()],
-            [above.x(), above.y(), above.z()],
-            [end.x(), end.y(), end.z()]
-        ];
-    }
-
-    /** 沿上扬弧线的分段做权威首碰判定：最先碰到的实体或方块就是这一脚挑中的地方；起点落在自身身上时跳过。 */
-    function blazekickTrace(action: CombatAction, points: CombatPoint[], radius: number): CombatImpact | null {
-        const self = String(action.actor().ref());
-        for (let index = 1; index < points.length; index++) {
-            const hit = action.trace(points[index - 1], points[index], radius, true);
-            const inner = hit.hitEntity() ? hit.target() : null;
-            if (inner !== null && String(inner.ref()) === self) continue;
-            if (hit.hitEntity() || hit.blocked()) return hit;
-        }
-        return null;
-    }
-
     define({
         id: "blazekick",
         cooldownParameter: "recharge",
         name: "Blaze Kick",
-        description: "拧身而起，把裹火的腿沿一道上扬的弧线挑出去：可以点敌人，也可以只朝一个方向近身空踢。命中最先碰到的那个敌人造成接触伤害、按概率使目标灼伤（灼伤使其物理伤害减半并持续掉血）；能否把它挑离地面按原生击飞规则，被拒绝时只保留伤害、不画升空轨迹。烈焰式更容易点着、挑得更高；重踢式踢得更重但火难留。",
-        uses: ["一记把目标挑离地面的上挑火焰踢", "贴身点着对手，靠灼伤压低它的攻击", "把目标挑到空中，打乱它的站位"],
+        description: "拧身而起，把裹火的腿从脚侧低点沿一条上扬的短弧挑到身前高点：可以点敌人，也可以只朝一个方向近身空踢。最先碰到的那个敌人受到一次接触伤害、按概率使目标灼伤（灼伤使其物理伤害减半并持续掉血）；能否把它挑离地面按原生击飞规则，被拒绝时只保留伤害、不画升空轨迹。烈焰式更容易点着、挑得更高；重踢式踢得更重但火难留。",
+        uses: ["一记把目标挑离地面的上挑火焰踢", "贴身点着对手，靠灼伤压低它的攻击", "近身把目标挑离站位，打乱它的落脚"],
         kind: "aim",
         range: 2.4,
         maxRange: 3.4,
@@ -91,11 +65,16 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
+            const self = String(actor.ref());
             const body = world.observe(actor);
             const origin = body === null ? action.origin() : body.position();
-            const heading = aim(action);
+            const look = WorldGeometry.facing(world, actor);
+            // The kick is a ground-level leg sweep; flattening the aim keeps a low target from burying it in the floor.
+            const heading = WorldGeometry.flatUnit(aim(action), look === null ? action.direction() : look);
+            const frame = WorldGeometry.basis(heading);
             const target = action.target();
             const targetBody = target !== null && world.valid(target) ? world.observe(target) : null;
+            action.releaseTarget();
             const reach = Math.max(2.0, action.range());
             const power = p("blazekick", "kick", action);
             const chance = p("blazekick", "burnChance", action);
@@ -105,55 +84,83 @@ namespace PokemonSkills {
             const embers = Math.max(8, Math.round(p("blazekick", "embers", action)));
             const scale = Math.max(0.6, Math.min(1.8, bulge / 0.75));
             const intensity = Math.max(0.6, Math.min(2.4, power / 85));
-            const aimEnd = targetBody !== null ? targetBody.position() : origin.plus(heading.scale(reach));
-            const under = origin.plus(WorldCombat.point(0, 0.9, 0));
-            const apex = origin.plus(heading.scale(reach * 0.55)).plus(WorldCombat.point(0, reach * 0.4 + bulge, 0));
-            const aboveAim = aimEnd.plus(WorldCombat.point(0, 0.5 + bulge * 0.4, 0));
-            // 沿上扬弧线做权威首碰：实体或墙先到就先算，判定与画出的火弧共用同一个落点。
-            const contact = blazekickTrace(action, [under, apex, aboveAim, aimEnd], Math.max(0.22, Math.min(0.7, bulge * 0.45)));
-            const stopped = contact !== null && (contact.hitEntity() || contact.blocked());
-            const stop = stopped ? contact!.position() : aimEnd;
-            const path = blazekickArc(origin, heading, reach, bulge, stop);
-            const victim = contact !== null && contact.hitEntity() ? contact.target() : null;
+            const radius = Math.max(0.24, Math.min(0.6, bulge * 0.45));
+            const halfWidth = body === null ? 0.4 : Math.max(0.2, Math.min(0.5, body.width() * 0.35));
+            const feetY = body === null ? origin.y() - 0.7 : origin.y() - body.height() * 0.5;
+            // Clamp the aimed point into the real kick reach so a far target is never kicked from range.
+            const rawEnd = targetBody !== null ? targetBody.position() : origin.plus(heading.scale(reach));
+            const toEnd = rawEnd.minus(origin), span = toEnd.length();
+            const end = span < 0.01 || span <= reach ? rawEnd : origin.plus(toEnd.unit().scale(reach));
+            // Foot-side low point -> front middle -> front upper point, all in real world coordinates.
+            const low = WorldCombat.point(origin.x() + frame.right.x() * halfWidth, feetY + 0.12, origin.z() + frame.right.z() * halfWidth);
+            const mid = origin.plus(end.minus(origin).scale(0.55)).plus(WorldCombat.point(0, 0.25, 0));
+            const high = end.plus(WorldCombat.point(0, 0.35, 0));
+            const points = [low, mid, high];
+            const scenes = WorldFeedback.actionScenes(blazekickScene);
+            const headingData = [heading.x(), heading.y(), heading.z()];
+            let resolved = false;
+
+            function conclude(current: CombatAction, contact: CombatImpact | null): void {
+                if (resolved) return;
+                resolved = true;
+                scenes.stop(current);
+                const scope = current.world();
+                const victim = contact !== null && contact.hitEntity() ? contact.target() : null;
+                if (victim !== null && String(victim.ref()) !== self && scope.valid(victim) && !scope.friendly(victim)) {
+                    const at = contact!.position();
+                    const landed = hurt(current, victim, "blazekick", power,
+                        { damage: damageSpec("blazekick", "kick"), contact: true, status: "burn", chance: chance, statusTicks: burnTicks });
+                    WorldFeedback.emit(scope, blazekickScene, 1, at,
+                        { moment: "kick", target: String(victim.ref()), embers: embers, scale: scale,
+                            intensity: Math.max(0.6, Math.min(2.4, power / 80)) }, 24);
+                    sound(current, "cobblemon:impact.fire");
+                    if (landed && scope.valid(victim)) {
+                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), blazekickHitText, [], 22);
+                        const away = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
+                        const lift = away.length() < 0.05 ? WorldCombat.point(heading.x() * 0.2, launch, heading.z() * 0.2)
+                            : away.unit().scale(0.25).plus(WorldCombat.point(0, launch, 0));
+                        // Lift is a velocity impulse, not a guaranteed block of height; resistance/events can refuse it.
+                        const lifted = scope.hitImpulse(victim, lift);
+                        if (CombatStatus.has(scope, victim, "burn")) {
+                            scope.ignite(victim, Math.max(20, Math.min(60, Math.round(burnTicks * 0.2))));
+                            WorldFeedback.emit(scope, blazekickScene, 1, at, { moment: "ignite", target: String(victim.ref()), embers: embers, scale: scale }, 24);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), blazekickBurnText, [], 24);
+                            sound(current, "minecraft:entity.blaze.burn");
+                        }
+                        if (lifted) WorldFeedback.emit(scope, blazekickScene, 1, at,
+                            { moment: "launch", target: String(victim.ref()), launch: launch, embers: embers, scale: scale, intensity: intensity }, 22);
+                    }
+                    scenes.finish(current, done);
+                    return;
+                }
+                const missAt = contact !== null ? contact.position() : end;
+                WorldFeedback.emit(scope, blazekickScene, 1, missAt, { moment: "miss", embers: Math.round(embers * 0.5), scale: scale }, 18);
+                WorldFeedback.text(scope, missAt.plus(WorldCombat.point(0, 0.8, 0)), blazekickMissText, [], 20);
+                sound(current, "cobblemon:move.gust.actor");
+                scenes.finish(current, done);
+            }
+
+            function sweep(current: CombatAction, index: number): void {
+                if (resolved) return;
+                const from = points[index], to = points[index + 1];
+                // Judgement and presentation share the exact endpoints: the fire front is drawn along this very sub-segment.
+                scenes.show(current, "sweep", to,
+                    { moment: "sweep", path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]],
+                        direction: headingData, embers: embers, scale: scale, intensity: intensity });
+                const hit = current.trace(from, to, radius, true);
+                const inner = hit.hitEntity() ? hit.target() : null;
+                if (inner !== null && String(inner.ref()) === self) {
+                    if (index + 2 < points.length) { current.after(1, function (next: CombatAction) { sweep(next, index + 1); }); return; }
+                    conclude(current, null);
+                    return;
+                }
+                if (hit.hitEntity() || hit.blocked()) { conclude(current, hit); return; }
+                if (index + 2 < points.length) { current.after(1, function (next: CombatAction) { sweep(next, index + 1); }); return; }
+                conclude(current, null);
+            }
 
             sound(action, "minecraft:entity.blaze.shoot");
-            WorldFeedback.emit(world, blazekickScene, 1, stop,
-                { moment: "spin", path: path, embers: embers, scale: scale, intensity: intensity,
-                    direction: [heading.x(), heading.y(), heading.z()] }, 22);
-
-            // 友方或自己先挡住腿路、或什么都没碰到，就只留一道空弧。
-            if (victim === null || String(victim.ref()) === String(actor.ref()) || world.friendly(victim)) {
-                WorldFeedback.emit(world, blazekickScene, 1, stop, { moment: "miss", embers: Math.round(embers * 0.5), scale: scale }, 18);
-                WorldFeedback.text(world, stop.plus(WorldCombat.point(0, 0.8, 0)), blazekickMissText, [], 20);
-                sound(action, "cobblemon:move.gust.actor");
-                done(action);
-                return;
-            }
-
-            const at = contact!.position();
-            const landed = hurt(action, victim, "blazekick", power,
-                { damage: damageSpec("blazekick", "kick"), contact: true, status: "burn", chance: chance, statusTicks: burnTicks });
-            WorldFeedback.emit(world, blazekickScene, 1, at,
-                { moment: "kick", target: String(victim.ref()), path: path, embers: embers, scale: scale,
-                    intensity: Math.max(0.6, Math.min(2.4, power / 80)) }, 24);
-            sound(action, "cobblemon:impact.fire");
-            if (landed && world.valid(victim)) {
-                WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), blazekickHitText, [], 22);
-                const away = WorldCombat.point(at.x() - origin.x(), 0, at.z() - origin.z());
-                const lift = away.length() < 0.05 ? WorldCombat.point(heading.x() * 0.2, launch, heading.z() * 0.2)
-                    : away.unit().scale(0.25).plus(WorldCombat.point(0, launch, 0));
-                // 挑飞只尝试原生允许：被击飞抗性或事件拒绝时不加升空表现。
-                const lifted = world.hitImpulse(victim, lift);
-                if (CombatStatus.has(world, victim, "burn")) {
-                    world.ignite(victim, Math.max(20, Math.min(60, Math.round(burnTicks * 0.2))));
-                    WorldFeedback.emit(world, blazekickScene, 1, at, { moment: "ignite", target: String(victim.ref()), embers: embers, scale: scale }, 24);
-                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.4, 0)), blazekickBurnText, [], 24);
-                    sound(action, "minecraft:entity.blaze.burn");
-                }
-                if (lifted) WorldFeedback.emit(world, blazekickScene, 1, at,
-                    { moment: "launch", target: String(victim.ref()), launch: launch, embers: embers, scale: scale, intensity: intensity }, 22);
-            }
-            done(action);
+            sweep(action, 0);
         }
     });
 }

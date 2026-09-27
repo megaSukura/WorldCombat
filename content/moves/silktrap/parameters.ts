@@ -69,7 +69,7 @@ namespace PokemonSkills {
             F.base(1.6).plus(F.body("height").times(0.5)).clamp(1.5, 3.2).round(2),
             "丝网半径", {
                 unit: "格",
-                description: "绕自身一圈铺开的丝网半径；身板越大网越宽，画面与判定同半径。"
+                description: "绕自身一圈铺开的丝网画面半径；身板越大网越宽。丝网按总量吸收来袭伤害，是否拦下不看这个半径。"
             }),
         /** 冷却：基础 80 刻 + 等级 ×0.5，夹在 80..130。 */
         charge: formula(

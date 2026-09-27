@@ -2,10 +2,10 @@
  * 影子分身 / doubleteam 的参数与数值来源。
  *
  * 原生事实：Normal、Status、威力 —、命中 必中、PP 15、目标 self／boosts={evasion:+1}。
- * 世界化：这不是一次「闪避率 +1」的抽象加成，而是用极快的身法留下一圈与本体同步的残影——
- * 来袭的攻击先打在残影上，残影替本体挨下这一击，挨得越多越淡，磨完就散。
- * 机制用共享 GuardEffects 的 pool 模式承接这份「替身预算」；同时给自己挂共享身份
- * world_combat:status/doubleteam 的真实 MobEffect（物品栏可见、移速小幅提升），宝可梦再抬一级闪避等级。
+ * 世界化：这不是一次「闪避率 +1」的抽象加成，而是用极快的身法留下数个与本体同步的诱饵身体——
+ * 追兵可能把矛头转向旧位置，本体仍照常挨打。诱饵真实存在、一击即破，随共享身份
+ * world_combat:status/doubleteam 的真实 MobEffect（物品栏可见、移速小幅提升）一起清理；宝可梦再抬一级闪避等级，
+ * 那一级是持久的等级提升，加速则是短暂余势。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   copies        2 + 速度 × 0.01 + 等级 × 0.01，取整夹 1..5；身法越快、越熟练，留的残影越多。
@@ -22,6 +22,8 @@ namespace PokemonSkills {
     export const doubleteamId = "doubleteam";
     export const doubleteamEffect = "world_combat:doubleteam_mirror";
     export const doubleteamScene = "world_combat:move_doubleteam";
+    /** Client-only body silhouette drawn at each unseen decoy's real box; the server body stays transparent. */
+    export const doubleteamDecoyScene = "world_combat:move_doubleteam_decoy";
     export const doubleteamSpot = "world_combat:status/doubleteam";
     export const doubleteamRule = "world_combat:doubleteam";
 

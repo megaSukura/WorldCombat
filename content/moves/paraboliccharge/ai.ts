@@ -23,13 +23,24 @@ namespace CompanionBehavior {
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= CompanionBehavior.ai<number>(item, "maxChase", 7);
     }
 
-    /** 以自身为圆心、本次电盘半径内真实可电的敌人数；只看自己够得着的一圈，远处扎堆不算。 */
-    function parabolicchargeDish(context: WorldBehavior.Context, radius: number): number {
-        var nearby = context.facts.nearby as CompanionBehavior.Entity[], count = 0, self = CompanionBehavior.source(context).point;
+    /** 本次电盘（真实半径 + 真实高度带 + 无实墙）内、真正可电的敌人数；只看自己够得着的一圈，远处扎堆不算。 */
+    function parabolicchargeDish(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        var self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[],
+            world = CompanionBehavior.world(context), count = 0;
+        var scope = { world: world, actor: world.source(), skill: PokemonSkills.skills[PokemonSkills.parabolicchargeId],
+            detail: { values: capability.data.config } };
+        var radius = Math.max(2.2, PokemonSkills.p(PokemonSkills.parabolicchargeId, "dish", scope));
+        var centre = CompanionBehavior.point(self.point);
         for (var i = 0; i < nearby.length; i++) {
             var other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible || parabolicchargeImmune(other)) continue;
-            if (CompanionBehavior.distance(other.point, self) <= radius) count++;
+            var dx = other.point[0] - self.point[0], dz = other.point[2] - self.point[2];
+            if (Math.sqrt(dx * dx + dz * dz) > radius) continue;
+            // 电盘只覆盖身体上下约三格的薄域；域外的不算收益。
+            var half = other.height ? other.height / 2 : 0.7;
+            if (other.point[1] + half < self.point[1] - 3 || other.point[1] - half > self.point[1] + 3) continue;
+            if (!world.clear(centre, CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return count;
     }
@@ -49,11 +60,15 @@ namespace CompanionBehavior {
         priority: function (context, capability, target) {
             if (!target || !capability || !parabolicchargeWants(context, capability, target)) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
-            var count = parabolicchargeDish(context, capability.data.range);
             var injured = CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(capability, "healBelow", 0.8);
-            var score = 14 + Math.min(3, count) * 5;
+            var score = 14;
+            // 群体加价只属于广角式（cluster 开）：关闭时不去按人数加价，只按普通攻击和受伤续航排序。
+            if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
+                var count = parabolicchargeDish(context, capability);
+                score += Math.min(3, count) * 5;
+                if (count >= 2) score += injured ? 8 : 2;
+            }
             if (injured) score += 12;
-            if (count >= 2) score += injured ? 8 : 2;
             return score;
         }
     });

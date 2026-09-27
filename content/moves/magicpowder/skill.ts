@@ -7,12 +7,13 @@
  * 幕：
  *   起（windup，提交前）：手里抖匀这把粉，只观察与预告，可被打断且不花代价。
  *   撒（throw，提交后）：粉团带轻微追踪飘向对象；点或方向都能空撒，撞到墙就在墙上散掉。
- *   改（coat）：真正第一个合法碰到的目标（用户选中的敌或友）被写进共享 NativeModifiers types 层
- *     （单一超能力，到期自动还原原生属性），挂共享身份 `world_combat:status/magicpowder` 的标记；粉粒亮一下。
+ *   改（coat）：真正第一个合法碰到的目标（用户选中的敌或友）先落身份载体，再用**同一载体**写共享 CombatTypes
+ *     replace 层（单一超能力，到期自动还原原生属性），挂共享身份 `world_combat:status/magicpowder`；体表的粉由
+ *     该 carrier 拥有（`WorldFeedback.onEffect`），净化/到期即一并收走。类型按实时事实读，普通/模组生物同样适用。
  *   免（immune）：草属性抖开粉末，只是抖开，不补其他状态。
  *   散（wipe）：改写到期时粉末从身上飘散，告诉玩家这层已经过去；不留一团同质粉云。
  *
- * 反制：草属性免疫粉末（预检直接拒绝，不浪费 20 发 PP）；已经是纯超能力的撒不上去；非法目标明确失败。
+ * 反制：草属性免疫粉末（预检直接拒绝，不浪费 20 发 PP）；已经是纯超能力的撒不上去；属性被原生锁住也撒不上。
  *   瞄准是 kind:aim：可瞄友或敌，选友方时粉团才被允许碰到它。
  */
 
@@ -28,16 +29,14 @@ namespace PokemonSkills {
 
     function magicpowderAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.25, 0)); }
 
-    /** 目标当前生效的属性（含临时层）；非宝可梦返回空。 */
+    /** 目标当前生效的属性（含临时层与 mod/普通生物提供的事实）；走共享 CombatantStats，和浸水同一契约。 */
     function magicpowderTypes(world: CombatWorld, target: CombatActor): string[] {
-        if (String(target.domain()) !== "cobblemon" || !world.valid(target)) return [];
-        return NativeEffects.types(CobblemonCombat.pokemon(target), NativeEffects.read(world, target));
+        return world.valid(target) ? PokemonDamage.combatants.read(world, target).types : [];
     }
 
-    /** 能不能撒：非宝可梦没有属性；草属性免疫粉末；已经是纯超能力也撒不上去。返回拒绝原因或空串。 */
+    /** 能不能撒：草属性免疫粉末；属性被原生锁住；已经是纯超能力也撒不上去。返回拒绝原因或空串。 */
     function magicpowderRefusal(world: CombatWorld, target: CombatActor): string {
         const types = magicpowderTypes(world, target);
-        if (types.length === 0) return "no-types";
         if (types.indexOf("grass") >= 0) return "grass-immune";
         if (NativeModifiers.typeLocked(world, target)) return "type-locked";
         return types.join(",") === "psychic" ? "already-psychic" : "";
@@ -120,10 +119,14 @@ namespace PokemonSkills {
             const chosen = target !== null && world.valid(target) ? String(target.ref()) : "";
             const chosenFriendly = chosen !== "" && world.friendly(target!);
             const scale = Math.max(0.6, Math.min(2.2, cloud / 1.2));
+            // 实际碰撞/判定半径；与画面用的大粉云 `cloud` 分开命名，不再让它被二次放大。
+            const hitRadius = Math.max(0.24, cloud * 0.3);
+            // 真实起点同时用于投射与瞄准，避免实体从脚底出发却按胸口方向飞。
             const from = body.position().plus(WorldCombat.point(0, body.height() * 0.55, 0));
             const aimed = action.targetPosition().minus(from);
             const direction = aimed.length() < 0.01 ? action.direction() : aimed.unit();
             let settled = false;
+            let flightId = "";
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -152,12 +155,32 @@ namespace PokemonSkills {
                         finish(current);
                         return;
                     }
-                    NativeModifiers.apply(scope, hit!, { types: ["psychic"] }, hold);
-                    MobEffects.apply(scope, hit!, magicpowderEffect, hold, sift ? 1 : 0);
+                    // 先落身份载体，再用同一载体写属性层：carrier 成功后才贴标，净化标识会一并撤掉类型。
+                    const previous = MobEffects.read(scope, hit!, magicpowderEffect);
+                    const carrier = MobEffects.apply(scope, hit!, magicpowderEffect, hold, sift ? 1 : 0);
+                    if (carrier === null) {
+                        WorldFeedback.emit(scope, magicpowderScene, 1, at, { moment: "fizzle", target: String(hit!.ref()), reason: "carrier-refused" }, 18);
+                        if (spot !== null) WorldFeedback.text(scope, magicpowderAbove(spot.position()), magicpowderFizzleText, [], 26);
+                        finish(current);
+                        return;
+                    }
+                    const layer = CombatTypes.apply(scope, hit!, { operation: "replace", types: ["psychic"] }, carrier);
+                    if (layer <= 0) {
+                        if (previous === null || String(previous.key()) !== String(carrier.key()))
+                            scope.removeMobEffect(hit!, magicpowderEffect, String(carrier.key()));
+                        WorldFeedback.emit(scope, magicpowderScene, 1, at, { moment: "fizzle", target: String(hit!.ref()), reason: "type-locked" }, 18);
+                        if (spot !== null) WorldFeedback.text(scope, magicpowderAbove(spot.position()), magicpowderFizzleText, [], 26);
+                        finish(current);
+                        return;
+                    }
                     if (spot !== null) {
+                        // 短附着标记由 carrier 拥有：改写多久，体表的粉就留多久，净化/到期即收。
+                        WorldFeedback.onEffect(scope, layer, "world_combat:move_magicpowder/mark", magicpowderScene, 1, spot.position(),
+                            { moment: "mark", target: String(hit!.ref()), motes: motes, glints: glints, radius: hitRadius,
+                                intensity: Math.max(0.7, Math.min(2, hold / 240)) });
                         WorldFeedback.emit(scope, magicpowderScene, 1, spot.position(),
-                            { moment: "coat", target: String(hit!.ref()), motes: motes, glints: glints, cloud: cloud,
-                                scale: scale, intensity: Math.max(0.7, Math.min(2, hold / 240)) }, 32);
+                            { moment: "coat", target: String(hit!.ref()), motes: motes, glints: glints, radius: hitRadius,
+                                cloud: cloud, scale: scale, intensity: Math.max(0.7, Math.min(2, hold / 240)) }, 32);
                         WorldFeedback.text(scope, magicpowderAbove(spot.position()), magicpowderCoatText, [], 30);
                     }
                     sound(current, "cobblemon:move.powder.target");
@@ -166,7 +189,7 @@ namespace PokemonSkills {
                 }
                 const wall = impact.blocked() ? impact.blockPosition() : null;
                 WorldFeedback.emit(scope, magicpowderScene, 1, wall === null ? at : wall,
-                    { moment: chosen === "" ? "empty" : "miss", motes: motes, scale: scale }, 22);
+                    { moment: chosen === "" ? "empty" : "miss", motes: motes, radius: hitRadius }, 22);
                 finish(current);
             }
 
@@ -174,16 +197,19 @@ namespace PokemonSkills {
                 sprite: "cobblemon:particle/generic/powder", scale: Math.max(0.7, scale), tint: 0xE86CC8, hitAllies: chosenFriendly
             };
             if (chosen !== "") appearance.homing = { target: chosen, turn: 6, delay: 1, range: action.range() };
-            const flight = LivingActions.projectile(action, {
-                speed: velocity, range: action.range(), radius: Math.max(0.24, cloud * 0.3), lifetime: 120,
-                direction: direction, appearance: appearance, impact: coat
+            flightId = LivingActions.projectile(action, {
+                speed: velocity, range: action.range(), radius: hitRadius, lifetime: 120,
+                origin: from, direction: direction, appearance: appearance, impact: coat
             }, function (current) {
-                WorldFeedback.emit(current.world(), magicpowderScene, 1, current.targetPosition(),
-                    { moment: chosen === "" ? "empty" : "miss", motes: motes, scale: scale }, 22);
+                // 完成回调读真实终点（弹体移除后仍保留最后接触/结束点），不拿满射程或旧瞄点冒充。
+                const scope = current.world();
+                const end = scope.projectilePosition(flightId) || current.targetPosition();
+                WorldFeedback.emit(scope, magicpowderScene, 1, end,
+                    { moment: chosen === "" ? "empty" : "miss", motes: motes, radius: hitRadius }, 22);
                 finish(current);
             });
             WorldFeedback.emit(world, magicpowderScene, 1, from,
-                { moment: "throw", projectile: flight, target: chosen, motes: motes, cloud: cloud, scale: scale }, 34);
+                { moment: "throw", projectile: flightId, target: chosen, motes: motes, cloud: cloud, scale: scale }, 34);
             sound(action, "cobblemon:move.powder.actor");
         }
     });

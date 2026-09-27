@@ -23,8 +23,22 @@ namespace PokemonSkills {
     const thunderouskickScene = "world_combat:move_thunderouskick";
     const thunderouskickGuard = "world_combat:thunderouskick_guard";
     const thunderouskickGuardText = "world_combat.move.thunderouskick.text.guard";
-    const thunderouskickBlindText = "world_combat.move.thunderouskick.text.blind";
+    const thunderouskickDistractText = "world_combat.move.thunderouskick.text.distracted";
     const thunderouskickMissText = "world_combat.move.thunderouskick.text.miss";
+
+    /** 两个方向角之间的最短有符号夹角（弧度）。 */
+    function thunderouskickTurn(from: number, to: number): number {
+        let delta = to - from;
+        while (delta > Math.PI) delta -= Math.PI * 2;
+        while (delta < -Math.PI) delta += Math.PI * 2;
+        return delta;
+    }
+
+    /** 目标碰撞箱在给定水平方向上的半宽，用来把侧身站位放到实际体表之外。 */
+    function thunderouskickSurface(body: CombatObservation, direction: CombatPoint): number {
+        const bounds = body.boundsMax().minus(body.boundsMin());
+        return Math.abs(direction.x()) * bounds.x() * 0.5 + Math.abs(direction.z()) * bounds.z() * 0.5;
+    }
 
     define({
         freeMovement: true,
@@ -116,26 +130,41 @@ namespace PokemonSkills {
                 if (!hit.hitEntity()) { whiff(current); return; }
                 const struck = hit.target(), point = hit.position();
                 const landed = impact(current, hit, "thunderouskick", power, { damage: damageSpec("thunderouskick", "kick"), contact: true });
+                const impactCount = Math.round(16 + intensity * 8);
                 WorldFeedback.emit(scope, thunderouskickScene, 1, point,
                     { moment: "kick", target: struck !== null ? String(struck.ref()) : "", steps: successSteps, reach: kickReach,
                         direction: [forward.x(), 0, forward.z()], contact: [point.x(), point.y(), point.z()],
                         from: [me.position().x(), me.position().y(), me.position().z()],
                         path: [[me.position().x(), me.position().y(), me.position().z()], [point.x(), point.y(), point.z()]],
-                        intensity: intensity }, 26);                sound(current, "cobblemon:impact.fighting");
+                        landed: landed ? 1 : 0, impact: landed ? impactCount : 0, intensity: intensity }, 26);
+                sound(current, landed ? "cobblemon:impact.fighting" : "minecraft:entity.player.attack.nodamage");
                 if (landed && struck !== null && scope.valid(struck)) {
                     const facts = scope.observe(struck);
                     const facing = facts !== null ? facts.attacking() : null;
-                    const blind = facing !== null && String(facing.ref()) !== String(current.actor().ref());
-                    const amount = stages + (successSteps >= 3 ? bonus : 0) + (blind ? 1 : 0);
-                    NativeEffects.boost(scope, struck, "def", -amount);
-                    MobEffects.apply(scope, struck, thunderouskickGuard, guardTicks, 0);
-                    WorldFeedback.emit(scope, thunderouskickScene, 1, point,
-                        { moment: "guard", target: String(struck.ref()), stages: amount, blind: blind ? 1 : 0 }, 24);
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)),
-                        blind ? thunderouskickBlindText : thunderouskickGuardText, [amount], 28);
+                    // 忙打别人只说明它分神，不推断真实视线，所以只叫「分神」。
+                    const distracted = facing !== null && String(facing.ref()) !== String(current.actor().ref());
+                    const amount = stages + (successSteps >= 3 ? bonus : 0) + (distracted ? 1 : 0);
+                    // 临时破防：护架缺口是一段 own window，锚到真实 guard 载体上，到期/被清除时一并收回，
+                    // 不留下永久降防却只挂短标记的错位。
+                    const before = NativeEffects.effectiveStage(scope, struck, "def");
+                    const carrier = MobEffects.apply(scope, struck, thunderouskickGuard, guardTicks, 0);
+                    let dropped = 0;
+                    if (carrier !== null) {
+                        const window = NativeEffects.boostWindow(scope, struck, { def: -amount }, guardTicks,
+                            "world_combat:move/thunderouskick", carrier);
+                        if (window > 0) dropped = Math.max(0, before - NativeEffects.effectiveStage(scope, struck, "def"));
+                        if (!(dropped > 0)) MobEffects.consume(scope, struck, thunderouskickGuard);
+                    }
+                    // 实际降级了多少级才裂甲：被能力拦截或已到下限就不冒成功反馈。
+                    if (dropped > 0) {
+                        WorldFeedback.emit(scope, thunderouskickScene, 1, point,
+                            { moment: "guard", target: String(struck.ref()), stages: dropped, distracted: distracted ? 1 : 0 }, 24);
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)),
+                            distracted ? thunderouskickDistractText : thunderouskickGuardText, [dropped], 28);
+                        sound(current, "minecraft:item.trident.thunder");
+                    }
                     const away = WorldCombat.point(point.x() - me.position().x(), 0, point.z() - me.position().z());
-                    if (away.length() > 0.2) scope.displace(struck, away.unit().scale(push));
-                    sound(current, "minecraft:item.trident.thunder");
+                    if (away.length() > 0.2) scope.hitDisplace(struck, away.unit().scale(push));
                 }
                 finish(current);
             }
@@ -150,21 +179,34 @@ namespace PokemonSkills {
                 const body = aimAt !== null ? scope.observe(aimAt) : null;
                 if (me === null) { whiff(current); return; }
                 if (body === null) { kick(current); return; }
-                const angle = Math.atan2(body.position().z() - me.position().z(), body.position().x() - me.position().x())
-                    + (attempts % 2 === 0 ? 1 : -1) * Math.PI * 0.62;
-                const destination = WorldCombat.point(body.position().x() + Math.cos(angle) * standoff, me.position().y(), body.position().z() + Math.sin(angle) * standoff);
                 const before = me.position();
-                const applied = LivingActions.step(scope, current.actor(), destination.minus(before), blink);
+                // 绕步的「绕」按相对目标中心的真实角位移计：直追（角度几乎不变）或撞墙（只走一点）
+                // 都达不到阈值，不再因为位移超过 0.5 格就白送一次成功绕步。
+                const toward = Math.atan2(before.z() - body.position().z(), before.x() - body.position().x());
+                const angle = toward + (attempts % 2 === 0 ? 1 : -1) * Math.PI / 3;
+                const radial = WorldCombat.point(Math.cos(angle), 0, Math.sin(angle));
+                // 站位以目标实际体表为准，至少让开半个体宽再留一点间隙。
+                const radius = Math.max(standoff, thunderouskickSurface(body, radial) + thunderouskickSurface(me, radial) + 0.3);
+                const destination = WorldCombat.point(body.position().x() + radial.x() * radius, before.y(), body.position().z() + radial.z() * radius);
+                const desired = destination.minus(before), feet = WorldCombat.point(before.x(), me.boundsMin().y(), before.z());
+                const route = SurfacePaths.advance(scope, feet, desired, Math.min(blink, desired.length()),
+                    { up: .1, down: .35, spacing: .2, samples: Math.ceil(blink / .2) });
+                const applied = route.travelled > .02 ? LivingActions.step(scope, current.actor(), route.point.minus(feet), blink) : 0;
                 attempts++;
                 const moved = scope.observe(current.actor());
                 const at = moved !== null ? moved.position() : before;
                 const travelled = at.minus(before);
                 const flat = WorldCombat.point(travelled.x(), 0, travelled.z());
-                if (applied > 0.5 && flat.length() > 0.05) {
+                const after = Math.atan2(at.z() - body.position().z(), at.x() - body.position().x());
+                const turned = Math.abs(thunderouskickTurn(toward, after));
+                if (applied > 0.5 && flat.length() > 0.2 && turned >= Math.PI / 9) {
                     successSteps++;
                     lastDirection = flat.unit();
+                    // 残影留在真正走过的旧点，并沿这一段真实端点连出短电光，位置不再跟当前 source。
                     WorldFeedback.emit(scope, thunderouskickScene, 1, at,
                         { moment: "blink", index: attempts, steps: successSteps, planned: feints,
+                            point: [before.x(), before.y(), before.z()],
+                            path: [[before.x(), before.y(), before.z()], [at.x(), at.y(), at.z()]],
                             direction: [lastDirection.x(), 0, lastDirection.z()], intensity: intensity }, 16);
                     sound(current, attempts % 2 === 0 ? "minecraft:entity.enderman.teleport" : "minecraft:entity.player.teleport");
                 }

@@ -6,9 +6,10 @@
  * 色相家族：冷银钢（0xC9D2E0 主体、0xEDF2F8 亮面、近白核心），余韵用中性灰（0x8A8F98）；无第二个色相。
  * 拍子：起 charge 0–18t ／ 钻 spin（逐刻续期）／ 凿 bore 0–26t ／ 中 drill ／ 收 skid ／ 空 miss。
  * 范围：bore／drill 钉在真实首接触点上（`bind: "point"`），半径按 `data.scale`（判定半径 / 0.5）缩放；
- *   spin 是一条沿 `data.direction` 的线，玩家一眼看出钻到哪、有多粗。
- * 运动：charge 的钻屑绕身体向内收成钻头；spin 的钢蓝气流沿方向拖尾、钻头自转；bore 的钻尖与拆盾碎片在同一
- *   接触点向外崩、钻屑受重力落下；skid 在真实停点收势。
+ *   spin 是一条沿 `data.direction` 的线，钻头本身是独立自定义场景（`world_combat:move_hyperdrill_head`），
+ *   贴当前身体前缘画出真在自转的短钻头。
+ * 运动：charge 的钻屑绕身体向内收成钻头；spin 的钢蓝气流沿方向拖尾、head 的钻头绕轴自转；bore 的钻尖与拆盾
+ *   碎片在同一接触点向外崩、钻屑受重力落下；drill 是伤害那一记单独的回执；skid 在真实停点收势。
  * 数：`data.grains`（物攻与速度派生的钻屑数）驱动 charge／spin／drill 的发射量，`data.broken`（凿开的守护
  *   层数）决定 bore 碎光的数量与亮度，`data.intensity`（威力 / 90）抬高命中那一下的密度。
  */
@@ -155,3 +156,60 @@ const HyperDrillDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_hyperdrill", 1, HyperDrillDefinition);
+
+/**
+ * 短钻头：服务端每刻按真实身体位置重发身前一小段轴线，客户端固定数量的钻纹贴图绕轴自转、从根部收到尖端，
+ * 贴住当前身体前缘，读得出是一支真在转的钻头而不是只转贴图的粒子。轴线随实际移动更新，命中仍由服务端回执驱动。
+ */
+const HyperdrillHeadScene = "world_combat:move_hyperdrill_head";
+const HyperdrillHeadDrill = "cobblemon:particle/generic/drill";
+const HyperdrillHeadSpiral = "cobblemon:particle/generic/spinbeam";
+const HyperdrillHeadTip = "cobblemon:particle/generic/impact/impact_steel";
+
+function hyperdrillHeadVec(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function hyperdrillHeadNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(HyperdrillHeadScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const at = hyperdrillHeadVec(data.at), head = hyperdrillHeadVec(data.head);
+    if (at === null || head === null) return;
+    const dir = hyperdrillHeadVec(data.direction) || [0, 0, 1];
+    const scale = Math.max(0.5, Math.min(2.0, hyperdrillHeadNumber(data.scale, 1)));
+    const intensity = Math.max(0.4, Math.min(2.4, hyperdrillHeadNumber(data.intensity, 1)));
+    const dx = head[0] - at[0], dy = head[1] - at[1], dz = head[2] - at[2];
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (length < 1e-4) return;
+    let sx = -dir[2], sz = dir[0];
+    const side = Math.sqrt(sx * sx + sz * sz);
+    if (side < 1e-4) { sx = 1; sz = 0; } else { sx /= side; sz /= side; }
+    const tick = frame.serverTick();
+    const alpha = Math.round(150 + 80 * Math.min(1, intensity / 2));
+    const steel = (Math.round(alpha * 0.75) << 24 | 0xC9D2E0) | 0;
+    const edge = (alpha << 24 | 0xEDF2F8) | 0;
+    frame.line(at[0], at[1], at[2], head[0], head[1], head[2], steel);
+    const beads = 4 + Math.round(intensity * 2);
+    for (let i = 0; i < beads; i++) {
+        const t = beads <= 1 ? 1 : i / (beads - 1);
+        const px = at[0] + dx * t, py = at[1] + dy * t, pz = at[2] + dz * t;
+        const angle = tick * 0.9 + t * Math.PI * 4;
+        const radius = (0.24 - 0.15 * t) * scale;
+        const ox = Math.cos(angle) * radius, oy = Math.sin(angle) * radius;
+        frame.sprite(HyperdrillHeadSpiral, px + sx * ox, py + oy, pz + sz * ox,
+            (0.13 + 0.05 * (1 - t)) * scale, (angle * 180 / Math.PI) % 360, edge, Math.floor(tick / 2 + i) % 8, true);
+        frame.sprite(HyperdrillHeadDrill, px + sx * ox * 0.8, py + oy * 0.8, pz + sz * ox * 0.8,
+            (0.18 + 0.05 * (1 - t)) * scale, (angle * 180 / Math.PI) % 360, edge, Math.floor(tick / 2 + i) % 6, true);
+    }
+    frame.sprite(HyperdrillHeadTip, head[0], head[1], head[2], (0.22 + 0.08 * intensity) * scale,
+        0, 0xFFFFFFFF | 0, Math.floor(tick) % 7, true);
+});

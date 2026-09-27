@@ -4,7 +4,7 @@
   "worldcombat.skill.icebeam.use.1": "对远处的高威胁目标先手点名",
   "worldcombat.skill.icebeam.use.2": "用一条固定光路补中随后走进来的敌人",
   "worldcombat.skill.icebeam.description.0": "沿瞄准方向瞬间贯穿：命中的敌人各受到一次约 %1$s 点伤害；光束停留 %2$s，若还有穿透名额，停留期间会反复扫过同一条光路，补中此刻进入光路的敌人。",
-  "worldcombat.skill.icebeam.description.1": "光束长 %1$s 格、半宽 %2$s 格，由近到远最多贯穿 %3$s 个敌人，每个目标只结算一次；遇到方块会在墙面处截断，墙后不会被光路打到。",
+  "worldcombat.skill.icebeam.description.1": "光束长 %1$s 格、半宽 %2$s 格，由近到远最多贯穿 %3$s 个敌人，每个目标只结算一次；光束按真实三维瞄准（可向上或向下指向空中/低处的目标），遇到方块会在墙面处截断，墙后不会被光路打到。",
   "worldcombat.skill.icebeam.description.2": "被命中的目标各有 %1$s 概率被冰冻；冰冻期间无法发动新招或进行普通攻击，也无法移动，冰属性免疫，受到火属性伤害即解冻。",
   "worldcombat.skill.icebeam.description.3": "起手 %1$s，收招 %2$s，冷却 %3$s。",
   "worldcombat.skill.icebeam.focus.on": "当前为聚焦式：光束更窄更短、单体威力与冰冻概率更高，但最多只穿两个目标，起手与冷却更久。",

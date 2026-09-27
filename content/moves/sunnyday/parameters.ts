@@ -7,12 +7,13 @@
  * 冻结被晒化（Gen 8 晴天下冰冻会解除），身上的水也被晒干（共享 soaked 身份被蒸掉）。
  *
  * 数值来源（每个参数读不同的个体数据）：
- *   gather       起手：基础 12 刻，速度每快 1 点减 0.04 刻，夹在 8..20。
- *   settle       收招：基础 9 刻，速度每快 1 点减 0.02 刻，夹在 6..14。
+ *   gather       起手：基础 12 刻，速度超过 40 后每点减 0.04（最多减 6），夹在 8..20；速度越快晴得越早。
+ *   settle       收招：基础 9 刻，速度超过 40 后每点减 0.02（最多减 4），夹在 6..14。
  *   reach        施放距离：基础 14 格，20 级起每级 +0.08，夹在 10..18。
  *   sunRadius    烈日区半径：基础 9 格 +（特攻超过 60）×0.02 +（身高超过 1.4）×1.5，再乘天候系数，夹在 6..16。
  *   sunTicks     烈日持续：基础 360 刻 + 20 级起每级 6 刻，再乘天候系数，夹在 240..700。
- *   sunlitTicks  晴天余温：基础 80 刻 + 速度 ×0.6，再乘天候系数，夹在 50..200。
+ *   sunlitTicks  晴天余温：基础 80 刻 + 速度 ×0.6，再乘天候系数，夹在 50..200；离开烈日区后残留的晴暖身份时长，
+ *                只供其他内容读取，火 / 水加成不随余温延长。
  *   sunDensity   日光密度：基础 30 + 特攻 ÷ 9，再乘天候系数，夹在 16..72；直接驱动粒子数量。
  * 配置 blazing 在「更大更烈更久的烈日」和「更小更久更省的温阳」之间取舍，两个方向都要付出代价。
  */
@@ -27,9 +28,9 @@ namespace PokemonSkills {
     WorldEnvironment.defineWeather("sun", { sunlight: 1 });
 
     actionParameters.define("sunnyday", {
-        gather: seconds(F.base(12).plus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(8, 20),
+        gather: seconds(F.base(12).minus(F.stat("speed").minus(40).max(0).times(0.04).clamp(0, 6)).clamp(8, 20),
             "起手", "把太阳叫来需要多少时间；速度越快，晴得越早。"),
-        settle: seconds(F.base(9).plus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
+        settle: seconds(F.base(9).minus(F.stat("speed").minus(40).max(0).times(0.02).clamp(0, 4)).clamp(6, 14),
             "收招", "烈日落下后收势需要多少时间；速度越快越利落。"),
         reach: formula(F.base(14).plus(F.level().minus(20).max(0).times(0.08)).clamp(10, 18).round(1),
             "施放距离", { unit: " 格", description: "能在多远的地面叫来这片烈日；等级越高够得越远。" }),
@@ -48,7 +49,7 @@ namespace PokemonSkills {
             F.base(80).plus(F.stat("speed").times(0.6))
                 .times(F.when(F.pref("blazing"), F.const(1.35), F.const(0.8)))
                 .clamp(50, 200),
-            "晴天余温", "离开烈日区后身上还暖多久；速度越快越难凉下来，烈日更久、温阳更短。"),
+            "晴天余温", "离开烈日区后晴暖身份还留存多久；速度越快越难凉下来，烈日更久、温阳更短。留存期间火 / 水加成不生效，属性加成只随身处烈日区的当前天气生效。"),
         sunDensity: formula(
             F.base(30).plus(F.stat("specialAttack").div(9))
                 .times(F.when(F.pref("blazing"), F.const(1.4), F.const(0.8)))

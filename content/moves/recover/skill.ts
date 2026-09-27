@@ -39,14 +39,24 @@ namespace PokemonSkills {
         return healed;
     }
 
-    /** 当刻收掉再生身份、停在 broken：剩余未交付的部分直接丢掉，已回生命保留。 */
-    function recoverBreak(world: CombatWorld, self: CombatActor): void {
-        if (!world.valid(self)) return;
-        if (MobEffects.read(world, self, recoverMark) !== null) MobEffects.consume(world, self, recoverMark);
+    /** 本次交付是否仍归自己：身份还在、且 key 与开修时记下的 anchor 一致（重放会换成新 key）。 */
+    function recoverOwned(world: CombatWorld, self: CombatActor, anchor: MobEffects.Anchor | null): boolean {
+        return anchor !== null && MobEffects.matches(world, self, anchor);
+    }
+    /**
+     * 当刻收掉再生身份、停在 broken：剩余未交付的部分直接丢掉，已回生命保留。
+     * 传 anchor 时只收「仍是自己这一份」的再生；被别人重放顶掉或自然收尾后不再误伤新的一程。
+     */
+    function recoverBreak(world: CombatWorld, self: CombatActor, anchor?: MobEffects.Anchor | null): boolean {
+        if (!world.valid(self)) return false;
+        if (anchor && !recoverOwned(world, self, anchor)) return false;
+        if (MobEffects.read(world, self, recoverMark) === null) return false;
+        if (MobEffects.consume(world, self, recoverMark) === null) return false;
         var body = world.observe(self);
-        if (body === null) return;
+        if (body === null) return true;
         WorldFeedback.emit(world, recoverScene, 1, body.position(), { moment: "broken", target: String(self.ref()) }, 24);
         WorldFeedback.text(world, recoverAbove(body.position()), recoverTextBroken, [], 24);
+        return true;
     }
 
     // 开始新的出手会结束当前再生：出手即主动放弃后半段，只保留已交付的回复。
@@ -87,10 +97,15 @@ namespace PokemonSkills {
             if (body.health() >= body.maxHealth() - 0.01) return "nothing-to-restore";
             return "";
         },
-        // 被打断时也要收干净：先把再生身份与剩余交付停掉，再让共享生命周期取消动作。
+        // 被打断时也要收干净：只收本次自己的再生身份与剩余交付，再让共享生命周期取消动作。
         interruptible: function (action) {
-            if (action.data(recoverActive) === null) return true;
-            try { recoverBreak(action.world(), action.actor()); } catch (error) { /* 已被取消的动作可能已经释放了世界句柄 */ }
+            var stored = action.data(recoverActive);
+            if (stored === null) return true;
+            try {
+                var anchor: MobEffects.Anchor | null = null;
+                try { var parsed = JSON.parse(stored); if (parsed && MobEffects.validAnchor(parsed)) anchor = parsed; } catch (error) { anchor = null; }
+                recoverBreak(action.world(), action.actor(), anchor);
+            } catch (error) { /* 已被取消的动作可能已经释放了世界句柄 */ }
             return true;
         },
         windup: function (action, _config, prepare) {
@@ -107,25 +122,32 @@ namespace PokemonSkills {
             var motes = Math.max(12, Math.round(p(recoverId, "motes", action)));
             var glow = Math.max(0.6, p(recoverId, "glow", action));
             var scale = Math.max(0.7, Math.min(1.9, glow / 0.9));
+            // 持续光点保持小而稳：尺寸只随光晕范围做有限缩放，不再直接乘出大光团。
+            var moteSize = Math.max(0.07, Math.min(0.11, 0.07 + (glow - 0.7) * 0.03));
             var interval = 2;
             var steps = Math.max(1, Math.round(window / interval));
             var budget = body.maxHealth() * total;
             var perStep = budget / steps;
+            var rate = Math.round(perStep / interval * 10);
 
-            action.data(recoverActive, "{}");
-            MobEffects.apply(world, self, recoverMark, window + 20, 0);
+            // 本次载体：身份一挂上就记下 revision，之后只交付/清理归自己的那一程；被重放顶掉则静默让位。
+            var carrier = MobEffects.apply(world, self, recoverMark, window, 0);
+            var anchor: MobEffects.Anchor | null = carrier === null ? null : MobEffects.anchor(carrier);
+            action.data(recoverActive, anchor === null ? "{}" : JSON.stringify(anchor));
             sound(action, "minecraft:block.beacon.activate");
             // 持续再生由本次 execute 自己创建的场景承载：结束 finish、被打断随动作清理，移动时贴着身体跟随。
             var scenes = WorldFeedback.actionScenes(recoverScene, 1);
             WorldFeedback.emit(world, recoverScene, 1, body.position(),
                 { moment: "begin", target: String(self.ref()), motes: motes, glow: glow, scale: scale,
-                    rate: Math.round(perStep / interval * 10) }, 30);
+                    moteSize: moteSize, rate: rate }, 30);
             WorldFeedback.text(world, recoverAbove(body.position()), recoverTextBegin, [], 30);
 
             var left = steps, delivered = 0, sinceFloat = 0;
             function settle(current: CombatAction, moment: string, textKey: string): void {
                 var access = current.world();
                 if (access.valid(self)) {
+                    // 正常收势只清本次自己的再生身份的残影；已补进生命保留，结束不留残余再生图标。
+                    if (recoverOwned(access, self, anchor)) MobEffects.consume(access, self, recoverMark);
                     var at = access.observe(self);
                     if (at !== null) {
                         WorldFeedback.emit(access, recoverScene, 1, at.position(),
@@ -140,16 +162,18 @@ namespace PokemonSkills {
                 if (!access.valid(self)) { done(current); return; }
                 var now = access.observe(self);
                 if (now === null) { done(current); return; }
-                if (MobEffects.read(access, self, recoverMark) === null) {
+                var mark = MobEffects.read(access, self, recoverMark);
+                if (mark === null) {
+                    // 身份被清（牛奶／effect clear）或到期：剩余再生当刻停，只留已交付部分。
                     scenes.stop(current);
                     WorldFeedback.emit(access, recoverScene, 1, now.position(), { moment: "broken", target: String(self.ref()), scale: scale }, 24);
                     WorldFeedback.text(access, recoverAbove(now.position()), recoverTextBroken, [], 24);
                     done(current);
                     return;
                 }
+                if (!recoverOwned(access, self, anchor)) { scenes.stop(current); done(current); return; }
                 var missing = now.maxHealth() - now.health();
                 if (missing <= 0.01) {
-                    MobEffects.consume(access, self, recoverMark);
                     settle(current, "settle", recoverTextFull);
                     return;
                 }
@@ -159,7 +183,7 @@ namespace PokemonSkills {
                     // 每份真实治疗推一次持续再生场景，画面密度随真实回量；没补进生命就不推。
                     scenes.show(current, "regenerate", now.position(),
                         { moment: "regenerate", target: String(self.ref()), motes: motes, glow: glow, scale: scale,
-                            rate: Math.round(perStep / interval * 10), left: left, total: steps,
+                            moteSize: moteSize, rate: rate, left: left, total: steps,
                             healed: Math.round(healed * 100) / 100,
                             intensity: Math.max(0.6, Math.min(1.6, 0.8 + healed / Math.max(0.001, perStep) * 0.4)),
                             fill: Math.max(0, Math.min(1, delivered / Math.max(0.001, budget))) });

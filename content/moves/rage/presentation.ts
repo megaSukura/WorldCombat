@@ -92,8 +92,9 @@ const RageDefinition: ParticleDefinition = {
             ]
         },
         aura: {
-            duration: 12,
-            exit: { stop: 6, drain: 10 },
+            // 守炉火光由 carrier 的托管效果每 10 刻 onEffect 续期；时长盖住这个间隔，火看起来是持续低烧而不是一闪一闪。
+            duration: 14,
+            exit: { stop: 14, drain: 12 },
             emitters: [
                 {
                     name: "low_fire", bind: "target", offset: [0, 0.06, 0], height: 0,

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.brickbreak.summary": "Step in and bring a hand chop straight down: it hurts the enemies the corridor has line of sight to and shatters the Reflect, Light Screen and Aurora Veil the landing point can actually reach. An empty point still strips a warded patch; ordinary blocks are untouched.",
+  "worldcombat.skill.brickbreak.summary": "Step in and bring a hand chop straight down: first shatter the enemy Reflect, Light Screen and Aurora Veil the landing point can actually reach (your own and your team's screens stay up), then hurt the enemies the corridor has line of sight to. An empty point still strips enemy wards; ordinary blocks are untouched.",
   "worldcombat.skill.brickbreak.use.0": "A quick chop at close range",
   "worldcombat.skill.brickbreak.use.1": "Shred a barrier the moment it goes up",
   "worldcombat.skill.brickbreak.use.2": "Open a warded target from the landing point",
   "worldcombat.skill.brickbreak.description.0": "Every enemy in the corridor with line of sight from you takes one hit of about %1$s contact damage with a %2$s block half-width; the target's Defence, type matchup and criticals are settled on impact, and a wall hides whoever stands behind it.",
-  "worldcombat.skill.brickbreak.description.1": "Reach %1$s blocks, stepping up to 0.6 blocks toward the aim point before the chop; Reflect, Light Screen and Aurora Veil within %2$s blocks of the landing point and in its line of sight shatter together, even when the corridor is empty, with no prior hit on the body required.",
+  "worldcombat.skill.brickbreak.description.1": "Reach %1$s blocks, stepping up to 0.6 blocks toward the aim point before the chop; the blade falls along its reachable path, and the enemy Reflect, Light Screen and Aurora Veil within %2$s blocks of the landing point and in its line of sight shatter first, before the chop is settled (your own and your team's screens stay up). It shatters at the landing point even when the corridor is empty, with no prior hit on the body required.",
   "worldcombat.skill.brickbreak.wide.on": "Wide mode: a 1.5x chop face, a 1.25x shatter radius and longer reach catch more of the corridor; the cost is 0.9x single-hit power, +2 ticks of preparation and +8 ticks of cooldown.",
   "worldcombat.skill.brickbreak.wide.off": "Focused mode: a narrower, harder straight chop at 1.06x power with quicker preparation and cooldown; the shatter radius and chop face stay at their base.",
   "worldcombat.skill.brickbreak.timing": "Range %1$s blocks; %2$s s preparation, %3$s s recovery, %4$s PP, %5$s s cooldown.",
@@ -22,7 +22,7 @@
   "worldcombat.skill.brickbreak.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.brickbreak.preference.ai.maxChase.help": "Beyond this distance it closes in instead of chopping. Larger values open from further out.",
   "worldcombat.skill.brickbreak.preference.ai.break": "Shatter first",
-  "worldcombat.skill.brickbreak.preference.ai.break.help": "On: prefer a target carrying Reflect, Light Screen or Aurora Veil and break the barrier first. Off: rank by threat and distance only.",
+  "worldcombat.skill.brickbreak.preference.ai.break.help": "On: prefer a target actually warded by an enemy Reflect, Light Screen or Aurora Veil (a field or a carried identity) and break the barrier first. Your own and your team's screens do not count. Off: rank by threat and distance only.",
   "world_combat.move.brickbreak.text.crack": "Barrier shattered %1$s layer(s)",
   "world_combat.move.brickbreak.text.miss": "Brick Break caught nothing"
 }

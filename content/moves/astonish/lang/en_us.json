@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.astonish.summary": "A startled scream with no warning: an instant, point-blank interrupt with a 0-tick wind-up. The damage is light, but the target almost always flinches - a wall or a body in front stops the scream first, and the darker it is, the harder it hits, flinches and lasts.",
+  "worldcombat.skill.astonish.summary": "A startled scream with no warning: an instant, point-blank interrupt with a 0-tick wind-up. The damage is light, but a hit has a chance to make the target flinch - a wall or a body in front stops the scream first, and the darker it is (both block light and sky-and-weather sunlight low), the harder it hits, the more it flinches and the longer it lasts.",
   "worldcombat.skill.astonish.description.0": "The scream deals about %1$s contact damage with a %2$s block startle radius; it is stronger in the dark. The target's defence, type and crits are applied on the hit.",
   "worldcombat.skill.astonish.description.1": "It reaches out to %1$s blocks; a wall or a body in front stops the scream, so nothing behind it is hit.",
   "worldcombat.skill.astonish.description.2": "On a hit there is a %1$s chance to make the target flinch for %2$s: it first interrupts any action the target is performing that can be interrupted, and while flinching it cannot start new moves or make ordinary attacks, though it can still move and be hit; both the chance and the duration are higher in the dark.",
@@ -25,7 +25,7 @@
   "worldcombat.skill.astonish.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.astonish.preference.ai.maxChase.help": "Beyond this distance the user closes in first. The scream is nearly point-blank; too large only makes the companion run for nothing.",
   "worldcombat.skill.astonish.preference.ai.opening": "When to call",
-  "worldcombat.skill.astonish.preference.ai.opening.help": "Always: treat it as a point-blank interrupt, usable at any time. Dark only: scream only when the user stands in block light below 7; stronger in the dark, but almost never used in the light.",
+  "worldcombat.skill.astonish.preference.ai.opening.help": "Always: treat it as a point-blank interrupt, usable at any time. Dark only: scream only when the user stands in real gloom (block light below 7 and sky-and-weather sunlight below 0.5); stronger in the dark, but almost never used in the light.",
   "worldcombat.skill.astonish.preference.ai.opening.always": "Always",
   "worldcombat.skill.astonish.preference.ai.opening.dark": "Dark only",
   "world_combat.move.astonish.text.hit": "Screamed",

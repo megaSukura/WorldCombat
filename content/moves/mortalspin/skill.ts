@@ -1,20 +1,21 @@
 /**
  * 晶光转转 / mortalspin 的出手方式。
  *
- * 核心念头：旋身甩出一圈带毒的晶光。身体一转，缠在身上的束缚被甩脱，随后朝四周甩出有限几枚真实毒晶，
- *   晶与晶之间留着缝隙；每枚晶碰到一个敌人就结算一次毒系接触伤害并让它中毒，方块会挡住对应的晶。
+ * 核心念头：起手一荡、甩出一圈带毒的晶光。缠在身上的束缚被抖脱，随后朝四周甩出有限几枚真实毒晶，
+ *   晶与晶之间留着缝隙；每枚晶碰到一个敌人就结算一次毒系伤害并让它中毒，方块会挡住对应的晶。
  *
  * 三幕（提交前只播预告）：
- *   起（wind，提交前）：毒晶在脚边聚起，只播一记预告。
- *   旋（free → spin → crystal → hit）：提交后立即甩脱身上的 rooted 世界效果与共享身份 partiallytrapped／
- *       trapped／leechseed，再朝全周撒出 `crystals` 枚真实毒晶；每枚最多命中一个敌人、每个敌人本轮最多挨
- *       一次，命中处顶开 `push` 并上 `toxin` 时长的毒；剧毒式上剧毒（掉血更快），晶光式上普通毒。
+ *   起（gather，提交前）：毒晶在脚边聚起、毒光圈在身周环绕一圈，只播一记预告。
+ *   甩（fling → crystal → hit）：提交后立即甩脱身上的 rooted 世界效果与共享身份 partiallytrapped／trapped／leechseed，
+ *      再朝全周撒出 `crystals` 枚真实毒晶；每枚最多命中一个敌人、每个敌人本轮最多挨一次，命中处顶开 `push` 并上
+ *      `toxin` 时长的毒；剧毒式上剧毒（掉血更快），晶光式上普通毒。
  *   散（settle）。
  *
- * 与同族分开：高速旋转同样脱缚，但它是把自己变快；晶光转转是把毒晶撒成一圈短飞晶——不形成持久毒地、也不提速。
- *   束缚与毒都是共享机制（CombatStatus 身份、world_combat:rooted），对宝可梦、原版生物、其他模组生物和玩家一视同仁。
+ * 与同族分开：高速旋转同样脱缚，但它是把自己变快、真正扫转身体；晶光转转是起手一荡把毒晶撒成一圈短飞晶——
+ *   不形成持久毒地、也不提速，身体不作整圈旋转，表现只画真实枚数与路线。束缚与毒都是共享机制
+ *   （CombatStatus 身份、world_combat:rooted），对宝可梦、原版生物、其他模组生物和玩家一视同仁。
  *
- * 配置 `virulent` 由公式改威力／半径／毒时长与时序；提交后才触碰世界。
+ * 配置 `virulent` 由公式改威力／半径／毒时长与时序；提交后才触碰世界。离体毒晶按投射物、非接触结算。
  */
 namespace PokemonSkills {
     const mortalspinScene = "world_combat:move_mortalspin";
@@ -37,7 +38,7 @@ namespace PokemonSkills {
         id: "mortalspin",
         cooldownParameter: "recharge",
         name: "Mortal Spin",
-        description: "旋身甩出一圈带毒的晶光：先把缠在身上的绑紧、紧束、寄生种子这类束缚甩脱，再朝四周甩出有限几枚真实毒晶，每枚碰到一个敌人各结算一次并让它中毒，晶与晶之间留有可躲的缝隙、方块会挡住对应的晶。剧毒式上剧毒、留得更久。",
+        description: "起手一荡甩出一圈带毒的晶光：先把缠在身上的绑紧、紧束、寄生种子这类束缚抖脱，再朝四周甩出有限几枚真实毒晶，每枚碰到一个敌人各结算一次并让它中毒，晶与晶之间留有可躲的缝隙、方块会挡住对应的晶。剧毒式上剧毒、留得更久。",
         uses: ["被绑紧、紧束或寄生种子缠住时脱身", "被围住时把毒晶撒成一圈、给沾到的人上毒", "用毒把一场缠斗慢慢磨赢"],
         kind: "self",
         range: 2.6,
@@ -68,7 +69,8 @@ namespace PokemonSkills {
         windup: function (action, config, prepare) {
             action.present("world_combat:move_mortalspin:gather", mortalspinScene, 1, action.origin(),
                 JSON.stringify({ moment: "gather", virulent: config && config.virulent === true ? 1 : 0,
-                    scatter: Math.round(p("mortalspin", "scatter", action)) }));
+                    scatter: Math.round(p("mortalspin", "scatter", action)),
+                    rings: Math.round(p("mortalspin", "rings", action)) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -114,6 +116,7 @@ namespace PokemonSkills {
             }
 
             function release(current: CombatAction): void {
+                if (settled) return;
                 remaining--;
                 if (remaining <= 0) finish(current);
             }
@@ -123,16 +126,21 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, mortalspinScene, 1, centre, { moment: "free", actor: String(actor.ref()), freed: freed, scale: scale, rings: rings }, 26);
                 WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), mortalspinFreeText, [freed], 28);
             }
+            // 起手只播一荡与真实枚数：不预画与判定无关的整圈假晶。
             WorldFeedback.emit(world, mortalspinScene, 1, centre,
-                { moment: "spin", actor: String(actor.ref()), radius: radius, scale: scale, rings: rings, scatter: scatter,
+                { moment: "fling", actor: String(actor.ref()), radius: radius, scale: scale, rings: rings, scatter: scatter,
                     crystals: crystals, toxic: virulent ? 1 : 0, freed: freed, intensity: Math.max(0.6, Math.min(2, power / 34 + freed * 0.12)) }, 30);
             world.sound("cobblemon:move.poisongas.target", centre, 16, "{}");
 
             function launch(current: CombatAction, index: number): void {
+                if (settled) return;
                 const angle = ringBase + index * (Math.PI * 2 / crystals);
                 const direction = WorldCombat.point(Math.cos(angle), 0, Math.sin(angle)).unit();
                 const key = "crystal:" + index;
-                const origin = current.origin().plus(direction.scale(crystalRadius + 0.1));
+                const start = current.origin();
+                const origin = start.plus(direction.scale(crystalRadius + 0.1));
+                // 发射口前的偏移段先查阻挡：紧贴的墙会挡住这一枚，不能凭空出现在墙外。
+                if (WorldGeometry.blockHit(world, start, origin) !== null) { release(current); return; }
                 let resolved = false;
                 const flight = current.projectile(origin, direction.scale(speed), 0, crystalRadius, radius, lifetime,
                     function (inner: CombatAction, hit: CombatImpact): void {
@@ -143,7 +151,8 @@ namespace PokemonSkills {
                         const touched = victim !== null && scope.valid(victim);
                         const enemy = touched && !scope.friendly(victim!);
                         if (enemy && !hitRefs[String(victim!.ref())] && hits < cap) {
-                            const landed = impact(inner, hit, "mortalspin", power, { damage: damageSpec("mortalspin", "spin"), contact: true });
+                            // 离体的毒晶是投射物，按非接触结算。
+                            const landed = impact(inner, hit, "mortalspin", power, { damage: damageSpec("mortalspin", "spin") });
                             if (landed) {
                                 hitRefs[String(victim!.ref())] = true;
                                 hits++;
@@ -167,7 +176,7 @@ namespace PokemonSkills {
                         scale: scale, toxic: virulent ? 1 : 0, intensity: Math.max(0.5, Math.min(2, power / 34)) });
             }
 
-            for (let index = 0; index < crystals; index++) launch(action, index);
+            for (let index = 0; index < crystals && !settled; index++) launch(action, index);
         }
     });
 }

@@ -70,13 +70,16 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("narrow"), F.const(1.1), F.const(0.85)))
                 .clamp(80, 300).round(0),
             "睡眠时长", "这一声带走的睡眠有多久；它是本组最短的一记，一声就完、也醒得快。"),
-        /** 生效概率：0.55 +（特攻 − 目标特防）×0.003 + 等级差 ×0.004；夹 0.30..0.95。 */
+        /** 生效概率：有明确目标时 0.55 +（特攻 − 目标特防）×0.003 + 等级差 ×0.004；空吹时固定 0.55；夹 0.30..0.95。 */
         landChance: percent(
-            F.base(0.55)
-                .plus(F.stat("specialAttack").minus(F.target("stat.specialDefence")).times(0.003).clamp(-0.25, 0.35))
-                .plus(F.level().minus(F.target("level")).times(0.004).clamp(-0.1, 0.1))
-                .clamp(0.30, 0.95),
-            "生效概率", "这一声是响是裂：施法者的特攻与等级压过目标的特防与等级，才更容易一声吹准。裂了整条线都只剩走音。"),
+            F.when(
+                F.known(F.target("stat.specialDefence")),
+                F.base(0.55)
+                    .plus(F.stat("specialAttack").minus(F.target("stat.specialDefence")).times(0.003).clamp(-0.25, 0.35))
+                    .plus(F.level().minus(F.target("level")).times(0.004).clamp(-0.1, 0.1)),
+                F.base(0.55)
+            ).clamp(0.30, 0.95),
+            "生效概率", "这一声是响是裂：有明确目标时由施法者的特攻与等级对抗目标的特防与等级；只朝方向或世界点空吹时，一律按固定的空吹基准成功率，不把缺失的目标数据当成零而虚高。裂了整条线都只剩走音。"),
         /** 波纹数：5 + 特攻偏移[0,8]；夹 4..14；等级台阶再抬。 */
         shrills: formula(
             F.base(5).plus(F.stat("specialAttack").minus(60).times(0.08).clamp(0, 8)).clamp(4, 14).round(0),
@@ -84,12 +87,12 @@ namespace PokemonSkills {
                 unit: " 圈",
                 description: "沿音束铺开的一圈圈声波数量；特攻越高越密，也是画面里波纹的数量。"
             }),
-        /** 推进速度：2.2 + 速度偏移[−0.6,1.6]；夹 1.4..4.0。 */
+        /** 余波速度：2.2 + 速度偏移[−0.6,1.6]；夹 1.4..4.0。 */
         noteSpeed: formula(
             F.base(2.2).plus(F.stat("speed").minus(60).times(0.03).clamp(-0.6, 1.6)).clamp(1.4, 4.0).round(2),
-            "音的推进", {
+            "余波速度", {
                 unit: " 格/刻",
-                description: "哨音沿音束推进的快慢；速度快的个体吹得更急，画面里的音束也更利落地扎穿整条线。"
+                description: "这一声本体同刻就铺满整条音线，余波再沿音束向外荡开；速度快的个体余波更急，画面里沿音束散开的波环更快。"
             }),
         /** 起手：8 − 速度偏移[−2,3]；夹 5..14。 */
         tempo: seconds(

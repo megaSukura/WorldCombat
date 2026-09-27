@@ -58,6 +58,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const origin = action.origin();
+            const scenes = WorldFeedback.actionScenes(watergunScene);
             const power = p("watergun", "spout", action);
             const speed = Math.max(0.5, p("watergun", "pressure", action));
             const radius = Math.max(0.14, p("watergun", "radius", action));
@@ -65,38 +66,52 @@ namespace PokemonSkills {
             const charged = !!(config && config.charge);
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.2));
             const intensity = Math.max(0.5, Math.min(2.0, power / 40));
-            let struck = false, settled = false;
+            let contacted = false, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             sound(action, "cobblemon:move.watergun.actor");
 
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius,
                 lifetime: Math.max(24, Math.round(action.range() / Math.max(0.2, speed) + 16)),
                 appearance: { sprite: "cobblemon:generic/water/waterjet_head", tint: 0x6FD3F2, glow: true,
                     scale: Math.max(0.6, Math.min(1.4, radius / 0.2)) },
                 impact: function (current: CombatAction, hit: CombatImpact) {
+                    // 一次真实首碰：到接触的一刻立刻停掉喷流，再按回执播命中或空响。
+                    contacted = true;
+                    scenes.stop(current, "jet");
                     const scope = current.world(), point = hit.position(), victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        struck = true;
-                        if (!impact(current, hit, "watergun", power, { damage: damageSpec("watergun", "spout") })) return;
-                        WorldFeedback.emit(scope, watergunScene, 1, point,
-                            { moment: "splash", target: String(victim.ref()), drops: drops, scale: scale,
-                                intensity: intensity, charged: charged ? 1 : 0 }, 20);
-                        sound(current, "cobblemon:move.watergun.target");
-                        sound(current, "cobblemon:impact.water");
+                        if (impact(current, hit, "watergun", power, { damage: damageSpec("watergun", "spout") })) {
+                            WorldFeedback.emit(scope, watergunScene, 1, point,
+                                { moment: "splash", target: String(victim.ref()), drops: drops, scale: scale,
+                                    intensity: intensity, charged: charged ? 1 : 0 }, 20);
+                            sound(current, "cobblemon:move.watergun.target");
+                            sound(current, "cobblemon:impact.water");
+                        }
                     } else {
                         WorldFeedback.emit(scope, watergunScene, 1, point,
                             { moment: "dud", drops: drops, scale: scale, intensity: intensity }, 18);
                         scope.sound("minecraft:entity.generic.splash", point, 14, "{}");
                     }
                 }
-            }, function (current: CombatAction) { finish(current); });
+            }, function (current: CombatAction) {
+                if (!contacted) {
+                    // 飞满射程没碰到任何东西：用弹体的真实末点落一记短滴水，不拿射程点或发射点假造终点。
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null) {
+                        WorldFeedback.emit(current.world(), watergunScene, 1, end,
+                            { moment: "dud", drops: drops, scale: scale, intensity: intensity }, 18);
+                        current.world().sound("minecraft:entity.generic.splash", end, 14, "{}");
+                    }
+                }
+                finish(current);
+            });
 
-            action.present("watergun:jet", watergunScene, 1, origin,
-                JSON.stringify({ moment: "jet", projectile: flight, drops: drops, scale: scale, intensity: intensity,
-                    charged: charged ? 1 : 0 }));
+            scenes.show(action, "jet", origin,
+                { moment: "jet", projectile: flight, drops: drops, scale: scale, intensity: intensity, charged: charged ? 1 : 0 });
         }
     });
 }

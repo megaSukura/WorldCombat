@@ -15,7 +15,7 @@
  *   lingerTicks  70 + (特攻 − 60) × 0.6 刻，夹 70..160；走出云后余味持续多久，特攻越强越缠绵。
  *   smokeSpeed   0.9 + (速度 − 50) × 0.006 格/刻，夹 0.8..1.4；速度越快，烟团扑到落点越急。
  *   density      30 + 体重 ÷ 6，夹 30..80；体重越大吐得越多，画面里的烟越密。
- *   tempo        速度 ÷ 7 + 4 刻，夹 6..14；速度越快越早吐烟。
+ *   tempo        14 − (速度 − 40) × 0.08 刻，夹 6..14；速度越快，攒烟越短、越早吐出。
  *   recharge     90 + (等级 − 30) × 1.5 刻，夹 90..180；等级越高越熟练。
  */
 namespace PokemonSkills {
@@ -32,7 +32,7 @@ namespace PokemonSkills {
         }),
         blindStage: formula(F.stat("specialAttack").minus(80).max(0).div(90).plus(1).clamp(1, 2).round(0), "呛眼级数", {
             unit: " 级",
-            description: "云里的人在宝可梦那一层损失的原生命中等级；特攻每 90 点升一级，最多两级。"
+            description: "云里的人在宝可梦那一层失去的命中等级；特攻每 90 点升一级，最多两级。这份下降绑在呛眼载体上，离开云后随余味一起结束。"
         }),
         cloudRadius: formula(F.base(1.8).plus(F.body("width").times(0.7)).clamp(1.6, 3.4).round(2), "烟云半径", {
             unit: " 格",
@@ -50,7 +50,7 @@ namespace PokemonSkills {
             unit: " 股",
             description: "画面里同时飘出的烟量；体重越大吐得越多。"
         }),
-        tempo: seconds(F.stat("speed").div(7).plus(4).clamp(6, 14).round(0), "起手",
+        tempo: seconds(F.base(14).minus(F.stat("speed").minus(40).max(0).times(0.08)).clamp(6, 14).round(0), "起手",
             "把这口烟攒到嘴边需要多久；速度越快越早吐出。"),
         recharge: seconds(F.base(90).plus(F.level().minus(30).max(0).times(1.5)).clamp(90, 180).round(0), "冷却",
             "两次喷烟之间的等待；等级越高越熟练。")

@@ -28,14 +28,22 @@ namespace CompanionBehavior {
         return count;
     }
 
+    /** 这一只这一次真的炸开半径，与出招走同一棵公式（浓糖也含在内）；读不到原生个体时退回定义参考半径。 */
+    function syrupbombBlast(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const access = world(context);
+        try {
+            return Math.max(1.8, PokemonSkills.p("syrupbomb", "blast", { world: access, actor: access.source(),
+                skill: PokemonSkills.skills["syrupbomb"], detail: { values: item.data.config || {} } }));
+        } catch (error) { return 2.2; }
+    }
+
     function syrupbombWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         const self = source(context);
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (status(context, threat, "syrupbomb")) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
+        // 驻守不再全禁出手：够得到就在原地投，离开站位与否交给共享接近逻辑与 ai.leaveStation。
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 12)) return false;
-        const blast = item.data.config && item.data.config.thick ? 3.2 : 2.2;
-        return syrupbombCluster(context, threat, blast) >= ai<number>(item, "cluster", 1);
+        return syrupbombCluster(context, threat, syrupbombBlast(context, item)) >= ai<number>(item, "cluster", 1);
     }
 
     registerUse("syrupbomb", {
@@ -55,8 +63,7 @@ namespace CompanionBehavior {
         },
         priority: function (context, item, target) {
             if (!target || !syrupbombWants(context, item, target)) return 0;
-            const blast = item.data.config && item.data.config.thick ? 3.2 : 2.2;
-            return Math.min(95, 32 + syrupbombCluster(context, target, blast) * 12);
+            return Math.min(95, 32 + syrupbombCluster(context, target, syrupbombBlast(context, item)) * 12);
         }
     });
 }

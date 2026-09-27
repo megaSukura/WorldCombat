@@ -8,9 +8,10 @@
  * 三幕（提交前只播预告）：
  *   起（gather）：掌心凝火、火苗收拢，只播预告，此时代价未结清。
  *   飞（flight）：提交后火球拖着焰尾沿浅弧飞出，途中撒下火星。
- *   爆（burst → splash → drop → fade）：命中活体时结算 `burst` 主爆伤害，炸开一圈火；随后在爆点 `splashRadius`
- *       范围内挑出主目标之外的对手，各结算一记 `splash`，并从爆点到每个人甩出一条火滴轨迹（`path`）；撞到方块或
- *       任何非活体只在受击面散出一小簇火、不出现爆圈，也不触发旁溅；飞行耗尽则只留残烟。
+ *   爆（burst → boundary → splash → drop → fade）：命中活体先结算 `burst` 主爆伤害，并在爆点散出接触火星与烟；主爆真的
+ *       结算后，同一刻发出 `boundary` 勾出 `splashRadius` 的火环，在范围内挑出主目标之外、身体可达（未被墙挡）的对手，
+ *       各结算一记 `splash`，并用一条短闪线和落点火花把这次分溅画出来——不是从爆点逐滴飞过去。撞到方块或任何非活体只在
+ *       受击面散出一小簇火、不出现爆圈，也不触发旁溅；飞行耗尽则把余火落在 `world.projectilePosition` 给出的实际弹体末点。
  *
  * 选取：`kind: "aim"`——可以朝任意方向或一个世界点抛出火球，也能空放；没有选中实体时沿所选方向/落点飞行，
  *   命中方块只散火，选敌更容易命中活体而带出旁溅。伤害权限仍由命中层按敌我关系判断。
@@ -51,7 +52,7 @@ namespace PokemonSkills {
         defaults: { spread: true, ai: { maxChase: 16, cluster: true, finishLow: false } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: pokemon ? p(flameburstId, "reach", pokemon) : 12, geometry: "line", style: "fire",
+            return { radius: p(flameburstId, "splashRadius", pokemon), geometry: "circle", style: "fire",
                 color: 0xFF7A2E, label: config && config.spread === true ? "扇溅式烈焰溅射" : "直爆式烈焰溅射" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -108,17 +109,20 @@ namespace PokemonSkills {
                     if (living)
                         landed = impact(current, hit, flameburstId, power, { damage: damageSpec(flameburstId, "burst") });
                     if (living) {
-                        // 打到活体：主爆炸开；只有主爆真正结算了，才把火分给爆点周围的人。
+                        // 打到活体：先散出接触火星与烟；只有主爆真正结算了，才勾出旁溅边界并把火分给爆点周围的人。
                         WorldFeedback.emit(scope, flameburstScene, 1, point,
-                            { moment: "burst", target: ref, drops: drops, embers: embers, scale: scale,
-                                intensity: intensity, radius: splashRadius }, 30);
+                            { moment: "burst", target: ref, drops: drops, scale: scale, intensity: intensity }, 30);
                         sound(current, "cobblemon:impact.fire");
                         sound(current, "minecraft:entity.generic.explode");
                         if (landed) {
+                            WorldFeedback.emit(scope, flameburstScene, 1, point,
+                                { moment: "boundary", radius: splashRadius, scale: scale, intensity: intensity }, 30);
                             let splashed = 0;
                             WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, splashRadius, { below: 2.5, above: 3 }),
                                 function (other, facts) {
                                     if (String(other.ref()) === ref) return;
+                                    // 从真实接触点检查到旁人身体的可达性：墙后的敌人不受溅射。
+                                    if (WorldGeometry.blockHit(scope, point, facts.position())) return;
                                     if (!hurt(current, other, flameburstId, splashPower, { damage: damageSpec(flameburstId, "splash") })) return;
                                     splashed++;
                                     WorldFeedback.emit(scope, flameburstScene, 1, point,
@@ -141,7 +145,11 @@ namespace PokemonSkills {
                     finish(current);
                 }
             }, function (current: CombatAction) {
-                WorldFeedback.emit(current.world(), flameburstScene, 1, current.origin(), { moment: "fade", scale: scale }, 16);
+                const scope = current.world();
+                // 原生弹体在完成回调内仍可读最后接触/结束点；取不到就不补画，不用满程点或原点假造终点。
+                const last = scope.projectilePosition(flight);
+                if (last !== null)
+                    WorldFeedback.emit(scope, flameburstScene, 1, last, { moment: "fade", scale: scale }, 16);
                 finish(current);
             });
             WorldFeedback.keep(world, "flameburst:flight:" + action.id(), flameburstScene, 1, action.origin(),

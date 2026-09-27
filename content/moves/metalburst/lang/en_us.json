@@ -28,5 +28,6 @@
   "worldcombat.skill.metalburst.preference.ai.maxChase": "Detonation distance",
   "worldcombat.skill.metalburst.preference.ai.maxChase.help": "Only chase the debtor within this distance to detonate; a larger value pursues the debt further.",
   "world_combat.move.metalburst.text.hit": "Metal Burst!",
-  "world_combat.move.metalburst.text.whiff": "An empty clank"
+  "world_combat.move.metalburst.text.whiff": "An empty clank",
+  "world_combat.move.metalburst.text.store": "Stress %1$s (%2$s s left)"
 }

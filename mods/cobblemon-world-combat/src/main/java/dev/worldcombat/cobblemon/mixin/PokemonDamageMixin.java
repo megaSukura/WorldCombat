@@ -3,12 +3,13 @@ package dev.worldcombat.cobblemon.mixin;
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import dev.worldcombat.cobblemon.PokemonHealthBridge;
+import com.llamalad7.mixinextras.injector.wrapmethod.WrapMethod;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import dev.worldcombat.core.world.NativeDamageReceipts;
 import net.minecraft.world.damagesource.DamageSource;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = PokemonEntity.class, remap = false)
 public abstract class PokemonDamageMixin {
@@ -25,11 +26,14 @@ public abstract class PokemonDamageMixin {
         // Commit once after the original accepted-hit path, for both wild and owned individuals.
     }
 
-    @Inject(method = "hurt", at = @At("RETURN"))
-    private void worldcombat$commitHealth(DamageSource source, float amount,
-            CallbackInfoReturnable<Boolean> callback) {
-        if (callback.getReturnValueZ()) {
-            PokemonHealthBridge.afterDamage((PokemonEntity) (Object) this, source);
+    @WrapMethod(method = "hurt")
+    private boolean worldcombat$commitHealth(DamageSource source, float amount, Operation<Boolean> original) {
+        var entity = (PokemonEntity) (Object) this;
+        if (entity.level().isClientSide) return original.call(source, amount);
+        try (var receipt = NativeDamageReceipts.enter(entity, source, amount, PokemonEntity.class)) {
+            boolean accepted = original.call(source, receipt.amount(amount));
+            if (accepted) PokemonHealthBridge.afterDamage(entity, source);
+            return receipt.returned(accepted);
         }
     }
 }

@@ -235,7 +235,7 @@ public final class NativeWorldWrites {
         if (!(entity instanceof Mob mob)) return false;
         var victim = target == null ? null : combat.resolve(target);
         if (target != null && victim == null) return false;
-        mob.setTarget(victim);
+        if (!NativeTargetRequests.request(mob, victim, false)) return false;
         if (mob instanceof NeutralMob neutral) {
             if (victim != null) { neutral.setPersistentAngerTarget(victim.getUUID()); neutral.startPersistentAngerTimer(); }
             else neutral.stopBeingAngry();

@@ -16,12 +16,13 @@
  * 配置 `heavy`（重叶式）由 resolve 改时序、由公式改威力／叶数／判定／射程；提交后才触碰世界。
  */
 namespace PokemonSkills {
-    /** 扇面里第 index 片叶（共 count 片）的瞄准方向：以基准角为中轴均匀张开。 */
+    /** 扇面里第 index 片叶（共 count 片）的瞄准方向：以真实瞄准方向为轴，用稳定三维基沿侧向均匀张开。
+     *  竖直分量随瞄准保留（上下瞄时扇面绕这条轴张开），不再把 Y 固定成一个接近水平的常数。 */
     function leafageFanDirection(direction: CombatPoint, index: number, count: number, spreadDegrees: number): CombatPoint {
-        const base = Math.atan2(direction.x(), direction.z());
+        const frame = WorldGeometry.basis(direction);
         const t = count <= 1 ? 0 : index / (count - 1) - 0.5;
-        const angle = base + t * spreadDegrees * Math.PI / 180;
-        return WorldCombat.point(Math.sin(angle), 0.06, Math.cos(angle)).unit();
+        const angle = t * spreadDegrees * Math.PI / 180;
+        return frame.forward.scale(Math.cos(angle)).plus(frame.right.scale(Math.sin(angle))).unit();
     }
 
     define({
@@ -73,12 +74,14 @@ namespace PokemonSkills {
             const intensity = Math.max(0.6, Math.min(2.0, power / 32));
             const direction = aim(action);
             const scenes = WorldFeedback.actionScenes(leafageScene);
-            let landed = false, remaining = count, settled = false;
+            // 全把只有一次接触预算：`spent` 记是否已经碰过敌体，`accepted` 记这次接触是否真的结出伤害。
+            // 被原生拒绝的接触不再冒充命中，也不让其余叶拿默认弹体身份免费重试。
+            let spent = false, accepted = false, remaining = count, settled = false;
             function finish(current: CombatAction): void {
                 if (settled || remaining > 0) return;
                 settled = true;
                 const scope = current.world(), body = scope.observe(current.actor());
-                if (!landed && body !== null) {
+                if (!spent && body !== null) {
                     WorldFeedback.emit(scope, leafageScene, 1, body.position(), { moment: "miss", scale: scale }, 18);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.05, 0)), leafageMissText, [], 20);
                 }
@@ -99,13 +102,22 @@ namespace PokemonSkills {
             for (let index = 0; index < count; index++) {
                 const shot = leafageFanDirection(direction, index, count, spread);
                 const flight = LivingActions.projectile(action, {
-                    speed: speed, range: reach + 2, radius: radius, direction: shot, gravity: 0.035, lifetime: 80,
+                    // 真实飞行程长与本招射程一致：reach 既是选点范围，也是叶能飞出的最远距离。
+                    speed: speed, range: reach, radius: radius, direction: shot, gravity: 0.035, lifetime: 80,
                     appearance: { sprite: "cobblemon:particle/generic/grass/leaf", tint: 0x9BD25A, glow: false, scale: scale },
+                    // 第一片碰到敌体就花掉全把的接触预算；其余叶只落地，不再尝试。
+                    // 显式共用 strike "toss"，避免默认的每弹体独立身份把每一片叶都变成一次满伤。
                     impact: function (current: CombatAction, hit: CombatImpact) {
                         const scope = current.world(), who = hit.target(), at = hit.position();
-                        if (who === null || !scope.valid(who) || scope.friendly(who) || landed) { landLeaf(scope, at); return; }
-                        landed = true;
-                        if (!impact(current, hit, leafageId, power, { damage: damageSpec(leafageId, "toss") })) return;
+                        if (who === null || !scope.valid(who) || scope.friendly(who) || spent) { landLeaf(scope, at); return; }
+                        spent = true;
+                        accepted = impact(current, hit, leafageId, power, { damage: damageSpec(leafageId, "toss") }, "toss");
+                        if (!accepted) {
+                            // 原生拒绝（免疫/保护/无敌）：只收束，不冒命中特效，给出失败反馈。
+                            landLeaf(scope, at);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), leafageRejectText, [], 20);
+                            return;
+                        }
                         WorldFeedback.emit(scope, leafageScene, 1, at,
                             { moment: "hit", target: String(who.ref()), leaves: count, scale: scale, intensity: intensity }, 20);
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), leafageHitText, [], 20);

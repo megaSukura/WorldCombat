@@ -93,8 +93,8 @@ namespace PokemonSkills {
                 unit: "点",
                 description: "月束与命中处溅起的月光点数，随特攻增长；粒子按它发射，画面里的数量和机制一致。"
             }),
-        /** 收招：基础 14 刻，体重每比 100 重 1 加 0.02（夹 -2..6）；夹 8..26。 */
-        recover: seconds(
+        /** 收招：基础 14 刻，体重每比 100 重 1 加 0.02（夹 -2..6）；夹 8..26。非保留键，resolve 真正读它。 */
+        aftercast: seconds(
             F.base(14).plus(F.body("weight").minus(100).times(0.02).clamp(-2, 6)).clamp(8, 26).round(0),
             "收招", "倾泻完之后把气势收回来、落回站姿的时间；越重的身体越难平复。"),
         /** 冷却：基础 40 刻，等级每比 40 高 1 减 0.3（夹 0..10）；夹 24..50。 */
@@ -119,7 +119,7 @@ namespace PokemonSkills {
     describe(bloodmoonId, [
         { key: "description.0", values: ["moonlight", "spill", "reach"] },
         { key: "description.beam", values: ["beamRadius", "pierce"] },
-        { key: "description.1", values: ["charge", "recover", "recharge"] },
+        { key: "description.1", values: ["charge", "aftercast", "recharge"] },
         { key: "description.2", values: ["spent"] },
         { key: "eclipse.on", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) === true; } },
         { key: "eclipse.off", values: [], when: function (context) { return read(context.detail.values, ["eclipse"]) !== true; } },

@@ -9,15 +9,23 @@
  * `ai.reserveHealth` 是付完之后要留下的比例；越高越不肯把自己削到危险区。
  */
 namespace PokemonSkills {
+    /** 把远处的一个点沿水平方向截到自己够得到的预算内；始终留在同一高度。 */
+    function shedtailClampPoint(self: number[], point: number[], budget: number): number[] {
+        var dx = point[0] - self[0], dz = point[2] - self[2], length = Math.sqrt(dx * dx + dz * dz);
+        if (!(length > budget) || length < 0.01) return [point[0], self[1], point[2]];
+        return [self[0] + dx / length * budget, self[1], self[2] + dz / length * budget];
+    }
+
     /**
      * The retreat destination both `available` and `target` use, so the safety probe and the cast judge one path.
      * Mirrors the release preference: the owner's point when available, otherwise directly away from the threat.
+     * A distant owner is clamped onto the actual retreat budget so the submitted point is never out of range.
      */
     function shedtailReleasePoint(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number[] {
         var self = CompanionBehavior.source(context), threat: WorldMethods.Subject | null = context.senses["world_combat:threat"];
         var owner = context.facts.owner, distance = Number(capability.data.range) || 0;
         if (CompanionBehavior.ai<string>(capability, "release", "owner") === "owner" && owner)
-            return owner.point.slice();
+            return shedtailClampPoint(self.point, owner.point, distance);
         if (threat) {
             var dx = self.point[0] - threat.point[0], dz = self.point[2] - threat.point[2];
             var length = Math.sqrt(dx * dx + dz * dz) || 1;
@@ -31,6 +39,8 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            if ((context.facts.intent === "hold" || context.facts.intent === "stay")
+                && !CompanionBehavior.ai<boolean>(capability, "leaveStation", false)) return false;
             var threat = context.senses["world_combat:threat"];
             if (!threat) return false;
             var self = CompanionBehavior.source(context);
@@ -64,8 +74,12 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             var self = CompanionBehavior.source(context);
-            // 生命被压到危险区时优先脱身。
-            return CompanionBehavior.ratio(self) < 0.55 ? 70 : 0;
+            // 与 available 同一可付出区间：付得起且面对威胁时就有正优先，越受压越优先，不再出现可用却零优先的死区。
+            if (!context.senses["world_combat:threat"] || CompanionBehavior.status(context, self, "shed_tail")) return 0;
+            var reserve = CompanionBehavior.ai<number>(capability, "reserveHealth", 0.15);
+            var health = CompanionBehavior.ratio(self);
+            if (health <= 0.5 + reserve) return 0;
+            return 40 + Math.round((1 - health) * 60);
         }
     });
 
@@ -79,7 +93,7 @@ namespace PokemonSkills {
             help: "尾巴留下的方向不变，改变的是自己往哪撤：背离威胁拉开距离，或退回主人身边。"
         }),
         field(pathOf("ai.leaveStation"), "驻守时允许离位", "boolean", {
-            help: "开启后，驻守命令下也会断尾抽身；关闭则只在原地方便时施放。"
+            help: "开启后，驻守命令下也会断尾抽身；关闭则遵守驻守位置。"
         })
     ]);
 }

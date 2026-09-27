@@ -19,7 +19,7 @@
  *   reach     投掷距离：速度与等级。
  *   collisionRadius 电团判定半径：特攻与身高；过载式 ×1.2。
  *   sparks    电火花量：特攻与载荷，表现按它发射。
- *   tempo/recover/recharge 速度与等级决定起手、收招与冷却；过载式更慢更费。
+ *   tempo/aftercast/recharge 速度与等级决定起手、收招与冷却；过载式更慢更费。
  *
  * 配置 `overcharge`（过载式，默认关）双向取舍：
  *   开（过载）：威力 ×1.12、判定 ×1.2，但飞行 ×0.85（球更重更慢）、起手 +2 刻、冷却 +6 刻——一发更狠但更容易落空。
@@ -100,8 +100,8 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("overcharge"), F.const(2), F.const(0)))
                 .clamp(3, 10).round(0),
             "起手", "把电充成一颗球的时间；速度越快充得越快，过载式要多攒两刻。"),
-        /** 收招：6 − 速度偏移[−1,1.5]；夹 3..10。 */
-        recover: seconds(
+        /** 收招：6 − 速度偏移[−1,1.5]；夹 3..10。用独立参数名（不占用保留键 recover），否则速度后摇不会真正生效。 */
+        aftercast: seconds(
             F.base(6).minus(F.stat("speed").minus(80).times(0.01).clamp(-1, 1.5)).clamp(3, 10).round(0),
             "收招", "投出之后收回手臂的收势；速度越快越利落。"),
         /** 冷却：26 − 速度偏移[−3,5] − 等级偏移[0,4] + 过载 6；夹 14..40。 */

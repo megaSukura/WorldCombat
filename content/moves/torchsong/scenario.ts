@@ -18,9 +18,11 @@ Smoke.scenario("torchsong", function (stage) {
         stage.after(100, function () {
             stage.expect(stage.casts("torchsong", caster) >= 1, "caster committed torch song");
             stage.expect(stage.damageTo(foe) > 0, "torch song dealt damage to the foe");
-            stage.note("landed pulses, cone targets and crit vary with positioning; the Sp. Atk boost is applied on the first hit", {
+            stage.expect((stage.stages(caster).spa || 0) >= 1, "the first actual hit raised the caster's Sp. Atk");
+            stage.note("landed pulses, cone targets and crit vary with positioning; the Sp. Atk boost fires on the first actual hit, not at the end", {
                 casts: stage.casts("torchsong", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
+                spa: stage.stages(caster).spa || 0,
                 foeAlive: foe.alive()
             });
             stage.done();

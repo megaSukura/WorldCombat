@@ -5,10 +5,11 @@
  * 亮一下冷色微光——那一下就是它的能力等级归零。
  * 色相家族：墨黑与灰蓝（obscuringsmoke / smokeorb / smoke）为主体，冷青白（glowingsparkle）只做少量高光；
  * 一个色相家族，没有第二个色相。
- * 拍子：起（gather 拢气）→ 击（bloom 雾墙铺开）→ 收（swept 逐处抹平、fade 余雾散去）。
- * 范围：bloom 与 fade 的雾圈绑 `point`，形状半径读服务端 `data.radius`（真实波及半径），玩家看到的圈就是会被抹到的地。
+ * 拍子：起（gather 拢气）→ 击（bloom 雾墙铺开、exit 让余雾散去）→ 收（swept 逐处抹平）。
+ * 范围：bloom 的雾圈绑 `point`、fit none，形状按参考半径 4 书写，再乘服务端 `data.scale`（真实波及半径 / 4）；
+ *   世界半径只缩放一次，玩家看到的圈就是会被抹到的地，不再叠加。
  * 运动：起手浊气向中心收拢；铺开时雾墙向外低速翻滚、贴地铺成一圈；扫过目标时从目标身上向上腾起。
- * 数：发射量按 `data.density`（特防派生）派生，被抹目标那一下的烟量按 `data.motes`（抹掉的级数派生）派生。
+ * 数：发射量按 `data.density`（特防派生）派生，只有真正被抹掉等级的目标才有那一蓬按 `data.motes`（抹掉的级数派生）的烟。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const HazeDefinition: ParticleDefinition = {
@@ -44,7 +45,7 @@ const HazeDefinition: ParticleDefinition = {
                     name: "bloom_wall", bind: "point", offset: [0, 0.35, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     rate: { data: "density", fallback: 24 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 4 } },
+                    shape: { kind: "ring", radius: 4 },
                     direction: "outward", speed: [0.02, 0.09], spread: 14,
                     lifetime: [14, 26], size: [0.45, 0.1], sizeMode: "linear",
                     color: 0x23232C, alpha: [0.5, 0], light: "world", maxParticles: 220
@@ -53,7 +54,7 @@ const HazeDefinition: ParticleDefinition = {
                     name: "bloom_carpet", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: { data: "density", fallback: 24 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.85 },
+                    shape: { kind: "circle", radius: 4, thickness: 0.85 },
                     direction: "outward", speed: [0.01, 0.05], spread: 10,
                     gravity: 0.005, drag: 0.94,
                     lifetime: [18, 30], size: [0.5, 0.12], sizeMode: "linear",
@@ -99,21 +100,6 @@ const HazeDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [10, 16], size: [0.35, 0.6], sizeMode: "linear",
                     color: 0xAFC4E8, alpha: [0.45, 0], light: "full", maxParticles: 8
-                }
-            ]
-        },
-        fade: {
-            duration: 40,
-            exit: { stop: 16, drain: 30 },
-            emitters: [
-                {
-                    name: "fade_mist", bind: "point", offset: [0, 0.15, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 4 }, thickness: 0.9 },
-                    direction: "up", speed: [0.005, 0.03], spread: 8,
-                    gravity: -0.004, drag: 0.95,
-                    lifetime: [22, 36], size: [0.6, 0.15], sizeMode: "linear",
-                    color: 0x2A2A34, alpha: [0.18, 0], light: "world", maxParticles: 80
                 }
             ]
         }

@@ -47,13 +47,24 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const sense = action.sense(), caster = sense.observe(action.actor());
+            const aimed = aim(action), fallback = WorldGeometry.facing(sense, action.actor());
+            // A grounded caster charges along the ground; an airborne one keeps the full three-dimensional aim.
+            const direction = caster !== null && caster.grounded()
+                ? WorldGeometry.flatUnit(aimed, fallback === null ? undefined : fallback) : aimed;
             action.present("extremespeed:charge", extremespeedScene, 1, action.origin(),
-                JSON.stringify({ moment: "charge", windup: prepare, overrun: config && config.overrun === true ? 1 : 0 }));
+                JSON.stringify({ moment: "charge", windup: prepare, overrun: config && config.overrun === true ? 1 : 0,
+                    backward: [-direction.x(), -direction.y(), -direction.z()] }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(extremespeedScene);
-            const direction = aim(action);
+            const world = action.world(), caster = world.observe(action.actor());
+            const aimed = aim(action), fallback = WorldGeometry.facing(world, action.actor());
+            // A grounded caster charges along the ground, so a lower target no longer buries the sweep in the floor.
+            const direction = caster !== null && caster.grounded()
+                ? WorldGeometry.flatUnit(aimed, fallback === null ? undefined : fallback) : aimed;
+            const backward = [-direction.x(), -direction.y(), -direction.z()];
             action.releaseTarget();
             const length = p(extremespeedId, "burst", action);
             const step = p(extremespeedId, "pace", action);
@@ -69,39 +80,40 @@ namespace PokemonSkills {
             let travelled = 0;
 
             sound(action, "cobblemon:move.quickattack.actor");
-            movementScenes.show(action, "leap", action.origin(), { moment: "leap", scale: scale, wake: wake, intensity: intensity, overrun: overrun ? 1 : 0 });
+            movementScenes.show(action, "leap", action.origin(), { moment: "leap", scale: scale, wake: wake, intensity: intensity,
+                direction: [direction.x(), direction.y(), direction.z()], backward: backward, overrun: overrun ? 1 : 0 });
 
             /** 收势：落空以终点收；已命中则以真实最终位置急收，让玩家看清停在哪。 */
             function conclude(current: CombatAction, moment: string, at: CombatPoint): void {
                 const scope = current.world(), here = current.origin();
                 if (moment === "miss") {
-                    WorldFeedback.emit(scope, extremespeedScene, 1, here, { moment: "miss", scale: scale, wake: wake }, 22);
+                    WorldFeedback.emit(scope, extremespeedScene, 1, here, { moment: "miss", scale: scale, wake: wake, backward: backward }, 22);
                     WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.15, 0)), extremespeedMissText, [], 24);
                     scope.sound("minecraft:entity.player.attack.sweep", here, 16, "{}");
                 } else {
-                    WorldFeedback.emit(scope, extremespeedScene, 1, here, { moment: "brake", scale: scale, wake: wake, intensity: intensity }, 18);
+                    WorldFeedback.emit(scope, extremespeedScene, 1, here, { moment: "brake", scale: scale, wake: wake, intensity: intensity, backward: backward }, 18);
                     scope.sound("cobblemon:impact.normal", here, 14, "{}");
                 }
                 movementScenes.finish(current, done);
             }
 
-            /** 余势真实扫掠：撞到后排身体或墙即停；已撞过的那一个照标准接触继续契约穿过，且不再补伤害。 */
+            /** 余势逐刻用真实完整身体扫掠：只忽略已撞过的首个目标，遇第二身体或墙就在实际接触面收势，不再补第二伤。 */
             function carryOn(current: CombatAction, remaining: number, elapsed: number, past: string): void {
                 if (remaining <= 0.02 || elapsed >= 10) { conclude(current, "ram", current.origin()); return; }
-                const scope = current.world();
-                const delta = direction.scale(Math.min(step * 0.6, remaining));
-                const swept = sweepStep(current, delta, radius), hit = swept.hit;
-                if (hit.blocked()) { conclude(current, "ram", current.origin()); return; }
-                if (hit.hitEntity()) {
-                    const other = hit.target();
-                    if (other !== null && scope.valid(other) && !scope.friendly(other) && String(other.ref()) !== past) {
-                        conclude(current, "ram", hit.position());
-                        return;
-                    }
-                }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
-                if (moved < p(extremespeedId, "minimumMove", current)) { conclude(current, "ram", current.origin()); return; }
-                current.after(1, function (next: CombatAction) { carryOn(next, remaining - moved, elapsed + 1, past); });
+                const scope = current.world(), actor = current.actor();
+                const before = scope.observe(actor);
+                if (before === null) { conclude(current, "ram", current.origin()); return; }
+                const legLength = Math.min(step * 0.6, remaining);
+                if (legLength < p(extremespeedId, "minimumMove", current)) { conclude(current, "ram", current.origin()); return; }
+                const from = before.position();
+                const hit = current.moveSweep(direction.scale(legLength), radius, JSON.stringify([past]));
+                const after = scope.observe(actor);
+                const stop = after === null ? current.origin() : after.position();
+                // moveSweep already advanced the body to the reached contact face or wall.
+                if (hit.hitEntity() || hit.blocked()) { conclude(current, "ram", stop); return; }
+                const applied = stop.minus(from).length();
+                if (applied < p(extremespeedId, "minimumMove", current)) { conclude(current, "ram", stop); return; }
+                current.after(1, function (next: CombatAction) { carryOn(next, remaining - applied, elapsed + 1, past); });
             }
 
             function ram(current: CombatAction, hit: CombatImpact, victim: CombatActor): void {
@@ -122,22 +134,23 @@ namespace PokemonSkills {
                 if (!overrun || carry <= 0.02) { conclude(current, "ram", hit.position()); return; }
                 movementScenes.stop(current, "leap");
                 movementScenes.show(current, "through", hit.position(), { moment: "through", target: String(victim.ref()), carry: carry, wake: wake, scale: scale,
-                    intensity: landed ? intensity : 0.6 });
+                    intensity: landed ? intensity : 0.6, direction: [direction.x(), direction.y(), direction.z()], backward: backward });
                 WorldFeedback.text(scope, hit.position().plus(WorldCombat.point(0, 1.15, 0)), extremespeedThroughText, [], 22);
                 carryOn(current, carry, 0, String(victim.ref()));
             }
 
             function advance(current: CombatAction): void {
-                const scope = current.world(), origin = current.origin();
+                const scope = current.world();
                 const delta = direction.scale(Math.min(step, length - travelled));
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
+                travelled += swept.moved;
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) { ram(current, hit, victim); return; }
+                    conclude(current, "miss", hit.position());
+                    return;
                 }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(current.actor(), swept.remaining) : 0);
-                travelled += moved;
-                if (hit.blocked() || moved < p(extremespeedId, "minimumMove", current) || travelled >= length) {
+                if (hit.blocked() || swept.moved < p(extremespeedId, "minimumMove", current) || travelled >= length) {
                     conclude(current, "miss", current.origin());
                     return;
                 }

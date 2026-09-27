@@ -21,7 +21,7 @@ Smoke.scenario("wingattack", function (stage) {
     }, function () {
         stage.expect(stage.casts("wingattack", caster) > 0, "pidgeotto committed wing attack");
         stage.expect(stage.damageTo(foe) > 0, "the wing sweep dealt damage to the foe");
-        stage.note("span/targets/push follow the user's body size and the wide choice; a pushed target can leave the fan after one sweep", {
+        stage.note("span/targets/push follow the user's body size and the wide choice; the fan only reaches in front, pushes via native hitDisplace, and a killed target still gets its contact receipt", {
             casts: stage.casts("wingattack", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive()

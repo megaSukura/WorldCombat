@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.healorder.summary": "Summons a swarm of retainers that channel around the caster; when the channel ends each survivor pays back a share of the healing. A retainer killed during the channel pays nothing, so the total depends on how many survive. With all survivors it restores about half of maximum health.",
+  "worldcombat.skill.healorder.summary": "Summons a swarm of retainers that channel around the caster; when the channel ends each survivor returns to the caster's side and, with a clear line, pays back a share of the healing. A retainer that strayed or is walled off pays nothing, and one killed during the channel pays nothing and scatters on the spot. With all survivors it restores about half of maximum health.",
   "worldcombat.skill.healorder.use.0": "Fast top-up in a pinch",
   "worldcombat.skill.healorder.use.1": "Stretch healing into a window with killable retainers",
   "worldcombat.skill.healorder.use.2": "Heal as a group between blows",
   "worldcombat.skill.healorder.description.0": "Summons %2$s retainers to channel around the caster; when the channel ends each surviving retainer delivers one share, restoring %1$s of maximum health if all survive, one share less for each retainer lost.",
-  "worldcombat.skill.healorder.description.1": "They channel for %1$s, orbiting at %2$s blocks with %3$s health each; they follow the caster and can be attacked and killed one by one during the channel to cut the delivery. Only usable while below full health.",
+  "worldcombat.skill.healorder.description.1": "They channel for %1$s, orbiting at %2$s blocks with %3$s health each; they follow the caster and can be attacked and killed one by one during the channel to cut the delivery. At the end a retainer must actually be back at the caster's side with a clear line to pay its share; one walled off or left behind disperses instead of healing from afar. Only usable while below full health.",
   "worldcombat.skill.healorder.stance.elite": "Elite retainers: about three-fifths the count but tougher, so a single death costs a bigger share; for a caster that fears being wiped at once.",
   "worldcombat.skill.healorder.stance.swarm": "Swarm retainers: more numerous and fragile, so losing one or two costs little, but area damage shaves the total faster.",
   "worldcombat.skill.healorder.timing": "A self move; after %1$s s of wind-up it spends %3$s PP, then recovers for %2$s s with a %4$s s cooldown committed on cast.",

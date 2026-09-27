@@ -75,53 +75,97 @@ namespace PokemonSkills {
             const rise = Math.max(0.02, p("geomancy", "rise", action));
             const linger = Math.max(20, Math.round(p("geomancy", "linger", action)));
             const scale = circle / geomancyReference;
+            // 地纹始终锚在这次扎地那一刻的脚下点：之后转身、被推都不再移动它，余光也留在原点。
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
 
-            // rooted 是这次立定的真实来源；地纹表现挂在它上面，随它自然结束或提前清除一起收。
+            // 定身 rooted 与蓄力窗口必须都真的挂上，第二拍才有可兑现的能量。
             const rootedId = WorldEffects.apply(world, actor, "rooted", {}, absorb + 6);
-            MobEffects.apply(world, actor, geomancyCharge, absorb + 4, gift);
-            if (rootedId > 0)
-                WorldFeedback.onEffect(world, rootedId, geomancyRuneKey, geomancyScene, 1, feet,
-                    { moment: "channel", actor: String(actor.ref()), absorb: absorb, runes: runes, circle: circle,
-                        rise: rise, scale: scale });
+            const charge = rootedId > 0 ? MobEffects.apply(world, actor, geomancyCharge, absorb + 4, gift) : null;
+            if (rootedId <= 0 || charge === null) {
+                if (rootedId > 0) world.operation(rootedId, "world_combat:dispel", "{}");
+                WorldFeedback.emit(world, geomancyScene, 1, feet,
+                    { moment: "collapse", actor: String(actor.ref()), circle: circle, scale: scale, runes: runes }, 26);
+                WorldFeedback.text(world, feet.plus(WorldCombat.point(0, 1.4, 0)), geomancyCollapseText, [], 26);
+                done(action);
+                return;
+            }
+            // 精确锚定本次的蓄力载体：之后只认这一个窗口，被别人换掉或清掉都算中断。
+            const chargeAnchor = MobEffects.anchor(charge);
+
+            // rooted 是这次立定的真实来源；地纹表现挂在它上面，随它自然结束或提前清除一起收。
+            WorldFeedback.onEffect(world, rootedId, geomancyRuneKey, geomancyScene, 1, feet,
+                { moment: "channel", actor: String(actor.ref()), absorb: absorb, runes: runes, circle: circle,
+                    rise: rise, scale: scale });
             WorldFeedback.emit(world, geomancyScene, 1, feet,
                 { moment: "plant", actor: String(actor.ref()), gift: gift, absorb: absorb, circle: circle, runes: runes,
                     rise: rise, scale: scale, intensity: Math.max(0.8, Math.min(2.2, runes / 26)) }, absorb + 16);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), geomancyChargingText, [], absorb);
+            WorldFeedback.text(world, feet.plus(WorldCombat.point(0, 1.4, 0)), geomancyChargingText, [], absorb);
             world.sound("minecraft:block.beacon.activate", feet, 16, "{}");
 
-            let settled = false;
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
-            action.after(absorb, function (current: CombatAction) {
+            let resolved = false;
+            // 只回收本次自己挂上的定身与蓄力窗口，不动别人留下的同 id 效果。
+            function cleanup(current: CombatAction): void {
+                const scope = current.world();
+                if (scope.effects(actor, "world_combat:rooted").some(function (view) { return view.id() === rootedId; }))
+                    scope.operation(rootedId, "world_combat:dispel", "{}");
+                if (MobEffects.matches(scope, actor, chargeAnchor)) MobEffects.consume(scope, actor, geomancyCharge);
+            }
+            function collapse(current: CombatAction): void {
+                if (resolved) return;
+                resolved = true;
+                cleanup(current);
+                WorldFeedback.emit(current.world(), geomancyScene, 1, feet,
+                    { moment: "collapse", actor: String(actor.ref()), circle: circle, scale: scale, runes: runes }, 26);
+                WorldFeedback.text(current.world(), feet.plus(WorldCombat.point(0, 1.4, 0)), geomancyCollapseText, [], 26);
+                current.world().sound("minecraft:block.beacon.deactivate", feet, 14, "{}");
+                done(current);
+            }
+            function release(current: CombatAction): void {
+                if (resolved) return;
                 const scope = current.world(), here = scope.observe(actor);
-                if (here === null) { finish(current); return; }
-                const at = here.position();
+                // 第二拍兑现前再核一次：还站着、没被睡冻、还在原窗口与定身里，才真的反冲。
                 const held = CombatStatus.behaves(scope, actor, "sleep") || CombatStatus.behaves(scope, actor, "frozen");
-                // 蓄力窗口提前消失同样算中断：没有窗口就没有可兑现的能量，不留假增益。
-                const window = MobEffects.read(scope, actor, geomancyCharge);
-                if (held || window === null) {
-                    if (rootedId > 0) scope.operation(rootedId, "world_combat:dispel", "{}");
-                    WorldFeedback.emit(scope, geomancyScene, 1, at,
-                        { moment: "collapse", actor: String(actor.ref()), circle: circle, scale: scale, runes: runes }, 26);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), geomancyCollapseText, [], 26);
-                    scope.sound("minecraft:block.beacon.deactivate", at, 14, "{}");
-                    finish(current);
-                    return;
-                }
+                const windowLive = MobEffects.matches(scope, actor, chargeAnchor);
+                const rootLive = scope.effects(actor, "world_combat:rooted").some(function (view) { return view.id() === rootedId; });
+                if (here === null || held || !windowLive || !rootLive || !here.grounded()) { collapse(current); return; }
+                resolved = true;
                 NativeEffects.boost(scope, actor, "spa", gift);
                 NativeEffects.boost(scope, actor, "spd", gift);
                 NativeEffects.boost(scope, actor, "spe", gift);
-                WorldFeedback.emit(scope, geomancyScene, 1, at,
+                WorldFeedback.emit(scope, geomancyScene, 1, feet,
                     { moment: "release", actor: String(actor.ref()), gift: gift, circle: circle, scale: scale, runes: runes,
                         rise: rise, intensity: Math.max(1, Math.min(2.6, gift + runes / 30)) }, 40);
-                // 独立余波：地纹余光按本身寿命亮 linger 刻。
-                WorldFeedback.emit(scope, geomancyScene, 1, at,
+                // 独立余光：地纹按本身寿命留在原脚下点，随反馈自然退去。
+                WorldFeedback.emit(scope, geomancyScene, 1, feet,
                     { moment: "residue", actor: String(actor.ref()), linger: linger, circle: circle, scale: scale,
                         runes: Math.min(runes, 32), intensity: Math.max(0.6, Math.min(1.8, runes / 40)) }, linger + 12);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.4, 0)), geomancyReleaseText, [gift], 32);
-                scope.sound("minecraft:block.beacon.power_select", at, 18, "{}");
-                finish(current);
+                WorldFeedback.text(scope, feet.plus(WorldCombat.point(0, 1.4, 0)), geomancyReleaseText, [gift], 32);
+                scope.sound("minecraft:block.beacon.power_select", feet, 18, "{}");
+                cleanup(current);
+                done(current);
+            }
+            const step = 4;
+            // 持续巡检：被推离地面、定身被清、原窗口失效、被睡冻，任一发生就当场崩散。
+            function watch(current: CombatAction, elapsed: number): void {
+                if (resolved) return;
+                const scope = current.world();
+                if (!scope.valid(actor)) { resolved = true; return; }
+                const here = scope.observe(actor);
+                if (here === null) { resolved = true; return; }
+                const held = CombatStatus.behaves(scope, actor, "sleep") || CombatStatus.behaves(scope, actor, "frozen");
+                const windowLive = MobEffects.matches(scope, actor, chargeAnchor);
+                const rootLive = scope.effects(actor, "world_combat:rooted").some(function (view) { return view.id() === rootedId; });
+                if (held || !windowLive || !rootLive || !here.grounded()) { collapse(current); return; }
+                if (elapsed >= absorb) { release(current); return; }
+                current.after(Math.min(step, absorb - elapsed), function (next) { watch(next, elapsed + step); });
+            }
+            // 外力中断（world_combat:interrupt）时动作已被取消，只做回收与崩散表现，不再调 done。
+            action.on("world_combat:interrupt", function (current: CombatAction) {
+                if (resolved) return;
+                resolved = true;
+                try { cleanup(current); current.world().sound("minecraft:block.beacon.deactivate", feet, 14, "{}"); } catch (error) { }
             });
+            watch(action, 0);
         }
     });
 }

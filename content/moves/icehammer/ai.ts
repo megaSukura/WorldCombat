@@ -44,18 +44,21 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || !icehammerWants(context, capability, target)) return 0;
-            const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+            const self = CompanionBehavior.source(context);
+            const distance = CompanionBehavior.distance(self.point, target.point);
             let score = 16;
             if (distance <= capability.data.range) score += 8;
             if (CompanionBehavior.ai<boolean>(capability, "chill", true) && CompanionBehavior.status(context, target, "chilled")) score += 10;
             if (icehammerGround(context, target)) score += 6;
+            // 这一记会让自身速度下降，已经压得很低时不再叠加。
+            if (CompanionBehavior.stage(context, self, "spe") <= -3) score -= 12;
             return score;
         }
     });
 
     addPreferences("icehammer", {}, [
         field(pathOf("glaciate"), "积冰式", "boolean", {
-            help: "开启：冰缓时长 ×1.4、冰面更大更久，彻底冻住目标；代价是威力 ×0.92、起手 +2 刻、收招 +2 刻、冷却 +6 刻。关闭（碎冰式）：一击更重、出手更快，但冰缓短、冰面小。"
+            help: "开启：冰缓时长 ×1.4、冰面更大更久（冰缓期间移动速度降低 15%）；代价是威力 ×0.92、起手 +2 刻、收招 +2 刻、冷却 +6 刻。关闭（碎冰式）：一击更重、出手更快，但冰缓短、冰面小。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 12, step: 1,

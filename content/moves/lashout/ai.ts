@@ -19,15 +19,16 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) > capability.data.range) return 0;
-            if (!CompanionBehavior.ai<boolean>(capability, "enraged", true)) return 12;
+            if (!CompanionBehavior.ai<boolean>(capability, "enraged", true)) return 10;
             const down = CompanionBehavior.fact<number>(context, "world_combat:lashout/stages", CompanionBehavior.source(context)) || 0;
-            return down > 0 ? 50 : 12;
+            // 有真实可解除的削弱才当救命反击；零削弱时只当普通近战，把位置让给更合适的输出招。
+            return down > 0 ? 50 : 8;
         }
     });
 
     addPreferences(lashoutId, {}, [
         field(pathOf("vent"), "宣泄", "boolean", {
-            help: "开启：命中后一次清空全部负等级，并把怒气转成 1~3 级物攻提升（受挫越深越多、持续数秒），但起手多 3 刻、冷却多 8 刻。关闭：只消掉一级负等级且无提升，更快更省。"
+            help: "开启：命中后按 9 层预算消减负等级，确实消减了至少一层才把怒气转成 1~3 级物攻提升（受挫越深越多、持续数秒），起手多 3 刻、冷却多 8 刻。关闭：只消掉一级负等级且无提升，更快更省。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,

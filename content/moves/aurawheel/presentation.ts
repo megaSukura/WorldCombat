@@ -3,10 +3,11 @@
  * 「施法者把颊囊能量聚成一只轮子贴地滚出去；轮子按滚动方向竖起，沿真实路程转，停下时散成脚边速度纹。」
  *
  * 色相家族：轮缘与尘取白/灰，实际色相由服务端按形态算出的 data.tint 只作辅助（命中、提速与蓄力的几处强调色）。
- * 拍子：蓄力 spin（轮子在脚边成形）→ 滚动 roll（竖直轮廓沿数据里的轴向转向、转速绑实际位移）→
+ * 拍子：蓄力 spin（轮子在脚边成形）→ 滚动 roll（竖立轮圈随本体移动、转速绑实际位移）→
  *       命中 strike → 停轮提速 boost（轮子散成脚边速度纹 + 上升环）。
- * 运动：roll 的轮子用 orient: direction 按 data.direction（轮轴）竖起，spin 由 data.spin（实际每刻位移派生）驱动。
- * 数：命中碎片数量由服务端按最终威力算出的 data.count 决定。
+ * 运动：roll 的轮子本体由自定义场景 world_combat:move_aurawheel/wheel 逐刻按 data.at 重画：
+ *       轮面立于行进-竖直平面，轮轴对准 data.direction，固定段数轮廓按 data.spin 转动；粒子只留尘土/速度线余迹。
+ * 数：命中碎片数量由服务端按最终威力算出的 data.count 决定，轮圈半径读实际 data.radius。
  */
 const AuraWheelDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -35,27 +36,10 @@ const AuraWheelDefinition: ParticleDefinition = {
                 }
             ]
         },
-        // 滚动：竖直轮子按滚动方向（轮轴 data.direction）竖起，转速随实际位移，沿路卷起尘土。
+        // 滚动：轮子本体由自定义场景 world_combat:move_aurawheel/wheel 竖起绘制并随本体移动；
+        // 这里只留沿路卷起的尘土与速度线作为余迹。
         roll: {
             emitters: [
-                {
-                    name: "wheel", bind: "source", height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    orient: "direction",
-                    rate: 14, shape: { kind: "ring", radius: 0.5 },
-                    direction: "outward", speed: [0.0, 0.03], spin: { data: "spin", fallback: 40 },
-                    lifetime: [8, 14], size: [0.4, 0.55],
-                    color: 0xE8E8E8, alpha: [0.7, 0], light: "full", maxParticles: 60
-                },
-                {
-                    name: "spokes", bind: "source", height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/drill",
-                    orient: "direction",
-                    rate: 18, shape: { kind: "sphere", radius: 0.25 },
-                    direction: "outward", speed: [0.01, 0.05], spin: { data: "spin", fallback: 40 },
-                    lifetime: [6, 10], size: [0.3, 0.14],
-                    color: 0xFFFFFF, alpha: [0.85, 0], light: "full", maxParticles: 60
-                },
                 {
                     name: "roll_dust", bind: "source", height: 0.05, offset: [0, 0.02, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
@@ -149,3 +133,54 @@ const AuraWheelDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_aurawheel", 1, AuraWheelDefinition);
+
+/**
+ * 轮子本体：固定段数的轮圈立于「行进方向-竖直」平面，轮轴对准 data.direction（水平、垂直于行进），
+ * 按 data.spin（实际每刻位移派生）整体转动，半径读实际 data.radius。服务端每刻在真实本体位置 data.at 重发同一实例，
+ * 实际移动或阶段结束即 stop，所以轮圈始终贴着会被扫到的那一圈、随本体移动，没有粒子的闪烁与贴片自转。
+ */
+const AuraWheelWheelScene = "world_combat:move_aurawheel/wheel";
+const AuraWheelRimSprite = "cobblemon:particle/generic/ring/mediumring";
+
+function aurawheelWheelVector(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function aurawheelWheelNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(AuraWheelWheelScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const at = aurawheelWheelVector(data.at);
+    const axle = aurawheelWheelVector(data.direction);
+    if (at === null || axle === null) return;
+    // 行进方向 = 水平面内垂直于轮轴；轴已是水平向量，长度即归一化因子。
+    const travelX = axle[2], travelZ = -axle[0];
+    const horizontal = Math.sqrt(travelX * travelX + travelZ * travelZ);
+    if (horizontal < 1e-6) return;
+    const tx = travelX / horizontal, tz = travelZ / horizontal;
+    const radius = Math.max(0.2, Math.min(1.0, aurawheelWheelNumber(data.radius, 0.45)));
+    const spin = Math.max(10, Math.min(120, aurawheelWheelNumber(data.spin, 40)));
+    const phase = frame.serverTick() * spin * Math.PI / 180;
+    const segments = 12;
+    const centreY = at[1];
+    const rim = (230 << 24 | 0xE8E8E8) | 0;
+    const spoke = (150 << 24 | 0xE8E8E8) | 0;
+    const frameIndex = Math.floor(frame.serverTick() * 0.5) % 6;
+    for (let i = 0; i < segments; i++) {
+        const angle = phase + i * (Math.PI * 2 / segments);
+        const x = at[0] + tx * Math.cos(angle) * radius;
+        const y = centreY + Math.sin(angle) * radius;
+        const z = at[2] + tz * Math.cos(angle) * radius;
+        frame.line(at[0], centreY, at[2], x, y, z, spoke);
+        frame.sprite(AuraWheelRimSprite, x, y, z, radius * 0.8, -(angle * 180 / Math.PI) % 360,
+            rim, frameIndex, true);
+    }
+});

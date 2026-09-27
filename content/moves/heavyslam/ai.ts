@@ -63,7 +63,7 @@ namespace PokemonSkills {
 
     addPreferences("heavyslam", {}, [
         field(pathOf("anchor"), "沉坠式", "boolean", {
-            help: "开启：跃得近、单点威力更高、砸出的坑更大，但顶开更少、收招与冷却更久。关闭：冲跳式，跃得远、顶得更开，单发更轻。"
+            help: "开启：跃得近、单点威力更高、落地更集中，但顶开更少、收招与冷却更久。关闭：冲跳式，跃得远、顶得更开，单发更轻。"
         }),
         field(pathOf("ai.maxChase"), "起跳距离", "number", {
             min: 2, max: 16, step: 1,

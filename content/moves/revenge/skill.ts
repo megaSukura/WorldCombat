@@ -73,10 +73,16 @@ namespace PokemonSkills {
             const flat = Math.sqrt(direction.x() * direction.x() + direction.z() * direction.z());
             const side = flat < 0.001 ? WorldCombat.point(1, 0, 0)
                 : WorldCombat.point(direction.z() / flat, 0, -direction.x() / flat);
+            const before = scope.observe(actor);
+            const start = before === null ? action.origin() : before.position();
             scope.displace(actor, side.scale(shuffle));
 
             const body = scope.observe(actor);
             const from = body === null ? action.origin() : body.position();
+            // 肘在肩高出手；矮小角色按自身身高取点，而不是固定世界高度。
+            const shoulder = (body === null ? 1.4 : body.height()) * 0.12;
+            const startShoulder = start.plus(WorldCombat.point(0, shoulder, 0));
+            const elbowFrom = from.plus(WorldCombat.point(0, shoulder, 0));
             const to = from.plus(direction.scale(reach));
             // 权威判定：第一个身体（含同伴）或实墙就是横肘真实停下的地方。
             const contact = action.trace(from, to, radius, true);
@@ -84,8 +90,12 @@ namespace PokemonSkills {
             const lander = contact.hitEntity() ? contact.target() : null;
             const victim = lander !== null && scope.valid(lander) && String(lander.ref()) !== String(actor.ref()) && !scope.friendly(lander) ? lander : null;
             const heading: number[] = [direction.x(), direction.y(), direction.z()];
+            // 实际侧步（第一段折点）→ 肩外 → 真实碰点的短横肘轨迹；步子太小时并入肩点。
+            const elbow: number[][] = startShoulder.minus(elbowFrom).length() < 0.02
+                ? [[elbowFrom.x(), elbowFrom.y(), elbowFrom.z()], [at.x(), at.y(), at.z()]]
+                : [[startShoulder.x(), startShoulder.y(), startShoulder.z()], [elbowFrom.x(), elbowFrom.y(), elbowFrom.z()], [at.x(), at.y(), at.z()]];
 
-            WorldFeedback.emit(scope, revengeScene, 1, at, { moment: "elbow", direction: heading, smash: smash, scale: scale }, 22);
+            WorldFeedback.emit(scope, revengeScene, 1, at, { moment: "elbow", path: elbow, direction: heading, smash: smash, scale: scale }, 22);
             sound(action, "minecraft:entity.iron_golem.attack");
 
             if (victim !== null) {

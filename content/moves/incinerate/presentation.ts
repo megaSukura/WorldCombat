@@ -5,8 +5,8 @@
  * 炸开火团，若它手里的树果或宝石真的被烧掉，火顺着那件东西窜高一簇、腾起几粒焦灰。
  * 色相家族：火橙（flame / ember / impact_fire）为唯一主色，烟与焦灰（smoke / tinydust）作衬，近白只在击点。
  * 拍子：起（gather 拢火）→ 扫（sweep 火舌逐刻横移）→ 击（burn 命中／爆燃）→ 撞墙（wall）→ 被挡（ward）→ 空（fizzle）。
- * 范围：sweep 的火舌贴 `data.path` 的两个顶点（口部到本刻真实接触点）画一条窄线，再在 `data.point` 的舌尖加一小簇火；
- *   判定与画面读同一个 trace 接触点，撞墙时画到真实方块格。
+ * 范围：sweep 的火舌贴 `data.path` 的有序顶点（口部到本刻每个真实子段的接触点，闭合成一条窄扇边界）铺设；
+ *   判定与画面读同一组 trace 接触点，撞墙时画到真实接触点而非方块格。
  * 运动：拢火向内聚；扫出时火舌沿当前指向舔过、边缘火星向外飞；命中是短促外爆，烧到可燃物才额外窜高。
  * 数：`data.flames`（特攻派生的火焰数）驱动拢火与火舌的粒子量；`data.flare`（烧到可燃物并取走时的火焰数，否则 0）
  *     单独驱动那簇爆燃；`data.ash`（烧毁成功时的焦屑数，否则 0）驱动灰屑；`data.intensity`（本击伤害占比）放大命中爆发。
@@ -20,7 +20,7 @@ const IncinerateDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 14 },
             emitters: [
                 {
-                    name: "draw", bind: "source", offset: [0, 0.6, 0.35], height: 0.3,
+                    name: "draw", bind: "point", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
                     rate: { data: "flames", fallback: 14 }, shape: { kind: "sphere", radius: 0.55 },
                     direction: "inward", speed: [0.03, 0.11],
@@ -28,7 +28,7 @@ const IncinerateDefinition: ParticleDefinition = {
                     color: 0xF08030, alpha: [0.85, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "sparks", bind: "source", offset: [0, 0.7, 0.35], height: 0.2,
+                    name: "sparks", bind: "point", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     rate: 22, shape: { kind: "sphere", radius: 0.4 },
                     direction: "inward", speed: [0.02, 0.08],
@@ -44,7 +44,7 @@ const IncinerateDefinition: ParticleDefinition = {
                 {
                     name: "tongue", bind: "path", fit: "none", height: 0.05,
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
-                    shape: { kind: "polyline" }, rate: { data: "flames", fallback: 14 }, speed: [0.02, 0.08],
+                    shape: { kind: "polyline", closed: true }, rate: { data: "flames", fallback: 14 }, speed: [0.02, 0.08],
                     direction: "outward", spread: 8,
                     lifetime: [5, 12], size: [0.2, 0.02],
                     color: 0xF08030, alpha: [0.85, 0], light: "full", maxParticles: 160
@@ -52,7 +52,7 @@ const IncinerateDefinition: ParticleDefinition = {
                 {
                     name: "lick", bind: "path", fit: "none", height: 0.05,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    shape: { kind: "polyline" }, rate: { data: "flames", fallback: 14 }, speed: [0.05, 0.18],
+                    shape: { kind: "polyline", closed: true }, rate: { data: "flames", fallback: 14 }, speed: [0.05, 0.18],
                     direction: "up", spread: 10,
                     lifetime: [6, 13], size: [0.07, 0.01],
                     color: 0xFFC46A, alpha: [0.85, 0], light: "full", maxParticles: 140

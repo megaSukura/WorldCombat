@@ -31,7 +31,9 @@ namespace PokemonSkills {
         defaults: { deep: false, ai: { maxChase: 11, crowd: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("bugbuzz", "coneLength", pokemon), geometry: "cone", style: "resonance", color: 0xA8C63A, label: "虫鸣" };
+            return { radius: p("bugbuzz", "coneLength", pokemon), geometry: "cone", orientation: "ground",
+                spread: p("bugbuzz", "coneAngle", pokemon), style: "resonance", color: 0xA8C63A,
+                label: config && config.deep === true ? "虫鸣·沉鸣" : "虫鸣" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills["bugbuzz"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -80,10 +82,11 @@ namespace PokemonSkills {
                 WorldFeedback.emit(world, bugbuzzScene, 1, facts.position(),
                     { moment: "hit", target: String(enemy.ref()), rings: rings, strength: strength, intensity: intensity, scale: scale }, 24);
                 if (world.valid(enemy) && world.random() < chance) {
-                    NativeEffects.boost(world, enemy, "spd", -stages);
+                    const delta = NativeEffects.boost(world, enemy, "spd", -stages);
                     const at = world.observe(enemy);
-                    if (at !== null)
-                        WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.2, 0)), bugbuzzSunderText, [stages], 30);
+                    // 实际被震掉多少才报多少；原生拒绝或已到顶时不发成功提示。
+                    if (delta !== 0 && at !== null)
+                        WorldFeedback.text(world, at.position().plus(WorldCombat.point(0, 1.2, 0)), bugbuzzSunderText, [Math.abs(delta)], 30);
                 }
             });
 

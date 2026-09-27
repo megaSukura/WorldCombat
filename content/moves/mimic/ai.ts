@@ -1,10 +1,12 @@
 /** Target selection follows each supported Pokémon or native-world branch and the configured chase policy. */
 namespace PokemonSkills {
-    /** 只读、决策内缓存：目标上一手是否可被模仿；返回招式 id 或 ""。 */
+    /** 只读、决策内缓存：目标上一手是否仍在记忆窗口内、可被模仿；返回招式 id 或 ""。 */
     CompanionBehavior.registerFact("world_combat:mimic-last", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return copiedNativeMove(access, actor);
+        const window = p("mimic", "window", access);
+        if (String(actor.domain()) !== "cobblemon") return copiedNativeMove(access, actor, window);
         const state = NativeEffects.read(access, actor);
         if (!state.used || !skills[state.used]) return "";
+        if (access.tick() - (state.usedTick || -1000) > window) return "";
         if (NativeLoadout.facts(CobblemonCombat.moveTemplate(state.used)).flags.failmimic) return "";
         return state.used;
     });

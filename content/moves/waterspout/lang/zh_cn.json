@@ -5,7 +5,7 @@
   "worldcombat.skill.waterspout.use.2": "把贴身的追击者从脸上冲开",
   "worldcombat.skill.waterspout.use.3": "在雨里打出最大的一记范围水击",
   "worldcombat.skill.waterspout.description.0": "潮头扫过身周一圈，圈内每个敌人各挨约 %1$s 点伤害；潮墙最远推到约 %2$s 格，空中与地上的目标都会被扫到。对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.waterspout.description.1": "潮墙从一端推到另一端约需 %1$s 秒：推涌式从中心推向最外缘、把目标沿背离方向推约 %2$s 格；回卷式从最外缘收向中心、把目标拉近约 %2$s 格。被扫中的目标带着湿透身份约 %3$s，期间移动速度降低 15%。",
+  "worldcombat.skill.waterspout.description.1": "潮头从发出时锁定的中心扫到另一端约需 %1$s 秒：推涌式从中心推向最外缘、把目标沿背离方向推约 %2$s 格；回卷式从最外缘收向中心、把目标拉近约 %2$s 格。被扫中的目标带着湿透身份约 %3$s，期间移动速度降低 15%。抗击退较强的目标照常吃伤害，但不会被推远或拉近。",
   "worldcombat.skill.waterspout.undertow.on": "当前回卷式：潮头从最外缘收向中心、把人拉向自己，湿身更久，但浪头 ×0.82、推得更近，起手 +2 刻、冷却 +6 刻。",
   "worldcombat.skill.waterspout.undertow.off": "当前推涌式：潮头从中心推向最外缘、把人推开，浪头更足，用来把一圈人从脸上冲走。",
   "worldcombat.skill.waterspout.timing": "可对身周 %1$s 格施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

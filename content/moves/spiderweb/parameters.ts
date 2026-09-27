@@ -16,7 +16,7 @@
  *   wrapTicks   第一层时长：等级与防御决定丝在多久后松脱；厚茧再拉长。
  *   layerBonus  每多一层的时长增量：物攻决定丝吐得多厚。
  *   layerCap    层数上限：体重 ≥250 的个体多缠一层；厚茧再加一层。
- *   slow        每层减掉多少导航速度：特攻换算，决定几层能完全钉住。
+ *   slow        每层减掉多少移动/飞行/导航速度：特攻换算，决定几层能完全钉住。
  *   globSpeed   黏丝的飞行速度：速度决定目标更难走开；厚茧的丝更沉更慢。
  *   globRadius  黏丝的判定半径：身高决定判定多宽。
  *   reach       吐丝距离：速度决定够得多远。
@@ -54,7 +54,7 @@ namespace PokemonSkills {
             F.base(0.30).plus(F.stat("specialAttack").times(0.0005))
                 .times(F.when(F.pref("thick", text("worldcombat.skill.spiderweb.preference.thick")), F.const(1.2), F.const(1.0)))
                 .clamp(0.26, 0.44),
-            "每层减速", "每多一层，目标的导航速度被多减掉多少；特攻越高减得越狠。三层以上通常就完全动不了。"),
+            "每层减速", "每多一层，目标的移动、飞行与导航速度都被多减掉多少；特攻越高减得越狠。三层以上通常就完全动不了。"),
         /** 黏丝速度：0.9 + (速度 −60) ×0.005；厚茧 ×0.85；夹 0.7..1.5。 */
         globSpeed: formula(
             F.base(0.9).plus(F.stat("speed").minus(60).times(0.005))

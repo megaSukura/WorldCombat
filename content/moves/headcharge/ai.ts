@@ -2,16 +2,23 @@
  * 爆炸头突击 / headcharge 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内（更远先交给共享接近逻辑）。
- * 这招的价值在一串人：`ai.preferLine`（默认开）在目标身后还串着一排敌人、沿冲撞线能一连撞中好几个时把它排到前面——
- * 但每多撞一个就多一次反噬，扎得越深越可能把自己耗空。关闭后只按威胁本身选目标。
+ * 这招的价值在一串人：`ai.preferLine`（默认开）在目标身后还串着一排敌人、沿真实冲程与判定半径能一连撞中好几个时把它排到前面——
+ * 但每多撞一个就多一次反噬，扎得越深越可能把自己耗空，所以低血时不再单纯因为人多加分。关闭后只按威胁本身选目标。
  * 锁定与否由玩家配置承担，不由 AI 选项重复。
  */
 namespace PokemonSkills {
-    function headchargeLine(context: WorldBehavior.Context, target: CompanionBehavior.Entity, chase: number): number {
+    /**
+     * 沿真实冲锋线与判定半径数一串人：射程取本个体实际的 `charge`（4~9 格），半宽取实际 `radius`，
+     * 不再用 ai.maxChase(12) 冒充冲程、也不用固定 1.6 冒充半径。
+     */
+    function headchargeLine(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
         const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.5) return 0;
+        const scope = CompanionBehavior.world(context);
+        const reach = p("headcharge", "charge", scope);
+        const halfWidth = p("headcharge", "radius", scope);
         const ux = dx / length, uz = dz / length;
         let count = 0;
         const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
@@ -20,9 +27,9 @@ namespace PokemonSkills {
             if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const along = ox * ux + oz * uz;
-            if (along <= 0.5 || along > chase) continue;
+            if (along <= 0.5 || along > reach) continue;
             const lateral = Math.abs(ox * uz - oz * ux);
-            if (lateral <= 1.6) count++;
+            if (lateral <= halfWidth) count++;
         }
         return count;
     }
@@ -46,8 +53,9 @@ namespace PokemonSkills {
             if (gap > capability.data.range) return 0;
             let score = 22;
             if (CompanionBehavior.ai<boolean>(capability, "preferLine", true)) {
-                const chase = CompanionBehavior.ai<number>(capability, "maxChase", 12);
-                if (headchargeLine(context, target, chase) >= 2) score += 20;
+                const onLine = headchargeLine(context, target);
+                // 多串一个就多一次反噬；低血时不再单纯因为人多加分。
+                if (onLine >= 2 && CompanionBehavior.ratio(self) > 0.4) score += Math.min(20, onLine * 8);
             }
             return score;
         }

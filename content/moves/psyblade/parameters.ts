@@ -36,23 +36,45 @@ namespace PokemonSkills {
     /** 短刃距离的参考值（格）：服务端传 scale = 实际刃长 / 这个值。 */
     export const psybladeReference = 4.0;
 
-    /** 施法者脚下是否带电：共享身份 world_combat:status/electricterrain（电气场地等来源铺下的电荷）。 */
-    export function psybladeChargedNow(world: CombatWorld, actor: CombatActor): boolean {
-        return CombatStatus.has(world, actor, "electricterrain");
+    /**
+     * 施法者此刻是否真的站在一片接地的电气场地上（共享语义身份 world_combat:terrain/electricterrain）。
+     * 用当前 WorldEffects.covers + grounded 判在场，不再看离场后仍残留 40–180 刻的 status 余电。
+     * 私有装配不含电气场地单元时查不到任何区域，按未带电处理。
+     */
+    export function psybladeGroundedField(world: CombatWorld | null, actor: CombatActor | null): boolean {
+        if (world === null || actor === null || !world.valid(actor)) return false;
+        const body = world.observe(actor);
+        if (body === null || !body.grounded()) return false;
+        const areas = WorldEffects.areas(world, WorldEffects.terrain("electricterrain"));
+        for (var i = 0; i < areas.length; i++) if (WorldEffects.covers(world, areas[i], actor)) return true;
+        return false;
     }
 
+    /** 自己脚下带电：真实接地电场。离场或腾空后立即失去带电，下一次恢复短刃。 */
+    export function psybladeChargedNow(world: CombatWorld, actor: CombatActor): boolean {
+        return psybladeGroundedField(world, actor);
+    }
+
+    /** 公式与执行共用同一「真实接地电场」事实，详情页展示的 ×1.5 与执行实际读的是同一个值。 */
+    defineFacts(psybladeId, function (context: FactContext): Formula.Facts {
+        return { read: function (id: string) {
+            if (id !== "psyblade.field") return undefined;
+            return psybladeGroundedField(context.world || null, context.actor || null) ? 1 : 0;
+        } };
+    });
+
     actionParameters.define(psybladeId, {
-        /** 灵刃威力：80 + 物攻偏移[−18,60]；自己带电 ×1.5；穿排 ×0.88 / 聚锋 ×1.08；夹 60..230。 */
+        /** 灵刃威力：80 + 物攻偏移[−18,60]；自己此刻站在接地电场里 ×1.5；穿排 ×0.88 / 聚锋 ×1.08；夹 60..230。 */
         blade: formula(
             F.base(80)
                 .plus(F.stat("attack").minus(60).times(0.55).clamp(-18, 60))
-                .times(F.when(F.status("electricterrain", text("worldcombat.skill.psyblade.value.grounded")).gt(0),
+                .times(F.when(F.var("psyblade.field", text("worldcombat.skill.psyblade.value.grounded")).gt(0),
                     F.const(1.5), F.const(1)).as(text("worldcombat.skill.psyblade.value.charged")))
                 .times(F.when(F.pref("extend", text("worldcombat.skill.psyblade.preference.extend")), F.const(0.88), F.const(1.08)))
                 .clamp(60, 230).round(1),
             "灵刃威力", {
                 unit: "威力",
-                description: "直刺那一下的威力；物攻越高刃越利。**自己脚下带着电场电荷时 ×1.5**——加成来自施法者站的地。对手防御、相性与暴击在命中时另算。"
+                description: "直刺那一下的威力；物攻越高刃越利。**自己此刻站在接地电场里 ×1.5**——加成来自施法者此刻站的地，不是离场后残留的电荷。对手防御、相性与暴击在命中时另算。"
             }),
         /** 短刃距离：4.0 + 速度偏移[−0.5,1.6]；夹 3.2..7.5。也是未带电时的实际射程。 */
         reach: formula(

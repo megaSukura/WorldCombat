@@ -13,21 +13,10 @@
  *       一个人都没糊到就播一个空泡。
  *
  * 选取是 `kind: "aim"`——方向或世界点都能放，目标为 null 时沿当前朝向照常飘泡；实体只是更容易命中。
- * 速度下降走共享能力等级（NativeEffects.boost 的 spe），宝可梦落到原生速度等级，其他战斗者落到移动速度属性。
+ * 速度下降走共享能力等级（`NativeEffects.boostWindow` 的 spe，绑在 bubble_suds 载体上），宝可梦落到原生速度等级，
+ * 其他战斗者落到移动速度属性；这次打滑自己的窗口到期或载体被清除时一并收回。
  */
 namespace PokemonSkills {
-    /** 一口泡群铺开的扇形多边形：顶点 + 外弧，判定（sector）与表现（polygon）读同一片区域。 */
-    function bubbleFan(origin: CombatPoint, heading: CombatPoint, reach: number, degrees: number): number[][] {
-        const base = Math.atan2(heading.z(), heading.x());
-        const half = (degrees * Math.PI / 180) / 2, steps = 7;
-        const vertices: number[][] = [[origin.x(), origin.y(), origin.z()]];
-        for (let i = 0; i <= steps; i++) {
-            const angle = base - half + 2 * half * (i / steps);
-            vertices.push([origin.x() + Math.cos(angle) * reach, origin.y(), origin.z() + Math.sin(angle) * reach]);
-        }
-        return vertices;
-    }
-
     /** 把瞄准方向压到水平面；泡群按地面方向铺出去。 */
     function bubbleHeading(direction: CombatPoint): CombatPoint {
         const flat = WorldCombat.point(direction.x(), 0, direction.z());
@@ -39,6 +28,24 @@ namespace PokemonSkills {
         const at = action.targetPosition();
         const delta = at.minus(from);
         return bubbleHeading(delta.length() < 0.05 ? action.direction() : delta);
+    }
+
+    /**
+     * 打滑结算：载体成功后才开一份属于这波泡泡的速度窗口，绑在 bubble_suds 上；
+     * 到期、牛奶／`/effect clear` 只收回这一次的降速，不碰别处的速度等级。已是满负速时不留载体、不播成功。
+     */
+    function bubbleSuds(scope: CombatWorld, victim: CombatActor, stages: number, suds: number, density: number): boolean {
+        const before = NativeEffects.effectiveStages(scope, victim);
+        const previous = MobEffects.read(scope, victim, bubbleEffect);
+        const carrier = MobEffects.apply(scope, victim, bubbleEffect, suds, 0);
+        if (carrier === null) return false;
+        const owned = NativeEffects.boostWindow(scope, victim, { spe: -stages }, suds, "world_combat:move/bubble", carrier, previous);
+        if (!owned) { scope.removeMobEffect(victim, carrier.id(), carrier.key()); return false; }
+        const after = NativeEffects.effectiveStages(scope, victim);
+        if ((before.spe || 0) - (after.spe || 0) <= 0) { scope.removeMobEffect(victim, carrier.id(), carrier.key()); return false; }
+        if (scope.effects(victim, bubbleLingerMark).length === 0)
+            scope.effect(bubbleLingerMark, victim, JSON.stringify({ density: density }), Math.max(1, Math.min(2400, suds)));
+        return true;
     }
 
     /**
@@ -148,7 +155,7 @@ namespace PokemonSkills {
                 scenes.finish(current, done);
             }
 
-            function onHit(current: CombatAction, hit: CombatImpact, volley: number): void {
+            function onHit(current: CombatAction, hit: CombatImpact, volley: number, strike: string): void {
                 const scope = current.world();
                 const victim = hit.target();
                 const point = hit.position();
@@ -165,18 +172,12 @@ namespace PokemonSkills {
                     return;
                 }
                 hitOnce[key] = true;
-                if (!impact(current, hit, bubbleId, power, { damage: damageSpec(bubbleId, "spray") })) return;
+                // 同一波的泡共享一个 strike：同波多粒泡打到同一人只有一次真结算；跨波各自独立。
+                if (!impact(current, hit, bubbleId, power, { damage: damageSpec(bubbleId, "spray") }, strike)) return;
                 hits++;
                 let sudsed = false;
-                if (scope.valid(victim) && scope.random() < chance) {
-                    sudsed = true;
-                    NativeEffects.boost(scope, victim, "spe", -stages);
-                    MobEffects.apply(scope, victim, bubbleEffect, suds, 0);
-                    if (scope.effects(victim, bubbleLingerMark).length === 0)
-                        scope.effect(bubbleLingerMark, victim,
-                            JSON.stringify({ density: Math.max(4, Math.min(10, Math.round(bubbles / 8))) }),
-                            Math.max(1, Math.min(2400, suds)));
-                }
+                if (scope.valid(victim) && scope.random() < chance)
+                    sudsed = bubbleSuds(scope, victim, stages, suds, Math.max(4, Math.min(10, Math.round(bubbles / 8))));
                 WorldFeedback.emit(scope, bubbleScene, 1, point,
                     { moment: "target", target: String(victim.ref()), bubbles: bubbles, intensity: intensity }, 22);
                 if (sudsed)
@@ -187,26 +188,28 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const volley = fired;
                 const body = scope.observe(current.actor());
-                const from = body === null ? current.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.6, 0));
+                // 泡泡从身体内一点的实际发射口吹出；与表现共用同一个 from，画面不再高于真实弹道。
+                const from = body === null ? current.origin() : body.position().plus(WorldCombat.point(0, body.height() * 0.3, 0));
                 const heading = bubbleAim(current, from);
                 const fan = span * Math.PI / 180;
+                const strike = bubbleId + ":" + volley;
                 for (let i = 0; i < puffs; i++) {
                     const offset = puffs <= 1 ? 0 : (i / (puffs - 1) - 0.5) * fan;
                     const cos = Math.cos(offset), sin = Math.sin(offset);
-                    const direction = WorldCombat.point(heading.x() * cos - heading.z() * sin, heading.y(),
+                    const direction = WorldCombat.point(heading.x() * cos - heading.z() * sin, 0,
                         heading.x() * sin + heading.z() * cos);
                     inFlight++;
                     LivingActions.projectile(current, {
-                        speed: velocity, range: reach, radius: radius, direction: direction, gravity: 0,
+                        speed: velocity, range: reach, radius: radius, direction: direction, gravity: 0, origin: from,
                         lifetime: Math.max(16, Math.round(reach / Math.max(0.2, velocity)) + 12),
                         appearance: { sprite: "cobblemon:generic/bubble/smallbubble", tint: 0xBFEFFF, glow: true,
                             scale: Math.max(0.7, radius / 0.16), pierce: 1 },
-                        impact: function (inner: CombatAction, hit: CombatImpact) { onHit(inner, hit, volley); }
+                        impact: function (inner: CombatAction, hit: CombatImpact) { onHit(inner, hit, volley, strike); }
                     }, complete);
                 }
                 fired++;
-                scenes.show(current, "fan", from,
-                    { moment: "fan", path: bubbleFan(from, heading, reach, span), bubbles: bubbles, intensity: intensity });
+                // 只播发射口的这一口；具体泡路交给真正飞出去的原生小泡，不再预涂满整片扇形。
+                scenes.show(current, "fan", from, { moment: "fan", bubbles: bubbles, intensity: intensity });
                 if (fired < volleys) current.after(gap, function (next: CombatAction) { fire(next); });
             }
 

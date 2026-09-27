@@ -125,6 +125,26 @@ namespace WorldEffects {
     export function hazards(world: CombatWorld, centre?: CombatPoint, radius?: number): Area[] {
         return areasWithTag(world, categories.hazard, centre, radius);
     }
+    /** Ground footprint intersection. The point is a real support/feet point; height tolerance belongs to the producer. */
+    export function surfaceTouches(field: { position: number[]; radius: number }, point: CombatPoint,
+                                   radius = 0, heightTolerance = 1): boolean {
+        return Math.abs(point.y() - field.position[1]) <= heightTolerance
+            && horizontal(field.position, point) <= field.radius + radius;
+    }
+    export function groundedContact(world: CombatWorld, actor: CombatActor, field: { position: number[]; radius: number }, heightTolerance = 1): boolean {
+        const body = world.observe(actor);
+        return !!body && body.grounded() && surfaceTouches(field,
+            WorldCombat.point(body.position().x(), body.boundsMin().y(), body.position().z()), 0, heightTolerance);
+    }
+    /** Live membership qualification shared by field callbacks and external consumers. */
+    export function covers(world: CombatWorld, area: Area, actor: CombatActor): boolean {
+        if (area.pending) return false;
+        const body = world.observe(actor), rule = rules[area.rule], definition = definitions[area.rule];
+        if (!body || !rule || !definition) return false;
+        const point = WorldAI.point(area.position);
+        if (point.minus(body.position()).length() > area.radius || (definition.lineOfSight && !world.clear(point, body.position()))) return false;
+        return !rule.accepts || rule.accepts(world, actor, { ...area, members: [] });
+    }
     /** Dispels every non-reservation field carrying one declared tag; returns how many ended. */
     export function clearTagged(world: CombatWorld, tag: string, centre?: CombatPoint, radius?: number): number {
         var found = areasWithTag(world, tag, centre, radius), cleared = 0;
@@ -143,7 +163,11 @@ namespace WorldEffects {
      * `field.data` is saved and persists across scans. `field.id`/`field.remaining` are the owning effect's
      * read-only facts for the current scan.
      */
-    export interface Rule { canTransfer?: (field: Field) => boolean; enter?: (world: CombatWorld, actor: CombatActor, field: Field) => void; stay?: (world: CombatWorld, actor: CombatActor, field: Field) => void; leave?: (world: CombatWorld, actor: CombatActor, field: Field) => void; scan?: (effect: CombatEffect, world: CombatWorld, field: Field) => void; }
+    export interface Rule {
+        /** Pure eligibility predicate, also used by covers() before the next membership scan. */
+        accepts?: (world: CombatWorld, actor: CombatActor, field: Field) => boolean;
+        canTransfer?: (field: Field) => boolean; enter?: (world: CombatWorld, actor: CombatActor, field: Field) => void; stay?: (world: CombatWorld, actor: CombatActor, field: Field) => void; leave?: (world: CombatWorld, actor: CombatActor, field: Field) => void; scan?: (effect: CombatEffect, world: CombatWorld, field: Field) => void;
+    }
     /**
      * A producer owns its callback id; identity and tags let independent producers share consumers.
      * `lineOfSight` defaults true: members need an unobstructed line from the field centre. Set it false
@@ -391,7 +415,8 @@ namespace WorldEffects {
             // Inspect the nearest bodies before each rule applies its own relationship/visibility checks.
             for (var i = 0; i < actors.length; i++) {
                 var actor = actors[i], observation = world.observe(actor);
-                if (observation === null || (requiresSight && !world.clear(center, observation.position()))) continue;
+                if (observation === null || (requiresSight && !world.clear(center, observation.position()))
+                    || rule.accepts && !rule.accepts(world, actor, state)) continue;
                 var ref = String(actor.ref());
                 if (state.members.indexOf(ref) < 0) visit("enter", world, actor, state);
                 visit("stay", world, actor, state);

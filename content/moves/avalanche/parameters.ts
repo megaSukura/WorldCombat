@@ -8,9 +8,9 @@
  *   对手**实际攻击**（有敌对攻击者、真的扣了血）打到，就挂上共享身份 `world_combat:status/battered`
  *   （被打懵），可叠到 5 层；雪崩命中时若自己带着它，这一记翻倍。
  *
- * 落法：施术者站定，把身前积雪倾倒成一股宽而低的雪体，沿瞄准方向**贴着真实地面**逐段推进——缓坡跟着滑下、
- *   实墙与明显上台阶把它挤住停下、悬崖处散落。雪面真实触及的每个非友方只吃一次：中央带原 collapse、
- *   两侧边缘 0.7 预算；积伤层数只按既有公式加宽与加压，不增加段伤。
+ * 落法：施术者站定，把身前积雪倾倒成一股宽而低的雪体，沿瞄准方向**贴着真实碰撞顶面**逐段推进——缓坡跟着滑下、
+ *   实墙与明显上台阶把它挤住停下、悬崖只在崖口散落。雪面真实触及的每个非友方只吃一次：中央带原 collapse、
+ *   两侧边缘 0.7 预算；积伤层数只按既有公式加宽与加压，不增加段伤。滑过的最后一段只留下短时残雪粒子，不替换方块。
  *
  * 数据分散（每项依赖不同的精灵数据）：
  *   collapse 雪崩威力 54 + 物攻偏移 + 等级偏移；带 battered 时 ×2，厚重式 ×0.90。
@@ -19,7 +19,6 @@
  *   radius   雪堆半宽 1.0 格 + 体型高度偏移 + 层数×0.12；厚重式 ×1.25，决定覆盖面。
  *   push     击退 0.50 格 + 物攻偏移 + 层数×0.06；厚重式 ×1.15。
  *   shards   冰屑数 16 + 物攻偏移 + 层数×2，驱动表现。
- *   frost    残雪存留 3 秒 + 等级偏移，地形租借时长。
  *   brace／settle／recharge 速度决定起手、收招、冷却。
  *
  * 配置 `deepdrift`（厚重）：开启＝雪堆半宽 ×1.25、击退 ×1.15、滑得更远 ×1.12，但本击 ×0.90、起手 +2、冷却 +8；
@@ -36,7 +35,7 @@ namespace PokemonSkills {
     /** 积伤窗口与叠加上限（协议常量）：一次挨打的印记停留多久、最多叠几层。 */
     export const avalancheBruise = 200;
     export const avalancheMaxStacks = 5;
-    /** 地形协议常量：一次采样最多向下看几格；超过判定高度的落差算悬崖。 */
+    /** 采样协议常量：一次向下探最多几格（超出视为悬空）；超过判定高度的落差算悬崖。 */
     export const avalancheDrop = 3;
     export const avalancheCliff = 1.5;
 
@@ -48,32 +47,12 @@ namespace PokemonSkills {
     }
 
     /**
-     * 从 `(x, fromY, z)` 那一列向下找连续地表，返回站在上面的脚点（方块顶 +1）；挖空/悬空/水面返回 null。
-     * 判定与表现共用同一条真实地表采样，雪体沿它滑。
+     * 从 `(x, fromY, z)` 那一列用共享 `SurfacePaths.support` 的原生碰撞采样（blockFace 朝上）找真实顶面，
+     * 返回脚点：**x/z 原样返回请求的连续坐标**，不再叠加 0.5 中心偏移，所以沿 heading 的每一步都不会横漂。
+     * 草/花/水面等没有向上碰撞面的东西不被当成地面，天花板也不会被当成脚下；落差超过 `avalancheDrop` 返回 null。
      */
     export function avalancheGround(world: CombatWorld, x: number, fromY: number, z: number): CombatPoint | null {
-        const top = Math.floor(fromY) + 1, bottom = Math.floor(fromY) - avalancheDrop;
-        for (let y = top; y >= bottom; y--) {
-            const block = world.block(WorldCombat.point(x + 0.5, y, z + 0.5));
-            if (block === null) return null;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") return null;
-            return WorldCombat.point(x + 0.5, y + 1, z + 0.5);
-        }
-        return null;
-    }
-
-    /** 可替换的自然地表：残雪只落在这些天然表层上。 */
-    export function avalancheSurface(block: CombatBlock | null): boolean {
-        if (block === null) return false;
-        if (block.tagged("minecraft:dirt") || block.tagged("minecraft:base_stone_overworld")
-            || block.tagged("minecraft:sand") || block.tagged("minecraft:snow")
-            || block.tagged("minecraft:terracotta") || block.tagged("minecraft:substrate_overworld")) return true;
-        const id = String(block.id());
-        return id === "minecraft:grass_block" || id === "minecraft:podzol" || id === "minecraft:mycelium"
-            || id === "minecraft:moss_block" || id === "minecraft:snow_block" || id === "minecraft:gravel"
-            || id === "minecraft:packed_ice" || id === "minecraft:ice" || id === "minecraft:clay";
+        return SurfacePaths.support(world, WorldCombat.point(x, fromY, z), 0.6, avalancheDrop);
     }
 
     defineFacts(avalancheId, function (context: FactContext): Formula.Facts {
@@ -143,10 +122,6 @@ namespace PokemonSkills {
                 unit: "枚",
                 description: "这股雪带起的冰屑数量；物攻越高、积伤越厚越密，直接驱动画面的发射量。"
             }),
-        /** 残雪存留：60 刻（3.0 秒）+ 等级偏移[0,20 刻]；夹 40..100 刻（地形租借时长）。 */
-        frost: seconds(
-            F.base(60).plus(F.level().minus(28).times(0.4).clamp(0, 20)).clamp(40, 100).round(0),
-            "残雪存留", "滑过的最后一段在可替换自然地表留下的残雪停留多久；等级越高留得越久。"),
         /** 起手：8 刻 − 速度偏移[−1.5,3] + 厚重 2 刻；夹 5..13。 */
         brace: seconds(
             F.base(8).minus(F.stat("speed").minus(58).times(0.02).clamp(-1.5, 3))
@@ -170,7 +145,7 @@ namespace PokemonSkills {
 
     describe(avalancheId, [
         { key: "description.0", values: ["collapse"] },
-        { key: "description.1", values: ["reach","step","radius","push","frost"] },
+        { key: "description.1", values: ["reach","step","radius","push"] },
         { key: "deepdrift.on", values: [], when: function (context) { return read(context.detail.values, ["deepdrift"]) === true; } },
         { key: "deepdrift.off", values: [], when: function (context) { return read(context.detail.values, ["deepdrift"]) !== true; } },
         { key: "timing", values: ["range","brace","settle","pp","recharge"] },

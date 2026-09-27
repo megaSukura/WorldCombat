@@ -1,7 +1,8 @@
 // 吵闹的可执行设计说明：一只只会吵闹的宝可梦对两只贴身的僵尸连喊。
 // 必然事实：本招被提交过；施法者身上出现过共享身份 uproar（止眠的凭据）；
 //   声浪对圈内的僵尸造成过伤害（多段结算里至少命中一次）。
-// 命中率、每圈震到几只、共喊了几次写进 note 供读轨迹判断。
+// 命中率、每圈震到几只、共喊了几次、止眠是否覆盖中途走入者写进 note 供读轨迹判断；
+//   免疫与拒绝不会计入命中，所以伤害断言仍只在真实落地时成立。
 Smoke.scenario("uproar", function (stage) {
     var caster = stage.pokemon({ species: "exploud", level: 40, moves: ["uproar"], at: [0, 0, 0] });
     var foeA = stage.mob({ type: "minecraft:zombie", at: [3, 0, 0] });

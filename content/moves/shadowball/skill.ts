@@ -4,9 +4,10 @@
  * 三幕：
  *   起（windup，提交前）：黑影在身前被攥成一团、向内收紧（`action.present` 预告）。
  *   飞（travel，提交后）：暗影团沿瞄准方向沿直线高速飞出，带剥落的阴气尾迹；瞄准点为空也照样射出。
+ *       飞行场景由 `WorldFeedback.actionScenes` 在 execute 内建立，随投射物真实结束释放，不额外留 feedback 实例。
  *   击（burst / fizzle）：命中活物时结算一次特殊伤害，爆散的强度读取这次实际造成的伤害回执（0 伤害不冒爆）；
- *       按概率用共享的 `NativeEffects.boost(..., "spd", -1)` 削掉目标特防，只有真的降级成功才在目标身上短暂
- *       贴住一层影子（`cling`）。打空、被吸收或撞到方块只留一下散影。
+ *       按概率用共享的 `NativeEffects.boost(..., "spd", -1)` 削掉目标特防，只有真的降级成功（applied !== 0）
+ *       才在目标身上贴住一层影子，持续 `clingTicks` 刻（`cling`，这是降阶回执的视觉，不是降阶持续时长）。打空、被吸收或撞到方块只留一下散影。
  *
  * 与同族分开：磨防四式里只有它是真实投射物、只打单体、命中后影子会附着在目标身上。
  * 配置 `dense`（凝影）由 resolve 改时序、由公式改威力／速度／射程。
@@ -50,7 +51,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
+            const scenes = WorldFeedback.actionScenes(shadowballScene);
             const origin = action.origin();
             const power = p("shadowball", "core", action);
             const speed = p("shadowball", "velocity", action);
@@ -61,7 +62,7 @@ namespace PokemonSkills {
             const shards = Math.max(12, Math.round(p("shadowball", "shards", action)));
             const scale = Math.max(0.6, Math.min(2.4, power / 70));
             let settled = false;
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             // 爆散由实际伤害回执驱动：把这一次施法的基准碎缕数与尺度交给 damage_applied 处理器。
             action.data("shadowball/burst", JSON.stringify({ shards: shards, scale: scale }));
@@ -105,8 +106,10 @@ namespace PokemonSkills {
                 }
             }, function (current: CombatAction) { finish(current); });
 
-            WorldFeedback.keep(world, "shadowball:trail:" + action.id(), shadowballScene, 1, origin,
-                { moment: "travel", projectile: flight, scale: scale, shards: shards }, 90);
+            // 飞行场景由动作拥有：随投射物真实结束（命中、撞块或飞尽）在 complete 里 stop／finish 释放，
+            // 不再用独立 90 刻 feedback 在弹体结束后留一个空实例。
+            scenes.show(action, "travel", origin,
+                { moment: "travel", projectile: flight, scale: scale, shards: shards });
         }
     });
 

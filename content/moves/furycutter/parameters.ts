@@ -6,12 +6,16 @@
  *
  * 翻译：把「连续命中就翻倍」落成「刀数翻倍」——一次连斩挥出 `cuts` 刀，每刀结算一次 `bite`，
  * 连斩层数 0／1／2 对应 1／2／4 刀。这样总伤害正好按原生翻倍，而画面里的刀数与判定段数一致：
- * 玩家看得见自己挥了几刀，也就知道自己攒到第几层了。
+ * 玩家看得见自己挥了几刀，也就知道自己攒到第几层了。每一刀是一道以自身为心、左右交替扫过前方的短刃面，
+ * 同一刀每敌只结算一次；对手退出这道弧带，后面的刀就不再落到它身上。
  *
  * 连斩层数是真实 MobEffect `world_combat:furycutter_momentum`（共享身份 world_combat:status/furycutter，
- * 振幅即层数）。落空即清空；任何别的招式提交也会打断它；只要在 `window` 内继续连斩，层数就往上走。
- * 选取为 `kind: "aim"`：可锁定实体，也可朝方向空挥；每一趟的方向在提交时锁定，整趟刀数沿一个方向走，
- * 对手绕到身后就能躲开这一趟剩下的刀。
+ * 振幅即层数）。落空即清空；任何别的招式**实际提交成功后**（world_combat:committed）也会打断它，
+ * 准备被取消或提交被拒绝不消耗层；只要在 `window` 内继续连斩，层数就往上走。
+ * 刃上聚气由这条层数载体自身拥有：另起一条 actor 托管效果 `world_combat:furycutter_aura`，只要载体还在就用
+ * 无限时长 moment 持续，载体因任何原因消失时统一结束。
+ * 选取为 `kind: "aim"`：可锁定实体，也可朝方向空挥；每一趟的挥刀方向在提交时锁定，整趟的刀都绕它扫，
+ * 对手绕到身后、或被墙挡住中心线，就能躲开这一趟剩下的刀。
  * `cuts` 参数用 F.state("furycutter") 直接读这份身份——详情页里玩家读到的段数就是场上真正结算的刀数。
  *
  * 数值分散（每个参数读不同的个体数据）：
@@ -33,6 +37,9 @@ namespace PokemonSkills {
     export const furycutterScene = "world_combat:move_furycutter";
     export const furycutterMomentum = "world_combat:furycutter_momentum";
     export const furycutterStreak = "world_combat:status/furycutter";
+    /** 刃上聚气的托管载体：拥有 streak 表现，随真实层数载体一起存续与结束。 */
+    export const furycutterAura = "world_combat:furycutter_aura";
+    export const furycutterAuraKey = "world_combat:move_furycutter/aura";
     export const furycutterRiseText = "world_combat.move.furycutter.text.rise";
     export const furycutterMissText = "world_combat.move.furycutter.text.miss";
     /** 表现里一刀的参考半宽（格）；服务端传 scale = 实际半宽 / 这个值。 */
@@ -94,7 +101,7 @@ namespace PokemonSkills {
             F.base(0.45).plus(F.body("width").minus(0.9).times(0.3)).clamp(0.35, 0.8).round(2),
             "刀面半宽", {
                 unit: "格",
-                description: "每一刀的横向覆盖半宽；身体越宽的个体刃面越宽。"
+                description: "每一刀扫过扇形的外缘横向半宽；身体越宽的个体一刀扫得越开，也越容易把对手框进弧带。"
             }),
         /** 贴身一步：基础 1.0 格，速度每比 55 快 1 加 0.006，穷追 ×1.15 并入，夹 0.7..1.6。 */
         step: formula(

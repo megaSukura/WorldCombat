@@ -18,7 +18,7 @@ Smoke.scenario("ragepowder", function (stage) {
     }, function () {
         stage.expect(stage.casts("ragepowder", caster) >= 1, "the butterfree committed rage powder");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/ragepowder"), "the shared ragepowder identity landed on the caster");
-        stage.note("粉尘云固定落在施法者选定的近地（AI 施放时落在自身朝威胁方向一小段），存续期内不随施法者移动，施法者可走开。云每 interval 刻扫一遍：对刚走进来、可受粉末、且不在再次入云冷却里的非友方活物各发一次 world.target 转向请求，被接受就放一条从入云者连向施术者的短线；拒绝转向的 Boss 只是不触发，不绕粉末免疫。草属性直接穿过这团粉。半径、存续、再次入云冷却随等级、特攻、特防与 thick（浓粉／薄粉）变化，完整装配的人工试玩才能看到敌人真的改追施术者。", {
+        stage.note("粉尘云固定落在施法者选定的近地，存续期内不随施法者移动，施法者可走开。云每 interval 刻扫一遍：只取真正踏进接触区、与本层地面连通的非友方活物——隔着墙或站在上层的不被牵动；对刚走进来、可受粉末、且不在再次入云冷却里的个体各发一次 world.target 转向请求，被接受就放一条从入云者连向施术者的短线；拒绝转向的 Boss 只是不触发，不绕粉末免疫。草属性直接穿过这团粉。再次施放时先退掉旧云再挂新载体，旧云结束不会清掉新状态。半径、存续、再次入云冷却随等级、特攻、特防与 thick（浓粉／薄粉）变化，完整装配的人工试玩才能看到敌人真的改追施术者。", {
             casterCasts: stage.casts("ragepowder", caster),
             identityEver: stage.hadMobEffect(caster, "world_combat:status/ragepowder"),
             allyAlive: ally.alive(), foeAlive: foe.alive(), tick: stage.tick()

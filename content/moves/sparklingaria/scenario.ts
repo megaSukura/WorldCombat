@@ -25,7 +25,7 @@ Smoke.scenario("sparklingaria", function (stage) {
         stage.expect(stage.damageTo(target) > 0, "the bubble wave dealt damage");
         stage.expect(sawBurn, "the target wore the shared burn identity before the aria");
         stage.expect(!stage.hasMobEffect(target, "world_combat:status/burn"), "the aria washed the burn away");
-        stage.note("crit, the distance falloff and the cure heal amount are random; the cure only applies to the ring at the moment of the cast", {
+        stage.note("crit, the distance falloff and the cure heal amount are random; the cure only applies to the ring at the moment of the cast. The ring is a real sphere against body boxes, so both the wash and the hit read the same volume; the 10-target cap limits enemy damage only, never how many burns are washed.", {
             casts: stage.casts("sparklingaria", caster),
             damage: Math.round(stage.damageTo(target) * 10) / 10,
             sawBurn: sawBurn,

@@ -2,12 +2,12 @@
  * 拍落 / knockoff 的客户端表现。
  *
  * 一句话：施法者把手臂高高抬起、脚下掀起一圈碎屑，随后压上去一记重拍，在接触点炸开一团骨白冲击；
- * 若对方手里有物，那件真实掉落物沿拍击方向翻滚飞出，视线一路跟到它落地闪一下。
+ * 若对方手里有物，那件真实掉落物沿拍击方向翻滚飞出，视线一路跟着它，落地由原生掉落物自己决定。
  * 色相家族：暗紫（smoke / impact_dark）为体，骨白（impact_normal / tinydust）作重击的强调，没有饱和色。
- * 拍子：起（raise 抬臂）→ 击（smash 重拍）→ 落（knock 跟随真实落物与落地小闪）／空（miss 收势）。
+ * 拍子：起（raise 抬臂）→ 击（smash 重拍）→ 送（knock 跟随真实落物）／空（miss 收势）。
  * 范围：smash 绑命中点，画出的就是被拍中的位置；knock 的 `path` 直接绑回执里的落物 UUID，跟着那件东西走。
- * 运动：抬臂时碎屑被从地面带起，重拍是短促外爆，落物自己翻滚远去，落地刻（data.land）闪一记小环。
- * 数：`data.motes`（体重派生的碎屑数）驱动抬臂、命中与落地粒子量；`data.intensity`（本击伤害占比）放大爆发。
+ * 运动：抬臂时碎屑被从地面带起，重拍是短促外爆，落物自己翻滚远去；不按估算刻硬播落地尘。
+ * 数：`data.motes`（体重派生的碎屑数）驱动抬臂与命中粒子量；`data.intensity`（本击伤害占比）放大爆发。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const KnockoffDefinition: ParticleDefinition = {
@@ -77,7 +77,9 @@ const KnockoffDefinition: ParticleDefinition = {
             ]
         },
         knock: {
-            duration: 150,
+            // 只跟随那件真实掉落物：wake 的 path 顶点就是回执里的落物 UUID，贴着它每刻的真实位置发尾迹。
+            // 落地由原生掉落物自己决定，这里不再按估算刻硬播「落地尘」，也不在物品当前位置假造触地环。
+            duration: 120,
             exit: { stop: 16, drain: 24 },
             emitters: [
                 {
@@ -87,24 +89,6 @@ const KnockoffDefinition: ParticleDefinition = {
                     direction: "velocity", speed: [0.01, 0.05],
                     lifetime: [4, 10], size: [0.06, 0.015],
                     color: 0xEADDC0, alpha: [0.5, 0], light: "full", maxParticles: 60
-                },
-                {
-                    name: "spill", bind: "path", fit: "none", offset: [0, 0.08, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "motes", fallback: 12 }, at: { data: "land", fallback: 30 } },
-                    shape: { kind: "polyline", randomDirection: 1 },
-                    direction: "outward", speed: [0.05, 0.2], gravity: 0.05, drag: 0.93,
-                    lifetime: [6, 13], size: [0.08, 0.02], sizeMode: "index",
-                    color: 0xC9BBA8, alpha: [0.7, 0], light: "world", maxParticles: 90
-                },
-                {
-                    name: "touchdown", bind: "path", fit: "none", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 1, at: { data: "land", fallback: 30 } },
-                    shape: { kind: "polyline" },
-                    direction: "away", speed: [0.0, 0.0],
-                    lifetime: [8, 14], size: [0.3, 0.12],
-                    color: 0xE9DDF4, alpha: [0.55, 0], light: "full", maxParticles: 4
                 }
             ]
         },

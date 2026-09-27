@@ -1,15 +1,16 @@
 /**
  * 疯狂滚压 / steamroller 的客户端表现。
  *
- * 一句话：身体揉成一团、脚边尘圈收紧，随后一团球贴着地面滚出去，球下被压出一道平痕、两侧扬起草屑与土屑，
- * 压到的人身上炸开一圈钝击虫粉、被推着往前；被压懵的人头顶再冒星。
+ * 一句话：身体揉成一团、脚边尘圈收紧，随后一团贴身的球壳贴着地面滚出去，球下被压出一道平痕、两侧扬起草屑与
+ * 土屑，压到的人身上炸开一圈钝击虫粉、被推着往前；被压懵的人头顶再冒星。
  * 色相家族：草黄与虫绿（impact_bug 0xB6C24A／ground_bugs／earth 0x8C7448），中性尘（tinydust），近白高光只给命中那一下。
  * 拍子：起（curl 团身）→ 滚（roll 掠地留痕）→ 压（crush 崩尘）／空（whiff 空滚）→ 懵（stagger）。
- * 范围：roll 的 `path` 随真实滚过的段落逐拍变长（从起点到当前本体），画面铺出的就是已经压过的那条线；
- *   crush 绑在真正被压到的目标身上。
+ * 范围：roll 的 `path` 随真实滚过的段落逐拍变长（从起点到当前足点，四角已投到脚下地面），画面铺出的就是已经
+ *   压过的那条贴地线；`ball` 与 `shell` 绑在施法者身体上，读起来是滚动的球壳而不是飘在空中的尘；crush 绑在
+ *   真正被压到的目标身上。
  * 运动：curl 的尘向里收；roll 的草屑贴地向外抛、土屑带重力；crush 的虫粉向目标外炸。
  * 数：roll 与 crush 的量绑定 `data.dirt`（物攻派生），`data.scale`（碾压半宽派生）决定球的体积，
- *   `data.tread`（压痕块数派生）决定贴地草屑密度，`data.intensity`（威力派生）抬命中亮度。
+ *   `data.tread`（压痕块数上限派生）决定贴地草屑密度，`data.intensity`（威力派生）抬命中亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const SteamrollerDefinition: ParticleDefinition = {
@@ -62,6 +63,14 @@ const SteamrollerDefinition: ParticleDefinition = {
                     rate: 22, shape: { kind: "sphere", radius: 0.2 }, direction: "outward", speed: [0.02, 0.1], spin: 20,
                     lifetime: [5, 10], size: { data: "scale", fallback: 1 },
                     color: 0xA8B24E, alpha: [0.7, 0], light: "world", maxParticles: 56
+                },
+                {
+                    name: "shell", bind: "source", offset: [0, 0.18, 0], height: 0.18,
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 8, shape: { kind: "ring", radius: 0.24, thickness: 0.2, rotation: [90, 0, 0] },
+                    direction: "shape", speed: [0.0, 0.02], spin: 28,
+                    lifetime: [4, 8], size: [0.3, 0.34], sizeMode: "sin",
+                    color: 0xA8B24E, alpha: [0.6, 0], light: "world", maxParticles: 40
                 }
             ]
         },

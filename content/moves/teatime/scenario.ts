@@ -1,4 +1,4 @@
-/** 茶会：范围内敌友各自吃掉携带的树果；杯盘与热气承载开席反馈。 场景核对提交、状态或生命变化；表现由人工体验确认。 */
+/** 茶会：范围内敌友各自吃掉携带的树果；结算用可辨树果向各持有者收合并 sip，随后只留短余韵。 场景核对提交、状态或生命变化；表现由人工体验确认。 */
 Smoke.scenario("teatime", function (stage) {
     stage.fill([-6, -1, -6], [8, -1, 6], "minecraft:grass_block");
     stage.fill([-6, 0, -6], [8, 1, 6], "minecraft:air");
@@ -23,7 +23,7 @@ Smoke.scenario("teatime", function (stage) {
     }, function () {
         stage.expect(stage.casts("teatime", caster) >= 1, "the caster held a tea party");
         stage.expect(foe.health() > foeLow, "the foe's held Berry was eaten and healed it on the spot");
-        stage.note("茶会以选定点为心，圈内敌友各自吃掉携带树果并结算；杯盘和热气由现有表现承载。", {
+        stage.note("茶会以选定点为心，圈内可被茶香直达的敌友各自吃掉携带树果并结算；结算用可辨树果收合并 sip，随后只留短余韵。", {
             casterCasts: stage.casts("teatime", caster),
             foeLow: Math.round(foeLow * 10) / 10,
             foeNow: Math.round(foe.health() * 10) / 10,

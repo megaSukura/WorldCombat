@@ -135,6 +135,12 @@ namespace NativeItems {
         var stack = JSON.parse(held.stack); stack.components = stack.components || {}; stack.components["minecraft:damage"] = next;
         return receipt(world.equipmentGiveResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, JSON.stringify(stack)));
     }
+    export interface DamageReceipt { ok: boolean; reason: string; damage: number; broken: boolean; }
+    /** Native durability use, including enchantments and a real break; provider refusal remains explicit. */
+    export function damageHeld(world: CombatWorld, actor: CombatActor, held: HeldRef, amount: number): DamageReceipt {
+        return JSON.parse(world.equipmentDamageResult(actor, held.slot.provider, held.slot.slot, held.slot.index,
+            held.expected, Math.max(0, Math.round(amount))));
+    }
     /** CAS-remove the exact observed stack as a native item entity; `data` is {pickupDelay,velocity,glow}. */
     export function dropHeld(world: CombatWorld, actor: CombatActor, held: HeldRef, data: string): Receipt {
         return receipt(world.equipmentDropResult(actor, held.slot.provider, held.slot.slot, held.slot.index, held.expected, data));
@@ -149,8 +155,11 @@ namespace NativeItems {
      * When both sides hold something the whole observed stacks swap. With one side empty, one item moves by default
      * and the source keeps its remainder; pass `count = 0` to move the whole stack (which a one-item slot refuses).
      */
-    export function exchangeHeld(world: CombatWorld, first: CombatActor, second: CombatActor, count: number = 1): Receipt {
+    export function exchangeHeld(world: CombatWorld, first: CombatActor, second: CombatActor, count: number = 1,
+                                 required: { firstEmpty?: boolean; secondEmpty?: boolean } = {}): Receipt {
         var a = heldOf(world, first), b = heldOf(world, second);
+        if ((required.firstEmpty && a !== null) || (required.secondEmpty && b !== null))
+            return { ok: false, reason: "destination-occupied", item: "", count: 0, drop: "" };
         var sa = a !== null ? a.slot : slotOf(first), sb = b !== null ? b.slot : slotOf(second);
         return receipt(world.equipmentExchangeResult(first, sa.provider, sa.slot, sa.index, a !== null ? a.expected : "",
             second, sb.provider, sb.slot, sb.index, b !== null ? b.expected : "", count));
@@ -257,8 +266,8 @@ namespace NativeItems {
             stat = pool[Math.floor(world.random() * pool.length) % pool.length];
         }
         var stages = berry.stages + (berry.boost ? extraStage : 0);
-        if (stat) NativeEffects.boost(world, actor, stat, stages);
-        result.stat = stat; result.stages = stages;
+        if (stat) stages = NativeEffects.boost(world, actor, stat, stages);
+        result.stat = stat; result.stages = stat ? stages : 0;
         if (applyRecoil && berry.recoil > 0) {
             var body = world.observe(actor);
             if (body !== null) { world.health(actor, -body.maxHealth() * berry.recoil * factor, "world_combat:" + recoilCause); result.recoil = true; }

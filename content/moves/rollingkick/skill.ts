@@ -5,10 +5,12 @@
  *   那一脚的震荡有概率让对手一滞。方向在提交那一刻锁死，起旋的时间里目标移开就会扫空。
  *
  * 三幕：
- *   起（whirl，提交前）：原地急旋、腿根蓄劲，只播预告，可被打断；这是对手走开的窗口。
+ *   起（whirl，提交前）：原地急旋、腿根蓄劲，只播预告，可被打断；绕腿弧覆盖全部 prepare，是对手走开的窗口。
  *   扑（drive → kick / whiff）：提交后沿玩家选定的方向逐刻扑出；trace 撞上活体即结算 `kick` 接触伤害，
- *       并把目标沿踢击方向抛飞（`launchAway` 远、`launchUp` 高）；按 `flinchChance` 掷畏缩。扑完距离没碰到人则扫空。
- *   落（hit / launch / miss）：接触那一刻才播 `kick` 命中；只有目标真的被 `displace` 推动了，才播 `launch` 抛飞轨迹。
+ *       并把目标沿踢击方向施加真实受击冲量（`launchAway` 水平初速、`launchUp` 上抛初速）形成短抛飞；
+ *       按 `flinchChance` 掷畏缩。扑完距离没碰到人则扫空。
+ *   落（hit / launch / miss）：接触那一刻才播 `kick` 命中；只有冲量被原生接受（目标真的被推动）才播 `launch` 抛飞轨迹。
+ *       抗击退的目标照常承受这一脚，但不被硬搬；实际飞多远由原生物理决定，不保证固定格数。
  *
  * 选取：`kind: "aim"`——自由方向或敌人辅助瞄准都行（用 `aim(action)` 定扑与踢向）；墙前止步、扫空收招。
  * 抛飞只作为可位移目标的附属效果；Boss 照常承受这一脚，不做额外定身延长。
@@ -59,9 +61,18 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const foot = p(rollingkickId, "foot", action), power = p(rollingkickId, "kick", action);
+            const sparks = Math.max(12, Math.round(p(rollingkickId, "sparks", action)));
+            const scale = Math.max(0.6, Math.min(2.0, foot / 0.42));
+            const intensity = Math.max(0.6, Math.min(2.2, power / 72));
             action.present("rollingkick:whirl", rollingkickScene, 1, action.origin(),
-                JSON.stringify({ moment: "whirl", sparks: Math.max(12, Math.round(p(rollingkickId, "sparks", action))),
-                    scale: Math.max(0.6, Math.min(2.0, foot / 0.42)), intensity: Math.max(0.6, Math.min(2.2, power / 72)) }));
+                JSON.stringify({ moment: "whirl", sparks: sparks, scale: scale, intensity: intensity }));
+            // 绕腿弧覆盖全部 prepare：给出施法者真实 ref、朝向与时长，客户端逐帧画绕身体扫过的腿影。
+            const aimed = aim(action), flatAim = WorldCombat.point(aimed.x(), 0, aimed.z());
+            const heading = flatAim.length() < 0.05 ? WorldCombat.point(0, 0, 1) : flatAim.unit();
+            action.present("rollingkick:leg", rollingkickLegScene, 1, action.origin(),
+                JSON.stringify({ moment: "spin", actor: String(action.actor().ref()),
+                    direction: [heading.x(), 0, heading.z()], start: action.sense().tick(), duration: prepare,
+                    scale: scale, intensity: intensity, sparks: sparks, reach: foot }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -117,15 +128,20 @@ namespace PokemonSkills {
                             { moment: "kick", target: String(victim.ref()), sparks: sparks, scale: scale, intensity: intensity }, 24);
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), rollingkickHitText, [], 22);
                         sound(current, "cobblemon:impact.fighting");
-                        // 踢飞：不是单纯击退，而是沿踢击方向把目标抛出去；抛飞只作为可位移目标的附属效果，
-                        // 位移真的发生了才播轨迹，推不动（被卡住）就不显示。
+                        // 踢飞：施加真实受击冲量（水平初速 + 上抛初速），由原生抗击退、空中阻尼与碰撞决定实际弧线；
+                        // 不保证固定格数位移，完全抗推的目标只吃伤害、不被硬搬。
                         const launch = direction.scale(launchAway).plus(WorldCombat.point(0, launchUp, 0));
-                        const moved = scope.displace(victim, launch);
-                        if (moved > 0.001) {
+                        const launched = scope.hitImpulse(victim, launch);
+                        if (launched) {
+                            const axis = launch.unit();
                             WorldFeedback.emit(scope, rollingkickScene, 1, at,
-                                { moment: "launch", target: String(victim.ref()), direction: [direction.x(), launchUp, direction.z()],
-                                    sparkles: Math.max(8, Math.round(8 + moved * 4)) }, 22);
-                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), rollingkickLaunchText, [Math.round(moved * 10) / 10], 22);
+                                { moment: "launch", target: String(victim.ref()), direction: [axis.x(), axis.y(), axis.z()],
+                                    sparkles: Math.max(8, Math.round(8 + (launchAway + launchUp) * 40)) }, 26);
+                            // 向外上踢痕：按真实踢出方向画一小段弧，与目标实际离地弧线共用端点。
+                            WorldFeedback.emit(scope, rollingkickLegScene, 1, at,
+                                { moment: "kick", actor: String(actor.ref()), direction: [axis.x(), axis.y(), axis.z()],
+                                    start: scope.tick(), scale: scale, intensity: intensity, sparks: sparks }, 20);
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.95, 0)), rollingkickLaunchText, [], 22);
                         }
                         if (scope.random() < chance && rollingkickFlinch(scope, victim, flinchTicks)) {
                             WorldFeedback.emit(scope, rollingkickScene, 1, at, { moment: "flinch", target: String(victim.ref()) }, 20);

@@ -14,6 +14,9 @@ final class NativeBodySweep {
     private NativeBodySweep() {}
 
     static Impact move(MinecraftCombat combat, ActorHandle actor, UUID controllerId, Point delta, double radius) {
+        return move(combat, actor, controllerId, delta, radius, java.util.Set.of());
+    }
+    static Impact move(MinecraftCombat combat, ActorHandle actor, UUID controllerId, Point delta, double radius, java.util.Set<String> ignoredContacts) {
         var source = combat.resolve(actor);
         if (source == null) throw new ActionInactiveException("Actor left");
         if (source.isPassenger() || source.isVehicle()) throw new ActionRejectedException("mounted-control");
@@ -37,8 +40,14 @@ final class NativeBodySweep {
         var controller = controllerId == null ? null : combat.server().getPlayerList().getPlayer(controllerId);
         LivingEntity victim = null; double contact = Double.POSITIVE_INFINITY;
         for (var entity : level.getEntities(source, targets, candidate -> candidate instanceof LivingEntity living && combat.mayHit(source, living, controller))) {
+            if (ignoredContacts.contains(combat.bind((LivingEntity) entity).ref())) continue;
             var box = entity.getBoundingBox();
-            double distance = entry(box.inflate(extentX, extentY, extentZ), start, direction, length);
+            var expanded = box.inflate(extentX, extentY, extentZ);
+            // An outgoing/tangent step from a contact face must be able to leave it, just as with blocks.
+            if (!entersAxis(expanded.minX, expanded.maxX, start.x, direction.x)
+                || !entersAxis(expanded.minY, expanded.maxY, start.y, direction.y)
+                || !entersAxis(expanded.minZ, expanded.maxZ, start.z, direction.z)) continue;
+            double distance = entry(expanded, start, direction, length);
             if (distance > obstruction + EPSILON || distance >= contact) continue;
             var centre = start.add(direction.scale(distance));
             var surface = closest(box, centre);

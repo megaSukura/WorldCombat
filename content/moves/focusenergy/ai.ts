@@ -9,10 +9,10 @@
  * 配置：ai.maxChase 限制考虑距离；ai.minGap 决定多近放弃聚气；深呼吸／浅呼吸改变强度与节奏。
  */
 namespace CompanionBehavior {
-    PokemonSkills.addPreferences("focusenergy", { ai: { maxChase: 14, minGap: 2, leaveStation: false } }, [
+    // 聚气是原地自持：射程 0、无需接近，驻守命令不该阻止这口气；因此不设 leaveStation。
+    PokemonSkills.addPreferences("focusenergy", { ai: { maxChase: 14, minGap: 2 } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 4, 26, 1),
-        PokemonSkills.number("ai.minGap", "贴身下限", 0, 8, 1),
-        PokemonSkills.flag("ai.leaveStation", "驻守时离位")
+        PokemonSkills.number("ai.minGap", "贴身下限", 0, 8, 1)
     ]);
 
     function focusenergyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
@@ -20,7 +20,6 @@ namespace CompanionBehavior {
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
         if (context.facts.mounted) return false;
         if (status(context, self, "focusenergy") || status(context, self, "dragoncheer")) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         if (distance(self.point, threat.point) > ai<number>(item, "maxChase", 14)) return false;
         return distance(self.point, threat.point) >= ai<number>(item, "minGap", 2);
     }

@@ -5,9 +5,9 @@
  *   虫色碎屑与毒泡。交叉式下两根明显从身体两侧分头飞。
  * 色相家族：虫黄绿（0xB6D84A）做针与碎屑，毒绿（0x9BE86B）只出现在针口毒泡上；近白做针尖亮点。
  *   整体是「两根」的节奏，与一根细针（毒针）一眼分开。
- * 拍子：起 aim（端针）→ 一 first（第一根）→ 二 second（第二根）→ 扎 sting（针口）→ 收 done。
- * 范围：first/second 各自绑在**自己那根真实投射物**上（服务端分别传 `data.projectile` 的 id），从真实发射口出发；
- *   交叉式下两枚发射口分居身体左右、朝同一释放点汇合，画面上能直接看出夹角；sting 绑在受击者身上，横向间隔由 `data.flank` 定。
+ * 拍子：起 aim（端针）→ 一 first（第一根）→ 二 second（第二根）→ 扎 sting（真实伤害的针口）→ 毒成 venom（只在实际施毒时）。
+ * 范围：first/second 各自绑在**自己那根真实投射物**上（服务端分别传 `data.projectile` 的 id），从真实发射口出发，
+ *   弹体飞到哪就画到哪、弹体结束（命中/撞墙/飞尽）才由服务端停掉这一拍，不在固定刻数提前收；sting 与 venom 都绑在受击者身上。
  * 运动：两针按固定出手间隔先后射出，各自飞向目标／掩体，第二根不等第一根到达就出发，分别可被墙或前排挡下。
  * 数：`data.motes`（由物攻派生）绑定命中碎屑量，`data.flank`（由碰撞箱宽度派生）绑定两针间隔，
  *   `data.index`（第几针）驱动第二针的收尾层。画面里的数量和机制一致。
@@ -64,8 +64,8 @@ const TwineedleDefinition: ParticleDefinition = {
             ]
         },
         second: {
-            duration: 18,
-            exit: { stop: 12, drain: 12 },
+            duration: 0,
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "shaft", bind: "projectile", fit: "none", height: 0.0,
@@ -108,15 +108,31 @@ const TwineedleDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.04, 0.15], gravity: 0.07, drag: 0.9,
                     lifetime: [7, 14], size: [0.05, 0.012],
                     color: 0x8FA83A, alpha: [0.65, 0], light: "world", maxParticles: 44
-                },
+                }
+            ]
+        },
+        venom: {
+            // 只有施毒回执成立（真的挂上毒）才播这一拍；被免疫/拒绝时没有这层毒泡。
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
                 {
-                    name: "venom", bind: "target", height: 0.45,
+                    name: "ooze", bind: "target", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     burst: { count: { data: "motes", fallback: 8 }, interval: 3, repeats: 2 },
                     shape: { kind: "sphere_surface", radius: 0.22 },
                     direction: "outward", speed: [0.02, 0.1],
                     lifetime: [8, 15], size: [0.07, 0.014],
                     color: 0x9BE86B, alpha: [0.8, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "ring", bind: "target", offset: [0, 0.06, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1, at: 0 },
+                    shape: { kind: "ring", radius: 0.3, rotation: [90, 0, 0] },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [7, 13], size: [0.14, 0.05],
+                    color: 0x9BE86B, alpha: [0.55, 0], light: "world", maxParticles: 14
                 }
             ]
         },

@@ -1,14 +1,14 @@
 /**
  * 踩踏 / stomp 的客户端表现。
  *
- * 一句话：抬起大脚、脚边尘土上跳 → 整只重量砸到目标点上，贴地炸开一圈与震波同径的土浪与钝白冲击，
- * 冲击点碎屑四散，最后落点留下一片被踩实的土痕。
+ * 一句话：抬起大脚、脚边尘土上跳 → 整只重量砸到锁定的真实落点，贴地炸开一圈与震波同径的土浪与钝白冲击，
+ * 冲击点碎屑四散，最后落点留下一圈被踩实的脚印压痕自然淡去（只画画面，不改动方块）。
  * 色相家族：土棕（0x8A7A62 / 0x6E5A3E）与钝白冲击（0xFFF2D8）；没有饱和色。
- * 拍子：起 raise（抬脚聚土）→ 击 slam（峰值）→ hit/shock（命中与震波）→ 收 crater（塌陷余韵）／ flinch。
- * 范围：slam 的地面环半径直接绑定 data.shock，画出的就是震波真正能扫到的范围；crater 环绑定 data.radius。
- * 运动：土浪从落点贴地向外推，碎屑向下砸后弹开；抬脚层是向内汇聚的尘土。
+ * 拍子：起 raise（抬脚聚土）→ 击 slam（峰值）→ hit/shock（命中与震波）→ 收 crater（脚印压痕）／ flinch。
+ * 范围：slam 的地面环半径直接绑定 data.shock，画出的就是震波真正能扫到的范围；crater 圆面绑定 data.radius。
+ * 运动：土浪从落点贴地向外推，碎屑向下砸后弹开；脚印是贴地不动的压痕，抬脚层是向内汇聚的尘土。
  * 数：`data.quake`（震波半径 ×24）决定贴地土浪的点数，`data.scale`（落脚判定 / 0.5）放大踩点，
- * `data.intensity`（主砸威力 / 80）抬高冲击亮度与密度，`data.radius`（塌陷半径）画出痕迹范围。
+ * `data.intensity`（主砸威力 / 80）抬高冲击亮度与密度，`data.radius`（脚印半径）与 `data.craterTicks`（脚印停留）画出痕迹范围与寿命。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const StompDefinition: ParticleDefinition = {
@@ -150,13 +150,23 @@ const StompDefinition: ParticleDefinition = {
             ]
         },
         crater: {
-            duration: 26,
-            exit: { stop: 11, drain: 20 },
+            duration: { data: "craterTicks", fallback: 80 },
+            exit: { stop: 14, drain: 30 },
             emitters: [
+                {
+                    name: "impression", bind: "point", offset: [0, 0.03, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: 22, at: 1 },
+                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.1 } },
+                    direction: "down", speed: [0.0, 0.02], spread: 6,
+                    gravity: 0.0, drag: 0.98,
+                    lifetime: { data: "craterTicks", fallback: 80 }, size: [0.16, 0.03],
+                    color: 0x6E5A3E, alpha: [0.55, 0], light: "world", maxParticles: 120
+                },
                 {
                     name: "settle", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "cells", fallback: 12 }, at: 2, interval: 4, repeats: 3 },
+                    burst: { count: { data: "radius", fallback: 1.1 }, at: 2, interval: 4, repeats: 3 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 1.1 } },
                     direction: "up", speed: [0.02, 0.08], spread: 20,
                     gravity: 0.03, drag: 0.94,

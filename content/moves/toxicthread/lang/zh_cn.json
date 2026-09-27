@@ -28,6 +28,7 @@
   "world_combat.move.toxicthread.text.latch": "中了毒丝（速度 -%1$s）",
   "world_combat.move.toxicthread.text.noslow": "毒丝缠住了它，但没能拉慢它",
   "world_combat.move.toxicthread.text.immune": "毒对它无效，但丝仍缠住了它",
+  "world_combat.move.toxicthread.text.refresh": "毒已在体内，丝只把它缠得更紧",
   "effect.world_combat.toxic_thread_laced": "被毒丝缠住",
   "worldcombat.skill.toxicthread.description.blocked": "毒丝是飞行物：途中撞上地形会被挡下，落空时只在落点洒下一小撮毒渍，不产生任何效果。",
   "worldcombat.skill.toxicthread.description.laced": "被缠住的目标会带上「被毒丝缠住」标记，持续与中毒一样久；标记本身不额外掉血或减速，同伴也不会对已缠住的目标重复吐丝。"

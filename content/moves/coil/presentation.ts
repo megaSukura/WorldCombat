@@ -1,164 +1,40 @@
-/**
- * 盘蜷 / coil 的客户端表现。
- *
- * 一句话：施术者贴着地面把身体一圈圈盘紧 → 能量沿一条向内收紧的低螺旋绕上身体、紫光越收越密 → 收到底后猛地向外一撑，
- *   一圈亮环荡开、攻/防/命中三点亮光各按本次真实增量亮起；此后盘势还在的时间里，脚边只留一圈极淡的轻量螺纹。
- * 色相家族：紫罗兰 0x8A6FD8 为环与主体，深靛 0x5B4B9E 作脚下与余韵，近白 0xE6DEFF 只落在强调与细节层。
- * 拍子：起（draw 0–14t）→ 盘（coil 0–40t，每 2 刻收一圈）→ 撑（rise 0–32t）→ 存（hum 持续）→ 收（fade）。
- * 范围：本招作用在自己身上；draw/coil/hum/fade 绑 `source` 随体型缩放，rise 额外有一层绑 `point` 的地面环，
- *   半径按 `data.scale`（实际盘绕半径 / 1.0）推出，画出的圈就是盘势撑开的位置。
- * 运动：draw 紫光向内聚拢；coil 低螺旋从脚边向身体收、粒子随环收紧；rise 亮环向外一推到底；hum 极淡螺纹起伏；fade 环向下散去。
- * 数：收紧的圈数绑 `data.coils`（防御与等级派生）；撑定三点分别绑 `data.rise`／`data.guard`／`data.focus`
- *   （本次三项各自实际抬高的级数）；盘得越厚、抬得越多，画面越密。
- * 持续：hum 绑在真正的盘势窗口上（服务端 `WorldFeedback.onEffect`），结束或提前清除会同步收回。
- * 参照节：视觉语言第二、三、四、五、七、九节。
- */
-const CoilDefinition: ParticleDefinition = {
-    interrupt: "drain",
-    moments: {
-        draw: {
-            duration: 14,
-            exit: { stop: 5, drain: 11 },
-            emitters: [
-                {
-                    name: "draw_ring", bind: "source", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 10, shape: { kind: "ring", radius: 0.7 },
-                    direction: "inward", speed: [0.03, 0.1],
-                    lifetime: [9, 15], size: [0.3, 0.08],
-                    color: 0x8A6FD8, alpha: [0.5, 0], light: "full", maxParticles: 30
-                },
-                {
-                    name: "draw_mote", bind: "source", offset: [0, 0.5, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: 14, shape: { kind: "sphere", radius: 0.5 },
-                    direction: "inward", speed: [0.03, 0.1],
-                    lifetime: [8, 14], size: [0.07, 0.02], sizeMode: "sin",
-                    color: 0xE6DEFF, alpha: [0.7, 0], light: "full", maxParticles: 40
-                }
-            ]
-        },
-        coil: {
-            duration: 40,
-            exit: { stop: 12, drain: 18 },
-            emitters: [
-                {
-                    name: "coil_rings", bind: "source", offset: [0, 0.12, 0], height: 0.1,
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    burst: { count: 1, at: 1, interval: 2, repeats: { data: "coils", fallback: 12 } },
-                    shape: { kind: "ring", radius: { data: "ring", fallback: 0.9 } },
-                    direction: "inward", speed: [0.05, 0.14], spin: 12,
-                    lifetime: [9, 16], size: [0.26, 0.06], sizeMode: "index",
-                    color: 0x8A6FD8, alpha: [0.78, 0], light: "full", maxParticles: 80
-                },
-                {
-                    name: "coil_spiral", bind: "source", offset: [0, 0.15, 0], height: 0.1,
-                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    burst: { count: { data: "coils", fallback: 12 }, at: 1 },
-                    shape: { kind: "ring", radius: { data: "ring", fallback: 0.9 } },
-                    velocity: { x: "-0.05*sin(6.283*t)", y: "0.02", z: "-0.05*cos(6.283*t)" },
-                    lifetime: [12, 20], size: [0.28, 0.08], sizeMode: "index",
-                    color: 0x5B4B9E, alpha: [0.55, 0], light: "world", maxParticles: 90
-                },
-                {
-                    name: "coil_pull", bind: "source", offset: [0, 0.5, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
-                    burst: { count: { data: "coils", fallback: 12 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 0.65 },
-                    direction: "inward", speed: [0.04, 0.12],
-                    lifetime: [8, 15], size: [0.06, 0.02],
-                    color: 0x5B4B9E, alpha: [0.6, 0], light: "world", maxParticles: 90
-                }
-            ]
-        },
-        rise: {
-            duration: 32,
-            exit: { stop: 11, drain: 18 },
-            emitters: [
-                {
-                    name: "rise_ring", bind: "source", offset: [0, 0.08, 0], height: 0.05,
-                    particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    burst: { count: 6, at: 1 },
-                    shape: { kind: "ring", radius: { data: "ring", fallback: 0.9 } },
-                    direction: "outward", speed: [0.08, 0.22],
-                    lifetime: [12, 20], size: [0.4, 0.9], sizeMode: "index",
-                    color: 0x8A6FD8, alpha: [0.8, 0], light: "full", maxParticles: 24
-                },
-                {
-                    name: "rise_point_ring", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
-                    burst: { count: 1, at: 1 },
-                    shape: { kind: "ring", radius: 1.0 },
-                    direction: "outward", speed: [0.07, 0.2],
-                    lifetime: [14, 22], size: [0.5, 1.0], sizeMode: "index",
-                    color: 0xE6DEFF, alpha: [0.75, 0], light: "full", maxParticles: 12
-                },
-                {
-                    name: "rise_power", bind: "source", offset: [0, 0.62, 0], height: 0.5,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "rise", fallback: 1 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 0.55 },
-                    direction: "outward", speed: [0.06, 0.18],
-                    lifetime: [11, 20], size: [0.1, 0.02], sizeMode: "index",
-                    color: 0xE6DEFF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 16
-                },
-                {
-                    name: "rise_guard", bind: "source", offset: [0, 0.4, 0], height: 0.3,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    burst: { count: { data: "guard", fallback: 1 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "outward", speed: [0.06, 0.18],
-                    lifetime: [11, 20], size: [0.1, 0.02], sizeMode: "index",
-                    color: 0xC9B6FF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 16
-                },
-                {
-                    name: "rise_focus", bind: "source", offset: [0, 0.75, 0], height: 0.6,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/sparkle",
-                    burst: { count: { data: "focus", fallback: 1 }, at: 1 },
-                    shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "up", speed: [0.05, 0.15],
-                    lifetime: [12, 22], size: [0.11, 0.02], sizeMode: "index",
-                    color: 0xE6DEFF, alpha: [0.92, 0], light: "full", bloom: 0.4, maxParticles: 16
-                }
-            ]
-        },
-        hum: {
-            exit: { drain: 24 },
-            emitters: [
-                {
-                    name: "hum_ring", bind: "source", offset: [0, 0.06, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    rate: 2.5, shape: { kind: "ring", radius: 0.6 },
-                    direction: "inward", speed: [0.006, 0.02],
-                    lifetime: [20, 34], size: [0.24, 0.06], sizeMode: "sin",
-                    color: 0x8A6FD8, alpha: [0.24, 0], alphaMode: "sin", light: "full", maxParticles: 16
-                },
-                {
-                    name: "hum_mote", bind: "source", offset: [0, 0.45, 0], height: 0.4,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: 2, shape: { kind: "sphere", radius: 0.45 },
-                    direction: "up", speed: [0.003, 0.012],
-                    lifetime: [16, 28], size: [0.05, 0.01], sizeMode: "sin",
-                    color: 0xE6DEFF, alpha: [0.26, 0], alphaMode: "sin", light: "world", maxParticles: 18
-                }
-            ]
-        },
-        fade: {
-            duration: 24,
-            exit: { stop: 8, drain: 16 },
-            emitters: [
-                {
-                    name: "fade_ring", bind: "source", offset: [0, 0.06, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 10 },
-                    shape: { kind: "ring", radius: 0.6 },
-                    direction: "down", speed: [0.02, 0.06], gravity: 0.02,
-                    lifetime: [12, 20], size: [0.24, 0.05],
-                    color: 0x5B4B9E, alpha: [0.5, 0], light: "world", maxParticles: 26
-                }
-            ]
+WorldCombatClient.scene("world_combat:move_coil", 1, frame => {
+    const entry: CombatSceneEntry<any> = JSON.parse(frame.data()), data = entry.data || {};
+    if (entry.lifecycle || data.lifecycle) return;
+    const actor = JSON.parse(frame.anchor(data.actor || entry.source));
+    const tick = frame.serverTick() + frame.partialTick();
+    const progress = Math.max(0, Math.min(1, (tick - Number(data.start || 0)) / Math.max(1, Number(data.duration || 1))));
+    const violet = 0x8A6FD8, pale = 0xE6DEFF;
+    if (data.moment === "prepare" && actor) {
+        const radius = Math.max(.2, actor.width * .65) * (1 - .4 * progress), height = actor.height * (.6 - .35 * progress);
+        let previous: number[] | null = null;
+        for (let i = 0; i <= 60; i++) {
+            const u = i / 60, angle = u * Math.PI * 6;
+            const point = [actor.x + Math.cos(angle) * radius * (1 - u * .25), actor.y + .08 + height * u,
+                actor.z + Math.sin(angle) * radius * (1 - u * .25)];
+            if (previous) frame.line(previous[0], previous[1], previous[2], point[0], point[1], point[2], (210 << 24) | violet);
+            previous = point;
+        }
+        return;
+    }
+    if ((data.moment === "spring" || data.moment === "trail") && Array.isArray(data.path)) {
+        const alpha = data.moment === "trail" ? Math.round(180 * (1 - progress)) : 180;
+        for (let i = 1; i < data.path.length; i++) {
+            const a = data.path[i - 1], b = data.path[i];
+            frame.line(a[0], a[1], a[2], b[0], b[1], b[2], (alpha << 24) | violet);
         }
     }
-};
-
-WorldCombatParticles.scene("world_combat:move_coil", 1, CoilDefinition);
+    if (data.moment === "armed" && actor) {
+        const yaw = Number(actor.bodyYaw || actor.yaw || 0) * Math.PI / 180;
+        const x = actor.x - Math.sin(yaw) * actor.width * .55, y = actor.y + actor.height * .62, z = actor.z + Math.cos(yaw) * actor.width * .55;
+        frame.sprite("cobblemon:particle/generic/psychic/psyring1", x, y, z, .24 + (data.factor - 1) * .16, 0, (230 << 24) | pale, 0, true);
+    }
+    if (data.moment === "spend" && actor) {
+        const y = actor.y + actor.height * .6;
+        for (let i = 0; i < 5; i++) {
+            const angle = i * Math.PI * 2 / 5, r = .16 + progress * .35;
+            frame.line(actor.x, y, actor.z, actor.x + Math.cos(angle) * r, y + .12 * progress, actor.z + Math.sin(angle) * r,
+                (Math.round(220 * (1 - progress)) << 24) | pale);
+        }
+    }
+});

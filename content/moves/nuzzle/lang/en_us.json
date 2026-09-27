@@ -31,6 +31,7 @@
   "worldcombat.skill.nuzzle.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.nuzzle.preference.ai.leaveStation.help": "When on, the companion may leave its post to nuzzle; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.nuzzle.text.hit": "Nuzzled and paralysed",
-  "world_combat.move.nuzzle.text.immune": "Electric typing shrugged off the paralysis",
+  "world_combat.move.nuzzle.text.immune": "The paralysis did not take",
+  "world_combat.move.nuzzle.text.resist": "It shrugged off the nuzzle",
   "world_combat.move.nuzzle.text.whiff": "The nuzzle met empty air"
 }

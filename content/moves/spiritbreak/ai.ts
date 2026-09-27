@@ -25,9 +25,23 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > item.data.range) return 0;
-            const shots:CombatProjectileFacts[]=JSON.parse(CompanionBehavior.world(context).projectiles(CompanionBehavior.point(self.point),Math.min(8,item.data.range+2)));
-            const active=shots.some(shot=>shot.hostile&&shot.interceptable&&shot.owner===target.ref);
-            return active?44:22;
+            // 加分只在真有敌弹正朝身前这条掌前通道飞来时给：看弹体当前速度是否指向施法者，
+            // 而不是目标附近有任意一颗可拦弹就加分。
+            const shots:CombatProjectileFacts[]=JSON.parse(CompanionBehavior.world(context).projectiles(CompanionBehavior.point(self.point),Math.min(10,item.data.range+3)));
+            let inbound=false;
+            for(let i=0;i<shots.length;i++){
+                const shot=shots[i];
+                if(!shot.hostile||!shot.interceptable)continue;
+                const px=shot.position[0]-self.point[0],py=shot.position[1]-self.point[1],pz=shot.position[2]-self.point[2];
+                const vx=shot.velocity[0],vy=shot.velocity[1],vz=shot.velocity[2];
+                const vlen=Math.sqrt(vx*vx+vy*vy+vz*vz);
+                if(!(vlen>1e-4))continue;
+                const range=Math.sqrt(px*px+py*py+pz*pz);
+                if(range>item.data.range+2.5)continue;
+                // 速度在「弹→施法者」方向上的分量：正且足够大才算正在进入掌前通道。
+                if(vx*(-px)+vy*(-py)+vz*(-pz)>vlen*range*0.25){inbound=true;break;}
+            }
+            return inbound?44:22;
         }
     });
 

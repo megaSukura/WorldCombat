@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.bonerush.summary": "Throw the hard bone in an arc again and again, slamming it into the ground under the target: the shock runs through the ground to every grounded enemy around the landing point (Ground damage, never contacts), and each landing leaves only a dust ring that fades on its own without changing the terrain, with the last strike the heaviest. You can point at an enemy or just throw at a free world point; a bone that hits a wall ends at the real contact face and shakes where it lands, and flying or airborne targets feel no shock. The hammer form hits harder and reaches five strikes, the fissure form shakes wider and leaves longer dust.",
+  "worldcombat.skill.bonerush.summary": "Throw the hard bone in an arc from the top of the body, aimed at the real support under the target's feet: the shock runs through the ground to every grounded enemy on the same layer around the landing point (Ground damage, never contacts), and each landing leaves only a dust ring that fades on its own without changing the terrain, with the last strike the heaviest. You can point at an enemy or just throw at a free world point; a bone that hits a wall or an airborne target stops at the contact face without transmitting across walls or layers, and flying or airborne targets feel no shock. The hammer form hits harder and reaches five strikes, the fissure form shakes wider and leaves longer dust.",
   "worldcombat.skill.bonerush.use.0": "Throw the bone from a distance and slam it under the target",
   "worldcombat.skill.bonerush.use.1": "The landing shock heaves everyone in a small patch of ground",
-  "worldcombat.skill.bonerush.use.2": "Fissure form claims the field with longer-lasting dust",
+  "worldcombat.skill.bonerush.use.2": "Fissure form leaves longer-lasting landing dust",
   "worldcombat.skill.bonerush.use.3": "Throw a bone freely at a world point",
   "worldcombat.skill.bonerush.description.0": "Each strike deals about %1$s Ground damage (non-contact); the bone is thrown at where the target now stands, so walking away before it lands makes it strike empty ground. A string is up to %2$s strikes, and each thrown bone can stray off line.",
   "worldcombat.skill.bonerush.description.1": "Throw range %1$s blocks, bone speed %2$s blocks/tick, arc drop %3$s; each landing shock reaches %4$s blocks and deals one Ground hit to every grounded enemy inside, lifting them (flying or airborne targets feel no shock).",
@@ -24,7 +24,6 @@
   "worldcombat.skill.bonerush.value.lift": "Lift",
   "worldcombat.skill.bonerush.value.boneRadius": "Bone collision",
   "worldcombat.skill.bonerush.value.gap": "Interval",
-  "worldcombat.skill.bonerush.value.accuracy": "Accuracy per strike",
   "worldcombat.skill.bonerush.value.dust": "Debris",
   "worldcombat.skill.bonerush.value.tempo": "Prepare",
   "worldcombat.skill.bonerush.value.settle": "Recover",

@@ -21,10 +21,12 @@ namespace CompanionBehavior {
     const ingrainSafe = PokemonSkills.flag("ai.safeFooting", "脚下安全才扎");
     ingrainSafe.help = "开启：站在岩浆、火、营火、细雪、仙人掌或水里时拒绝扎根；关闭：脚下有没有危险都照扎。";
 
-    /** 脚下有没有会持续伤害或没有实心支撑的方块；只读世界入口，读不到就当不安全。 */
+    /** 脚下有没有会持续伤害或没有实心支撑的方块；用真实碰撞箱脚底取点，读不到就当不安全。 */
     function ingrainHazardous(context: WorldBehavior.Context): boolean {
         try {
             const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context), p = self.point;
+            const half = Math.max(0.2, (typeof self.height === "number" && isFinite(self.height) ? self.height : 1.4) / 2);
+            const feet = p[1] - half;
             const hazard = function (block: any): boolean {
                 if (block === null) return true;
                 const id = String(block.id());
@@ -33,8 +35,9 @@ namespace CompanionBehavior {
                     || id === "minecraft:powder_snow" || id === "minecraft:cactus" || id === "minecraft:sweet_berry_bush"
                     || id === "minecraft:wither_rose" || id === "minecraft:water";
             };
-            return hazard(world.block(CompanionBehavior.point([p[0], p[1] + 0.1, p[2]])))
-                || hazard(world.block(CompanionBehavior.point([p[0], p[1] - 0.6, p[2]])));
+            // 采样脚所在格与脚下一格，而不是身体中心上下取点。
+            return hazard(world.block(CompanionBehavior.point([p[0], feet + 0.1, p[2]])))
+                || hazard(world.block(CompanionBehavior.point([p[0], feet - 0.1, p[2]])));
         } catch (ignored) { return true; }
     }
 

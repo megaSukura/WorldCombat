@@ -1,7 +1,7 @@
 /**
- * 嬉闹的可执行设计说明：让会这一招的布鲁朝一名被定住的格斗系目标滚过去，验证扑撞命中、造成伤害。
- * 早一步写入 `prefer(romp: true)`，让 AI 的首次决策就带上撒欢式；侧向再摆一个可见、可达的敌人，
- * 读出真正转身滚向第二个的过程（第二个被打中记在 note 里，不写成硬断言）。
+ * 嬉闹的可执行设计说明：让会这一招的布鲁朝一名被定住的格斗系目标蹦撞过去，验证扑撞命中、造成伤害。
+ * 早一步写入 `prefer(romp: true)`，让 AI 的首次决策就带上撒欢式；侧向再摆一个可见、可达、同高的敌人，
+ * 读出真正转身撞向第二个的过程（第二个被打中记在 note 里，不写成硬断言）。
  * 顶开距离与降攻（基础 10% 起）是位置／随机结果，也只作记录。
  */
 Smoke.scenario("playrough", function (stage) {
@@ -18,9 +18,9 @@ Smoke.scenario("playrough", function (stage) {
         stage.until(900, function () { return stage.casts("playrough", snubbull) > 0 && stage.damageTo(machop) > 0; }, function () {
             stage.expect(stage.casts("playrough", snubbull) > 0, "嬉闹被放出来了");
             stage.expect(stage.damageTo(machop) > 0, "扑撞打到了第一个目标身上");
-            // 第二段翻滚在首段撞击后隔 2 刻才起滚，等动作走完再看是否真的翻到了第二个。
+            // 第二段转身撞在首段撞击后隔 2 刻才起滚，等动作走完再看是否真的撞到了第二个。
             stage.after(60, function () {
-                stage.note("顶开距离、侧向第二次翻滚是否命中，以及降攻（基础 10% 起）都是位置／随机结果，只作记录。",
+                stage.note("顶开距离、侧向转身撞第二个是否命中，以及降攻（基础 10% 起）都是位置／随机结果，只作记录。",
                     { casts: stage.casts("playrough", snubbull), damage: Math.round(stage.damageTo(machop) * 10) / 10,
                       second: Math.round(stage.damageTo(geodude) * 10) / 10,
                       secondHits: stage.hits(geodude, true),

@@ -15,6 +15,9 @@
  */
 
 namespace PokemonSkills {
+    /** 逐列风幕由自定义场景绘制，与命中/落空粒子分开注册：各列分别成段，不跨阻塞空隙连面。 */
+    const whirlwindCurtainScene = "world_combat:move_whirlwind_curtain";
+
     define({
         id: whirlwindId,
         cooldownParameter: "wait",
@@ -48,7 +51,7 @@ namespace PokemonSkills {
                 label: config && config.wide ? "吹飞·宽阔风墙" : "吹飞" };
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
-            const scenes = WorldFeedback.actionScenes(whirlwindScene, 1);
+            const scenes = WorldFeedback.actionScenes(whirlwindCurtainScene, 1);
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             const origin = body !== null ? body.position() : action.origin();
             if (action.target() !== null) action.releaseTarget();
@@ -107,20 +110,22 @@ namespace PokemonSkills {
                         stopped[i] = true;
                     } else frontAt[i] = targetFront;
                 }
-                // 风幕画在当拍的实际风面上：竖向沿每条风线的推进端点连成一条起伏的带子。
-                const curtain: number[][] = [];
-                for (let i = 0; i < columns; i++) curtain.push(linePoint(i, frontAt[i], baseY));
-                for (let i = columns - 1; i >= 0; i--) curtain.push(linePoint(i, frontAt[i], baseY + curtainHeight));
+                // 风幕画在当拍的实际风面上：每列各自成段，前沿已停住的列不跨空隙连面。
+                const curtainBase: number[][] = [];
+                for (let i = 0; i < columns; i++) curtainBase.push(linePoint(i, frontAt[i], baseY));
                 const frontCentre = origin.plus(dir.scale(targetFront));
-                scenes.show(current, "front", frontCentre, {
-                    moment: "gust", path: curtain, direction: [dir.x(), 0, dir.z()],
-                    scale: scale, motes: motes, front: targetFront, reach: reach, band: band,
-                    depth: Math.round(step * 100) / 100
+                scenes.show(current, "gust", frontCentre, {
+                    moment: "gust", path: curtainBase, fronts: frontAt.slice(), direction: [dir.x(), 0, dir.z()],
+                    baseY: baseY, height: curtainHeight, scale: scale, motes: motes,
+                    front: targetFront, reach: reach, band: band, depth: Math.round(step * 100) / 100
                 });
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(frontCentre, 0, band + 1, { below: 2.2, above: 2.6 }),
-                    function (target, facts) {
+                // 实际风幕体：从风道根到当拍前沿、真实帘高度，用真实实体箱相交挑人；墙后不穿。
+                const curtainTop = baseY + curtainHeight;
+                const region = WorldGeometry.bodyLane(origin, dir, targetFront + reachDepth, band + 0.6,
+                    { below: origin.y() - baseY, above: curtainTop - origin.y() });
+                WorldGeometry.selectBodies(scope, region, function (target, facts) {
                     const ref = String(target.ref());
-                    if (ref === String(actor.ref())) return;
+                    if (ref === String(actor.ref()) || facts.friendly()) return;
                     const point = facts.position();
                     const rel = point.minus(origin);
                     const along = rel.x() * dir.x() + rel.z() * dir.z();
@@ -128,7 +133,8 @@ namespace PokemonSkills {
                     if (Math.abs(lateral) > band + 0.6) return;
                     if (Math.abs(along - targetFront) > reachDepth) return;
                     const column = nearestColumn(lateral);
-                    if (frontAt[column] < along - 0.6) return;
+                    // 该列风的前沿停在这一格之前（被墙截住）时，墙后这具身体不被风接触。
+                    if (frontAt[column] < along - 0.05) return;
                     if (!contacted[ref]) {
                         contacted[ref] = true;
                         budget[ref] = blow;

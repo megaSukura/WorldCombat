@@ -5,7 +5,9 @@
  * 命中处炸开火系撞击，唱完余烬散去。
  * 色相家族：橙金（flame / ember / note，0xF0A030 与 0xFFD25A），强调处近白；音符用原色。
  * 拍子：起（inhale）→ 唱（sing 多段锥面）→ 击（hit）→ 提（boost）→ 收（fade）。
- * 范围：sing 的锥面长度与张角就是判定锥（`data.reach`、`data.half`），玩家看得出站进锥里会被烧到。
+ * 范围：sing 用 `fit:"world"` 的 cone_volume，锥面长度与张角就是判定锥（`data.reach`、`data.half`）；
+ *   `data.reach` 是服务端沿朝向撞墙截短后的真实可达长度。每段一次独立 emit，所以每一声都重新喷锥，
+ *   不会因为同 key 的停发时钟只亮第一段。
  * 运动：inhale 向内收拢；sing 沿 `data.direction` 从口中喷出、贴锥面向外甩；音符上浮。
  * 数：音符与火星数量绑定 `data.notes`（特攻派生），命中强弱绑定 `data.intensity`（总威力派生），
  *   当前段数绑定 `data.pulse`。
@@ -35,31 +37,31 @@ const TorchsongDefinition: ParticleDefinition = {
         },
         sing: {
             duration: 0,
-            exit: { stop: 2, drain: 10 },
+            exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "throat", bind: "source", offset: [0, 0, 0], height: 0.8, fit: "none", orient: "direction",
+                    name: "throat", bind: "source", offset: [0, 0, 0], height: 0.8, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
                     burst: { count: { data: "notes", fallback: 26 }, interval: 2, repeats: 3 },
-                    shape: { kind: "cone_volume", radius: 0.25, length: 7, angleDegrees: { data: "half", fallback: 13 } },
+                    shape: { kind: "cone_volume", radius: 0.25, length: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 13 } },
                     direction: "shape", speed: [0.06, 0.22], spread: 8,
                     lifetime: [6, 11], size: [0.34, 0.1], sizeMode: "index",
                     color: 0xF0A030, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 200
                 },
                 {
-                    name: "core", bind: "source", offset: [0, 0, 0], height: 0.8, fit: "none", orient: "direction",
+                    name: "core", bind: "source", offset: [0, 0, 0], height: 0.8, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
                     rate: { data: "notes", fallback: 26 },
-                    shape: { kind: "cone_volume", radius: 0.25, length: 7, angleDegrees: { data: "half", fallback: 13 } },
+                    shape: { kind: "cone_volume", radius: 0.25, length: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 13 } },
                     direction: "shape", speed: [0.04, 0.16],
                     lifetime: [5, 10], size: [0.42, 0.16],
                     color: 0xFFD25A, alpha: [0.6, 0], light: "full", bloom: 0.35, maxParticles: 160
                 },
                 {
-                    name: "songers", bind: "source", offset: [0, 0, 0], height: 0.85, fit: "none", orient: "direction",
+                    name: "songers", bind: "source", offset: [0, 0, 0], height: 0.85, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/note",
                     rate: { data: "notes", fallback: 26 },
-                    shape: { kind: "cone_volume", radius: 0.25, length: 7, angleDegrees: { data: "half", fallback: 13 } },
+                    shape: { kind: "cone_volume", radius: 0.25, length: { data: "reach", fallback: 6 }, angleDegrees: { data: "half", fallback: 13 } },
                     direction: "shape", speed: [0.05, 0.18], spin: 20,
                     lifetime: [8, 14], size: [0.14, 0.03],
                     color: 0xFFF2C0, alpha: [0.7, 0], light: "full", maxParticles: 90

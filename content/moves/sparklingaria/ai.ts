@@ -4,9 +4,11 @@
  * 同一支歌有两个用途，注册在两条协议上：
  *   `world_combat:attack`——站在敌人堆里唱，一次轰到身边一圈；
  *   `world_combat:heal`  ——朝一个**中了灼伤**的同伴（不含自己）唱，把它的灼伤洗掉。
- * 什么局面下出手：攻击分支看 `ai.maxChase`（默认 9）内可见、敌对的敌人，身边敌人越多 priority 越高；
+ * 什么局面下出手：攻击分支看 `ai.maxChase`（默认 9）内可见、敌对的敌人，身边敌人越多 priority 越高，
+ *   同时把圈里同伴的灼伤洗净算作支援收益、把圈里敌人的灼伤被解除物攻惩罚算作代价。
  *   救助分支在 `ai.cureAllies`（默认开）时，对 `ai.maxChase` 内身上带灼伤身份的同伴出手，同伴越残 priority 越高。
- * 站位：共享接近逻辑把身位收进波及半径以内，再原地起唱。起手较长，注意别在人堆里硬站。
+ * 站位：同伴在范围外也可以先被选中，由 `approachTarget` 让共享接近逻辑把身体带进波及半径，再原地起唱。
+ *   起手较长，注意别在人堆里硬站。
  */
 namespace PokemonSkills {
     function sparklingariaBurned(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
@@ -21,22 +23,28 @@ namespace PokemonSkills {
     function sparklingariaValid(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || !target.visible) return false;
-        const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
-        if (target.friendly) return distance <= sparklingariaRadius(item);
-        return distance <= CompanionBehavior.ai<number>(item, "maxChase", 9);
+        // 走到 ai.maxChase 内就能由共享接近逻辑把身体带进波及半径；不必此刻就已经在圈里。
+        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+            <= CompanionBehavior.ai<number>(item, "maxChase", 9);
     }
 
-    /** 自身波及半径内还站着几个可见、敌对的敌人。 */
-    function sparklingariaCluster(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+    /** 自身波及半径内还站着几个可见、敌对的敌人，以及圈里被这支歌会一并洗到的灼伤同伴/敌人。 */
+    function sparklingariaWashCounts(context: WorldBehavior.Context, item: WorldBehavior.Capability): { enemies: number; burnedEnemies: number; burnedAllies: number } {
         const nearby: WorldMethods.Subject[] = context.facts.nearby || [], self = CompanionBehavior.source(context);
-        const reach = typeof item.data.range === "number" ? item.data.range : 4.5;
-        let count = 0;
+        const reach = sparklingariaRadius(item);
+        let enemies = 0, burnedEnemies = 0, burnedAllies = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= reach) count++;
+            if (other.health <= 0 || !other.visible) continue;
+            if (CompanionBehavior.distance(self.point, other.point) > reach) continue;
+            if (other.friendly) {
+                if (String(other.ref) !== String(self.ref) && sparklingariaBurned(context, other)) burnedAllies++;
+            } else {
+                enemies++;
+                if (sparklingariaBurned(context, other)) burnedEnemies++;
+            }
         }
-        return count;
+        return { enemies: enemies, burnedEnemies: burnedEnemies, burnedAllies: burnedAllies };
     }
 
     CompanionBehavior.registerUse("sparklingaria", {
@@ -61,6 +69,7 @@ namespace PokemonSkills {
             }
             return sparklingariaValid(context, capability, target);
         },
+        approachTarget: function (_context, _capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target) return 0;
             if (target.friendly) {
@@ -68,10 +77,13 @@ namespace PokemonSkills {
                 return CompanionBehavior.ratio(target) < 0.5 ? 100 : 72;
             }
             if (!sparklingariaValid(context, capability, target)) return 0;
-            const count = sparklingariaCluster(context, capability);
-            let base = 18 + Math.min(26, Math.max(0, count - 1) * 8);
-            // 敌方身上的灼伤会被这支歌一并洗掉，纯攻击收益要打折；多敌同圈时仍值得起唱。
-            if (sparklingariaBurned(context, target)) base -= 12;
+            const counts = sparklingariaWashCounts(context, capability);
+            // 打：身边敌人越多越值。
+            let base = 18 + Math.min(26, Math.max(0, counts.enemies - 1) * 8);
+            // 支援收益：这一圈顺手洗掉同伴的灼伤。
+            base += Math.min(30, counts.burnedAllies * 12);
+            // 代价：洗掉敌人的灼伤会一并解除它的物攻惩罚，圈里带烧的敌人越多越该换招或换个站位。
+            base -= Math.min(18, counts.burnedEnemies * 9);
             return Math.max(6, base);
         }
     });

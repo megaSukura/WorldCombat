@@ -7,8 +7,8 @@
  * 色相家族：淡蓝（0x7FB3E0／0xBFD6EE）为主体，近白蓝（0xEAF3FF）只做泪光高光。
  * 层次：眼角泪光（起手）→ 洒落泪滴＋高光（含泪）→ 前推泪扇（放声）→ 头顶余韵（持续）→ 灰蓝（被挡下）。
  * 起击收：windup（蓄泪）→ tears／sob（落到对方身上）→ linger（失落还在，慢慢离场）。
- * 数：泪滴数量读服务端 data.tears，伤得越重越密；放声的泪扇覆盖读 data.radius，
- *   线的朝向读 data.direction，画的正是机制里那片扇形。
+ * 数：泪滴数量读服务端 data.tears，伤得越重越密；放声的泪扇用真实 sector 画在半径 data.radius、张角 data.angle 上，
+ *   orient:"heading" 让扇面按 data.direction 的真实朝向转，画的正是机制里那片扇形（不是整圆也不是一条线）。
  */
 const TearfullookDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -52,18 +52,18 @@ const TearfullookDefinition: ParticleDefinition = {
             duration: 32,
             emitters: [
                 {
-                    name: "tearfullook_wave", bind: "point", height: 0.5,
+                    name: "tearfullook_wave", bind: "point", height: 0.5, fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     burst: { count: { data: "tears", fallback: 24 }, interval: 4, repeats: 3 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 3 } },
+                    shape: { kind: "sector", radius: { data: "radius", fallback: 3 }, angleDegrees: { data: "angle", fallback: 90 } },
                     direction: "outward", speed: [0.04, 0.12],
                     lifetime: [12, 20], size: [0.14, 0.02],
                     color: 0x7FB3E0, alpha: [0.7, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "tearfullook_gust", bind: "point", height: 0.5, orient: "direction",
+                    name: "tearfullook_gust", bind: "point", height: 0.5, fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    rate: 30, shape: { kind: "line", length: { data: "radius", fallback: 3 } },
+                    rate: 30, shape: { kind: "sector", radius: { data: "radius", fallback: 3 }, angleDegrees: { data: "angle", fallback: 90 } },
                     direction: "outward", speed: [0.05, 0.14],
                     lifetime: [10, 16], size: [0.12, 0.02],
                     color: 0xBFD6EE, alpha: [0.6, 0], light: "full", maxParticles: 70

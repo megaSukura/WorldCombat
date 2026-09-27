@@ -8,8 +8,9 @@
  *   被打断或转为新的出手时动作清理、broken 当刻停流——不会在驱散后继续播完同样的时长。
  * 范围：作用于自己，绑 source（fit body）——光晕半径绑定 data.glow，玩家看得出它是贴着这具身体在修，而不是一块地面区域；
  *   移动时光仍贴着身体跟随，不停。
- * 机制驱动：regenerate 的上升微光速率绑定 data.rate（每刻回复量派生）、明细亮度随 data.intensity（本次真实回量派生）、
- *   整体尺寸随 data.scale（光晕范围派生）、环脉冲半径随 data.glow、已交付进度随 data.fill —— 伤越重、回得越实，画面越密越亮。
+ * 机制驱动：regenerate 的上升微光速率绑定 data.rate（每刻回复量派生）、光点尺寸绑定 data.moteSize（光晕范围做有限缩放），
+ *   明细亮度随 data.intensity（本次真实回量派生）、整体范围随 data.scale、环脉冲半径随 data.glow、已交付进度随 data.fill——
+ *   伤越重、回得越实，画面越密越亮，但持续光点始终小而稳，不会涨成大光团。
  */
 const RecoverDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -57,7 +58,7 @@ const RecoverDefinition: ParticleDefinition = {
                     name: "motes", bind: "source", offset: [0, 0.15, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
                     rate: { data: "rate", fallback: 26 }, shape: { kind: "sphere", radius: 0.42 }, direction: "up", speed: [0.01, 0.035],
-                    lifetime: [14, 24], size: { data: "scale", fallback: 0.12 },
+                    lifetime: [14, 24], size: { data: "moteSize", fallback: 0.09 },
                     color: 0x9FE8B8, alpha: [0.75, 0], light: "full", bloom: 0.15, maxParticles: 70
                 },
                 {

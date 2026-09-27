@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.stomp.summary": "把全身重量往下砸的一脚：朝选定的近处地表落脚，正下方站在脚印里的目标吃最重的一击、有机会被踩懵，脚下震波还会波及落点周围站着的其他敌人（不重复主目标）——走出脚印就能避开主击，腾空的人躲得开震波。",
+  "worldcombat.skill.stomp.summary": "把全身重量往下砸的一脚：朝选定的近处地表落脚，正下方站在脚印里的目标吃最重的一击、有机会被踩懵，脚下震波还会波及落点周围、站在相连地面上的其他敌人（不重复主目标）——走出脚印就能避开主击，腾空的人躲得开震波，隔墙或另一层的人不会被震到。",
   "worldcombat.skill.stomp.description.0": "这一脚造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.stomp.description.1": "落点震波半径 %1$s 格，圈内其他站在地上的敌人各吃约 %2$s，至多再波及 3 名（不重复主目标）；越重震得越广。",
+  "worldcombat.skill.stomp.description.1": "落点震波半径 %1$s 格，圈内其他站在相连地面上的敌人各吃约 %2$s，至多再波及 3 名（不重复主目标）；越重震得越广。隔墙、断层或另一层的敌人不会被震到。",
   "worldcombat.skill.stomp.description.2": "起手会锁定踩点，目标移出脚印就避开主击；主目标命中后 %1$s 概率畏缩，只被震波扫到的旁人 %2$s 概率畏缩，畏缩 %3$s；畏缩会打断可被打断的动作，期间无法发动新招或进行普通攻击。目标在空中时这一脚踩不到它，但它下方的震波仍会扩散；施放者本身也要站在地面上。",
   "worldcombat.skill.stomp.heavy.on": "重踏式：抬得更高、砸得更重、塌陷与震波更广、更容易震懵，但起手更慢、冷却更久。",
   "worldcombat.skill.stomp.heavy.off": "快压式：出手快、范围小、单发略轻。",
@@ -15,8 +15,8 @@
   "worldcombat.skill.stomp.value.aftershock": "震波威力",
   "worldcombat.skill.stomp.value.shock": "震波半径",
   "worldcombat.skill.stomp.value.foot": "落脚判定",
-  "worldcombat.skill.stomp.value.crater": "塌陷半径",
-  "worldcombat.skill.stomp.value.craterTicks": "塌陷停留",
+  "worldcombat.skill.stomp.value.crater": "脚印半径",
+  "worldcombat.skill.stomp.value.craterTicks": "脚印停留",
   "worldcombat.skill.stomp.value.flinchChance": "主目标畏缩几率",
   "worldcombat.skill.stomp.value.staggerChance": "震波畏缩几率",
   "worldcombat.skill.stomp.value.flinchTicks": "畏缩持续",
@@ -34,5 +34,5 @@
   "world_combat.move.stomp.text.shock": "震到 %1$s 人",
   "world_combat.move.stomp.text.miss": "踩空",
   "effect.world_combat.stomp_flinch": "畏缩",
-  "worldcombat.skill.stomp.description.crater": "落点地表会被踩裂：半径 %1$s 格内的泥土、石头、沙地等暂时变成粗土、圆石或砂岩，%2$s 后恢复原样。"
+  "worldcombat.skill.stomp.description.crater": "落点会留下一圈半径 %1$s 格、被踩实的脚印压痕，%2$s 后淡去；它只是画面，不改变方块。"
 }

@@ -25,14 +25,18 @@ Smoke.scenario("futuresight", function (stage) {
         stage.expect(stage.casts("futuresight", caster) >= 1, "the xatu committed Future Sight");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/futuresight"), "the target carried the foreseen mark");
         stage.expect(stage.damageTo(foe) > 0, "the delayed psychic mote landed and dealt damage");
-        stage.note("the mote hovers for delay (50-240 ticks, delay x1.4 / quick x0.75) and follows the target before it drops; the damage is the sight power resolved against the target at landing", {
-            casts: stage.casts("futuresight", caster),
-            damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
-            damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
-            foeAlive: foe.alive(),
-            casterAlive: caster.alive(),
-            tick: stage.tick()
+        // 兑现后本 charge 的印记贡献随即收回：预约结束不留悬挂标记。
+        stage.after(6, function () {
+            stage.expect(!stage.hasMobEffect(foe, "world_combat:status/futuresight"), "landing released this charge's foreseen mark");
+            stage.note("the mote is pure presentation (a charge-owned scene, not an attackable body); it hovers for delay (50-240 ticks, delay x1.4 / quick x0.75) and follows the target, then lands from its real position for the sight power. The mark is one StatusContributions entry owned by this charge, so multiple appointments do not clear each other. Cause/effect and the countdown ring remain playtest items.", {
+                casts: stage.casts("futuresight", caster),
+                damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
+                damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
+                foeAlive: foe.alive(),
+                casterAlive: caster.alive(),
+                tick: stage.tick()
+            });
+            stage.done();
         });
-        stage.done();
     }, "the foreseen mote lands on the target within 60 s");
 });

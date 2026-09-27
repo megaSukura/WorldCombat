@@ -236,5 +236,6 @@
   "worldcombat.reason.waiting-cooldown": "指令已保留，等待招式冷却",
   "worldcombat.reason.waiting-action": "指令已保留，等待当前动作结束",
   "worldcombat.reason.already-carried": "目标已被携带",
-  "worldcombat.reason.already-swapped": "交换效果仍在持续"
+  "worldcombat.reason.already-swapped": "交换效果仍在持续",
+  "worldcombat.reason.no-benefit": "当前已达到这项强化的上限"
 }

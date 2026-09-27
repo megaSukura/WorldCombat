@@ -6,9 +6,10 @@
  *
  * 三幕（提交前只播预告）：
  *   起（gather）：沉身收臂，身周暗色气旋向里收拢、地面浮出半径圈，只播预告。
- *   扫（sweep → hit）：提交后从起始朝向横转 `lap` 刻；每刻重读身边当前的敌人，按「上一角到当前角」真正扫过的
- *       扇带判定——站在这一小段刃路里、还没被扫过的敌人各挨一次 `sweep`（真墙挡刃，后来跨进刃路的也算），
- *       按各自体重的 `jolt` 被甩开。画面只画此刻那道刃弧和很短一段过去轨迹，不从起始一格格长成满饼。
+ *   扫（sweep → hit）：提交后身体从起始朝向横转 `lap` 刻、扫击中心随身体同步；每刻重读身边当前的敌人，按
+ *       「上一角到当前角」真正扫过的扇带判定——站在这一小段刃路里、还没被扫过的敌人各挨一次 `sweep`（真墙挡刃，
+ *       后来跨进刃路的也算），按各自体重的 `jolt` 经 hitDisplace 被甩开（保留原生抗击退，被挡住时更短）。
+ *       画面按本刻真实角片铺出挥击前缘加很短一段过去轨迹，不从起始一格格长成满饼。
  *   收（settle）：转满一整圈后地面荡出一圈尘环淡去；没扫到人就只留扑空的尘。
  *
  * 与同族分开：臂锤/冰锤是原地过顶单体重砸、疾速转轮是贴地旋转冲进；狂舞挥打是唯一原地转整圈、
@@ -64,7 +65,7 @@ namespace PokemonSkills {
             const world = action.world();
             const self = world.observe(action.actor());
             if (self === null) { done(action); return; }
-            const centre = self.position();
+            let centre = self.position();
             const heading = aim(action);
             const base = Math.atan2(heading.x(), heading.z());
             const radius = Math.max(2.2, p("brutalswing", "reach", action));
@@ -75,7 +76,9 @@ namespace PokemonSkills {
             const full = Math.PI * 2;
             const selfRef = String(action.actor().ref());
             const struck: { [ref: string]: boolean } = Object.create(null);
-            const trail = Math.min(full / 12, full * 2 / lap);
+            // 视觉扇面至少覆盖本刻真正扫过的那一小片（full / lap），再带一段更短的过去残迹。
+            const slice = full / Math.max(1, lap);
+            const residue = Math.min(full / 18, slice * 0.5);
             let step = 0, hits = 0;
 
             function normal(angle: number): number { return ((angle % full) + full) % full; }
@@ -123,19 +126,25 @@ namespace PokemonSkills {
                             { moment: "hit", target: ref, scale: scale, intensity: intensity, count: Math.round(8 + power * 0.2) }, 18);
                         if (scope.valid(enemy) && jolt > 0) {
                             const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
-                            if (away.length() > 0.15) scope.displace(enemy, away.unit().scale(jolt));
+                            if (away.length() > 0.15) scope.hitDisplace(enemy, away.unit().scale(jolt));
                         }
                     });
             }
 
             /** 每刻按当前敌人重读这一段刃路；扫满 `lap` 刻后收招。 */
             function advance(current: CombatAction): void {
+                // 扫击中心随身体同步：施放中身体若被动挪动，刃路与命中都跟着走，不留在起手那一点。
+                centre = current.origin();
                 const angle = full * (step + 1) / lap;
                 const previous = full * step / lap;
                 swept(current, previous, angle);
+                const bearing = base + angle;
+                // 身体跟着刃路转，让「角色横转」与画面里的挥击前缘一致；转速按本圈耗时定。
+                const turn = Math.min(180, Math.max(15, Math.round(360 / lap + 5)));
+                current.face(centre.plus(WorldCombat.point(Math.sin(bearing), 0, Math.cos(bearing)).scale(1.5)), turn, 45);
                 scenes.show(current, "sweep", centre,
-                    { moment: "sweep", path: arcPath(Math.max(0, angle - trail), angle), progress: Math.min(1, (step + 1) / lap),
-                        direction: [Math.sin(base), 0, Math.cos(base)], radius: radius, scale: scale, intensity: intensity });
+                    { moment: "sweep", path: arcPath(Math.max(0, angle - slice - residue), angle), progress: Math.min(1, (step + 1) / lap),
+                        direction: [Math.sin(bearing), 0, Math.cos(bearing)], radius: radius, scale: scale, intensity: intensity });
                 step++;
                 if (step >= lap) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });

@@ -5,28 +5,26 @@
  *   ai.opening=受压时张雾（默认）只在对手正攻击自己或主人、或自己刚被打过时张；
  *   =随时时见威胁就先罩上，当常备防御。
  * 对谁出手：自己；雾会以自身为锚顺手把队友一起罩住，所以不需要选中队友。
- * 候选之间怎么排：身边有友方还没被雾罩住时排得更前（58）——张雾是为了护住这一片；
- *   若威胁本身带着可能降级的招式（读得到招式表的精灵），这一片队友更急（62）；只剩自己需要时 48。
+ * 候选之间怎么排：身边有友方还没被雾罩住时排得更前——张雾是为了护住这一片；
+ *   已有友方真的带着负等级（实际发生过的降级）时略高（58），否则保守的 54；只剩自己需要时 48。
  * 够不到怎么办：不需要够——威胁太远就先不理会，等它靠近。
- * 放完之后：雾替自己与队友吞掉能力下降，交回共享顺序继续战斗；雾还在时不再重复，离开雾圈的人随补给停止失去。
+ * 放完之后：雾替自己与队友吞掉外来的能力下降（自己招式自愿付的降级不在此列），交回共享顺序继续战斗；
+ *   雾还在时不再重复，离开雾圈的人随补给停止失去。
  * 配置 veil（浓雾／薄雾）改变半径、时长与节奏；ai.maxChase、ai.opening 决定追多远、什么时候张雾。
  */
 namespace PokemonSkills {
-    /** 只读事实：威胁招式表里的变化招式数量（可能是降级来源）；非宝可梦未知返回 -1。 */
-    CompanionBehavior.registerFact("world_combat:move_mist/threat", function (access, actor, _argument) {
-        if (String(actor.domain()) !== "cobblemon") return -1;
-        const pokemon = CobblemonCombat.pokemon(actor);
-        if (pokemon === null) return -1;
-        let count = 0;
-        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
-            const move = pokemon.move(slot);
-            if (move !== null && String(move.category()) === "status") count++;
+    /** 只读事实：半径内是否已经有友方真带着负等级——这是实际发生过的降级，不是从招式表猜出来的威胁。
+     *  变化招式数量也含回复/强化，不能当作降级来源；普通 MC 有害药水属于神秘守护要挡的异常，不是白雾。 */
+    function mistDowngraded(context: WorldBehavior.Context): boolean {
+        const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (!other.friendly || other.health <= 0) continue;
+            if (CompanionBehavior.distance(other.point, self.point) > 6) continue;
+            const stages = CompanionBehavior.stages(context, other);
+            for (const name in stages) if (stages[name] < 0) return true;
         }
-        return count;
-    });
-    function mistDebuffers(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): number {
-        const value = CompanionBehavior.fact<number>(context, "world_combat:move_mist/threat", threat);
-        return value === null || value === undefined ? -1 : Number(value);
+        return false;
     }
     function mistAllyExposed(context: WorldBehavior.Context): boolean {
         const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
@@ -57,8 +55,8 @@ namespace PokemonSkills {
         approachTarget: function (context) { return CompanionBehavior.source(context); },
         priority: function (context) {
             if (!mistAllyExposed(context)) return 48;
-            const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"];
-            return threat && mistDebuffers(context, threat) > 0 ? 62 : 58;
+            // 保守权重：护住这一片本身就有价值，已知有降级在身时略高；不把普通「受伤」当成降级威胁。
+            return mistDowngraded(context) ? 58 : 54;
         }
     });
 

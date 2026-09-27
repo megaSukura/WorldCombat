@@ -5,12 +5,13 @@
  *   防御抬起来；花瓣停一阵便凋落。
  *
  * 色相家族：粉（0xE89AC0）画花浪与护瓣，近白粉（0xF6E3EE）做高光，暖黄（0xF2D27A）只作为花心那一撮小面积强调。
- * 层次：起（身侧拢瓣）／绽（外推花浪＋护瓣）／持（护瓣在目标身上）／收（凋落）。
- * 起击收：gather（起）→ bloom（击）→ guard（落在谁身上）→ fade（收）。
+ * 层次：起（身侧拢瓣）／绽（外推花浪）／持（护瓣跟住受益者的防御窗口）／收（凋落）。
+ * 起击收：gather（起）→ bloom（击）→ guard（跟住每个受益者，随其 boostWindow 存续）→ fade（收）。
  * 范围：bloom 的花浪层绑 `data.scale`（实际花浪半径 / 3.0）铺出与判定同径的花环，玩家一眼知道站多远会被扫到。
- * 运动：花瓣沿径向由内向外翻卷、带缓降；护瓣贴着目标向外展开一圈；凋落时向下飘。
- * 数：花瓣量绑 `data.petals`（特攻与等级派生），护瓣强度绑 `data.guard`（防御等级派生），
+ * 运动：花瓣沿径向由内向外翻卷、带缓降；护瓣在受益者身上持续向外展开一圈；凋落时向下飘。
+ * 数：花瓣量绑 `data.petals`（特攻与等级派生），护瓣密度绑 `data.petals`、强度绑 `data.guard`（防御等级派生），
  *   范围与尺寸绑 `data.scale`（体型与特攻派生）——都由本招算出的机制值驱动。
+ * 生命周期：guard 由受益者本次 boostWindow 的 onEffect 拥有，窗口走完或被清除即停，不留残余护瓣。
  */
 const FlowerShieldDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -60,24 +61,23 @@ const FlowerShieldDefinition: ParticleDefinition = {
             ]
         },
         guard: {
-            duration: 28,
-            exit: { stop: 10, drain: 18 },
+            exit: { drain: 24 },
             emitters: [
                 {
-                    name: "guard_petals", bind: "target", height: 0.5,
+                    name: "guard_petals", bind: "target", fit: "body", height: 0.5,
                     particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
-                    burst: { count: { data: "motes", fallback: 12 }, interval: 5, repeats: 3 },
-                    shape: { kind: "ring", radius: 0.55 }, direction: "outward", speed: [0.04, 0.12], spin: 22,
-                    lifetime: [14, 24], size: [0.16, 0.05],
-                    color: 0xE89AC0, alpha: [0.8, 0], light: "full", maxParticles: 60
+                    rate: { data: "petals", fallback: 6 },
+                    shape: { kind: "ring", radius: 0.55 }, direction: "outward", speed: [0.02, 0.08], spin: 22,
+                    lifetime: [14, 26], size: [0.12, 0.04],
+                    color: 0xE89AC0, alpha: [0.55, 0], light: "world", maxParticles: 24
                 },
                 {
-                    name: "guard_glow", bind: "target", height: 0.55,
+                    name: "guard_glow", bind: "target", fit: "body", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
-                    rate: { data: "motes", fallback: 12 }, shape: { kind: "sphere", radius: 0.5 },
-                    direction: "up", speed: [0.01, 0.04],
-                    lifetime: [12, 22], size: [0.08, 0.02],
-                    color: 0xF6E3EE, alpha: [0.5, 0], light: "full", bloom: 0.2, maxParticles: 30
+                    rate: 3, shape: { kind: "sphere_surface", radius: 0.5 },
+                    direction: "up", speed: [0.005, 0.02],
+                    lifetime: [12, 22], size: [0.06, 0.015],
+                    color: 0xF6E3EE, alpha: [0.4, 0], light: "world", bloom: 0.15, maxParticles: 16
                 }
             ]
         },

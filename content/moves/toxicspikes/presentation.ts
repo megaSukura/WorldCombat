@@ -58,7 +58,7 @@ const ToxicSpikesDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "open_ring", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
+                    name: "open_ring", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 34 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "outward", speed: [0.05, 0.16],
@@ -66,7 +66,7 @@ const ToxicSpikesDefinition: ParticleDefinition = {
                     color: toxicspikesPoisonColor, alpha: [0.6, 0], light: "full", maxParticles: 70
                 },
                 {
-                    name: "caltrops", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "caltrops", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/caltrop",
                     burst: { count: { data: "fumes", fallback: 16 }, interval: 2, repeats: 2 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
@@ -75,7 +75,7 @@ const ToxicSpikesDefinition: ParticleDefinition = {
                     color: toxicspikesPoisonColor, alpha: [0.9, 0], light: "full", maxParticles: 120
                 },
                 {
-                    name: "miasma", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
+                    name: "miasma", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/goo/sludgesplash",
                     burst: { count: 34 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "outward", speed: [0.03, 0.1],
@@ -88,7 +88,7 @@ const ToxicSpikesDefinition: ParticleDefinition = {
             exit: { drain: 30 },
             emitters: [
                 {
-                    name: "ring", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    name: "ring", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: 10, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.004, 0.03],
@@ -96,7 +96,7 @@ const ToxicSpikesDefinition: ParticleDefinition = {
                     color: toxicspikesPoisonColor, alpha: [0.26, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "spikes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "spikes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/caltrop",
                     rate: { data: "fumes", fallback: 16 }, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.004, 0.03], spread: 16, spin: 16,
@@ -104,7 +104,7 @@ const ToxicSpikesDefinition: ParticleDefinition = {
                     color: toxicspikesPoisonColor, alpha: [0.35, 0], light: "full", maxParticles: 110
                 },
                 {
-                    name: "bubbles", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "bubbles", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/bubble/poisonbubble",
                     rate: 10, shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.01, 0.05],

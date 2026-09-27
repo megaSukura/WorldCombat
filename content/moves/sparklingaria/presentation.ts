@@ -6,9 +6,9 @@
  * 洗涤光泽、火星被泡包着熄灭，只有真的回复了血才再亮起恢复点，冰蓝的音符在身周缓缓上浮。
  * 色相家族：水青与近白（bigbubble / bubble / water_ripple / glowingsparkle_cyan）为主体，音符用低饱和的
  *   青白 note 贴图，不引入第二个色相。
- * 拍子：起（inhale 收泡）→ 爆（burst 整圈涨开、hit 逐人水花、wash 洗净/灭火、heal 真实回复）→ 余（note 音符上浮）。
- * 范围：burst 的水泡圈按 `data.scale`（波及半径 / 4.5）涨到机制半径，玩家一眼看出站在哪会被唱到。
- * 运动：水泡由中心向外整圈涨开；hit 的细沫向外炸开；wash 的泡向内包住目标；heal 的光泽向上抽；note 的音符缓慢上浮。
+ * 拍子：起（inhale 收泡）→ 爆（burst 整圈泡面瞬时亮起、hit 逐人水花、wash 洗净/灭火、heal 真实回复）→ 余（note 音符上浮）。
+ * 范围：burst 是一整层球面泡，按 `data.scale`（波及半径 / 4.5）撑到机制半径，玩家一眼看出站在哪会被唱到。
+ * 运动：泡面由中心向外瞬时亮起并向外散；hit 的细沫向外炸开；wash 的泡向内包住目标；heal 的光泽向上抽；note 的音符缓慢上浮。
  * 数：`data.bubbles`（气泡数量参数）决定整圈气泡的发射量，`data.count`（本击威力派生）决定每个受击者的细沫量，
  *   `data.intensity` 抬高亮度；heal 只在 `restored` 为真时由服务端发出，不谎报回血。
  */
@@ -38,13 +38,14 @@ const SparklingariaDefinition: ParticleDefinition = {
             ]
         },
         burst: {
-            duration: 30,
-            exit: { stop: 14, drain: 20 },
+            duration: 24,
+            exit: { stop: 10, drain: 18 },
             emitters: [
                 {
+                    // 瞬时膨胀的泡面：一整层球面在判定半径处同时亮起（data.scale = 实际半径 / 4.5）。
                     name: "bloom", bind: "point", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/bigbubble",
-                    rate: { data: "bubbles", fallback: 28 }, shape: { kind: "circle", radius: 4.5, thickness: 1 },
+                    burst: { count: { data: "bubbles", fallback: 28 }, at: 1 }, shape: { kind: "sphere_surface", radius: 4.5 },
                     direction: "outward", speed: [0.08, 0.3], spread: 10,
                     lifetime: [12, 22], size: [0.2, 0.05],
                     color: 0x9FDCEC, alpha: [0.85, 0], light: "world", maxParticles: 120
@@ -52,7 +53,7 @@ const SparklingariaDefinition: ParticleDefinition = {
                 {
                     name: "foam", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/bubble",
-                    rate: { data: "bubbles", fallback: 28 }, shape: { kind: "circle", radius: 4.2, thickness: 0.9 },
+                    burst: { count: { data: "bubbles", fallback: 28 }, at: 1 }, shape: { kind: "circle", radius: 4.2, thickness: 0.9 },
                     direction: "outward", speed: [0.06, 0.22], spread: 16,
                     lifetime: [10, 18], size: [0.12, 0.03],
                     color: 0xBFEFFA, alpha: [0.6, 0], light: "world", maxParticles: 160

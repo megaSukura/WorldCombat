@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.aquatail.summary": "Swing the tail into an arc of water that presses forward: the crest advances from point-blank out to its reach, everyone it catches takes contact damage, is shoved away from the caster and stays drenched (movement speed -10%). If the target is burned, the wave cures the burn and puts out its fire. The wave travels, so stepping out of the arc, backing past the crest, or a wall in between dodges it; aiming at the ground swings it with no target at all.",
+  "worldcombat.skill.aquatail.summary": "Swing the tail into an arc of water that presses forward: the direction and centre are fixed the moment it leaves, the crest advances from point-blank out to its reach, everyone it catches takes contact damage, is shoved away from the caster and stays drenched (movement speed -10%). A target that is on fire or carries a burn has its fire put out, and a burn is cured. The wave travels, so stepping out of the arc, backing past the crest, or a wall in between dodges it; aiming at the ground swings it with no target at all.",
   "worldcombat.skill.aquatail.use.0": "Sweep the people in front with an advancing water wall",
   "worldcombat.skill.aquatail.use.1": "Shove a foe that is right in your face away with its footing",
   "worldcombat.skill.aquatail.use.2": "Put out a target's fire and burn with one wave",
@@ -33,5 +33,5 @@
   "world_combat.move.aquatail.text.douse": "Fire meets water",
   "world_combat.move.aquatail.text.miss": "Aqua Tail found nothing",
   "effect.world_combat.aquatail_drenched": "Aqua Tail: Drenched",
-  "worldcombat.skill.aquatail.description.douse": "If the target is burned, this wave cures the burn and puts out the fire on it."
+  "worldcombat.skill.aquatail.description.douse": "On a hit, a target that is on fire has its fire put out, and if it also carries a burn that burn is cured."
 }

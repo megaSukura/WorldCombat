@@ -18,17 +18,20 @@ const AccelerockDefinition: ParticleDefinition = {
             exit: { stop: 2, drain: 10 },
             emitters: [
                 {
+                    // 岩壳只短促成形一次：瞬时 burst 轮廓，不再整段 windup 持续收拢。
                     name: "crust", bind: "source", offset: [0, 0.5, 0], height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/large_rock",
-                    rate: 10, shape: { kind: "sphere", radius: 0.55 },
-                    direction: "inward", speed: [0.04, 0.14],
+                    burst: { count: { data: "shards", fallback: 12 }, at: 0 },
+                    shape: { kind: "sphere_surface", radius: 0.5 },
+                    direction: "inward", speed: [0.06, 0.18],
                     lifetime: [6, 12], size: [0.26, 0.06], sizeMode: "index",
                     color: 0x9A8A6A, alpha: [0.85, 0], light: "world", maxParticles: 26
                 },
                 {
                     name: "grit", bind: "source", offset: [0, 0.2, 0], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 16, shape: { kind: "ring", radius: 0.5 },
+                    burst: { count: { data: "shards", fallback: 10 }, at: 0 },
+                    shape: { kind: "ring", radius: 0.5 },
                     direction: "inward", speed: [0.03, 0.1],
                     lifetime: [5, 9], size: [0.12, 0.02],
                     color: 0xD8CCB8, alpha: [0.6, 0], light: "world", maxParticles: 30
@@ -78,15 +81,6 @@ const AccelerockDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.1, 0.3], spread: 40, gravity: 0.045, drag: 0.98,
                     lifetime: [10, 18], size: [0.16, 0.05], sizeMode: "index",
                     color: 0x9A8A6A, alpha: [0.95, 0], light: "world", maxParticles: 80
-                },
-                {
-                    name: "dust", bind: "point", fit: "none", offset: [0, 0.25, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: { data: "puff", fallback: 10 }, at: 0 },
-                    shape: { kind: "ring", radius: { data: "scar", fallback: 1.0 } },
-                    direction: "outward", speed: [0.02, 0.1],
-                    lifetime: [10, 18], size: [0.3, 0.06], sizeMode: "sin",
-                    color: 0x6B5B45, alpha: [0.45, 0], light: "world", maxParticles: 60
                 }
             ]
         },
@@ -95,22 +89,14 @@ const AccelerockDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
+                    // 尘痕只是低强度余辉：贴在落点缓慢铺开又散去。
                     name: "dust", bind: "point", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    burst: { count: { data: "shards", fallback: 12 }, at: 0 },
+                    burst: { count: { data: "shards", fallback: 8 }, at: 0 },
                     shape: { kind: "ring", radius: { data: "scar", fallback: 1.0 } },
-                    direction: "outward", speed: [0.02, 0.1],
-                    lifetime: [10, 18], size: [0.2, 0.04], sizeMode: "sin",
-                    color: 0xD8CCB8, alpha: [0.6, 0], light: "world", maxParticles: 50
-                },
-                {
-                    name: "settle", bind: "point", fit: "none", offset: [0, 0.1, 0],
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    burst: { count: { data: "shards", fallback: 12 }, at: 2 },
-                    shape: { kind: "ring", radius: { data: "scar", fallback: 1.0 } },
-                    direction: "outward", speed: [0.02, 0.08],
-                    lifetime: [10, 18], size: [0.24, 0.05], sizeMode: "sin",
-                    color: 0x6B5B45, alpha: [0.4, 0], light: "world", maxParticles: 40
+                    direction: "outward", speed: [0.01, 0.06],
+                    lifetime: [12, 20], size: [0.18, 0.03], sizeMode: "sin",
+                    color: 0xD8CCB8, alpha: [0.35, 0], light: "world", maxParticles: 40
                 }
             ]
         },

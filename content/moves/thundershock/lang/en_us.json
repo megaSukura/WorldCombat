@@ -1,6 +1,6 @@
 {
   "worldcombat.skill.thundershock.summary": "A short, point-blank electric jab that lands instantly. Its range is tiny but it barely costs a beat; against a target already paralysed it hits harder and tops the paralysis up. Electric types are immune to paralysis.",
-  "worldcombat.skill.thundershock.description.0": "The jab strikes along a straight line at a target within %2$s blocks, dealing about %1$s special damage with a collision radius of %3$s blocks; the line must be clear. If another creature stands on the line, the first one takes the jab instead: an enemy is struck, an ally draws the current away.",
+  "worldcombat.skill.thundershock.description.0": "The jab strikes along a straight line at a target within %2$s blocks, dealing about %1$s special damage with a collision radius of %3$s blocks; the line must be clear. The current only travels to the end of the real range, so aiming at the ground or into the air stops there too. If another creature stands on the line, the first one takes the jab instead: an enemy is struck, an ally draws the current away; an immune target only shows a misfire, never a hit.",
   "worldcombat.skill.thundershock.description.1": "On a hit there is a %1$s chance to paralyse the target for %2$s; if the target is already paralysed, the paralysis is topped up to at least %3$s (never shortened) and the jab hits about 1.38x harder.",
   "worldcombat.skill.thundershock.description.2": "Windup %1$s, cooldown %2$s.",
   "worldcombat.skill.thundershock.timing": "Needs line of sight: range %1$s, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
@@ -21,7 +21,7 @@
   "worldcombat.skill.thundershock.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.thundershock.preference.ai.maxChase.help": "Beyond this distance the companion closes in instead of jabbing; a larger value chases further, but its range is tiny so long chases rarely pay off.",
   "worldcombat.skill.thundershock.preference.ai.followUp": "Follow up on paralysed",
-  "worldcombat.skill.thundershock.preference.ai.followUp.help": "When on, a paralysed target gets much higher priority - this jab hits it harder and extends the paralysis; when off, it ranks as an ordinary melee attack.",
+  "worldcombat.skill.thundershock.preference.ai.followUp.help": "When on, a paralysed target ranks higher - this jab hits it harder and clearly prefers to renew a paralysis that is nearly over; while plenty of time remains it only ranks as an ordinary follow-up. When off, it ranks as an ordinary melee attack.",
   "worldcombat.skill.thundershock.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.thundershock.preference.ai.leaveStation.help": "When on, the companion may leave its post to jab; when off, it only casts at what it can reach from where it stands.",
   "worldcombat.skill.thundershock.term.paralyzed": "Target paralysed",
@@ -30,5 +30,6 @@
   "world_combat.move.thundershock.text.stim": "The paralysis was jolted longer",
   "world_combat.move.thundershock.text.blocked": "An ally drew the current",
   "world_combat.move.thundershock.text.whiff": "The jab found nothing",
+  "world_combat.move.thundershock.text.immune": "The jab was shrugged off",
   "worldcombat.skill.thundershock.description.paralysis": "While paralysed, the target moves at half speed and every attempt to act has a 25% chance to fail; Electric-type targets cannot be paralysed."
 }

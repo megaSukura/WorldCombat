@@ -18,7 +18,7 @@ Smoke.scenario("thrash", function (stage) {
             stage.expect(stage.casts("thrash", caster) > 0, "thrash was committed");
             stage.expect(stage.damageTo(foeA) > 0, "the flailing damaged a foe");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/confusion"), "the user ended the rampage confused");
-            stage.note("大闹一番左右交替扇扫并收在末记跺地，共 2~3 记：每记只罩住扫过去那一侧的敌人并朝外震开，未扫到的一侧暂时安全；挥间按移动意图／交替方向踉跄，末记要脚踩实地；闹完自己恍惚（共享身份 confusion）；狂乱式下每记还会磕伤自己", {
+            stage.note("大闹一番左右交替扇扫并收在末记跺地，共 2~3 记：每记只罩住扫过去那一侧的敌人并朝外震开，未扫到的一侧暂时安全；挥间按移动意图／交替方向踉跄，末记要脚踩实地；闹完自己恍惚（共享身份 confusion）；狂乱式下每记还会磕伤自己。遮挡只用纯方块 clear 判断，更近的实体不再替目标挡下这一记；离地的末记显示踏空、不掀地震也不结算伤害。", {
                 casts: stage.casts("thrash", caster),
                 onA: Math.round(stage.damageTo(foeA) * 10) / 10,
                 onB: Math.round(stage.damageTo(foeB) * 10) / 10,

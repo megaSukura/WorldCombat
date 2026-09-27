@@ -6,8 +6,9 @@
  * 色相家族：拳白偏暖（0xFFE08A 偏色）与命中近白（0xFFFFFF）做本体与强调，拳风碎屑（tinydust 原色）只做余韵。
  * 拍子：起 brace（收拳亮面）→ 击 flurry（一拳接一拳）→ 中 hit / 空 miss → 收 settle。
  * 范围：本招是身前一点（聚焦式）或一小片扇面（乱打式）的连拳，画面靠砸在对手身上的拳印与拳风标出会被打到的地方。
- * 运动：`fist` 沿服务端锁定并下发的固定拳道 `data.direction` 直线砸出（`orient: "direction"`），乱打式只在这条
- *   固定扇面内微微散开；命中 `hit` 落在真实接触点，方块拦住拳路。固定拳道不随旧目标转。
+ * 运动：每拳由独立客户端场景（`world_combat:move_cometpunch_fist`）按服务端给出的真实肩位与拳道终点，
+ *   左右手交替地把一枚拳沿固定拳道直送出去再收回；速度线只在这条固定扇面内微微散开。命中 `hit` 落在真实接触点，
+ *   方块拦住拳路。固定拳道不随旧目标转。
  * 数：`data.sparks`（物攻换算的拳风量）绑定命中星点与碎屑的发射量，`data.index` / `data.punches` 让画面读出
  *   演到第几拳、还剩几拳，`data.dense`（后拳收紧的间隔派生）让速度线逐拳变多，`data.intensity`（单拳威力派生）
  *   抬高亮度，`data.scale`（臂展换算）让大个子的拳更大。
@@ -41,15 +42,6 @@ const CometpunchDefinition: ParticleDefinition = {
             duration: 10,
             exit: { drain: 7 },
             emitters: [
-                {
-                    name: "fist", bind: "source", offset: [0, 0.5, -0.2], height: 0.45, fit: "body",
-                    orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/fist",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "sphere", radius: 0.16 }, direction: "shape", speed: [0.55, 1.35], spread: 5,
-                    lifetime: [4, 8], size: [0.34, 0.08], sizeMode: "index",
-                    color: 0xFFFFFF, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 40
-                },
                 {
                     name: "after", bind: "source", offset: [0, 0.5, -0.2], height: 0.45, fit: "body",
                     orient: "direction",
@@ -127,3 +119,43 @@ const CometpunchDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_cometpunch", 1, CometpunchDefinition);
+
+/**
+ * 每拳一枚清楚拳形：服务端按当刻朝向给出真实肩位 `from`、拳道终点 `at`、出拳手 hand 与推进刻数，
+ * 客户端用 `serverTick` 让拳沿短路径前伸、再收回；左右拳交替所以肩位与色相在两侧轮换。
+ * 固定绘制（1 枚拳 + 至多 1 段尾线），复用原生图集，不生成粒子或额外实体。
+ */
+const CometpunchFistSprite = "cobblemon:particle/generic/fist";
+const CometpunchFistFrames = 5;
+
+function cometpunchFistNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene("world_combat:move_cometpunch_fist", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "thrust") return;
+    const from = Array.isArray(data.from) ? data.from : null;
+    const at = Array.isArray(data.at) ? data.at : null;
+    if (!from || !at || from.length !== 3 || at.length !== 3) return;
+    const start = cometpunchFistNumber(data.start, frame.serverTick());
+    const duration = Math.max(1, cometpunchFistNumber(data.dur, 4));
+    const elapsed = frame.serverTick() - start;
+    if (elapsed < 0 || elapsed > duration) return;
+    const phase = elapsed / duration;
+    // 前 45% 把拳直送出去，随后收回肩位。
+    const extension = phase < 0.45 ? phase / 0.45 : Math.max(0, 1 - (phase - 0.45) / 0.55);
+    const x = from[0] + (at[0] - from[0]) * extension;
+    const y = from[1] + (at[1] - from[1]) * extension;
+    const z = from[2] + (at[2] - from[2]) * extension;
+    const hand = data.hand === -1 ? -1 : 1;
+    const hue = hand > 0 ? 0xFFE08A : 0xFFD06A;
+    const scale = Math.max(0.5, Math.min(1.8, cometpunchFistNumber(data.scale, 1)));
+    const spriteFrame = Math.max(0, Math.min(CometpunchFistFrames - 1, Math.floor(extension * CometpunchFistFrames)));
+    frame.sprite(CometpunchFistSprite, x, y, z, 0.34 + 0.12 * scale, hand * extension * 10,
+        ((0xFF << 24) | hue) | 0, spriteFrame, true);
+    if (extension > 0.05)
+        frame.line(from[0], from[1], from[2], x, y, z, ((Math.round(70 * extension) << 24) | 0xFFFFFF) | 0);
+});

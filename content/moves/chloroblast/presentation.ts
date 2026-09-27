@@ -4,9 +4,11 @@
  * 一句话：施法者把全身的叶绿素收进核心，再从身前朝准线喷成一整片青绿的扇形爆流；罩住谁谁身上炸开一丛叶屑，
  * 放完之后施法者身上落下一层枯黄的碎叶——叶绿素被抽空的代价直接看得见。
  * 色相家族：新绿到青黄（razorleaf／leaf 原色、impact_grass 亮帧、energyorb 青绿），枯叶用低饱和黄绿与灰。
- * 拍子：起 gather（收绿）→ 放 release（扇形爆流）→ 中 hit（叶屑）／ 空 fizzle（尽头散叶）→ 枯 wither（落枯叶）。
- * 范围：release 用 `data.path` 画出服务端扇形的同一组顶点（顶点 + 弧）——扇形铺多大、张多开，画面就是那片绿。
- * 运动：叶绿素由内向外沿扇形铺开、边缘沿弧同时扩张；命中叶屑在目标处炸开；枯叶在施法者身上垂直下落。
+ * 拍子：起 gather（收绿）→ 放 release（一次由身前推出去的扇形爆流）→ 中 hit（叶屑）／ 空 fizzle（尽头散叶）→ 枯 wither（落枯叶）。
+ * 范围：release 用 `data.reach`／`data.angle`／`data.direction` 的 sector 与 arc 形状，与服务端 `WorldGeometry.sector`
+ *   判定读同一组数——扇形铺多大、张多开、朝哪边，画面就是那片绿。
+ * 运动：叶绿素从身前沿扇面向外推出去（`direction: "shape"`），前沿是一道贴在 `data.reach` 上的弧；命中叶屑在目标处炸开；
+ *   枯叶在施法者身上垂直下落。
  * 数：`data.motes`（特攻与体重派生）决定扇形密度与落叶量，`data.intensity`（威力 / 150）抬高亮度与密度，
  * `data.count`（按到中心距离的远近，以及枯叶按实际自损派生）让近处命中浓、远处命中淡，也让枯叶只随真实失血变密。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -45,32 +47,32 @@ const ChloroblastDefinition: ParticleDefinition = {
             ]
         },
         release: {
-            duration: 28,
-            exit: { stop: 10, drain: 18 },
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
             emitters: [
                 {
-                    name: "fan_fill", bind: "path", offset: [0, 0.5, 0],
+                    name: "fan_fill", bind: "point", fit: "world", orient: "heading", offset: [0, 0.5, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/razorleaf",
-                    shape: { kind: "polygon" },
-                    rate: { data: "motes", fallback: 40 }, direction: "shape", speed: [0.05, 0.24],
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 7 }, angleDegrees: { data: "angle", fallback: 80 } },
+                    rate: { data: "motes", fallback: 40 }, direction: "shape", speed: [0.08, 0.3], spread: 10,
                     lifetime: [5, 11], size: [0.16, 0.04], sizeMode: "index",
-                    color: 0x9CCB44, alpha: [0.6, 0], light: "world", maxParticles: 360
+                    color: 0x9CCB44, alpha: [0.6, 0], light: "world", maxParticles: 340
                 },
                 {
-                    name: "fan_glow", bind: "path", offset: [0, 0.45, 0],
+                    name: "fan_glow", bind: "point", fit: "world", orient: "heading", offset: [0, 0.45, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
-                    shape: { kind: "polygon" },
-                    rate: { data: "flow", fallback: 70 }, direction: "shape", speed: [0.03, 0.18],
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 7 }, angleDegrees: { data: "angle", fallback: 80 } },
+                    rate: { data: "flow", fallback: 70 }, direction: "shape", speed: [0.05, 0.22], spread: 12,
                     lifetime: [6, 12], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xCDE985, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 260
+                    color: 0xCDE985, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 240
                 },
                 {
-                    name: "fan_edge", bind: "path", offset: [0, 0.55, 0],
+                    name: "fan_edge", bind: "point", fit: "world", orient: "heading", offset: [0, 0.55, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/leaf",
-                    shape: { kind: "polyline", closed: true },
-                    rate: { data: "motes", fallback: 40 }, direction: "shape", spread: 12, speed: [0.06, 0.26],
+                    shape: { kind: "arc", radius: { data: "reach", fallback: 7 }, arcDegrees: { data: "angle", fallback: 80 }, thickness: 0.4 },
+                    rate: { data: "motes", fallback: 40 }, direction: "shape", spread: 12, speed: [0.1, 0.34],
                     lifetime: [5, 11], size: [0.2, 0.04], sizeMode: "index",
-                    color: 0xD7E86B, alpha: [0.8, 0], light: "world", maxParticles: 220
+                    color: 0xD7E86B, alpha: [0.8, 0], light: "world", maxParticles: 240
                 },
                 {
                     name: "muzzle", bind: "source", offset: [0, 0.65, 0], height: 0.3,

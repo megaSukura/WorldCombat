@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.camouflage.summary": "读脚下这块地，把身体暂时染成它的属性：水里是水、草丛是草、洞窟是岩；配置「随景而变」时覆色期间会不断重读脚下。",
+  "worldcombat.skill.camouflage.summary": "读脚下第一块真实材质，让它的色尘覆在身上并暂时换成对应属性：水里是水、草丛是草、洞窟是岩；配置「随景而变」时覆色期间会不断重读脚下。",
   "worldcombat.skill.camouflage.use.0": "按所在地形临时改成贴合属性的属性",
   "worldcombat.skill.camouflage.use.1": "翻掉当前受击面、换一套相性与状态免疫",
   "worldcombat.skill.camouflage.use.2": "开战前先按地形定属性",
@@ -21,6 +21,6 @@
   "effect.world_combat.camouflage": "保护色",
   "world_combat.move.camouflage.text.coat": "染上了 %1$s 属性",
   "world_combat.move.camouflage.text.shift": "随地形换成了 %1$s 属性",
-  "worldcombat.skill.camouflage.description.materials": "读的是脚下的流体与方块：水、冰、草叶、沙土、岩矿与末地石、火与岩浆（含下界岩）分别读成水／冰／草／地面／岩石／火；读不到具体材质时按维度兜底（下界为火、末地为岩），否则读成一般属性。",
+  "worldcombat.skill.camouflage.description.materials": "从脚下第一块非空气格读起：水与岩浆、冰雪、草叶、沙土、岩矿与末地石分别读成水／冰／草／地面／岩石／火。第一块材质不认识时就按维度兜底（下界为火、末地为岩），否则读成一般属性；木地板就停在木地板上，不会透过它读到下面的石头。",
   "worldcombat.skill.camouflage.description.nature": "染上的是一种单一属性，会替换掉原本的全部属性（双属性也被压成这一种）；覆色到期、被清除或施放者离场时立刻还原。已经正好就是该单一属性时无法发动。"
 }

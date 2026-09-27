@@ -1,15 +1,15 @@
 /**
  * 龙之俯冲 / dragonrush 的客户端表现。
  *
- * 一句话：身周先铺开一圈紫黑杀气、地面被压出纹路，随后一条龙影拖着黑焰腾起再砸下，落点炸开一圈冲击与土屑，
- * 被镇住的人头顶再冒一串眩晕星。
+ * 一句话：身周先铺开一圈紫黑杀气、地面被压出纹路，随后一条龙影拖着黑焰腾起再砸下，真实落点处炸开一圈冲击与土屑，
+ * 被镇住的人头顶再冒一串眩晕星，把对手动作打断时再闪一下红。
  * 色相家族：龙紫与暗紫（impact_dragon 0x7C6BE8／wisp 0x4A3A78／obscuringsmoke），暗红凶气（anger_red）做点缀，
  *   近白高光（0xFFF3FF）只给命中那一下。
- * 拍子：起（menace 张杀气）→ 扑（leap 腾起下坠）→ 击（crash/impact 砸地崩土）／空（miss 扬尘）→ 懵（stagger）。
- * 范围：menace 的圈半径绑 `data.menace`（威压半径），同时用 `data.point`/`data.lockRadius` 在锁点上铺一圈预告，
- *   报出这一扑将落在哪；crash 的贴地环半径绑 `data.scale`（落点半径 / 2.0），砸的就是这一扑的真实落点范围。
+ * 拍子：起（menace 张杀气）→ 锁（lock 真实落点预告）→ 扑（leap 腾起下坠）→ 击（crash/impact 砸地崩土）／空（miss）→ 懵（stagger）→ 断（interrupt）。
+ * 范围：menace 的圈半径绑 `data.menace`（威压半径）；lock 的水平预告圈半径绑 `data.lockRadius`（真实落点半径），
+ *   它与 crash 的贴地环都不随体型/scale 二次缩放（fit:"world"），画的就是这一扑真正会覆盖的圈。
  * 运动：menace 的凶气由内向外铺开、缓慢上浮；leap 的黑焰沿本体上抛再下坠；crash 的冲击贴地向外扩、土屑带重力外抛。
- * 数：`data.dust`（物攻派生）决定砸地的土屑量，`data.intensity`（威力派生）抬高命中亮度，`data.hop` 只用于腾空幕铺开。
+ * 数：`data.dust`（物攻派生）决定砸地的土屑量，`data.intensity`（威力派生）抬高命中亮度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const DragonrushDefinition: ParticleDefinition = {
@@ -22,7 +22,7 @@ const DragonrushDefinition: ParticleDefinition = {
                 {
                     name: "dread_ring", bind: "source", offset: [0, 0.08, 0], height: 0.0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: 22, shape: { kind: "ring", radius: { data: "menace", fallback: 3 }, rotation: [90, 0, 0] },
+                    rate: 22, shape: { kind: "ring", radius: { data: "menace", fallback: 3 } },
                     direction: "outward", speed: [0.03, 0.14], spread: 16,
                     gravity: -0.01, drag: 0.95,
                     lifetime: [10, 18], size: [0.18, 0.03],
@@ -36,13 +36,33 @@ const DragonrushDefinition: ParticleDefinition = {
                     color: 0xE0526E, alpha: [0.6, 0], light: "full", bloom: 0.25, maxParticles: 30
                 },
                 {
-                    // 锁点预告：menace 只负责报出这一扑将落在哪，落点真被挡住时由动作让它消退。
-                    name: "lock_mark", bind: "point", offset: [0, 0.06, 0], fit: "none",
+                    name: "lock_mark", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    rate: 8, shape: { kind: "ring", radius: { data: "lockRadius", fallback: 1.4 }, rotation: [90, 0, 0] },
+                    rate: 8, shape: { kind: "ring", radius: { data: "lockRadius", fallback: 1.4 } },
                     direction: "outward", speed: [0.02, 0.08],
                     lifetime: [10, 18], size: [0.4, 1.1],
                     color: 0x8A78F0, alpha: [0.4, 0], light: "world", maxParticles: 30
+                }
+            ]
+        },
+        lock: {
+            duration: 0,
+            exit: { stop: 4, drain: 16 },
+            emitters: [
+                {
+                    name: "lock_ring", bind: "point", offset: [0, 0.06, 0], fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/ring/groundquake",
+                    rate: 12, shape: { kind: "ring", radius: { data: "lockRadius", fallback: 1.4 } },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [10, 18], size: [0.4, 1.1],
+                    color: 0x8A78F0, alpha: [0.45, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "lock_dot", bind: "point", offset: [0, 0.1, 0], fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
+                    rate: 6, shape: { kind: "circle", radius: 0.22 }, direction: "up", speed: [0.01, 0.04],
+                    lifetime: [10, 18], size: [0.12, 0.02], sizeMode: "sin",
+                    color: 0xC9B8FF, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 16
                 }
             ]
         },
@@ -71,10 +91,10 @@ const DragonrushDefinition: ParticleDefinition = {
             exit: { stop: 14, drain: 20 },
             emitters: [
                 {
-                    name: "shock", bind: "point", offset: [0, 0.06, 0], fit: "none",
+                    name: "shock", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: 2, at: 0, interval: 3 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: { data: "outer", fallback: 1.4 } },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [10, 18], size: [0.5, 1.4],
                     color: 0x6B58C8, alpha: [0.5, 0], light: "world", maxParticles: 24
@@ -88,10 +108,10 @@ const DragonrushDefinition: ParticleDefinition = {
                     color: 0xFFFFFF, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 70
                 },
                 {
-                    name: "earth", bind: "point", offset: [0, 0.08, 0], fit: "none",
+                    name: "earth", bind: "point", offset: [0, 0.08, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: { data: "dust", fallback: 16 }, at: 0 },
-                    shape: { kind: "circle", radius: { data: "scale", fallback: 1 }, thickness: 0.5, rotation: [90, 0, 0] },
+                    shape: { kind: "circle", radius: { data: "outer", fallback: 1.4 }, thickness: 0.5 },
                     direction: "outward", speed: [0.06, 0.26], gravity: 0.05, drag: 0.94,
                     lifetime: [10, 20], size: [0.13, 0.03], sizeMode: "index",
                     color: 0x7A6A8C, alpha: [0.65, 0], light: "world", maxParticles: 120
@@ -132,6 +152,20 @@ const DragonrushDefinition: ParticleDefinition = {
                     shape: { kind: "sphere", radius: 0.24 }, direction: "outward", speed: [0.02, 0.1], spread: 20,
                     lifetime: [8, 14], size: [0.12, 0.02],
                     color: 0xC9B8FF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 30
+                }
+            ]
+        },
+        interrupt: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "snap", bind: "target", offset: [0, 0.4, 0], height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.08, 0.26], spread: 24,
+                    lifetime: [5, 10], size: [0.3, 0.05], sizeMode: "index",
+                    color: 0xFF6B6B, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 24
                 }
             ]
         },

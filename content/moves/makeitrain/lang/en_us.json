@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.makeitrain.summary": "Shake the whole vault overhead and hurl it up as real coin beams that arc out around the user and fall; only a beam that truly reaches an enemy settles special damage, each enemy is hit at most once per cast, and eaves or low ceilings block the rain. When the gold runs out the user's Sp. Atk falls and a few real coins are left at the beams' actual landing spots. The hoard form throws more and heavier but costs more and recharges slower.",
+  "worldcombat.skill.makeitrain.summary": "Shake the whole vault overhead and hurl it up as real coin beams that arc out around the user and fall; only a beam that truly touches an enemy (rising or falling) settles special damage, each enemy is hit at most once per cast, and eaves or low ceilings block the rain. When the gold runs out the user's Sp. Atk falls, but this cast already leaves the hand at its pre-drain strength; a few real coins are left where beams actually touched. The hoard form throws more and heavier but costs more and recharges slower.",
   "worldcombat.skill.makeitrain.use.0": "Unload a wide area when surrounded",
   "worldcombat.skill.makeitrain.use.1": "Toss a real rain on a packed group in the open",
   "worldcombat.skill.makeitrain.use.2": "Read roofs against the real arcs and stand under cover to dodge",
-  "worldcombat.skill.makeitrain.description.0": "Hurls coins out to %2$s blocks around the user in %3$s beams, one beam every %4$s; each beam follows its real arc, and each enemy is struck at most once per cast for about %1$s special damage.",
+  "worldcombat.skill.makeitrain.description.0": "Hurls coins out to %2$s blocks around the user in %3$s beams, one beam every %4$s; each beam follows its real dragging arc up and down, and touching an enemy while rising or falling settles it, with each enemy struck at most once per cast for about %1$s special damage.",
   "worldcombat.skill.makeitrain.description.1": "The whole rain spreads a fixed total budget of about %1$s pickable real coins at the beams' actual landing spots; more beams do not raise the total.",
   "worldcombat.skill.makeitrain.description.2": "After the cast the user's Sp. Atk falls by %1$s stage(s).",
   "worldcombat.skill.makeitrain.hoard.on": "Currently the hoard form: more power, range and beams, but 2 stages of self Sp. Atk loss, a longer wind-up and cooldown, and the same total drop.",
@@ -27,6 +27,8 @@
   "worldcombat.skill.makeitrain.preference.ai.minFoes.help": "How many enemies must stand nearby before the companion spends this cast; larger values save the vault for real crowds instead of emptying it for one or two targets. Set it to 1 to use it on a lone boss.",
   "worldcombat.skill.makeitrain.preference.ai.maxChase": "Approach distance",
   "worldcombat.skill.makeitrain.preference.ai.maxChase.help": "Beyond this distance the companion holds outside the coverage ring first; larger values make it walk in from further away.",
+  "worldcombat.skill.makeitrain.preference.ai.regain": "Hold back when spent",
+  "worldcombat.skill.makeitrain.preference.ai.regain.help": "On: once the user's Sp. Atk has been emptied (for example right after a previous Make It Rain) it strongly de-prioritises spending the vault again, avoiding repeated self-cost against the same group; off: it ignores its current Sp. Atk stage and orders only by how many foes are in the ring.",
   "world_combat.move.makeitrain.text.hit": "Coins hit %1$s target(s)",
   "world_combat.move.makeitrain.text.miss": "The gold rain falls short",
   "world_combat.move.makeitrain.text.cost": "Sp. Atk -%1$s"

@@ -22,6 +22,30 @@ namespace PokemonSkills {
     const crunchMissText = "world_combat.move.crunch.text.miss";
     const crunchReleaseText = "world_combat.move.crunch.text.release";
 
+    /** 缺口识别存续的托管载体：跟着真实破防身份一起到期或被清掉，不留失效锚或驱散后的残影。 */
+    const crunchGapWatch = "world_combat:move_crunch/gap_mark";
+
+    /**
+     * 朝真实接触点的一圈上下夹合牙弧：上弧由左到右、下弧折回，合成一条闭合轮廓。
+     * `opening` 是牙关在弧顶张开的一半高度，研磨时按实际身体间隙收紧。
+     */
+    function crunchJawPath(at: CombatPoint, direction: CombatPoint, span: number, opening: number): number[][] {
+        const frame = WorldGeometry.basis(direction, WorldCombat.point(0, 0, 1));
+        const points: number[][] = [];
+        const steps = 6;
+        for (let i = 0; i <= steps; i++) {
+            const t = -1 + 2 * i / steps, height = opening * (1 - t * t);
+            const upper = at.plus(frame.right.scale(t * span)).plus(frame.up.scale(height));
+            points.push([upper.x(), upper.y(), upper.z()]);
+        }
+        for (let i = steps; i >= 0; i--) {
+            const t = -1 + 2 * i / steps, height = opening * (1 - t * t);
+            const lower = at.plus(frame.right.scale(t * span)).minus(frame.up.scale(height));
+            points.push([lower.x(), lower.y(), lower.z()]);
+        }
+        return points;
+    }
+
     /** 两个原生碰撞箱之间最短的真实间隙；分离越远值越大，贴住为 0。 */
     function crunchGap(first: CombatObservation, second: CombatObservation): number {
         const aMin = first.boundsMin(), aMax = first.boundsMax(), bMin = second.boundsMin(), bMax = second.boundsMax();
@@ -127,12 +151,19 @@ namespace PokemonSkills {
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
                 sound(current, "minecraft:block.anvil.land");
                 if (scope.random() < chance) {
-                    if (NativeEffects.boost(scope, victim, "def", -stages) !== 0 && scope.valid(victim)) {
-                        MobEffects.apply(scope, victim, crunchMark, crack, 0);
-                        WorldFeedback.emit(scope, crunchScene, 1, here,
-                            { moment: "crack", target: victimRef, stages: stages, shards: Math.round(14 + stages * 12), scale: scale, intensity: intensity }, 28);
-                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.35, 0)), crunchCrushText, [stages], 30);
-                        sound(current, "cobblemon:impact.dark");
+                    // 直接降级与身份期限分开收据：boost 返回本次真正落下的级数。
+                    const delta = NativeEffects.boost(scope, victim, "def", -stages);
+                    if (delta !== 0 && scope.valid(victim)) {
+                        WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.35, 0)), crunchCrushText, [Math.abs(delta)], 30);
+                        // 缺口身份真的挂上才画成功标记，并让缺口画面与这份真实载体同存。
+                        const mark = MobEffects.apply(scope, victim, crunchMark, crack, 0);
+                        if (mark !== null && scope.valid(victim)) {
+                            if (scope.effects(victim, crunchGapWatch).length === 0)
+                                scope.effect(crunchGapWatch, victim, "{}", Math.max(1, Math.min(2400, crack)));
+                            WorldFeedback.emit(scope, crunchScene, 1, here,
+                                { moment: "crack", target: victimRef, stages: Math.abs(delta), shards: Math.round(14 + Math.abs(delta) * 12), scale: scale, intensity: intensity }, 28);
+                            sound(current, "cobblemon:impact.dark");
+                        }
                     }
                 }
                 finish(current);
@@ -148,9 +179,16 @@ namespace PokemonSkills {
                 if (!stillBiting(scope, selfBody, body)) { release(current, victimRef, at); return; }
                 const gap = crunchGap(selfBody, body);
                 const closeness = Math.max(0, Math.min(1, 1 - gap / (radius + 0.8)));
-                movementScenes.show(current, "grind", body.position(),
+                // 牙弧贴合点取两只身体中心的实时中点，研磨随实际间隙收紧。
+                const here = selfBody.position().plus(body.position()).scale(0.5);
+                const normal = selfBody.position().minus(body.position());
+                const dir = normal.length() < 0.01 ? current.direction() : normal.unit();
+                const opening = Math.max(0.02, Math.min(radius * 0.7, gap));
+                movementScenes.show(current, "grind", here,
                     { moment: "grind", target: victimRef, grind: grind, morsels: Math.max(8, Math.round(morsels * 0.6)),
-                        scale: scale, press: Math.round((0.14 + 0.2 * closeness) * 100) / 100 });
+                        scale: scale, press: Math.round((0.14 + 0.2 * closeness) * 100) / 100,
+                        direction: [dir.x(), dir.y(), dir.z()],
+                        path: crunchJawPath(here, dir, radius * 1.5, opening) });
                 if (elapsed >= grind) { grindOut(current, victimRef, at); return; }
                 current.after(2, function (next: CombatAction) { grindPoll(next, victimRef, at, elapsed + 2); });
             }
@@ -161,9 +199,15 @@ namespace PokemonSkills {
                 const victimRef = String(victim.ref());
                 const landed = impact(current, contact, "crunch", power,
                     { damage: damageSpec("crunch", "fang"), contact: true, bite: true });
-                WorldFeedback.emit(scope, crunchScene, 1, at,
-                    { moment: "bite", target: victimRef, morsels: morsels, scale: scale, intensity: intensity }, 26);
+                // 首击被原生拒绝时不画咬中：没有真实伤害就没有牙关压实的画面与浮字。
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
+                const body = scope.observe(victim);
+                const contactNormal = body === null ? current.direction() : at.minus(body.position());
+                const dir = contactNormal.length() < 0.01 ? current.direction() : contactNormal.unit();
+                WorldFeedback.emit(scope, crunchScene, 1, at,
+                    { moment: "bite", target: victimRef, morsels: morsels, scale: scale, intensity: intensity,
+                        direction: [dir.x(), dir.y(), dir.z()],
+                        path: crunchJawPath(at, dir, radius * 1.5, radius * 0.35) }, 26);
                 sound(current, "cobblemon:move.crunch.target");
                 WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), crunchLatchText, [], 22);
                 grindPoll(current, victimRef, at, 0);
@@ -188,5 +232,39 @@ namespace PokemonSkills {
 
             advance(action);
         }
+    });
+
+    /**
+     * 缺口画面存续期：和真实破防载体同步，身份自然到期或提前被驱散时立即停。
+     * 直接降级是 boost 的一次结算，这道身份另有自己的期限，两者各记各的。
+     */
+    function crunchGapTick(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        if (!world.valid(target)) { effect.end(); return; }
+        const carrier = world.mobEffect(target, crunchMark);
+        if (carrier === null) { effect.end(); return; }
+        const body = world.observe(target);
+        if (body === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "gap", crunchScene, 1, body.position(),
+            { moment: "gap", target: String(target.ref()) });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(crunchGapWatch, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid crunch gap mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(crunchGapWatch, "start", crunchGapTick);
+    WorldCombat.effectHandler(crunchGapWatch, "watch", crunchGapTick);
+    WorldCombat.effectHandler(crunchGapWatch, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 破防被牛奶／/effect clear 提前拿掉时，立即撤掉缺口画面，不等它自己的下一次巡检。
+    WorldCombat.on("world_combat:move_crunch/gap-release", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== crunchMark) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        world.effects(actor, crunchGapWatch).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
     });
 }

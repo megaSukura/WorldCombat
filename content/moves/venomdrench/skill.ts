@@ -7,10 +7,11 @@
  *
  * 两幕：
  *   起（windup，提交前）：身上浮起一层黏稠的毒光、滴落；可被打断，打断不消耗任何东西。
- *   泼（提交后）：以自身为心张开 spread 的一圈，凡圈内非友方都被泼到——
- *     · 带着共享身份 world_combat:status/poison（含剧毒）的：攻击、特攻、速度各 −drop，并挂上共享身份
- *       world_combat:status/drenched 的印记；
- *     · 没中毒的：只播“被淋湿”的一幕，不产生任何数值变化。
+ *   泼（提交后）：以自身为心张开 spread 的一圈，毒液从身上短泼向圈内每个非友方——
+ *     · 带着共享身份 world_combat:status/poison（含剧毒）的：攻击、特攻、速度各 −drop，按实际生效的
+ *       回执挂上共享身份 world_combat:status/drenched 的印记；
+ *     · 没中毒的：只播“被淋湿”的一幕，不产生任何数值变化；
+ *     · 中间隔着实体方块的：毒液泼在墙上，墙后的人不受影响。
  *
  * 与同族分开：酸液炸弹贴脸喷酸、掉的是特防且一定命中；毒液陷阱**只对已经中毒者生效**，一次削三项，是
  *   「先下毒、再收割」那一半的招。
@@ -20,6 +21,7 @@ namespace PokemonSkills {
     const venomdrenchDrench = "world_combat:venomdrench_drench";
     const venomdrenchDrenchedText = "world_combat.move.venomdrench.text.drenched";
     const venomdrenchWashedText = "world_combat.move.venomdrench.text.washed";
+    const venomdrenchNogainText = "world_combat.move.venomdrench.text.nogain";
     /** 表现里的参考半径：`data.scale = 实际泼洒半径 / 这个数`。 */
     const venomdrenchReference = 4.0;
 
@@ -62,39 +64,64 @@ namespace PokemonSkills {
             const world = action.world(), self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
+            const hand = origin.plus(WorldCombat.point(0, selfBody === null ? 0.9 : selfBody.height() * 0.55, 0));
             const drop = Math.max(1, Math.min(2, Math.round(p("venomdrench", "drop", action))));
             const spread = Math.max(2.0, Math.min(7.5, p("venomdrench", "spread", action)));
             const drops = Math.max(12, Math.round(p("venomdrench", "drops", action)));
             const spray = Math.max(0.05, p("venomdrench", "spray", action));
             const linger = Math.max(40, Math.round(p("venomdrench", "linger", action)));
             const scale = spread / venomdrenchReference;
-            let drenched = 0, washed = 0;
+            let drenched = 0, washed = 0, blocked = 0;
 
             sound(action, "cobblemon:move.sludgebomb.actor");
-            // 毒液不看视线：泼出去的一圈罩住就走。
+            // 毒液是液体：从身上短泼向圈内每个非友方，逐个按真实墙面与真实下降回执结算。
             WorldGeometry.select(world, WorldGeometry.ring(origin, 0, spread, { below: 2, above: 3 }), function (actor, facts) {
                 if (facts.friendly()) return;
-                const ref = String(actor.ref());
+                const ref = String(actor.ref()), at = facts.position();
+                const wall = WorldGeometry.blockHit(world, hand, at);
+                if (wall !== null) {
+                    // 实体方块挡住：毒液泼在墙上，墙后的人不受影响。
+                    const splashAt = wall.position();
+                    blocked++;
+                    WorldFeedback.emit(world, venomdrenchScene, 1, splashAt,
+                        { moment: "blocked", path: [[hand.x(), hand.y(), hand.z()], [splashAt.x(), splashAt.y(), splashAt.z()]],
+                            target: ref, scale: scale, drop: drop }, 22);
+                    return;
+                }
+                // 表示与判定共用同一条自身→目标连线：从身上短泼到这个合法目标。
+                WorldFeedback.emit(world, venomdrenchScene, 1, origin,
+                    { moment: "pour", path: [String(self.ref()), ref], target: ref, drops: Math.max(6, Math.round(drops / 3)),
+                        spread: spread, scale: scale }, 22);
                 if (CombatStatus.has(world, actor, "poison")) {
-                    NativeEffects.boost(world, actor, "atk", -drop);
-                    NativeEffects.boost(world, actor, "spa", -drop);
-                    NativeEffects.boost(world, actor, "spe", -drop);
+                    const atk = Math.max(0, -NativeEffects.boost(world, actor, "atk", -drop));
+                    const spa = Math.max(0, -NativeEffects.boost(world, actor, "spa", -drop));
+                    const spe = Math.max(0, -NativeEffects.boost(world, actor, "spe", -drop));
+                    const applied = atk + spa + spe;
+                    // 印记只说明「这个人刚被毒液黏过」；三围等级已写进公共阶梯，印记到期不会回退它们。
                     MobEffects.apply(world, actor, venomdrenchDrench, linger, drop);
                     drenched++;
-                    WorldFeedback.emit(world, venomdrenchScene, 1, facts.position(),
-                        { moment: "drenched", target: ref, drop: drop, drops: drops, spread: spread, scale: scale,
-                            intensity: Math.max(0.8, Math.min(2.2, drop + drops / 40)) }, 26);
-                    WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), venomdrenchDrenchedText, [drop], 28);
+                    if (applied > 0) {
+                        WorldFeedback.emit(world, venomdrenchScene, 1, at,
+                            { moment: "drenched", target: ref, drop: drop, atk: atk, spa: spa, spe: spe, applied: applied,
+                                drops: drops, spread: spread, scale: scale,
+                                intensity: Math.max(0.8, Math.min(2.2, drop + drops / 40)) }, 26);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), venomdrenchDrenchedText, [applied], 28);
+                    } else {
+                        // 已到封底或免疫削弱：这次没有削动，不假装削了。
+                        WorldFeedback.emit(world, venomdrenchScene, 1, at,
+                            { moment: "washed", target: ref, drops: Math.max(6, Math.round(drops / 3)), spread: spread, scale: scale }, 20);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), venomdrenchNogainText, [], 24);
+                    }
                 } else {
                     washed++;
-                    WorldFeedback.emit(world, venomdrenchScene, 1, facts.position(),
+                    WorldFeedback.emit(world, venomdrenchScene, 1, at,
                         { moment: "washed", target: ref, drops: Math.max(6, Math.round(drops / 3)), spread: spread, scale: scale }, 20);
-                    WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.2, 0)), venomdrenchWashedText, [], 24);
+                    WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), venomdrenchWashedText, [], 24);
                 }
             });
             WorldFeedback.emit(world, venomdrenchScene, 1, origin,
                 { moment: "splash", actor: String(self.ref()), drop: drop, drops: drops, spread: spread, spray: spray, scale: scale,
-                    drenched: drenched, washed: washed, intensity: Math.max(0.8, Math.min(2.2, drops / 30)) }, 30);
+                    drenched: drenched, washed: washed, blocked: blocked, intensity: Math.max(0.8, Math.min(2.2, drops / 30)) }, 30);
             if (drenched > 0) sound(action, "cobblemon:move.sludgebomb.target");
             else if (washed > 0) sound(action, "minecraft:entity.generic.splash");
             done(action);

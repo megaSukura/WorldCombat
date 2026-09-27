@@ -8,18 +8,29 @@
  *   起（coil，提交前）：鳃叶张开、水汽在嘴边聚成一层（present coil）。
  *   扑（lunge）：逐刻朝目标扑近，途中第一个近敌优先；也可选中一个空点直扑。
  *   咬（bite / clamp → reel / press）：咬上的一刻结算 rend，受击/拖动/减速统一取实际咬中的那个身体；
- *       目标尚未打过施法者时翻倍，画面换成更重的水花并浮出「先咬住！」；
- *       随后沿真实 drag 收拢两片鳃刃之间的水线，把猎物一节节拖近；若拖不动（免位移）只压出一记短咬。
+ *       目标最近没真正出手打过施法者时翻倍，画面换成更重的水花并浮出「先咬住！」；
+ *       随后沿真实 drag 收拢两片鳃刃之间的水线，把猎物一节节拖近；拖不动（免位移）只压出一记短咬。
+ *       拖动全程走原生受击位移（保留抗击退），被墙隔断或脱离咬合就断开收口。
  *
  * 选取：`kind: "aim"`——实体追近为核心，也可选一个空点直扑；target 为 null 时不假咬，只扑空收势。
  *
  * 与同族分开：电喙是点到即走的直线电啄；鳃咬是贴身咬合、拖拽压速，把猎物钉在原地。
  */
 namespace PokemonSkills {
+    const fishiousrendJawScene = "world_combat:move_fishiousrend_jaws";
     const fishiousrendClampText = "world_combat.move.fishiousrend.text.clamp";
     const fishiousrendHitText = "world_combat.move.fishiousrend.text.hit";
     const fishiousrendSlowText = "world_combat.move.fishiousrend.text.slow";
     const fishiousrendMissText = "world_combat.move.fishiousrend.text.miss";
+
+    /** 施法者真实的嘴前一点：按咬的方向从头部向前推，双颚贴这个点合到真实碰点。 */
+    function fishiousrendMouth(world: CombatWorld, actor: CombatActor, direction: CombatPoint): CombatPoint {
+        const body = world.observe(actor);
+        if (body === null) return WorldCombat.point(0, 0, 0);
+        const unit = direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
+        const head = body.position().plus(WorldCombat.point(0, Math.max(0.35, body.height() * 0.42), 0));
+        return head.plus(unit.scale(Math.max(0.3, body.width() * 0.5 + 0.14)));
+    }
 
     define({
         freeMovement: true,
@@ -59,6 +70,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const scenes = WorldFeedback.actionScenes(fishiousrendScene);
+            const jaws = WorldFeedback.actionScenes(fishiousrendJawScene);
             // 扑咬贴地走：方向取水平分量，避免身体贴着地面时被地面挡下。
             const aimed = aim(action);
             const flat = WorldCombat.point(aimed.x(), 0, aimed.z());
@@ -72,7 +84,12 @@ namespace PokemonSkills {
             const scale = radius / 0.5;
             let travelled = 0, settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
+            function finish(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
+                jaws.stop(current);
+                scenes.finish(current, done);
+            }
 
             function miss(current: CombatAction): void {
                 if (settled) return;
@@ -85,52 +102,61 @@ namespace PokemonSkills {
             }
 
             /** 沿真实 drag 收拢鳃口路径：一节节把实际咬中的猎物拖近，水线随之收短；拖不动只短咬压。 */
-            function reel(current: CombatAction, victim: CombatActor, remaining: number, total: number): void {
+            function reel(current: CombatAction, victim: CombatActor, remaining: number, total: number, engaged: number): void {
                 if (settled) return;
                 const scope = current.world();
                 if (remaining <= 0.001 || !scope.valid(victim)) { finish(current); return; }
                 const self = scope.observe(current.actor()), prey = scope.observe(victim);
                 if (self === null || prey === null) { finish(current); return; }
-                const toward = self.position().minus(prey.position());
+                const anchor = self.position(), at = prey.position(), toward = anchor.minus(at);
+                // 以咬合那一刻的真实间距为绳长：猎物被甩开、或咬合线被实墙隔断，就断开收口。
+                if (engaged <= 0) engaged = toward.length();
+                if (toward.length() > engaged + 0.75 || !scope.clear(anchor, at)) { finish(current); return; }
                 const chunk = Math.min(0.35, remaining);
-                let moved = 0;
-                if (toward.length() > 0.05) moved = scope.displace(victim, toward.unit().scale(chunk));
+                // 拖动走原生受击位移：抗击退、被墙/被拒都真实返回 0，绝不绕过原生规则。
+                const moved = toward.length() > 0.05 ? scope.hitDisplace(victim, toward.unit().scale(chunk)) : 0;
                 if (moved < 0.02) {
                     if (total - remaining <= 0.001) {
                         // 免位移：只压出一记短咬，不播水线收拢。
-                        WorldFeedback.emit(scope, fishiousrendScene, 1, prey.position(), { moment: "press", target: String(victim.ref()), scale: scale }, 22);
+                        WorldFeedback.emit(scope, fishiousrendScene, 1, at, { moment: "press", target: String(victim.ref()), scale: scale }, 22);
                     }
                     finish(current);
                     return;
                 }
-                scenes.show(current, "reel", prey.position(),
+                scenes.show(current, "reel", at,
                     { moment: "reel", target: String(victim.ref()), self: String(current.actor().ref()),
                         path: [String(victim.ref()), String(current.actor().ref())],
                         dragged: Math.round((total - remaining + moved) * 100) / 100, scale: scale });
-                current.after(1, function (later: CombatAction) { reel(later, victim, remaining - moved, total); });
+                current.after(1, function (later: CombatAction) { reel(later, victim, remaining - moved, total, engaged); });
             }
 
             function bite(current: CombatAction, victim: CombatActor, point: CombatPoint, contact: CombatImpact): void {
                 const scope = current.world();
                 if (!scope.valid(victim)) { miss(current); return; }
-                const power = p(fishiousrendId, "rend", current);
-                // 先咬住与威力都只按实际咬中的那个身体判断。
-                const doubled = fishiousrendLead(withTarget(factContext(current), victim)) > 0;
+                // 先咬住与威力都只按实际咬中的那个身体判断，不用旧瞄准目标替代首体。
+                const aimed = withTarget(factContext(current), victim);
+                const doubled = fishiousrendLead(aimed) > 0;
+                const power = p(fishiousrendId, "rend", aimed);
                 const count = Math.round(14 + power / 3);
                 const landed = impact(current, contact, fishiousrendId, power,
                     { damage: damageSpec(fishiousrendId, "rend"), contact: true, bite: true });
                 // 伤害被拒绝时不冒称咬住、不拖拽、不减速。
                 if (!landed) { finish(current); return; }
+                const self = scope.observe(current.actor());
+                const direction = self === null ? direction0 : point.minus(self.position());
+                jaws.show(current, "bite", point,
+                    { moment: "jaws", from: fishiousrendMouth(scope, current.actor(), direction),
+                        contact: [point.x(), point.y(), point.z()], scale: scale, start: scope.tick(), hold: 0 });
                 WorldFeedback.emit(scope, fishiousrendScene, 1, point,
                     { moment: doubled ? "clamp" : "bite", target: String(victim.ref()), doubled: doubled ? 1 : 0,
                         power: Math.round(power * 10) / 10, count: count, slow: slowStages, scale: scale }, 28);
                 scope.sound(doubled ? "cobblemon:move.crunch.target" : "cobblemon:impact.water", point, 16, "{}");
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.1, 0)),
                     doubled ? fishiousrendClampText : fishiousrendHitText, [], 24);
-                // 受击、拖动与减速统一指向同一个实际咬中的身体。
-                NativeEffects.boost(scope, victim, "spe", -slowStages);
-                if (slowStages > 0) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.45, 0)), fishiousrendSlowText, [], 22);
-                reel(current, victim, drag, drag);
+                // 受击、拖动与减速统一指向同一个实际咬中的身体；只有真的压低了速度才报压速。
+                if (NativeEffects.boost(scope, victim, "spe", -slowStages) < 0)
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.45, 0)), fishiousrendSlowText, [], 22);
+                reel(current, victim, drag, drag, 0);
             }
 
             sound(action, "minecraft:entity.frog.long_jump");

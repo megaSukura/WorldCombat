@@ -5,7 +5,7 @@
   "worldcombat.skill.hyperdrill.use.2": "Finish whoever stands in front with high contact damage",
   "worldcombat.skill.hyperdrill.description.0": "The bore deals about %1$s contact damage.",
   "worldcombat.skill.hyperdrill.description.1": "Drills %1$s blocks along the aimed direction at %2$s blocks/tick with a %3$s-block drill radius; it stops when it hits a wall or spends its whole charge.",
-  "worldcombat.skill.hyperdrill.description.2": "Tears up to %1$s guard layers off a target (Protect, Detect, Wide Guard and Harden all share this guard mechanism) and shoves it %2$s blocks; through mode pierces up to %3$s targets, focus mode stops at the first.",
+  "worldcombat.skill.hyperdrill.description.2": "Tears up to %1$s guard layers off a target (Protect, Detect, Wide Guard and Harden all share this guard mechanism) and shoves it %2$s blocks; through mode contacts up to %3$s targets along the line (guard first, then the hit at each real contact point, stopping at one that will not budge), while focus mode hits only the first.",
   "worldcombat.skill.hyperdrill.through.on": "Through mode: the drill pierces up to %1$s targets, reach x1.15 and speed x1.1, at the cost of x0.9 power per hit, +2 ticks wind-up and +8 ticks cooldown, for drilling a whole line.",
   "worldcombat.skill.hyperdrill.through.off": "Focus mode: stops at the first target with x1.2 power, a faster wind-up and a shorter cooldown, for boring through one hard target.",
   "worldcombat.skill.hyperdrill.timing": "Castable within %1$s blocks; after a %2$s wind-up it spends %4$s PP, recovers for %3$s, and goes on cooldown for %5$s.",

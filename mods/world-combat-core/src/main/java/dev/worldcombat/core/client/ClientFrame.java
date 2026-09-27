@@ -39,10 +39,15 @@ public final class ClientFrame {
     }
     public String anchor(String actor) {
         check(); var entity = entity(actor); if (entity == null || scene == null) return "null";
-        var point = entity.getPosition(scene.getPartialTick().getGameTimeDeltaPartialTick(false));
+        var partial = scene.getPartialTick().getGameTimeDeltaPartialTick(false);
+        var point = entity.getPosition(partial);
         var data = new com.google.gson.JsonObject();
         data.addProperty("x", point.x); data.addProperty("y", point.y); data.addProperty("z", point.z);
         data.addProperty("height", entity.getBbHeight()); data.addProperty("health", entity.getHealth()); data.addProperty("maxHealth", entity.getMaxHealth());
+        data.addProperty("width", entity.getBbWidth());
+        data.addProperty("yaw", net.minecraft.util.Mth.rotLerp(partial, entity.yRotO, entity.getYRot()));
+        data.addProperty("pitch", net.minecraft.util.Mth.lerp(partial, entity.xRotO, entity.getXRot()));
+        data.addProperty("bodyYaw", net.minecraft.util.Mth.rotLerp(partial, entity.yBodyRotO, entity.yBodyRot));
         data.addProperty("name", entity.getDisplayName().getString()); data.addProperty("distance", point.distanceTo(scene.getCamera().getPosition()));
         return data.toString();
     }
@@ -102,6 +107,35 @@ public final class ClientFrame {
     }
     public double distance(double x, double y, double z) {
         check(); return scene == null ? 0 : scene.getCamera().getPosition().distanceTo(new Vec3(x, y, z));
+    }
+    /** Fraction of this native client tick, for interpolation between authored scene poses. */
+    public double partialTick() { check(); return scene == null ? 0 : scene.getPartialTick().getGameTimeDeltaPartialTick(false); }
+    /** The existing synchronized combat clock, interpolated within this rendered tick. */
+    public double serverTick() { check(); return ClientPresentation.serverTick() + partialTick(); }
+    /** A loaded living body's actual renderer/model/skin at an independent feet point. Scaling is relative
+     * to the source's current native size; yaw is an extra world-Y rotation in degrees. */
+    public boolean entityEcho(String actor,double x,double y,double z,double sx,double sy,double sz,double yaw,int argb,boolean fullBright){
+        check();if(scene==null||!Double.isFinite(x+y+z+yaw)||!EntityEchoMath.scale(sx,sy,sz)||(argb>>>24)==0)return false;
+        var entity=entity(actor);var mc=Minecraft.getInstance();if(entity==null||mc.level==null)return false;
+        var camera=scene.getCamera().getPosition();if(camera.distanceToSqr(x,y,z)>128*128)return false;
+        var pose=EntityEchoMath.pose(scene.getPoseStack(),x-camera.x,y-camera.y,z-camera.z,sx,sy,sz,yaw);
+        int light=fullBright?net.minecraft.client.renderer.LightTexture.FULL_BRIGHT:
+            net.minecraft.client.renderer.LevelRenderer.getLightColor(mc.level,net.minecraft.core.BlockPos.containing(x,y,z));
+        return NativeEntityEcho.render(entity,(float)partialTick(),pose,argb,light);
+    }
+    /** Camera-facing sprite in the native atlas, depth tested with the world; no entity or particle is created. */
+    public void sprite(String texture, double x, double y, double z, double height, double roll, int argb, int frame, boolean fullBright) {
+        check(); if (scene == null || texture == null || !Double.isFinite(x+y+z+height+roll) || height <= 0) return;
+        var mc = Minecraft.getInstance(); if (mc.level == null) return;
+        var camera = scene.getCamera().getPosition();
+        if (camera.distanceToSqr(x,y,z) > 128*128) return;
+        int light = fullBright ? net.minecraft.client.renderer.LightTexture.FULL_BRIGHT
+            : net.minecraft.client.renderer.LevelRenderer.getLightColor(mc.level, net.minecraft.core.BlockPos.containing(x,y,z));
+        var pose=scene.getPoseStack(); pose.pushPose();
+        try {
+            pose.translate(x-camera.x,y-camera.y,z-camera.z);
+            WorldVisuals.spriteAt(texture,pose,mc.renderBuffers().bufferSource(),scene.getCamera().rotation(),height,roll,argb,frame,light);
+        } finally { pose.popPose(); }
     }
     public void line(double x, double y, double z, double tx, double ty, double tz, int color) {
         check(); if (scene == null) return;

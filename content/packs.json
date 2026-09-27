@@ -25,7 +25,9 @@
         "content/mechanisms/status-vocabulary.ts",
         "content/mechanisms/combat-status.ts",
         "content/mechanisms/mob-effects.ts",
-        "content/mechanisms/combat-stages.ts"
+        "content/mechanisms/damage-budgets.ts",
+        "content/mechanisms/combat-stages.ts",
+        "content/mechanisms/combat-types.ts"
       ]
     },
     "world_combat:native": {
@@ -42,16 +44,22 @@
         "content/mechanisms/native-rule-values.ts",
         "content/mechanisms/native-semantics.ts",
         "content/mechanisms/pokemon-damage.ts",
+        "content/mechanisms/native-critical-choice.ts",
         "content/mechanisms/native-loadout.ts",
         "content/mechanisms/native-growth.ts",
         "content/mechanisms/native-capture.ts",
         "content/mechanisms/projectile.ts",
         "content/mechanisms/native-effects.ts",
+        "content/mechanisms/native-damage-budgets.ts",
           "content/mechanisms/move-executions.ts",
+          "content/mechanisms/execution-outcomes.ts",
           "content/mechanisms/combat-encounters.ts",
         "content/mechanisms/native-attack-projection.ts",
+        "content/mechanisms/attack-starts.ts",
         "content/mechanisms/native-minecraft-status.ts",
         "content/mechanisms/native-modifiers.ts",
+        "content/mechanisms/native-types.ts",
+        "content/mechanisms/native-attack-types.ts",
         "content/mechanisms/native-mobility.ts",
         "content/mechanisms/native-vitality.ts",
         "content/traits/ability-recipes.ts"
@@ -72,6 +80,7 @@
         "content/mechanisms/boundaries.ts",
         "content/mechanisms/surface-paths.ts",
         "content/mechanisms/world-bodies.ts",
+        "content/mechanisms/deferred-sacrifice.ts",
         "content/mechanisms/world-actions.ts",
         "content/mechanisms/living-actions.ts",
         "content/mechanisms/body-scale.ts",

@@ -4,12 +4,13 @@
  * 一句话：站定沉腰，脚下收拢起一圈金白的光，光随伤势越亮；随后整副身板贴地直撞出去，撞实的一刻炸开暖金的
  * 重击与翻卷的尘环，把人沿冲势推远。
  * 色相家族：暖金与近白（FFF0C8 / E8C56A / FFFCF0）为主，伤势重时更白更亮；没有冷色。
- * 拍子：集器 ledger（账本就绪珠，全部齐了浮光环）→ 起 gather（就绪珠收拢汇入身体）→ 撞 charge（贴地直冲）→
+ * 拍子：集器 ledger（账本逐槽小符号 + 全部齐了浮光环）→ 起 gather（就绪珠收拢汇入身体）→ 撞 charge（贴地直冲）→
  *       击 slam（命中峰值）→ 收 miss / whiff（落空刹停）→ 散 spend（提交珍藏整体熄灭）→ 锁 locked（未解锁的暗珠）。
- * 范围：slam 绑命中点、画出的就是撞实的位置；ledger / gather / spend 绑施法者自身，就绪珠随账本点亮。
- * 运动：ledger 的就绪珠在体侧环列，gather 的光点从四周向内收进脚下，charge 沿冲撞方向拖出土线与金点，
- *       slam 的冲击向外炸并翻起尘环，spend 的珠光向内收尽。
- * 数：`data.ready`（真实账本已提交的招数）驱动点亮的就绪珠，`data.orbs`（已损失生命与威力派生）决定起手光点数，
+ * 范围：slam 绑命中点、画出的就是撞实的位置；ledger / gather / spend 绑施法者自身，就绪标记随账本点亮。
+ * 运动：ledger 的逐槽小符号由自定义场景在施法者头顶固定位置持续绘制（已用点亮、未用暗淡，直到消费），
+ *       gather 的光点从四周向内收进脚下，charge 沿冲撞方向拖出土线与金点，slam 的冲击向外炸并翻起尘环，
+ *       spend 的珠光向内收尽。
+ * 数：`data.marks`（真实账本逐槽已用/未用）驱动小符号，`data.orbs`（已损失生命与威力派生）决定起手光点数，
  *    `data.count`（威力派生）决定命中冲击与碎屑数，`data.wound`（已损失生命比例）抬高亮度与冲击规模，
  *    `data.halo`（全部齐时为 1 派生的持续量）撑起珍藏光环，`data.scale`（判定半径 / 0.5）放大判定轮廓。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -18,27 +19,10 @@ const LastresortDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         ledger: {
+            // The per-slot used/unused symbols are drawn by the custom scene below, so they persist instead of bursting away.
             duration: 0,
             exit: { stop: 4, drain: 10 },
             emitters: [
-                {
-                    name: "lit", bind: "source", offset: [0, 0.55, 0], height: 0.25,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsboost",
-                    burst: { count: { data: "ready", fallback: 3 } },
-                    shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
-                    direction: "up", speed: [0.01, 0.03],
-                    lifetime: [14, 22], size: [0.16, 0.06],
-                    color: 0xFFF0C8, alpha: [0.9, 0], light: "full", bloom: 0.5, maxParticles: 18
-                },
-                {
-                    name: "empty", bind: "source", offset: [0, 0.55, 0], height: 0.25,
-                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
-                    burst: { count: { data: "missing", fallback: 3 } },
-                    shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
-                    direction: "up", speed: [0.01, 0.03],
-                    lifetime: [14, 22], size: [0.1, 0.04],
-                    color: 0x9A8C5A, alpha: [0.5, 0], light: "world", maxParticles: 12
-                },
                 {
                     name: "halo", bind: "source", offset: [0, 0.1, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/giantring_white",
@@ -224,3 +208,33 @@ const LastresortDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_lastresort", 1, LastresortDefinition);
+
+/**
+ * 珍藏账本标记：服务端按真实招槽给出 marks（1=这一轮已提交，0=还没），回调在施法者头顶固定位置各画一个小符号，
+ * 已用点亮为暖白金、未用为暗金，随账本效果持续存在，直到提交珍藏（效果释放）才消失。
+ */
+WorldCombatClient.scene("world_combat:move_lastresort_marks", 1, function (frame) {
+    const entry: CombatSceneEntry<{ target?: string; marks?: number[]; unlocked?: boolean }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    const ref = data.target || entry.source;
+    const pose = ref ? JSON.parse(frame.anchor(ref)) : null;
+    if (!pose) return;
+    const marks = Array.isArray(data.marks) ? data.marks : [];
+    const total = marks.length;
+    if (total <= 0) return;
+    const time = frame.serverTick();
+    const width = Number(pose.width) || 0.6, height = Number(pose.height) || 1.4;
+    const yaw = (Number(pose.bodyYaw) || Number(pose.yaw) || 0) * Math.PI / 180;
+    const rightX = Math.cos(yaw), rightZ = Math.sin(yaw);
+    const span = Math.max(0.36, Math.min(0.5, width * 0.5));
+    const baseY = pose.y + height + 0.3;
+    for (let i = 0; i < total; i++) {
+        const offset = (i - (total - 1) / 2) * span;
+        const x = pose.x + rightX * offset, z = pose.z + rightZ * offset;
+        const y = baseY + Math.sin((time + i * 9) * 0.12) * 0.03;
+        const lit = Number(marks[i]) > 0;
+        frame.sprite(lit ? "cobblemon:particle/generic/orb/xsboost" : "cobblemon:particle/generic/orb/xsfadeorblite",
+            x, y, z, lit ? 0.26 : 0.17, 0, (lit ? 0xFFFFF0C8 : 0x889A8C5A) | 0, 0, lit);
+    }
+});

@@ -4,7 +4,7 @@
   "worldcombat.skill.needlearm.use.1": "对付贴着你绕行的目标，宽扇面不容易漏",
   "worldcombat.skill.needlearm.use.2": "多段挥臂只结算一次主伤，扫一片也不爆发",
   "worldcombat.skill.needlearm.description.0": "刺臂扫过一片扇形，扫到的敌人各受一次约 %1$s 点物理伤害；挥扫半径 %2$s 格。",
-  "worldcombat.skill.needlearm.description.1": "先扑上 %2$s 格（每刻 %3$s 格）再起抡，手臂从右到左抡过 %1$s 度的扇面、分三拍扫过；被地形挡住就停在原地起抡。",
+  "worldcombat.skill.needlearm.description.1": "先扑上 %2$s 格（每刻 %3$s 格）再起抡，手臂从右到左抡过 %1$s 度的扇面、分三拍扫过；被地形挡住就停在原地起抡，隔墙的敌人扫不到。",
   "worldcombat.skill.needlearm.description.2": "被扫中的目标各有 %1$s 概率畏缩 %2$s，期间无法发动新招或进行普通攻击；同一敌人在整套挥臂里只结算一次主伤。",
   "worldcombat.skill.needlearm.description.3": "当前横扫式为 %1$s。",
   "worldcombat.skill.needlearm.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

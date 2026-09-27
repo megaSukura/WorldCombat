@@ -4,12 +4,20 @@
  * 什么局面下出手：挂在共享的 attack／ranged 位上。带毒针的伙伴把它当**便宜的远程消耗**：目标可见、敌对、存活、
  *   在 `ai.maxChase`（默认 14）以内就点射；更远交给共享接近逻辑，因为射程也就 11～15 格。
  * 对谁出手：`ai.spreadVenom`（默认开）打开时，未中毒的目标排得更前——这一发就是用来把毒铺开的；
- *   关闭则所有目标一视同仁（对已毒目标它只是再补一点伤害）。
+ *   身上已经有待渗毒针（`world_combat:move_poisonsting/seep`）的目标降一档，避免只为赌概率反复扎同一个人；
+ *   已知毒免疫（毒／钢属性）只剩小伤害价值。关闭则所有目标一视同仁（对已毒目标它只是再补一点伤害）。
  * 够不到怎么办：射程交给 `reach`，共享任务负责把身位送进射程。
  * 放完之后：只有伤害与「渗毒」两拍，伙伴立刻交回共享顺序；冷却最短，下一次决策往往还能再点。
- * 优先级：基础 18（未毒且在射程内）／22（已毒目标只按普通远程排序时 +4，避免空转）／6（还要先走近）。
+ * 优先级：18（未毒且在射程内）／12（已中毒）／10（已带待渗毒针）／8（免毒者小伤害）／22（关闭铺毒时）／6（还要先走近）。
  */
 namespace PokemonSkills {
+    /** 已知毒免疫（毒／钢属性，见 NativeMinecraftStatus.inherent）：这一针注不进毒，只按小伤害价值考虑。 */
+    function poisonstingPoisonImmune(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const facts = CompanionBehavior.pokemonFacts(context, target);
+        if (!facts || !facts.types) return false;
+        return facts.types.indexOf("poison") >= 0 || facts.types.indexOf("steel") >= 0;
+    }
+
     CompanionBehavior.registerUse("poisonsting", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -30,7 +38,12 @@ namespace PokemonSkills {
             if (distance > capability.data.range) return 6;
             const poisoned = CompanionBehavior.status(context, target, "poison");
             if (!CompanionBehavior.ai<boolean>(capability, "spreadVenom", true)) return 22;
-            return poisoned ? 12 : 18;
+            if (poisoned) return 12;
+            // 身上已经有待渗的针：再扎同样的毒只是赌概率，降一档，别全程重复对同一个人扎针。
+            if (CompanionBehavior.effect(context, target, poisonstingSeepMark)) return 10;
+            // 免毒者（毒／钢）这一针只剩小伤害价值。
+            if (poisonstingPoisonImmune(context, target)) return 8;
+            return 18;
         }
     });
 

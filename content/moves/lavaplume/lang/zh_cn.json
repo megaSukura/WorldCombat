@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.lavaplume.summary": "从身体竖起一柱高热烟流：底窄、上端略散，自下而上扫过，被烧到的敌人一起挨伤、可能灼伤；烟柱升到设定高度，遇到顶棚就截断在下面。浓烟式让余热留在同一根柱子里反复烫人；爆燃式一发更重、没有余热。",
+  "worldcombat.skill.lavaplume.summary": "从身体竖起一柱高热烟流：底窄、上端略散，自下而上扫过，被烧到的敌人一起挨伤、可能灼伤；烟柱升到设定高度，遇到顶棚就截断在下面。浓烟式让余热留在同一根柱子里反复烫人；爆燃式一发更重、没有余热。整根柱子锁在初次喷发的位置，施法者走开后旧柱仍在原地收尾。",
   "worldcombat.skill.lavaplume.use.0": "烧到贴身与正上方的敌人",
   "worldcombat.skill.lavaplume.use.1": "让贴身的几个人灼伤",
   "worldcombat.skill.lavaplume.use.2": "用柱内余热逼人离开你的正上方与脚边",
@@ -7,7 +7,7 @@
   "worldcombat.skill.lavaplume.description.0": "烟柱自下而上扫过，柱内每个敌人最多结算一次、各挨约 %1$s 的伤害，整柱最多命中 %2$s 个敌人。对手特防、相性与暴击在命中时另算。",
   "worldcombat.skill.lavaplume.description.1": "烟柱从身体向上竖喷：上端散开到 %1$s 格，最高升到身体中心以上 %2$s 格，%3$s 秒内升到顶；中途遇到顶棚会在顶棚下截断。",
   "worldcombat.skill.lavaplume.description.2": "被烟柱烧到的目标有 %1$s 的几率陷入灼伤，持续约 40 秒：期间每 5 秒损失自身最大生命的 1/16，且造成的物理伤害减半；火属性免疫。",
-  "worldcombat.skill.lavaplume.description.3": "浓烟式留在同一根柱内的余热持续 %2$s 秒，每 %3$s 秒再烫柱内每人约 %1$s 的伤害。",
+  "worldcombat.skill.lavaplume.description.3": "浓烟式让同一根柱子留下余热，持续 %2$s 秒：期间每个还站在柱内的人每 %3$s 秒各挨一次约 %1$s 的余热伤害，同一跳内每人只算一次。",
   "worldcombat.skill.lavaplume.fume.on": "开启浓烟式：烟柱威力约 ×0.88、半径约 ×0.85、起手 +2 刻，但同一根柱内留下余热反复烫人，冷却 +10 刻。",
   "worldcombat.skill.lavaplume.fume.off": "关闭浓烟式（爆燃式）：烟柱威力约 ×1.1、半径最广、没有余热，冷却 −2 刻，用来一发打疼贴身与低空的敌人。",
   "worldcombat.skill.lavaplume.timing": "可对身周 %1$s 格施放，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",
@@ -26,7 +26,7 @@
   "worldcombat.skill.lavaplume.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.lavaplume.preference.ai.maxChase.help": "超过这个距离就不主动靠近，先在烟柱射程外待命。越大越愿意先朝目标接近再喷。",
   "worldcombat.skill.lavaplume.preference.ai.lofted": "对空优先",
-  "worldcombat.skill.lavaplume.preference.ai.lofted.help": "开启后，目标处在自己上方（或正往上压）时优先喷烟，高大的 Boss 近身也略优先；关闭则只按普通攻击排序。",
+  "worldcombat.skill.lavaplume.preference.ai.lofted.help": "开启后，目标真的落在本个体当前柱体里（算过水平半径、顶棚截断后的实际高度与真实通路）时优先喷烟，高大的 Boss 近身也略优先；关闭则只按普通攻击排序。",
   "world_combat.move.lavaplume.text.hit": "烧到 %1$s 个",
   "world_combat.move.lavaplume.text.burn": "被点着了",
   "world_combat.move.lavaplume.text.miss": "烟柱散去"

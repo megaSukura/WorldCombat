@@ -1,5 +1,5 @@
-// 传动：辅助齿轮给正负电己方挂在身上的可见状态，承载共享身份 world_combat:status/geared。
-// 它是运转的时限；等级记录在本单元的托管效果 world_combat:gearup_mark 上，由 skill.ts 从移除事件里原样收回。
+// 传动：辅助齿轮给正负电/金属己方挂在身上的可见状态，承载共享身份 world_combat:status/geared。
+// 它也是这次攻击/特攻临时窗口的载体：skill.ts 把 boostWindow 绑在它上面，状态结束或清除时贡献随之收回。
 // 启动脚本不引用服务端共享库，标签用字符串字面量。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:gearup_drive")
     .beneficial()

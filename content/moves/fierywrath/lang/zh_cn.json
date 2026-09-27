@@ -5,7 +5,7 @@
   "worldcombat.skill.fierywrath.use.2": "守住一块地方",
   "worldcombat.skill.fierywrath.use.3": "对自己越危急打得越痛",
   "worldcombat.skill.fierywrath.description.0": "以自身为中心炸开半径 %2$s 格的恶属性怒焰，圈内敌人各吃约 %1$s 的伤害（离中心越近越重）；对手防御、相性与暴击在命中时另算。",
-  "worldcombat.skill.fierywrath.description.1": "最外圈的人至少吃满爆发的 %1$s；命中后把人沿气场方向推开约 %2$s 格。",
+  "worldcombat.skill.fierywrath.description.1": "最外圈的人至少吃满爆发的 %1$s；命中后把人沿气场方向推开约 %2$s 格，完整实墙会截住那一路（墙后不受气场）。",
   "worldcombat.skill.fierywrath.description.2": "被震实时的畏缩几率 %1$s：命中后施加持续 %2$s 秒的畏缩，并尝试打断目标正在进行的可中断动作；畏缩期间目标无法发动新招或进行普通攻击。",
   "worldcombat.skill.fierywrath.description.3": "余怒：爆发中心的怒焰持续 %2$s 秒，每 %3$s 秒对圈内每人再灼烧约 %1$s 的伤害，并把没走出去的人再次向外推。",
   "worldcombat.skill.fierywrath.linger.on": "开启余怒：爆发约少 20%%、推得更轻，但气场留场反复灼烧，起手多 2 刻、冷却 +10 刻。",

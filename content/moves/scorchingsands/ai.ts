@@ -15,27 +15,39 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 13);
     }
 
-    /** 目标脚下是否真的踩在天然沙面：闷烧式只在能烤出连通热区的地方才值得先手。 */
-    function scorchingNatural(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        const world = CompanionBehavior.world(context), base = CompanionBehavior.point(target.point);
-        const x = Math.floor(base.x()), z = Math.floor(base.z()), top = Math.floor(base.y()) + 1;
-        for (let dy = 0; dy >= -4; dy--) {
-            const block = world.block(WorldCombat.point(x, top + dy, z));
-            if (block === null) return false;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            return id === "minecraft:sand" || id === "minecraft:red_sand" || block.tagged("c:sand");
-        }
-        return false;
+    /** 本招在当前配置下的真实爆半径：闷烧收益与扎堆判断都按它算，普通型不再用固定小圈近似。 */
+    function scorchingRadius(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return Math.max(1.2, p("scorchingsands", "spread",
+            { world: world, actor: world.source(), detail: { values: capability.data.config || {} } }));
     }
 
-    function scorchingCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 目标点是否落在当前沙幕速度的可达弧内；越界只在排序上降权，仍允许共享接近逻辑先靠拢。 */
+    function scorchingReachable(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), origin = CompanionBehavior.point(CompanionBehavior.source(context).point);
+        const speed = Math.max(0.5, p("scorchingsands", "flingSpeed",
+            { world: world, actor: world.source(), detail: { values: capability.data.config || {} } }));
+        try {
+            return LivingActions.ballisticSolutions(origin, CompanionBehavior.point(target.point), speed, 0.05, 180).length > 0;
+        } catch (error) { return true; }
+    }
+
+    /** 落点附近真正能连成一片的天然沙格数：闷烧式按实际铺出的沙面积估收益，不再只看脚下单格。 */
+    function scorchingSandArea(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity, radius: number): number {
+        const world = CompanionBehavior.world(context);
+        let cap = 6;
+        try { cap = Math.max(6, Math.round(p("scorchingsands", "sandCells",
+            { world: world, actor: world.source(), detail: { values: capability.data.config || {} } }))); } catch (error) { }
+        try { return scorchingCells(world, CompanionBehavior.point(target.point), radius, cap).length; } catch (error) { return 0; }
+    }
+
+    function scorchingCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity, radius: number): number {
         const nearby = (context.facts.nearby as CompanionBehavior.Entity[]) || [];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.0) count++;
+            if (CompanionBehavior.distance(other.point, target.point) <= radius) count++;
         }
         return count;
     }
@@ -55,12 +67,20 @@ namespace PokemonSkills {
             if (!target || !scorchingWants(context, capability, target)) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
+            const radius = scorchingRadius(context, capability);
             let score = 16;
             if (!CompanionBehavior.status(context, target, "burn")) score += 6;
             if (target.wet) score += 6;
             if (CompanionBehavior.ai<boolean>(capability, "preferClusters", true))
-                score += Math.min(20, scorchingCluster(context, target) * 10);
-            if (capability.data.config && capability.data.config.hearth && scorchingNatural(context, target)) score += 12;
+                score += Math.min(20, scorchingCluster(context, target, radius) * 10);
+            const hearth = capability.data.config && capability.data.config.hearth === true;
+            if (hearth) {
+                // 闷烧收益按实际可达的连通沙格面积估，能铺出成片热沙才值得先手。
+                score += Math.min(20, Math.round(scorchingSandArea(context, capability, target, radius) * 0.8));
+            } else if (!scorchingReachable(context, capability, target)) {
+                // 普通型这一抛到不了目标点：降权，交给共享接近逻辑先靠拢。
+                score -= 8;
+            }
             return score;
         }
     });

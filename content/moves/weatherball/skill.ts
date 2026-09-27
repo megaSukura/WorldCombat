@@ -15,20 +15,31 @@ namespace PokemonSkills {
 
     function weatherballHit(current: CombatAction, hit: CombatImpact, element: WeatherballElement, power: number, bursts: number): void {
         var world = current.world(), target = hit.target(), point = hit.position();
+        var at = [point.x(), point.y(), point.z()];
         if (target === null) {
-            WorldFeedback.emit(world, weatherballScene, 1, point, { moment: "fizzle", tint: element.colour, scale: 1 }, 22);
+            WorldFeedback.emit(world, weatherballScene, 1, point, { moment: "fizzle", tint: element.colour, scale: 1, point: at }, 22);
             return;
         }
         var body = world.observe(target), before = body ? body.health() : 0, maximum = body ? Math.max(1, body.maxHealth()) : 1;
         var landed = impact(current, hit, "weatherball", power, weatherballFeatures());
         var after = world.valid(target) ? world.observe(target) : null, dealt = before - (after ? after.health() : 0);
         var intensity = Math.max(1, Math.min(3, 1 + dealt / maximum * 4));
-        world.sound(element.sound, point, 16, "{}");
-        WorldFeedback.emit(world, weatherballScene, 1, point, { moment: "impact", target: String(target.ref()), tint: element.colour,
-            intensity: intensity, scale: p("weatherball", "halo", current), bursts: Math.round(bursts * (0.7 + intensity * 0.2)) }, 34);
-        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.8, 0)),
-            "world_combat.move.weatherball.text.sky", [{ key: "cobblemon.type." + element.type, fallback: element.type }], 28);
-        if (!landed) return;
+        var halo = p("weatherball", "halo", current);
+        var payload: any = { target: String(target.ref()), point: at, tint: element.colour, intensity: intensity,
+            scale: halo, ring: halo / 2, bursts: Math.round(bursts * (0.7 + intensity * 0.2)) };
+        if (landed) {
+            // 命中的球是成功的；按快照属性爆开。
+            world.sound(element.sound, point, 16, "{}");
+            WorldFeedback.emit(world, weatherballScene, 1, point, { moment: "impact", target: payload.target, point: at, tint: payload.tint,
+                intensity: intensity, scale: halo, ring: halo / 2, bursts: payload.bursts }, 34);
+            WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.8, 0)),
+                "world_combat.move.weatherball.text.sky", [{ key: "cobblemon.type." + element.type, fallback: element.type }], 28);
+        } else {
+            // 被免疫：不冲突、不爆闪，只用一口哑掉的元素散开并说明无效。
+            WorldFeedback.emit(world, weatherballScene, 1, point, { moment: "immune", target: payload.target, point: at, tint: payload.tint, scale: halo }, 26);
+            WorldFeedback.text(world, point.plus(WorldCombat.point(0, 0.8, 0)),
+                "world_combat.move.weatherball.text.immune", [{ key: "cobblemon.type." + element.type, fallback: element.type }], 26);
+        }
     }
 
     function weatherballStrike(action: CombatAction, config: any, done: (current: CombatAction) => void): void {
@@ -37,6 +48,8 @@ namespace PokemonSkills {
         var sky = weatherballSkyAt(world, origin), element = weatherballElementOf(sky);
         var power = p("weatherball", "orb", action), speed = p("weatherball", "velocity", action),
             radius = p("weatherball", "radius", action), bursts = p("weatherball", "bursts", action);
+        // 发射一次就把天色、属性、威力与颜色锁进动作快照，贯穿的所有接触读同一份。
+        action.data(weatherballSnapshotKey, JSON.stringify({ sky: sky, type: element.type, colour: element.colour }));
         sound(action, "minecraft:entity.illusioner.cast_spell");
         WorldFeedback.emit(world, weatherballScene, 1, origin, { moment: "gather", tint: element.colour, scale: 1,
             charged: sky === "clear" ? 0 : 1 }, 30);

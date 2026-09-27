@@ -33,5 +33,6 @@
   "worldcombat.skill.barrage.preference.ai.cover.help": "Applies to flat throws only: targets with no cover between the user and them rank higher because a flat throw is blocked by walls; a target hiding behind a wall ranks lower without pretending a ricochet can land. Lob throws ignore this and arc over cover.",
   "world_combat.move.barrage.text.tally": "%1$s of %2$s balls landed",
   "world_combat.move.barrage.text.out": "The target left, so the throws stop (%1$s balls landed)",
+  "world_combat.move.barrage.text.noarc": "No clear arc over cover",
   "worldcombat.skill.barrage.description.out": "A ball that hits no enemy only lands (a flat throw bounces once first) and deals no damage; every ball follows the current aim, so a target leaving does not cancel the rest - a bare-direction throw is legal too."
 }

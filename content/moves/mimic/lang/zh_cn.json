@@ -25,5 +25,5 @@
   "world_combat.move.mimic.text.empty": "读不到可借的招",
   "world_combat.move.mimic.text.noprovider": "附近没有可借的示范者",
   "world_combat.move.mimic.text.snap": "念线被切断",
-  "worldcombat.skill.mimic.world": "普通生物在 %1$s 内成功用过的已知原生攻击，会转译为对应的现有招式，借用 %2$s：普通近战→撞击，蜇刺→毒针，冲撞→头锤，重锤→摔打，箭矢→乱击，三叉戟→角撞，火球→火花，音爆→音爆，间接魔法→幻象光线。未列出的攻击无法模仿。"
+  "worldcombat.skill.mimic.world": "普通生物在 %1$s 内成功用过的已知原生攻击，会转译为对应的现有招式，借用 %2$s：普通近战→撞击，蜇刺/箭矢→毒针，冲撞→头锤，重锤→摔打，三叉戟→飞弹针，火球→火花，音爆→音爆，间接魔法→幻象光线。未列出的攻击无法模仿。"
 }

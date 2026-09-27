@@ -2,9 +2,9 @@
  * 泡沫光线 / bubblebeam 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase`（默认 14）格之内；更远交给共享接近逻辑。
- * 为什么优先跑得快的目标：这招打不疼、但会黏住压速度，`ai.crippleRunners`（默认开）下，正在快速移动的
- *   目标多一档分——先黏住追兵或逃兵，把它从速度优势里拽下来。
- * 对谁出手：已经带着共享身份 foamed 的目标降一档（重复黏着价值低），把这一发留给还清爽的对手。
+ * 为什么优先跑得快的目标：这招打不疼、但会黏住压速度，`ai.crippleRunners`（默认开）下，正在快速移动且
+ *   真实泡速追得上的目标多一档分——先黏住追兵或逃兵，把它从速度优势里拽下来；追不上只给较小的先手分。
+ * 对谁出手：已经真正被压了速度等级的目标降一档（重复黏着价值低），纯身份 foamed 不再压低仍值得输出的目标。
  * 够不到怎么办：reach 就是本招射程，不够先走近；三颗泡按真实慢速飞行，AI 会在出膛时按目标当前移动前置，
  *   泡飞得慢，对付横移的路线更像提前占位而不是追击。
  * 放完之后：目标带着泡沫身份与掉速窗口，伙伴交回共享顺序决定继续追还是走位等冷却。
@@ -23,6 +23,20 @@ namespace PokemonSkills {
         return Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) > 0.08;
     }
 
+    /** 本个体、当前配置下的真实泡速：慢泡追不上比它更快的横移者，只值得较小的先手分。 */
+    function bubblebeamCanCatch(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        let speed = 0;
+        try {
+            speed = p("bubblebeam", "velocity", { world: world, actor: world.source(),
+                skill: skills["bubblebeam"], detail: { values: capability.data.config } });
+        } catch (error) { speed = 0; }
+        if (!(speed > 0)) return false;
+        const motion = CompanionBehavior.velocity(context, target);
+        const pace = motion === null ? 0 : Math.sqrt(motion[0] * motion[0] + motion[2] * motion[2]);
+        return pace <= speed;
+    }
+
     CompanionBehavior.registerUse("bubblebeam", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -39,8 +53,11 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             let score = 17;
             if (CompanionBehavior.distance(self.point, target.point) <= capability.data.range) score += 4;
-            if (CompanionBehavior.ai<boolean>(capability, "crippleRunners", true) && bubblebeamMoving(target)) score += 8;
-            if (CompanionBehavior.status(context, target, "foamed")) score -= 7;
+            // 优先黏横移者，但用真实泡速核对追不追得上；追不上只给较小的先手分。
+            if (CompanionBehavior.ai<boolean>(capability, "crippleRunners", true) && bubblebeamMoving(target))
+                score += bubblebeamCanCatch(context, capability, target) ? 8 : 3;
+            // 只按真正生效的速度等级降权：纯身份的泡沫不再压低一个仍然值得输出的目标。
+            if (CompanionBehavior.stage(context, target, "spe") < 0) score -= 7;
             return score;
         }
     });

@@ -2,7 +2,7 @@
   "worldcombat.skill.refresh.summary": "Stands still and breathes out to clear poison, bad poison, burn and paralysis from itself at once, leaving a brief clear window that repels fresh poison, burns and paralysis. It does not heal, and does not touch sleep or freeze.",
   "worldcombat.skill.refresh.use.0": "Clear a burn or poison before it drains you",
   "worldcombat.skill.refresh.use.1": "Break out of paralysis and act normally again",
-  "worldcombat.skill.refresh.use.2": "Pre-cleanse and use the clear window to block the next status",
+  "worldcombat.skill.refresh.use.2": "Block the next same-kind status with the clear window right after cleansing",
   "worldcombat.skill.refresh.description.0": "Cleansing grants a %1$s clear window during which fresh poison, burns and paralysis are repelled.",
   "worldcombat.skill.refresh.description.1": "You must stand still for %1$s to shed poison, bad poison, burn and paralysis in one breath; you cannot move while preparing.",
   "worldcombat.skill.refresh.stance.deep": "Deep breath: x1.3 wind-up and x1.25 cooldown for a x1.5 clear window (a longer protection).",

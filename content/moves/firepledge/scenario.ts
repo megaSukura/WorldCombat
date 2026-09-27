@@ -22,7 +22,7 @@ Smoke.scenario("firepledge", function (stage) {
             stage.expect(stage.casts("firepledge", caster) > 0, "firepledge was committed");
             stage.expect(stage.damageTo(foe) > 0, "the fire pillar dealt damage");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/burn"), "the pillar set the target burning (shared status identity)");
-            stage.note("火柱命中与点燃是必然；命中几个、暴击、誓约印半径与停留、共鸣由局面决定。单火印只是短寿共鸣标记、本身不持续灼烧，共鸣需要另一元素的誓约印（草／水）在落点附近，单招场景里无法合法制造，故不在此断言；柱脚焦痕只由粒子表达，不再替换地表方块", {
+            stage.note("火柱命中与点燃是必然；命中几个、暴击、誓约印半径与停留、共鸣由局面决定。火柱贴落点下方的真实地面升起、撞到上方方块就停在接触面；单火印只是短寿共鸣标记、本身不持续灼烧，共鸣需要另一元素（草／水）同阵营、尚未组合且通路无阻的誓约印在落点附近，并会当场消费那枚印，单招场景里无法合法制造，故不在此断言；柱脚焦痕只由粒子表达，不再替换地表方块", {
                 casts: stage.casts("firepledge", caster),
                 foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,
                 burned: stage.hadMobEffect(foe, "world_combat:status/burn")

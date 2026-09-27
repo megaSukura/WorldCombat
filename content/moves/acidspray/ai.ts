@@ -2,20 +2,28 @@
  * 酸液炸弹 / acidspray —— AI 用途。
  *
  * 出手局面：目标可见、敌对、存活，且落在 `ai.maxChase`（默认 8）格内——射程很短，出手前要先贴近。
- * 对谁出手：`ai.crowd`（默认开）打开时，优先数出射程内**特防还没被削过**的敌人：两个以上就最有价值，
- *   一个也值得先手，替队伍的后续特殊招把防线打开；关闭则只按普通攻击排序。
+ * 对谁出手：`ai.crowd`（默认开）打开时，按**瞄准方向前方本个体真实的楔角与射程**，数出楔形里**特防还没被削过**的敌人：
+ *   两个以上就最有价值，一个也值得先手，替队伍的后续特殊招把防线打开；关闭则只按普通攻击排序。
  * 够不到怎么办：交给共享接近逻辑走近到 `reach` 内再喷；`approachTarget` 让伙伴朝目标靠近。
  * 放完接什么：交回共享交战计划；它是一发即喷即散的贴脸削防，不负责留场。
  */
 namespace PokemonSkills {
-    function acidsprayUnlowered(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+    /** 以目标方向为中线，按本个体实际的楔角与射程数出楔内还没被削掉特防的敌人（含目标）。 */
+    function acidsprayUnlowered(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: WorldMethods.Subject): number {
         const self = CompanionBehavior.source(context).point, nearby = context.facts.nearby as CompanionBehavior.Entity[];
         const radius = typeof capability.data.range === "number" ? capability.data.range : 5;
+        const angle = p("acidspray", "sprayAngle", CompanionBehavior.world(context));
+        const cosHalf = Math.cos(Math.min(180, Math.max(5, angle)) * Math.PI / 360);
+        const dx = target.point[0] - self[0], dz = target.point[2] - self[2], length = Math.sqrt(dx * dx + dz * dz);
+        if (length < 1e-6) return 1;
+        const ux = dx / length, uz = dz / length;
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || other.ref === String(context.actor)) continue;
-            if (CompanionBehavior.distance(other.point, self) > radius) continue;
+            const ox = other.point[0] - self[0], oz = other.point[2] - self[2], distance = Math.sqrt(ox * ox + oz * oz);
+            if (distance > radius) continue;
+            if (distance > 1e-6 && (ox / distance) * ux + (oz / distance) * uz < cosHalf - 1e-12) continue;
             // 只数还没被削掉特防的：等级 0 或更高都算没削过，已经是负数的目标收益低。
             if (CompanionBehavior.stage(context, other, "spd") >= 0) count++;
         }
@@ -39,7 +47,7 @@ namespace PokemonSkills {
             if (!target) return 0;
             const base = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 20 : 0;
             if (!CompanionBehavior.ai<boolean>(capability, "crowd", true)) return base;
-            const unlowered = acidsprayUnlowered(context, capability);
+            const unlowered = acidsprayUnlowered(context, capability, target);
             return unlowered >= 2 ? base + 14 : unlowered === 1 ? base + 6 : base;
         }
     });
@@ -53,7 +61,7 @@ namespace PokemonSkills {
             help: "超过这个距离就不主动靠近，先在射程外待命；越大越愿意先朝目标接近再喷。"
         }),
         field(pathOf("ai.crowd"), "先削没掉防的", "boolean", {
-            help: "开启后，射程内特防还没被削过的敌人越多越优先喷雾，替队伍后续特殊招打开防线；关闭则只按普通攻击排序。"
+            help: "开启后，瞄准方向前方的楔形里特防还没被削过的敌人越多越优先喷雾，替队伍后续特殊招打开防线；关闭则只按普通攻击排序。"
         })
     ]);
 }

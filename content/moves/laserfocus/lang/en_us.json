@@ -3,7 +3,7 @@
   "worldcombat.skill.laserfocus.use.0": "Hone the edge before the foe commits to a big hit",
   "worldcombat.skill.laserfocus.use.1": "Turn a single key hit into a lethal one",
   "worldcombat.skill.laserfocus.use.2": "Force the foe to back off before the edge fades",
-  "worldcombat.skill.laserfocus.description.0": "Your next damaging attack (physical or special) is forced to land a critical hit; the edge stays for %1$s, is spent after one such hit, and fades on its own if you never strike. Against a critical-immune target, or a hit that already crits, the edge changes nothing and is not spent.",
+  "worldcombat.skill.laserfocus.description.0": "Your next physical or special attack that actually deals damage is critical. The edge lasts %1$s and is spent on that successful hit, including an already-natural critical. Critical immunity, a fully blocked hit, or a miss leaves it available.",
   "worldcombat.skill.laserfocus.description.2": "Windup %1$s, recovery %2$s. The edge is on yourself and needs no aim.",
   "worldcombat.skill.laserfocus.steady.on": "Steady focus: the edge window is x1.6 longer, but windup becomes %1$s and cooldown becomes %2$s.",
   "worldcombat.skill.laserfocus.steady.off": "Quick hone: a shorter window and a shorter cooldown, good for honing every swing often.",

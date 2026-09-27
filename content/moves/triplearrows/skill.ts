@@ -2,15 +2,17 @@
  * 三连箭 / triplearrows 的出手方式。
  *
  * 核心念头：**一记低扫腿踢开护架，紧接三箭同时离弦**——腿不是用来伤人的，是用来让对手的护架空出来；
- * 三支箭一起走，被这一脚真正踢开的那一下会被钉在要害上（暴击），箭势重时还会把人压得开不了手（畏缩）。
+ * 三支箭一起走，被这一脚**真正踢低防御**的那一下会被钉在要害上（暴击），箭势重时还会把人压得开不了手（畏缩）。
  *
  * 两拍：
  *   起（windup，提交前）：压低身子、箭尾聚光。
  *   一击（kick）：提交后朝方向点或选中目标的方向扫出一腿。腿只够到 `reach` 那点近身长度，**不随目标离得多远拉长**：
- *       近处踢中活物才结算一次小接触伤害，并按踢开几率压一级防御、挂共享身份 `world_combat:status/guardbroken`。
- *       只有被这一脚真正踢中的那个目标，本轮三箭才会钉在要害上；远处只收箭伤，不虚构腿伤。
- *   二击（volley）：隔 `drawTicks` 同时射出 3 支箭（外观是真的箭，每条箭迹各自跟随自己的投射物）。每支箭命中结算
- *       一段 `volley`；第一次命中时掷一次畏缩，中了就把目标压住（共享身份 `world_combat:status/flinch` + `world_combat:interrupt`）。
+ *       近处踢中活物才结算一次小接触伤害；只有当降防真的发生（`NativeEffects.boost` 返回非 0，免疫/已到底不算）时，
+ *       才挂共享身份 `world_combat:status/guardbroken`、报出「护架被踢开」。够不到就只扫空，不显示冲击、不虚构腿伤。
+ *   二击（volley）：隔 `drawTicks` 同时射出 3 支箭（外观是真的箭，每条箭迹各自跟随自己的投射物）。箭按完整 3D 准心
+ *       散角（含俯仰，高低地/矮目标都能瞄），每支箭命中结算一段 `volley`；第一次命中时掷一次畏缩，中了就把目标压住
+ *       （共享身份 `world_combat:status/flinch` + `world_combat:interrupt`）。暴击画面只由最终 `damage_applied`
+ *       回执里的真实暴击驱动——免暴目标即使被强制要害也不显示暴击星。
  *
  * 选取：kind 为 aim——方向点或实体都能放，远距离可以直接三箭；箭会被墙挡住，腿够不到就不会有腿伤。
  *
@@ -30,7 +32,7 @@ namespace PokemonSkills {
     define({
         id: "triplearrows",
         name: "Triple Arrows",
-        description: "先朝方向点或选中目标扫出一记近身低腿踢开护架，再同时射出 3 支箭：三箭可以打同一个目标，也可以扇形散开照顾几个。腿只够到近身一点，远距离不会凭空踢中，只送三箭；被这一脚真正踢开护架的目标会被钉在要害上，箭势重时把目标压得开不了手。",
+        description: "先朝方向点或选中目标扫出一记近身低腿踢开护架，再同时射出 3 支箭：三箭可以打同一个目标，也可以扇形散开照顾几个。腿只够到近身一点，远距离不会凭空踢中，只送三箭；只有被这一脚真正踢低防御的目标会被钉在要害上，箭势重时把目标压得开不了手。",
         uses: ["腿技踢开护架后三箭齐发", "扇形齐射同时照顾挤在一起的目标", "中距离单体高暴击连射"],
         kind: "aim",
         range: 3.4,
@@ -86,7 +88,7 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            // 一拍：只够到近身一点的低扫腿；踢中谁，谁的护架才可能开。
+            // 一拍：只够到近身一点的低扫腿；只有降防真的发生，谁的护架才算开。
             const me = world.observe(action.actor());
             const aimPoint = action.targetPosition();
             const delta = me !== null ? WorldCombat.point(aimPoint.x() - me.position().x(), 0, aimPoint.z() - me.position().z()) : WorldCombat.point(0, 0, 1);
@@ -99,26 +101,27 @@ namespace PokemonSkills {
                 const victim = kick.target(), point = kick.position();
                 const landed = impact(action, kick, "triplearrows", kickPower,
                     { damage: damageSpec("triplearrows", "kick"), contact: true }, "kick");
+                sound(action, "cobblemon:impact.fighting");
                 WorldFeedback.emit(world, triplearrowsScene, 1, point,
                     { moment: "kick", target: victim !== null ? String(victim.ref()) : "", reach: kickReach,
-                        point: [point.x(), point.y(), point.z()],
+                        point: [point.x(), point.y(), point.z()], contact: landed ? 1 : 0,
                         path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]], intensity: intensity }, 22);
-                if (landed && victim !== null && world.valid(victim)) {
-                    opened = world.random() < guardChance;
-                    if (opened) {
+                // 开架绑定真实降防结果：免疫降防或已到底时 boost 返回 0，不算踢开，也就不给必暴。
+                if (landed && victim !== null && world.valid(victim) && world.random() < guardChance) {
+                    const drop = NativeEffects.boost(world, victim, "def", -guardStages);
+                    if (drop !== 0) {
+                        opened = true;
                         openedRef = String(victim.ref());
-                        NativeEffects.boost(world, victim, "def", -guardStages);
                         MobEffects.apply(world, victim, triplearrowsGuard, guardTicks, 0);
                         WorldFeedback.emit(world, triplearrowsScene, 1, point,
-                            { moment: "guard", target: openedRef, stages: guardStages }, 22);
-                        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), triplearrowsGuardText, [guardStages], 26);
+                            { moment: "guard", target: openedRef, stages: Math.abs(drop) }, 22);
+                        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), triplearrowsGuardText, [Math.abs(drop)], 26);
                     }
-                    sound(action, "cobblemon:impact.fighting");
                 }
             } else {
-                // 腿够不到就只是在脚前短区扫过，不做成远处的腿伤。
+                // 腿够不到就只是在脚前短区扫过：没有接触、没有冲击，也不做成远处的腿伤。
                 WorldFeedback.emit(world, triplearrowsScene, 1, from,
-                    { moment: "kick", target: "", reach: kickReach, direction: [forward.x(), 0, forward.z()],
+                    { moment: "kick", target: "", reach: kickReach, direction: [forward.x(), 0, forward.z()], contact: 0,
                         point: [kickEnd.x(), kickEnd.y(), kickEnd.z()],
                         path: [[from.x(), from.y(), from.z()], [kickEnd.x(), kickEnd.y(), kickEnd.z()]], intensity: intensity }, 20);
             }
@@ -129,17 +132,19 @@ namespace PokemonSkills {
                 const targetActor = targetRef === "" ? null : scope.actor(targetRef);
                 const targetBody = targetActor !== null && scope.valid(targetActor) ? scope.observe(targetActor) : null;
                 const origin = body !== null ? body.position().plus(WorldCombat.point(0, 0.6, 0)) : current.origin().plus(WorldCombat.point(0, 0.6, 0));
-                let base = targetBody !== null && body !== null
-                    ? WorldCombat.point(targetBody.position().x() - body.position().x(), 0, targetBody.position().z() - body.position().z())
-                    : WorldCombat.point(current.direction().x(), 0, current.direction().z());
+                const aimCentre = targetBody !== null ? targetBody.position() : current.targetPosition();
+                let base = aimCentre.minus(origin);
+                if (base.length() < 1e-6) base = current.direction();
                 if (base.length() < 1e-6) base = WorldCombat.point(0, 0, 1);
                 base = base.unit();
+                // 完整 3D 准心：先拿到含俯仰的 forward，再在垂直于它的平面上散角，高低地/矮目标都能瞄。
+                const frame = WorldGeometry.basis(base, aim(current));
                 sound(current, "minecraft:entity.arrow.shoot");
                 let pending = arrows;
                 for (let index = 0; index < arrows; index++) {
                     const offset = (index - 1) * spread * Math.PI / 180;
                     const cos = Math.cos(offset), sin = Math.sin(offset);
-                    const direction = WorldCombat.point(base.x() * cos - base.z() * sin, 0, base.x() * sin + base.z() * cos);
+                    const direction = frame.forward.scale(cos).plus(frame.right.scale(sin)).unit();
                     const flight = current.projectile(origin, direction.scale(arrowSpeed), 0.02, arrowRadius, arrowRange, 80,
                         function (inner, hit) { landed(inner, hit); },
                         function (inner) { if (--pending <= 0) finish(inner); },
@@ -158,8 +163,7 @@ namespace PokemonSkills {
                 const result = impact(current, hit, "triplearrows", volleyPower, features, "volley");
                 const point = hit.position();
                 WorldFeedback.emit(scope, triplearrowsScene, 1, point,
-                    { moment: "hit", target: String(victim.ref()), arrows: arrows, spread: spread,
-                        crit: opened && String(victim.ref()) === openedRef ? 1 : 0, intensity: intensity }, 22);
+                    { moment: "hit", target: String(victim.ref()), arrows: arrows, spread: spread, intensity: intensity }, 22);
                 sound(current, "minecraft:entity.arrow.hit");
                 if (!result || !scope.valid(victim)) return;
                 // 一次施放只在第一支真正命中的箭上掷一次畏缩（与原生「一次判定」一致）。
@@ -176,4 +180,14 @@ namespace PokemonSkills {
         }
     });
 
+    // 暴击画面只认最终 damage_applied 回执里的真实暴击：免暴目标即使被强制要害也不会亮星。
+    WorldCombat.on("world_combat:move_triplearrows/volleycrit", "world_combat:damage_applied", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.move) !== "triplearrows" || data.segment !== "volley" || data.critical !== true || !(data.actual > 0)) return;
+        const target = event.target(), world = event.world();
+        if (target === null || typeof data.x !== "number" || typeof data.y !== "number" || typeof data.z !== "number") return;
+        const at = WorldCombat.point(data.x, data.y, data.z);
+        WorldFeedback.emit(world, triplearrowsScene, 1, at,
+            { moment: "crit", target: String(target.ref()), crit: 1 }, 22);
+    });
 }

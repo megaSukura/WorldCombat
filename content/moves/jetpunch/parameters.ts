@@ -35,6 +35,13 @@ namespace PokemonSkills {
     export const jetpunchDouseText = "world_combat.move.jetpunch.text.douse";
     export const jetpunchMissText = "world_combat.move.jetpunch.text.miss";
 
+    /** 目标此刻是否真的带着火：共享身份 burn 或原生实体着火任一成立（普通 MC 火焰不挂 burn 标记）。 */
+    export function jetpunchAflame(world: CombatWorld, actor: CombatActor): boolean {
+        if (CombatStatus.has(world, actor, "burn")) return true;
+        const native = world.nativeEntity(actor);
+        return native !== null && typeof native.isOnFire === "function" && !!native.isOnFire();
+    }
+
     actionParameters.define(jetpunchId, {
         /** 水柱威力：60 +（物攻 − 55）× 0.26 [−10,28] +（速度 − 55）× 0.18 [−5,18]；水锤 ×0.9；夹 34..112。 */
         torrent: formula(

@@ -14,7 +14,7 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "tackle",
         name: "Tackle",
-        description: "朝选定的方向迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开；可以只选方向朝空处撞。跑得越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
+        description: "朝选定的方向迈步助跑，用整个身体撞上去，再顺着冲势向对方身侧滑开；可以只选方向朝空处撞。速度越快、身体越重，这一下越沉；撞空就冲到助跑尽头。",
         uses: ["拉开距离时的一记短助跑冲撞", "朝任意方向撞开，把对手顶离掩体", "撞后向身侧滑开，调整站位"],
         kind: "aim",
         range: 3,
@@ -117,17 +117,18 @@ namespace PokemonSkills {
                 travelled += swept.moved;
                 if (hit.hitEntity()) {
                     const target = hit.target();
-                    const point = hit.position();
                     const landed = impact(current, hit, "tackle", power, { damage: damageSpec("tackle", "power"), contact: true });
-                    WorldFeedback.emit(scope, tackleScene, 1, point,
-                        { moment: "impact", direction: heading, scale: scale, intensity: intensity }, 10);
                     if (landed && target !== null && scope.valid(target)) {
+                        const point = hit.position();
+                        WorldFeedback.emit(scope, tackleScene, 1, point,
+                            { moment: "impact", direction: heading, scale: scale, intensity: intensity }, 10);
                         scope.hitDisplace(target, direction.scale(push));
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), tackleHitText, [], 22);
                         sound(current, "cobblemon:impact.normal");
                         startSlip(current, carry);
                         return;
                     }
+                    // A blocked or refused contact keeps the light settling instead of the bright impact burst.
                     startSlip(current, carry * 0.5);
                     return;
                 }

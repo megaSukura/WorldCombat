@@ -2,11 +2,11 @@
  * 跺脚 / stompingtantrum 的客户端表现。
  *
  * 一句话：施法者沉身一跺、脚下尘土一跳 → 地面朝目标裂开一条土石迸溅的缝 → 缝上的人被掀飞、土石炸开；
- *   带憋愤时裂缝更深、一拍更响，随后缝上的浮尘慢慢平复。
+ *   带憋愤时裂缝爆得更宽、一拍更响，随后缝上的浮尘很快散去。
  * 色相家族：干燥的土黄与赭石（0xC9A46A / 0x8A6B45）为主体，深缝用更暗的赭褐（0x5A4028）压深；不引入第二个色相。
- * 拍子：起 stomp（跺脚预告）→ 裂 fissure（裂缝沿 path 掠向目标，增强时多一层深缝）→ 击 burst（缝上土石炸开）→ 痕 rent（浮尘停留）。
- * 范围：fissure 与 rent 用与判定同一条 `data.path`（脚下→地面支撑尽头）画裂缝。
- * 运动：土石沿 path 从脚下掠向目标，到点向上迸起；缝痕贴地留下。
+ * 拍子：起 stomp（跺脚预告）→ 裂 fissure（缝沿 path 向前爆开，增强时多一层深缝）→ 击 burst（缝上土石炸开）→ 痕 rent（短暂浮尘）。
+ * 范围：fissure 与 rent 用与判定同一条 `data.path`（脚下→真实支撑尽头，断口即止）画缝。
+ * 运动：土石沿 path 铺开，到点向上迸起；缝痕贴地扬起随即散去，不长期留痕也不封路。
  * 数：fissure 的深缝层绑定 `data.deep`（憋愤增强时为 0），burst 的碎块量绑定 `data.flows`（物攻与等级换算），
  *   强度绑定命中威力；rent 的点数绑定 `data.cells`（物攻换算）。
  */
@@ -94,8 +94,8 @@ const StompingtantrumDefinition: ParticleDefinition = {
             ]
         },
         rent: {
-            duration: 28,
-            exit: { stop: 12, drain: 22 },
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
             emitters: [
                 {
                     name: "rent_seam", bind: "path", fit: "none", offset: [0, 0.03, 0],

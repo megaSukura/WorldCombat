@@ -19,8 +19,11 @@ namespace PokemonSkills {
             && CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(item, "maxChase", 14)) return false;
         if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return false;
         if (CompanionBehavior.ai<string>(item, "opening", "opening") !== "opening") return true;
+        // 默认只在该敌人最近真的出手攻击过（实际攻击记忆）时取笑；aggro（attacking）与刚挨打只是「它盯上了你／
+        // 伤到了你」的受威胁信息，不用来断言对手「正要出手」。
         const owner = context.facts.owner;
-        return target.attacking === self.ref || !!owner && target.attacking === owner.ref || self.hurtAgo < 40;
+        const threatened = target.attacking === self.ref || !!owner && target.attacking === owner.ref || self.hurtAgo < 40;
+        return tormentSwinging(context, target) || threatened;
     }
 
     CompanionBehavior.registerUse(tormentId, {

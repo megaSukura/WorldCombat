@@ -33,7 +33,7 @@ namespace NativeModifiers {
             Object.keys(values).forEach(function (key) {
                 var n = values[key], allowed = field === "stages" ? stages : stats;
                 if (allowed.indexOf(key) < 0 || typeof n !== "number" || !isFinite(n) || n !== Math.floor(n)
-                    || field === "stages" && Math.abs(n) > 6 || field === "stats" && (n < 1 || n > 10000)) throw new Error("Invalid native stat modifier");
+                    || field === "stats" && (n < 1 || n > 10000)) throw new Error("Invalid native stat modifier");
             });
         });
         // Any count of known, ordered-unique type identities, including the empty layer that means "no type".
@@ -53,6 +53,9 @@ namespace NativeModifiers {
         return JSON.stringify(value);
     }
     export function read(world: CombatWorld, actor: CombatActor): Layers {
+        return readLayers(world,actor);
+    }
+    function readLayers(world: CombatWorld, actor: CombatActor, cures: string[] = []): Layers {
         var result: Layers = { stages: {}, stats: {}, moves: {}, moveKeys: {}, forbidden: [], categories: [] };
         var nativeEntries = world.effects(actor, "cobblemon_world_combat:modifier"), entries: CombatEffectView[] = [];
         for (var i = 0; i < nativeEntries.length; i++) entries.push(nativeEntries[i]);
@@ -61,6 +64,10 @@ namespace NativeModifiers {
             var value: Options = JSON.parse(String(entry.data()));
             if (value.pending) return;
             if ((value.carrier || value.owner) && !CombatStages.windowAlive(world, actor, value)) return;
+            if(value.carrier&&cures.length){
+                var carrier=world.mobEffect(actor,value.carrier.id);
+                if(carrier&&CombatStatus.names(carrier).some(function(name){return cures.indexOf(name)>=0;}))return;
+            }
             Object.keys(value.stages || {}).forEach(function (stat) { result.stages![stat] = (result.stages![stat] || 0) + value.stages![stat]; });
             Object.keys(value.stats || {}).forEach(function (stat) { result.stats![stat] = value.stats![stat]; });
             Object.keys(value.moves || {}).forEach(function (slot) { result.moves![slot] = value.moves![slot]; result.moveKeys![slot] = String(entry.id()); });
@@ -78,9 +85,9 @@ namespace NativeModifiers {
     }
     export function restriction(world: CombatWorld, actor: CombatActor, move: CombatPokemonMove, action: CombatAction | null = null,
         policyMove: CombatPokemonMove = move): string {
-        var policy = CombatStatus.actionReason(CombatStatus.actionPolicy(world, actor, action, policyMove));
+        var context=CombatStatus.actionPolicy(world,actor,action,policyMove),policy=CombatStatus.actionReason(context);
         if (policy) return policy;
-        var pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(world, actor), layers = state.layers!;
+        var pokemon = CobblemonCombat.pokemon(actor), state = NativeEffects.read(world, actor), layers = readLayers(world,actor,context.selfCures||[]);
         if (layers.forbidden!.indexOf(String(move.id())) >= 0 || layers.categories!.indexOf(String(move.category())) >= 0) return "move-restricted";
         if (layers.only && layers.only !== String(move.id())) return "move-locked";
         if (state.flags.tauntUntil > world.tick() && String(move.category()) === "status") return "move-restricted";

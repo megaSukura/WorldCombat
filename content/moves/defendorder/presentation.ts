@@ -45,6 +45,20 @@ const DefendOrderDefinition: ParticleDefinition = {
                 }
             ]
         },
+        appear: {
+            duration: 14,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "appear_mote", bind: "source", fit: "none", height: 0,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: 6 }, shape: { kind: "sphere", radius: 0.16 },
+                    direction: "outward", speed: [0.01, 0.05], spin: 6,
+                    lifetime: [8, 14], size: [0.08, 0.01], sizeMode: "sin",
+                    color: 0xFFF3C4, alpha: [0.5, 0], light: "world", maxParticles: 12
+                }
+            ]
+        },
         cling: {
             exit: { drain: 16 },
             emitters: [

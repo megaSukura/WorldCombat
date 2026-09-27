@@ -40,20 +40,22 @@ const PsychicfangsDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "jaws", bind: "path", offset: [0, 0.55, 0],
+                    name: "jaw_upper", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/fang",
-                    shape: { kind: "polyline" },
-                    rate: 26, direction: "shape", speed: [0.04, 0.14], spread: 8,
-                    lifetime: [5, 10], size: [0.22, 0.06], sizeMode: "index",
-                    color: 0xF0E0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 90
+                    shape: { kind: "sphere", radius: 0.12 },
+                    offset: [0, { data: "openRadius", fallback: 0.5 }, 0],
+                    rate: 26, direction: "inward", speed: [0.04, 0.14], spread: 8, spin: 4,
+                    lifetime: [5, 10], size: [0.24, 0.06],
+                    color: 0xF0E0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },
                 {
-                    name: "closing", bind: "point", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    shape: { kind: "circle", radius: { data: "openRadius", fallback: 0.5 } },
-                    orient: "direction", rate: 18, direction: "inward", speed: [0.04, 0.12],
-                    lifetime: [6, 12], size: [0.16, 0.04], sizeMode: "sin",
-                    color: 0xD060C0, alpha: [0.5, 0], light: "full", maxParticles: 60
+                    name: "jaw_lower", bind: "point",
+                    particle: "world_combat_core:cobblemon/generic/fang",
+                    shape: { kind: "sphere", radius: 0.12 },
+                    offset: [0, { data: "openLower", fallback: -0.5 }, 0],
+                    rate: 26, direction: "inward", speed: [0.04, 0.14], spread: 8, spin: 4,
+                    lifetime: [5, 10], size: [0.24, 0.06],
+                    color: 0xF0E0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 60
                 }
             ]
         },
@@ -62,30 +64,31 @@ const PsychicfangsDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "jaws", bind: "path", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/bite",
-                    shape: { kind: "polyline" },
-                    rate: 22, direction: "shape", speed: [0.04, 0.12],
-                    lifetime: [6, 12], size: [0.3, 0.08], sizeMode: "index",
-                    color: 0xF0E0FF, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 70
+                    name: "jaw_upper", bind: "point",
+                    particle: "world_combat_core:cobblemon/generic/fang",
+                    burst: { count: 12, at: 0 }, shape: { kind: "sphere", radius: 0.14 },
+                    offset: [0, { data: "openRadius", fallback: 0.05 }, 0],
+                    direction: "inward", speed: [0.06, 0.18],
+                    lifetime: [6, 12], size: [0.3, 0.1],
+                    color: 0xF0E0FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 },
                 {
-                    name: "impact", bind: "point", offset: [0, 0.55, 0],
+                    name: "jaw_lower", bind: "point",
+                    particle: "world_combat_core:cobblemon/generic/fang",
+                    burst: { count: 12, at: 0 }, shape: { kind: "sphere", radius: 0.14 },
+                    offset: [0, { data: "openLower", fallback: -0.05 }, 0],
+                    direction: "inward", speed: [0.06, 0.18],
+                    lifetime: [6, 12], size: [0.3, 0.1],
+                    color: 0xF0E0FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
+                },
+                {
+                    name: "impact", bind: "point",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_psychic",
                     burst: { count: { data: "power", fallback: 24 }, at: 0 },
                     shape: { kind: "sphere", radius: { data: "scale", fallback: 0.5 } },
                     direction: "outward", speed: [0.06, 0.24], spread: 20,
                     lifetime: [7, 14], size: [0.3, 0.05], sizeMode: "index",
                     color: 0xF4E0FF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 90
-                },
-                {
-                    name: "teeth", bind: "point", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/fang",
-                    burst: { count: 10, at: 1 },
-                    shape: { kind: "circle", radius: { data: "openRadius", fallback: 0.06 } },
-                    orient: "direction", direction: "inward", speed: [0.06, 0.18],
-                    lifetime: [6, 12], size: [0.26, 0.1],
-                    color: 0xF0E0FF, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 }
             ]
         },

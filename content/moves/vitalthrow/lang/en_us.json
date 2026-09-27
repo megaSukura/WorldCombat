@@ -1,8 +1,8 @@
 {
-  "worldcombat.skill.vitalthrow.summary": "Brace for a nearby foe, then fling it along its momentum. A target caught mid-action takes a stronger throw. A successful launch followed by a prompt landing adds a pin; knockback resistance and terrain govern the actual flight.",
-  "worldcombat.skill.vitalthrow.description.0": "The throw deals about %1$s damage; when the target is mid-action (borrowed momentum) its power rises by %2$s. Defence, type matchups and crit are settled on the hit.",
+  "worldcombat.skill.vitalthrow.summary": "Brace for a nearby foe, then fling it along its momentum. A target caught pressing toward the user takes a stronger throw. A successful launch followed by a prompt landing adds a pin; knockback resistance and terrain govern the actual flight.",
+  "worldcombat.skill.vitalthrow.description.0": "The throw deals about %1$s damage; when the grabbed target is pressing toward the user (borrowed momentum) its power rises by %2$s. Defence, type matchups and crit are settled on the hit.",
   "worldcombat.skill.vitalthrow.description.1": "The user braces for %1$s s before striking, grabbing a target within %2$s blocks; with nothing to grab nearby the move whiffs.",
-  "worldcombat.skill.vitalthrow.description.2": "Add %1$s blocks/tick along the target’s horizontal momentum, or away from the user if it is still. Resistance and terrain determine the actual movement. A successful launch followed by a prompt landing pins the target for %2$s.",
+  "worldcombat.skill.vitalthrow.description.2": "Using the grabbed target's own weight, add %1$s blocks/tick along its horizontal momentum, or away from the user if it is still. Resistance and terrain determine the actual movement. A successful launch followed by a prompt landing pins the target for %2$s.",
   "worldcombat.skill.vitalthrow.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.vitalthrow.growth.0": "At level %1$s: throw power %2$s and pin %3$s s.",
   "worldcombat.skill.vitalthrow.growth.1": "At level %1$s: throw power %2$s and added throw velocity %3$s blocks/tick.",

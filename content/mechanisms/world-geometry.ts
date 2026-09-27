@@ -1,4 +1,8 @@
 namespace WorldGeometry {
+    /** The native query also returns a MISS receipt. This projection returns only a blocking surface. */
+    export function blockHit(world: CombatWorld, from: CombatPoint, to: CombatPoint): CombatImpact | null {
+        const hit=world.clipBlocks(from,to);return hit&&hit.blocked()?hit:null;
+    }
     /** Current native head/look direction; content chooses whether to flatten it for a ground maneuver. */
     export function facing(world: CombatWorld, actor: CombatActor): CombatPoint | null {
         if (!world.valid(actor)) return null;
@@ -40,6 +44,21 @@ namespace WorldGeometry {
         if (forward.length() > 1e-6) return forward.unit();
         var alternate = fallback ? flat(fallback) : null;
         return alternate && alternate.length() > 1e-6 ? alternate.unit() : WorldCombat.point(0, 0, 1);
+    }
+    /** A right/up frame perpendicular to forward, including vertical aim. Zero aim uses fallback or +Z.
+     * `upHint` chooses the roll; when it is parallel to forward a world axis supplies a stable plane. */
+    export function basis(direction: CombatPoint, fallback?: CombatPoint, upHint?: CombatPoint): { forward: CombatPoint; right: CombatPoint; up: CombatPoint } {
+        function usable(value: CombatPoint | undefined): boolean {
+            return value !== undefined && isFinite(value.length()) && value.length() > 1e-9;
+        }
+        function cross(a: CombatPoint, b: CombatPoint): CombatPoint {
+            return WorldCombat.point(a.y()*b.z()-a.z()*b.y(), a.z()*b.x()-a.x()*b.z(), a.x()*b.y()-a.y()*b.x());
+        }
+        const forward = usable(direction) ? direction.unit() : usable(fallback) ? fallback!.unit() : WorldCombat.point(0,0,1);
+        let reference = usable(upHint) ? upHint!.unit() : WorldCombat.point(0,1,0);
+        if (cross(forward, reference).length() < 1e-6) reference = Math.abs(forward.y()) < .9 ? WorldCombat.point(0,1,0) : WorldCombat.point(1,0,0);
+        const right = cross(forward, reference).unit();
+        return { forward: forward, right: right, up: cross(right, forward).unit() };
     }
     /** Finds the first solid block below `point` and returns the cell centre one block above it; `point` if none. */
     export function ground(world: CombatWorld, point: CombatPoint, drop = 4): CombatPoint {

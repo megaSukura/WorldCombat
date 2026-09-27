@@ -2,9 +2,9 @@
  * 冰息 / frostbreath —— AI 用途。
  *
  * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格内；够不到交给共享接近逻辑。
- * 对谁出手：`ai.cluster`（默认开）打开时，目标附近还挤着别的敌人就抬高 priority——扇形的价值在「罩一片」；
- *   `ai.finish`（默认开）打开时，残血目标排前；`ai.advantage`（默认开）打开时，慢的或防御厚的目标排前
- *   （必暴冷雾最能啃厚甲，疾走者则容易在雾漫到前走出扇面，横向速度越高越降权）。冷雾慢到、走出扇面就躲开。
+ * 对谁出手：`ai.cluster`（默认开）打开时，若有别的敌人和目标落在同一张扇形里就抬高 priority——扇形的价值在「罩一片」；
+ *   `ai.finish`（默认开）打开时，残血目标排前；`ai.advantage`（默认开）打开时，移速慢或特防厚的目标排前
+ *   （慢的走不出冷雾，特防厚的正是这一记特殊伤害要啃的），疾走者横向速度越高越降权。冷雾慢到、走出扇面就躲开。
  * 够不到怎么办：reach 就是本招实际射程，先走近。
  * 放完之后：冷雾的冻僵与落点霜交回共享交战计划，霜是租借地形会自己到期还原。
  */
@@ -14,6 +14,14 @@ namespace PokemonSkills {
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(capability, "maxChase", 14);
+    }
+
+    /** 当前配置下扇形的半角（度）：判定与排序读同一个 `spread` 参数。 */
+    function frostbreathHalfAngle(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context), actor = world.actor(CompanionBehavior.source(context).ref);
+        if (!actor || String(actor.domain()) !== "cobblemon") return 30;
+        return Math.max(15, Math.min(80, p(frostbreathId, "spread", { pokemon: CobblemonCombat.pokemon(actor),
+            skill: skills[frostbreathId], detail: { values: capability.data.config || {} }, world: world, actor: actor }) / 2));
     }
 
     CompanionBehavior.registerUse(frostbreathId, {
@@ -33,12 +41,17 @@ namespace PokemonSkills {
             const range = capability.data.range;
             let score = CompanionBehavior.distance(self.point, target.point) <= range ? 20 : 0;
             if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
+                // 群体计数看扇内：靠近目标方向、且落在同一张扇形里的敌人才算「一起罩」。
                 const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-                for (let index = 0; index < nearby.length; index++) {
+                const ax = target.point[0] - self.point[0], az = target.point[2] - self.point[2];
+                const toward = Math.sqrt(ax * ax + az * az), limit = Math.cos(frostbreathHalfAngle(context, capability) * Math.PI / 180);
+                for (let index = 0; toward > 1e-6 && index < nearby.length; index++) {
                     const other = nearby[index];
                     if (other.friendly || other.health <= 0 || other.ref === target.ref) continue;
-                    if (CompanionBehavior.distance(other.point, target.point) <= 4
-                        && CompanionBehavior.distance(self.point, other.point) <= range) { score += 14; break; }
+                    if (CompanionBehavior.distance(self.point, other.point) > range) continue;
+                    const bx = other.point[0] - self.point[0], bz = other.point[2] - self.point[2];
+                    const span = Math.sqrt(bx * bx + bz * bz);
+                    if (span > 1e-6 && (ax * bx + az * bz) / (toward * span) >= limit) { score += 14; break; }
                 }
             }
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 8);
@@ -47,10 +60,10 @@ namespace PokemonSkills {
                 const velocity = CompanionBehavior.velocity(context, target);
                 const flat = velocity ? Math.sqrt(velocity[0] * velocity[0] + velocity[2] * velocity[2]) : 0;
                 score -= Math.min(18, Math.round(flat * 45));
-                // 厚甲架势吃必暴冷雾最划算：防御越高排得越前。
+                // 这是特殊招，必须害只看特防厚不厚；物防高低与本招收益无关。
                 const stats = CompanionBehavior.combatStats(context, target);
-                const defence = stats && stats.stats && typeof stats.stats.def === "number" ? stats.stats.def : null;
-                if (defence !== null) score += Math.max(0, Math.min(12, (defence - 60) * 0.1));
+                const special = stats && stats.stats && typeof stats.stats.spd === "number" ? stats.stats.spd : null;
+                if (special !== null) score += Math.max(0, Math.min(12, (special - 60) * 0.1));
             }
             return score;
         }

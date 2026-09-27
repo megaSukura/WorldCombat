@@ -7,8 +7,9 @@
  * 两幕（提交前只播预告）：
  *   沉（wind，提交前）：重心下沉、脚边火星聚起，只播一记预告。
  *   踢（kick → hit / miss，提交后）：朝瞄准方向垫步踢进 `lunge` 格（每刻 `cruise`）；trace 撞上活体即结算 `kick`
- *       接触伤害、让目标攻击下降 `stages` 级；踢实后施术者沿反方向后撤 `retreat` 格收脚（受原生可站空间限制，
- *       后方站不下就原地收势）。踢空只是空收一脚。
+ *       接触伤害、让目标攻击按原生实际接受的 delta 下降 `stages` 级（已经到底或免疫时不假报）；踢实后施术者
+ *       沿反方向后撤 `retreat` 格收脚——整条后撤路径逐格查原生顶面与通行走廊，越墙或无落脚就原地收势。
+ *       伤害被拒或撞到友方时只在一脚落点收势，不冒充命中。踢空只是空收一脚。
  *
  * 选择是自由的：`kind: "aim"` 收任意阵营实体或一个世界点；没有实体目标时用选中的点／方向空踢、照样收脚。
  *   伤害被拒绝时不动、不降攻。
@@ -32,7 +33,7 @@ namespace PokemonSkills {
         id: "tropkick",
         cooldownParameter: "recharge",
         name: "Trop Kick",
-        description: "沉身垫步，把裹着南国热浪的一脚低平踢向对手的支撑腿：命中造成接触伤害、让目标的攻击下降一级；踢实后回身收脚、后撤小半步重新站稳（后方站不下就原地收势）。出手最快、回气最短，踢空只是空收一脚。",
+        description: "沉身垫步，把裹着南国热浪的一脚低平踢向对手的支撑腿：命中造成接触伤害、让目标的攻击下降一级；踢实后回身收脚、后撤小半步重新站稳（整条后撤路径被挡或无落脚就原地收势）。出手最快、回气最短，踢空只是空收一脚。",
         uses: ["贴身时压低对手的物理输出", "用最快的一脚先卸掉威胁", "踢完借后撤收步拉开一点身位"],
         kind: "aim",
         range: 2.4,
@@ -52,7 +53,7 @@ namespace PokemonSkills {
             const context: NumberContext = { pokemon, skill: skills["tropkick"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p("tropkick", "tempo", context)),
-                recover: Math.round(p("tropkick", "recover", context)),
+                recover: Math.round(p("tropkick", "aftercast", context)),
                 cooldown: Math.round(p("tropkick", "recharge", context)),
                 active: 0,
                 range: p("tropkick", "lunge", context) + 0.6
@@ -91,21 +92,27 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
-            /** 踢实后回身收脚：沿反方向后撤半步；后方放不下身子就原地收势。 */
-            function recover(current: CombatAction): void {
+            /** 踢实后回身收脚：沿反方向后撤半步；整条后撤路径都查通行与落脚支撑，越墙或无落脚就原地收势。 */
+            function retract(current: CombatAction): void {
                 const scope = current.world();
                 const body = scope.observe(actor);
                 if (body === null) { finish(current); return; }
                 const width = Math.max(0.2, body.width()), height = Math.max(0.2, body.height());
-                const back = direction.scale(-retreat);
+                const backUnit = direction.scale(-1);
                 const feet = body.position().plus(WorldCombat.point(0, -height / 2, 0));
+                // 后撤是有限的地面路径：逐格查原生顶面与通行走廊，走到悬崖或墙前就停。
+                const step = SurfacePaths.advance(scope, feet, backUnit, retreat,
+                    { up: Math.max(0.4, height * 0.5), down: 0.6, spacing: 0.25, samples: 12 });
                 let moved = 0;
-                if (retreat > 0.01 && LivingActions.freeSpace(scope, feet.plus(back), width, height)) moved = scope.displace(actor, back);
+                if (retreat > 0.01 && !step.ended && step.travelled >= retreat - 0.05
+                    && LivingActions.freeSpace(scope, step.point, width, height))
+                    moved = scope.displace(actor, backUnit.scale(retreat));
                 const after = scope.observe(actor);
                 const where = after !== null ? after.position() : body.position();
+                const motes = moved < 0.05 ? 0 : Math.max(2, Math.min(16, Math.round(moved * 8)));
                 WorldFeedback.emit(scope, tropkickScene, 1, where,
                     { moment: "retract", embers: embers, retreat: Math.round(retreat * 100) / 100, moved: Math.round(moved * 100) / 100,
-                        scale: scale, intensity: intensity }, 24);
+                        motes: motes, scale: scale, intensity: intensity }, 24);
                 finish(current);
             }
 
@@ -115,23 +122,29 @@ namespace PokemonSkills {
                 const at = hit.position();
                 const landed = victim !== null && impact(current, hit, "tropkick", power, { damage: damageSpec("tropkick", "kick"), contact: true });
                 struck = true;
-                WorldFeedback.emit(scope, tropkickScene, 1, at,
-                    { moment: "hit", target: victim !== null ? String(victim.ref()) : "", direction: [direction.x(), 0, direction.z()],
-                        embers: embers, scale: scale, intensity: intensity }, 30);
                 if (landed && victim !== null && scope.valid(victim)) {
-                    NativeEffects.boost(scope, victim, "atk", -stages);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), tropkickDropText, [stages], 24);
+                    WorldFeedback.emit(scope, tropkickScene, 1, at,
+                        { moment: "hit", target: String(victim.ref()), direction: [direction.x(), 0, direction.z()],
+                            embers: embers, scale: scale, intensity: intensity }, 30);
+                    // 掉攻按原生实际接受的 delta 报告：已经到底或免疫时不假报。
+                    const delta = NativeEffects.boost(scope, victim, "atk", -stages);
+                    if (delta < 0)
+                        WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), tropkickDropText, [-delta], 24);
                     scope.sound("cobblemon:impact.grass", at, 16, "{}");
                     scope.sound("minecraft:block.fire.extinguish", at, 12, "{}");
+                } else {
+                    // 接触被拒或撞到友方：只在一脚落点收势，不冒充命中、不报掉攻。
+                    WorldFeedback.emit(scope, tropkickScene, 1, at,
+                        { moment: "miss", embers: embers, scale: scale, intensity: intensity }, 20);
                 }
-                recover(current);
+                retract(current);
             }
 
             function advance(current: CombatAction): void {
                 const scope = current.world();
                 const origin = current.origin();
                 const step = Math.min(cruise, Math.max(0, length - travelled));
-                if (step <= 0.001) { recover(current); return; }
+                if (step <= 0.001) { retract(current); return; }
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
@@ -139,7 +152,7 @@ namespace PokemonSkills {
                 const moved = swept.moved;
                 travelled += moved;
                 movementScenes.show(current, "kick", origin, { moment: "kick", direction: [direction.x(), direction.y(), direction.z()], embers: embers, scale: scale, intensity: intensity });
-                if (hit.blocked() || moved < tropkickMinimumMove || travelled >= length) { recover(current); return; }
+                if (hit.blocked() || moved < tropkickMinimumMove || travelled >= length) { retract(current); return; }
                 current.after(1, advance);
             }
 

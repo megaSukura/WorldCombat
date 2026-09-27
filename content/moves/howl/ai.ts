@@ -16,14 +16,29 @@ namespace CompanionBehavior {
 
     PokemonSkills.addPreferences("howl", { cry: 1, ai: { maxChase: 14, minGap: 3 } }, [howlMaxChase, howlMinGap]);
 
-    function howlAllyNear(context: WorldBehavior.Context, radius: number): boolean {
+    /** 本次配置实际吼出的声浪半径，与出招走同一棵公式；AI 不再固定按 6 格估。 */
+    function howlRadius(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            const value = PokemonSkills.p("howl", "radius",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills["howl"], detail: { values: capability.data.config || {} } });
+            if (typeof value === "number" && isFinite(value) && value > 0) return Math.max(1, value);
+        } catch (error) { }
+        return Math.max(1, Number(capability.data.range) || 3);
+    }
+
+    /** 声浪半径内还没被吼到斗志的物攻伙伴数量（不含自己）。 */
+    function howlUncovered(context: WorldBehavior.Context, radius: number): number {
         const self = CompanionBehavior.source(context), nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly && other.health > 0 && other.ref !== self.ref
-                && CompanionBehavior.distance(other.point, self.point) <= radius) return true;
+            if (!other.friendly || other.health <= 0 || other.ref === self.ref) continue;
+            if (CompanionBehavior.distance(other.point, self.point) > radius) continue;
+            if (CompanionBehavior.status(context, other, "howl")) continue;
+            count++;
         }
-        return false;
+        return count;
     }
 
     CompanionBehavior.registerUse("howl", {
@@ -44,7 +59,8 @@ namespace CompanionBehavior {
             if (!threat) return 0;
             const gap = CompanionBehavior.distance(self.point, threat.point);
             const pack = Number(capability.data.config.cry) === 1;
-            if (pack && howlAllyNear(context, 6)) return 92;
+            // 群嚎只按本次真实半径内「还没被吼到」的伙伴数决定优先级；独啸是自用招，不数队友。
+            if (pack && howlUncovered(context, howlRadius(context, capability)) > 0) return 92;
             return gap < CompanionBehavior.ai<number>(capability, "minGap", 3) ? 40 : 88;
         }
     });

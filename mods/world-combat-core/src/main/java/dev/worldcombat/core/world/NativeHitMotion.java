@@ -12,6 +12,27 @@ import net.neoforged.neoforge.common.CommonHooks;
 public final class NativeHitMotion {
     private NativeHitMotion() {}
 
+    /** Native received movement remains in NeoForge's event chain, before vanilla resistance. */
+    public static void adjust(net.neoforged.neoforge.event.entity.living.LivingKnockBackEvent event) {
+        var entity = event.getEntity();
+        if (event.isCanceled() || !(event.getStrength() > 0)
+            || !(entity.level() instanceof net.minecraft.server.level.ServerLevel level)
+            || !CombatServices.CONTENT.ready() || !CombatServices.CONTENT.hooks().has("world_combat:knockback_incoming")
+            || !CombatServices.domain(entity).available(entity)) return;
+        var combat = CombatServices.get(level.getServer());
+        var actor = combat.bind(entity); var data = new com.google.gson.JsonObject();
+        data.addProperty("strength", event.getStrength()); data.addProperty("originalStrength", event.getStrength());
+        data.addProperty("ratioX", event.getRatioX()); data.addProperty("ratioZ", event.getRatioZ());
+        var result = combat.runtime().event("world_combat:knockback_incoming", actor, actor, data.toString(), true);
+        if (!result.rejection().isEmpty()) { event.setCanceled(true); return; }
+        var resolved = com.google.gson.JsonParser.parseString(result.data()).getAsJsonObject();
+        double strength = resolved.get("strength").getAsDouble(), x = resolved.get("ratioX").getAsDouble(), z = resolved.get("ratioZ").getAsDouble();
+        if (!Double.isFinite(strength) || strength < 0 || strength > Float.MAX_VALUE || !Double.isFinite(x) || !Double.isFinite(z)) {
+            event.setCanceled(true); return;
+        }
+        event.setStrength((float) strength); event.setRatioX(x); event.setRatioZ(z);
+    }
+
     private static LivingEntity recipient(MinecraftCombat combat, ActorHandle source, ActorHandle target, UUID controller) {
         var origin = combat.resolve(source); var entity = combat.resolve(target);
         if (origin == null || entity == null || entity.isPassenger() || entity.isVehicle()) return null;

@@ -5,8 +5,8 @@
  * 格斗系冲击、沿踢向把它踹出一圈尘；踢偏则是脚踝磕地、在落点砸出一圈土。
  * 色相家族：草木米白（0xF2F5E8）与嫩绿（0xA9CF7A）为家族色，命中冲击偏近白，落尘用中性 tinydust。
  * 拍子：起 windup（缩身）→ 跃 leap（浅弧爬升）→ 俯 dive（沿弧线压下）→ 击 impact ／ 失 crash。
- * 范围：leap 的 `bind:"path"` 沿提交时锁定的浅弧顶点画一条低平的黄色轨迹，和飞膝的高柱明显分开；dive 的
- *   `bind:"path"` 沿锁定的落点铺出下降走廊，画的就是这一踢覆盖到的地方。
+ * 范围：leap / dive 每刻只发本体真实走过的一小段，`bind:"path"` 沿这段实走端点发射，画出的是已经飞过的
+ *   短尾迹，而不是把整条未来弧线一次铺满；起跳扬尘改成一发留在起跳地面，不跟着空中的身体跑。
  * 运动：leap 是沿 `data.direction` 的低平速度线，dive 是沿 `data.direction` 斜切而下的弧线，
  *   impact 是横在腿部高度、向外扫开的水平环（不再有落地地环，地环只属于 crash）。
  * 数：`data.count`（踢劲派生）决定命中迸发量，`data.dust`（体重与物攻派生）决定扬尘密度，
@@ -38,7 +38,7 @@ const JumpkickDefinition: ParticleDefinition = {
             ]
         },
         leap: {
-            duration: 24,
+            duration: 0,
             exit: { stop: 10, drain: 12 },
             emitters: [
                 {
@@ -60,7 +60,7 @@ const JumpkickDefinition: ParticleDefinition = {
                 {
                     name: "kickup", bind: "source", height: 0.0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "dust", fallback: 12 }, shape: { kind: "ring", radius: 0.42 },
+                    burst: { count: { data: "dust", fallback: 12 }, at: 0 }, shape: { kind: "ring", radius: 0.42 },
                     direction: "outward", speed: [0.05, 0.16], spread: 16,
                     lifetime: [8, 15], size: [0.1, 0.02], sizeMode: "index",
                     color: 0xB9A98A, alpha: [0.5, 0], gravity: 0.04, drag: 0.92, light: "world", maxParticles: 90
@@ -68,7 +68,7 @@ const JumpkickDefinition: ParticleDefinition = {
             ]
         },
         dive: {
-            duration: 20,
+            duration: 0,
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {

@@ -2,7 +2,8 @@
  * 甩肉 / filletaway 的出手方式。
  *
  * 念头的形状（一幕 + 余韵）：
- *  1) 削——提交后立刻按配置扣除最大生命，把攻击、特攻、速度各提高若干级（`NativeEffects.boost`），
+ *  1) 削——提交后立刻按配置通过 `world.payHealth` 支付最大生命的一部分（保留生命线，原生减伤/吸收/救命仍生效，
+ *     只按真实正 HP 支付决定结果），把攻击、特攻、速度各提高若干级（`NativeEffects.boost`，取真实阶段增量），
  *     并按体重把若干块血肉沿四周甩进世界（`world.dropItem`，只有原生掉落物的职责，会自然消失，不产生额外
  *     治疗或伤害）。
  *  2) 余韵——身上短暂的一层轻快轮廓渐隐，表示「更轻了」。
@@ -19,7 +20,7 @@ namespace PokemonSkills {
         id: "filletaway",
         name: "Fillet Away",
         description: "一刀削掉自身大量生命，把血肉甩进世界，换取攻击、特攻与速度的大幅提高；生命不足以支付代价并留下保留生命时无法施放。",
-        uses: ["开战前把进攻三项拉满再冲", "生命富余时用血换一轮爆发", "在对手接近的空档里把自己削得更快更凶"],
+        uses: ["开战前把进攻三项叠起来再冲", "生命富余时用血换一轮爆发", "在对手接近的空档里把自己削得更快更凶"],
         kind: "self",
         range: 3,
         prepare: 6,
@@ -60,16 +61,20 @@ namespace PokemonSkills {
             if (body === null) { done(action); return; }
             const cost = p("filletaway", "cost", action);
             const levels = p("filletaway", "levels", action);
-            if (body.health() <= body.maxHealth() * cost) {
+            const reserve = config && config.ai && config.ai.reserveHealth !== undefined ? Number(config.ai.reserveHealth) : 0.15;
+            const due = body.maxHealth() * cost;
+            // 生命支付走原生结算并读取真实正支付：保留生命线，原生减伤/吸收/救命仍生效；金额不到 1 也不是零。
+            const paid = world.payHealth(due, "world_combat:filletaway_cost", Math.max(0, body.maxHealth() * reserve));
+            if (!(paid > 0)) {
                 WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), filletawayWeakText, [], 24);
                 done(action);
                 return;
             }
-            const paid = -world.health(actor, -body.maxHealth() * cost, "world_combat:filletaway_cost");
-            if (paid < 1) { done(action); return; }
-            NativeEffects.boost(world, actor, "atk", levels);
-            NativeEffects.boost(world, actor, "spa", levels);
-            NativeEffects.boost(world, actor, "spe", levels);
+            // 实际阶段增量决定结果：已在 +6 的能力不再叠加，落地的提示与表现按真实增量给。
+            const gainAtk = NativeEffects.boost(world, actor, "atk", levels);
+            const gainSpa = NativeEffects.boost(world, actor, "spa", levels);
+            const gainSpe = NativeEffects.boost(world, actor, "spe", levels);
+            const gained = gainAtk + gainSpa + gainSpe;
             const chunks = Math.max(1, Math.round(p("filletaway", "chunks", action)));
             const fling = p("filletaway", "fling", action);
             const scatter = p("filletaway", "scatter", action);
@@ -85,11 +90,12 @@ namespace PokemonSkills {
             }
             WorldFeedback.emit(world, filletawayScene, 1, centre,
                 { moment: "carve", scale: scatter / 2, intensity: Math.max(0.4, Math.min(2.5, paid / Math.max(1, body.maxHealth() * 0.5))),
-                    chunks: chunks, spread: scatter }, 30);
+                    chunks: chunks, spread: scatter, gained: gained, atk: gainAtk, spa: gainSpa, spe: gainSpe }, 30);
             // 独立余波：切开之后身体浮起一层轻快轮廓，按它自己的寿命留一小段。
             WorldFeedback.emit(world, filletawayScene, 1, centre,
-                { moment: "afterglow", scale: scatter / 2, intensity: Math.max(0.4, Math.min(2.5, paid / Math.max(1, body.maxHealth() * 0.5))) }, 34);
-            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.4, 0)), filletawayText, [Math.round(paid), levels], 28);
+                { moment: "afterglow", scale: scatter / 2, intensity: Math.max(0.4, Math.min(2.5, paid / Math.max(1, body.maxHealth() * 0.5))),
+                    gained: gained }, 34);
+            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.4, 0)), filletawayText, [Math.round(paid), gainAtk, gainSpa, gainSpe], 28);
             world.sound("minecraft:entity.sheep.shear", centre, 18, "{}");
             done(action);
         }

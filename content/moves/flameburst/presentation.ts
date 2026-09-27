@@ -1,15 +1,15 @@
 /**
  * 烈焰溅射 / flameburst 的客户端表现。
  *
- * 一句话：掌心凝出一颗火球射出去，火球拖着焰尾沿浅弧飞行；命中点炸开一团火，炸开的同时几滴火从爆点被甩出去，
- * 沿着弧线落到旁边每个对手身上，各自绽开一小簇火。
+ * 一句话：掌心凝出一颗火球射出去，火球拖着焰尾沿浅弧飞行；命中点炸开一团火，同一刻用一条短闪线把火分到旁边每个
+ * 被波及的对手身上，各自绽开一小簇火。
  * 色相家族：橙红（0xFF8A3C）与余烬黄（0xFFD06A），烟收在深褐（0x3A2A22）；饱和只出现在火球、爆点与火滴的小面积。
- * 拍子：起（gather 凝火）→ 飞（flight 焰尾）→ 击（burst 炸开）→ 溅（splash 火滴轨迹 → drop 落点）
- *   ／散（scatter 撞墙或非活体只散火）→ 收（fade 残烟）。
- * 范围：`burst` 的 `ring` 用 `shape.radius: 2.0` 配上 `data.scale`（溅射半径 / 2.0）画出来，这圈火环的半径就是
- *   机制里的溅射半径——玩家一眼看出站得离目标多近会被溅到。撞到方块/非活体只播 `scatter`，不画这圈火环。
- * 运动：火球沿浅弧飞出并撒火星；`splash` 沿 `data.path`（爆点→被溅到的对手）铺出火滴轨迹，drop 在对手身上绽放；
- *   `scatter` 在受击的方块面上向外散火，画的就是撞墙那一下。
+ * 拍子：起（gather 凝火）→ 飞（flight 焰尾）→ 击（burst 爆点接触火星）→ 界（boundary 只在主爆真正结算后勾出）
+ *   → 溅（splash 短闪线 → drop 落点，同刻）／散（scatter 撞墙或非活体只散火）→ 收（fade 残烟）。
+ * 范围：`boundary` 的 `impact_edge` 直接用 `data.radius`（机制 splashRadius）在冲击点勾出一圈短火点，半径就是机制里的
+ *   溅射半径——玩家一眼看出站得离目标多近会被溅到；主爆被拒、无人分伤时服务端不发这一幕。撞到方块/非活体只播 `scatter`。
+ * 运动：火球沿浅弧飞出并撒火星；`splash` 是同一刻沿 `data.path`（爆点→被溅到的对手）整段随机发射的一次短闪线，
+ *   `drop` 在对手身上绽放，两者同刻出现，呈现一次分溅而非火滴飞行；`scatter` 在受击方块面上向外散火，画的就是撞墙那一下。
  * 数：`burst`／`scatter` 的粒子量绑 `data.drops`（特攻与等级换算出机制数），强度绑 `data.intensity`（主爆威力派生），
  *   飞行火星量绑 `data.embers`。
  */
@@ -68,14 +68,6 @@ const FlameburstDefinition: ParticleDefinition = {
                     color: 0xFFF0C0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 110
                 },
                 {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.15, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    burst: { count: 1 },
-                    shape: { kind: "ring", radius: 2.0 }, direction: "outward", speed: [0.1, 0.28],
-                    lifetime: [10, 16], size: [0.36, 0.8],
-                    color: 0xFF8A3C, alpha: [0.5, 0], light: "world", maxParticles: 4
-                },
-                {
                     name: "smoke", bind: "point", fit: "none", offset: [0, 0.35, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 6 },
@@ -85,16 +77,30 @@ const FlameburstDefinition: ParticleDefinition = {
                 }
             ]
         },
-        splash: {
-            duration: 22,
-            exit: { stop: 6, drain: 10 },
+        boundary: {
+            duration: 30,
+            exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "drops", bind: "path", fit: "none",
+                    name: "impact_edge", bind: "point", fit: "world", offset: [0, 0.15, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 12 },
+                    shape: { kind: "ring", radius: { data: "radius", fallback: 2 } }, direction: "outward", speed: [0.04, 0.12],
+                    lifetime: [10, 16], size: [0.18, 0.05], sizeMode: "index",
+                    color: 0xFF8A3C, alpha: [0.5, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
+        splash: {
+            duration: 12,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "flash_line", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
-                    rate: { data: "drops", fallback: 12 }, shape: { kind: "polyline" },
-                    direction: "outward", speed: [0.05, 0.2], gravity: 0.04, drag: 0.95,
-                    lifetime: [8, 14], size: [0.14, 0.02],
+                    burst: { count: { data: "drops", fallback: 12 }, at: 0 }, shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.08, 0.28], gravity: 0.04, drag: 0.95,
+                    lifetime: [5, 10], size: [0.12, 0.02], sizeMode: "index",
                     color: 0xFFD06A, alpha: [0.9, 0], light: "full", maxParticles: 70
                 }
             ]

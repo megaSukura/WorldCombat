@@ -5,7 +5,8 @@
  *   每颗在真实碰撞位置炸开一圈龙属性能量（撞在屋顶就在上层爆）。
  * 色相家族：龙焰的紫绿（0x9A8AF0 / 0x6FE0C8）为主体，燃石的橙（0xD98A4A）与深褐烟（0x2E2824）衬托。
  * 拍子：起 summon（聚落点）→ 标 mark（逐颗地面圈）→ 落 fall（下坠尾迹）→ 击 impact（命中）与 burst（炸点与余烬）。
- * 范围：mark 用 `data.radius`（每颗落点半径）画出会被砸到的地；burst 用 `data.impactRadius`。
+ * 范围：mark 用 `data.radius`（每颗真实落点半径）画出会被砸到的地；burst 用 `data.impactRadius`。两者都 `fit:"world"`，
+ *   形状半径直接取机制值，`data.scale` 只放大粒子尺寸，预示圈与受击范围一致。
  * 运动：陨石垂直向下、尾迹沿自身路径拖出；落点向外崩碎星与碎石。
  * 数：碎片数绑定 `data.shards`（特攻派生），强度绑定 `data.intensity`（单颗威力 / 120），
  *   落星数量由服务端逐颗触发 mark／fall／burst 表达。
@@ -41,17 +42,17 @@ const DracometeorDefinition: ParticleDefinition = {
             exit: { drain: 14 },
             emitters: [
                 {
-                    name: "landing", bind: "point", fit: "none", offset: [0, 0.05, 0],
+                    name: "landing", bind: "point", fit: "world", offset: [0, 0.05, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    rate: 6, shape: { kind: "ring", radius: { data: "radius", fallback: 1.8 } },
+                    rate: 6, shape: { kind: "ring", radius: { data: "radius", fallback: 1.3 } },
                     direction: "outward", speed: [0.02, 0.06],
                     lifetime: [10, 18], size: [0.3, 0.5],
                     color: 0x9A8AF0, alpha: [0.4, 0], light: "world", maxParticles: 40
                 },
                 {
-                    name: "dust", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "dust", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 1.8 }, thickness: 0.85 },
+                    rate: 14, shape: { kind: "circle", radius: { data: "radius", fallback: 1.3 }, thickness: 0.85 },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [8, 16], size: [0.06, 0.01],
                     color: 0x8A7AB0, alpha: [0.35, 0], light: "world", maxParticles: 50
@@ -109,7 +110,7 @@ const DracometeorDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 20 },
             emitters: [
                 {
-                    name: "ring", bind: "point", fit: "none", offset: [0, 0.08, 0],
+                    name: "ring", bind: "point", fit: "world", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
                     burst: { count: 1 },
                     shape: { kind: "ring", radius: { data: "impactRadius", fallback: 1.3 } },
@@ -118,7 +119,7 @@ const DracometeorDefinition: ParticleDefinition = {
                     color: 0xC0B4E8, alpha: [0.75, 0], light: "world", maxParticles: 24
                 },
                 {
-                    name: "scatter", bind: "point", fit: "none", offset: [0, 0.25, 0],
+                    name: "scatter", bind: "point", fit: "world", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "shards", fallback: 20 } },
                     shape: { kind: "circle", radius: { data: "impactRadius", fallback: 1.3 } },
@@ -127,13 +128,28 @@ const DracometeorDefinition: ParticleDefinition = {
                     color: 0x6A5A50, alpha: [0.85, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "smoke", bind: "point", fit: "none", offset: [0, 0.3, 0],
+                    name: "smoke", bind: "point", fit: "world", offset: [0, 0.3, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 18 },
                     shape: { kind: "sphere", radius: { data: "impactRadius", fallback: 1.3 } },
                     direction: "up", speed: [0.03, 0.14], drag: 0.9,
                     lifetime: [14, 26], size: [0.3, 0.52],
                     color: 0x2E2824, alpha: [0.35, 0], light: "world", maxParticles: 70
+                }
+            ]
+        },
+        fizzle: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "dissipate", bind: "point", fit: "world", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
+                    burst: { count: 10, at: 0 },
+                    shape: { kind: "sphere", radius: 0.4 },
+                    direction: "outward", speed: [0.05, 0.2], drag: 0.9,
+                    lifetime: [8, 16], size: [0.08, 0.01],
+                    color: 0x9A8AF0, alpha: [0.6, 0], light: "world", maxParticles: 30
                 }
             ]
         }

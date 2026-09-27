@@ -82,7 +82,7 @@ const MatchaGotchaDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 14 },
             emitters: [
                 {
-                    name: "tea_disc", bind: "point", fit: "none", offset: [0, 0.12, 0],
+                    name: "tea_disc", bind: "point", fit: "world", orient: "direction", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble_broth",
                     burst: { count: 22 }, shape: { kind: "ring", radius: { data: "burst", fallback: 1.4 } },
                     direction: "outward", speed: [0.06, 0.26], spread: 14,
@@ -113,21 +113,22 @@ const MatchaGotchaDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "link", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    shape: { kind: "polyline" }, rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.02, 0.09], spread: 10,
-                    lifetime: [8, 15], size: [0.09, 0.02],
-                    color: 0x5E8A24, alpha: [0.7, 0], light: "world", maxParticles: 80
+                    name: "return_stream", bind: "target", orient: "direction", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    shape: { kind: "line", length: 1.1 },
+                    rate: { data: "motes", fallback: 14 },
+                    direction: "shape", speed: [0.16, 0.4], spread: 9,
+                    lifetime: [5, 11], size: [0.09, 0.01],
+                    color: 0x9CCB4F, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 60
                 },
                 {
-                    name: "flow", bind: "point", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    shape: { kind: "line", length: { data: "span", fallback: 3 } },
+                    name: "return_seed", bind: "target", orient: "direction", height: 0.4,
+                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
+                    shape: { kind: "line", length: 0.9 },
                     rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.13, 0.34], spread: 9,
-                    lifetime: [6, 13], size: [0.09, 0.01],
-                    color: 0x9CCB4F, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 70
+                    direction: "shape", speed: [0.1, 0.3], spread: 12,
+                    lifetime: [5, 11], size: [0.08, 0.02],
+                    color: 0x5E8A24, alpha: [0.75, 0], light: "world", maxParticles: 44
                 }
             ]
         },

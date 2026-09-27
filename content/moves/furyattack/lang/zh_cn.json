@@ -1,12 +1,12 @@
 {
-  "worldcombat.skill.furyattack.summary": "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方这串就断。可以点敌人，也可以只给一个方向起手，准线在起手时锁死、每刺同轴；空放会沿准线刺完整串。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
+  "worldcombat.skill.furyattack.summary": "站定用角或喙朝一点连续突刺：每一刺把对手顶退，退到够不着的地方后面的刺就都戳空。可以点敌人，也可以只给一个方向起手，准线在起手时锁死、每刺同轴；每一刺各自掷命中，点地与点敌走同一套规则，前排的身体会挡住后排。顶退式站定不动、一路把人推出射程；追击式向前跟住，把整串吃满。",
   "worldcombat.skill.furyattack.use.0": "站定用角喙朝一点连续突刺",
   "worldcombat.skill.furyattack.use.1": "每一刺把对手顶退，一路把它推出射程",
   "worldcombat.skill.furyattack.use.2": "追击式跟住走位，把整串吃满",
-  "worldcombat.skill.furyattack.use.3": "只朝一个方向起手，沿固定准线空刺完整串",
-  "worldcombat.skill.furyattack.description.0": "每一刺造成约 %1$s 点接触伤害（走物攻），这一串最多 %2$s 刺，每刺 %3$s 命中；落空一刺或目标被顶出射程，这串就断。",
+  "worldcombat.skill.furyattack.use.3": "只朝一个方向起手，空刺也按同一套命中规则前进",
+  "worldcombat.skill.furyattack.description.0": "每一刺造成约 %1$s 点接触伤害（走物攻），这一串最多 %2$s 刺，每刺 %3$s 命中；落空一刺这串就断，目标被顶出射程只是让后面的刺戳空。",
   "worldcombat.skill.furyattack.description.1": "刺距 %1$s 格，刺面半宽 %2$s 格，每刺把目标顶退 %3$s 格，两刺间隔 %4$s。",
-  "worldcombat.skill.furyattack.description.2": "追击式每刺前进 %1$s 格；每一刺最多击中 %2$s 个目标。",
+  "worldcombat.skill.furyattack.description.2": "追击式每刺前进 %1$s 格；每一刺最多击中 %2$s 个并排目标，前排会挡住后排。",
   "worldcombat.skill.furyattack.close.on": "当前追击式：每一刺后向前跟住，把距离压回射程内，整串更容易吃满；代价是每刺略轻、几乎推不动人。",
   "worldcombat.skill.furyattack.close.off": "当前顶退式：站定不动、每刺更重、顶退更大，一路把目标推出去；代价是它很快被推出射程，这串提前断。",
   "worldcombat.skill.furyattack.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -35,6 +35,5 @@
   "worldcombat.skill.furyattack.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.furyattack.preference.ai.leaveStation.help": "开启后，驻守命令下也会为乱击离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.furyattack.text.miss": "第 %1$s 刺擦空",
-  "world_combat.move.furyattack.text.out": "顶出射程，连刺 %1$s 下收手",
   "world_combat.move.furyattack.text.tally": "连刺 %1$s 下"
 }

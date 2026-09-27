@@ -37,7 +37,7 @@ namespace PokemonSkills {
         id: "firelash",
         cooldownParameter: "recharge",
         name: "Fire Lash",
-        description: "点起一条燃烧的长鞭，沿瞄准方向分四拍甩出再落下：整条鞭扫过的路径就是判定线，真实扫到第一个敌人或墙就停。命中造成单体物理火焰伤害并必然把目标防御烧降 1 级；缠卷式把实际命中的目标分四拍拉向自己并短暂减速、剥甲两级，代价是威力、鞭长与出手速度。",
+        description: "点起一条燃烧的长鞭，沿瞄准方向分四拍甩出再落下：鞭梢逐段向外扫过，每拍只检测新伸出的一段，真实扫到第一个敌人或墙就停，画面也止在真实首接触点。命中造成单体物理火焰伤害并必然把目标防御烧降 1 级；缠卷式把实际命中的目标分四拍拉向自己（走原生受控位移、按抗性结算）并短暂减速、剥甲两级，代价是威力、鞭长与出手速度。",
         uses: ["中距离用一条火鞭剥掉对手防御，给后续攻击开路", "缠卷式把目标拖到身边再接一记近战", "对高防目标持续削甲"],
         kind: "aim",
         range: 4.2,
@@ -109,9 +109,14 @@ namespace PokemonSkills {
                 const from = firelashArcPoint(origin, tip, beat / firelashBeats);
                 const to = firelashArcPoint(origin, tip, (beat + 1) / firelashBeats);
                 const contact = current.trace(from, to, whipWidth);
-                const path = whipPath((beat + 1) / firelashBeats);
-                scenes.show(current, "whip", to,
-                    { moment: "lash", path: path, tip: [to.x(), to.y(), to.z()], embers: embers, intensity: intensity, scale: scale });
+                // 画面截到真实首接触：碰到实体或墙就止在真实接触点，否则画到本拍末端。判定与表现共用端点。
+                const cut = contact.hitEntity() || contact.blocked() ? contact.position() : null;
+                const endpoint = cut !== null ? cut : to;
+                var path: number[][];
+                if (cut !== null) { path = whipPath(beat / firelashBeats); path.push([endpoint.x(), endpoint.y(), endpoint.z()]); }
+                else path = whipPath((beat + 1) / firelashBeats);
+                scenes.show(current, "whip", endpoint,
+                    { moment: "lash", path: path, tip: [endpoint.x(), endpoint.y(), endpoint.z()], embers: embers, intensity: intensity, scale: scale });
 
                 if (contact.hitEntity()) {
                     const victim = contact.target();
@@ -183,7 +188,8 @@ namespace PokemonSkills {
                 const toward = body.position().minus(held.position());
                 if (!scope.clear(held.position(), body.position())) { snap(current, victimRef, false); return; }
                 const step = Math.min(remaining, perBeat);
-                const moved = toward.length() < 0.05 ? 0 : scope.displace(victim!, toward.unit().scale(step));
+                // 受控位移走 hitDisplace：保留原生击退事件、抗性与权限，并返回实际移动预算。
+                const moved = toward.length() < 0.05 ? 0 : scope.hitDisplace(victim!, toward.unit().scale(step));
                 const left = Math.max(0, remaining - moved);
                 scenes.show(current, "rope", held.position(),
                     { moment: "bind", path: ["source", victimRef], target: victimRef, remaining: left,
@@ -196,12 +202,19 @@ namespace PokemonSkills {
             function snap(current: CombatAction, victimRef: string, held: boolean): void {
                 const scope = current.world();
                 scenes.stop(current, "rope");
+                const self = scope.observe(actor);
                 const victim = scope.actor(victimRef);
-                const body = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
-                const at = body !== null ? body.position() : current.origin();
-                WorldFeedback.emit(scope, firelashScene, 1, at,
-                    { moment: "bind", target: victimRef, held: held ? 1 : 0, embers: Math.round(embers * 0.5), intensity: intensity, scale: scale }, 22);
-                if (held) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.3, 0)), firelashBindText, [], 26);
+                const heldBody = victim !== null && scope.valid(victim) ? scope.observe(victim) : null;
+                const from = heldBody !== null ? heldBody.position() : current.origin();
+                const anchor = self !== null ? self.position() : current.origin();
+                const toward = anchor.minus(from);
+                // 收尾给一段有 path 的短收鞭，不再是「无 path 的绳圈」。
+                const stub = toward.length() > 0.05 ? from.plus(toward.unit().scale(Math.min(0.8, toward.length())))
+                    : from.plus(WorldCombat.point(0, 0.5, 0));
+                const path: number[][] = [[from.x(), from.y(), from.z()], [stub.x(), stub.y(), stub.z()]];
+                WorldFeedback.emit(scope, firelashScene, 1, from,
+                    { moment: "retract", path: path, target: victimRef, held: held ? 1 : 0, embers: Math.round(embers * 0.5), intensity: intensity, scale: scale }, 22);
+                if (held) WorldFeedback.text(scope, from.plus(WorldCombat.point(0, 1.3, 0)), firelashBindText, [], 26);
                 finish(current);
             }
 

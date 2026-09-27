@@ -4,9 +4,10 @@
  * 一句话：深吸一口气，胸腔亮起，随后一道青紫的龙息从嘴前喷成整片扇形，由近及远把锥面填满，气流边缘卷起
  * 螺旋，扫过的目标身上炸开龙属冲击，最后留一缕雾气散去。
  * 色相家族：龙青（0x7FE6D0）为主、紫（0x9A6BE0）作叶尖，强调用原型 impact_dragon。
- * 拍子：起（inhale 吸气聚气）→ 击（breath 扇形铺开 + 逐个 impact）→ 收（linger 雾气散去）。
- * 范围：breath 用 `data.path`（服务端扇面顶点）画 polygon 与 polyline，锥有多大、够到哪，画面就是那块地。
- * 运动：气息沿 shape 向外推，边缘顺顶点卷出螺旋，中心光核比气流走得更快。
+ * 拍子：起（inhale 吸气聚气）→ 击（breath 前沿逐刻推进 + 逐个 impact）→ 收（linger 雾气散去）。
+ * 范围：breath 用 `data.reach`／`data.inner`／`data.arc`／`data.direction` 的 sector（新扫过的环带）与 arc（正在推进的前沿），
+ *   与服务端 `WorldGeometry.sector` 判定读同一组刻刻增长的数字——前沿到哪、哪才会被扫到。
+ * 运动：气息沿 shape 从身前沿扇面向外推，前沿弧比气流走得更快，中心光核最亮。
  * 数：`data.flow`（吐息长度换算的流量）直接绑定气流密度，`data.scale`（当前长度 / 全长）控制粒子尺寸，
  * `data.intensity`（本击威力 / 60）抬高命中亮度。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -37,30 +38,30 @@ const DragonbreathDefinition: ParticleDefinition = {
             ]
         },
         breath: {
-            duration: 16,
-            exit: { stop: 8, drain: 16 },
+            duration: 40,
+            exit: { stop: 34, drain: 16 },
             emitters: [
                 {
-                    name: "gust", bind: "path", offset: [0, 0.4, 0],
+                    name: "gust", bind: "point", fit: "world", orient: "heading", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    shape: { kind: "polygon" },
-                    rate: { data: "flow", fallback: 80 }, direction: "shape", speed: [0.03, 0.12],
+                    shape: { kind: "sector", radius: { data: "reach", fallback: 7 }, innerRadius: { data: "inner", fallback: 0 }, angleDegrees: { data: "arc", fallback: 48 } },
+                    rate: { data: "flow", fallback: 80 }, direction: "shape", speed: [0.05, 0.18], spread: 8,
                     lifetime: [8, 16], size: [0.26, 0.06], spin: 8,
                     color: 0x7FE6D0, alpha: [0.3, 0], light: "world", maxParticles: 320
                 },
                 {
-                    name: "edge", bind: "path", offset: [0, 0.42, 0],
+                    name: "edge", bind: "point", fit: "world", orient: "heading", offset: [0, 0.42, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    shape: { kind: "polyline" },
-                    rate: 70, direction: "shape", speed: [0.08, 0.26], spread: 12,
+                    shape: { kind: "arc", radius: { data: "reach", fallback: 7 }, arcDegrees: { data: "arc", fallback: 48 }, thickness: 0.4 },
+                    rate: 70, direction: "shape", speed: [0.1, 0.3], spread: 14,
                     lifetime: [6, 13], size: [0.16, 0.04],
                     color: 0xA6F3E2, alpha: [0.7, 0], light: "full", maxParticles: 240
                 },
                 {
-                    name: "core", bind: "path", offset: [0, 0.42, 0],
+                    name: "core", bind: "point", fit: "world", orient: "heading", offset: [0, 0.42, 0],
                     particle: "world_combat_core:cobblemon/generic/orb/energyorb",
-                    shape: { kind: "polyline" },
-                    rate: 28, direction: "shape", speed: [0.1, 0.3],
+                    shape: { kind: "arc", radius: { data: "reach", fallback: 7 }, arcDegrees: { data: "arc", fallback: 48 }, thickness: 0.2 },
+                    rate: 28, direction: "shape", speed: [0.12, 0.34],
                     lifetime: [5, 12], size: [0.18, 0.05],
                     color: 0xB79AF0, alpha: [0.8, 0], light: "full", bloom: 0.45, maxParticles: 120
                 }

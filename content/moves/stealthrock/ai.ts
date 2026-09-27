@@ -3,8 +3,9 @@
  *
  * 什么局面有意义：有可见、敌对、存活、在 `ai.maxChase`（默认 11）以内的威胁时抬石。石阵只对“进入那一下”
  *   结算，站住不动不会被持续砸，所以它更看重**目标会经过哪里**：`ai.lead` 给移动中的目标一点提前量，
- *   把石阵抬在它要去的门口／空道上；`ai.minFoes` 让威胁身边至少挤着这么多敌人才额外加分。跑动的目标
- *   加分、原地站定的目标减分，避免把静止的 Boss 当成持续伤害来源。
+ *   把石阵抬在它要去的门口／空道上；`ai.minFoes` 让威胁身边至少挤着这么多敌人才额外加分（目标本人只算一次）。跑动的目标
+ *   加分、原地站定的目标减分，避免把静止的 Boss 当成持续伤害来源。自己那片石阵仍有空位、仍盖着这条路时不再重放，
+ *   免得反复换场刷新警戒。
  * 对谁出手：当前威胁，落点是它（或提前量后）的位置。
  * 够不到怎么办：交给共享接近逻辑；`kind` 为 point，AI 会把石阵抬到目标所在位置。
  * 放完之后：石阵留在空中，谁跨进来就有一枚岩块飞出；同一片地上重放会刷新石阵。
@@ -31,15 +32,33 @@ namespace PokemonSkills {
         return velocity ? Math.sqrt(Number(velocity[0] || 0) * Number(velocity[0] || 0) + Number(velocity[2] || 0) * Number(velocity[2] || 0)) : 0;
     }
 
-    function stealthrockCluster(context: WorldBehavior.Context, aim: number[]): number {
+    function stealthrockCluster(context: WorldBehavior.Context, aim: number[], target: CompanionBehavior.Entity): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        // 目标本人只算一次：从 1 起算时把它从 nearby 里剔掉，避免单敌被算成两个。
         let count = 1;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
+            if (String(other.ref) === String(target.ref)) continue;
             if (CompanionBehavior.distance(other.point, aim) <= 3.0) count++;
         }
         return count;
+    }
+
+    /** 自己已有一片仍覆盖这个落点、还有时长且尚未打空的石阵：不必重复换场刷新警戒。 */
+    function stealthrockFieldLive(context: WorldBehavior.Context, aim: number[]): boolean {
+        const world = CompanionBehavior.world(context), own = String(CompanionBehavior.source(context).ref);
+        const found = WorldEffects.areas(world, stealthrockRule, CompanionBehavior.point(aim), 2.0);
+        for (let i = 0; i < found.length; i++) {
+            const area = found[i];
+            if (area.source !== own || !(area.remaining > 0)) continue;
+            const slots = area.data && area.data.slots;
+            let empty = false;
+            if (Array.isArray(slots)) for (let s = 0; s < slots.length; s++) if (slots[s] > 0) { empty = true; break; }
+            if (Array.isArray(slots) && !empty) continue;
+            return true;
+        }
+        return false;
     }
 
     /** 用原生方块射线量门口／空道：两侧近处都是墙、正前方还通，就把石阵抬在这里比空地更值。 */
@@ -74,7 +93,9 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return stealthrockWants(context, capability, target);
+            if (!stealthrockWants(context, capability, target)) return false;
+            // 自己那片还没打完、仍盖着这条路：不必再抬一片来刷新警戒。
+            return !stealthrockFieldLive(context, stealthrockLead(context, capability, target));
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
@@ -93,7 +114,8 @@ namespace PokemonSkills {
             let base = 22;
             // 石阵只吃“进入那一下”：跑动的目标值得预判，站定的目标不该按持续伤害计价。
             base += stealthrockHorizontalSpeed(target) > 0.05 ? 10 : -6;
-            if (stealthrockCluster(context, aim) >= CompanionBehavior.ai<number>(capability, "minFoes", 2)) base += 14;
+            if (stealthrockCluster(context, aim, target) >= CompanionBehavior.ai<number>(capability, "minFoes", 2)) base += 14;
+            if (stealthrockFieldLive(context, aim)) base -= 16;
             if (stealthrockCorridor(world, aim, stealthrockHeading(context, target, aim))) base += 14;
             if (CompanionBehavior.ratio(target) > 0.8) base += 4;
             return base;

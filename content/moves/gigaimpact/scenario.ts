@@ -20,7 +20,7 @@ Smoke.scenario("gigaimpact", function (stage) {
             "the caster entered the mustrecharge window");
         var recharging = stage.hasMobEffect(a, "world_combat:status/mustrecharge") ? a : b;
         var before = stage.casts("gigaimpact", recharging);
-        stage.note("gigaimpact exchange", { casts: stage.casts("gigaimpact"), onA: stage.damageTo(a), onB: stage.damageTo(b),
+        stage.note("gigaimpact exchange; exhaustion is applied at launch, so a charge that is cancelled or whiffs still pays it", { casts: stage.casts("gigaimpact"), onA: stage.damageTo(a), onB: stage.damageTo(b),
             movedA: Math.round(stage.travelled(a) * 10) / 10, movedB: Math.round(stage.travelled(b) * 10) / 10,
             rechargingTravelled: Math.round(stage.travelled(recharging) * 10) / 10 });
         stage.after(12, function () {

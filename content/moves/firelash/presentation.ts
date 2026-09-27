@@ -123,6 +123,29 @@ const FirelashDefinition: ParticleDefinition = {
                 }
             ]
         },
+        // 收鞭：不再是「无 path 的绳圈」，沿短收的一段画最后一缕火。
+        retract: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "retracting", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    shape: { kind: "polyline" }, rate: 34,
+                    direction: "outward", speed: [0.02, 0.1], spread: 16,
+                    lifetime: [5, 10], size: [0.2, 0.03], sizeMode: "index",
+                    color: 0xFF9A3C, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 40
+                },
+                {
+                    name: "tail_fizzle", bind: "point", fit: "none", offset: [0, 0.4, 0],
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    burst: { count: 6, at: 0 }, shape: { kind: "sphere", radius: 0.2 },
+                    direction: "up", speed: [0.02, 0.1],
+                    lifetime: [7, 13], size: [0.1, 0.02],
+                    color: 0xFFB347, alpha: [0.6, 0], light: "world", maxParticles: 16
+                }
+            ]
+        },
         miss: {
             duration: 16,
             exit: { stop: 8, drain: 12 },

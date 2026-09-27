@@ -45,6 +45,14 @@ namespace PokemonSkills {
         effect.schedule("tick", "tick", 20, "{}");
     });
 
+    // 睡眠被解除（伤害惊醒、牛奶、/effect clear、自然到点）后，跟着它的余韵立即收场，不在醒后多留一段。
+    WorldCombat.on("world_combat:move_hypnosis/clear", "world_combat:mob_effect_removed", "", function (event: CombatWorldEvent): void {
+        if (String(JSON.parse(String(event.data())).id) !== "world_combat:sleep") return;
+        const world = event.world(), actor = event.actor();
+        if (actor === null || !world.valid(actor)) return;
+        world.effects(actor, hypnosisTrance).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+    });
+
     define({
         id: hypnosisId,
         cooldownParameter: "recharge",
@@ -99,29 +107,24 @@ namespace PokemonSkills {
                 label: config && config.focus === true ? "催眠术·凝神" : "催眠术·随惑" };
         },
         execute: function (action, move, config, done) {
+            const scenes = WorldFeedback.actionScenes(hypnosisScene);
             const world = action.world(), actor = action.actor(), target = action.target();
             const self = world.observe(actor);
             if (self === null) { done(action); return; }
             const origin = action.origin();
-            const aimPoint = action.targetPosition();
             const rings = Math.max(4, Math.round(p(hypnosisId, "rings", action)));
             const radius = Math.max(0.18, p(hypnosisId, "gazeRadius", action));
             const speed = Math.max(0.4, p(hypnosisId, "waveSpeed", action));
             const chance = Math.max(0.05, Math.min(0.95, p(hypnosisId, "landChance", action)));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.42));
             const ref = target === null ? "" : String(target.ref());
-            const line: any = target !== null
-                ? [String(actor.ref()), ref]
-                : [[origin.x(), origin.y(), origin.z()], [aimPoint.x(), aimPoint.y(), aimPoint.z()]];
+            let settled = false;
+            function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
             sound(action, "cobblemon:move.sing.actor");
-            // 真实通视细线：从自身连到目标/空放落点，表示这一波要走的路线；运动的前沿由下面的投射物承担。
-            // rings 驱动细线密度与枪口爆发数量，scale 随落点半径缩放线宽与粒子尺寸。
-            WorldFeedback.emit(world, hypnosisScene, 1, origin,
-                { moment: "wave", path: line, rings: rings, scale: scale }, 26);
             const appearance: LivingActions.ProjectileAppearance = {
                 sprite: "cobblemon:particle/generic/psychic/psyswirl", scale: scale, tint: 0x7D5BD8, glow: true
             };
-            // 锁定实体时波跟着它飞；空放时只沿方向直飞。友方也参与碰撞（hitAllies），撞到就散、不改选目标。
+            // 锁定实体时波有限追踪着它飞（每刻约 18°）；空放时只沿方向直飞。友方也参与碰撞（hitAllies），撞到就散、不改选目标。
             if (target !== null && world.valid(target))
                 appearance.homing = { target: ref, turn: 18, delay: 1, range: action.range() };
             appearance.hitAllies = true;
@@ -156,10 +159,12 @@ namespace PokemonSkills {
                 WorldFeedback.text(scope, hypnosisAbove(at), "world_combat.move.hypnosis.text.sleep", [Math.round(ticks / 20)], 32);
                 sound(current, "cobblemon:move.sleeppowder.target");
             }
-            LivingActions.projectile(action, {
+            const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, appearance: appearance,
                 impact: function (current, hit) { land(current, hit); }
-            }, done);
+            }, function (current) { finish(current); });
+            // 暗示波由真实投射物承载：光环与短尾绑在弹体上随它飞、到达才收圈，不预铺整条线。
+            scenes.show(action, "wave", origin, { moment: "wave", projectile: flight, rings: rings, scale: scale });
         }
     });
 }

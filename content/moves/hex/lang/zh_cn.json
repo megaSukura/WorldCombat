@@ -31,5 +31,5 @@
   "world_combat.move.hex.text.blight": "祸不单行！",
   "world_combat.move.hex.text.strike": "被鬼影刺中",
   "world_combat.move.hex.text.miss": "诅咒落空",
-  "worldcombat.skill.hex.description.miss": "诅咒只落在施放时锁定的起手瞄点：若那里没有可承载的地面、或投射被墙截断又无处可落，结界就散去；被选目标跑开不会拖着结界追。"
+  "worldcombat.skill.hex.description.miss": "诅咒沿起手锁定的方向送出，在鬼火头真实的结束点向下找可承载的地面；那里没有可承载地面、或投射被墙截断又无处可落，结界就散去；被选目标跑开不会拖着结界追。"
 }

@@ -5,8 +5,9 @@
  *   （`multihit: [2, 5]`）。描述「用角或喙刺向对手进行攻击，连续攻击2～5次」，约 53 位学习者。
  *
  * 翻译：把「用角或喙连续刺」落成**原地定点突刺**——施法者扎住脚步，用角／喙朝同一个点一下一下地戳；每一下把
- *   对手顶退一点，退到够不着的地方这串就断。它是本族唯一**站定不动、把对手推着打**的连击：贴着墙的对手躲不开，
- *   会被整串吃满；站在空地上的人会被一路顶出射程，这串自然提前收场。
+ *   对手顶退一点，退到够不着的地方，后面的刺就都戳在空处。它是本族唯一**站定不动、把对手推着打**的连击：
+ *   贴着墙或被杀招逼住的对手躲不开，会被整串吃满；站在空地上的人会被一路顶出射程。
+ *   每刺独立掷 `accuracy`，**点敌人和只给方向起手走同一套规则**；前排的身体挡住后排，一刺不会穿透到身后第二排。
  *   与同族分开：乱抓会绕圈换位、扫尾拍打是原地整圈旋尾、骨棒乱打是掷骨夯地；只有乱击把「顶退」做进连击里。
  *
  * 数据分散（每项读不同的精灵数据）：
@@ -33,8 +34,8 @@
 namespace PokemonSkills {
     export const furyattackId = "furyattack";
     export const furyattackScene = "world_combat:move_furyattack";
+    export const furyattackHornScene = "world_combat:move_furyattack_horn";
     export const furyattackMissText = "world_combat.move.furyattack.text.miss";
-    export const furyattackOutText = "world_combat.move.furyattack.text.out";
     export const furyattackTallyText = "world_combat.move.furyattack.text.tally";
 
     actionParameters.define(furyattackId, {
@@ -55,7 +56,7 @@ namespace PokemonSkills {
                 .floor().clamp(2, 5),
             "刺数", {
                 unit: "刺",
-                description: "这一串最多刺出几下（原生 2～5）；物攻定收角速度、等级定耐力。中途落空或目标被顶出射程，这串就断。"
+                description: "这一串最多刺出几下（原生 2～5）；物攻定收角速度、等级定耐力。中途落空一刺，这串就断；目标被顶出射程不算中断，只是后面的刺戳空。"
             }),
         /** 刺距：2.6 + 身高偏移[−0.2,0.9]×0.7 + 速度偏移[−0.15,0.4]×0.01；追击 ×1.05；夹 2.0..4.0。 */
         reach: formula(
@@ -98,7 +99,7 @@ namespace PokemonSkills {
             F.base(1).plus(F.body("width").minus(1.0).times(1.2).clamp(0, 1)).floor().clamp(1, 2),
             "最多刺到", {
                 unit: "个",
-                description: "一刺最多同时刺到几个非友方目标；身宽的个体角尖能盖到并排的第二个。"
+                description: "一刺最多同时刺到几个非友方目标；身宽的个体角尖能盖到并排的第二个。前排的身体会挡住后排，一刺不穿透到身后第二排。"
             }),
         /** 间隔：3 − 速度偏移[−0.6,1.0]×0.02；夹 2..5。 */
         gap: seconds(
@@ -107,7 +108,7 @@ namespace PokemonSkills {
         /** 每刺命中率：0.85 + 速度偏移[−0.03,0.06]；夹 0.72..0.97。 */
         accuracy: percent(
             F.base(0.85).plus(F.stat("speed").minus(55).times(0.001).clamp(-0.03, 0.06)).clamp(0.72, 0.97).round(3),
-            "每刺命中率", "每一刺独立掷的命中率（原生 85% 起）；速度提高它。落空一刺这串就断。"),
+            "每刺命中率", "每一刺独立掷的命中率（原生 85% 起）；速度提高它。点敌人和只给方向起手都掷这一下，落空一刺这串就断。"),
         /** 尘点数量：12 + 物攻偏移[−3,12]；夹 8..30。 */
         sparks: formula(
             F.base(12).plus(F.stat("attack").minus(55).times(0.12).clamp(-3, 12)).clamp(8, 30).round(0),

@@ -2,7 +2,7 @@
  * 宇宙力量 / cosmicpower — 执行组织。
  *
  * 核心念头：站定，一道星光柱从头顶垂直落进身体——防御与特防一起抬起来。它是本组里唯一从天上取力的一招：
- *   起手最长、最容易被中途打断，换来的是夜里星光更盛（夜里多抬 1 级）。
+ *   起手最长、最容易被中途打断，换来的是弱光下星光更盛（日光低于四分之一时多抬 1 级）。
  *
  * 两幕：
  *   引（windup 播「落星」，提交前只观察与预告，打断不花代价）。
@@ -18,8 +18,6 @@ namespace PokemonSkills {
     const cosmicPowerContribution = "world_combat:move/cosmicpower";
     const cosmicPowerSettleText = "world_combat.move.cosmicpower.text.settle";
     const cosmicPowerWaneText = "world_combat.move.cosmicpower.text.wane";
-    /** 表现里的参考半径：`data.scale = 实际星环半径 / 这个数`。 */
-    const cosmicPowerReferenceRadius = 1.5;
 
     /** 关掉本来源此前留下的窗口，让刷新替换而不是叠加。 */
     function cosmicPowerCloseOwnWindows(world: CombatWorld, actor: CombatActor): void {
@@ -35,8 +33,8 @@ namespace PokemonSkills {
         id: "cosmicpower",
         cooldownParameter: "wait",
         name: "宇宙力量",
-        description: "站定，一道星光柱从头顶垂直落进身体：防御与特防一起提高。它是本组起手最长、最容易被中途打断的一招，代价换来的是夜里星光更盛——同样的招在夜里多抬 1 级。窗口走完时两项等级一起收回。",
-        uses: ["拉开距离站定，把两项防护一次拉高", "夜里星光更盛，多抬 1 级", "在挨打之前把壳垫厚，再回头交战"],
+        description: "站定，一道星光柱从头顶垂直落进身体：防御与特防一起提高。它是本组起手最长、最容易被中途打断的一招，代价换来的是弱光下星光更盛——日光低于四分之一时同样的招各多抬 1 级。窗口走完时两项等级一起收回。",
+        uses: ["拉开距离站定，把两项防护一次拉高", "日光低于四分之一时星光更盛，各多抬 1 级", "在挨打之前把壳垫厚，再回头交战"],
         kind: "self",
         range: 1,
         maxRange: 1,
@@ -62,8 +60,15 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, _config, prepare) {
+            // 世界单位的柱长／环半径原样交给表现，起手与提交尺度一致；
+            // 主体星点用真实柱顶到身体点的速度，正好在 prepare 内落进身体。
+            const shaft = Math.max(3, p("cosmicpower", "shaft", action));
+            const ring = Math.max(0.6, p("cosmicpower", "ring", action));
+            const constellation = Math.max(5, Math.min(9, Math.round(p("cosmicpower", "constellation", action))));
+            const fall = Math.max(0.08, shaft / Math.max(1, prepare));
             action.present("world_combat:move_cosmicpower:descend", cosmicPowerScene, 1, action.origin(),
-                JSON.stringify({ moment: "descend" }));
+                JSON.stringify({ moment: "descend", shaft: shaft, shaftHalf: shaft / 2, ring: ring,
+                    columnRadius: ring * 0.5, prepare: prepare, fall: fall, constellation: constellation }));
             return prepare;
         },
         execute: function (action, _move, _config, done) {
@@ -76,7 +81,6 @@ namespace PokemonSkills {
             const halo = Math.max(14, Math.round(p("cosmicpower", "halo", action)));
             const constellation = Math.max(5, Math.min(9, Math.round(p("cosmicpower", "constellation", action))));
             const ring = Math.max(0.6, p("cosmicpower", "ring", action));
-            const scale = ring / cosmicPowerReferenceRadius;
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             // 刷新替换：先撤本来源旧窗口，再挂新的星辉载体与属于自己的窗口。
             cosmicPowerCloseOwnWindows(world, actor);
@@ -93,12 +97,12 @@ namespace PokemonSkills {
             WorldFeedback.emit(world, cosmicPowerScene, 1, feet,
                 { moment: "pour", actor: String(actor.ref()), aegis: aegisLevels, ward: wardLevels, halo: halo,
                     constellation: constellation, shaft: shaft, shaftHalf: shaft / 2, ring: ring, columnRadius: ring * 0.5,
-                    scale: scale, night: night,
+                    night: night,
                     intensity: Math.max(0.8, Math.min(2, (aegisLevels + wardLevels) / 2 + halo / 80)) }, 48);
             if (window)
                 WorldFeedback.onEffect(world, window, "cosmicpower:halo", cosmicPowerScene, 1, feet,
                     { moment: "column", actor: String(actor.ref()), halo: halo, constellation: constellation, ring: ring,
-                        scale: scale, night: night, nightRate: night ? 4 : 0, nightRadius: ring * 1.5 });
+                        night: night, nightRate: night ? 4 : 0, nightRadius: ring * 1.5 });
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.35, 0)), cosmicPowerSettleText,
                 [aegisLevels, wardLevels, Math.round(dwell / 20)], 34);
             world.sound("minecraft:block.beacon.activate", body.position(), 16, "{}");

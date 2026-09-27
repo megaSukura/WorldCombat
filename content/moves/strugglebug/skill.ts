@@ -5,7 +5,9 @@
  *   起（windup，提交前）：撑住身形、脚下泛起一圈将起未起的虫点，只播预告。
  *   涌（burst → wave，提交后）：虫群以施法者脚下为心、沿真实支撑地面向外推进。前缘由一圈射线组成，
  *       每条射线每刻用 `SurfacePaths.advance` 沿地面走出去，遇墙、断崖或悬空就停在该处——虫群不会
- *       隔墙扇拍，也不会在悬空处架桥。前缘扫到谁就把谁缠住：各结算一次 `swarm` 伤害、特攻降
+ *       隔墙扇拍，也不会在悬空处架桥。判定只取上一刻前缘与当前前缘围成的贴地细带，且逐段分开：
+ *       扫过的内部再进入也不会被咬，射线在墙／断崖停下的地段各自收束，不跨空连成整片。前缘扫到谁就把谁缠住：
+ *       各结算一次 `swarm` 伤害、特攻降
  *       `dropStages` 级（只报实际降成功的级数），并实际施加 `world_combat:infested`（移动变慢）。
  *       只有该次状态真正挂上时，才创建一个跟随该目标的托管脚边虫带（`strugglebugCling`），被驱散立即散。
  *       同一目标只被扫到一次；飞在高处、不站真实地面上的目标不会凭上下圆柱被地虫抓到。
@@ -134,6 +136,7 @@ namespace PokemonSkills {
                 current.stopMovement();
                 let active = 0;
                 reach = 0;
+                const before = rays.map(ray => ray.point);
                 for (let i = 0; i < rays.length; i++) {
                     const ray = rays[i];
                     if (!ray.ended) {
@@ -148,8 +151,23 @@ namespace PokemonSkills {
                     reach = Math.max(reach, ray.distance);
                 }
 
+                // 只有前缘扫过的那条贴地细带参与判定，且逐段（相邻两条射线之间）分开：上一刻与当前
+                // 前缘围成的小四边形各自成立，射线在墙／断崖停下的地段自然收束，不跨空连成整片。
                 const outline = frontPoints();
-                const region = WorldGeometry.polygon(outline, { below: 0.9, above: 0.9 });
+                const quads: CombatPoint[][] = [];
+                for (let i = 0; i < outline.length; i++) {
+                    const j = (i + 1) % outline.length;
+                    quads.push([before[i], before[j], outline[j], outline[i]]);
+                }
+                const region: WorldGeometry.Region = {
+                    centre: function () { return ground; },
+                    radius: function () { return reach + 1; },
+                    contains: function (point) {
+                        if (point.y() < ground.y() - 0.9 || point.y() > ground.y() + 0.9) return false;
+                        for (let q = 0; q < quads.length; q++) if (WorldGeometry.insidePolygon(point.x(), point.z(), quads[q])) return true;
+                        return false;
+                    }
+                };
                 WorldGeometry.selectEnemies(scope, region, function (enemy: CombatActor, facts: CombatObservation) {
                     const ref = String(enemy.ref());
                     if (caught[ref] || ref === String(selfActor.ref())) return;

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.dragonenergy.summary": "把自身的生命力凝成一道龙息，沿瞄准方向喷成一个前向的 3D 锥（可朝上空喷，墙会截住）：锥内所有敌人各挨一次龙威并被沿喷出方向带走。威力随自身剩余血量下降、在抽血前快照，满血时最盛；献祭式额外抽走一部分生命来加码。",
+  "worldcombat.skill.dragonenergy.summary": "把自身的生命力凝成一道龙息，沿瞄准方向喷成一个前向的 3D 锥（可朝上空喷，墙会截住）：锥内所有敌人各挨一次龙威并被沿喷出方向带走。威力随自身剩余血量下降、在抽血前快照，满血时最盛；献祭式额外按等级抽走一部分生命来加码，若把自己抽倒则这一喷不再完成。",
   "worldcombat.skill.dragonenergy.use.0": "朝一条线上的敌人一次贯穿",
   "worldcombat.skill.dragonenergy.use.1": "在满血时打出最高的一记前向龙息",
   "worldcombat.skill.dragonenergy.use.2": "把成列的敌人一起推出去",
@@ -18,7 +18,7 @@
   "worldcombat.skill.dragonenergy.value.lifeDraw": "献祭抽血",
   "worldcombat.skill.dragonenergy.value.focusCount": "生命光条数",
   "worldcombat.skill.dragonenergy.preference.sacrifice": "献祭式",
-  "worldcombat.skill.dragonenergy.preference.sacrifice.help": "开启：龙息 ×1.3，但施放瞬间抽走最大生命的一部分（血量越低越危险），血薄时会把后面几发一起打薄甚至自毙，起手与冷却也略增；关闭（守成式）＝不出血、威力较低。",
+  "worldcombat.skill.dragonenergy.preference.sacrifice.help": "开启：龙息 ×1.3，但施放瞬间按等级抽走最大生命的一部分（与当前血量无关），血薄时可能把自己抽倒，这一喷就不再完成，起手与冷却也略增；关闭（守成式）＝不出血、威力较低。",
   "worldcombat.skill.dragonenergy.preference.ai.maxChase": "接近距离",
   "worldcombat.skill.dragonenergy.preference.ai.maxChase.help": "超过这个距离就不主动喷龙息，先朝目标走近。越大越愿意在远处先手，锥也越容易只罩住一个。",
   "worldcombat.skill.dragonenergy.preference.ai.line": "成列时优先",

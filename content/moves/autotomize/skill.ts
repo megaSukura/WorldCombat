@@ -7,11 +7,12 @@
  *
  * 两幕：
  *   卸（windup 播「撬件」，提交前只观察与预告，打断不花代价）。
- *   轻（提交后）：NativeEffects.boost(spe, gift) 写入公共能力阶梯，按 parts 甩出短寿命、
- *     不可拾取的 WorldBodies 外壳（按施法者属性取材的原生外观，受真实重力抛落、随后自行散掉），
- *     并挂共享身份 world_combat:status/lightened 的「轻身」窗口。窗口内由 world_combat:autotomize_mark
- *     把重力按 buoyancy 下调；mark 锚定这次 MobEffect 的实际应用（carrier），窗口被牛奶、/effect clear
- *     或自然到期结束时就地收回重力，重施先替换旧窗口与旧 mark，不叠多份。
+ *   轻（提交后）：先确认新的「轻身」MobEffect 真的应用成功，再替换旧的 mark 与重力层；
+ *     NativeEffects.boost(spe, gift) 按实际回执写入公共能力阶梯，按成功抛出的件数甩出短寿命、
+ *     不可拾取的装饰性 WorldBodies 外壳（targetable:false，不参与战斗碰撞；按施法者属性取材的原生外观，
+ *     受真实重力抛落、随后自行散掉），并挂共享身份 world_combat:status/lightened 的「轻身」窗口。
+ *     窗口内由 world_combat:autotomize_mark 把重力按 buoyancy 下调；mark 锚定这次 MobEffect 的实际应用
+ *     （carrier）与其真实寿命，窗口被牛奶、/effect clear 或自然到期结束时就地收回重力，重施先替换旧窗口与旧 mark，不叠多份。
  * 反制：窗口只是「轻」的读法，速度等级不随窗口收回（外壳已经没了）；想再快只能等冷却、再卸一轮。
  *   重力下调只改变跳跃与下落，不会让静止的身体悬浮起来。
  *
@@ -39,10 +40,12 @@ namespace PokemonSkills {
         normal: "minecraft:flint"
     };
 
-    function autotomizePartOf(world: CombatWorld, pokemon: CombatPokemon): string {
-        for (let index = 0; index < pokemon.typeCount(); index++) {
-            const id = autotomizeMaterial[String(pokemon.type(index))];
-            if (id && world.item(id) !== null) return id;
+    function autotomizePartOf(world: CombatWorld, pokemon: CombatPokemon | null): string {
+        if (pokemon !== null) {
+            for (let index = 0; index < pokemon.typeCount(); index++) {
+                const id = autotomizeMaterial[String(pokemon.type(index))];
+                if (id && world.item(id) !== null) return id;
+            }
         }
         return "minecraft:flint";
     }
@@ -149,22 +152,26 @@ namespace PokemonSkills {
             const fling = Math.max(0.1, p("autotomize", "fling", action));
             const window = Math.max(80, Math.round(p("autotomize", "lightTicks", action)));
             const buoyancy = Math.max(0.05, Math.min(0.6, p("autotomize", "buoyancy", action)));
-            NativeEffects.boost(world, actor, "spe", gift);
-            // A recast replaces the old window and its mark instead of stacking a second gravity drop.
+            // A refused refresh keeps the live window and its gravity exactly as they were; only a freshly accepted
+            // carrier lets us retire the old mark (otherwise the old layer would be lost to a rejected recast).
+            const carrier = MobEffects.set(world, actor, autotomizeLight, window, 0);
+            if (carrier === null) { done(action); return; }
             world.effects(actor, autotomizeMark).forEach(function (view) {
                 world.operation(view.id(), "world_combat:dispel", "{}");
             });
-            const carrier = MobEffects.set(world, actor, autotomizeLight, window, 0);
             const centre = body.position(), width = body.width(), height = body.height();
             const shellScale = Math.max(0.35, Math.min(0.85, (width + height) / 4));
-            if (carrier) {
-                const mark = world.effect(autotomizeMark, actor,
-                    JSON.stringify({ gravity: buoyancy, anchor: MobEffects.anchor(carrier) }), window);
-                // 持续表现绑在 mark 上：窗口被清除或到期时一起收走，不会在驱散后继续播放。
-                if (mark > 0) WorldFeedback.onEffect(world, mark, "autotomize:light", autotomizeScene, 1, centre,
-                    { moment: "light", actor: String(actor.ref()), buoyancy: buoyancy, parts: parts });
-            }
-            const item = autotomizePartOf(world, CobblemonCombat.pokemon(actor));
+            const markTicks = Math.max(1, Math.min(12000, carrier.duration() > 0 ? carrier.duration() : window));
+            const mark = world.effect(autotomizeMark, actor,
+                JSON.stringify({ gravity: buoyancy, anchor: MobEffects.anchor(carrier) }), markTicks);
+            // 持续表现绑在 mark 上：窗口被清除或到期时一起收走，不会在驱散后继续播放。
+            if (mark > 0) WorldFeedback.onEffect(world, mark, "autotomize:light", autotomizeScene, 1, centre,
+                { moment: "light", actor: String(actor.ref()), buoyancy: buoyancy, parts: parts });
+            // Report the real speed gain, not the theoretical one: a body already at the cap gains nothing.
+            const gained = NativeEffects.boost(world, actor, "spe", gift);
+            const caster = String(actor.domain()) === "cobblemon" ? CobblemonCombat.pokemon(actor) : null;
+            const item = autotomizePartOf(world, caster);
+            let shed = 0;
             for (let index = 0; index < parts; index++) {
                 const angle = world.random() * Math.PI * 2, speed = fling * (0.6 + world.random() * 0.6);
                 const drop = WorldCombat.point(Math.cos(angle) * (width * 0.5 + 0.25),
@@ -173,16 +180,18 @@ namespace PokemonSkills {
                     const shell = WorldBodies.spawn(world, centre.plus(drop), {
                         appearance: { item: item, scale: shellScale, spin: true },
                         size: [shellScale, shellScale], health: 1, speed: 0, gravity: true, pushable: false,
-                        invulnerable: true, knockbackResistance: 1, silent: true
+                        targetable: false, invulnerable: true, knockbackResistance: 1, silent: true
                     }, autotomizeShell, { scale: shellScale, parts: parts }, 45);
                     world.motion(shell, WorldCombat.point(Math.cos(angle) * speed, 0.2, Math.sin(angle) * speed), false);
+                    shed++;
                 } catch (error) { /* 外壳被拒绝时只丢这一片，轻身机制照常 */ }
             }
+            if (gained === 0 && shed === 0) { done(action); return; }
             WorldFeedback.emit(world, autotomizeScene, 1, centre,
-                { moment: "shed", actor: String(actor.ref()), gift: gift, parts: parts, buoyancy: buoyancy, window: window,
-                    scale: Math.max(0.7, Math.min(2, 0.9 + parts * 0.12)),
-                    intensity: Math.max(0.8, Math.min(2, gift / 2 + parts * 0.08)) }, 30);
-            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), autotomizeText, [gift, parts], 30);
+                { moment: "shed", actor: String(actor.ref()), gift: gained, parts: shed, buoyancy: buoyancy, window: window,
+                    scale: Math.max(0.7, Math.min(2, 0.9 + shed * 0.12)),
+                    intensity: Math.max(0.8, Math.min(2, gained / 2 + shed * 0.08)) }, 30);
+            WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.3, 0)), autotomizeText, [gained, shed], 30);
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.7, 0)), autotomizeLightText, [Math.round(buoyancy * 100)], 40);
             world.sound("minecraft:entity.armor_stand.break", centre, 16, "{}");
             done(action);

@@ -25,7 +25,7 @@
   "worldcombat.skill.iceball.value.frostTicks": "冰面停留",
   "worldcombat.skill.iceball.value.shards": "冰屑点数",
   "worldcombat.skill.iceball.value.tempo": "起手",
-  "worldcombat.skill.iceball.value.recover": "收招",
+  "worldcombat.skill.iceball.value.rest": "收招",
   "worldcombat.skill.iceball.value.recharge": "冷却",
   "worldcombat.skill.iceball.preference.thick": "厚壳式",
   "worldcombat.skill.iceball.preference.thick.help": "开启（厚壳）：每中一发乘 2.3、威力上限 +15%、每层加粗 ×1.2、加粗上限 ×1.2、冰面更大更久，代价是球速 ×0.85、两发间隔 +2 刻、收招 +2 刻、冷却 +6 刻、每发基础威力 ×0.9。关闭（薄壳，原生形态）：乘 2.0、球飞得更快、两发间隔与冷却更短，代价是上限较低、长不粗、冰面更小更短。",
@@ -33,5 +33,5 @@
   "worldcombat.skill.iceball.preference.ai.maxChase.help": "超过这个距离就不抛球，先走近。越大越愿意从远处先手。",
   "world_combat.move.iceball.text.cap": "冰球撞满 %1$s 趟，碎开",
   "world_combat.move.iceball.text.hit": "冰球撞击 %1$s",
-  "worldcombat.skill.iceball.description.stance": "冰球在飞的整段里，施放者定在原地、无法移动或做其他动作。方向在释放时锁定，目标倒下或离开也不会取消已发出的球；空发、撞框或伤害被拒就当场碎冰收尾，撞满发数同样收束。"
+  "worldcombat.skill.iceball.description.stance": "冰球在飞的整段里，施放者定在原地、无法移动或做其他动作。按住技能键时每一发按当刻瞄准方向推出，AI 或无持续输入时逐发沿释放时锁定的方向；目标倒下或离开也不会取消已发出的球；空发、撞框或伤害被拒就当场碎冰收尾，撞满发数同样收束。空发按弹体真实末点处理，不会冻在上一颗的接触处。"
 }

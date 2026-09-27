@@ -19,7 +19,7 @@
   "worldcombat.skill.magiccoat.preference.sweep": "膜幅",
   "worldcombat.skill.magiccoat.preference.sweep.help": "广膜：反射距离 ×1.3，但膜持续 ×0.8、起手 +2 刻、冷却 ×1.1；窄膜：膜持续 ×1.2、起手 −1 刻、冷却 ×0.9，但反射距离 ×0.8。挡得远与等得久二选一。",
   "worldcombat.skill.magiccoat.preference.ai.maxChase": "考虑距离",
-  "worldcombat.skill.magiccoat.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才撑膜；调小只在贴身时撑，调大在更远处就先备好。",
+  "worldcombat.skill.magiccoat.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才撑膜；实际反射距离是本招自己算出的上限，这个值再收紧时只在更近处撑，调大则允许在射程内先备好。",
   "worldcombat.skill.magiccoat.preference.ai.opening": "出手时机",
   "worldcombat.skill.magiccoat.preference.ai.opening.help": "随时：确认对手会施加异常时撑膜；受压时撑膜：已确认异常威胁，且自己或主人正受压时撑。",
   "worldcombat.skill.magiccoat.preference.ai.opening.anytime": "随时",

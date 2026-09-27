@@ -5,7 +5,8 @@
  *   云留在地上慢慢飘，谁走进来，身上的病痛就被香气化成粉色花瓣卷走（cloud / cleanse）。
  * 色相家族：柔粉 0xF6C7E0 作香云主体，新绿 0xA8DFA0 作飘走的花叶细节，被化掉的病痛用低饱和暗紫 0x8A6BB0 画小面积。
  * 拍子：起 windup 0–14t ／ 铺 release 0–26t、settle 0–30t ／ 留 cloud 持续 ／ 净 cleanse 0–24t。
- * 范围：settle 与 cloud 的圆环绑 point、fit none，几何按 data.scale = 实际香云半径 / 3.0 缩放，云边即判定边。
+ * 范围：release 的香线用 fit world 按真实送香距离铺满，不再随香云半径缩放；settle 与 cloud 的圆环绑 point、fit none，
+ *   几何按 data.scale = 实际香云半径 / 3.0 缩放，云边即判定边，云轮廓由场地效果托管（onEffect）随云散一起收。
  * 数：release/cloud 的香雾数与 settle 的落点爆量绑 data.motes（特防与体型派生），净化花瓣数绑 data.removed（本次化掉的项数）。
  */
 const AromatherapyDefinition: ParticleDefinition = {
@@ -38,7 +39,7 @@ const AromatherapyDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "release_jet", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "none", orient: "direction",
+                    name: "release_jet", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     rate: 70, shape: { kind: "line", length: { data: "distance", fallback: 3 } },
                     direction: "shape", speed: [0.04, 0.12],
@@ -46,7 +47,7 @@ const AromatherapyDefinition: ParticleDefinition = {
                     color: 0xF6C7E0, alpha: [0.9, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "release_petal", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "none", orient: "direction",
+                    name: "release_petal", bind: "point", offset: [0, 0.25, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/vanilla/cherry_petal",
                     rate: 20, shape: { kind: "line", length: { data: "distance", fallback: 3 } },
                     direction: "shape", speed: [0.03, 0.09], spin: 8,

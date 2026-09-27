@@ -1,25 +1,36 @@
-/** guillotine: one native execution attempt; native damage events and immunity determine its result. */
+/** guillotine: one bounded native clamp; native immunity and damage events determine its result. */
 namespace PokemonSkills {
-    export const guillotineResisted = "world_combat:guillotine_resisted";
-    WorldCombat.effect(guillotineResisted, 1, 400, "actor", json => json, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(guillotineResisted, "start", function () { });
-
     export const guillotineId = "guillotine";
     export const guillotineScene = "world_combat:move_guillotine";
     export const guillotineKillText = "world_combat.move.guillotine.text.kill";
+    export const guillotineHitText = "world_combat.move.guillotine.text.hit";
     export const guillotineMissText = "world_combat.move.guillotine.text.miss";
     /** 表现里钳口的参考长度（格）；服务端传 scale = 实际钳口长度 / 这个值。 */
     export const guillotineReference = 2.4;
 
-    /**
-     * 处决：钳口合拢，把目标剩下的生命一次夹断。属性免疫（一般系打不到幽灵）返回 "immune"。
-     * 目标防御、护甲与韧性不参与——原生伤害事件决定本次是否生效。
-     */
-    export function guillotineExecute(action: CombatAction, target: CombatActor): "kill" | "immune" | "miss" | "resisted" {
+    const guillotineDeath = "world_combat:move_guillotine/death_receipt";
+    WorldCombat.effect(guillotineDeath, 1, 4, "actor", json => json, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(guillotineDeath, "start", () => {});
+    WorldCombat.effectHandler(guillotineDeath, "operation:world_combat:dispel", effect => effect.end());
+    WorldCombat.on("world_combat:guillotine/confirmed", "world_combat:actor_died", "", event => {
+        const death: CombatNativeDeathFacts = JSON.parse(event.data()), world = event.world(), source = event.actor();
+        if (death.sourceEntity !== String(source.ref()).split("/")[0] || death.damageType !== "world_combat_core:action_independent") return;
+        world.effects(source, guillotineDeath).forEach(view => {
+            const expected = JSON.parse(view.data());
+            if (death.victim !== expected.target || death.tick !== expected.tick) return;
+            world.operation(view.id(), "world_combat:dispel", "{}");
+            const at = WorldCombat.point(death.position[0], death.position[1], death.position[2]);
+            WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1, 0)), guillotineKillText, [], 28);
+            world.sound("minecraft:item.trident.hit", at, 14, "{}");
+        });
+    });
+
+    /** Fixed native HP receipt; a separate final native death fact confirms a kill. */
+    export function guillotineStrike(action: CombatAction, target: CombatActor): "hit" | "immune" | "resisted" | "source-left" {
         const world = action.world();
-        if (!world.valid(target) || world.friendly(target)) return "miss";
+        if (!world.valid(target) || world.friendly(target)) return "resisted";
         const body = world.observe(target);
-        if (body === null || body.health() <= 0) return "miss";
+        if (body === null || body.health() <= 0) return "resisted";
         const move = CobblemonCombat.moveTemplate(guillotineId), type = String(move.type());
         const facts = PokemonDamage.combatants.read(world, target);
         for (let index = 0; index < facts.types.length; index++)
@@ -27,20 +38,25 @@ namespace PokemonSkills {
                 PokemonDamage.immune(world, target, JSON.stringify({ kind: "move", move: guillotineId, type: type }));
                 return "immune";
             }
-        const metadata: any = { kind: "move", move: guillotineId, type: type, category: String(move.category()),
-            contact: true, knockback: false, bypassCooldown: true, targetScale: 1, critical: false, action: action.id() };
-        const armor = world.attributeValue(target, "minecraft:generic.armor");
-        if (armor !== null) metadata.armorExcluded = armor.value();
-        const toughness = world.attributeValue(target, "minecraft:generic.armor_toughness");
-        if (toughness !== null) metadata.toughnessExcluded = toughness.value();
-        const accepted = world.hurt(target, body.health() + body.maxHealth(), JSON.stringify(metadata));
-        const after = world.observe(target);
-        if (accepted && (after === null || after.health() <= 0)) return "kill";
-        world.effect(guillotineResisted, target, "{}", 400);
-        return "resisted";
+        const amount = Math.max(0, p(guillotineId, "damage", action));
+        const nativeSource = world.nativeEntity(action.actor());
+        const receipt = PokemonDamage.fixedReceipt(world, target, move, amount,
+            { contact: true, knockback: false, bypassCooldown: true, ignoreArmor: true }, "immunity", action);
+        if (!nativeSource || !nativeSource.isAlive() || nativeSource.isRemoved()) return "source-left";
+        if (!(receipt.actual > 0)) return "resisted";
+        if (receipt.after !== null && receipt.after <= 0)
+            world.effect(guillotineDeath, action.actor(), JSON.stringify({ target: String(target.ref()), tick: receipt.tick }), 4);
+        return "hit";
     }
 
     actionParameters.define(guillotineId, {
+        /** 重夹伤害：20 + 0.65×物攻 + 0.2×等级；夹 20..160，世界生命点。 */
+        damage: formula(
+            F.base(20).plus(F.stat("attack").times(0.65)).plus(F.level().times(0.2)).clamp(20, 160).round(1),
+            "重夹伤害", {
+                unit: "点",
+                description: "两钳缘合拢时对钳口内首个敌人一次结算的真实生命伤害；由自己的物攻与等级决定，目标还剩多少生命都不改变它，也不暴击。只有属性免疫与原生减伤会拦住它。"
+            }),
         /** 钳口长度：2.4 + 宽度偏移[−0.15,0.8] + 等级(≥25)偏移[0,0.5]；阔钳 ×1.1；夹 1.8..3.8。 */
         span: formula(
             F.base(2.4).plus(F.body("width").minus(0.9).times(0.55).clamp(-0.15, 0.8))
@@ -95,7 +111,7 @@ namespace PokemonSkills {
     ]);
 
     describe(guillotineId, [
-        { key: "description.0", values: ["span", "arc"] },
+        { key: "description.0", values: ["damage", "span", "arc"] },
         { key: "description.1", values: ["mark"] },
         { key: "description.2", values: ["recover"] },
         { key: "wide.on", values: [], when: function (context) { return read(context.detail.values, ["wide"]) === true; } },

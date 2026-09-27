@@ -9,6 +9,15 @@ namespace PokemonSkills {
         }
         return false;
     }
+    /** 目标当前最低的有效等级；< 0 表示确实有一项被压低，值得优先点它。 */
+    function acupressureWeakest(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+        let lowest = 0;
+        for (let index = 0; index < acupressureAiStats.length; index++) {
+            const stage = CompanionBehavior.stage(context, target, acupressureAiStats[index]);
+            if (stage < lowest) lowest = stage;
+        }
+        return lowest;
+    }
 
     CompanionBehavior.registerUse("acupressure", {
         protocols: ["world_combat:fortify", "world_combat:bolster"],
@@ -35,10 +44,15 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
-            if (String(target.ref) !== String(self.ref)) return 68;
+            const weakest = acupressureWeakest(context, target);
+            if (String(target.ref) !== String(self.ref)) {
+                // 优先救明确被削弱的近友；没有负项时只是普通补强，让位给确定的增益。
+                return weakest < 0 ? 86 : 58;
+            }
             const threat = context.senses["world_combat:threat"];
             if (!threat) return 0;
-            return CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2) ? 0 : 92;
+            if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return 0;
+            return weakest < 0 ? 100 : 90;
         }
     });
 

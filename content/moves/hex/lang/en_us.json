@@ -31,5 +31,5 @@
   "world_combat.move.hex.text.blight": "Misfortune piles on!",
   "world_combat.move.hex.text.strike": "Struck by the curse",
   "world_combat.move.hex.text.miss": "The curse fizzles",
-  "worldcombat.skill.hex.description.miss": "The curse lands only on the aim point locked in at cast; if there is no supportable ground there, or the flight is cut off by a wall with nowhere to land, the sigil fizzles. A chosen target running away never drags it along."
+  "worldcombat.skill.hex.description.miss": "The curse travels along the direction locked in at cast and looks for supportable ground at the wisp's real end point; if there is none there, or the flight is cut off by a wall with nowhere to land, the sigil fizzles. A chosen target running away never drags it along."
 }

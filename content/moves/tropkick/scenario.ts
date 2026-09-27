@@ -25,7 +25,7 @@ Smoke.scenario("tropkick", function (stage) {
             stage.expect(stage.damageTo(golem) > 0, "the kick dealt damage to the target");
             stage.expect(stage.attribute(golem, "minecraft:generic.attack_damage") < baseAttack,
                 "the kick lowered the target's attack attribute through the shared stat ladder");
-            stage.note("trop kick is a low, flat side kick that lowers Attack on contact; it does not move the target and leaves no scorch. After a hit the user withdraws a short step backwards when there is room behind. Random parts: damage roll and crit.", {
+            stage.note("trop kick is a low, flat side kick that lowers Attack on contact; the drop is reported from the native accepted delta (none once at the floor). It does not move the target and leaves no scorch. After a hit the user withdraws a short step backwards only when the whole retreat path is clear and supported. Random parts: damage roll and crit.", {
                 casts: stage.casts("tropkick", queen),
                 baseAttack: Math.round(baseAttack * 100) / 100,
                 attackNow: Math.round(stage.attribute(golem, "minecraft:generic.attack_damage") * 100) / 100,

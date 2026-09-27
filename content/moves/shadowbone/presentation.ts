@@ -5,10 +5,11 @@
  * 目标头上再冒一层鬼火。
  * 色相家族：幽紫与近黑（impact_ghost／obscuringsmoke 原色、shadowball_impact）＋一处冷白高光（glowingsparkle）。
  * 拍子：起（windup 骨影成形）→ 击（throw 骨棒尾迹 → impact 阴气炸开）→ 收（wail 仅在真的慑防后出现）。
- * 范围：impact 在命中点炸开的团就是骨棒的判定尺度；`data.scale` 与机制里的判定半径同源，骨棒越大炸得越开。
+ * 范围：impact 在命中点炸开的团就是骨棒的判定尺度；burst 的形状半径用参考值 1，由引擎按 `data.scale`
+ *   （判定半径 / 参考 0.3）缩放一次。windup 的身侧聚骨按服务端传入的 `data.offX`/`data.offZ` 随当前朝向定位。
  * 运动：骨棒本体用翻转的物品外观（minecraft:bone）飞行，尾迹沿它的轨迹拖出；阴气从命中点朝外散，鬼火在目标身上慢慢收。
  * 数：`data.notes`（骨棒威力换算）绑定阴气与碎屑数量，`data.scale`（判定半径换算）绑定爆开尺度，
- * `data.stages`（慑防等级）绑定鬼火数量。
+ *   `data.stages`（实际慑防等级）绑定鬼火数量。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const ShadowboneDefinition: ParticleDefinition = {
@@ -19,7 +20,7 @@ const ShadowboneDefinition: ParticleDefinition = {
             exit: { stop: 4, drain: 12 },
             emitters: [
                 {
-                    name: "gather", bind: "source", offset: [0.4, 0.7, 0.3], height: 0.3,
+                    name: "gather", bind: "source", offset: [{ data: "offX", fallback: 0.4 }, 0.7, { data: "offZ", fallback: 0.3 }], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
                     rate: 14, shape: { kind: "sphere", radius: 0.3 },
                     direction: "inward", speed: [0.02, 0.09],
@@ -27,7 +28,7 @@ const ShadowboneDefinition: ParticleDefinition = {
                     color: 0x5A4A7A, alpha: [0.45, 0], light: "world", maxParticles: 30
                 },
                 {
-                    name: "spirit", bind: "source", offset: [0.4, 0.75, 0.3], height: 0.3,
+                    name: "spirit", bind: "source", offset: [{ data: "offX", fallback: 0.4 }, 0.75, { data: "offZ", fallback: 0.3 }], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/orb/scalingshaded",
                     rate: 16, shape: { kind: "sphere", radius: 0.26 },
                     direction: "inward", speed: [0.02, 0.08],
@@ -65,10 +66,10 @@ const ShadowboneDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "burst", bind: "point", offset: [0, 0.0, 0],
+                    name: "burst", bind: "point", fit: "none", offset: [0, 0.0, 0],
                     particle: "world_combat_core:cobblemon/moves/shadowball_impact",
                     burst: { count: { data: "notes", fallback: 16 }, at: 0 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 1 },
                     direction: "outward", speed: [0.05, 0.2], spread: 20,
                     lifetime: [8, 16], size: [0.4, 0.1], sizeMode: "index",
                     color: 0x8A7AB8, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 70

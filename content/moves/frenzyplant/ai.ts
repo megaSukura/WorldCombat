@@ -1,23 +1,59 @@
 /**
  * 疯狂植物的 AI 用途。
  *
- * 什么局面下出手：目标可见、敌对、活着且在施放距离以内，落点附近挤着至少 `ai.minTargets` 个可见敌人
- * （默认 1）；因为根须褪去后要力竭一段，自身生命要高于 `ai.minHealth`（或这一圈能罩住三个以上）才出手。
- * 对谁出手：在候选里挑「周围敌人最密」的那个当落点（selectTarget），一圈抽到更多人。
+ * 什么局面下出手：目标可见、敌对、活着且在施放距离以内，落点周围的**真实根臂**能扫到至少 `ai.minTargets` 个可见敌人
+ * （默认 1）；因为根臂一开始抽合就要力竭一段，自身生命要高于 `ai.minHealth`（或这一圈能罩住三个以上）才出手。
+ * 对谁出手：在候选里挑「根尖覆盖最密」的那个当落点（selectTarget），一圈抽到更多人。
  * 怎么够到：共享接近把身位收到射程以内（`kind: "point"`，以目标位置为落点）。
  * 出手前后：放完交回共享交战计划；力竭期间招式由共享起手门禁自动屏蔽。
+ *
+ * 覆盖按执行时的同一套根臂几何估算：有支撑的入口、方向、爆发半径与根尖宽度；固定半径聚群不能代替根尖命中。
  */
 namespace PokemonSkills {
-    /** 以 target 为落点、半径约 3 格内当前可见敌人的数量；用于聚堆判断与排序。 */
-    function frenzyplantCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+    /** 一次决策共享的参数上下文：同一批读取复用世界、施法者与配置。 */
+    function frenzyplantParameterContext(context: WorldBehavior.Context, capability: WorldBehavior.Capability): FactContext {
+        const world = CompanionBehavior.world(context);
+        return { world: world, actor: world.source(), skill: skills["frenzyplant"], detail: { values: capability.data.config } };
+    }
+
+    function frenzyplantLanding(context: WorldBehavior.Context, subject: CompanionBehavior.Entity): CombatPoint | null {
+        const access = CompanionBehavior.world(context), here = CompanionBehavior.point(subject.point);
+        return SurfacePaths.support(access, WorldCombat.point(here.x(), here.y(), here.z()), .1, 2);
+    }
+
+    /** The supported arm entry points for a landing, exactly as the cast generates them. */
+    function frenzyplantArmBases(context: WorldBehavior.Context, capability: WorldBehavior.Capability, landing: CombatPoint): CombatPoint[] {
+        const access = CompanionBehavior.world(context), radius = p("frenzyplant", "radius", frenzyplantParameterContext(context, capability));
+        const count = Math.max(3, Math.min(5, Math.round(radius + 1))), bases: CombatPoint[] = [];
+        for (let i = 0; i < count; i++) {
+            const angle = i / count * Math.PI * 2;
+            const at = SurfacePaths.support(access, landing.plus(WorldCombat.point(Math.cos(angle) * radius, 0, Math.sin(angle) * radius)), 1, 1);
+            if (at) bases.push(at);
+        }
+        return bases;
+    }
+
+    /** Visible enemies whose body the supported root tips would actually sweep. */
+    function frenzyplantCovered(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
+        const landing = frenzyplantLanding(context, target);
+        if (!landing) return 0;
+        const bases = frenzyplantArmBases(context, capability, landing);
+        if (!bases.length) return 0;
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        let count = 0;
+        let covered = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || !(other.health > 0) || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.0) count++;
+            if (Math.abs(other.point[1] - landing.y()) > 3.0) continue;
+            // 根尖在近地面扫过，覆盖按水平面比较身体位置，再按半宽加宽。
+            const body = WorldCombat.point(other.point[0], landing.y(), other.point[2]);
+            const half = typeof other.width === "number" ? other.width / 2 : 0.4;
+            for (let a = 0; a < bases.length; a++) {
+                const closest = WorldGeometry.closestOnSegment(body, bases[a], landing);
+                if (closest.minus(body).length() <= 0.32 + half) { covered++; break; }
+            }
         }
-        return count;
+        return covered;
     }
 
     CompanionBehavior.registerUse("frenzyplant", {
@@ -32,12 +68,12 @@ namespace PokemonSkills {
         selectTarget: function (context, capability, proposed) {
             if (proposed.friendly || !(proposed.health > 0) || !proposed.visible) return proposed;
             const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-            let best = proposed, bestScore = frenzyplantCluster(context, capability, proposed);
+            let best = proposed, bestScore = frenzyplantCovered(context, capability, proposed);
             for (let i = 0; i < nearby.length; i++) {
                 const other = nearby[i];
                 if (other.friendly || !(other.health > 0) || !other.visible) continue;
                 if (CompanionBehavior.distance(CompanionBehavior.source(context).point, other.point) > capability.data.range) continue;
-                const score = frenzyplantCluster(context, capability, other);
+                const score = frenzyplantCovered(context, capability, other);
                 if (score > bestScore) { best = other; bestScore = score; }
             }
             return best;
@@ -47,21 +83,19 @@ namespace PokemonSkills {
             if (!target) return true;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return false;
-            const cluster = frenzyplantCluster(context, capability, target);
-            if (cluster < CompanionBehavior.ai<number>(capability, "minTargets", 1)) return false;
+            const covered = frenzyplantCovered(context, capability, target);
+            if (covered < CompanionBehavior.ai<number>(capability, "minTargets", 1)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.35);
-            return CompanionBehavior.ratio(self) >= minHealth || cluster >= 3;
+            return CompanionBehavior.ratio(self) >= minHealth || covered >= 3;
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
-            const access=CompanionBehavior.world(context),point=CompanionBehavior.point(target.point);
-            let clear=0;for(let i=0;i<4;i++){const a=i*Math.PI/2,from=point.plus(WorldCombat.point(Math.cos(a)*2,1,Math.sin(a)*2));const clip=access.clipBlocks(from,point);if(clip&&!clip.blocked())clear++;}
-            if(!clear)return 0;
-            const cluster = frenzyplantCluster(context, capability, target);
-            return cluster >= 3 ? 48 : cluster >= 2 ? 26 : 12;
+            const covered = frenzyplantCovered(context, capability, target);
+            if (covered <= 0) return 0;
+            return covered >= 3 ? 48 : covered >= 2 ? 26 : 12;
         }
     });
 
@@ -71,7 +105,7 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.minTargets"), "最少目标数", "number", {
             min: 1, max: 4, step: 1,
-            help: "落点附近至少有几个敌人才主动施放。调高更惜用、专等对手聚堆，调成 1 则对单个目标也放。"
+            help: "落点周围的根臂至少要扫到几个敌人才主动施放。调高更惜用、专等对手聚堆，调成 1 则对单个目标也放。"
         }),
         field(pathOf("ai.minHealth"), "保留生命", "number", {
             min: 0, max: 0.8, step: 0.05,

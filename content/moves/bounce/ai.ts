@@ -48,13 +48,17 @@ namespace CompanionBehavior {
         },
         priority: function (context, item, target) {
             if (!target) return 0;
-            const self = source(context);
-            if (ratio(self) < ai<number>(item, "escapeBelow", 0.55) && distance(self.point, target.point) <= item.data.range) return 60;
-            // 遮顶时仍能低跳，只是明显降权；开阔处再给地面敌群加权。
+            const world = CompanionBehavior.world(context), self = source(context);
+            const radius = PokemonSkills.p(PokemonSkills.bounceId, "impactRadius",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills[PokemonSkills.bounceId], detail: { values: item.data.config } });
+            // 受压逃生必须是「贴地的近战威胁 + 头顶有净空」：任意低血本身不算安全逃生。
+            const near = distance(self.point, target.point) <= Math.max(2.0, radius + 1.0);
+            if (ratio(self) < ai<number>(item, "escapeBelow", 0.55) && near && bounceOpen(context) && target.grounded !== false) return 60;
+            // 遮顶时仍能低跳，只是明显降权；开阔处再给地面敌群加权，聚群半径按真实落地圈。
             if (!bounceOpen(context)) return 5;
             let crowd = 0;
             (context.facts.nearby as Entity[]).forEach(function (other) {
-                if (!other.friendly && other.health > 0 && distance(other.point, target.point) <= 3) crowd++;
+                if (!other.friendly && other.health > 0 && distance(other.point, target.point) <= Math.max(0.7, radius)) crowd++;
             });
             return (status(context, target, "paralysis") ? 8 : 16) + (target.grounded ? 2 : 0) + Math.min(6, crowd * 2);
         }

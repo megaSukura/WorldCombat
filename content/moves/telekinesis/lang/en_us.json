@@ -24,7 +24,7 @@
   "worldcombat.skill.telekinesis.preference.ai.requireGrounded": "Grounded targets only",
   "worldcombat.skill.telekinesis.preference.ai.requireGrounded.help": "On: only lift targets that still stand on the ground; flying targets are skipped. Off: lift already-airborne targets too.",
   "worldcombat.skill.telekinesis.preference.ai.avoidProtecting": "Avoid ground-weak targets",
-  "worldcombat.skill.telekinesis.preference.ai.avoidProtecting.help": "On: do not lift Fire/Electric/Poison/Rock/Steel-like targets, so their Ground weakness is not shielded. Off: control first, lift them anyway.",
+  "worldcombat.skill.telekinesis.preference.ai.avoidProtecting.help": "On: judge by the full type matchup and do not lift targets that are genuinely Ground-weak (Ground effectiveness product above 1), so their weakness is not shielded. Off: control first, lift them anyway.",
   "worldcombat.skill.telekinesis.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.telekinesis.preference.ai.leaveStation.help": "On: a holding companion will leave its post to lift the target. Off: it casts only where it already stands.",
   "effect.world_combat.telekinesis_field": "Telekinesis",
@@ -34,5 +34,5 @@
   "world_combat.move.telekinesis.text.negate": "Ground moves cannot reach it",
   "worldcombat.skill.telekinesis.description.3": "An opponent that is already suspended cannot be lifted again; burrowing species such as Diglett, Dugtrio, Sandygast and Palossand refuse to leave the ground, and the cast also needs an unobstructed line to the target.",
   "worldcombat.skill.telekinesis.description.4": "When the time runs out the hold releases and the suppressed movement returns; being smacked down or caught by Gravity cuts it short early.",
-  "worldcombat.skill.telekinesis.description.1": "Rooting, grounding and native refusal prevent the lift. Actual damage, removal, caster loss or leaving the lift point releases it. Ceilings determine real height."
+  "worldcombat.skill.telekinesis.description.1": "Rooting, grounding and native refusal prevent the lift. Actual damage, removal, caster loss, the caster moving out of range or being cut off by a wall, or the target leaving the lift point releases it. Ceilings determine real height."
 }

@@ -54,7 +54,8 @@ namespace CompanionBehavior {
 
     registerUse(PokemonSkills.magneticfluxId, {
         protocols: ["world_combat:fortify"],
-        reach: function (_context, item) { return Math.max(1.5, ai<number>(item, "pack", 6) * 0.5); },
+        // 站位距离就是真实磁场半径：走到离要罩住的伙伴这么近，脚下立起的场才真的盖住它。
+        reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, _target) {
             if (context.facts.mounted) return false;
             const pick = magneticfluxPick(context, item);
@@ -64,7 +65,8 @@ namespace CompanionBehavior {
             return !!pick;
         },
         accepts: function () { return true; },
-        approachTarget: function (context) { return source(context); },
+        // 向要罩住的伙伴走近，让以自身为中心的磁场真正罩住它，而不是留在原地脚下空放。
+        approachTarget: function (context, item) { return magneticfluxPick(context, item) || source(context); },
         priority: function (context, item, _target) {
             const counts = magneticfluxCount(context, item);
             if (counts.friends === 0) return 0;

@@ -17,6 +17,12 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
     }
 
+    /** 目标脚下已经盖着自己这招留下的蒸汽云：再喷一次只会重叠，交给共享顺序换别的做法。 */
+    function strangesteamCovered(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context);
+        return WorldEffects.areasAround(world, CompanionBehavior.point(target.point), 0, strangesteamField).length > 0;
+    }
+
     function strangesteamCrowd(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
         const nearby: CompanionBehavior.Entity[] = context.facts.nearby || [];
         let crowd = 0;
@@ -34,13 +40,14 @@ namespace PokemonSkills {
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return strangesteamWants(context, capability, target);
+            if (!strangesteamWants(context, capability, target)) return false;
+            return !strangesteamCovered(context, target);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return !target.friendly && target.health > 0 && target.visible && !strangesteamCovered(context, target);
         },
         priority: function (context, capability, target) {
-            if (!target || !strangesteamWants(context, capability, target)) return 0;
+            if (!target || !strangesteamWants(context, capability, target) || strangesteamCovered(context, target)) return 0;
             let score = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range ? 22 : 0;
             if (CompanionBehavior.ai<boolean>(capability, "crowd", true)) score += Math.min(18, strangesteamCrowd(context, target) * 9);
             if (CompanionBehavior.ai<boolean>(capability, "finish", true)) score += Math.round((1 - CompanionBehavior.ratio(target)) * 7);

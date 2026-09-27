@@ -7,69 +7,129 @@
  *   对方立刻翻脸，只有降下去的攻击还留着。
  *
  * 出手：短起手（windup 在身侧摊开手势）后提交，以自身为圆心摊开。
- * 命中：WorldGeometry.select 取半径内看得见、尚未被劝住的非友方，逐个降攻击（能力下降始终保留）。
- *       平息敌意交由世界 native target：成功才挂共享身份 world_combat:befriended_offer（身份
- *       world_combat:status/befriended）与一只托管效果；原生 Boss 拒绝改目标时只留一次降攻的小纹，不硬控。
- * 维持与破裂：托管效果存续期间每秒再平息一次；一旦对方受到来自施法者阵营的敌对伤害，托管的和睦结束、
- *       握手表现随之断开，对方可以重新还手，但已降的攻击等级保留。
- * 反制：背对、看不见手势，或者干脆离远到半径之外；它不造成伤害，也不阻止对方绕后。
+ * 命中：WorldGeometry.select 取半径内看得见、尚未被劝住的非友方，按救援需求排序后逐个尝试。
+ *       先落实际降攻（NativeEffects.boost 的真实变化才用于反馈），再挂真实 MobEffect 载体；载体落地后由
+ *       一只托管效果以 effect owner 身份申请 world.targetLease(actor, null, ticks)。只有原生事件真实接受，
+ *       才宣布暂缓选敌。Boss 等拒绝该入口时只留降攻的小纹，不硬控。
+ * 维持与破裂：托管效果按 watch 核对载体与租约（active && owned && mode=calm）；载体被驱散或租约丢失即结束。
+ *       一旦对方受到来自施法者阵营的实际正伤害，托管的和睦结束，对方可以重新还手，但已降的攻击等级保留。
+ * 反制：背对、看不见手势，或者干脆离远到半径之外；它不造成伤害，也不阻止对方绕后。玩家与绕过 Mob.setTarget
+ *       的自定义 Boss 调度拿不到原生租约，本招只据真实结果反馈，不冒充停手。
  */
 namespace PokemonSkills {
     function playniceAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
-    /** 和睦破裂时用的一支托管效果：持有握手表现与「谁在劝」，并负责在存续期间维持停手。 */
     const playniceCalmMark = "world_combat:playnice_calm";
+    const playniceBefriendText = "world_combat.move.playnice.text.befriend";
+    const playniceHeldText = "world_combat.move.playnice.text.held";
+    const playniceOfferText = "world_combat.move.playnice.text.offer";
+    const playniceOfferHeldText = "world_combat.move.playnice.text.offer.held";
 
-    /**
-     * 劝一个人：先降攻击（能力下降始终保留），再尝试平息敌意。
-     * 平息成功才挂共享身份与握手；Boss 拒绝改目标时只落降攻的小纹。返回是否真的平息住了。
-     */
-    function playniceCalmActor(world: CombatWorld, actor: CombatActor, drop: number, calm: number, sparkles: number): boolean {
-        NativeEffects.boost(world, actor, "atk", -drop);
-        const calmed = world.target(actor, null);
-        const at = world.observe(actor);
-        if (at === null) return false;
-        if (!calmed) {
-            WorldFeedback.emit(world, playniceScene, 1, at.position(),
-                { moment: "downdrop", target: String(actor.ref()), drop: drop, sparkles: sparkles }, 26);
-            return false;
-        }
-        MobEffects.apply(world, actor, playniceEffect, calm, 0);
-        world.effect(playniceCalmMark, actor,
-            JSON.stringify({ caster: String(world.source().ref()), drop: drop }), calm);
-        WorldFeedback.emit(world, playniceScene, 1, at.position(),
-            { moment: "befriend", target: String(actor.ref()), drop: drop, sparkles: sparkles }, 30);
-        WorldFeedback.text(world, playniceAbove(at.position()), "world_combat.move.playnice.text.befriend", [drop], 40);
-        return true;
+    interface PlayniceCandidate { actor: CombatActor; need: number; }
+
+    /** 救援需求排序：正在打施法者或其友军的敌人最该先劝，其次离施法者越近越急。 */
+    function playniceNeed(world: CombatWorld, self: CombatActor, facts: CombatObservation, origin: CombatPoint): number {
+        const engaged = facts.attacking();
+        let need = 0;
+        if (engaged !== null && world.valid(engaged)
+            && (String(engaged.key()) === String(self.key()) || world.allied(engaged, self))) need += 100;
+        return need + Math.max(0, 40 - facts.position().minus(origin).length());
     }
 
-    // 托管效果只负责两件事：把「谁在劝」记下来，并在存续期间每秒再平息一次。握手表现绑在它上面。
+    /**
+     * 劝一个人：先降攻击（能力下降始终保留），再尝试用原生目标租约平息敌意。
+     * 真实降攻与是否接受平息分别反馈；只有租约真实接受才挂握手与共享身份。返回实际降级与是否平息。
+     */
+    function playniceCalmActor(world: CombatWorld, actor: CombatActor, drop: number, calm: number, sparkles: number): { calmed: boolean; dropped: number } {
+        const dropped = Math.max(0, -NativeEffects.boost(world, actor, "atk", -drop));
+        const carrier = MobEffects.apply(world, actor, playniceEffect, calm, 0);
+        const at = world.observe(actor);
+        if (carrier === null || !carrier.tagged(playniceSpot) || at === null) return { calmed: false, dropped: dropped };
+        try {
+            // 单独的精确目标托管效果持有租约：开始必须原生事件接受，效果结束即清除租约。
+            world.effect(playniceCalmMark, actor,
+                JSON.stringify({ caster: String(world.source().ref()), drop: dropped, carrier: MobEffects.anchor(carrier) }), calm);
+        } catch (error) {
+            MobEffects.consume(world, actor, String(carrier.id()));
+            return { calmed: false, dropped: dropped };
+        }
+        let lease: any = null;
+        try { lease = JSON.parse(world.targetLeaseState(actor)); } catch (error) { lease = null; }
+        if (!lease || lease.active !== true || lease.mode !== "calm") {
+            // 拒绝平息（Boss、玩家、无当前目标等）：start 已撤回载体，只留真实降攻的小纹。
+            WorldFeedback.emit(world, playniceScene, 1, at.position(),
+                { moment: "downdrop", target: String(actor.ref()), drop: dropped, sparkles: sparkles }, 26);
+            return { calmed: false, dropped: dropped };
+        }
+        WorldFeedback.emit(world, playniceScene, 1, at.position(),
+            { moment: "befriend", target: String(actor.ref()), drop: dropped, sparkles: sparkles }, 30);
+        WorldFeedback.text(world, playniceAbove(at.position()), dropped > 0 ? playniceBefriendText : playniceHeldText, [dropped], 40);
+        return { calmed: true, dropped: dropped };
+    }
+
+    // 托管效果：申请并维持真实原生目标租约，核对载体生命周期；握手表现绑在它上面，随它一起结束。
     WorldCombat.effect(playniceCalmMark, 1, 1200000, "actor", function (json) {
         const value = JSON.parse(json);
-        if (typeof value.caster !== "string" || !value.caster || typeof value.drop !== "number" || !isFinite(value.drop))
-            throw new Error("Invalid play nice calm");
+        if (typeof value.caster !== "string" || !value.caster) throw new Error("Invalid play nice calm source");
+        if (typeof value.drop !== "number" || !isFinite(value.drop) || value.drop < 0) throw new Error("Invalid play nice calm drop");
+        if (!MobEffects.validAnchor(value.carrier)) throw new Error("Invalid play nice calm carrier");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(playniceCalmMark, "start", function (effect) {
         const world = effect.world(), actor = effect.target(), state = JSON.parse(effect.state());
+        if (!world.valid(actor) || !MobEffects.matches(world, actor, state.carrier)) { effect.end(); return; }
+        if (!world.targetLease(actor, null, effect.remaining())) {
+            // 原生入口拒绝：不宣布停手，撤掉载体，只留降攻。
+            MobEffects.consume(world, actor, state.carrier.id);
+            effect.end(); return;
+        }
         const body = world.observe(actor);
-        if (body === null) { effect.end(); return; }
-        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_playnice/hold", playniceScene, 1, body.position(),
-            { moment: "hold", target: String(actor.ref()), drop: state.drop });
-        effect.schedule("keep", "keep", 20, "{}");
+        if (body !== null)
+            WorldFeedback.onEffect(world, effect.id(), "world_combat:move_playnice/hold", playniceScene, 1, body.position(),
+                { moment: "hold", target: String(actor.ref()), drop: state.drop });
+        effect.schedule("watch", "watch", 10, "{}");
     });
-    WorldCombat.effectHandler(playniceCalmMark, "keep", function (effect) {
-        const world = effect.world(), actor = effect.target();
-        if (!world.valid(actor)) { effect.end(); return; }
-        world.target(actor, null);
-        effect.schedule("keep", "keep", 20, "{}");
+    // 载体被驱散、被替换，或租约丢失/到期：结束和睦，仍属本效果的载体一并撤回，不留失效锚。
+    WorldCombat.effectHandler(playniceCalmMark, "watch", function (effect) {
+        const world = effect.world(), actor = effect.target(), state = JSON.parse(effect.state());
+        if (!world.valid(actor) || !MobEffects.matches(world, actor, state.carrier)) { effect.end(); return; }
+        let lease: any = null;
+        try { lease = JSON.parse(world.targetLeaseState(actor)); } catch (error) { lease = null; }
+        if (!lease || lease.active !== true || lease.owned !== true || lease.mode !== "calm") {
+            MobEffects.consume(world, actor, state.carrier.id);
+            effect.end(); return;
+        }
+        effect.schedule("watch", "watch", 10, "{}");
+    });
+    WorldCombat.effectHandler(playniceCalmMark, "end", function (effect) {
+        const world = effect.world(), actor = effect.target(), state = JSON.parse(effect.state());
+        if (world.valid(actor) && MobEffects.matches(world, actor, state.carrier))
+            MobEffects.consume(world, actor, state.carrier.id);
     });
     WorldCombat.effectHandler(playniceCalmMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    // 己方先动手就把这份和睦打碎：受来自施法者阵营的敌对伤害时，结束平息、断开握手；攻击下降保留。
+    // 已开始或正在进行的攻击也要停：仍持有本招真实 calm 租约的载体，其可识别的直接攻击提交被共享闸门拒绝。
+    CombatStatus.actions.define({ id: "world_combat:move_playnice/calm", after: ["cobblemon_world_combat:skill-policy"],
+        apply: function (context: CombatStatus.ActionPolicy) {
+            const world = context.world, actor = context.actor;
+            if (!world.valid(actor) || !CombatStatus.has(world, actor, playniceSpot)) return;
+            const direct = context.phase === "damage" ? DamageSemantics.read(context.metadata).attack
+                : context.phase === "commit" && !!context.move && typeof context.move.category === "function"
+                    && String(context.move.category()) !== "status";
+            if (!direct) return;
+            let lease: any = null;
+            try { lease = JSON.parse(world.targetLeaseState(actor)); } catch (error) { return; }
+            if (!lease || lease.active !== true || lease.mode !== "calm") return;
+            context.blocked.calmed = true;
+            context.detail.calmed = { status: "befriended" };
+        } });
+
+    // 己方先动手就把这份和睦打碎：受来自施法者阵营的实际正伤害时，结束平息、断开握手；攻击下降保留。
     WorldCombat.on("world_combat:move_playnice/break", "world_combat:damage_applied", "", function (event) {
         const world = event.world(), victim = event.target(), attacker = event.actor();
         if (victim === null || !world.valid(victim)) return;
+        const data = JSON.parse(String(event.data() || "{}"));
+        if (!(data.actual > 0)) return;
         const marks = world.effects(victim, playniceCalmMark);
         if (!marks.length) return;
         for (let index = 0; index < marks.length; index++) {
@@ -120,34 +180,40 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", bow: config && config.bow ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) {
+        indicator: function (config, pokemon) {
             const bow = !!(config && config.bow);
-            return { radius: bow ? 2.2 : 3.4, geometry: "circle", style: "friendship", color: 0x6FC26F,
+            return { radius: p(playniceId, "offerRadius", pokemon), geometry: "circle", style: "friendship", color: 0x6FC26F,
                 label: bow ? "和睦相处·作揖" : "和睦相处" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
-            const radius = Math.max(1.4, p(playniceId, "offerRadius", action));
+            const radius = Math.max(1.6, p(playniceId, "offerRadius", action));
             const drop = Math.max(1, Math.min(3, Math.round(p(playniceId, "atkDrop", action))));
             const calm = Math.max(40, Math.round(p(playniceId, "calmTicks", action)));
             const cap = Math.max(1, Math.round(p(playniceId, "maxTargets", action)));
             const sparkles = Math.max(10, Math.round(p(playniceId, "sparkles", action)));
-            const bow = !!(config && config.bow);
             sound(action, "minecraft:block.note_block.chime");
-            let caught = 0, calmed = 0;
+            const candidates: PlayniceCandidate[] = [];
             WorldGeometry.select(world, WorldGeometry.ring(origin, 0, radius), function (actor, facts) {
-                if (caught >= cap || facts.friendly() || !facts.visible()) return;
-                if (CombatStatus.has(world, actor, "befriended")) return;
-                caught++;
-                if (playniceCalmActor(world, actor, drop, calm, sparkles)) calmed++;
+                if (facts.friendly() || !facts.visible() || CombatStatus.has(world, actor, playniceSpot)) return;
+                candidates.push({ actor: actor, need: playniceNeed(world, self, facts, origin) });
             });
+            candidates.sort(function (a, b) { return b.need - a.need; });
+            let attempts = 0, calmed = 0, applied = 0;
+            for (let index = 0; index < candidates.length && attempts < cap; index++) {
+                const result = playniceCalmActor(world, candidates[index].actor, drop, calm, sparkles);
+                attempts++;
+                if (result.dropped > applied) applied = result.dropped;
+                if (result.calmed) calmed++;
+            }
             WorldFeedback.emit(world, playniceScene, 1, origin,
-                { moment: "offer", radius: radius, caught: caught, calmed: calmed, drop: drop, bow: bow ? 1 : 0,
+                { moment: "offer", radius: radius, caught: candidates.length, calmed: calmed, drop: applied,
                     sparkles: sparkles, scale: radius / 3.0 }, 34);
-            if (caught > 0)
-                WorldFeedback.text(world, playniceAbove(origin), "world_combat.move.playnice.text.offer", [caught, drop], 40);
+            if (calmed > 0)
+                WorldFeedback.text(world, playniceAbove(origin), applied > 0 ? playniceOfferText : playniceOfferHeldText,
+                    [calmed, applied], 40);
             done(action);
         }
     });

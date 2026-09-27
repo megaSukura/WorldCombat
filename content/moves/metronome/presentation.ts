@@ -6,15 +6,15 @@
  *
  * 色相家族：紫（0xC8A0FF 的漩涡）与琥珀（0xFFE08A 的光点）为主，白色只出现在落成的一闪；
  * 两个色相在这里表达“搅动”与“结果”两层含义。
- * 拍子：wag 0–34t（起：问号与漩涡由慢到快）→ draw 0–22t（击：白闪，收：彩屑散开）。
- * 贴图与帧尺寸来自 particle_types.txt。
+ * 拍子：wag 与本次实际搓指同长（data.wag，3–14 刻；起：问号与漩涡由慢到快）→ draw 0–22t（击：白闪，
+ * 收：彩屑散开）。问号在抽签落定的同一刻停止发射，不盖住随后真实招式的动作。贴图与帧尺寸来自 particle_types.txt。
  */
 const metronomeDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         wag: {
-            duration: 34,
-            exit: { stop: 28, drain: 24 },
+            duration: { data: "wag", fallback: 14 },
+            exit: { stop: { data: "wag", fallback: 14 }, drain: 24 },
             emitters: [
                 {
                     name: "wag_swirl", bind: "source", height: 0.5,

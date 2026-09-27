@@ -14,8 +14,8 @@
  * 与同族分开：热水抛出的沸水会烫伤并留下烫池；水蒸气是一条向前张开、专化冰冻、且只随强日照变强的扇面。
  */
 namespace PokemonSkills {
-    /** 蒸汽扇面顶点：origin 为心、朝 direction 张开 angleDegrees、半径 reach；判定与表现共用。 */
-    function hydrosteamFan(origin: CombatPoint, direction: CombatPoint, reach: number, angleDegrees: number): CombatPoint[] {
+    /** 蒸汽扇面顶点：origin 为心、朝 direction 张开 angleDegrees、半径 reach；每条边射线被实墙截到真实接触面。判定与表现共用。 */
+    function hydrosteamFan(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, reach: number, angleDegrees: number): CombatPoint[] {
         const forward = WorldCombat.point(direction.x(), 0, direction.z());
         const heading = forward.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : forward.unit();
         const half = Math.max(0, Math.min(180, angleDegrees)) / 2 * Math.PI / 180;
@@ -24,7 +24,9 @@ namespace PokemonSkills {
         const vertices: CombatPoint[] = [origin];
         for (let index = 0; index <= steps; index++) {
             const angle = base - half + (2 * half) * (index / steps);
-            vertices.push(origin.plus(WorldCombat.point(Math.cos(angle) * reach, 0, Math.sin(angle) * reach)));
+            const edge = origin.plus(WorldCombat.point(Math.cos(angle) * reach, 0, Math.sin(angle) * reach));
+            const wall = WorldGeometry.blockHit(world, origin, edge);
+            vertices.push(wall !== null ? wall.position() : edge);
         }
         return vertices;
     }
@@ -89,7 +91,7 @@ namespace PokemonSkills {
             const maxTargets = Math.max(1, Math.round(p(hydrosteamId, "maxTargets", action)));
             const sunlit = hydrosteamSunlit(world, actor);
             const scale = reach / hydrosteamReference;
-            const vertices = hydrosteamPath(hydrosteamFan(origin, direction, reach, angle));
+            const vertices = hydrosteamPath(hydrosteamFan(world, origin, direction, reach, angle));
             let hits = 0, thawed = 0;
 
             // 原生 defrost：烧开这炉蒸汽的一刻先解掉自己身上的冰冻（空喷也一样）。
@@ -109,9 +111,10 @@ namespace PokemonSkills {
                     WorldFeedback.text(world, facts.position().plus(WorldCombat.point(0, 1.25, 0)), hydrosteamThawText, [], 24);
                 }
                 CombatStatus.apply(world, victim, "soaked", hydrosteamSoaked, soakTicks, 0, { secondary: true, unique: true });
+                // 顶开走 hitDisplace：保留原生抗击退、敌我权限与碰撞；被拒绝时不报成功。
                 const away = facts.position().minus(origin);
                 if (world.valid(victim) && away.length() > 0.2)
-                    world.displace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
+                    world.hitDisplace(victim, WorldCombat.point(away.x(), 0, away.z()).unit().scale(push));
                 WorldFeedback.emit(world, hydrosteamScene, 1, facts.position(),
                     { moment: "scald", target: String(victim.ref()), thawed: wasFrozen ? 1 : 0, push: push,
                         scale: scale, vapor: vapor, sunlight: sunlit ? 1 : 0, intensity: sunlit ? 1.6 : 1 }, 24);

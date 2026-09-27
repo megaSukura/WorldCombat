@@ -29,8 +29,10 @@
   "worldcombat.skill.swallow.preference.ai.minLayers.help": "打算攒到几层再吞；3 层一口回满，默认 2 与蓄力默认的攒层数一致，调低则更早兑现但回得更少。",
   "worldcombat.skill.swallow.preference.ai.emergency": "危急先吞",
   "worldcombat.skill.swallow.preference.ai.emergency.help": "开启：血量低于兑现血量时，哪怕只有一层也先吞保命；关闭：不足最少层数就先不吞，继续等蓄力。",
-  "world_combat.move.swallow.text.gulp": "吞下（%1$s 层 → 回复 %2$s%%）",
-  "world_combat.move.swallow.text.sip": "慢咽（%1$s 层 → 共回复 %2$s%%）",
+  "world_combat.move.swallow.text.gulp": "吞下（%1$s 层 · 回复 %2$s）",
+  "world_combat.move.swallow.text.sip": "慢咽（%1$s 层 · 共回复 %2$s）",
+  "world_combat.move.swallow.text.full": "吞下（%1$s 层 · 生命已满）",
+  "world_combat.move.swallow.text.denied": "吞下被封（%1$s 层未回复）",
   "effect.world_combat.swallowed": "咽力",
   "worldcombat.skill.swallow.description.layers": "回多少取决于吞下时真正攒着的层数：每层按特防与体重回复最大生命的 18%%–32%%，满三层额外再跳一档、最多可回满；回复不会超过已失去的生命。吞下会连同蓄力提供的防御与特防一起收走。"
 }

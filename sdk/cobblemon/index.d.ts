@@ -160,6 +160,9 @@ declare const CobblemonCombat: {
     reviveResult(world: CombatWorld, actor: CombatActor, slot: number, ratio: number, expectedId: string): string;
     /** Compare-and-write the native PP balance; stale move identities or balances return false. */
     pp(world: CombatWorld, actor: CombatActor, slot: number, moveKey: string, expectedPp: number, value: number): boolean;
+    /** Permanent native slot CAS. expectedMoveKey is the observed move.key(), or empty for an empty slot.
+     * Uses the native move-set writer and a fresh move with its native PP; content owns learning eligibility/cost. */
+    replaceMove(world: CombatWorld, actor: CombatActor, slot: number, expectedMoveKey: string, id: string): boolean;
     record(world: CombatWorld, actor: CombatActor, id: string, amount: number): void;
     resetCritical(world: CombatWorld, actor: CombatActor): void;
 };

@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.flatter.summary": "Flatter the target, raising its Special Attack and leaving it dazed: its attempts may be lost in a daze, but it keeps moving freely while the raised Special Attack hurts everyone.",
-  "worldcombat.skill.flatter.use.0": "Make a hard-hitting foe keep fumbling",
-  "worldcombat.skill.flatter.use.1": "Break the rhythm of a special threat",
+  "worldcombat.skill.flatter.summary": "Flatter the target, raising its Special Attack and leaving it dazed: its attempts may be lost in a daze while it keeps moving freely. The gift is the cost, so it suits suppressing physical threats that do not rely on Special Attack; companions will not use it on a target immune to confusion.",
+  "worldcombat.skill.flatter.use.0": "Make a physical threat that ignores Special Attack keep fumbling",
+  "worldcombat.skill.flatter.use.1": "Break the rhythm of a hard-hitting melee foe",
   "worldcombat.skill.flatter.use.2": "Add fuel to an already faltering enemy",
-  "worldcombat.skill.flatter.description.0": "Flatter the target senseless: it gains %1$s Special Attack stages (its moves hit harder and it is more dangerous under focus) and is left dazed for about %2$s s. It is never pinned and keeps moving freely.",
+  "worldcombat.skill.flatter.description.0": "Flatter the target senseless: it gains %1$s Special Attack stages (its moves hit harder and it is more dangerous under focus) and is left dazed for about %2$s s. It is never pinned and keeps moving freely. This is spoken flattery, not requiring line of sight; the floating text on a hit shows the stages actually gained.",
   "worldcombat.skill.flatter.description.1": "While dazed, each attempt (including native special attacks) has a %1$s%% chance to be lost in a daze; the fumble only wastes that attempt and deals no damage.",
   "worldcombat.skill.flatter.description.2": "Telegraph %1$s s, recovery %2$s s, cooldown %3$s s, range %4$s blocks. Rapid patter adds to the gift and fumble chance but shortens the daze; a slow tribute lasts longer with a lighter gift.",
   "worldcombat.skill.flatter.timing": "Short windup and recovery; accurate and single target, paced by its cooldown.",

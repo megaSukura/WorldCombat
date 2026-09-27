@@ -6,8 +6,8 @@
  *
  * 两幕：
  *   起（brace，提交前）：站定沉腰、双臂开张，明摆着在等（长起手，可被打断）。
- *   摔（seize → heave → slam）：提交后向前一捞，抓到活体的一刻按它有没有在出手决定借力加成；
- *       结算后把目标沿它自己的冲势甩出去（没在动就朝背离施法者的方向甩），落地压制。
+ *   摔（seize → heave → slam）：提交后向前一捞，抓到的就是真实首次接触的身体；按它此刻**朝施法者压过来的速度**
+ *       决定借力加成，投力按这个受击者的属性结算，再把它沿自己的冲势甩出去（没在动就朝背离施法者的方向甩），落地压制。
  *   近处没人就扑空。
  *
  * 与同族分开：地球上投是举起后向下砸、按等级结算并钉住；借力摔是**后发的借力一摔**，按施法者分量结算，
@@ -17,17 +17,23 @@ namespace PokemonSkills {
     const vitalthrowLanding = "world_combat:vitalthrow_landing";
     WorldCombat.effect(vitalthrowLanding, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
     WorldCombat.effectHandler(vitalthrowLanding, "start", effect => {
-        const data = JSON.parse(effect.state()), world = effect.world(), target = effect.target(), body = world.observe(target);
-        if (body === null) { effect.end(); return; }
-        WorldFeedback.onEffect(world, effect.id(), "flight", vitalthrowScene, 1, body.position(),
-            { moment: "heave", target: String(target.ref()), intensity: data.intensity, scale: data.scale, direction: data.direction, duration: effect.remaining() });
+        // 抛掷已经发生，但目标是否真的离地由每刻的真实碰撞事实决定：实际离地才播甩飞，重新落地才压制。
+        const data = JSON.parse(effect.state());
+        data.airborne = false; effect.state(JSON.stringify(data));
         effect.schedule("landing", "landing", 1, "{}");
     });
     WorldCombat.effectHandler(vitalthrowLanding, "landing", effect => {
         const world = effect.world(), target = effect.target(), body = world.observe(target), data = JSON.parse(effect.state());
         if (body === null) { effect.end(); return; }
-        if (!body.grounded()) { data.airborne = true; effect.state(JSON.stringify(data)); effect.schedule("landing", "landing", 1, "{}"); return; }
-        if (!data.airborne) { effect.schedule("landing", "landing", 1, "{}"); return; }
+        if (!data.airborne) {
+            if (!body.grounded()) {
+                data.airborne = true; effect.state(JSON.stringify(data));
+                WorldFeedback.onEffect(world, effect.id(), "flight", vitalthrowScene, 1, body.position(),
+                    { moment: "heave", target: String(target.ref()), intensity: data.intensity, scale: data.scale, direction: data.direction, duration: effect.remaining() });
+            }
+            effect.schedule("landing", "landing", 1, "{}"); return;
+        }
+        if (!body.grounded()) { effect.schedule("landing", "landing", 1, "{}"); return; }
         WorldEffects.apply(world, target, "rooted", {}, data.pin);
         WorldFeedback.emit(world, vitalthrowScene, 1, body.position(),
             { moment: "slam", target: String(target.ref()), intensity: data.intensity, scale: data.scale, pinned: data.pin }, 26);
@@ -75,11 +81,9 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const world = action.world();
             const actor = action.actor();
-            const bait = !!(config && config.bait);
             const reach = p("vitalthrow", "catchRange", action);
             const basePower = p("vitalthrow", "throwPower", action);
             const bonus = p("vitalthrow", "momentum", action);
-            const fling = p("vitalthrow", "fling", action);
             const pinTicks = Math.max(10, Math.round(p("vitalthrow", "pinTicks", action)));
             const direction = aim(action);
             const self = world.observe(actor);
@@ -102,30 +106,36 @@ namespace PokemonSkills {
 
             if (self === null) { finish(action); return; }
             const from = self.position();
-            const selected = action.target();
+            // 真实首次接触的身体就是抓取对象：沿瞄准方向做一次真实扫掠，墙面截断、友军不算。
+            const contact = action.trace(from, from.plus(direction.scale(reach)), scale * 0.55);
             let victim: CombatActor | null = null;
-            if (selected !== null && world.valid(selected)) {
-                const body = world.observe(selected);
-                if (body !== null && body.position().minus(from).length() <= reach + 0.6 && world.clear(from, body.position())) victim = selected;
+            if (contact.hitEntity()) {
+                const candidate = contact.target();
+                if (candidate !== null && world.valid(candidate) && !world.friendly(candidate)) victim = candidate;
             }
-            if (victim === null) {
-                const hit = action.trace(from, from.plus(direction.scale(reach)), scale * 0.55);
-                if (hit.hitEntity()) victim = hit.target();
-            }
-
-            if (victim === null || !world.valid(victim) || world.friendly(victim)) { miss(action); return; }
+            if (victim === null) { miss(action); return; }
 
             const seen = world.observe(victim);
-            // 对手正在出手（扑进来）时借到的冲劲最大；这就是「在对手之后出手」换来的必中与加成。
-            const committed = seen !== null && seen.attacking() !== null;
-            const power = basePower * (1 + (committed ? bonus : 0));
+            if (seen === null) { miss(action); return; }
+            // 来势：目标此刻是否正沿朝向使用者的方向位移。借力摔接的是这股冲劲，不是「在出手」这个历史状态。
+            const velocity = seen.velocity();
+            const toUser = WorldCombat.point(self.position().x() - seen.position().x(), 0, self.position().z() - seen.position().z());
+            const flat = WorldCombat.point(velocity.x(), 0, velocity.z());
+            let closing = false;
+            if (toUser.length() > 1e-6 && flat.length() > 0.02) {
+                const unit = toUser.unit();
+                closing = (flat.x() * unit.x() + flat.z() * unit.z()) / flat.length() > 0.3;
+            }
+            const power = basePower * (1 + (closing ? bonus : 0));
             const intensity = Math.max(0.6, Math.min(2.4, power / 70));
+            // 投力按实际抓到的受击者属性求值，而不是预览时锁定的那个目标。
+            const fling = p("vitalthrow", "fling", withTarget(factContext(action), victim));
 
             const landed = hurt(action, victim, "vitalthrow", power,
                 { damage: damageSpec("vitalthrow", "throwPower"), contact: true });
             if (!landed) { WorldFeedback.text(world, from.plus(WorldCombat.point(0, 1.2, 0)), vitalthrowMissText, [], 22); finish(action); return; }
-            WorldFeedback.emit(world, vitalthrowScene, 1, seen === null ? from : seen.position(),
-                { moment: "seize", target: String(victim.ref()), committed: committed ? 1 : 0,
+            WorldFeedback.emit(world, vitalthrowScene, 1, contact.position(),
+                { moment: "seize", target: String(victim.ref()), closing: closing ? 1 : 0,
                   intensity: intensity, scale: scale }, 22);
             sound(action, "minecraft:entity.player.attack.strong");
 

@@ -18,20 +18,20 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 11);
     }
 
-    /** 落点要有合法地表支撑，否则网会散掉：水、岩浆、基岩、屏障与空中都算无效。 */
+    /** 落点要有可站立的原生碰撞顶面，否则网会散掉：水、岩浆、空中与不可用区块都算无效。 */
     function stickywebGround(world: CombatWorld, aim: number[]): boolean {
-        const point = WorldCombat.point(aim[0], aim[1], aim[2]);
-        const ground = WorldGeometry.ground(world, point, 6);
-        const below = world.block(WorldCombat.point(ground.x(), ground.y() - 1, ground.z()));
-        if (below === null) return false;
-        const id = String(below.id());
-        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
-            && id !== "minecraft:water" && id !== "minecraft:lava" && id !== "minecraft:bedrock" && id !== "minecraft:barrier";
+        return SurfacePaths.support(world, WorldCombat.point(aim[0], aim[1], aim[2]), 1.0, 6) !== null;
     }
 
     function stickywebBlocked(world: CombatWorld, from: CombatPoint, to: CombatPoint): boolean {
-        const hit = world.clipBlocks(from, to);
-        return !!hit && hit.blocked();
+        return WorldGeometry.blockHit(world, from, to) !== null;
+    }
+
+    /** 对移动目标只算一次提前量：落点由 `target` 钩子采用，`priority` 用同一份结果打分，不重复应用。 */
+    function stickywebAim(selected: CompanionBehavior.Entity, lead: number): number[] {
+        if (lead <= 0 || !selected.velocity) return selected.point;
+        return [selected.point[0] + Number(selected.velocity[0] || 0) * lead, selected.point[1],
+            selected.point[2] + Number(selected.velocity[2] || 0) * lead];
     }
 
     /** 窄路／门口：两侧近处是墙、正前方还通，网铺在这里能逼对手踩线或绕行。 */
@@ -55,21 +55,20 @@ namespace PokemonSkills {
                 && !CompanionBehavior.status(context, target, "stickyweb");
         },
         target: function (context, capability, selected) {
-            const lead = CompanionBehavior.ai<number>(capability, "lead", 6), velocity = selected.velocity;
-            if (lead <= 0 || !velocity) return selected;
+            const lead = CompanionBehavior.ai<number>(capability, "lead", 6), aim = stickywebAim(selected, lead);
+            if (aim === selected.point) return selected;
             const copy = JSON.parse(JSON.stringify(selected));
-            copy.point = [selected.point[0] + Number(velocity[0] || 0) * lead, selected.point[1], selected.point[2] + Number(velocity[2] || 0) * lead];
+            copy.point = aim;
             return copy;
         },
         approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target || !stickywebWants(context, capability, target)) return 0;
-            const world = CompanionBehavior.world(context), lead = CompanionBehavior.ai<number>(capability, "lead", 6), velocity = target.velocity;
-            const aim = lead > 0 && velocity
-                ? [target.point[0] + Number(velocity[0] || 0) * lead, target.point[1], target.point[2] + Number(velocity[2] || 0) * lead]
-                : target.point;
+            const world = CompanionBehavior.world(context), lead = CompanionBehavior.ai<number>(capability, "lead", 6);
+            const aim = stickywebAim(target, lead);
             if (!stickywebGround(world, aim)) return 0;
             let base = 22;
+            const velocity = target.velocity;
             const speed = velocity ? Math.sqrt(Number(velocity[0] || 0) * Number(velocity[0] || 0) + Number(velocity[2] || 0) * Number(velocity[2] || 0)) : 0;
             if (speed > 0.08) base += 10;
             if (stickywebCorridor(world, aim)) base += 12;

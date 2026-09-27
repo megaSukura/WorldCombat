@@ -7,8 +7,9 @@
  * 起击收：起 windup 24t ／击 burst 44t ／持 field 每 5 刻续期 ／击 crisp 24t ／击 cover 28t ／击 lock 28t。
  * 持续状态：field 是稀疏、缓慢下落的雪花加一层贴地薄雾——**让出视线**，密度低、尺寸小，
  * 地面一圈白环画出「站哪里在雪里」。
- * 机制驱动：雪区半径决定雪花与白环的大小（data.scale = 半径/10），雪花数量直接读本招算出的 flakeDensity，
- * 覆雪与冻水各自的格数由 coverCells／freezeCells 派生（data.covers／data.locks）。
+ * 机制驱动：雪区半径决定雪花与白环的大小（data.scale = 半径/10）；burst 与 field 的柱域都用同一个参考半径 10，
+ * 由 data.scale 只缩放一次；雪花数量直接读本招算出的 flakeDensity，覆雪格数由 coverCells 派生（data.covers），
+ * 冻水结晶按实际落成的冰格逐格播放（服务端每次只带一个实际坐标，data.locks 为 1），不再聚合到中心。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  * windup 呼气 icy_snow        向前飘散       0.1-0.02 12-22 0.5→0  ≤60
@@ -19,7 +20,7 @@
  * field  白环 largering       贴地脉冲       0.4-0.8  26-44 0.2→0   ≤34
  * crisp  薄光 xsboost         球面外散       0.12-0.03 10-20 0.85→0 ≤60
  * cover  覆盖 powdered_snow   贴地铺开       0.3-0.1  16-28 0.6→0   ≤120
- * lock   冻水 icy_snow        球面外散       0.14-0.03 12-22 0.7→0   ≤80
+ * lock   冰面 icy_snow        贴格结晶＋白环 0.12-0.03 12-24 0.7→0   ≤44
  */
 const SnowscapeDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -48,7 +49,7 @@ const SnowscapeDefinition: ParticleDefinition = {
                     color: 0xCFEAF8, alpha: [0.4, 0], light: "world", maxParticles: 40 },
                 { name: "opens", bind: "point", offset: [0, 2.2, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/powdered_snow",
-                    rate: { data: "density", fallback: 30 }, shape: { kind: "cylinder", radius: { data: "radius", fallback: 10 }, length: 4 },
+                    rate: { data: "density", fallback: 30 }, shape: { kind: "cylinder", radius: 10, length: 4 },
                     direction: "down", speed: [0.05, 0.18], gravity: 0.003, drag: 0.98,
                     lifetime: [16, 30], size: [0.22, 0.05], sizeMode: "index",
                     color: 0xF2FAFF, alpha: [0.5, 0], light: "world", maxParticles: 300 }
@@ -105,13 +106,18 @@ const SnowscapeDefinition: ParticleDefinition = {
             duration: 28,
             exit: { stop: 12, drain: 18 },
             emitters: [
-                { name: "freeze", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                { name: "freeze", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/icy_snow",
-                    burst: { count: { data: "locks", fallback: 4 }, interval: 4, repeats: { data: "locks", fallback: 4 } },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 10 } },
-                    direction: "outward", speed: [0.04, 0.12],
+                    burst: { count: 12 }, shape: { kind: "circle", radius: 0.55 },
+                    direction: "up", speed: [0.03, 0.1],
                     lifetime: [12, 22], size: [0.14, 0.03],
-                    color: 0xCFEAF8, alpha: [0.7, 0], light: "full", bloom: 0.15, maxParticles: 80 }
+                    color: 0xCFEAF8, alpha: [0.7, 0], light: "full", bloom: 0.15, maxParticles: 40 },
+                { name: "rim", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: 0.6 },
+                    direction: "outward", speed: [0.02, 0.06],
+                    lifetime: [14, 24], size: [0.9, 0.2],
+                    color: 0xEAF6FF, alpha: [0.5, 0], light: "world", maxParticles: 4 }
             ]
         }
     }

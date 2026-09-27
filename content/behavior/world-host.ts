@@ -164,6 +164,7 @@ namespace WorldBehaviorHost {
                     var view = access.observe(actor);
                     return view ? adapter.snapshot(view, access) : null;
                 },
+                validReference: function (ref) { const actor = access.actor(ref); return !!actor && String(actor.ref()) === ref && access.valid(actor); },
                 move: function (destination, within, memory) { return WorldAI.navigate(access, point(destination), within, memory); },
                 reachPoint: function (target, from) { const body = target.ref ? access.actor(target.ref) : null;
                     return body ? coordinates(access.closestPoint(body, point(from))) : target.point; },

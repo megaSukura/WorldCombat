@@ -3,7 +3,8 @@
  *
  * 念头的形状：施法者周身浮起螺旋气、朝目标收拢（coil，提交前只播预告）→ 一束螺旋力沿瞄准方向扫出窄线，
  *   缠住**第一个真正碰到的敌人**、由脚到头拧紧（wring）：命中一记随「目标完整度」结算的 `wring` → 双绞式在
- *   `gap` 刻后再**反向**拧一记（第二拧按目标当时的血量重算、乘 `secondFactor`），第一拧成功不保证第二拧：
+ *   `gap` 刻后再**反向**拧一记，第二拧按目标**当下的血量**重算公式并显式乘回 `secondFactor`（段倍率经动作
+ *   数据带进本招的动态 resolve，不会被重算覆盖），第一拧成功不保证第二拧：
  *   目标走出原施放范围、或与施法者之间被实墙隔开，就散圈收场 → 松手，流光散去。
  *
  * 两拧方向相反：第一圈向右收、第二圈向左收，所以看得出一紧一松的反拧。线被墙截住、或没缠到任何敌人就只是拧空，
@@ -110,6 +111,7 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const girth = wringoutGirth(scope, target);
                 const power = p(wringoutId, "wring", current);
+                current.data(wringoutFactorKey, JSON.stringify({ value: 1 }));
                 if (!hurt(current, target, wringoutId, power,
                     { damage: damageSpec(wringoutId, "wring"), contact: true })) {
                     whiff(current, contact, "resist");
@@ -143,8 +145,10 @@ namespace PokemonSkills {
                     return;
                 }
                 // 第二拧按目标此刻的血量重算，完整度系数自然落到「已经挨过一拧」的那个人身上；方向相反。
+                // 段倍率先写进动作数据，动态 resolve 在按当下血量重算后再乘回去（不会被覆盖）。
                 const girth = wringoutGirth(scope, target);
                 const again = p(wringoutId, "wring", current) * second;
+                current.data(wringoutFactorKey, JSON.stringify({ value: second }));
                 if (!hurt(current, target, wringoutId, again,
                     { damage: damageSpec(wringoutId, "wring"), contact: true })) { finish(current); return; }
                 const now = scope.observe(target);

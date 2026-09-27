@@ -5,22 +5,26 @@ import net.minecraft.resources.ResourceLocation;
 
 /** The visual subset of helper/projectile data, copied into entity data so the client can render it. */
 public final class Appearance {
-    public static final Appearance EMPTY = new Appearance("", "", "", 1f, -1, false, false, "");
+    public static final Appearance EMPTY = new Appearance("", "", "", 1f, -1, false, 0f, "");
     private final String item, sprite, block, json;
-    private final boolean spin;
+    private final float spin;
     private final float scale;
     private final int tint;
     private final boolean glow;
 
-    private Appearance(String item, String sprite, String block, float scale, int tint, boolean glow, boolean spin, String json) {
+    private Appearance(String item, String sprite, String block, float scale, int tint, boolean glow, float spin, String json) {
         this.item = item; this.sprite = sprite; this.block = block; this.scale = scale; this.tint = tint; this.glow = glow; this.spin = spin; this.json = json;
     }
     public String item() { return item; }
     public String sprite() { return sprite; }
     /** A block id rendered as a full block model, e.g. a boulder, a crystal or an ice slab body. */
     public String block() { return block; }
-    /** Slowly rotates item and block appearances around the vertical axis. */
-    public boolean spin() { return spin; }
+    /** Item/block yaw or billboard roll, in degrees per game tick; the legacy true value means four. */
+    public boolean spin() { return spin != 0; }
+    public float spinRate() { return spin; }
+    public float spinAngle(long tick, float partial, int seed) {
+        return (float) (((tick + (double) seed) * spin + partial * spin) % 360);
+    }
     public float scale() { return scale; }
     /** Negative when no tint is declared. */
     public int tint() { return tint; }
@@ -50,12 +54,17 @@ public final class Appearance {
         int tint = tint(root.get("tint"));
         boolean glow = root.has("glow") && root.get("glow").isJsonPrimitive() && root.get("glow").getAsJsonPrimitive().isBoolean()
             && root.get("glow").getAsBoolean();
-        boolean spin = root.has("spin") && root.get("spin").isJsonPrimitive() && root.get("spin").getAsJsonPrimitive().isBoolean() && root.get("spin").getAsBoolean();
+        float spin = 0;
+        if (root.has("spin") && root.get("spin").isJsonPrimitive()) {
+            var value = root.getAsJsonPrimitive("spin");
+            if (value.isBoolean()) spin = value.getAsBoolean() ? 4 : 0;
+            else if (value.isNumber() && Float.isFinite(value.getAsFloat())) spin = value.getAsFloat();
+        }
         var normalized = new JsonObject();
         if (!item.isEmpty()) normalized.addProperty("item", item);
         if (!sprite.isEmpty()) normalized.addProperty("sprite", sprite);
         if (!block.isEmpty()) normalized.addProperty("block", block);
-        if (spin) normalized.addProperty("spin", true);
+        if (spin != 0) normalized.addProperty("spin", spin);
         if (scale != 1f) normalized.addProperty("scale", scale);
         if (tint >= 0) normalized.addProperty("tint", tint);
         if (glow) normalized.addProperty("glow", true);

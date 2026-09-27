@@ -12,7 +12,7 @@
   "worldcombat.skill.thunderwave.value.reach": "Discharge range",
   "worldcombat.skill.thunderwave.value.lockTicks": "Paralysis duration",
   "worldcombat.skill.thunderwave.value.shockRadius": "Collision radius",
-  "worldcombat.skill.thunderwave.value.arcs": "Arcs",
+  "worldcombat.skill.thunderwave.value.sparkDensity": "Spark density",
   "worldcombat.skill.thunderwave.value.joltSpeed": "Spark density",
   "worldcombat.skill.thunderwave.value.tempo": "Windup",
   "worldcombat.skill.thunderwave.value.recharge": "Cooldown",

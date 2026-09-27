@@ -32,6 +32,7 @@
   "worldcombat.skill.nightdaze.preference.ai.minFoes": "Minimum foes",
   "worldcombat.skill.nightdaze.preference.ai.minFoes.help": "Only worth erupting when at least this many foes stand inside the user's radius. Lower fires more readily (even for one), higher is pickier about crowds.",
   "effect.world_combat.nightdaze_shroud": "Shrouded",
-  "world_combat.move.nightdaze.text.shroud": "Shrouded, accuracy -%1$s",
+  "world_combat.move.nightdaze.text.shroud": "Shrouded: Accuracy -%1$s (kept until disengage), Attack -18%% while dark",
+  "world_combat.move.nightdaze.text.aim": "Accuracy -%1$s",
   "world_combat.move.nightdaze.text.miss": "The dark wave found nobody"
 }

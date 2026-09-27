@@ -6,11 +6,32 @@
  * 配置：多远考虑出手、驻守指令下是否离位。
  */
 namespace CompanionBehavior {
-    function terrainpulseCharged(context: WorldBehavior.Context): boolean {
+    /** 脚下真实支撑脚点上的场地元素；悬空或脚下无场地/无法识别时为 null。接地与同层判定与执行同源。 */
+    function terrainpulseLocked(context: WorldBehavior.Context): string | null {
         var subject = CompanionBehavior.source(context);
-        if (subject.grounded === false) return false;
+        if (subject.grounded === false) return null;
         var access = CompanionBehavior.world(context);
-        return !!PokemonSkills.terrainpulseTerrainAt(access, CompanionBehavior.point(subject.point));
+        var feet = CompanionBehavior.point([subject.point[0], subject.point[1] - (subject.height || 1.4) / 2, subject.point[2]]);
+        var terrain = PokemonSkills.terrainpulseTerrainAtPoint(access, feet, true);
+        return terrain ? terrain.type : null;
+    }
+
+    function terrainpulseCharged(context: WorldBehavior.Context): boolean { return terrainpulseLocked(context) !== null; }
+
+    /** 锁定元素对目标属性的相性加分：只有真实克制关系才加，不凭空推断。 */
+    var terrainpulseStrong: { [element: string]: string[] } = {
+        electric: ["water", "flying"],
+        grass: ["water", "ground", "rock"],
+        fairy: ["dragon", "dark", "fighting"],
+        psychic: ["fighting", "poison"]
+    };
+    function terrainpulseAffinity(context: WorldBehavior.Context, target: WorldMethods.Subject): number {
+        var element = terrainpulseLocked(context);
+        if (element === null) return 0;
+        var stats = CompanionBehavior.combatStats(context, target), types = stats && stats.types ? stats.types : [];
+        var strong = terrainpulseStrong[element] || [];
+        for (var i = 0; i < types.length; i++) if (strong.indexOf(types[i]) >= 0) return 12;
+        return 0;
     }
 
     function terrainpulseConnected(context:WorldBehavior.Context,target:CompanionBehavior.Entity):boolean{
@@ -34,7 +55,7 @@ namespace CompanionBehavior {
         },
         priority: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject | null): number {
             if(!target||!terrainpulseConnected(context,target))return 0;
-            return (terrainpulseCharged(context)?60:20)-(target.grounded===false?15:0);
+            return (terrainpulseCharged(context)?60:20)-(target.grounded===false?15:0)+terrainpulseAffinity(context,target);
         }
     });
 

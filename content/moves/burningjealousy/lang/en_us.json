@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.burningjealousy.summary": "Breathes fire in a fan in a chosen direction. An empowered target burns heavier and catches fire, while an ordinary target only takes the base fire. It can be spat at open ground, and blocks are never set alight.",
+  "worldcombat.skill.burningjealousy.summary": "Breathes fire in a fan in a chosen direction. An empowered target burns heavier and catches fire, while an ordinary target only takes the base fire. Solid walls clip the flame, so a target behind a wall is never reached. It can be spat at open ground, and blocks are never set alight.",
   "worldcombat.skill.burningjealousy.use.0": "Punish an opponent that just powered up",
   "worldcombat.skill.burningjealousy.use.1": "Sweep a line of enemies standing in front of the user",
   "worldcombat.skill.burningjealousy.use.2": "Suppress a set-up sweeper with burn",

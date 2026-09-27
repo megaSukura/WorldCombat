@@ -14,7 +14,7 @@ Smoke.scenario("raindance", function (stage) {
         stage.expect(stage.casts("raindance", caster) > 0, "raindance was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/soaked") || stage.hadMobEffect(target, "world_combat:status/soaked"),
             "a body inside the rain carries the shared soaked identity");
-        stage.note("rain laid over the engagement; the drenched identity landed on a body inside it. Water x1.5 / Fire x0.5, fire dousing and the value comparison over both sides' moves need a second caster and are left to play.",
+        stage.note("rain laid over the engagement; the drenched identity landed on a body inside it. The Water x1.5 / Fire x0.5 boost now follows the current effective weather at the body (newest covering field wins), so an overlapping sun field cancels it. Dousing a real body fire and the value comparison over both sides' moves need a second caster and are left to play.",
             { casts: stage.casts("raindance", caster),
               casterSoaked: stage.hadMobEffect(caster, "world_combat:status/soaked"),
               targetSoaked: stage.hadMobEffect(target, "world_combat:status/soaked") });

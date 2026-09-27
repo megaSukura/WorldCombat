@@ -59,13 +59,14 @@ namespace PokemonSkills {
             const radius = p("nightshade", "collisionRadius", action);
             const splashRadius = p("nightshade", "splashRadius", action);
             const cap = Math.max(1, Math.round(p("nightshade", "maximumTargets", action)));
+            const shroud = Math.max(1, Math.round(p("nightshade", "shroud", action)));
             const direction = aim(action);
             const target = action.target();
             const struck: { [ref: string]: boolean } = Object.create(null);
             let settled = false, resolved = false;
             sound(action, "minecraft:entity.vex.charge");
 
-            const appearance: any = { sprite: "cobblemon:particle/generic/orb/smokeorb", tint: 0x6E5AA8, glow: true, scale: 0.9 };
+            const appearance: LivingActions.ProjectileAppearance = { sprite: "cobblemon:particle/generic/orb/smokeorb", tint: 0x6E5AA8, glow: true, scale: 0.9 };
             if (target !== null && world.valid(target))
                 appearance.homing = { target: String(target.ref()), turn: 10, delay: 2, range: range };
 
@@ -85,7 +86,8 @@ namespace PokemonSkills {
                     const actual = nightshadeRawHit(current, victim, damage, false);
                     if (actual > 0) {
                         WorldFeedback.emit(scope, nightshadeScene, 1, point,
-                            { moment: "haunt", target: String(victim.ref()), count: Math.round(12 + Math.min(40, actual * 0.6)), scale: radius / 0.32 }, 28);
+                            { moment: "haunt", target: String(victim.ref()), shroud: shroud,
+                                count: Math.round(12 + Math.min(40, actual * 0.6)), scale: radius / 0.32 }, shroud);
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), nightshadeHauntText, [Math.round(actual)], 26);
                         if (splash) {
                             const found = scope.query(point, splashRadius, false);
@@ -95,10 +97,11 @@ namespace PokemonSkills {
                                 if (ref === String(self.ref()) || struck[ref]) continue;
                                 const facts = scope.observe(other);
                                 if (facts === null || facts.friendly()) continue;
+                                // 爆点与目标之间被墙隔断就不算被波及。
+                                if (WorldGeometry.blockHit(scope, point, facts.position()) !== null) continue;
                                 struck[ref] = true;
                                 if (nightshadeRawHit(current, other, damage, false) > 0) extra++;
                             }
-                            // 炸影阶段只在真实命中后、按实际被波及的敌人数播报。
                             WorldFeedback.emit(scope, nightshadeScene, 1, point,
                                 { moment: "splash", count: Math.round(12 + extra * 9), scale: splashRadius / 1.7 }, 26);
                         }
@@ -110,17 +113,21 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1, 0)), nightshadeBlockText, [], 22);
                 }
             };
+            let projectileId = "";
             const projectile = LivingActions.projectile(action, flight, function (current: CombatAction) {
-                // 空放的幻影按射程飞到瞄准点后自然收束，在这里补上消散。
+                // 空放/飞尽用弹体的真实末点消散，不拿满射程点或旧瞄准点假造终点。
                 if (!resolved) {
-                    const end = current.targetPosition();
-                    WorldFeedback.emit(current.world(), nightshadeScene, 1, end, { moment: "fizzle", scale: radius / 0.32 }, 22);
-                    WorldFeedback.text(current.world(), end.plus(WorldCombat.point(0, 1, 0)), nightshadeFizzleText, [], 22);
+                    const end = current.world().projectilePosition(projectileId);
+                    if (end !== null) {
+                        WorldFeedback.emit(current.world(), nightshadeScene, 1, end, { moment: "fizzle", scale: radius / 0.32 }, 22);
+                        WorldFeedback.text(current.world(), end.plus(WorldCombat.point(0, 1, 0)), nightshadeFizzleText, [], 22);
+                    }
                 }
                 if (settled) { done(current); return; }
                 settled = true;
                 done(current);
             });
+            projectileId = projectile;
             WorldFeedback.keep(world, "nightshade:flight:" + action.id(), nightshadeScene, 1, action.origin(),
                 { moment: "flight", projectile: projectile, scale: radius / 0.32 }, flight.lifetime! + 10);
         }

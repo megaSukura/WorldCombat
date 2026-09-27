@@ -4,8 +4,8 @@
  * 一句话：牙间窜起电光、脚边亮起一圈静电 → 沿一条直线飞快扑出、身后拖出电弧 → 咬实的一刻在接触点炸开电色迸溅与獠牙剪影，
  * 电流从伤口沿身体爬成一层噼啪的麻电；目标本就麻着时，这一次接触的电花更亮更密，但只作表现、不再加定身。
  * 色相家族：电黄（0xE8D24A）与近白（0xFFF6B0），白光只出现在咬实与电花的核心。
- * 拍子：起 charge（聚电）→ 扑 pounce → 咬 bite（命中峰值）／ 麻 jolt → 懵 flinch ／ miss。
- * 范围：bite 与 jolt 都绑命中点，画出的就是被咬中的位置与被麻到的身体。
+ * 拍子：起 charge（聚电，时长随真实起手）→ 扑 pounce → 咬 bite（命中峰值）／ 麻 jolt → 懵 flinch ／ miss。
+ * 范围：bite 与 jolt 都绑命中点，画出的就是被咬中的位置与被麻到的身体；獠牙沿服务端给出的真实咬合方向收拢。
  * 运动：速度线沿扑出方向掠过；jolt 的麻电沿目标身体向上爬；flinch 的星子从头顶上飘。
  * 数：`data.sparks`（速度派生）决定咬中与麻电的弧数；`data.intensity`（威力 / 65）抬高密度与亮度；
  * `data.scale`（獠牙判定 / 0.42）放大牙影与判定环。
@@ -14,8 +14,8 @@ const ThunderfangDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         charge: {
-            duration: 13,
-            exit: { stop: 6, drain: 10 },
+            duration: { data: "windup", fallback: 13 },
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "gather", bind: "source", height: 0.5,
@@ -66,8 +66,8 @@ const ThunderfangDefinition: ParticleDefinition = {
                     name: "fang_frames", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/fang",
                     burst: { count: 5, at: 1 },
-                    shape: { kind: "sphere", radius: 0.26 },
-                    direction: "outward", speed: [0.04, 0.16],
+                    shape: { kind: "cone", radius: 0.3, angleDegrees: 55 },
+                    orient: "direction", direction: "inward", speed: [0.04, 0.16],
                     lifetime: [6, 11], size: [0.32, 0.06], sizeMode: "index",
                     color: 0xFFF6B0, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 24
                 },

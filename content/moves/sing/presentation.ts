@@ -6,8 +6,9 @@
  *
  * 色相家族：靛紫（0x9B7BD8）为主体声波与音符，深紫（0x5A3E96）压在核心，近白紫（0xE8D9FF）只给起手与「睡下」的高光。
  * 拍子：起 windup（攒音符）→ 唱 note（声波一圈圈荡出＋音符升起）→ 眠 sleep（头顶 Z）／困 drowsy（睡意环）；余韵 linger 随时间收拢。
- * 范围：note 的声波绑在施法者身上、`fit: "none"`，按 `data.scale`（声场半径 ÷ 参考 5 格）放大定义几何，并用
- *   `data.expand`（半径 ÷ 20 刻）给一个向外速度，让波前在粒子寿命内正好走到真实声场边缘——画到哪，就唱到哪。
+ * 范围：note 的声波绑在施法者身上、`fit: "none"`，圆环躺在 XZ 水平面（不旋转成竖面），
+ *   每句按 `data.rings` 一次发出对应圈数，并用 `data.expand`（半径 ÷ 20 刻）给一个向外速度，
+ *   让波前在粒子寿命内正好走到真实声场边缘——画到哪，就唱到哪。
  * 运动：声波沿水平面向外滚、音符向上飘；drowsy 的环绑在目标身上向内收；sleep 的 Z 自下而上升起。
  * 数：`data.rings`（特攻与等级换算）决定声波与 Z 的数量与亮度；`data.stack`（已听句数）决定目标身上睡意音符的多少。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -44,8 +45,8 @@ const SingDefinition: ParticleDefinition = {
                 {
                     name: "wave", bind: "source", fit: "none", height: 0.12, offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
-                    rate: { data: "rings", fallback: 4 },
-                    shape: { kind: "ring", radius: 0.35, rotation: [90, 0, 0] },
+                    burst: { count: { data: "rings", fallback: 4 } },
+                    shape: { kind: "ring", radius: 0.35 },
                     direction: "outward", speed: { data: "expand", fallback: 0.22 }, spread: 8,
                     lifetime: [18, 26], size: [0.3, 0.05], sizeMode: "linear", spin: 20,
                     color: 0x9B7BD8, alpha: [0.7, 0], light: "full", bloom: 0.25, maxParticles: 90
@@ -53,8 +54,8 @@ const SingDefinition: ParticleDefinition = {
                 {
                     name: "wave_core", bind: "source", fit: "none", height: 0.1,
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    rate: { data: "rings", fallback: 3 },
-                    shape: { kind: "ring", radius: 0.22, rotation: [90, 0, 0] },
+                    burst: { count: { data: "rings", fallback: 3 } },
+                    shape: { kind: "ring", radius: 0.22 },
                     direction: "outward", speed: { data: "expand", fallback: 0.22 }, spread: 5,
                     lifetime: [16, 24], size: [0.18, 0.04],
                     color: 0xE8D9FF, alpha: [0.6, 0], light: "full", maxParticles: 60

@@ -1,8 +1,7 @@
 /** 用花瓣提高周围草属性宝可梦，以及手持鲜花的普通生物和玩家的防御，范围内的敌人也会受益。 */
 namespace PokemonSkills {
-    function flowershieldStage(world: CombatWorld, actor: CombatActor): number {
-        return NativeEffects.stage(NativeEffects.read(world, actor), "def");
-    }
+    /** 防御临时贡献的来源名：同一份载体上的 boostWindow 只收回自己这一份。 */
+    const flowershieldContribution = "world_combat:move/flowershield";
     /** 草属性判定跟随共享的现行属性（含后来追加草属性的层）。 */
     export function flowershieldQualifies(world: CombatWorld, actor: CombatActor): boolean {
         if (!world.valid(actor)) return false;
@@ -19,28 +18,36 @@ namespace PokemonSkills {
         for (let i = 0; i < types.length; i++) if (String(types[i]) === "grass") return true;
         return false;
     }
-    /** 给一个草属性落护瓣；amplifier 记录这次抬了几级，窗口走完或被人清除时照数收回。已在身上的人只续时、不叠加。 */
-    function flowershieldGrant(world: CombatWorld, actor: CombatActor, amount: number, ticks: number): boolean {
-        const levels = Math.max(1, Math.min(6, Math.round(amount)));
-        const existing = MobEffects.read(world, actor, flowershieldEffect);
-        if (existing !== null) {
-            if (existing.duration() < ticks * 0.5) MobEffects.apply(world, actor, flowershieldEffect, ticks, existing.amplifier());
-            return false;
-        }
-        NativeEffects.boost(world, actor, "def", levels);
-        MobEffects.apply(world, actor, flowershieldEffect, ticks, levels);
-        return true;
+    /**
+     * 给一个受益者落护瓣：先挂真实 MobEffect 载体，再由 boostWindow 把防御贡献绑在这份载体上——
+     * 窗口只收回自己交出的那一份，绝不按计划级数去减别人的阶段。已在身上的人只延时、不再叠同一份；
+     * 载体被清除或到期时，窗口随锚一起失效。返回本次真正新增的防御级数（重复进入为 0）。
+     */
+    function flowershieldGrant(world: CombatWorld, actor: CombatActor, gift: number, ticks: number): number {
+        if (!world.valid(actor)) return 0;
+        const before = NativeEffects.effectiveStage(world, actor, "def");
+        const previous = MobEffects.read(world, actor, flowershieldEffect);
+        const carrier = MobEffects.apply(world, actor, flowershieldEffect, ticks, previous ? previous.amplifier() : gift);
+        if (carrier === null) return 0;
+        const changes: { [stat: string]: number } = {};
+        if (previous === null) changes.def = gift;
+        const windowId = NativeEffects.boostWindow(world, actor, changes, Math.max(1, carrier.duration()),
+            flowershieldContribution, carrier, previous);
+        const awarded = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
+        const body = world.observe(actor);
+        if (windowId > 0 && body !== null)
+            WorldFeedback.onEffect(world, windowId, "flowershield:carrier:" + String(actor.ref()),
+                flowershieldScene, 1, body.position(),
+                { moment: "guard", target: String(actor.ref()), guard: awarded, petals: Math.max(6, Math.round(gift * 4)) });
+        return awarded;
     }
 
-    // 护瓣走完、被人解除：按 amplifier 把这次抬起的防御原样收回（只收当前实际持有的正等级）。
+    // 护瓣走完或被清除：防御贡献已随载体上的 boostWindow 自行收回，这里只做退场反馈，不再手动加减别的阶段。
     WorldCombat.on("world_combat:move_flowershield/revert", "world_combat:mob_effect_removed", "", function (event: CombatWorldEvent) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== flowershieldEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(0, Math.round(Number(data.amplifier) || 0));
-        const loss = Math.min(levels, Math.max(0, flowershieldStage(world, actor)));
-        if (loss > 0) NativeEffects.boost(world, actor, "def", -loss);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, flowershieldScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 24);
@@ -62,7 +69,7 @@ namespace PokemonSkills {
         cooldown: 110,
         style: "floral",
         stationary: true,
-        defaults: { dense: 0, ai: { maxChase: 12, pack: 6 } },
+        defaults: { dense: 0, ai: { maxChase: 12 } },
         fields: [
             field(pathOf("dense"), "瓣形", "choice", {
                 options: [
@@ -103,17 +110,16 @@ namespace PokemonSkills {
             const scale = bloom / flowershieldReferenceRadius;
             const origin = body.position();
             let reached = 0;
+            // 花浪只扫到视线可达的同一片空间：隔墙的目标不会隔空落瓣。
             const actors = world.query(origin, bloom, false);
             for (let i = 0; i < actors.length; i++) {
                 const other = actors[i];
                 if (!flowershieldQualifies(world, other)) continue;
                 const obs = world.observe(other);
                 if (obs === null) continue;
-                if (!flowershieldGrant(world, other, guard, ticks)) continue;
+                if (String(other.key()) !== String(actor.key()) && !world.clear(origin, obs.position())) continue;
+                if (flowershieldGrant(world, other, guard, ticks) <= 0) continue;
                 reached++;
-                WorldFeedback.emit(world, flowershieldScene, 1, obs.position(),
-                    { moment: "guard", target: String(other.ref()), guard: guard,
-                      motes: Math.max(8, Math.round(petals * 0.5)), scale: scale }, 28);
             }
             world.sound("minecraft:block.flowering_azalea.place", origin, 16, "{}");
             world.sound("minecraft:block.azalea.place", origin, 12, "{}");

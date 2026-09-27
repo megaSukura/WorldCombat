@@ -2,14 +2,15 @@
  * 疾速转轮 / spinout 的客户端表现。
  *
  * 一句话：施法者压低重心、脚边火星先转成一圈 → 整个人贴地滑出，前半直行、后半向选定侧甩尾，沿真实弯曲的
- *   路径拖出旋转的钢蓝气流、火星与一道弯轮痕 → 撞上目标炸开钢色冲击、地面磨出一圈痕迹，随后转速刹不住、
- *   身上浮起疲软的灰气（按实际降速）。路径是真实的：判定推进与画面读同一组 `data.path` 顶点，头不会原地
- *   旋转却走直线。
+ *   路径拖出旋转的钢蓝气流、身体外一圈轮缘火星与一道贴地的弯轮痕 → 撞上目标炸开钢色冲击、地面磨出一圈痕迹，
+ *   随后转速刹不住、身上浮起疲软的灰气（按实际降速）。偏好侧被封死、自动改向另一侧时另闪一下改向提示。
+ *   路径是真实的：判定推进与画面读同一组 `data.path` 顶点，头不会原地旋转却走直线。
  * 色相家族：钢蓝灰（0x6E7C8C 主体、0x9AA6B4 亮面）为主体，磨地火星的暖橙（0xFFC766）只在细节层，
  *   中性尘作余韵；无第二色相。
- * 拍子：起 wind（压腿旋起）→ 旋 spin（贴地弯曲滑行）→ 击 impact（撞实磨地）→ 收 stagger（失速）／失 miss（空转）。
- * 范围：spin 沿 `data.path`（与服务端 sweepStep 同一条真实路径）画出轮痕与拖尾；impact 的磨痕圈按 `data.radius`
- *   与 `data.scale` 铺开，画出的那圈就是地上被磨到的地方。
+ * 拍子：起 wind（压腿蓄势）→ 旋 spin（贴地弯曲滑行）→ 击 impact（撞实磨地）→ 收 stagger（失速）／失 miss（空转）；
+ *   自动改侧时插一记 redirect。
+ * 范围：spin 沿 `data.path`（与服务端真实推进同一条路径，顶点已投影到脚下地面）画出轮痕与拖尾；impact 的磨痕圈
+ *   按 `data.radius` 与 `data.scale` 铺开，画出的那圈就是地上被磨到的地方。
  * 运动：spin 的钢蓝气流绕身体公转并沿实际路径拖尾；impact 的冲击从撞击点向外崩、火星带重力落回；
  *   stagger 的灰气缓慢上飘。
  * 数：`data.sparks`（速度与体重换算的火星量）决定滑行与撞击的火星密度，`data.intensity`（威力 / 100）
@@ -39,6 +40,14 @@ const SpinoutDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.2], spin: 16,
                     lifetime: [5, 11], size: [0.08, 0.01],
                     color: 0xFFC766, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 70
+                },
+                {
+                    name: "gather", bind: "source", offset: [0, 0.14, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    rate: 12, shape: { kind: "ring", radius: 0.62 },
+                    direction: "inward", speed: [0.04, 0.14], gravity: 0.05, drag: 0.9,
+                    lifetime: [6, 12], size: [0.08, 0.02],
+                    color: 0x8C8375, alpha: [0.5, 0], light: "world", maxParticles: 44
                 }
             ]
         },
@@ -53,6 +62,14 @@ const SpinoutDefinition: ParticleDefinition = {
                     direction: "velocity", speed: [0.0, 0.02], spin: 30,
                     lifetime: [5, 10], size: [0.34, 0.06], sizeMode: "index",
                     color: 0x9AA6B4, alpha: [0.7, 0], light: "full", bloom: 0.2, maxParticles: 130
+                },
+                {
+                    name: "wheel_rim", bind: "source", offset: [0, 0.24, 0], height: 0.24, orient: "heading",
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    rate: 7, shape: { kind: "ring", radius: 0.46, thickness: 0.3 },
+                    direction: "shape", speed: [0.0, 0.02], spin: 26,
+                    lifetime: [4, 8], size: [0.34, 0.38], sizeMode: "sin",
+                    color: 0x9AA6B4, alpha: [0.6, 0], light: "world", maxParticles: 40
                 },
                 {
                     name: "drill", bind: "source", offset: [0, 0.45, 0], height: 0.4,
@@ -151,6 +168,21 @@ const SpinoutDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [12, 20], size: [0.08, 0.01],
                     color: 0x9AA6B4, alpha: [0.5, 0], light: "world", maxParticles: 60
+                }
+            ]
+        },
+        redirect: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "swerve", bind: "source", offset: [0, 0.1, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/quickattack_dashlines",
+                    burst: { count: { data: "sparks", fallback: 14 }, at: 0 },
+                    shape: { kind: "ring", radius: 0.5 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [5, 10], size: [0.24, 0.06], sizeMode: "index",
+                    color: 0xC9CFD6, alpha: [0.6, 0], light: "world", maxParticles: 30
                 }
             ]
         },

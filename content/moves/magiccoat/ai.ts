@@ -16,8 +16,12 @@ namespace PokemonSkills {
             const threat: CompanionBehavior.Entity | null = context.senses["world_combat:threat"];
             if (!threat || threat.health <= 0 || !threat.visible) return false;
             if (!CompanionBehavior.fact<boolean>(context, "world_combat:move_magiccoat/threat", threat)) return false;
+            const world = CompanionBehavior.world(context);
+            const reach = typeof item.data.range === "number" && isFinite(item.data.range) ? item.data.range
+                : PokemonSkills.p(magiccoatId, "coatReach", { world: world, actor: world.source(), skill: skills[magiccoatId],
+                    detail: { values: item.data.config } });
             const self = CompanionBehavior.source(context);
-            if (CompanionBehavior.distance(self.point, threat.point) > CompanionBehavior.ai<number>(item, "maxChase", 14)) return false;
+            if (CompanionBehavior.distance(self.point, threat.point) > Math.min(CompanionBehavior.ai<number>(item, "maxChase", 14), Math.max(0, reach))) return false;
             if (CompanionBehavior.ai<string>(item, "opening", "anytime") !== "anytime") return magiccoatPressured(context);
             return true;
         },
@@ -27,7 +31,7 @@ namespace PokemonSkills {
     });
 
     const magiccoatChase = number("ai.maxChase", "考虑距离", 4, 26, 1);
-    magiccoatChase.help = "伙伴只在威胁离自己这么远以内时才撑膜；调小只在贴身时撑，调大在更远处就先备好。";
+    magiccoatChase.help = "伙伴只在威胁离自己这么远以内时才撑膜；实际反射距离是本招自己算出的上限，这个值再收紧时只在更近处撑，调大则允许在射程内先备好。";
     const magiccoatOpening = choice("ai.opening", "出手时机", ["anytime", "incoming"], ["随时", "受压时撑膜"]);
     magiccoatOpening.help = "随时：确认对手会施加异常时撑膜；受压时撑膜：已确认异常威胁，且自己或主人正受压时撑。";
     const magiccoatStation = flag("ai.leaveStation", "驻守时允许离位");

@@ -2,9 +2,9 @@
  * 起草 / trailblaze 的伙伴 AI 用途。
  *
  * 什么局面下出手：考虑距离内有可见的敌对目标、且目标在 `ai.maxChase` 之内时列入候选（本招靠窜跃接近，够不到交给共享接近逻辑）。
- * 这一跳的分量看起跳点：`ai.preferCover` 开启时，脚边正好有草木就把 priority 抬高一截——顺着草丛窜出去更远更重、还多带一档速度；
+ * 这一跳的分量看起跳点：`ai.preferCover` 开启时，脚边正好有草木就把 priority 抬高一截——顺着草丛窜出去更重、还多带一档速度；
  * 代价是可能为了踩进草丛而绕路或晚出手。关闭则只看距离与威胁。
- * 放完之后：既然刚提了速，伙伴会顺势朝最近的威胁压上一小段，把新速度用掉。
+ * 放完之后：既然刚提了速，伙伴会顺势朝当前有效的威胁实体压上一小段，把新速度用掉。
  */
 namespace PokemonSkills {
     function trailblazeThreat(context: WorldBehavior.Context): WorldBehavior.Bag | null {
@@ -62,7 +62,7 @@ namespace PokemonSkills {
             help: "对手离自己这么远以内才考虑窜出去；调小只贴脸出手，调大愿意从更远处起跳。"
         }),
         field(pathOf("ai.preferCover"), "优先草丛起跳", "boolean", {
-            help: "开启：脚边有草木时优先窜跃，跳得更远更重还多带一档速度；关闭：只看距离与威胁，不为踩草绕路。"
+            help: "开启：脚边有草木时优先窜跃，这一跳更重、提速多一档；关闭：只看距离与威胁，不为踩草绕路。"
         })
     ]);
 }

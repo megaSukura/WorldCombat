@@ -4,9 +4,11 @@
  * 一句话：施法者脚下泛起一圈绿光、把草种按进土里 → 草叶成圈从落点涌出、铺满一块地 →
  * 踩在草上的活体从真实脚接地处长出一小片草叶、被草托着慢慢回血，离地者脚下没有这束脉冲；密植时还从草里飞起种子去喂幼苗。
  * 色相家族：草绿 0x7CCB5A 作主体、嫩绿 0x9FE07A 作边缘、近白 0xEDF8DC 只给叶片高光与治疗。
- * 起击收：起 windup 24t ／击 sprout 46t ／持 field 每 5 刻续期 ／击 root 20t ／击 heal 30t ／击 growth 30t。
+ * 起击收：起 windup 24t ／击 sprout 46t ／持 field 随场地效果存续 ／击 root 20t ／击 heal 30t ／击 growth 30t。
  * 持续状态：field 是贴地草叶边圈与缓慢呼吸的绿芒，低密度、贴脚边，不遮视线；边圈画出「站哪里被托住」。
- * 机制驱动：草地半径决定边圈与草叶的实际大小（data.scale = 半径/3），草叶数量直接读本招算出的 bloomDensity。
+ * 边界由场效果 onEffect 托管，随场地到期/驱散一起释放；breathe 是连续的环境呼吸，不绑定任何固定治疗拍，
+ * 真实回血另有 heal 幕单独提示。机制驱动：草地半径决定边圈与草叶的实际大小（data.scale = 半径/3），
+ * 草叶数量直接读本招算出的 bloomDensity。
  *
  * 层 | 职责 | 贴图 | 运动 | 尺寸 | 寿命 | alpha | 存活
  * windup 聚种 xsseed        升腾＋内收   0.10-0.02 10-18 0.9→0 ≤40
@@ -71,10 +73,10 @@ const GrassyTerrainDefinition: ParticleDefinition = {
                     color: 0x8FCF6E, alpha: [0.22, 0], alphaMode: "sin", light: "full", maxParticles: 50 },
                 { name: "breathe", bind: "point", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/sparkle/sparkle",
-                    burst: { count: 16, interval: 40, repeats: 15, at: 25 }, shape: { kind: "ring", radius: 2.9 },
+                    rate: 5, shape: { kind: "ring", radius: 2.9 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [26, 44], size: [0.11, 0.02],
-                    color: 0xB9E890, alpha: [0.4, 0], light: "full", maxParticles: 40 },
+                    color: 0xB9E890, alpha: [0.4, 0], alphaMode: "sin", light: "full", maxParticles: 40 },
                 { name: "motes", bind: "point", offset: [0, 0.04, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 4, shape: { kind: "circle", radius: 2.5 },

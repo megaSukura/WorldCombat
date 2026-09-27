@@ -6,7 +6,8 @@
  * 三幕：
  *   起（windup，提交前）：目标身上只浮起一道收得很紧的暗紫细指示，表示这笔仇指向了它（present mark）。
  *   候（execute 起）：账在施放时被取走；暗影在施法者自己身边聚起、盘着等一拍（stalkDelay），不是目标头顶的落伤预告。
- *   讨（launch）：暗影离手、追着账主飞；命中时按账本以 1.5 倍结算，没有账时暗记消散（whiff）。
+ *   讨（launch）：暗影离手、追着账主飞；命中时按账本以 1.5 倍结算，闪击与扣血数字读实际落下的伤害，
+ *     免疫／无敌／墙只 whiff；目标暗记随动作打断清理。没有账时暗记消散（whiff）。
  *
  * 与同族分开：复仇是隔空、延迟、追人的一记暗影；金属爆炸是自身为中心、即时落地的钢爆。
  */
@@ -73,10 +74,10 @@ namespace PokemonSkills {
             const scale = p(comeuppanceId, "collisionRadius", action) / 0.34;
             WorldFeedback.emit(world, comeuppanceScene, 1, selfBody === null ? action.origin() : selfBody.position(),
                 { moment: "lurk", target: targetRef, duration: delay, scale: scale }, delay + 24);
-            // 同时只给目标留一道很轻的指向环，随延迟走完自行熄灭，表示暗影正在锁定它而不是已经命中。
+            // 目标身上只留一道很轻的指向环，随动作存亡（打断即清），表示暗影正在锁定它而不是已经命中。
             if (targetBody !== null)
-                WorldFeedback.emit(world, comeuppanceScene, 1, targetBody.position(),
-                    { moment: "mark", target: targetRef, duration: delay, scale: scale }, delay + 8);
+                action.present("comeuppance:mark", comeuppanceScene, 1, targetBody.position(),
+                    JSON.stringify({ moment: "mark", target: targetRef, duration: delay, scale: scale }));
 
             function launch(current: CombatAction): void {
                 const scope = current.world(), body = scope.observe(current.actor());
@@ -107,13 +108,18 @@ namespace PokemonSkills {
                             WorldFeedback.emit(inner, comeuppanceScene, 1, point, { moment: "whiff", scale: scale }, 20);
                             return;
                         }
-                        const landed = comeuppanceRawHit(current2, struck, refund, false);
+                        // 只有真正落下的伤害才播闪击与扣血数字：免疫、无敌或墙一律只 whiff，不谎报成功。
+                        const actual = comeuppanceRawHit(current2, struck, refund, false);
+                        if (!(actual > 0)) {
+                            WorldFeedback.emit(inner, comeuppanceScene, 1, point, { moment: "whiff", scale: scale }, 20);
+                            return;
+                        }
                         WorldFeedback.emit(inner, comeuppanceScene, 1, point,
-                            { moment: "strike", target: String(struck.ref()), count: Math.round(14 + refund / 2),
-                                scale: scale, power: Math.round(refund * 10) / 10 }, 28);
+                            { moment: "strike", target: String(struck.ref()), count: Math.round(14 + actual / 2),
+                                scale: scale, power: Math.round(actual * 10) / 10 }, 28);
                         inner.sound("cobblemon:impact.dark", point, 16, "{}");
-                        if (landed) WorldFeedback.text(inner, point.plus(WorldCombat.point(0, 1.1, 0)), comeuppanceHitText,
-                            [Math.round(refund)], 26);
+                        WorldFeedback.text(inner, point.plus(WorldCombat.point(0, 1.1, 0)), comeuppanceHitText,
+                            [Math.round(actual)], 26);
                     }
                 };
                 const projectile = LivingActions.projectile(current, flight, function (cur: CombatAction) {

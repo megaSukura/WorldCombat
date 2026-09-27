@@ -75,7 +75,12 @@ public record ParticleDefinition(Map<String, Moment> moments, ExitMode interrupt
      * the key". {@code stop} is the tick at which emission stops (default {@code duration}), and
      * {@code drain} is how many further ticks to wait for surviving particles (default 40).
      */
-    public record Moment(int duration, int stop, int drain, List<EmitterSpec> emitters, List<ChildSpec> children) {
+    public record SoundCue(String id, double volume, double pitch, Bind bind) {}
+
+    public record Moment(int duration, int stop, int drain, List<EmitterSpec> emitters, List<ChildSpec> children, SoundCue sound) {
+        public Moment(int duration, int stop, int drain, List<EmitterSpec> emitters, List<ChildSpec> children) {
+            this(duration, stop, drain, emitters, children, null);
+        }
         public Moment {
             duration = Math.max(0, duration);
             stop = Math.max(0, stop);

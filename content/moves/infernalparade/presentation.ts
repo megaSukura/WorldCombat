@@ -4,7 +4,9 @@
  * 一句话：脚下腾起一圈幽蓝鬼火，散开冲成一队，各自扭头追向目标扑上去；被异常缠身的目标更容易被整队扑实、烧起来。
  * 色相家族：幽蓝紫为主（wisp / shadowball_impact），火只作小面积暖点（ember / impact_fire 的亮帧）。
  * 拍子：起（coven 0–6t 聚拢）→ 击（summon 散开、flight 每团沿真实投射物飞、strike 追踪扑击）→ 收（fade 空过、ignite 点燃）。
- * 范围：coven/summon 贴施法者，flight 绑各团真实投射物（`data.projectile`），strike / ignite 绑命中点——画面随鬼火实际落点走。
+ * 范围：coven/summon 贴施法者，flight 绑各团真实投射物（`data.projectile`），strike / ignite 绑命中点——画面随鬼火实际落点走；
+ *   散开前路用 flight 的 launch 沿每团真实初始方向短促前冲读出，不画绕后轨迹。
+ * 只有真实造成伤害的那一团才播放 strike 爆火；被免疫/保护拒绝的团只走 fade。ignite 绑被灼伤对象的最新 ref。
  * 运动：鬼火本体由投射物外观渲染，flight 轮廓沿同一位置拖行；到达起旋延迟前保持散开方向、之后才弯转，撞墙只散一团鬼气。
  * 数：`data.count`（本轮实际团数）决定起旋那一burst 的鬼火数，`data.strikeCount`（总威力 / 60 派生）决定扑击爆发的量，
  * `data.intensity` 同时抬高亮度与发射量，`data.scale`（单团判定 / 0.24）放大起旋地面环与飞行轮廓。
@@ -39,6 +41,17 @@ const InfernalparadeDefinition: ParticleDefinition = {
             duration: 0,
             exit: { drain: 8 },
             emitters: [
+                {
+                    // 散开阶段的可读前路：只在出膛时沿这一团的真实初始方向喷一道短促前冲，读作「先直飞」，
+                    // 不画绕后轨迹，也不承诺一定绕到目标背后。
+                    name: "launch", bind: "projectile", fit: "none", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.06, 0.22], spread: 12,
+                    lifetime: [4, 8], size: [0.1, 0.03],
+                    color: 0x9FC2FF, alpha: [0.7, 0], light: "full", maxParticles: 14
+                },
                 {
                     name: "wisp_body", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",

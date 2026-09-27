@@ -4,11 +4,13 @@
  * 一句话：拳面窜起电流、快拳正中目标炸开一撮电火花；接着一条短粗电索把双方拴住并随双方位置移动，
  * 在放电窗里越来越亮；目标退开就断电熄灭，贴满窗口才在目标身上炸开放电并把分枝电弧送向邻敌。
  * 色相家族：电弧黄（0xE8D24A）与近白（0xFFFBE0）；饱和黄只出现在电流与火花的细小面积。
- * 拍子：起 charge（拳面聚电）→ 击 hit（命中电爆）→ 贴 contact（电索，progress 逐渐变亮）→
- *   放电 discharge 或断电 break → 链 arc（电弧跳向邻敌）与 whiff（空拳）。
- * 范围：contact 的电索用 `data.path: ["source","target"]`，两端实体每帧跟随；arc 用电弧折线。
+ * 拍子：起 charge（拳面聚电）→ 出拳 strike（拳面到真实接触点的短拳尖轨迹）→ 击 hit（命中电爆）→
+ *   贴 contact（电索，progress 逐渐变亮）→ 放电 discharge 或断电 break（各自独立回执，不被收尾截断）→
+ *   链 arc（电弧跳向邻敌）与 whiff（空拳）。
+ * 范围：strike 用 `data.path`（拳面 ↔ 真实接触点）；contact 的电索用 `data.path: ["source","target"]`，
+ *   两端实体每帧跟随；arc 用电弧折线。
  * 运动：拳面沿瞄准方向冲出，电弧从真实目标跃向邻敌。
- * 数：contact 的分枝数绑 `data.bolts`，亮度绑 `data.progress`；命中强度绑 `data.intensity`。
+ * 数：contact／strike 的分枝数绑 `data.bolts`，contact 亮度绑 `data.progress`；命中强度绑 `data.intensity`。
  */
 const ThunderpunchDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -32,6 +34,28 @@ const ThunderpunchDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.03, 0.12],
                     lifetime: [5, 9], size: [0.1, 0.03],
                     color: 0xE8D24A, alpha: [0.7, 0], light: "full", bloom: 0.3, maxParticles: 30
+                }
+            ]
+        },
+        strike: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
+            emitters: [
+                {
+                    name: "jab", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/bolt",
+                    shape: { kind: "polyline" }, burst: { count: { data: "bolts", fallback: 5 }, interval: 2 },
+                    direction: "shape", orient: "direction", speed: [0.05, 0.2],
+                    lifetime: [3, 7], size: [0.22, 0.05], sizeMode: "index",
+                    color: 0xFFFBE0, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 40
+                },
+                {
+                    name: "streak", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    shape: { kind: "polyline" }, rate: 40,
+                    direction: "shape", orient: "direction", speed: [0.06, 0.2],
+                    lifetime: [3, 6], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0xE8D24A, alpha: [0.8, 0], light: "full", bloom: 0.35, maxParticles: 50
                 }
             ]
         },

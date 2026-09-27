@@ -1,97 +1,96 @@
 /**
  * 苹果酸 / appleacid —— 注册与动作。
  *
- * 核心念头：**扔出一颗会发酵的酸苹果**——它砸中目标就把对方的特防泡软，并留一层「发酵」；
- * 目标在发酵没退之前再挨一颗，第二口更狠（−2），这一口会把那层发酵消费掉，之后重新从 −1 开始。
- * 落点摊开一小滩冒酸泡的果浆：待在酸里的敌人会持续被浸到发酵，还会被低频咬伤；苹果核落在地上当个真东西。
- * 它是四式里唯一扔真东西、唯一能对同一目标叠酸的那个。
+ * 核心念头：**扔出一颗会发酵的酸苹果**。它砸中单一目标就把对方的特防泡软并留一层「发酵」；
+ * 目标在发酵没退之前再挨一颗，第二口更狠（−2）并把那层发酵消费掉，之后重新从 −1 起算。
+ * 它不溅射、不封地，只结算直接命中的那一个目标——和酸液封地、毒液冲击消费外部毒各走各的路。
  *
  * 三幕：
  *   起（windup，提交前）：手里掂着酸苹果、酸汁滴落（`action.present` 预告，不碰世界）。
  *   掷（cast，提交后）：低弧抛出苹果（原生投射物携带物品外观）。
- *   爆（burst → patch）：命中活物或地面时在**真落点**炸成酸浆，溅到落点周围每个人；主目标吃 `core`、周围吃 `splash`，
- *       各自按是否已带 `world_combat:status/sour` 决定掉 1 级还是 2 级特防；已发酵者这一口消费掉发酵窗口；
- *       原地租借一滩酸浆（规则 `world_combat:appleacid_patch` 由本单元注册），走进去被浸到发酵、留在里面持续发酵并被咬。
- *   落空：苹果没砸到任何东西就落到地上，留成一颗真苹果（`miss`）。
+ *   命中（impact）：主碰撞走 `impact`，保留真实弹体回执；命中非友方就结算 core，并按目标身上
+ *       本施法者留下的发酵窗口决定掉 1 级或 2 级特防；第二口真正消费掉那层窗口后才不留新发酵。
+ *   发酵（ferment，持续）：目标身上那层酸的画面由**真正拥有的托管效果** `appleacidFermentWindow`
+ *       承载：实际发招的命中把最新 carrier 的 id/key 交给它建立本来源窗口，被消费/到期/被清即收回，
+ *       外部同身份 sour 不属于本招窗口，也不会被本招当作第二口。
  *
- * 选取 `kind: "aim"`：自由抛点（地面落成酸）或点实体；`target` 为 null 时沿提交朝向抛出，不要求存在敌人。
+ * 选取 `kind: "aim"`：自由抛点（地面落空）或点实体；`target` 为 null 时沿提交朝向抛出，不要求存在敌人。
  *
- * 配置 `ferment`（发酵式）由 resolve 改时序与射程、由公式改发酵与酸浆：开启＝更黏、更容易叠；
- * 关闭（爆汁式）＝一发更痛、溅得更开、飞得更快。
+ * 配置 `ferment`（发酵式）由 resolve 改时序与射程、由公式改发酵窗口；开启＝更黏、更容易接上第二口，
+ * 关闭（爆汁式）＝一发更痛、飞得更快。
  */
 namespace PokemonSkills {
     const appleacidScene = "world_combat:move_appleacid";
     const appleacidSour = "world_combat:appleacid_sour";
-    const appleacidPatch = "world_combat:appleacid_patch";
-    const appleacidPatchKey = "appleacid:patch";
+    export const appleacidFermentWindow = "world_combat:appleacid_ferment";
     const appleacidSourText = "world_combat.move.appleacid.text.sour";
     const appleacidStackText = "world_combat.move.appleacid.text.stack";
+    const appleacidFermentText = "world_combat.move.appleacid.text.ferment";
     const appleacidMissText = "world_combat.move.appleacid.text.miss";
+    const appleacidWindowTicks = 1600;
 
-    /** 把发酵身份施加到任意战斗者身上，走共享身份；`unique` 让同身份只留最新一层。 */
-    function appleacidFerment(world: CombatWorld, actor: CombatActor, ticks: number): void {
-        CombatStatus.apply(world, actor, "sour", appleacidSour, ticks, 0, { unique: true });
+    /** 把发酵身份施加到任意战斗者身上，走共享身份；只留一层本招载体。成功施加才返回 true。 */
+    function appleacidFerment(world: CombatWorld, actor: CombatActor, ticks: number): boolean {
+        return CombatStatus.apply(world, actor, "sour", appleacidSour, ticks, 0, { unique: true });
     }
 
-    /** 消费掉本单元种下的发酵窗口（不改动别的生产者的同身份载体）。 */
-    function appleacidConsume(world: CombatWorld, actor: CombatActor): void {
-        const carriers = CombatStatus.tagged(world, actor, "sour");
-        for (let i = 0; i < carriers.length; i++)
-            if (String(carriers[i].id()) === appleacidSour) world.removeMobEffect(actor, appleacidSour, carriers[i].key());
-    }
-
-    /** 落点酸浆：走进去被浸到发酵、留在里面持续发酵并被低频咬伤；只做发酵与原伤，从不反复降特防。 */
-    WorldEffects.fieldRule(appleacidPatch, {
-        scan: function (effect, world, field) {
-            // 酸泡强度表示成熟进度：取圈内发酵得最深的非友方，0 就是没人泡着。
-            const point = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
-            const total = Math.max(1, Math.round(field.data.sourTicks || 60));
-            let mature = 0;
-            const actors = world.query(point, field.radius, false);
-            for (let i = 0; i < actors.length; i++) {
-                if (world.friendly(actors[i])) continue;
-                const carriers = CombatStatus.tagged(world, actors[i], "sour");
-                for (let j = 0; j < carriers.length; j++) {
-                    const remaining = carriers[j].duration();
-                    if (remaining >= 0) mature = Math.max(mature, 1 - remaining / total);
-                }
-            }
-            mature = Math.max(0, Math.min(1, mature));
-            WorldFeedback.onEffect(world, effect.id(), appleacidPatchKey, appleacidScene, 1, point,
-                { moment: "patch", splash: field.radius, cores: field.data.cores, scale: field.data.scale,
-                    intensity: Math.max(0.4, Math.min(1.6, (field.data.damage || 7) / 7)), mature: mature,
-                    bubble: 3 + mature * 9 });
-        },
-        enter: function (world, actor, field) {
-            if (world.friendly(actor)) return;
-            const body = world.observe(actor);
-            if (body === null) return;
-            appleacidFerment(world, actor, Math.max(20, Math.round(field.data.sourTicks || 60)));
-            WorldFeedback.emit(world, appleacidScene, 1, body.position(),
-                { moment: "soak", target: String(actor.ref()), cores: field.data.cores, scale: field.data.scale,
-                    intensity: Math.max(0.4, Math.min(1.4, (field.data.damage || 7) / 7)) }, 20);
-        },
-        stay: function (world, actor, field) {
-            if (world.friendly(actor)) return;
-            // 待在酸里持续发酵（刷新窗口），再按低频咬一口。
-            appleacidFerment(world, actor, Math.max(20, Math.round(field.data.sourTicks || 60)));
-            const next = field.data.next || (field.data.next = {}), ref = String(actor.ref());
-            if (world.tick() < (next[ref] || 0)) return;
-            next[ref] = world.tick() + Math.max(4, Math.round(field.data.pulse || 20));
-            const body = world.observe(actor);
-            if (body === null) return;
-            if (hurt(world, actor, "appleacid", field.data.damage || 0, { damage: damageSpec("appleacid", "patch") }))
-                WorldFeedback.emit(world, appleacidScene, 1, body.position(),
-                    { moment: "patch_hit", target: ref, cores: field.data.cores, scale: field.data.scale,
-                        intensity: Math.max(0.4, Math.min(1.4, (field.data.damage || 7) / 7)) }, 18);
+    /** 本施法者在目标身上留下的那个 carrier 快照；锚点与实时载体不符则不算本来源窗口。 */
+    function appleacidOwnCarrier(world: CombatWorld, actor: CombatActor, owner: string): MobEffects.Anchor | null {
+        const views = world.effects(actor, appleacidFermentWindow);
+        for (let i = 0; i < views.length; i++) {
+            if (String(views[i].source().ref()) !== owner) continue;
+            let anchor: any;
+            try { anchor = JSON.parse(views[i].data()); } catch (error) { continue; }
+            if (!MobEffects.validAnchor(anchor) || !MobEffects.matches(world, actor, anchor)) continue;
+            return { id: anchor.id, key: anchor.key };
         }
-    });
+        return null;
+    }
+
+    /** 只消费本施法者留在目标身上的那一个 carrier；确认实际移除才算消费成功。 */
+    function appleacidConsumeCarrier(world: CombatWorld, actor: CombatActor, anchor: MobEffects.Anchor): boolean {
+        return MobEffects.matches(world, actor, anchor) && world.removeMobEffect(actor, anchor.id, anchor.key);
+    }
+
+    /** 由实际发招的命中按最新 carrier 快照建立本施法者的发酵画面；旧 revision 作废，不留失效锚。 */
+    function appleacidBindWindow(world: CombatWorld, actor: CombatActor, owner: string): void {
+        const carrier = MobEffects.read(world, actor, appleacidSour);
+        if (carrier === null) return;
+        world.effects(actor, appleacidFermentWindow).forEach(function (view) {
+            if (String(view.source().ref()) === owner) world.operation(view.id(), "world_combat:dispel", "{}");
+        });
+        const ticks = carrier.duration() < 0 ? appleacidWindowTicks : Math.max(1, Math.min(appleacidWindowTicks, carrier.duration()));
+        world.effect(appleacidFermentWindow, actor, JSON.stringify({ id: carrier.id(), key: carrier.key() }), ticks);
+    }
+
+    // 发酵画面归属：一个真正拥有的托管效果，观察目标身上的本招载体。
+    // 由命中时的施法者世界建立、保留精确 carrier id/key；被消费/到期/被清时 watch 自行结束，不留失效锚。
+    WorldCombat.effect(appleacidFermentWindow, 1, appleacidWindowTicks, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.id !== "string" || typeof value.key !== "string") throw new Error("Invalid appleacid ferment anchor");
+        return JSON.stringify({ id: value.id, key: value.key });
+    }, EffectProtocols.unchanged);
+    function appleacidFermentPresent(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target(), anchor = JSON.parse(effect.state());
+        const body = world.observe(target);
+        if (body === null || !MobEffects.matches(world, target, anchor)) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_appleacid/ferment", appleacidScene, 1, body.position(),
+            { moment: "ferment", target: String(target.ref()) });
+        effect.schedule("watch", "watch", 2, "{}");
+    }
+    WorldCombat.effectHandler(appleacidFermentWindow, "start", appleacidFermentPresent);
+    WorldCombat.effectHandler(appleacidFermentWindow, "watch", appleacidFermentPresent);
+    WorldCombat.effectHandler(appleacidFermentWindow, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     define({
         id: "appleacid",
         name: "Apple Acid",
-        description: "扔出一颗酸苹果：命中时在真落点炸成酸浆，主目标与落点周围的敌人都会掉特防；带着发酵身份的目标再挨一颗会更狠（−2），并把那层发酵消费掉，之后重新从 −1 开始。落点留下一滩冒泡的酸浆，敌人走进去会被浸到发酵、留在里面持续发酵并被反复咬。发酵式更黏更易叠酸，爆汁式一发更痛、溅得更开。",
-        uses: ["对同一个目标连扔两颗：第一颗特防 −1，命中发酵中的目标再降 2 级并耗掉发酵", "一次溅到聚在落点周围的多个对手", "用余下的酸浆封住一小片地"],
+        description: "扔出一颗酸苹果砸向单体目标：命中造成特殊伤害并令其特防 −1，同时在目标身上留下一层发酵。发酵没退之前再命中同一目标，第二口更狠（−2）并把这层发酵消费掉，之后重新从 −1 起算。它不溅射、不留酸场，只结算直接命中的那一个目标；落空只在落点溅一下，不掉苹果。发酵式让苹果飞得更慢、砸击更轻，但发酵窗口 ×1.6，更容易接上第二口；爆汁式一发更痛、飞得更快、射得更远，但酸留不久。",
+        uses: [
+            "对同一个目标连扔两颗：第一颗特防 −1 并留下发酵，窗口内补第二颗改为 −2 并耗掉发酵",
+            "切换发酵式把窗口拉长，更容易对同一目标接上第二口",
+            "自由抛掷：对任意关系实体或落点都能扔出苹果"
+        ],
         kind: "aim",
         range: 10,
         maxRange: 15,
@@ -103,7 +102,7 @@ namespace PokemonSkills {
         defaults: { ferment: false, ai: { maxChase: 13, stackSour: true } },
         fields: [],
         indicator: function (config, pokemon) {
-            return { radius: p("appleacid", "splashRadius", pokemon), geometry: "area", style: "grass",
+            return { radius: p("appleacid", "reach", pokemon), geometry: "line", style: "grass",
                 color: 0x9EC44A, label: config && config.ferment === true ? "发酵苹果酸" : "爆汁苹果酸" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
@@ -128,85 +127,73 @@ namespace PokemonSkills {
             const body = world.observe(action.actor());
             const origin = body === null ? action.origin() : body.position();
             const power = p("appleacid", "core", action);
-            const splashPower = p("appleacid", "splash", action);
-            const patchPower = p("appleacid", "patch", action);
             const speed = p("appleacid", "globSpeed", action);
             const gravity = p("appleacid", "globGravity", action);
             const radius = p("appleacid", "globRadius", action);
-            const splashRadius = p("appleacid", "splashRadius", action);
-            const patchRadius = p("appleacid", "patchRadius", action);
-            const patchTicks = Math.max(30, Math.round(p("appleacid", "patchTicks", action)));
-            const patchPulse = Math.max(6, Math.round(p("appleacid", "patchPulse", action)));
             const sourStages = Math.max(1, Math.round(p("appleacid", "sourStages", action)));
             const secondStages = Math.max(1, Math.round(p("appleacid", "secondStages", action)));
             const sourTicks = Math.max(30, Math.round(p("appleacid", "sourTicks", action)));
             const cores = Math.max(10, Math.round(p("appleacid", "cores", action)));
-            const scale = Math.max(0.6, Math.min(2.4, splashRadius / 2.2));
+            const scale = Math.max(0.6, Math.min(2.4, radius / 0.22));
             const intensity = Math.max(0.5, Math.min(2.2, power / 62));
             const scenes = WorldFeedback.actionScenes(appleacidScene);
-            // 自由抛点：有选中点就抛向它，否则沿提交朝向抛出。
+            // 自由抛点：有选中点就抛向它，否则沿提交朝向抛出；零长度/竖直瞄准由 basis 给出稳定方向。
             const aimPoint = action.targetPosition();
             const delta = aimPoint.minus(origin);
-            const point = delta.length() < 0.05 ? origin.plus(action.direction().unit().scale(action.range())) : aimPoint;
+            const frame = WorldGeometry.basis(action.direction(), delta, WorldCombat.point(0, 1, 0));
+            const point = delta.length() < 0.05 ? origin.plus(frame.forward.scale(action.range())) : aimPoint;
             let settled = false;
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
-            /** 一人一咬：按是否已带发酵决定掉 1 级还是 2 级；发酵中的这一咬会把窗口消费掉，否则重新施加。 */
-            function bite(current: CombatAction, victim: CombatActor, powerValue: number, segment: string, at: CombatPoint): void {
+            /** 一次成功命中：按是否已带发酵决定掉 1 级还是 2 级；发酵中的这一口把窗口消费掉，否则施加。 */
+            function bite(current: CombatAction, hit: CombatImpact, victim: CombatActor): void {
                 const scope = current.world();
-                const ripe = CombatStatus.has(scope, victim, "sour");
-                const stages = ripe ? secondStages : sourStages;
-                if (!hurt(current, victim, "appleacid", powerValue, { damage: damageSpec("appleacid", segment) })) return;
-                NativeEffects.boost(scope, victim, "spd", -stages);
-                if (ripe) appleacidConsume(scope, victim);
-                else appleacidFerment(scope, victim, sourTicks);
+                if (!impact(current, hit, "appleacid", power, { damage: damageSpec("appleacid", "core") })) return;
+                const owner = String(current.actor().ref());
+                // 只把本施法者上一颗留下的发酵当作第二口：先确认能真正消费那一个 carrier，才采用 -2；
+                // 别人的同身份 sour 不进入本招循环，本次仍是第一口。
+                const own = appleacidOwnCarrier(scope, victim, owner);
+                const consumed = own !== null && appleacidConsumeCarrier(scope, victim, own);
+                const stages = consumed ? secondStages : sourStages;
+                const applied = NativeEffects.boost(scope, victim, "spd", -stages);
+                const fermented = consumed ? false : appleacidFerment(scope, victim, sourTicks);
+                if (fermented) appleacidBindWindow(scope, victim, owner);
+                const held = scope.observe(victim);
+                const at = held === null ? hit.position() : held.position();
                 WorldFeedback.emit(scope, appleacidScene, 1, at,
-                    { moment: ripe ? "stack" : "hit", target: String(victim.ref()), cores: cores, scale: scale,
-                        intensity: ripe ? Math.min(2.4, intensity * 1.2) : intensity }, 24);
-                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)),
-                    ripe ? appleacidStackText : appleacidSourText, [stages], 28);
+                    { moment: consumed ? "stack" : "hit", target: String(victim.ref()), cores: cores, scale: scale,
+                        intensity: consumed ? Math.min(2.4, intensity * 1.2) : intensity }, 24);
+                // 按真实生效的降阶量显示：从 -5 再降 2 实际只掉 1 级时，浮字也是 1。
+                if (applied !== 0)
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)),
+                        consumed ? appleacidStackText : appleacidSourText, [Math.abs(applied)], 28);
+                else if (fermented || consumed)
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.2, 0)), appleacidFermentText, [], 28);
             }
 
-            function burst(current: CombatAction, point: CombatPoint, primary: CombatActor | null): void {
+            /** 主碰撞：命中非友方就咬一口；落空/落地只在落点溅一下，不掉苹果、不留场。 */
+            function land(current: CombatAction, hit: CombatImpact): void {
                 const scope = current.world();
-                let hits = 0;
-                if (primary !== null && scope.valid(primary) && !scope.friendly(primary)) {
-                    const held = scope.observe(primary);
-                    if (held !== null) { bite(current, primary, power, "core", held.position()); hits++; }
+                const victim = hit.target();
+                if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) bite(current, hit, victim);
+                else {
+                    const at = hit.position();
+                    WorldFeedback.emit(scope, appleacidScene, 1, at, { moment: "miss", cores: cores, scale: scale, intensity: 0.8 }, 22);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.9, 0)), appleacidMissText, [], 24);
                 }
-                WorldGeometry.selectEnemies(scope, WorldGeometry.ring(point, 0, splashRadius, { below: 2, above: 3 }), function (other, facts) {
-                    if (primary !== null && String(other.ref()) === String(primary.ref())) return;
-                    bite(current, other, splashPower, "splash", facts.position());
-                    hits++;
-                });
-                WorldFeedback.emit(scope, appleacidScene, 1, point,
-                    { moment: "burst", target: primary === null ? "" : String(primary.ref()), splash: splashRadius, cores: cores,
-                        scale: scale, hits: hits, intensity: intensity }, 28);
-                sound(current, "cobblemon:impact.grass");
-                // 酸浆的视觉由场地规则自己的 scan 绑定到效果生命周期上，随场地结束清理。
-                WorldEffects.field(scope, appleacidPatch, point, patchRadius,
-                    { damage: patchPower, pulse: patchPulse, sourTicks: sourTicks, cores: cores, scale: scale, next: {} }, patchTicks);
                 finish(current);
             }
 
             sound(action, "minecraft:entity.wind_charge.throw");
             const launch = LivingActions.ballistic(origin, point, speed, gravity);
-            const direction = launch === null ? (delta.length() < 0.05 ? action.direction().unit() : delta.unit()) : launch;
+            const direction = launch === null ? (delta.length() < 0.05 ? frame.forward : delta.unit()) : launch;
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, gravity: gravity, lifetime: 200,
                 direction: direction,
                 appearance: { item: "minecraft:apple", glow: false, scale: Math.max(1.0, radius / 0.22) },
-                impact: function (current: CombatAction, hit: CombatImpact) { burst(current, hit.position(), hit.target()); }
-            }, function (current: CombatAction) {
-                if (settled) return;
-                WorldFeedback.emit(current.world(), appleacidScene, 1, point,
-                    { moment: "miss", cores: cores, scale: scale, intensity: 0.8 }, 22);
-                WorldFeedback.text(current.world(), point.plus(WorldCombat.point(0, 0.9, 0)), appleacidMissText, [], 24);
-                current.world().dropItem(point, "minecraft:apple", 1, JSON.stringify({ pickupDelay: 20 }));
-                sound(current, "minecraft:entity.item.pickup");
-                finish(current);
-            });
+                impact: function (current: CombatAction, hit: CombatImpact) { land(current, hit); }
+            }, function (current: CombatAction) { finish(current); });
             scenes.show(action, "cast", origin, { moment: "cast", projectile: flight, cores: cores, scale: scale, intensity: intensity });
         }
     });

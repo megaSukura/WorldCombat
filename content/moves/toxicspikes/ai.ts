@@ -1,9 +1,9 @@
 /**
  * 毒菱 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
- * 什么局面有意义：有可见、敌对、存活、在 `ai.maxChase`（默认 10）以内、身上还没有剧毒的威胁时布毒菱。
- *   已有普通毒的目标仍值得再撒一层把它升级成剧毒（给更高优先级）；已经剧毒的目标不再浪费。
- *   敌方毒属性的身体会把整片毒菱吸掉，对它布毒菱价值很低（降优先级），但它走进已有毒菱能帮玩家清场。
+ * 什么局面有意义：有可见、敌对、存活、贴地、在 `ai.maxChase`（默认 10）以内、身上还没有剧毒的威胁时布毒菱。
+ *   空中路径的生物不会踩到毒菱，不布；毒属性会把整片毒菱吸掉，不布；钢属性免疫中毒，也不布。
+ *   已有普通毒的目标只有在脚下能接上第二层（附近已有自己同层地的毒菱）时才值得再撒——否则仍是 1 层，不会升级。
  * `ai.lead` 给移动中的目标一点提前量，把毒菱撒在它要经过的位置。
  * 对谁出手：当前威胁；它的位置（或提前量）就是落点。
  * 够不到怎么办：交给共享接近逻辑；`kind` 为 point，AI 会把毒菱撒向目标所在位置。
@@ -11,17 +11,40 @@
  * 配置 virulent（烈毒／缓和）改变毒性与覆盖；ai.maxChase、ai.lead 决定追多远、留多少提前量。
  */
 namespace PokemonSkills {
+    /** 当前有效类型（含临时类型变更），普通 MC 生物与模组生物同样适用，不再只读宝可梦个体。 */
+    function toxicspikesTypes(context: WorldBehavior.Context, target: CompanionBehavior.Entity): string[] {
+        const world = CompanionBehavior.world(context), actor = world.actor(target.ref);
+        if (actor === null) return [];
+        try { return PokemonDamage.combatants.read(world, actor).types || []; } catch (error) { return []; }
+    }
+
+    /** 目标脚下附近是否已有自己在同层地布下的毒菱：只有能接上第二层，给已中毒目标补一层才有意义。 */
+    function toxicspikesCanStack(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        const own = String(self.ref), areas = WorldEffects.areas(world, toxicspikesRule), targetPoint = CompanionBehavior.point(target.point);
+        for (let i = 0; i < areas.length; i++) {
+            const area = areas[i];
+            if (area.pending || area.source !== own || (area.data && area.data.absorbed)) continue;
+            if (Math.abs(area.position[1] - target.point[1]) > 2.0) continue;
+            const centre = WorldCombat.point(area.position[0], area.position[1], area.position[2]);
+            if (centre.minus(targetPoint).length() <= area.radius + 4) return true;
+        }
+        return false;
+    }
+
     function toxicspikesWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
+        // 空中路径不会踩上毒菱。
+        if (target.grounded === false) return false;
         if (CompanionBehavior.status(context, target, "toxic")) return false;
+        const types = toxicspikesTypes(context, target);
+        // 毒属性会把整片毒菱吸掉、钢属性免疫中毒，对它们布菱是白费。
+        if (types.indexOf("poison") >= 0 || types.indexOf("steel") >= 0) return false;
+        // 已有普通毒但这一趟只能算 1 层：不会升级成剧毒，拒绝主动送场。
+        if (CompanionBehavior.status(context, target, "poison") && !toxicspikesCanStack(context, target)) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(item, "maxChase", 10);
-    }
-
-    function toxicspikesPoisonType(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
-        const facts = CompanionBehavior.pokemonFacts(context, target);
-        return !!facts && facts.types.indexOf("poison") >= 0;
     }
 
     CompanionBehavior.registerUse(toxicspikesId, {
@@ -33,8 +56,10 @@ namespace PokemonSkills {
             return toxicspikesWants(context, capability, target);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible
-                && !CompanionBehavior.status(context, target, "toxic");
+            if (target.friendly || target.health <= 0 || !target.visible || target.grounded === false) return false;
+            if (CompanionBehavior.status(context, target, "toxic")) return false;
+            const types = toxicspikesTypes(context, target);
+            return types.indexOf("poison") < 0 && types.indexOf("steel") < 0;
         },
         target: function (context, capability, selected) {
             const lead = CompanionBehavior.ai<number>(capability, "lead", 0), velocity = selected.velocity;
@@ -47,10 +72,8 @@ namespace PokemonSkills {
         priority: function (context, capability, target) {
             if (!target || !toxicspikesWants(context, capability, target)) return 0;
             let score = 20;
-            // 已有普通毒：再撒一层就能升级成剧毒，值得优先。
+            // 已有普通毒：能接上第二层就升级成剧毒，值得优先。
             if (CompanionBehavior.status(context, target, "poison")) score += 10;
-            // 毒属性会把整片毒菱吸掉，对它布毒菱价值低。
-            if (toxicspikesPoisonType(context, target)) score -= 12;
             return Math.max(1, score);
         }
     });

@@ -40,11 +40,11 @@ namespace PokemonSkills {
             .plus(F.var("light", { key: "worldcombat.skill." + synthesisId + ".value.light" }).times(0.30))
             .plus(F.stat("specialDefence").minus(60).max(0).times(0.0008).as("叶片韧性"))
             .clamp(0.30, 0.72).round(3),
-            "回复比例", "整段光合按缺失生命回复的总比例上限：日照越足越高（晴天正午接近 2/3），特防越高叶片越强韧；夜里或遮蔽处只回下限。这口总量会均分成 4 次、各按当刻日照结算。"),
+            "回复比例", "整段光合按缺失生命回复的总比例上限：日照越足越高（晴天正午接近 2/3），特防越高叶片越强韧；夜里或遮蔽处只回下限。这口总量会均分成 4 次、各按当刻日照结算，且总量不超过开始光合时的缺血量——中途再挨打也不会把它撑大。"),
         prepareTicks: seconds(F.base(7).minus(F.stat("speed").minus(40).max(0).times(0.05)).clamp(5, 11).as("速度修正"),
             "起手时长", "摊开叶片起手、尚未开始计光合的准备时间；速度越快越短。"),
         soakTicks: seconds(F.base(18).minus(F.stat("speed").minus(40).max(0).times(0.08)).clamp(10, 20).as("速度修正"),
-            "光合时长", "提交后持续吸光的整段时间，回复均分成 4 次落在其中；整段站定，被打断则停止剩余几口。")
+            "光合时长", "提交后持续吸光的整段时间目标，回复均分成 4 次落在其中；每次都取该值的 1/4 向下取整为整数拍，所以实际时长为 4 的整数倍，见说明里的实际拍数。整段站定，被打断则停止剩余几口。")
     });
     stages(synthesisId, [
         { level: 40, values: { cooldown: 210 } },
@@ -52,10 +52,17 @@ namespace PokemonSkills {
     ]);
     describe(synthesisId, [
         { key: "description.0", values: ["heal"] },
-        { key: "description.1", values: ["prepareTicks", "soakTicks"] },
+        { key: "description.1", values: ["prepareTicks", "soakActual"] },
         { key: "description.additional", values: [] },
         { key: "timing", values: ["prepare","recover","pp","cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.cooldown"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.cooldown"] }
-    ]);
+    ], {
+        /** 实际光合时长：整段按 4 等分取整后的真实拍数（floor(soak/4)×4），与 execute 里落点的间隔一致。 */
+        soakActual: function (context: NumberContext): any {
+            const soak = p(synthesisId, "soakTicks", context);
+            const interval = Math.max(1, Math.floor(soak / 4));
+            return valueBinding(rounded((interval * 4) / 20), text("worldcombat.skill.synthesis.value.soakTicks"));
+        }
+    });
 }

@@ -63,7 +63,7 @@ namespace PokemonSkills {
             const context: NumberContext = { pokemon, skill: skills["feint"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p("feint", "tempo", context)),
-                recover: Math.round(p("feint", "recover", context)),
+                recover: Math.round(p("feint", "settle", context)),
                 cooldown: Math.round(p("feint", "recharge", context)),
                 active: 0,
                 range: p("feint", "reach", context) + 0.3
@@ -76,7 +76,6 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const actor = action.actor();
             const reach = Math.max(1.2, p("feint", "reach", action));
             const rush = Math.max(0.3, p("feint", "rush", action));
@@ -88,16 +87,16 @@ namespace PokemonSkills {
             const sparks = Math.max(6, Math.round(p("feint", "sparks", action)));
             const scale = radius / feintReferenceRadius;
             const heading = WorldGeometry.flatUnit(aim(action), WorldCombat.point(0, 0, 1));
+            const scenes = WorldFeedback.actionScenes(feintScene);
             let travelled = 0, settled = false;
 
             sound(action, "cobblemon:move.quickattack.actor");
-            WorldFeedback.emit(world, feintScene, 1, action.origin(),
-                { moment: "wind", sparks: sparks, scale: scale }, 14);
 
-            /** 收势：真实接触到的敌人先掀守护再结算这一戳；没接触到谁只留一路虚晃。 */
+            /** 收势：真实接触到的敌人先掀守护再结算这一戳；没接触到谁只留一路虚晃。冲刺表现随收势停。 */
             function strike(current: CombatAction, at: CombatPoint, victim: CombatActor | null): void {
                 if (settled) return;
                 settled = true;
+                scenes.stop(current, "rush");
                 const scope = current.world();
                 let broken = 0, landed = false, power = jab;
                 if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -148,8 +147,9 @@ namespace PokemonSkills {
                 if (step <= 0.03) { strike(current, self.position(), null); return; }
                 const swept = sweepStep(current, heading.scale(step), radius), hit = swept.hit;
                 travelled += swept.moved;
-                WorldFeedback.keep(scope, "feint:rush:" + String(current.actor().ref()), feintScene, 1, self.position(),
-                    { moment: "rush", direction: [heading.x(), 0, heading.z()], sparks: sparks, scale: scale }, 8);
+                // 冲刺表现由本动作拥有：接触/收势那一刻就停，不再留一段固定时长的尾迹。
+                scenes.show(current, "rush", self.position(),
+                    { moment: "rush", direction: [heading.x(), 0, heading.z()], sparks: sparks, scale: scale });
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) { strike(current, hit.position(), victim); return; }

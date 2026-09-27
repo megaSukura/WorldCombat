@@ -9,10 +9,12 @@
  *   起（windup，提交前）：双翼收到身前、翼缘亮起钢光，只播预告，可被打断。
  *   展／掠（unfold / glide，提交后）：非滑翔式在 `unfold` 刻里把双翼从正前方展开到 `span`；滑翔式在
  *       `glideDist` 的真实推进期间保持全幅翼缘。每一刻都按当刻真实身体位置采**左、右两条肩到翼尖的短
- *       `trace`**（含友方与墙），翼缘碰到谁就结算一次 `wing` 接触伤害并把目标沿背离方向推开 `knock` 格；
- *       每个目标整招只吃一次，直线上的第一个身体或墙就是那一侧翼缘的真实端点，墙把该侧翼截断。
- *   磨（harden / miss）：整招第一次有效命中才掷一次 `hardenChance`，按 `NativeEffects` 实际涨到的防御级数
- *       播磨硬回执；整招没碰到任何人只留散羽。滑翔撞墙立即收翼结束，不超出 `glideDist` 的位移预算。
+ *       `trace`**（含友方与墙），翼缘碰到谁就结算一次 `wing` 接触伤害并把目标沿背离方向用 `hitDisplace`
+ *       推开 `knock` 格（保留原生抗击退）；每个目标整招只吃一次，直线上的第一个身体或墙就是那一侧翼缘
+ *       的真实端点，墙把该侧翼截断。翼旋转按 ≤12° 细分角、滑翔按上刻→本刻的根弦与尖弦补真实扫面，
+ *       快展开或身体移动时不漏中间位置。
+ *   磨（harden / miss）：整招第一次有效命中即记尝试、只掷一次 `hardenChance`，按 `NativeEffects` 实际涨到的
+ *       防御级数播磨硬回执；整招没碰到任何人只留散羽。滑翔撞墙立即收翼结束，不超出 `glideDist` 的位移预算。
  *
  * 与同族分开：金属爪是贴脸两点、磨的是攻击；钢翼是两侧真实翼缘、把两边的人分别扫开、磨的是防御。
  *   正前方两条翼缘之间不接触的空隙是安全的，不是整扇同时填伤。
@@ -99,7 +101,9 @@ namespace PokemonSkills {
             const intensity = Math.max(0.5, Math.min(2.4, power / 70));
             const pace = Math.max(0.4, Math.min(0.9, glideDist / 4 + 0.15));
             const struck: { [ref: string]: boolean } = Object.create(null);
-            let hits = 0, hardened = false, walls = 0, settled = false;
+            let hits = 0, hardenTried = false, walls = 0, settled = false;
+            let lastPoseL: { root: CombatPoint; tip: CombatPoint } | null = null;
+            let lastPoseR: { root: CombatPoint; tip: CombatPoint } | null = null;
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -116,14 +120,14 @@ namespace PokemonSkills {
                 scenes.finish(current, done);
             }
 
-            /** 整招第一次有效命中才掷一次；按实际涨到的防御级数播，满级或被拒不留成功回执。 */
+            /** 整招第一次有效命中才掷一次（命中即记尝试，未中也只此一次）；按实际涨到的防御级数播，满级或被拒不留成功回执。 */
             function harden(current: CombatAction, point: CombatPoint): void {
-                if (hardened) return;
+                if (hardenTried) return;
+                hardenTried = true;
                 const scope = current.world();
                 if (scope.random() >= chance) return;
                 const delta = NativeEffects.boost(scope, actor, "def", stages);
                 if (delta <= 0) return;
-                hardened = true;
                 const self = scope.observe(actor);
                 const at = self === null ? point : self.position();
                 WorldFeedback.emit(scope, steelwingScene, 1, at,
@@ -147,24 +151,15 @@ namespace PokemonSkills {
                 return { root: root, tip: root.plus(direction.scale(length)) };
             }
 
-            /** 一侧翼缘的真实 `trace`：第一个身体或墙就是端点；每个目标整招只结算一次伤害与推距。 */
-            function swipe(current: CombatAction, sideSign: number, t: number): void {
+            /** 结算一次真实 `trace` 回执：第一个身体或墙就是端点；每个目标整招只结算一次伤害与推距。 */
+            function landContact(current: CombatAction, sideSign: number, contact: CombatImpact, endpoint: CombatPoint, wallFeedback: boolean): void {
                 const scope = current.world();
-                const geometry = wingGeometry(current, sideSign, t);
-                if (geometry === null) return;
-                const contact = current.trace(geometry.root, geometry.tip, radius, true);
-                const endpoint = contact.position();
                 const lander = contact.hitEntity() ? contact.target() : null;
                 const victim = lander !== null && scope.valid(lander) && !scope.friendly(lander) ? lander : null;
-                scenes.show(current, sideSign < 0 ? "wingL" : "wingR", geometry.root,
-                    { moment: "wing", side: sideSign, path: [steelwingVertex(geometry.root), steelwingVertex(endpoint)],
-                        point: steelwingVertex(endpoint),
-                        blocked: contact.blocked() && !contact.hitEntity() ? 1 : 0,
-                        feathers: feathers, scale: scale, intensity: intensity });
                 if (victim !== null && !struck[String(victim.ref())]) {
                     struck[String(victim.ref())] = true;
                     const landed = impact(current, contact, "steelwing", power,
-                        { damage: damageSpec("steelwing", "wing"), contact: true });
+                        { damage: damageSpec("steelwing", "wing"), contact: true }, sideSign < 0 ? "wingL" : "wingR");
                     if (landed) {
                         hits++;
                         WorldFeedback.emit(scope, steelwingScene, 1, endpoint,
@@ -176,12 +171,13 @@ namespace PokemonSkills {
                             const target = scope.observe(victim), self = scope.observe(actor);
                             if (target !== null && self !== null) {
                                 const away = steelwingFlat(target.position().minus(self.position()));
-                                if (away.length() > 0.05) scope.displace(victim, away.unit().scale(knock));
+                                // 受击位移走 hitDisplace：保留原生抗击退、事件与敌我权限。
+                                if (away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(knock));
                             }
                         }
                         harden(current, endpoint);
                     }
-                } else if (contact.blocked() && !contact.hitEntity()) {
+                } else if (wallFeedback && contact.blocked() && !contact.hitEntity()) {
                     walls++;
                     WorldFeedback.emit(scope, steelwingScene, 1, endpoint,
                         { moment: "wall", face: contact.blockFace(), feathers: Math.round(feathers * 0.5), scale: scale }, 18);
@@ -190,20 +186,54 @@ namespace PokemonSkills {
                 }
             }
 
+            /** 一侧翼缘在当刻位姿的真实 `trace`，并在给出上一刻位姿时把上刻到本刻的扫面补上（根弦与尖弦）。 */
+            function strikePose(current: CombatAction, sideSign: number, pose: { root: CombatPoint; tip: CombatPoint },
+                prevPose: { root: CombatPoint; tip: CombatPoint } | null): void {
+                const contact = current.trace(pose.root, pose.tip, radius, true);
+                const endpoint = contact.position();
+                scenes.show(current, sideSign < 0 ? "wingL" : "wingR", pose.root,
+                    { moment: "wing", side: sideSign, path: [steelwingVertex(pose.root), steelwingVertex(endpoint)],
+                        point: steelwingVertex(endpoint),
+                        blocked: contact.blocked() && !contact.hitEntity() ? 1 : 0, edgeRadius: radius,
+                        feathers: feathers, scale: scale, intensity: intensity });
+                landContact(current, sideSign, contact, endpoint, true);
+                if (prevPose !== null) {
+                    // 翼旋转/身体移动之间补真实扫面：上刻翼根、翼尖到本刻的位移各补一条 trace；墙回执只由翼缘本身给。
+                    const rootChord = current.trace(prevPose.root, pose.root, radius, true);
+                    landContact(current, sideSign, rootChord, rootChord.position(), false);
+                    const tipChord = current.trace(prevPose.tip, pose.tip, radius, true);
+                    landContact(current, sideSign, tipChord, tipChord.position(), false);
+                }
+            }
+
+            /** 采一侧翼缘在展翼进度 `t` 的位姿；`prevT` 给出时补上刻→本刻扫面。 */
+            function swipe(current: CombatAction, sideSign: number, t: number, prevT?: number): void {
+                const pose = wingGeometry(current, sideSign, t);
+                if (pose === null) return;
+                const prevPose = prevT === undefined ? null : wingGeometry(current, sideSign, prevT);
+                strikePose(current, sideSign, pose, prevPose);
+            }
+
             function showBody(current: CombatAction, moment: string): void {
                 const self = current.world().observe(actor);
                 if (self !== null) scenes.show(current, "body", self.position(),
                     { moment: moment, feathers: feathers, scale: scale, intensity: intensity });
             }
 
-            /** 非滑翔：原地把双翼从正前方展开到 `span`，每刻各采一次两条翼缘。 */
-            function unfoldStep(current: CombatAction, step: number): void {
+            /** 非滑翔：原地把双翼从正前方展开到 `span`；每刻按 ≤12° 细分角，补上刻到本刻的整段扫面。 */
+            function unfoldStep(current: CombatAction, step: number, lastT: number): void {
                 const t = Math.min(1, (step + 1) / unfold);
                 showBody(current, "unfold");
-                swipe(current, -1, t);
-                swipe(current, 1, t);
+                const samples = Math.max(1, Math.ceil(Math.abs(t - lastT) * (span - 20) / 12));
+                let previous = lastT;
+                for (let s = 1; s <= samples; s++) {
+                    const angle = lastT + (t - lastT) * s / samples;
+                    swipe(current, -1, angle, previous);
+                    swipe(current, 1, angle, previous);
+                    previous = angle;
+                }
                 if (step + 1 >= unfold || current.world().observe(actor) === null) { finish(current); return; }
-                current.after(1, function (next: CombatAction) { unfoldStep(next, step + 1); });
+                current.after(1, function (next: CombatAction) { unfoldStep(next, step + 1, t); });
             }
 
             /** 滑翔：用 `sweepStep` 真实推进，撞墙即收翼结束；保持全幅翼缘每刻采两条。 */
@@ -235,8 +265,10 @@ namespace PokemonSkills {
                             from: [start.x(), start.y(), start.z()],
                             to: [now.position().x(), now.position().y(), now.position().z()] });
                 }
-                swipe(current, -1, 1);
-                swipe(current, 1, 1);
+                // 全幅翼缘：本刻位姿 + 与上刻位姿之间的根弦、尖弦，身体移动也不漏中间位置。
+                const poseL = wingGeometry(current, -1, 1), poseR = wingGeometry(current, 1, 1);
+                if (poseL !== null) { strikePose(current, -1, poseL, lastPoseL); lastPoseL = poseL; }
+                if (poseR !== null) { strikePose(current, 1, poseR, lastPoseR); lastPoseR = poseR; }
                 travelled += moved;
                 if (moved < 0.02 || travelled >= glideDist) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { glideStep(next, travelled); });
@@ -244,7 +276,7 @@ namespace PokemonSkills {
 
             sound(action, "cobblemon:animation.steel.wing_flap.large");
             if (glide) glideStep(action, 0);
-            else unfoldStep(action, 0);
+            else unfoldStep(action, 0, 0);
         }
     });
 }

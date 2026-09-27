@@ -3,7 +3,7 @@
   "worldcombat.skill.trickortreat.use.0": "dress a target as a Ghost with a Ghost/Dark weakness",
   "worldcombat.skill.trickortreat.use.1": "dress an ally to shut down Normal and Fighting hits",
   "worldcombat.skill.trickortreat.use.2": "pair with Foresight to strip the shell's Ghost immunity",
-  "worldcombat.skill.trickortreat.description.0": "Add the Ghost type to the target for %1$s: while dressed it counts as Ghost for same-type bonus and damage taken - Normal and Fighting cannot touch it, while Ghost and Dark strike it hard; the type reverts when the shell expires or is removed early. Only a non-Ghost Pokemon with fewer than three types and no type-locking ability can be dressed.",
+  "worldcombat.skill.trickortreat.description.0": "Add the Ghost type to the target for %1$s: while dressed it counts as Ghost for same-type bonus and damage taken - Normal and Fighting cannot touch it, while Ghost and Dark strike it hard; the type reverts when the shell expires or is removed early. Any living body can be dressed as long as it is not Ghost, has fewer than three effective types and no type-locking ability; ordinary sword or arrow damage that is not classified or converted by the shared types still does not become a matchup on its own.",
   "worldcombat.skill.trickortreat.grand.on": "Grand: %1$s wind-up and %2$s cooldown buy a longer shell and denser decorations.",
   "worldcombat.skill.trickortreat.grand.off": "Light: shorter shell, faster wind-up and cooldown, good for dressing often.",
   "worldcombat.skill.trickortreat.description.1": "Aim at a friend or foe: dress range %1$s blocks, wind-up %2$s, recovery %3$s; a blocked line of sight stops the cast, and empty ground is not dressed. Dressing an ally still pays the same PP and cooldown.",

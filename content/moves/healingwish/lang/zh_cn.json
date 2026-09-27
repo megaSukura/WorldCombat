@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.healingwish.summary": "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，第一个来到它身边、受伤或带有害状态效果的伙伴按其最大生命的比例回复并清除全部有害状态效果；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
+  "worldcombat.skill.healingwish.summary": "完整牺牲后，在脚下真实地面留下一颗愿星。愿星等待已认定的友军，首个实际获得回复或有害状态净化的伤友领取；满血干净或收益被拒绝时继续等待。",
   "worldcombat.skill.healingwish.use.0": "残血时把命换成伙伴的一次大幅回复",
   "worldcombat.skill.healingwish.use.1": "在必死前为缠斗中的伙伴留一颗愿望",
   "worldcombat.skill.healingwish.use.2": "把倒下的地方变成一处救援点",

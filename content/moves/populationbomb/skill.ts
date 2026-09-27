@@ -1,17 +1,17 @@
 /**
  * 鼠数儿 / populationbomb 的出手方式。
  *
- * 核心念头：伙伴们从自己身边排好队，然后一只接一只扑向瞄准点——**这一串能拉多长是不确定的**：
- *   每只独立掷命中，扑空一只这串就断。可能是可怜的一下，也可能一连十下。它卖的是「不知道会有几只」。
+ * 核心念头：伙伴们在自己身边排成一队真实待发的小身影，然后一只接一只扑向瞄准点——**这一串能拉多长是不确定的**：
+ *   每只沿真实路径扑出，扑空一只这串就断。可能是可怜的一下，也可能一连十下。它卖的是「不知道会有几只」。
  *
  * 三幕：
- *   起（windup，提交前）：施法者身边先亮起集结的尘土与细小身影，只播预告。
- *   集（gather，提交后）：按 `comrades` 在身边预留真实可放的位置排出一支短队（宽身体、贴墙时能排几只算几只），
- *     足迹路径随队列变短。
- *   扑（volley，提交后）：从队伍位置依次朝该次释放的瞄准点发出真实投递（每只一格位置，外观是小身影）；
- *     每只独立掷 `accuracy`，掷空就偏航扑空；只有真正撞上非友方活体并由 `impact` 结算出伤害才算命中，
- *     撞墙、目标横移走开或飞出射程都算这一只扑空。一只扑空，这一串立即结束，剩余伙伴自队列四散。
- *     已出发的鼠不追踪，后续出发的鼠只按当刻位置微调瞄准点。上限 `comrades`（至多十只）。
+ *   起（windup，提交前）：施法者身边先亮起集结的尘土，只播预告。
+ *   集（gather，提交后）：在施术者身边预留**真地面支撑、本体够得到**的位置叫出至多 `comrades` 只真实伙伴
+ *     （HelperActor，可见、可被清掉），按 `ring` 排成可数的一队；放不下的位置直接少叫一只。
+ *   扑（volley，提交后）：从每只伙伴的**当刻真实站位**依次朝该次释放的瞄准点发出真实投递；
+ *     每只独立结算一小段 `swarm` 接触伤害，按真实首碰者结算。随机误差只让它偏航改路径——偏航后真撞到也算，
+ *     不再用隐藏掷骰否定碰撞；只有掷空撞墙/飞尽、或该伙伴在轮到自己前已被打散，这一串才从这里断掉，
+ *     剩余伙伴自队列四散。上限 `comrades`（至多十只）。
  *
  * 与同族分开：三连箭是三支箭**同时**离弦、骨头回力镖是**同一根骨头去与回**、围攻是**真实在场的同伴**各发一道直线影；
  *   鼠数儿是**自己身边排出的不确定长度队伍**，一只扑空整队散掉——这四招的「多段」结构各不相同。
@@ -23,25 +23,32 @@ namespace PokemonSkills {
     const populationbombId = "populationbomb";
     const populationbombMissText = "world_combat.move.populationbomb.text.miss";
     const populationbombCapText = "world_combat.move.populationbomb.text.cap";
-    /** 队列里一只伙伴的碰撞尺寸；用于 `freeSpace` 预留真实可放的位置。 */
-    const populationbombComradeWidth = 0.45;
-    const populationbombComradeHeight = 0.45;
+    /** 队列里一只真实伙伴的碰撞尺寸，按 HelperActor 的实际箱体；用于 `freeSpace` 预留真地面上的空位。 */
+    const populationbombComradeWidth = 0.6;
+    const populationbombComradeHeight = 0.9;
+    const populationbombSprite = "cobblemon:particle/generic/ground_bugs";
 
-    /** 在施术者脚边预留真实可放的位置排出一支队伍；放不下的位置直接少叫一只。 */
-    function populationbombQueue(world: CombatWorld, feet: CombatPoint, count: number, ring: number): CombatPoint[] {
+    /** 在施术者身边预留**真地面支撑、本体够得到**的位置排出一支队伍；不成立的位置直接少叫一只。 */
+    function populationbombQueue(world: CombatWorld, feet: CombatPoint, count: number, ring: number, from: CombatPoint): CombatPoint[] {
         const result: CombatPoint[] = [];
         const golden = 2.399963229728653;
         for (let i = 0; i < count; i++) {
             const angle = i * golden + world.random() * 0.6;
             const radius = ring * (0.72 + 0.28 * (i / Math.max(1, count - 1)));
             const candidate = feet.plus(WorldCombat.point(Math.cos(angle) * radius, 0, Math.sin(angle) * radius));
-            const spot = LivingActions.freeSpot(world, candidate, populationbombComradeWidth, populationbombComradeHeight, 0.9);
-            if (spot !== null) result.push(spot);
+            const spot = LivingActions.freeSpot(world, candidate, populationbombComradeWidth, populationbombComradeHeight, 1.0);
+            if (spot === null) continue;
+            // 真地面支撑：原生顶面；悬空、液体、无碰撞面都不算。
+            const ground = SurfacePaths.support(world, spot.plus(WorldCombat.point(0, 0.1, 0)), 0.6, 1.6);
+            if (ground === null) continue;
+            // 本体可达：施术者到队列伙伴有一道不穿墙的通道，隔墙的位置不凭空出伙伴。
+            if (!world.clear(from, ground.plus(WorldCombat.point(0, populationbombComradeHeight * 0.5, 0)))) continue;
+            result.push(ground);
         }
         return result;
     }
 
-    /** 把水平方向绕 Y 轴旋转一个角度，用来让掷空的伙伴明显偏航。 */
+    /** 把水平方向绕 Y 轴旋转一个角度，用来让掷偏的伙伴明显偏航。 */
     function populationbombVeer(direction: CombatPoint, angle: number): CombatPoint {
         const cos = Math.cos(angle), sin = Math.sin(angle);
         return WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(), direction.x() * sin + direction.z() * cos);
@@ -51,7 +58,7 @@ namespace PokemonSkills {
         id: "populationbomb",
         cooldownParameter: "recharge",
         name: "鼠数儿",
-        description: "伙伴们从自己身边排好队，然后一只接一只扑向瞄准的实体或空地：每只独立结算一小段伤害、独立掷命中，只有真正撞上目标才造成伤害，扑空一只这一串就断了。能命中 1～10 次，长度不确定；目标横移、隔墙或飞空都会被真实截断。",
+        description: "伙伴们在自己身边排成一队真实的小身影，然后一只接一只扑向瞄准的实体或空地：每只从自己的真实站位独立扑出、独立结算一小段伤害，只有真正撞上目标才造成伤害，掷偏扑空一只这一串就断了，轮到自己前被打散的伙伴也不再落这一下。能命中 1～10 次，长度不确定；目标横移、隔墙或飞空都会被真实截断。",
         uses: ["叫来一队伙伴连续扑击", "对残血目标用不确定长度的连段收尾", "在对手来不及还手前堆出一串小伤害"],
         kind: "aim",
         range: 7,
@@ -69,10 +76,11 @@ namespace PokemonSkills {
                 color: 0xC9B78A, label: config && config.swarm === true ? "鼠海" : "精锐合击" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            const context: NumberContext = { pokemon, skill: skills["populationbomb"], detail: { values: config }, world: world || null, actor: actor || null, attributes };
+            const context: NumberContext = { pokemon, skill: skills["populationbomb"], detail: { values: config },
+                world: world || null, actor: actor || null, attributes };
             return {
-                prepare: Math.round(p("populationbomb", "tempo", context)),
-                recover: Math.round(p("populationbomb", "recover", context)),
+                prepare: Math.round(p("populationbomb", "muster", context)),
+                recover: Math.round(p("populationbomb", "aftercast", context)),
                 cooldown: Math.round(p("populationbomb", "recharge", context)),
                 active: skills["populationbomb"].active,
                 range: p("populationbomb", "reach", context)
@@ -98,17 +106,27 @@ namespace PokemonSkills {
             const speed = Math.max(0.4, p("populationbomb", "flight", action));
             const radius = p("populationbomb", "radius", action);
             const ring = Math.max(1.5, p("populationbomb", "ring", action));
-            const lurk = Math.max(0, p("populationbomb", "lurk", action));
+            const lurk = Math.max(0.1, p("populationbomb", "lurk", action));
             const motes = Math.max(6, Math.round(p("populationbomb", "motes", action)));
             const muster = Math.max(2, Math.round(p("populationbomb", "muster", action)));
             const swarmMode = !!(config && config.swarm === true);
             const scale = Math.max(0.6, Math.min(2.0, ring / 3.5));
             const intensity = Math.max(0.6, Math.min(2.4, pounce / 13));
+            const appearScale = Math.max(0.5, Math.min(1.4, radius * 2.6));
             const feet = body.position().minus(WorldCombat.point(0, body.height() * 0.5, 0));
-            const queue = populationbombQueue(world, feet, max, ring);
-            const cap = Math.min(max, queue.length);
+            const queue = populationbombQueue(world, feet, max, ring, body.position());
             const scenes = WorldFeedback.actionScenes(populationbombScene);
-            const sprite = "cobblemon:particle/generic/ground_bugs";
+            // 真实有限可破坏的待发伙伴：每只在自己的队列位置站成可数的一队；打掉一只就少一份。
+            const helperHealth = Math.max(2, Math.round(pounce * 0.4));
+            const ttl = Math.max(80, muster + max * gap + 160);
+            const helpers: CombatActor[] = [];
+            for (let i = 0; i < queue.length; i++) {
+                try {
+                    helpers.push(world.helper(queue[i], helperHealth,
+                        JSON.stringify({ sprite: populationbombSprite, scale: appearScale, glow: true }), ttl));
+                } catch (error) { }
+            }
+            const cap = Math.min(max, helpers.length);
             let slot = 0, hits = 0, settled = false;
 
             function settle(current: CombatAction): void {
@@ -116,17 +134,11 @@ namespace PokemonSkills {
                 settled = true;
                 scenes.finish(current, done);
             }
-            function queuePath(start: number): any[] {
-                const path: any[] = [];
-                for (let i = start; i < queue.length; i++)
-                    path.push([queue[i].x(), queue[i].y() + populationbombComradeHeight * 0.6, queue[i].z()]);
-                return path;
-            }
             function showQueue(current: CombatAction, start: number): void {
                 const scope = current.world(), here = scope.observe(actor);
                 scenes.show(current, "muster", here !== null ? here.position() : locked,
-                    { moment: "gather", count: Math.max(0, queue.length - start), total: cap, scale: scale,
-                        swarm: swarmMode ? 1 : 0, intensity: intensity, motes: motes, path: queuePath(start) });
+                    { moment: "gather", count: Math.max(0, cap - start), total: cap, scale: scale,
+                        swarm: swarmMode ? 1 : 0, intensity: intensity, motes: motes });
             }
             /** 整串结束：剩余伙伴自队列四散，并给出真实命中数或断在哪一只。 */
             function scatter(current: CombatAction, lastSlot: number, landed: boolean, at: CombatPoint): void {
@@ -142,38 +154,53 @@ namespace PokemonSkills {
                 }
             }
 
-            /** 放出一只伙伴：从它自己的队伍位置朝当刻瞄准点扑出；掷空就偏航。 */
+            /** 放出一只伙伴：从它自己的真实站位朝当刻瞄准点扑出；掷偏只改路径，真撞到就算。 */
             function launch(current: CombatAction): void {
                 if (settled) return;
                 const scope = current.world();
                 const index = slot;
-                const from = queue[Math.min(index, queue.length - 1)];
+                const helper = index < helpers.length ? helpers[index] : null;
+                const here = helper !== null && scope.valid(helper) ? scope.observe(helper) : null;
+                if (helper === null || here === null) {
+                    // 轮到自己前已被打散/失效：这一串从这里断掉，剩余伙伴散去。
+                    scatter(current, index, false, locked);
+                    settle(current);
+                    return;
+                }
                 // 实体目标每次出发前复核位置（已出发者不追踪）；点选空地始终按锁定落点。
                 let aimPoint = locked;
                 if (targetRef !== null) {
                     const watched = scope.actor(targetRef);
                     const watchedBody = watched !== null && scope.valid(watched) ? scope.observe(watched) : null;
-                    if (watchedBody === null) { scatter(current, index, false, locked); settle(current); return; }
+                    if (watchedBody === null) {
+                        scope.removeHelper(helper);
+                        scatter(current, index, false, locked);
+                        settle(current);
+                        return;
+                    }
                     aimPoint = watchedBody.position();
                 }
                 aimPoint = aimPoint.plus(WorldCombat.point((scope.random() - 0.5) * 0.5, (scope.random() - 0.5) * 0.25, (scope.random() - 0.5) * 0.5));
-                let heading = aimPoint.minus(from);
+                // 从伙伴脚边起跳：真实站位 + lurk 的跃起高度。
+                const origin = here.position().minus(WorldCombat.point(0, populationbombComradeHeight * 0.5, 0)).plus(WorldCombat.point(0, lurk, 0));
+                let heading = aimPoint.minus(origin);
                 if (heading.length() < 0.05) heading = WorldCombat.point(0, 0, 1);
                 const distance = heading.length();
                 let direction = heading.unit();
-                const intendedMiss = scope.random() >= accuracy;
-                if (intendedMiss) direction = populationbombVeer(direction, (0.6 + scope.random()) * (0.6 + scope.random()) * (scope.random() < 0.5 ? -1 : 1));
+                // 随机误差只让它偏航：偏航后真撞到也算，不用隐藏掷骰否定真实碰撞。
+                if (scope.random() >= accuracy) direction = populationbombVeer(direction, (0.6 + scope.random()) * (0.6 + scope.random()) * (scope.random() < 0.5 ? -1 : 1));
                 const arrival = Math.max(3, Math.round(distance / Math.max(0.25, speed)));
-                const appeared = { sprite: sprite, scale: Math.max(0.5, Math.min(1.4, radius * 2.6)), glow: true };
+                const appeared = { sprite: populationbombSprite, scale: appearScale, glow: true };
                 const key = "rush:" + index;
+                scope.removeHelper(helper);
                 let struck = false, noted = false, closed = false;
-                const flight = current.projectile(from, direction.scale(speed), 0, radius, distance + 2, arrival + 24,
+                const flight = current.projectile(origin, direction.scale(speed), 0, radius, distance + 2, arrival + 24,
                     function (inner: CombatAction, hit: CombatImpact): void {
                         if (closed) return;
                         const hitWorld = inner.world(), victim = hit.target();
                         let landed = false;
-                        // 真实身体碰撞才结算；掷空的那只即使碰到也不给伤害，避免把偏航演成命中。
-                        if (!intendedMiss && victim !== null && hitWorld.valid(victim) && !hitWorld.friendly(victim))
+                        // 真实身体碰撞才结算；掷偏的那只若真的撞上，也算它打中。
+                        if (victim !== null && hitWorld.valid(victim) && !hitWorld.friendly(victim))
                             landed = impact(inner, hit, populationbombId, pounce,
                                 { damage: damageSpec(populationbombId, "swarm"), contact: true, slice: true }, "populationbomb:" + index);
                         noted = true;
@@ -207,7 +234,7 @@ namespace PokemonSkills {
                         }
                     }, JSON.stringify(appeared));
                 sound(current, "minecraft:entity.rabbit.attack");
-                scenes.show(current, key, from, { moment: "rush", projectile: flight, target: targetRef === null ? "" : targetRef,
+                scenes.show(current, key, origin, { moment: "rush", projectile: flight, target: targetRef === null ? "" : targetRef,
                     count: index + 1, total: cap, direction: [direction.x(), direction.y(), direction.z()],
                     scale: scale, intensity: intensity, motes: motes });
             }

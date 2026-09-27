@@ -15,7 +15,6 @@
  *   window    回声记忆窗口：能捡多久以前的那次出手；特攻记得更久，细学更久。
  *   echoes    回荡涟漪的数量；特攻决定表现里的圈数。
  *   tempo     起手：速度越快张口越快；细学要多等一拍。
- *   aftercast 收势：速度越快越快收住。
  *   recharge  冷却：速度越快越熟练；细学更贵。
  * 配置 deep（深回声）双向取舍：记忆窗口更长、回声更亮，但起手更慢、冷却更长；关闭则是短促的抢回声。
  *   它通过 F.pref("deep") 进入公式。
@@ -27,8 +26,8 @@ namespace PokemonSkills {
     export const copycatEmptyText = "world_combat.move.copycat.text.empty";
     export const copycatTargetText = "world_combat.move.copycat.text.target";
 
-    /** 短期回声账本：每位出手者各留最近一条，施术者在附近挑最新的一条借，远处战斗不抢走本地动作。 */
-    export interface CopycatEcho { id: string; tick: number; ref: string; }
+    /** 短期回声账本：每位出手者各留最近一条；`at` 记下出手当刻的位置，供距离与视线核对。 */
+    export interface CopycatEcho { id: string; tick: number; ref: string; at: number[]; }
     export var copycatEchoes: { [ref: string]: CopycatEcho } = Object.create(null);
     export function copycatRemember(echo: CopycatEcho): void { copycatEchoes[echo.ref] = echo; }
 
@@ -55,9 +54,6 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("deep"), F.const(3), F.const(0)))
                 .clamp(2, 12).round(0),
             "起手", "从张口到把那一手重新亮起的时间；速度越快越短，细学要多等一拍。"),
-        aftercast: seconds(
-            F.base(4).minus(F.stat("speed").times(0.005)).clamp(2, 7).round(0),
-            "收势", "演完之后的收势；速度越快越短。"),
         recharge: seconds(
             F.base(60).minus(F.stat("speed").times(0.08))
                 .times(F.when(F.pref("deep"), F.const(1.35), F.const(1)))
@@ -68,13 +64,13 @@ namespace PokemonSkills {
     describe(copycatId, [
         { key: "description.0", values: ["span", "window"] },
         { key: "description.1", values: [] },
-        { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
+        { key: "description.2", values: ["tempo", "recharge"] },
         { key: "deep.on", values: [], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },
         { key: "timing", values: ["span","prepare","recover","pp","cooldown"] }
     ]);
 
-    // 记账：任何生物提交一次已实装的招式动作就更新它自己那条记录；仿效在附近按时间挑最新的一条。
+    // 记账：任何生物提交一次已实装的招式动作就更新它自己那条记录，并记下出手当刻的位置。
     WorldCombat.on("world_combat:move_copycat/ledger", "world_combat:committed", "", function (event) {
         const action = event.action();
         if (action === null) return;
@@ -82,6 +78,10 @@ namespace PokemonSkills {
         if (!world.valid(actor)) return;
         const executing = NativeLoadout.executing(action);
         if (executing === null) return;
-        copycatRemember({ id: String(executing.id()), tick: world.tick(), ref: String(actor.ref()) });
+        const body = world.observe(actor);
+        if (body === null) return;
+        const point = body.position();
+        copycatRemember({ id: String(executing.id()), tick: world.tick(), ref: String(actor.ref()),
+            at: [point.x(), point.y(), point.z()] });
     });
 }

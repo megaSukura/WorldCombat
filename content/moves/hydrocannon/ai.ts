@@ -3,19 +3,26 @@
  *
  * 什么局面下出手：目标可见、敌对、活着且在射程以内；因为打完要力竭一段，自身生命要高于 `ai.minHealth`
  * （或这一炮能收掉残血）才出手。
- * 对谁出手：开启 `ai.preferSoaked` 时优先挑身上带着 `world_combat:status/soaked` 的敌人——水柱对湿透的目标
- * 多一份 `drenchBonus`，所以它跟着队友的水招或自己上一发继续打；没有湿的目标就按提案目标来。
+ * 对谁出手：开启 `ai.preferSoaked` 时优先挑已经湿透的敌人——带 `world_combat:status/soaked` 身份，或此刻天然沾水
+ * （下雨、入水，由观察到的 wet 事实判定）都算——水柱对湿透的目标多一份 `drenchBonus`；已经点名聚焦的目标不换。
  * 怎么够到：共享接近把身位收到射程以内，然后朝目标喷出水柱（`kind: "enemy"`）。
  * 出手前后：放完交回共享交战计划；力竭期间招式由共享起手门禁自动屏蔽。
  */
 namespace PokemonSkills {
+    /** 湿透：带浸湿身份，或此刻天然沾水（下雨、入水）——两者都让水柱更重。 */
+    function hydrocannonSoaked(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        return target.wet === true || CompanionBehavior.status(context, target, "soaked");
+    }
+
     CompanionBehavior.registerUse("hydrocannon", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return capability.data.range; },
         selectTarget: function (context, capability, proposed) {
             if (proposed.friendly || !(proposed.health > 0) || !proposed.visible) return proposed;
             if (!CompanionBehavior.ai<boolean>(capability, "preferSoaked", true)) return proposed;
-            if (CompanionBehavior.status(context, proposed, "soaked")) return proposed;
+            // 已经点名聚焦的目标不因为别处有湿目标就被换掉。
+            if (context.facts.focus === proposed.ref) return proposed;
+            if (hydrocannonSoaked(context, proposed)) return proposed;
             const self = CompanionBehavior.source(context);
             const nearby = context.facts.nearby as CompanionBehavior.Entity[];
             let best: CompanionBehavior.Entity | null = null;
@@ -23,7 +30,7 @@ namespace PokemonSkills {
                 const other = nearby[i];
                 if (other.friendly || !(other.health > 0) || !other.visible) continue;
                 if (CompanionBehavior.distance(self.point, other.point) > capability.data.range) continue;
-                if (!CompanionBehavior.status(context, other, "soaked")) continue;
+                if (!hydrocannonSoaked(context, other)) continue;
                 if (best === null || other.health < best.health) best = other;
             }
             return best || proposed;

@@ -32,7 +32,7 @@ Smoke.scenario("healpulse", function (stage) {
     }, function () {
         stage.expect(stage.casts("healpulse", caster) >= 1, "the caster sent a healing wave to the wounded ally");
         stage.expect(ally.health() > injuredAt, "the wave reached the ally and restored it");
-        stage.note("治愈波动沿施法者到伙伴的连线赶路：飞行时间 = 距离 ÷ 波动速度（速度公式），到期时重新取得伙伴——还活着就兑现回复、已离场就落空（PP 与冷却照付）。回复随特攻与亲密度、波动半径随身高与特攻、光点随特攻；超载／轻吐在回复厚度与飞行速度之间取舍。等待期间伙伴被打倒而落空、以及两点之间距离拉长后的延迟，留给完整装配的人工试玩。", {
+        stage.note("治愈波动从施法者身前推出，波前每刻按 pulseSpeed 向伙伴当前位置推进、以有限速率转向，贴上伙伴身体的一刻才结算回复；总路程在出招时按距离定下（保留原 3..72 刻的行程预算），途中撞墙就在墙前落空。回复随特攻与亲密度、波动半径随身高与特攻、光点随特攻；超载／轻吐在回复厚度与飞行速度之间取舍。AI 用起手 + 距离÷速度 估到达延时，急危且到得快的伙伴优先。等待期间伙伴被打倒或跑光行程而落空、以及墙截断，留给完整装配的人工试玩。", {
             casterCasts: stage.casts("healpulse", caster),
             allyInjured: Math.round(injuredAt * 10) / 10,
             allyNow: Math.round(ally.health() * 10) / 10,

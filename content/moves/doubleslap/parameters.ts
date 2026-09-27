@@ -69,6 +69,13 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "手掌能够到多远的对手；身高越高的个体臂展越长，也是本招的实际射程来源。直抽式略远一点。"
             }),
+        /** 掌扇张角：基础 60 度，身宽每比 0.9 宽 1 格加 24 度（夹 -30..20）；夹在 30..80。 */
+        fan: formula(
+            F.base(60).plus(F.body("width").minus(0.9).times(24).clamp(-30, 20)).clamp(30, 80).round(0),
+            "掌扇张角", {
+                unit: "度",
+                description: "每一掌扇出的短扇总张角；身宽越宽的个体一记摊得越开。服务端判定、指示预览与掌扇表现共用这个角度。"
+            }),
         /** 横向拨动：交叉式 0.18 + 物攻偏移[0,0.35]×0.003 + 身宽偏移[0,0.2]×0.2，夹 0..0.6；直抽式为 0。 */
         sway: formula(
             F.when(F.pref("cross"),
@@ -115,7 +122,7 @@ namespace PokemonSkills {
 
     describe(doubleslapId, [
         { key: "description.0", values: ["slap","slaps"] },
-        { key: "description.1", values: ["gap","reach","accuracy"] },
+        { key: "description.1", values: ["gap","reach","fan","accuracy"] },
         { key: "description.2", values: ["sway"] },
         { key: "cross.on", values: [], when: function (context) { return read(context.detail.values, ["cross"]) === true; } },
         { key: "cross.off", values: [], when: function (context) { return read(context.detail.values, ["cross"]) !== true; } },

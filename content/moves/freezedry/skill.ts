@@ -72,8 +72,8 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", deep: deep ? 1 : 0, intensity: deep ? 1.3 : 1 }));
             return prepare;
         },
-        indicator: function (config) {
-            return { radius: 9, geometry: "line", style: "frost", label: config && config.deep ? "冷冻干燥·深冻" : "冷冻干燥" };
+        indicator: function (config, pokemon) {
+            return { radius: p("freezedry", "reach", pokemon), geometry: "line", style: "frost", label: config && config.deep ? "冷冻干燥·深冻" : "冷冻干燥" };
         },
         execute: function (action, move, config, done) {
             const world = action.world();
@@ -86,17 +86,16 @@ namespace PokemonSkills {
             const targetRef = target === null ? "" : String(target.ref());
             const origin = action.origin(), reach = action.range();
             const direction = aim(action);
-            // 无人可打时冰晶飞完全程；末点按真实的航向与原生阻尼求解，逐刻推进到消散那一刻。
-            let endPoint = origin.plus(direction.scale(reach)), landed = false, contacted = false;
+            let landed = false, contacted = false;
             sound(action, "cobblemon:move.icebeam.actor");
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: reach, radius: radius, lifetime: 90, direction: direction,
-                appearance: { sprite: "cobblemon:particle/generic/ice/iceshard", glow: true, scale: 0.9 },
+                // 冰晶碰友方也截停（不穿人），命中回调决定不误伤；真实终点由 projectilePosition 读取。
+                appearance: { sprite: "cobblemon:particle/generic/ice/iceshard", glow: true, scale: 0.9, hitAllies: true },
                 impact: function (current, hit) {
                     const scope = current.world();
                     const struck = hit.target(), point = hit.position();
-                    endPoint = point;
-                    // 方块或非生物实体接触：在真实接触点碎开，不在原瞄准点补一次假命中。
+                    // 方块、非生物实体或友方接触：在真实接触点碎开，不在原瞄准点补一次假命中。
                     if (struck === null || !scope.valid(struck)) {
                         if (!hit.blocked() && !hit.hitEntity()) return;
                         contacted = true;
@@ -105,35 +104,41 @@ namespace PokemonSkills {
                         sound(current, "minecraft:block.glass.break");
                         return;
                     }
+                    contacted = true;
+                    scenes.stop(current, "bolt");
+                    // 友方身体：截停并碎在接触点，不计伤害、也不误播命中或免疫。
+                    if (scope.friendly(struck)) {
+                        WorldFeedback.emit(scope, freezedryScene, 1, point, { moment: "fizzle" }, 20);
+                        sound(current, "minecraft:block.glass.break");
+                        return;
+                    }
                     const soaked = freezedrySoaked(scope, struck);
-                    // 先结算伤害：被免疫或被拒时这次接触不算命中，也不播成功冻结。
+                    const alreadyFrozen = CombatStatus.has(scope, struck, "frozen");
+                    // 先结算伤害：被免疫或被拒时这次接触不算命中，也不播成功冻结或湿身反馈。
                     const applied = impact(current, hit, "freezedry", power,
-                        { damage: damageSpec("freezedry", "shard"), status: "frozen", chance: chance });
+                        { damage: damageSpec("freezedry", "shard"),
+                            status: alreadyFrozen ? "" : "frozen", chance: alreadyFrozen ? 0 : chance });
                     if (!applied) return;
                     landed = true;
-                    scenes.stop(current, "bolt");
+                    const intensity = Math.max(0.6, Math.min(2, power / 70));
                     WorldFeedback.emit(scope, freezedryScene, 1, point,
-                        { moment: soaked ? "soaked" : "hit", target: String(struck.ref()),
-                            intensity: Math.max(0.6, Math.min(2, power / 70)) }, 30);
+                        { moment: soaked ? "soaked" : "hit", target: String(struck.ref()), intensity: intensity }, 30);
+                    // 冻结成功单独反馈：只有本次真的挂上 frozen 才播，已在冰冻中的目标不重复播。
+                    if (!alreadyFrozen && CombatStatus.has(scope, struck, "frozen"))
+                        WorldFeedback.emit(scope, freezedryScene, 1, point,
+                            { moment: "freeze", target: String(struck.ref()), intensity: intensity }, 30);
                     sound(current, "cobblemon:move.icebeam.target_1");
                 }
             }, function (current) {
-                if (!landed && !contacted)
-                    WorldFeedback.emit(current.world(), freezedryScene, 1, endPoint, { moment: "fizzle" }, 18);
+                // 全程无人可打：在原生弹体的真实末点短熄，不用 .99 外推或满射程点假造终点。
+                if (!landed && !contacted) {
+                    const end = current.world().projectilePosition(flight);
+                    if (end !== null) WorldFeedback.emit(current.world(), freezedryScene, 1, end, { moment: "fizzle" }, 18);
+                }
                 scenes.finish(current, done);
             });
-            // 飞行物不是活体，actor() 解析不到；冰晶无重力、不追踪，按原生 0.99 水平阻尼累计的真实位移
-            // 逐刻推进末点，不必读取实体。撞墙或命中会在回调里另记真实接触点。
-            let flown = 0;
-            function track(current: CombatAction): void {
-                if (landed || contacted) return;
-                flown++;
-                endPoint = origin.plus(direction.scale(speed * (1 - Math.pow(0.99, flown)) / 0.01));
-                current.after(1, track);
-            }
-            action.after(1, track);
             scenes.show(action, "bolt", origin,
-                { moment: "bolt", projectile: flight, target: targetRef, power: power });
+                { moment: "bolt", projectile: flight, target: targetRef, power: power, radius: radius });
         }
     });
 }

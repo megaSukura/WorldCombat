@@ -18,7 +18,7 @@ Smoke.scenario("irontail", function (stage) {
     }, function () {
         stage.expect(stage.casts("irontail", caster) >= 1, "caster committed iron tail");
         stage.expect(stage.damageTo(foe) > 0, "iron tail dealt damage to the foe");
-        stage.note("the dent is a 30% roll; the mark tag records whether it landed at all", {
+        stage.note("the landing point is locked at windup and the tail drops from a high tip onto it; a caster shoved out of reach cancels the slam instead of moving the ring. The dent is a 30% roll; the mark tag records whether it landed at all", {
             casts: stage.casts("irontail", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             dented: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),

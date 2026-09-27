@@ -6,8 +6,8 @@
  *
  * 色相家族：苔绿（0x7FA83C）为孢子主体，暗橄榄（0x4E6E2A）压在爆心，近白黄绿（0xD8F0A0）只给起手与「睡下」的高光。
  * 拍子：起 windup（攒孢）→ 爆 burst（一次炸满）→ 眠 asleep（头顶 Z）；免疫 immune／空 fizzle 收尾。
- * 范围：burst 以自身为圆心、`fit: "none"`，shape 半径按 `data.scale`（实际半径 ÷ 参考 2.2 格）缩放——
- *   画出的那片孢子就是判定圈，且爆开只在 `data.speed` 内一瞬完成，与「够得近才躲不掉」一致。
+ * 范围：burst 以自身为圆心、`fit: "none"`，shape 按参考半径 2.2 格书写，再用 `data.scale`（实际半径 ÷ 2.2）
+ *   一次缩放到真实半径——画出的那片孢子就是判定圈，且爆开只在 `data.speed` 内一瞬完成，与「够得近才躲不掉」一致。
  * 运动：孢子从身上猛地向外喷、受阻力迅速停下（不留云）；asleep 的孢子环在目标身上向内收，Z 向上升。
  * 数：`data.spores`（特攻与等级换算）决定喷出的孢子数量与密度，`data.puff`（身高换算）决定单颗孢子的大小。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -37,7 +37,7 @@ const SporeDefinition: ParticleDefinition = {
                     name: "puff", bind: "point", fit: "none", height: 0.35,
                     particle: "world_combat_core:cobblemon/generic/grass/mushroomize",
                     burst: { count: { data: "spores", fallback: 22 }, interval: 2, repeats: 2 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 2.2 },
                     direction: "outward", speed: { data: "speed", fallback: 1.1 }, spread: 70, drag: 0.86, gravity: 0.005,
                     lifetime: [12, 22], size: [0.14, 0.04], spin: 20,
                     color: 0x7FA83C, alpha: [0.9, 0], light: "world", maxParticles: 160
@@ -46,7 +46,7 @@ const SporeDefinition: ParticleDefinition = {
                     name: "puff_dust", bind: "point", fit: "none", height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/grass/tochukaso",
                     burst: { count: 20 },
-                    shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "sphere", radius: 2.2 },
                     direction: "outward", speed: [0.15, 0.5], drag: 0.88,
                     lifetime: [10, 18], size: [0.1, 0.03],
                     color: 0xD8F0A0, alpha: [0.7, 0], light: "world", maxParticles: 70
@@ -55,7 +55,7 @@ const SporeDefinition: ParticleDefinition = {
                     name: "puff_ring", bind: "point", fit: "none", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 16 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 }, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 2.2 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [10, 16], size: [0.22, 0.07],
                     color: 0x4E6E2A, alpha: [0.5, 0], light: "world", maxParticles: 30
@@ -116,7 +116,7 @@ const SporeDefinition: ParticleDefinition = {
                 {
                     name: "waste", bind: "point", fit: "none", height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/grass/mushroomize",
-                    burst: { count: 12 }, shape: { kind: "sphere", radius: { data: "scale", fallback: 1 } },
+                    burst: { count: 12 }, shape: { kind: "sphere", radius: 2.2 },
                     direction: "outward", speed: [0.03, 0.1], drag: 0.9, gravity: 0.01,
                     lifetime: [8, 14], size: [0.1, 0.03],
                     color: 0x7FA83C, alpha: [0.4, 0], light: "world", maxParticles: 24

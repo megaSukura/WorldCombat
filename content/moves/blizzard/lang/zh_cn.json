@@ -3,7 +3,7 @@
   "worldcombat.skill.blizzard.use.0": "封锁一块场地，逼敌人离开或硬吃",
   "worldcombat.skill.blizzard.use.1": "一次覆盖挤在一起的一队敌人",
   "worldcombat.skill.blizzard.use.2": "在雨天把范围和冰冻概率都推高",
-  "worldcombat.skill.blizzard.description.0": "每阵对风暴范围内每个敌人造成一次伤害，第一阵约 %1$s 点特殊伤害，共扑打 %2$s 阵；同一目标后续每阵约为上一阵的 85%%，最低不低于第一阵的五成。",
+  "worldcombat.skill.blizzard.description.0": "每阵对风暴范围内每个敌人造成一次伤害，第一阵约 %1$s 点特殊伤害，共扑打 %2$s 阵。雪风只扑到风暴中轴能直接吹到的空气里的人，被实心墙完全挡住的圈内目标不挨打。只有同一目标反复挨打才会逐阵衰减：后续每阵约为上一阵的 85%%，最低不低于第一阵的五成；后来才走进风暴的人仍按第一阵满伤。",
   "worldcombat.skill.blizzard.description.1": "风暴半径 %1$s 格，阵间隔 %2$s，落点距离 %3$s 格。",
   "worldcombat.skill.blizzard.description.2": "每阵把风暴范围内的敌人从中心往外推 %1$s 格，并有 %2$s 概率使其冰冻；冰冻期间无法移动、也无法出招，最多持续约 8 秒，受到火属性伤害即解除。",
   "worldcombat.skill.blizzard.description.4": "起手 %1$s，收招 %2$s，冷却 %3$s。",
@@ -28,9 +28,7 @@
   "worldcombat.skill.blizzard.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.blizzard.preference.ai.maxChase.help": "目标离自己这么远以内才考虑召唤暴风雪；调小只在近处下雪，调大愿意从更远处封锁。",
   "worldcombat.skill.blizzard.preference.ai.cluster": "优先扎堆目标",
-  "worldcombat.skill.blizzard.preference.ai.cluster.help": "开启后优先挑周围挤着同伴的目标（这一片风雪会一次盖住他们）；关闭则按射程与目标血量排序。",
-  "worldcombat.skill.blizzard.preference.ai.clusterRadius": "扎堆半径",
-  "worldcombat.skill.blizzard.preference.ai.clusterRadius.help": "判断「扎堆」时数周围这个半径内还有几个敌人；调大更看重大范围，调小只看真正贴在一起的人。",
+  "worldcombat.skill.blizzard.preference.ai.cluster.help": "开启后优先挑本场风雪半径能一次盖住最多敌人的目标（只数从风暴中轴没有实心墙挡住的人）；关闭则按射程与目标血量排序。",
   "world_combat.move.blizzard.text.hit": "暴风雪覆盖 %1$s 个敌人",
   "world_combat.move.blizzard.text.miss": "暴风雪落空"
 }

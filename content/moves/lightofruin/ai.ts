@@ -2,14 +2,15 @@
  * 破灭之光 / lightofruin 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、活着、在 `ai.maxChase` 之内；从自己指向目标的这条走廊里至少能贯穿
- * `ai.minLine` 个敌人（默认 1，即单个目标也放）；因为反噬按打出的总伤害结算，自身生命还要高于 `ai.minHealth`
- * （或这一束能收掉残血）才出手——穿一排人虽然收益大，自己也可能被反噬打残，所以比随机光保守。
- * 对谁出手：挑「站得最成一条线」的那个——从自己到它拉出的走廊里敌人越多越优先，把贯穿的收益最大化。
+ * `ai.minLine` 个敌人（默认 1，即单个目标也放）。反噬按打出的总伤害结算，所以衡量的是**能不能活过这一发**：
+ * 目标越多，要还的血越多，自身生命就要越充裕（`ai.minHealth` 之外，每多一个同线目标再抬一档门槛）。
+ * 对谁出手：挑「站得最成一条线」的那个——但不是人数越多越愿赌：自己越虚，贯穿越多目标反而越危险，
+ *   优先度会被按预计总反噬扣掉，只有残血目标才额外加分收掉。
  * 怎么够到：共享接近把身位收进射程以内，再沿目标方向射出光柱。
  * 放完之后：交回共享交战计划；反噬刚付过，通常会退开或转用便宜的招。
  */
 namespace PokemonSkills {
-    /** 从自己指向 target 的走廊里，够得到的可见敌人数量；用于贯穿判断与排序。 */
+    /** 从自己指向 target 的走廊里，够得到、无遮挡的可见敌人数量；用于贯穿判断与排序。 */
     function lightofruinLineup(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
         const reach = typeof capability.data.range === "number" ? capability.data.range : 11;
@@ -18,6 +19,7 @@ namespace PokemonSkills {
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return 1;
         const hx = dx / length, hz = dz / length;
+        const world = CompanionBehavior.world(context);
         const nearby = (context.facts.nearby as CompanionBehavior.Entity[]) || [];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
@@ -26,7 +28,9 @@ namespace PokemonSkills {
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const along = ox * hx + oz * hz;
             if (along <= 0.2 || along > reach) continue;
-            if (Math.abs(ox * hz - oz * hx) <= half) count++;
+            if (Math.abs(ox * hz - oz * hx) > half) continue;
+            if (world && !world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) continue;
+            count++;
         }
         return Math.max(1, count);
     }
@@ -59,13 +63,14 @@ namespace PokemonSkills {
             if (!lightofruinValid(target)) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, target.point) > CompanionBehavior.ai<number>(capability, "maxChase", 14)) return false;
-            if (lightofruinLineup(context, capability, target) < CompanionBehavior.ai<number>(capability, "minLine", 1)) return false;
+            const lineup = lightofruinLineup(context, capability, target);
+            if (lineup < CompanionBehavior.ai<number>(capability, "minLine", 1)) return false;
             const minHealth = CompanionBehavior.ai<number>(capability, "minHealth", 0.5);
             const ratio = CompanionBehavior.ratio(self);
-            // 自己越虚越惜用：仅略高于门槛时要求贯穿更多人，才肯吃这笔按实伤走的总反噬。
-            if (ratio < minHealth) return CompanionBehavior.ratio(target) <= 0.3;
-            if (ratio < minHealth + 0.15 && lightofruinLineup(context, capability, target) < CompanionBehavior.ai<number>(capability, "minLine", 1) + 1) return false;
-            return true;
+            // 残血目标值得用这一发收掉，不受自伤门槛限制。
+            if (CompanionBehavior.ratio(target) <= 0.3) return true;
+            // 反噬按打出的总伤害走：目标越多，要还的血越多，自身生命门槛就抬得越高——不以人数越多越愿赌。
+            return ratio >= minHealth + Math.max(0, lineup - 1) * 0.07;
         },
         accepts: function (context, capability, target) { return lightofruinValid(target); },
         priority: function (context, capability, target) {
@@ -74,9 +79,9 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             const lineup = lightofruinLineup(context, capability, target);
             const base = lineup >= 3 ? 60 : lineup >= 2 ? 34 : 22;
-            // 反噬按打出的总伤害走：自己越虚，越不愿拿一列人去赌这一发。
-            const drain = Math.round((1 - CompanionBehavior.ratio(self)) * 30);
-            const score = (CompanionBehavior.ratio(target) <= 0.3 ? base + 10 : base) - drain;
+            // 反噬按打出的总伤害走：自己越虚、要贯穿的目标越多，这笔账越重，优先度随之压低（不以人数越多越愿赌）。
+            const risk = Math.round((1 - CompanionBehavior.ratio(self)) * 30) * Math.max(1, lineup - 1);
+            const score = (CompanionBehavior.ratio(target) <= 0.3 ? base + 10 : base) - risk;
             return Math.max(1, score);
         }
     });

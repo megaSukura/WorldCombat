@@ -18,6 +18,7 @@ public final class NativeDeathChecks {
     public static void onDeath(WorldEvent event) {
         if (observer == null || !event.actor().entity().equals(observer) || event.target() == null || !event.target().entity().equals(victim)) return;
         var data = JsonParser.parseString(event.data()).getAsJsonObject();
+        require(data.get("damageType").getAsString().equals("minecraft:generic") && data.get("cause").getAsString().equals("generic"), "Death lost native damage provenance");
         require(data.get("friendly").getAsBoolean() && data.get("entity").getAsString().equals(victim.toString()), "Death lost observer-relative friendship/identity");
         require(!event.world().valid(event.target()) && event.world().valid(event.actor()), "Death scope gained a live corpse capability");
         boolean blocked = false;

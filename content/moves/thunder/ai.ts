@@ -4,6 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
  * 这是一记从天而降的远程落雷，所以伙伴会尽量拉开距离锁定目标。`ai.preferWet`（默认开）让它优先劈
  * 湿身的目标（雷更容易感电）——代价是可能放过没湿的真正威胁；关闭则只认威胁本身。
+ * `ai.preferStill`（默认开）在蓄云期间目标会横移时降分：留在原地的目标更容易被那一柱雷压中。
  * 下雨时命中率由实现保证为必中，AI 不需要额外选项。
  */
 namespace PokemonSkills {
@@ -29,6 +30,13 @@ namespace PokemonSkills {
             const env = WorldEnvironment.read(CompanionBehavior.world(context), CompanionBehavior.point(target.point));
             if (env && typeof env.rain === "number" && env.rain > 0.2) score += 14;
             if (env && env.loaded === true && env.skyVisible === false) score -= 30;
+            // 蓄云期间会横移的目标更容易走出落点：预计停留的抬分，正在跑的降分。
+            if (CompanionBehavior.ai<boolean>(capability, "preferStill", true)) {
+                const motion = CompanionBehavior.velocity(context, target);
+                const still = target.rooted || target.sleeping || motion === null
+                    || Math.sqrt(motion[0] * motion[0] + motion[1] * motion[1] + motion[2] * motion[2]) < 0.05;
+                if (still) score += 10; else score -= 4;
+            }
             return score;
         },
         selectTarget: function (context, capability, proposed) {
@@ -49,7 +57,7 @@ namespace PokemonSkills {
 
     addPreferences("thunder", {}, [
         field(pathOf("charged"), "聚云式", "boolean", {
-            help: "开启：多蓄 6 刻，落雷威力更高、落点更集中（散布更小），但收招与冷却更长。关闭：雷落得更快，代价是威力略低、散布略大。"
+            help: "开启：多蓄 6 刻，落雷威力更高、落点半径更大，但收招与冷却更长；关闭：雷落得更快，代价是威力略低、范围略小。"
         }),
         field(pathOf("ai.maxChase"), "施放距离", "number", {
             min: 2, max: 24, step: 1,
@@ -57,6 +65,9 @@ namespace PokemonSkills {
         }),
         field(pathOf("ai.preferWet"), "优先湿身目标", "boolean", {
             help: "开启：优先劈湿身的目标，雷更容易把它感电，但可能放过没湿的真正威胁。关闭：只认威胁本身。"
+        }),
+        field(pathOf("ai.preferStill"), "优先预计停留的目标", "boolean", {
+            help: "开启：蓄云期间不动、被定住、睡眠或冰冻的目标优先，正在奔跑的目标降分；关闭：只按威胁与距离排序，愿意赌一发预判。"
         })
     ]);
 }

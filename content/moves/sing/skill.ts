@@ -35,9 +35,10 @@ namespace PokemonSkills {
         const data = JSON.parse(effect.state());
         const remain = Math.max(0, effect.remaining());
         const ratio = data.total > 0 ? Math.max(0, Math.min(1, remain / data.total)) : 0;
-        WorldFeedback.keep(world, "sing:" + String(actor.ref()), singScene, 1, body.position(),
+        // 余韵绑在这层 trance 托管效果自己身上：睡醒/被解时效果一收，头顶的 Z 与剩余环随之结束，不残留。
+        WorldFeedback.onEffect(world, effect.id(), "sing:" + String(actor.ref()), singScene, 1, body.position(),
             { moment: "linger", target: String(actor.ref()), remain: remain, total: data.total, rings: data.rings,
-              ringRadius: Math.round((0.2 + 0.75 * ratio) * 100) / 100 }, 30);
+              ringRadius: Math.round((0.2 + 0.75 * ratio) * 100) / 100 });
         effect.schedule("tick", "tick", 20, "{}");
     });
 
@@ -97,6 +98,8 @@ namespace PokemonSkills {
             function singNote(current: CombatAction): void {
                 const scope = current.world();
                 if (!scope.valid(self)) { finish(current); return; }
+                // 全段站定：多拍演唱期间用与准备/收招相同的姿态规则，按住不移动；被打断由动作宿主任期结束，未来句不再唱。
+                LivingActions.posture(current, { stationary: true });
                 const body = scope.observe(self);
                 const at = body === null ? origin : body.position();
                 scope.sound("minecraft:block.note_block.harp", at, 16, "{}");
@@ -110,10 +113,15 @@ namespace PokemonSkills {
                     if (targetBody === null) return;
                     const ref = String(target.ref());
                     const existing = MobEffects.read(scope, target, singDrowsy);
-                    const count = (existing === null ? 0 : existing.amplifier()) + 1;
-                    MobEffects.apply(scope, target, singDrowsy, dozeTicks, Math.min(20, count));
-                    if (count >= needed) {
+                    // 句数从 1 起算，amplifier 存 count-1；计数封顶 20，只作睡意门限，不带任何属性修饰。
+                    const count = (existing === null ? 0 : existing.amplifier() + 1) + 1;
+                    const capped = Math.min(20, count);
+                    MobEffects.apply(scope, target, singDrowsy, dozeTicks, capped - 1);
+                    // 固定小幅减速单独用 amplifier 0 的迟缓承载：整句话里最多约 -15%，不随句数叠成锁足。
+                    MobEffects.apply(scope, target, "minecraft:slowness", dozeTicks, 0);
+                    if (capped >= needed) {
                         if (!CombatStatus.inflict(scope, target, "sleep", sleepTicks)) {
+                            // 免眠：留下有限视觉睡意与固定减速，但不反复叠控制、不入睡。
                             WorldFeedback.emit(scope, singScene, 1, targetBody.position(), { moment: "immune", target: ref }, 20);
                             WorldFeedback.text(scope, singAbove(targetBody.position()), "world_combat.move.sing.text.immune", [], 26);
                             return;
@@ -129,8 +137,8 @@ namespace PokemonSkills {
                         return;
                     }
                     WorldFeedback.emit(scope, singScene, 1, targetBody.position(),
-                        { moment: "drowsy", target: ref, stack: count, needed: needed, scale: scale }, 22);
-                    WorldFeedback.text(scope, singAbove(targetBody.position()), "world_combat.move.sing.text.drowsy", [count, needed], 24);
+                        { moment: "drowsy", target: ref, stack: capped, needed: needed, scale: scale }, 22);
+                    WorldFeedback.text(scope, singAbove(targetBody.position()), "world_combat.move.sing.text.drowsy", [capped, needed], 24);
                 });
                 stanza++;
                 if (stanza >= maxBeats) { finish(current); return; }
@@ -138,6 +146,7 @@ namespace PokemonSkills {
             }
 
             sound(action, "minecraft:block.note_block.chime");
+            LivingActions.posture(action, { stationary: true });
             singNote(action);
         }
     });

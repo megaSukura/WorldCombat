@@ -19,7 +19,7 @@
  *   grip         咬合判定 0.44 + 身高偏移。
  *   grindTicks   研磨时长 10 刻 + 体重偏移；碾压式 +6。
  *   crushChance  咬塌几率 0.20 + 体重偏移 + 等级偏移；碾压式 ×1.35 / 疾咬式 ×0.75。
- *   crushStages  咬塌级数：体重超过 100 才可能一次压塌 2 级（native 固定 1 级，重量给出这一档）。
+ *   crushStages  咬塌级数：基础 1 级，体重约 267 以上才能一次压塌 2 级（native 固定 1 级，重量给出这一档）。
  *   crackTicks   破防标记时长 80 刻 + 等级偏移；碾压式 +30。
  *   tempo/aftercast/recharge 速度决定起手、收招与冷却，碾压式更慢更久。
  *
@@ -94,12 +94,12 @@ namespace PokemonSkills {
                 .times(F.when(F.pref("crush", text("worldcombat.skill.crunch.preference.crush")), F.const(1.35), F.const(0.75)))
                 .clamp(0.10, 0.6),
             "咬塌几率", "研磨结束时把护甲压塌、令目标防御下降的几率（原生 20%）；越重、等级越高的个体越容易咬碎。"),
-        /** 咬塌级数：基础 1 级，体重超过 100 才可能一次压塌 2 级；夹 1..2。 */
+        /** 咬塌级数：基础 1 级，体重每比 100 重 1 加 0.006（夹 0..1）后向下取整；约 267 及以上才能一次压塌 2 级；夹 1..2。 */
         crushStages: formula(
             F.base(1).plus(F.body("weight").minus(100).times(0.006).clamp(0, 1)).floor().clamp(1, 2),
             "咬塌级数", {
                 unit: "级",
-                description: "一次咬塌让目标防御下降的能力等级；体重 100 以上的沉重牙口能一次压塌两级，轻的只有一级。"
+                description: "一次咬塌让目标防御下降的能力等级；本档把体重换算成级数，约 267 以上的沉重牙口才够一次压塌两级，更轻的只有一级。"
             }),
         /** 破防标记时长：基础 80 刻，等级 30 起每级 +1.6（夹 −14..60）；碾压 +30；夹 60..240。 */
         crackTicks: seconds(

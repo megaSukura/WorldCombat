@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.healingwish.summary": "Gives itself away: the user faints on the spot and leaves a wish star where it fell. The star waits; the first wounded or afflicted ally to come to it is restored by a share of its maximum health and has every harmful status effect cleared; with no one in need it fades on its own. With no ally able to receive, the user does not faint.",
+  "worldcombat.skill.healingwish.summary": "After a complete sacrifice, leave one wish star on actual ground. It waits for identified allies and is consumed by the first wounded ally who actually receives healing or cleansing. Healthy allies and refused benefits leave it waiting.",
   "worldcombat.skill.healingwish.use.0": "Trade your life for a large heal on an ally",
   "worldcombat.skill.healingwish.use.1": "Leave a wish for a brawling ally before you die",
   "worldcombat.skill.healingwish.use.2": "Turn your fall spot into a rescue point",

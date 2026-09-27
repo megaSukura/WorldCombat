@@ -1,11 +1,13 @@
 // 治愈铃声的可执行设计说明：这招只在半径内有人带着主异常时才成立，所以场面让施术者与同队伙伴各挂一项异常。
 // 必然事实：施术者提交过治愈铃声；灼伤身份从施术者身上消失（被真正清除）；同队伙伴的剧毒身份也消失。
+// 两人之间立一堵实心墙，铃声照样穿过（声波不看遮挡），所以墙后的伙伴仍被洗到。
 // 铃声半径、声数、铃光量与起手/冷却取决于特攻、速度、特防、体型与等级，写进 note。
 Smoke.scenario("healbell", function (stage) {
+    stage.fill([0, 0, 0], [0, 1, 0], "minecraft:stone");
     stage.weather("clear");
     stage.time("day");
 
-    // 只会治愈铃声的差不多娃娃（带灼伤）与同队吉利蛋（带中毒、技能表为空）贴身站位；无敌人，双方原地不动。
+    // 只会治愈铃声的差不多娃娃（带灼伤）与同队吉利蛋（带中毒、技能表为空）贴身站位，中间隔一堵墙；无敌人，双方原地不动。
     var caster = stage.pokemon({ species: "audino", level: 34, moves: ["healbell"], at: [-1, 0, 0], status: "burn" });
     var ally = stage.pokemon({ species: "chansey", level: 30, moves: [], at: [1, 0, 0], status: "poison" });
     stage.team("bell", [caster, ally]);
@@ -19,8 +21,8 @@ Smoke.scenario("healbell", function (stage) {
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/burn"), "the caster had carried the burn identity before the bell");
         stage.expect(!stage.hasMobEffect(caster, "world_combat:status/burn"), "the bell cleared the caster's burn");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/poison"), "the teammate had carried the poison identity before the bell");
-        stage.expect(!stage.hasMobEffect(ally, "world_combat:status/poison"), "the bell reached the teammate and cleared its poison");
-        stage.note("铃声以 chimeRadius 为半径判定：特攻与等级决定半径、速度决定响几声、特防与体型决定铃光数；每一声都从施术者当前所在处响出，洗一次范围内的全部主异常（poison 身份一并带走剧毒，含 sleep 与 frozen）。本场景两项异常都在半径内被洗掉；只有真正清掉东西的对象会在自己身上亮起净光柱，空响仍然响完但不刷清除光。施放期间可以移动，声数、间隔与两端的粒子环留给完整装配的人工试玩。", {
+        stage.expect(!stage.hasMobEffect(ally, "world_combat:status/poison"), "the bell reached through the wall and cleared the teammate's poison");
+        stage.note("铃声以 chimeRadius 为半径判定：特攻与等级决定半径、速度决定响几声、特防与体型决定铃光数；每一声都从施术者当前所在处响出，洗一次范围内的全部主异常（poison 身份一并带走剧毒，含 sleep 与 frozen），声波穿过方块，所以站在墙后也不会被漏掉。本场景两项异常都在半径内被洗掉；只有真正清掉东西的对象会在自己身上亮起净光柱，空响仍然响完但不刷清除光，最后一响只剩少量将散的余韵。施放期间可以移动，声数、间隔与两端的粒子环留给完整装配的人工试玩。", {
             casterCasts: stage.casts("healbell", caster),
             casterBurnEver: stage.hadMobEffect(caster, "world_combat:status/burn"),
             casterBurnNow: stage.hasMobEffect(caster, "world_combat:status/burn"),
@@ -29,5 +31,5 @@ Smoke.scenario("healbell", function (stage) {
             tick: stage.tick()
         });
         stage.done();
-    }, "heal bell cures the caster and a nearby teammate within 35 s");
+    }, "heal bell cures the caster and a teammate behind a wall within 35 s");
 });

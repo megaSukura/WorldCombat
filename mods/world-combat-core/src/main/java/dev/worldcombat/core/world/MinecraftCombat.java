@@ -20,6 +20,12 @@ public final class MinecraftCombat implements CombatHost {
     private final NativeDeathFacts deaths = new NativeDeathFacts(this);
     private final NativeProjectileObservations projectileObservations = new NativeProjectileObservations(this);
     public NativeProjectileObservations projectileObservations() { return projectileObservations; }
+    private final NativeAttackStarts attackStarts = new NativeAttackStarts(this);
+    public NativeAttackStarts attackStarts() { return attackStarts; }
+    @Override public String attackStarts(ActorHandle observer, ActorHandle actor, long after) {
+        checkThread(); return attackStarts.query(observer, actor, after);
+    }
+    @Override public String damageReceipt() { checkThread(); return NativeDamageReceipts.active(this); }
     @Override public String projectiles(ActorHandle source, Point centre, double radius) {
         checkThread(); return projectileObservations.query(source, centre, radius);
     }
@@ -51,6 +57,8 @@ public final class MinecraftCombat implements CombatHost {
     private final WorldAttributes attributes = new WorldAttributes(this);
     private final NativeEquipmentSuppression equipmentSuppression = new NativeEquipmentSuppression(this);
     private final NativeGroundLift groundLift = new NativeGroundLift(this);
+    private final NativeTargetRequests targetRequests = new NativeTargetRequests(this);
+    public NativeTargetRequests targetRequests() { return targetRequests; }
     public WorldAttributes attributes() { return attributes; }
     public WorldHelpers helpers() { return helpers; }
     private final WorldBodies bodies = new WorldBodies(this);
@@ -64,6 +72,7 @@ public final class MinecraftCombat implements CombatHost {
         presentations.putFor(owner, actor, key, type, version, point, data, ticks);
     }
     private String healthCause = "";
+    String currentHealthCause() { return healthCause; }
     private LivingEntity healingRecipient;
     private ActorHandle healingSource;
     @Override public BlockObservation block(ActorHandle actor, Point point) { return NativeBlockUse.observe(this, actor, point); }
@@ -160,8 +169,16 @@ public final class MinecraftCombat implements CombatHost {
         sounds.addLast(new Audible(event.getLevel().dimension().location().toString(), sound.getRange(event.getNewVolume()),
             new SoundObservation(++soundId, sound.getLocation().toString(), point(location), runtime.now(), soundMetadata)));
     }
-    private record DamageTicket(ActorHandle source, ActorHandle target, double before, String data, ExecutionOrigin origin) {}
-    private final Map<net.minecraft.world.damagesource.DamageSource, Map<UUID, DamageTicket>> damageTickets = new IdentityHashMap<>();
+    static final class DamageTicket {
+        final ActorHandle source, target;
+        final ExecutionOrigin origin;
+        final boolean contextual;
+        final String receipt;
+        com.google.gson.JsonObject data;
+        DamageTicket(ActorHandle source, ActorHandle target, ExecutionOrigin origin, boolean contextual, String receipt, com.google.gson.JsonObject data) {
+            this.source = source; this.target = target; this.origin = origin; this.contextual = contextual; this.receipt = receipt; this.data = data;
+        }
+    }
     private final Set<ActorHandle> controlled = new HashSet<>();
     private final Map<ActorHandle, Set<Long>> controlOwners = new HashMap<>();
     public WorldEffects effects() { return effects; }
@@ -255,7 +272,6 @@ public final class MinecraftCombat implements CombatHost {
     public void tick() {
         deaths.flush();
         flushDepartures();
-        damageTickets.clear();
         for (Runnable ended; (ended = endedEffects.pollFirst()) != null; ) ended.run();
         flushChangedActors();
         runtime.tick();
@@ -263,6 +279,7 @@ public final class MinecraftCombat implements CombatHost {
         effects.tick();
         equipmentSuppression.tick();
         groundLift.tick();
+        targetRequests.tick();
         helpers.tick();
         NativeWorldWrites.tickSpawned(this);
         sounds.removeIf(sound -> runtime.now() - sound.observation().tick() > 200);
@@ -277,7 +294,7 @@ public final class MinecraftCombat implements CombatHost {
         presentations.tick();
     }
 
-    public void stop() { deaths.clear(); flushDepartures(); endedEffects.clear(); changedActors.clear(); nativeDamageOrigins.clear(); NativeWorldWrites.stopSpawned(this); runtime.stop(); equipmentSuppression.stop(); groundLift.stop(); effectStorage.setDirty(); effects.stop(); helpers.stop(); presentations.clear(); controlled.clear(); controlOwners.clear(); bindings.clear(); departures.clear(); }
+    public void stop() { deaths.clear(); flushDepartures(); endedEffects.clear(); changedActors.clear(); nativeDamageOrigins.clear(); NativeWorldWrites.stopSpawned(this); runtime.stop(); equipmentSuppression.stop(); groundLift.stop(); targetRequests.stop(); effectStorage.setDirty(); effects.stop(); helpers.stop(); presentations.clear(); controlled.clear(); controlOwners.clear(); bindings.clear(); departures.clear(); }
     public void controlled(ActorHandle actor, boolean value) {
         controlled(0, actor, value);
     }
@@ -326,6 +343,7 @@ public final class MinecraftCombat implements CombatHost {
         attributes.release(instance);
         equipmentSuppression.release(instance);
         groundLift.release(instance);
+        targetRequests.release(instance);
         for (var actor : List.copyOf(controlOwners.keySet())) controlled(instance, actor, false);
     }
     @Override public void lease(long instance, Runnable cleanup) {
@@ -345,6 +363,14 @@ public final class MinecraftCombat implements CombatHost {
     }
     @Override public boolean replaceMobEffect(ActorHandle operator, ActorHandle target, String id, String expected, int ticks, int amplifier, ExecutionOrigin origin) {
         return NativeEffectTransfer.replace(this,operator,target,id,expected,ticks,amplifier,origin);
+    }
+    @Override public int transformMobEffects(ActorHandle operator, ActorHandle target, String changes, ExecutionOrigin origin) {
+        return NativeEffectTransfer.transform(this,operator,target,changes,origin);
+    }
+    @Override public boolean matchesMobEffect(ActorHandle target, String id, String expected) {
+        checkThread();var entity=resolve(target);if(entity==null)return false;
+        var type=net.minecraft.core.registries.BuiltInRegistries.MOB_EFFECT.getHolder(net.minecraft.resources.ResourceLocation.parse(id)).orElse(null);
+        return type!=null&&MinecraftEffectState.matches(entity,entity.getEffect(type),expected);
     }
     @Override public boolean attribute(long owner, ActorHandle target, String id, double amount, String operation) { return attributes.set(owner, target, id, amount, operation); }
     @Override public int suppressEquipment(long owner, ActorHandle target) { return equipmentSuppression.acquire(owner, target); }
@@ -485,12 +511,17 @@ public final class MinecraftCombat implements CombatHost {
     }
 
     public boolean mayHit(LivingEntity source, LivingEntity target, ServerPlayer controller) {
+        return mayHit(source, target, controller, DamageRelations.HOSTILE);
+    }
+    private boolean mayHit(LivingEntity source, LivingEntity target, ServerPlayer controller, DamageRelations relations) {
+        if (!target.isAlive() || target.isInvulnerable() || !CombatServices.domain(target).available(target)
+            || target.level() != source.level() || target instanceof ServerPlayer player && (player.isCreative() || player.isSpectator())) return false;
+        if (source == target) return relations.self();
+        if (relations.friendly()) return true;
         var sourceOwner = source instanceof HelperActor ? helpers.source(bind(source)) : source instanceof ScriptedBody ? bodies.principal(bind(source)) : null;
         var targetOwner = target instanceof HelperActor ? helpers.source(bind(target)) : target instanceof ScriptedBody ? bodies.principal(bind(target)) : null;
         if ((sourceOwner != null || targetOwner != null) && friendly(bind(source), bind(target))) return false;
-        return source != target && target.isAlive() && !target.isInvulnerable() && CombatServices.domain(target).available(target)
-            && target.level() == source.level() && !(target instanceof ServerPlayer player && (player.isCreative() || player.isSpectator()))
-            && (controller == null || !target.getUUID().equals(controller.getUUID()))
+        return (controller == null || !target.getUUID().equals(controller.getUUID()))
             && !CombatServices.domain(source).friendly(source, target)
             && !CombatServices.domain(target).friendly(target, source);
     }
@@ -532,12 +563,18 @@ public final class MinecraftCombat implements CombatHost {
     @Override public Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius) {
         checkThread(); return NativeBodySweep.move(this, actor, controller, delta, radius);
     }
+    @Override public Impact moveSweep(ActorHandle actor, UUID controller, Point delta, double radius, java.util.Set<String> ignoredContacts) {
+        checkThread(); return NativeBodySweep.move(this, actor, controller, delta, radius, ignoredContacts);
+    }
 
     @Override public boolean damage(ActorHandle actor, ActorHandle target, UUID controllerId, double amount) {
+        return damage(actor, target, controllerId, amount, DamageRelations.HOSTILE);
+    }
+    private boolean damage(ActorHandle actor, ActorHandle target, UUID controllerId, double amount, DamageRelations relations) {
         checkThread();
         var source = resolve(actor); var victim = resolve(target);
         var controller = controllerId == null ? null : server.getPlayerList().getPlayer(controllerId);
-        if (source == null || victim == null || !mayAct(actor, controllerId) || !mayHit(source, victim, controller)) return false;
+        if (source == null || victim == null || !mayAct(actor, controllerId) || !mayHit(source, victim, controller, relations)) return false;
         return settleDamage(source, victim, controller, amount, null);
     }
     private boolean settleDamage(LivingEntity source, LivingEntity victim, ServerPlayer controller, double amount, CombatProjectile projectile) {
@@ -548,13 +585,15 @@ public final class MinecraftCombat implements CombatHost {
         var previousRecipient = damageRecipient;
         var previousContext = damageContext;
         boolean previousKnockback = damageKnockback;
+        boolean hostile = source != victim && !friendly(bind(source), bind(victim));
         damageRecipient = victim;
         damageContext = cause;
         damageKnockback = knockback;
         boolean applied;
         try (var floor = NativeDamageFloor.open(victim, cause, data.has("minimumHealth") ? data.get("minimumHealth").getAsDouble() : 0)) { applied = victim.hurt(damageContext, nativeAmount); }
         finally { damageRecipient = previousRecipient; damageContext = previousContext; damageKnockback = previousKnockback; }
-        if (applied && !victim.isAlive()) CombatServices.domain(source).defeated(source, victim, controller);
+        if (applied && !victim.isAlive() && hostile)
+            CombatServices.domain(source).defeated(source, victim, controller);
         return applied;
     }
 
@@ -565,10 +604,14 @@ public final class MinecraftCombat implements CombatHost {
         return damage(actor, target, controller, amount, metadata, null);
     }
     @Override public boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata, ExecutionOrigin origin) {
+        return damage(actor, target, controller, amount, metadata, origin, DamageRelations.HOSTILE);
+    }
+    @Override public boolean damage(ActorHandle actor, ActorHandle target, UUID controller, double amount, String metadata,
+                                    ExecutionOrigin origin, DamageRelations relations) {
         String previous = damageMetadata; var previousOrigin = damageOrigin;
         damageOrigin = origin != null && origin.belongsTo(actor) ? origin : null;
         damageMetadata = ExecutionOrigin.stamp(metadata, damageOrigin);
-        try { return damage(actor, target, controller, amount); } finally { damageMetadata = previous; damageOrigin = previousOrigin; }
+        try { return damage(actor, target, controller, amount, relations); } finally { damageMetadata = previous; damageOrigin = previousOrigin; }
     }
 
     @Override public void particle(ActorHandle actor, Point position) {
@@ -607,6 +650,11 @@ public final class MinecraftCombat implements CombatHost {
         checkThread(); var origin = inspect(source); var entity = inspect(target);
         if (origin == null || entity == null || origin.level() != entity.level() || origin.distanceToSqr(entity) > 64 * 64) return new EquipmentObservation[0];
         return WorldEquipment.read(entity);
+    }
+    @Override public String equipmentModifiers(ActorHandle source, ActorHandle target) {
+        checkThread(); var origin = inspect(source); var entity = inspect(target);
+        if (origin == null || entity == null || origin.level() != entity.level() || origin.distanceToSqr(entity) > 64 * 64) return "[]";
+        return equipmentSuppression.facts(entity);
     }
     @Override public boolean equipmentTake(ActorHandle target, String provider, String slot, int index, String expected, int count) { return NativeEquipment.takeOp(this, target, provider, slot, index, expected, count).ok(); }
     @Override public String equipmentDrop(ActorHandle target, String provider, String slot, int index, String expected, String data, int count) { return NativeEquipment.dropOp(this, target, provider, slot, index, expected, data, count).drop(); }
@@ -653,7 +701,7 @@ public final class MinecraftCombat implements CombatHost {
         var holder = net.minecraft.core.registries.BuiltInRegistries.ATTRIBUTE.getHolder(net.minecraft.resources.ResourceLocation.parse(id));
         if (holder.isEmpty()) return null;
         var attribute = entity.getAttribute(holder.get());
-        return attribute == null ? null : new AttributeObservation(attribute.getBaseValue(), attribute.getValue());
+        return attribute == null ? null : WorldAttributes.observe(attribute);
     }
     @Override public AttributeObservation attributeValue(ActorHandle source, ActorHandle target, String id, long excludedOwner) {
         var value = attributeValue(source, target, id);
@@ -725,6 +773,9 @@ public final class MinecraftCombat implements CombatHost {
     @Override public boolean lightning(ActorHandle actor, UUID controller, Point point, boolean visualOnly) { return NativeWorldWrites.lightning(this, actor, controller, point, visualOnly); }
     @Override public boolean ignite(ActorHandle target, int ticks) { return NativeWorldWrites.ignite(this, target, ticks); }
     @Override public boolean target(ActorHandle actor, ActorHandle target) { return NativeWorldWrites.target(this, actor, target); }
+    @Override public boolean targetLease(long owner, ActorHandle actor, ActorHandle target, int ticks) { return targetRequests.acquire(owner, actor, target, ticks); }
+    @Override public String targetLeaseState(long owner, ActorHandle actor) { return targetRequests.state(owner, actor); }
+    @Override public boolean targetLeaseRelease(long owner, ActorHandle actor) { return targetRequests.release(owner, actor); }
     @Override public boolean weather(ActorHandle actor, String weather, int ticks) { return NativeWorldWrites.weather(this, actor, weather, ticks); }
     @Override public Object nativeEntity(ActorHandle target) { return resolve(target); }
     @Override public Object nativeLevel(ActorHandle source) { var entity = resolve(source); return entity == null ? null : entity.level(); }
@@ -778,6 +829,15 @@ public final class MinecraftCombat implements CombatHost {
         return health(source, target, controller, delta, cause, 0);
     }
     @Override public double health(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause, double minimumHealth) {
+        return changeHealth(source, target, controller, delta, cause, minimumHealth, "effect");
+    }
+    @Override public String equipmentDamageResult(ActorHandle target, String provider, String slot, int index, String expected, int amount) {
+        checkThread(); return NativeEquipmentDamage.apply(this, target, provider, slot, index, expected, amount).json();
+    }
+    @Override public double payHealth(ActorHandle source, UUID controller, double amount, String cause, double minimumHealth) {
+        return Math.max(0, -changeHealth(source, source, controller, -amount, cause, minimumHealth, "health_cost"));
+    }
+    private double changeHealth(ActorHandle source, ActorHandle target, UUID controller, double delta, String cause, double minimumHealth, String damageKind) {
         checkThread();
         float nativeDelta = NativeAmounts.delta(delta);
         var actor = resolve(source); var entity = resolve(target); if (actor == null || entity == null) return 0;
@@ -792,8 +852,9 @@ public final class MinecraftCombat implements CombatHost {
             else {
                 if (entity instanceof ServerPlayer player && (player.isCreative() || player.isSpectator())) return 0;
                 if (actor != entity && !mayHit(actor, entity, controller == null ? null : server.getPlayerList().getPlayer(controller))) return 0;
-                var nativeCause = damageSource(actor, "effect");
-                try (var floor = NativeDamageFloor.open(entity, nativeCause, minimumHealth)) {
+                var nativeCause = damageSource(actor, damageKind);
+                try (var floor = NativeDamageFloor.open(entity, nativeCause, minimumHealth);
+                     var selfHarm = NativeSelfHarm.open(actor, entity)) {
                     if (entity.hurt(nativeCause, -nativeDelta) && !entity.isAlive() && actor != entity)
                         CombatServices.domain(actor).defeated(actor, entity, controller == null ? null : server.getPlayerList().getPlayer(controller));
                 }
@@ -963,9 +1024,8 @@ public final class MinecraftCombat implements CombatHost {
         var value = com.google.gson.JsonParser.parseString(result.data()).getAsJsonObject().get("amount").getAsDouble();
         event.setAmount(Double.isFinite(value) && value >= 0 && value <= Float.MAX_VALUE ? (float) value : 0);
     }
-    public void incoming(net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent event) {
-        var victim = event.getEntity(); var cause = event.getSource(); float amount = event.getAmount();
-        if (!CombatServices.CONTENT.ready() || !CombatServices.domain(victim).available(victim)) return;
+    DamageTicket openDamageReceipt(LivingEntity victim, net.minecraft.world.damagesource.DamageSource cause, float amount, String receipt) {
+        if (!CombatServices.CONTENT.ready() || !CombatServices.domain(victim).available(victim)) return null;
         var source = cause.getEntity() instanceof LivingEntity living && living.level() == victim.level() && living.distanceToSqr(victim) <= 64 * 64
             && CombatServices.domain(living).available(living) ? living : victim;
         boolean contextual = damageRecipient == victim && damageContext == cause;
@@ -976,26 +1036,74 @@ public final class MinecraftCombat implements CombatHost {
         var origin = contextual && damageOrigin != null && damageOrigin.belongsTo(bind(source)) ? damageOrigin
             : source == cause.getEntity() ? nativeDamageOrigins.get(cause, bind(source), CombatServices.CONTENT.epoch()) : null;
         ExecutionOrigin.stamp(data, origin);
-        var result = runtime.event("world_combat:damage_incoming", bind(source), bind(victim), data.toString(), true, origin);
-        if (!result.rejection().isEmpty()) { event.setAmount(0); return; }
-        var finalData = com.google.gson.JsonParser.parseString(result.data()).getAsJsonObject();
-        ExecutionOrigin.stamp(finalData, origin);
-        double value = finalData.get("amount").getAsDouble();
-        damageTickets.computeIfAbsent(cause, key -> new HashMap<>()).put(victim.getUUID(), new DamageTicket(bind(source), bind(victim), victim.getHealth(), finalData.toString(), origin));
-        event.setAmount(Double.isFinite(value) && value >= 0 && value <= Float.MAX_VALUE ? (float) value : 0);
-        if (contextual && event.getAmount() > 0) ArmorProjection.apply(event, finalData);
+        data.addProperty("receiptId", receipt);
+        return new DamageTicket(bind(source), bind(victim), origin, contextual, receipt, data);
     }
-    public void applied(LivingEntity victim, net.minecraft.world.damagesource.DamageSource cause) {
-        var group = damageTickets.get(cause); if (group == null) return;
-        var ticket = group.remove(victim.getUUID()); if (group.isEmpty()) damageTickets.remove(cause);
-        if (ticket == null || victim.getHealth() >= ticket.before()) return;
-        var data = com.google.gson.JsonParser.parseString(ticket.data()).getAsJsonObject();
-        data.addProperty("actual", ticket.before() - victim.getHealth()); data.addProperty("before", ticket.before()); data.addProperty("after", victim.getHealth());
+    void prepareDamage(NativeDamageReceipts.Frame frame) {
+        var ticket = frame.ticket;
+        var result = runtime.event("world_combat:damage_prepare", ticket.source, ticket.target, ticket.data.toString(), true, ticket.origin);
+        var data = com.google.gson.JsonParser.parseString(result.data()).getAsJsonObject();
+        ExecutionOrigin.stamp(data, ticket.origin); data.addProperty("receiptId", ticket.receipt);
+        ticket.data = data;
+        frame.rejection = result.rejection();
+        double amount = data.get("amount").getAsDouble();
+        frame.amount = frame.rejection.isEmpty() && Double.isFinite(amount) && amount >= 0 && amount <= Float.MAX_VALUE ? (float) amount : 0;
+        data.addProperty("amount", (double) frame.amount);
+    }
+    public void incoming(net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent event) {
+        var victim = event.getEntity(); var cause = event.getSource();
+        var frame = NativeDamageReceipts.current(victim, cause);
+        // A manually posted event has no hurt lifetime and cannot acquire a damage budget.
+        var ticket = frame == null ? openDamageReceipt(victim, cause, event.getAmount(), "") : frame.ticket;
+        if (ticket == null) return;
+        ticket.data.addProperty("amount", (double) event.getAmount());
+        var result = runtime.event("world_combat:damage_incoming", ticket.source, ticket.target, ticket.data.toString(), true, ticket.origin);
+        var finalData = com.google.gson.JsonParser.parseString(result.data()).getAsJsonObject();
+        ExecutionOrigin.stamp(finalData, ticket.origin);
+        finalData.addProperty("receiptId", ticket.receipt);
+        ticket.data = finalData;
+        if (!result.rejection().isEmpty()) {
+            if (frame != null) frame.rejection = result.rejection();
+            event.setAmount(0); return;
+        }
+        double value = finalData.get("amount").getAsDouble();
+        event.setAmount(Double.isFinite(value) && value >= 0 && value <= Float.MAX_VALUE ? (float) value : 0);
+        if (ticket.contextual && event.getAmount() > 0) ArmorProjection.apply(event, finalData);
+    }
+    void settled(NativeDamageReceipts.Frame frame) {
+        var ticket = frame.ticket;
+        var data = ticket.data.deepCopy();
+        ExecutionOrigin.stamp(data, ticket.origin); data.addProperty("receiptId", ticket.receipt);
+        double blocked = frame.container == null ? 0 : Math.max(0, frame.container.getBlockedDamage());
+        String outcome = frame.actual > 0 ? "applied" : frame.failed ? "error" : !frame.rejection.isEmpty() ? "rejected"
+            : frame.cancelled ? "cancelled" : frame.absorbed > 0 ? "absorbed" : blocked > 0 ? "blocked" : frame.accepted ? "zero" : "refused";
+        data.addProperty("actual", frame.actual); data.addProperty("before", frame.before); data.addProperty("after", frame.after);
+        data.addProperty("absorbed", frame.absorbed); data.addProperty("blocked", blocked);
+        data.addProperty("accepted", frame.accepted); data.addProperty("outcome", outcome); data.addProperty("settled", true);
+        data.addProperty("failed", frame.failed); data.addProperty("rejection", frame.rejection);
+        var position = frame.victim.getBoundingBox().getCenter();
+        data.addProperty("x", position.x); data.addProperty("y", position.y); data.addProperty("z", position.z);
+        publishSettlement(ticket, data, frame.actual);
+    }
+    void settledPrepared(DamageTicket ticket, LivingEntity victim, boolean failed, String rejection) {
+        var data = ticket.data.deepCopy();
+        ExecutionOrigin.stamp(data, ticket.origin); data.addProperty("receiptId", ticket.receipt);
+        data.addProperty("actual", 0); data.addProperty("before", (double) victim.getHealth()); data.addProperty("after", (double) victim.getHealth());
+        data.addProperty("absorbed", 0); data.addProperty("blocked", 0); data.addProperty("accepted", false);
+        data.addProperty("outcome", failed ? "error" : rejection.isEmpty() ? "refused" : "rejected");
+        data.addProperty("settled", true); data.addProperty("failed", failed); data.addProperty("rejection", rejection);
         var position = victim.getBoundingBox().getCenter();
         data.addProperty("x", position.x); data.addProperty("y", position.y); data.addProperty("z", position.z);
-        String previous = damageMetadata; damageMetadata = "{}";
-        try { runtime.event("world_combat:damage_applied", ticket.source(), ticket.target(), data.toString(), true, ticket.origin()); }
-        finally { damageMetadata = previous; }
+        publishSettlement(ticket, data, 0);
+    }
+    private void publishSettlement(DamageTicket ticket, com.google.gson.JsonObject data, double actual) {
+        String previous = damageMetadata; var previousOrigin = damageOrigin; var previousRecipient = damageRecipient; var previousContext = damageContext;
+        damageMetadata = "{}"; damageOrigin = null; damageRecipient = null; damageContext = null;
+        try {
+            // Budgets settle before legacy successful-hit observers can start a new native hit.
+            runtime.event("world_combat:damage_settled", ticket.source, ticket.target, data.toString(), true, ticket.origin);
+            if (actual > 0) runtime.event("world_combat:damage_applied", ticket.source, ticket.target, data.toString(), true, ticket.origin);
+        } finally { damageMetadata = previous; damageOrigin = previousOrigin; damageRecipient = previousRecipient; damageContext = previousContext; }
     }
 
     @Override public void report(long instance, String content, String message, Throwable error) {

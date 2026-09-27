@@ -4,8 +4,9 @@
  * 浴场是区域铺场，收益与风险都在「铺在哪」。它只把一般属性招式变成电，所以只在能算出实际收益时铺：
  *   何时考虑  有 threat 在 ai.maxChase 之内、这招就绪、自己目前没站在已有的离子浴里、没有重叠的旧场。
  *   铺不铺    只在本方（自己或附近伙伴）有一个电属性且带一般属性招式的攻击者（改电后吃本系），
- *             或者威胁确定会出一般属性招式、而本方有地面系免疫者会把它改出来的电招吃掉时。未知来源的
- *             普通攻击一律不当作一般属性，所以不会为主观猜测铺场。
+ *             或者威胁确定会出一般属性招式、而本方有地面系免疫者会把它改出来的电招吃掉时。只有已知证据
+ *             算数——宝可梦配招里的一般招，或共享分类器记录过的普通原生攻击；未知来源的普通攻击不当作
+ *             一般属性，所以不会为主观猜测铺场。
  *   铺在哪    ai.placement = towardThreat 时压在对手与自己之间，让交战线落在浴场里；
  *             underSelf 时罩住自己，适合自己要用一般属性招式、或想把安全区放在脚下。
  *   对谁出手  地面一点；由共用任务走到 reach 后按 choice 的落点施放。
@@ -35,15 +36,27 @@ namespace CompanionBehavior {
         if (!actor || String(actor.domain()) !== "cobblemon") return null;
         return CobblemonCombat.pokemon(actor);
     }
-    /** Only a known native individual's loadout is read; an unknown attacker is never assumed to be Normal. */
+    /** A known native normal attack recorded by the shared classifier is convertible evidence too. */
+    function ionNativeNormal(context: WorldBehavior.Context, subject: Entity): boolean {
+        const access = world(context), actor = access.actor(subject.ref);
+        if (!actor || !access.valid(actor)) return false;
+        const recent = DamageSemantics.recentAttack(access, actor, 200);
+        if (!recent) return false;
+        const classification: NativeAttackTypes.Context = { world: access, source: actor, target: actor,
+            data: { damageType: recent.type }, baseType: "", type: "" };
+        NativeAttackTypes.classifications.apply(classification);
+        return classification.baseType === "normal";
+    }
+    /** Only known evidence counts: a Pokemon loadout with a Normal move, or a classified native normal attack. */
     function ionKnowsNormal(context: WorldBehavior.Context, subject: Entity): boolean {
         const pokemon = ionPokemon(context, subject);
-        if (!pokemon) return false;
-        for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
-            const move = pokemon.move(slot);
-            if (move && String(move.type()).toLowerCase() === "normal") return true;
+        if (pokemon) {
+            for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+                const move = pokemon.move(slot);
+                if (move && String(move.type()).toLowerCase() === "normal") return true;
+            }
         }
-        return false;
+        return ionNativeNormal(context, subject);
     }
     /** Effective types from the shared native facts, so type-rewrite layers count too. */
     function ionHasType(context: WorldBehavior.Context, subject: Entity, type: string): boolean {

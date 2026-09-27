@@ -1,28 +1,24 @@
 /**
  * 回声 / echoedvoice 的 AI 用途。
  *
- * 什么局面下出手：目标可见、敌对、存活且在 `ai.maxChase`（默认 9）格内时列入候选；够不到交给共享接近逻辑。
- * 对谁出手：`accepts` 只筛阵营、存活与可见；谁当前被盯上就唱给谁。
- * 排序：`ai.sustainEcho`（默认开）打开时，自己或附近有人身上还带着回声身份（world_combat:status/echoed_voice）
- *   就把 priority 抬到 42——接上这一层正是叠高的窗口；否则按普通远程 20 排序。
- * 够不到怎么办：射程交给 `reach`，共享任务把身位收进歌程之后再唱。
+ * 什么局面下出手：目标敌对、存活且在 `ai.maxChase`（默认 9）格内时列入候选；够不到交给共享接近逻辑。
+ * 对谁出手：`accepts` 只筛阵营与存活——声音不被掩体阻挡，不需要当前视线，遮挡但已知的目标也能按记忆接唱。
+ * 排序：`ai.sustainEcho`（默认开）打开时，用与服务端同一个 `echoedvoiceLayer` 判断附近（含自己）是否有
+ *   可接的回声（发声者传播距覆盖到自己），有就把 priority 抬到 42——接上这一层正是叠高的窗口；否则按普通远程 20 排序。
+ * 够不到怎么办：射程用真实歌程 `reach`（capability.data.range），共享任务把身位收进歌程之后再唱。
  * 放完接什么：交回共享交战计划；回声留在自己身上，等下一个接的人（也可能是自己）。
  */
 namespace PokemonSkills {
+    /** 统一接唱判定：读服务端同一个发声者传播距口径，本次能否在附近（含自己）找到可接的回声。 */
     function echoedvoiceEchoNearby(context: WorldBehavior.Context): boolean {
-        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        const self = String(context.actor);
-        for (let index = 0; index < nearby.length; index++) {
-            const other = nearby[index];
-            if (other.ref === self || other.health <= 0) continue;
-            if (CompanionBehavior.status(context, other, echoStatus)) return true;
-        }
-        return false;
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(CompanionBehavior.source(context).ref);
+        return actor !== null && echoedvoiceLayer(world, actor) > 1;
     }
 
     CompanionBehavior.registerUse(echoId, {
         protocols: ["world_combat:attack", "world_combat:ranged"],
-        reach: function (context, capability) { return Math.min(capability.data.range, 5.6); },
+        reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
@@ -30,7 +26,7 @@ namespace PokemonSkills {
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 9);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return !target.friendly && target.health > 0;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

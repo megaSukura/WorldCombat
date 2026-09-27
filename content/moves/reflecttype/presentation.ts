@@ -61,6 +61,28 @@ const ReflecttypeSceneDefinition: ParticleDefinition = {
                 }
             ]
         },
+        hold: {
+            duration: 0,
+            exit: { stop: 4, drain: 14 },
+            emitters: [
+                {
+                    name: "hold_panes", bind: "source", fit: "body", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/screen_color",
+                    rate: 4, shape: { kind: "sphere_surface", radius: 0.52 },
+                    direction: "inward", speed: [0.01, 0.05],
+                    lifetime: [14, 22], size: [0.14, 0.04],
+                    color: { data: "color", fallback: 0xD98CE8 }, alpha: [0.4, 0], light: "full", maxParticles: 40
+                },
+                {
+                    name: "hold_glints", bind: "source", fit: "body", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 2, shape: { kind: "sphere_surface", radius: 0.56 },
+                    direction: "outward", speed: [0.02, 0.08],
+                    lifetime: [12, 20], size: [0.06, 0.01],
+                    color: { data: "color", fallback: 0xFFE9F8 }, alpha: [0.6, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
         settle: {
             duration: 44,
             exit: { stop: 24, drain: 30 },

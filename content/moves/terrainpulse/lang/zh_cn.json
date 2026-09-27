@@ -15,7 +15,7 @@
   "worldcombat.skill.terrainpulse.value.bursts": "爆发数量",
   "worldcombat.skill.terrainpulse.value.ring": "地环半径",
   "worldcombat.skill.terrainpulse.preference.resonate": "共鸣",
-  "worldcombat.skill.terrainpulse.preference.resonate.help": "开启：第一波落下后再补一波贴地环，两波各 ×0.7，适合压住一片区域；关闭：只推一波、威力全额，适合打一个目标。两个方向各有取舍。",
+  "worldcombat.skill.terrainpulse.preference.resonate.help": "开启：沿同一方向同时发出相邻的一窄一宽两道地脉，每道 ×0.7，适合压住一片区域；关闭：只推一道、威力全额，适合打一个目标。两个方向各有取舍。",
   "worldcombat.skill.terrainpulse.preference.ai.maxChase": "推波距离",
   "worldcombat.skill.terrainpulse.preference.ai.maxChase.help": "只在这个距离内主动推波；更远的目标交给共享接近逻辑走过去。",
   "worldcombat.skill.terrainpulse.preference.ai.leaveStation": "驻守时离位",

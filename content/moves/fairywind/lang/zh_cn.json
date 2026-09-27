@@ -5,7 +5,7 @@
   "worldcombat.skill.fairywind.use.2": "远距离先手，用风把对手推离掩体",
   "worldcombat.skill.fairywind.description.0": "香风沿选定方向或世界点直飞（可空放），沿途每个被扫到的对手受到约 %1$s 点特殊伤害（对手防御、相性与暴击在命中时另算）；风最多再穿过 %2$s 个对手而不停下。",
   "worldcombat.skill.fairywind.description.1": "射程 %1$s 格，风以 %2$s 格/刻走直线，风团半径 %3$s 格。",
-  "worldcombat.skill.fairywind.description.2": "被扫到的对手会被甩向风的侧面 %1$s 格。",
+  "worldcombat.skill.fairywind.description.2": "被扫到的对手沿它相对风轴的侧别被甩开 %1$s 格；正贴着风轴的目标朝发射时可见的固定旋向甩开。",
   "worldcombat.skill.fairywind.description.3": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒。",
   "worldcombat.skill.fairywind.wide.on": "广旋式：风团半径 ×1.5、贯穿 +1、侧甩 ×1.4，但单次伤害 ×0.85、射程 ×0.95、起手 +1 刻、冷却 +5 刻——扫得更宽更散，射程略短。",
   "worldcombat.skill.fairywind.wide.off": "轻掠式（默认）：单次伤害与射程保持满值，出手快、冷却短，但风团窄、贯穿少、侧甩弱——一条更细更利的线。",
@@ -27,7 +27,7 @@
   "worldcombat.skill.fairywind.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.fairywind.preference.ai.maxChase.help": "超过这个距离就不主动刮风，先走近；越大越愿意从更远处先手。",
   "worldcombat.skill.fairywind.preference.ai.through": "穿一串",
-  "worldcombat.skill.fairywind.preference.ai.through.help": "开启：瞄准方向后方还排着别的敌人时优先刮风，一阵风穿一串；关闭：不数直线，当普通远程攻击排序。",
+  "worldcombat.skill.fairywind.preference.ai.through.help": "开启：数「自身到目标」这条三维通道里、射程内、未被墙挡住、真实风团能罩住的非友方（受贯穿上限封顶）；有两个以上就优先刮风穿过去。关闭：不数通道，当普通远程攻击排序。",
   "world_combat.move.fairywind.text.hit": "第 %1$s 个被风扫到",
   "world_combat.move.fairywind.text.miss": "香风散空"
 }

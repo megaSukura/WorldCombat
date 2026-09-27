@@ -8,8 +8,9 @@
  *   起（brace，提交前）：低头、后腿蹬地、角尖压低，只播预告。
  *   顶（gore → impact，提交后）：先做一次**原生短接触**（moveSweep）——身体朝 `heading` 趟出 `rush` 格，
  *       停在第一个实体或障碍上；只有真的接触到非友方才结算一次 `gore` 接触伤害。撞墙或空趟就收角，不越墙找原目标。
- *   推（push，可续几刻）：角不松，**先把目标沿地面推一步**，再按目标实际被推动的位移把本体跟进同样距离；
- *       目标被拒、撞墙或推不动（实际位移≈0）就立刻松角——绝不空推让本体穿过目标。只此一次初伤，推行过程不追加伤害。
+ *   推（push，可续几刻）：角不松，**先把目标沿地面推一步**，再按目标实际被推动的位移把本体跟进同样距离；目标与初推
+ *       一样全走原生受击位移（`hitDisplace`，保留原生抗击退与受击事件）。初推为 0、目标被拒、撞墙、换位脱离接触，
+ *       或本体跟不上目标的实际位移，都立刻松角——绝不空推让本体穿过目标。只此一次初伤，推行过程不追加伤害。
  *
  * 选取：`kind: "aim"`——可点任意阵营实体或一个世界点；首敌由原生接触建立，命中权限仍由命中层判断。
  *
@@ -24,11 +25,21 @@ namespace PokemonSkills {
     const hornattackPushText = "world_combat.move.hornattack.text.push";
     const hornattackMissText = "world_combat.move.hornattack.text.miss";
     const hornattackMinimum = 0.02;
+    /** 持续推行的允许间距增量：目标被挤开或换位超过这个宽度就松角。 */
+    const hornattackContactSlack = 0.75;
 
     /** 把瞄准方向压平成一个水平单位向量。 */
     function hornattackHeading(direction: CombatPoint): CombatPoint {
         const flat = WorldCombat.point(direction.x(), 0, direction.z());
         return flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
+    }
+
+    /** 施法者与目标当前的水平间距（身体中心），用来逐步确认角还贴在同一具身体上。 */
+    function hornattackGap(world: CombatWorld, actor: CombatActor, foe: CombatActor): number {
+        const self = world.observe(actor), other = world.observe(foe);
+        if (self === null || other === null) return 0;
+        const a = self.position(), b = other.position();
+        return WorldCombat.point(a.x() - b.x(), 0, a.z() - b.z()).length();
     }
 
     function hornattackCoords(point: CombatPoint): number[] { return [point.x(), point.y(), point.z()]; }
@@ -67,8 +78,10 @@ namespace PokemonSkills {
             };
         },
         windup: function (action, config, prepare) {
+            const facing = hornattackHeading(WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction()));
             action.present("world_combat:move_hornattack:brace", hornattackScene, 1, action.origin(),
-                JSON.stringify({ moment: "brace", windup: prepare, drive: config && config.drive === true }));
+                JSON.stringify({ moment: "brace", windup: prepare, direction: [facing.x(), facing.y(), facing.z()],
+                    drive: config && config.drive === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
@@ -125,11 +138,15 @@ namespace PokemonSkills {
                 { moment: "impact", target: String(victim.ref()), dust: dust, scale: scale, intensity: intensity }, 20);
             WorldFeedback.text(world, contactPoint.plus(WorldCombat.point(0, 1.1, 0)), hornattackHitText, [], 20);
 
-            // 初始顶退也按实际位移跟进：先动目标、再动本体。
-            const shoved = world.valid(victim) ? world.displace(victim, heading.scale(shove)) : 0;
+            // 初始顶退：目标走原生受击位移（保留原生抗击退/受击事件）；被拒（实际为 0）就立即松角，不再尝试。
+            const shoved = world.valid(victim) ? world.hitDisplace(victim, heading.scale(shove)) : 0;
             let carried = shoved;
-            if (shoved > hornattackMinimum && world.valid(actor)) world.displace(actor, heading.scale(shoved));
             let settled = false;
+            if (shoved <= hornattackMinimum) { finish(action); return; }
+            // 本体只跟着目标真实被推动的量走；被挡就跟不上，直接松角。
+            const followedStart = world.valid(actor) ? world.displace(actor, heading.scale(shoved)) : 0;
+            if (followedStart < shoved - 0.05) { finish(action); return; }
+            const engaged = hornattackGap(world, actor, foeActor);
 
             function finish(current: CombatAction): void {
                 if (settled) return;
@@ -144,10 +161,11 @@ namespace PokemonSkills {
             function push(current: CombatAction, remaining: number): void {
                 const scope = current.world();
                 if (!scope.valid(foeActor) || remaining <= hornattackMinimum || carried >= carry) { finish(current); return; }
+                // 每步重新确认还是同一具身体贴着角：目标被挤开、换位或已脱离接触就立即收角。
+                if (hornattackGap(scope, actor, foeActor) > engaged + hornattackContactSlack) { finish(current); return; }
                 const step = Math.min(carrySpeed, remaining);
-                const back = heading.scale(step);
-                // 先把目标推一步；推不动（被拒/撞墙/抗性）就立即收角，绝不空推穿过目标。
-                const targetMoved = scope.displace(foeActor, back);
+                // 持续推行也全走原生受击位移：被抗击退/撞墙/被拒就是 0，立即收角，绝不空推穿过目标。
+                const targetMoved = scope.hitDisplace(foeActor, heading.scale(step));
                 if (targetMoved < hornattackMinimum) { finish(current); return; }
                 carried += targetMoved;
                 const followed = scope.valid(actor) ? scope.displace(actor, heading.scale(targetMoved)) : 0;
@@ -165,7 +183,7 @@ namespace PokemonSkills {
                 current.after(1, function (next: CombatAction) { push(next, remaining - step); });
             }
 
-            push(action, carry);
+            push(action, Math.max(0, carry - shoved));
         }
     });
 }

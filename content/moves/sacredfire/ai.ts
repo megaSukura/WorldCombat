@@ -6,7 +6,7 @@
  *   身份的目标排后（再点一次意义不大）。另一条救援线：自己或附近队友被冰封时，把它当作解冻手段送出去
  *   （`world_combat:bolster` 协议、高优先级），不把没有异常的友方当作攻击目标。
  * 够不到怎么办：reach 是本招航程，不够就靠近到出手起点。
- * 放完之后：一记远程火击，圣火式还会在撞击点留下一片只烫敌人的余焰；交回共享交战计划。
+ * 放完之后：只留下这一记远程火击的结果，交回共享交战计划。
  */
 namespace PokemonSkills {
     function sacredfireWants(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -47,7 +47,7 @@ namespace PokemonSkills {
 
     addPreferences("sacredfire", {}, [
         field(pathOf("smite"), "天罚式", "boolean", {
-            help: "开启：撞击威力 ×1.15、冷却 −6 刻，但点燃概率 ×0.55 且落点不留余焰，用来点杀。关闭（圣火式）：点燃概率拉满、撞击点留一片虹彩余焰反复烫人，代价是威力略低、冷却 +8 刻。"
+            help: "开启：撞击威力 ×1.15、冷却 −6 刻，但点燃概率 ×0.55，用来点杀。关闭（圣火式）：点燃概率拉满，代价是威力略低、冷却 +8 刻。"
         }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 3, max: 18, step: 1,

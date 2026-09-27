@@ -21,7 +21,7 @@ Smoke.scenario("populationbomb", function (stage) {
     }, function () {
         stage.expect(stage.casts("populationbomb", caster) > 0, "population bomb was committed");
         stage.expect(stage.damageTo(foe) > 0, "at least one fellow connected");
-        stage.note("伙伴在自己身边排出队伍后依次真实扑出：每只独立掷命中（掷空偏航），且只有真正撞上非友方活体才结算；扑空/撞墙/目标横移走开这一串就断。默认「鼠海」上限十只、命中率约 85%，实际只数随机。配置 swarm 关闭后上限更少、每下更重更准。连段长度与命中分布由完整装配的人工试玩核对。", {
+        stage.note("伙伴是真实可见、可被清掉的 HelperActor，在施术者身边的真地面上排成可数的一队（悬空/隔墙的位置不叫伙伴），然后从各自真实站位依次扑出；随机误差只让伙伴偏航改飞行路径，偏航后真撞到仍结算，不用隐藏掷骰否定碰撞；一只彻底扑空、或轮到自己前被打散，这一串就断。默认「鼠海」上限十只、命中率约 85%，实际只数随机。连段长度与命中分布由完整装配的人工试玩核对。", {
             casts: stage.casts("populationbomb", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             foeAlive: foe.alive(),

@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.hardpress.summary": "抬臂／抬钳，沿身前一小片掌面把对手压进地面：物攻与体重决定这一压的分量，对手此刻剩余的生命越满，威力越大——对手已经残了，这一下就轻。它是三压招里起手最快、冷却最短的一记，靠一记接一记地压；双腕式把掌面左右摊开、一次罩住并排站的几个目标，但单点更轻，节奏不变。",
+  "worldcombat.skill.hardpress.summary": "抬臂／抬钳，沿身前一小片掌面把对手向下压：物攻与体重决定这一压的分量，对手此刻剩余的生命越满，威力越大——对手已经残了，这一下就轻。它是三压招里起手最快、冷却最短的一记，靠一记接一记地压；双腕式把掌面左右摊开、一次罩住并排站的几个目标，但单点更轻，节奏不变。",
   "worldcombat.skill.hardpress.description.0": "每个被压中的目标受到约 %1$s 点钢属性接触伤害；对手剩余生命越满，这一下对它压得越重。",
-  "worldcombat.skill.hardpress.description.1": "沿身前铺开一小片掌面：朝瞄准方向长 %1$s 格、左右各半宽 %2$s 格；掌面内的每个敌人各命中一次。命中后把它向地面压沉 %3$s 格，并沿背离掌心方向顶开 %4$s 格。",
+  "worldcombat.skill.hardpress.description.1": "沿身前铺开一小片掌面：朝瞄准方向长 %1$s 格、左右各半宽 %2$s 格；掌面内的每个敌人各命中一次。命中后给它 %3$s 格/刻的向下速度，并沿背离掌心方向顶开 %4$s 格。",
   "worldcombat.skill.hardpress.description.2": "最多伸手 %1$s 格。",
   "worldcombat.skill.hardpress.brace.on": "双腕式：两腕／双钳一起压下去，掌面半宽 ×1.7，可一次罩住并排站的几个目标；代价是单点威力 ×0.86，起手与冷却不变。",
   "worldcombat.skill.hardpress.brace.off": "单腕式（默认）：一腕集中下压，单点威力更高、掌面更窄，只压得住身前的目标。",
@@ -13,7 +13,7 @@
   "worldcombat.skill.hardpress.use.2": "用最快的循环一记接一记地压住对手",
   "worldcombat.skill.hardpress.value.press": "压顶威力",
   "worldcombat.skill.hardpress.value.pressRadius": "压顶半径",
-  "worldcombat.skill.hardpress.value.sink": "压沉深度",
+  "worldcombat.skill.hardpress.value.sink": "下压速度",
   "worldcombat.skill.hardpress.value.shove": "顶开距离",
   "worldcombat.skill.hardpress.value.reach": "伸手距离",
   "worldcombat.skill.hardpress.value.motes": "碎屑数",

@@ -1,31 +1,8 @@
-/**
- * 跺脚 / stompingtantrum —— 参数、伤害段与「上一次出手落空」的记账。
- *
- * 原生事实：Ground／物理／威力 75／命中 100／PP 10／接触；
- *   「化悔恨为力量进行攻击。如果上一回合招式没有打中，威力就会翻倍」（Cobblemon 1.8）。
- *
- * 翻译：即时战斗没有回合，本实现把「上一回合招式没有打中」落成**一次真实的失手**——施法者上一次
- *   进攻出手没打出伤害时，身上会留下「憋愤」状态（共享身份 world_combat:status/stompingtantrum）；
- *   带着这口气再跺脚，这一脚威力翻倍、裂缝更深更响。任何命中都会把这口气消掉。
- *   记为事件：world_combat:committed 记下一次出手，world_combat:damage_applied 记下它有没有打中。
- *
- * 数据分散（每项读不同的精灵数据）：
- *   tremor    跺地威力：物攻定狠度、体重定砸得实不实、等级补一点；带憋愤时 ×2。
- *   fissure   裂缝长度：身高决定跺开多远、等级补一点；它也是本招的实际射程来源。
- *   halfWidth 裂缝半宽：碰撞箱宽度。
- *   launch    上抛初速：物攻与体重（越沉越能把人掀起来）。
- *   shove     向外推开：物攻。
- *   flows     裂缝颗粒数：物攻与等级，直接驱动画面密度。
- *   rentTicks／rentCells 缝上浮尘停留多久、铺多少点：等级与物攻。
- *   tempo／settle／recharge 速度决定起手、收招、冷却。
- *
- * 配置 deep（深跺）：裂缝更宽 ×1.25、上抛 ×1.15、裂痕更久 ×1.3，但威力 ×0.92、裂缝略短 ×0.95、
- *   起手 +3 刻、冷却 +8 刻；关闭＝窄而快、单次更疼。两向各有局面：深跺封住一条路，浅跺点掉一个人。
- */
+/** 跺脚读取已结束的前次进攻结果；憋愤图标仅展示资格，公式与 AI 使用同一事实。 */
 namespace PokemonSkills {
     export const stompId = "stompingtantrum";
     export const stompScene = "world_combat:move_stompingtantrum";
-    /** 共享身份：上一次出手落空后憋着的那口气。 */
+    /** 可见提示身份；实际资格通过 stompWhiffed 读取。 */
     export const stompStatus = "stompingtantrum";
     export const stompEffect = "world_combat:stompingtantrum_frustration";
     export const stompHitText = "world_combat.move.stompingtantrum.text.hit";
@@ -33,19 +10,16 @@ namespace PokemonSkills {
     export const stompMissText = "world_combat.move.stompingtantrum.text.miss";
     /** 憋愤持续：够下一次出手用掉，不至拖太久。 */
     export const stompRageTicks = 110;
-    /** 只把「刚出手就落空／早忘了」排除在外的窗口。 */
-    var stompSwingWindow = { min: 6, max: 150 };
-    /** 每个进攻者最近一次出手：commit 刻，以及之后有没有打出过伤害。 */
-    var stompSwings: { [ref: string]: { attempt: number; land: number } } = Object.create(null);
-
-    /** 施法者上一次出手是否打空（供 AI 与表现读同一份事实）。 */
-    export function stompWhiffed(world: CombatWorld, actor: CombatActor): boolean {
-        const swing = stompSwings[String(actor.ref())];
-        if (swing === undefined) return false;
-        const now = world.tick();
-        return (swing.land || -1000) < swing.attempt
-            && now - swing.attempt >= stompSwingWindow.min && now - swing.attempt <= stompSwingWindow.max;
+    /** Preparation previews the latest result; a committed stomp reads its frozen prior execution. */
+    export function stompWhiffed(world: CombatWorld, actor: CombatActor, action?: CombatAction | null): boolean {
+        const sameActor = action && String(action.actor().ref()) === String(actor.ref());
+        const result = sameActor ? ExecutionOutcomes.previous(action!, stompRageTicks) : ExecutionOutcomes.latest(world, actor, stompRageTicks);
+        return result !== null && result.status === "miss";
     }
+    defineFacts(stompId, context => ({ read: id => {
+        if (id !== "stompingtantrum.previousMiss") return undefined;
+        return !!context.world && !!context.actor && stompWhiffed(context.world, context.actor, context.action);
+    } }));
 
     actionParameters.define(stompId, {
         /** 跺地威力：基础 75，物攻每比 60 多 1 加 0.3（夹 −14..32），体重每比 50 重 1 加 0.08（夹 −6..18），等级每比 30 高 1 加 0.4（夹 −4..10）；带憋愤 ×2、深跺 ×0.92；夹 38..190。 */
@@ -54,7 +28,7 @@ namespace PokemonSkills {
                 .plus(F.stat("attack").minus(60).times(0.3).clamp(-14, 32))
                 .plus(F.body("weight").minus(50).times(0.08).clamp(-6, 18))
                 .plus(F.level().minus(30).times(0.4).clamp(-4, 10))
-                .times(F.when(F.status(stompStatus).gt(0), F.const(2), F.const(1)).as(text("worldcombat.skill.stompingtantrum.value.rage")))
+                .times(F.when(F.var("stompingtantrum.previousMiss", text("worldcombat.skill.stompingtantrum.value.rage")), F.const(2), F.const(1)).as(text("worldcombat.skill.stompingtantrum.value.rage")))
                 .times(F.when(F.pref("deep"), F.const(0.92), F.const(1)))
                 .clamp(38, 190).round(1),
             "跺地威力", {
@@ -108,11 +82,11 @@ namespace PokemonSkills {
                 unit: "个",
                 description: "沿裂缝迸出的土石数量；物攻与等级越高越密，直接驱动画面的发射量。"
             }),
-        /** 缝上浮尘停留：基础 120 刻 + 等级 ×0.8；深跺 ×1.3；夹 80..300。 */
+        /** 缝上浮尘散去：基础 24 刻 + 等级 ×0.15；深跺 ×1.2；夹 24..42。只是短暂装饰，不封路。 */
         rentTicks: seconds(
-            F.base(120).plus(F.level().times(0.8))
-                .times(F.when(F.pref("deep"), F.const(1.3), F.const(1))).clamp(80, 300).round(0),
-            "裂痕停留", "跺开后缝上浮尘停留多久；到期自然散去。"),
+            F.base(24).plus(F.level().times(0.15))
+                .times(F.when(F.pref("deep"), F.const(1.2), F.const(1))).clamp(24, 42).round(0),
+            "浮尘散去", "跺开后缝上扬起的浮尘多久散去；它只是短暂装饰，不会长期封路。"),
         /** 缝上点位数：基础 18 + 物攻 ×0.2；夹 14..48。同时驱动表现密度。 */
         rentCells: formula(
             F.base(18).plus(F.stat("attack").times(0.2)).clamp(14, 48).round(0),
@@ -153,27 +127,15 @@ namespace PokemonSkills {
         { key: "growth.1", values: ["tier.1.level", "tier.1.tremor", "tier.1.launch"] }
     ]);
 
-    // ---- 记账：把「上一次出手落空」落成身上的 reality（憋愤）----
-    // 每一次进攻出手（kind = enemy 或 aim）提交时，看上一次进攻出手到这一刻有没有打出过伤害；
-    // 没有则说明上一招打空了，施加/续上共享身份。任何命中都会消掉这口气，不靠回合。
-    WorldCombat.on("world_combat:stompingtantrum/swing", "world_combat:committed", "", function (event) {
-        const action = event.action();
-        if (action === null) return;
-        const kind = action.targetKind();
-        if (kind !== "enemy" && kind !== "aim") return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.observe(actor) === null) return;
-        const ref = String(actor.ref()), now = world.tick(), previous = stompSwings[ref];
-        const spent = previous !== undefined && (previous.land || -1000) < previous.attempt
-            && now - previous.attempt >= stompSwingWindow.min && now - previous.attempt <= stompSwingWindow.max;
-        if (spent) CombatStatus.apply(world, actor, stompStatus, stompEffect, stompRageTicks, 0, { unique: true });
-        stompSwings[ref] = { attempt: now, land: previous === undefined ? -1000 : previous.land };
-    });
-    WorldCombat.on("world_combat:stompingtantrum/land", "world_combat:damage_applied", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (data.kind !== "move" || !(data.actual > 0)) return;
-        const world = event.world(), actor = event.actor(), swing = stompSwings[String(actor.ref())];
-        if (swing !== undefined) swing.land = world.tick();
-        CombatStatus.cure(world, actor, stompStatus);
-    });
+    // The managed observer provides the writable cue scope; action_ended only records the result.
+    ExecutionOutcomes.views.define({ id: "world_combat:stompingtantrum/cue", apply: view => {
+        const world = view.world, actor = view.actor;
+        if (!NativeLoadout.hasEquipped(world, actor, stompId)) return;
+        const result = ExecutionOutcomes.latest(world, actor, stompRageTicks);
+        const cue = MobEffects.read(world, actor, stompEffect);
+        if (result && result.status === "miss" && result.ended !== null) {
+            const remaining = Math.max(1, stompRageTicks - (world.tick() - result.ended));
+            if (!cue) MobEffects.apply(world, actor, stompEffect, remaining, 0);
+        } else if (cue) MobEffects.consume(world, actor, stompEffect);
+    } });
 }

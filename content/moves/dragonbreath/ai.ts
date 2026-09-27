@@ -7,15 +7,25 @@
  * 把这一口留给还能被麻的人。够不到交给共享接近逻辑。
  */
 namespace PokemonSkills {
-    /** 另一个敌人是否落在“自己 → 目标”方向、半角约为 30° 的锥内。 */
-    function dragonbreathInCone(self: WorldMethods.Subject, direction: WorldMethods.Subject, other: WorldMethods.Subject, reach: number): boolean {
+    /** 本个体这一发实际的吐息总张角；读不到时按广息／聚焦两档回退，不再固定用一个 30° 半角。 */
+    function dragonbreathArc(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        try {
+            const world = CompanionBehavior.world(context);
+            const value = p("dragonbreath", "arc", { world: world, actor: world.source(), detail: { values: capability.data.config } });
+            if (isFinite(value) && value > 0) return value;
+        } catch (error) { }
+        return capability.data.config && capability.data.config.wide === false ? 34 : 60;
+    }
+
+    /** 另一个敌人是否落在“自己 → 目标”方向、与实际吐息同半角的锥内。 */
+    function dragonbreathInCone(self: WorldMethods.Subject, direction: WorldMethods.Subject, other: WorldMethods.Subject, reach: number, cosHalf: number): boolean {
         const dx = direction.point[0] - self.point[0], dz = direction.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 0.01) return false;
         const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
         const od = Math.sqrt(ox * ox + oz * oz);
         if (od < 0.01 || od > reach) return false;
-        return (ox * dx + oz * dz) / (od * length) >= 0.86;
+        return (ox * dx + oz * dz) / (od * length) >= cosHalf - 1e-6;
     }
 
     CompanionBehavior.registerUse("dragonbreath", {
@@ -39,12 +49,14 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > reach) return 0;
             let score = 22;
             if (CompanionBehavior.ai<boolean>(capability, "cluster", true)) {
+                // 用本个体实际的张角，而不是写死的 cos 0.86：束流式与广息式在场上能罩住的人不同。
+                const cosHalf = Math.cos(dragonbreathArc(context, capability) * Math.PI / 360);
                 let crowded = 1;
                 const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
                 for (let i = 0; i < nearby.length; i++) {
                     const other = nearby[i];
                     if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                    if (dragonbreathInCone(self, target, other, reach)) crowded++;
+                    if (dragonbreathInCone(self, target, other, reach, cosHalf)) crowded++;
                 }
                 if (crowded >= 2) score += 20;
             }

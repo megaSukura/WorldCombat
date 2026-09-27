@@ -6,8 +6,9 @@
  *
  * 色相家族：礼盒红金（0xE05050／0xFFD166）为主体（开盒、机关）；糖果粉（0xFF9AC1／0xFFD0E4）只用于
  *   掷中糖果这一个结果——两种结果各有一套颜色，是这招的核心信息，故允许第二色相。
- * 拍子：起 windup（托盒系带）→ 掷 throw（盒身飞行＋纸屑尾迹）→ 开 open（盒盖弹开）＋ 炸 blast（红金纸屑）
- *   ／甜 candy（粉糖与心）／空 empty（只弹开盒盖）。
+ * 拍子：起 windup（托盒系带）→ 掷 throw（盒身飞行＋纸屑尾迹）→ 开 open（盒盖弹开）＋ 机关 trap（弹簧拳套＋短弹簧线，
+ *   只在机关档）／炸 blast（红金纸屑）／甜 candy（糖体、粉光与心）／受治 treat（糖与心落在真正被治好的人身上）／空 empty。
+ * 分支由服务端决定：机关档同一开盒刻播 trap，糖果档播 candy；treat 是治疗对象处的独立回执。
  * 范围：open / blast 的范围用服务端传的 `data.scale`（机关半径 / 参考半径）放大，落点与圈内就是会被炸到的地。
  * 运动：盒子沿低弧飞（实物外观），纸屑在开盒点向外迸开、糖与心向上飘；`tier` 越重，冲量越大。
  * 数：`data.motes`（物攻与等级换算）决定纸屑数量，`data.tier`（1.5／1／0.65 档）决定爆炸的尺寸与强度，
@@ -105,10 +106,43 @@ const PresentDefinition: ParticleDefinition = {
                 }
             ]
         },
+        trap: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    // 弹簧拳套：机关档才播的盒口主形，与开盒同一刻弹出。
+                    name: "fist", bind: "point", fit: "none", offset: [0, 0.45, 0],
+                    particle: "world_combat_core:cobblemon/generic/fist",
+                    burst: { count: 1, at: 0 }, shape: { kind: "point" },
+                    direction: "up", speed: [0.1, 0.2],
+                    lifetime: [7, 11], size: [0.55, 0.45], spriteFrom: "age", sizeMode: "linear",
+                    color: 0xFFFFFF, alpha: [1, 0.15], light: "full", bloom: 0.2, maxParticles: 2
+                },
+                {
+                    // 短弹簧线：沿盒口向上的一小截，数量随盒屑派生。
+                    name: "spring", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: { data: "motes", fallback: 10 } }, shape: { kind: "line", length: 0.6 },
+                    direction: "up", speed: [0.0, 0.03],
+                    lifetime: [5, 9], size: [0.08, 0.02],
+                    color: 0xFFD166, alpha: [0.9, 0], light: "full", maxParticles: 12
+                }
+            ]
+        },
         candy: {
             duration: 28,
             exit: { stop: 10, drain: 18 },
             emitters: [
+                {
+                    // 糖体：糖果档才有的盒口主形，粉糖从盒里弹出。
+                    name: "candy_body", bind: "point", fit: "none", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/orb/orb",
+                    burst: { count: 1, at: 0 }, shape: { kind: "point" },
+                    direction: "up", speed: [0.04, 0.1],
+                    lifetime: [16, 22], size: [0.45, 0.3], sizeMode: "linear",
+                    color: 0xFF9AC1, alpha: [1, 0.3], light: "full", bloom: 0.3, maxParticles: 2
+                },
                 {
                     name: "sugar", bind: "point", height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
@@ -132,6 +166,37 @@ const PresentDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [12, 20], size: [0.18, 0.4],
                     color: 0xFFD0E4, alpha: [0.5, 0], light: "full", maxParticles: 30
+                }
+            ]
+        },
+        treat: {
+            // 受治疗者回执：糖与心绑在真正被治好的人身上，不再停在盒点。
+            duration: 30,
+            exit: { stop: 11, drain: 18 },
+            emitters: [
+                {
+                    name: "treat_body", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/orb/orb",
+                    burst: { count: 1, at: 0 }, shape: { kind: "point" },
+                    direction: "up", speed: [0.05, 0.12],
+                    lifetime: [16, 24], size: [0.5, 0.32], sizeMode: "linear",
+                    color: 0xFF9AC1, alpha: [1, 0.3], light: "full", bloom: 0.3, maxParticles: 2
+                },
+                {
+                    name: "treat_sugar", bind: "target", height: 0.7,
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
+                    burst: { count: { data: "motes", fallback: 12 } }, shape: { kind: "sphere_surface", radius: 0.4 },
+                    direction: "up", speed: [0.03, 0.14],
+                    lifetime: [12, 20], size: [0.1, 0.01],
+                    color: 0xFFD0E4, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 48
+                },
+                {
+                    name: "treat_hearts", bind: "target", height: 0.75,
+                    particle: "world_combat_core:cobblemon/generic/status/infatuation_heart",
+                    burst: { count: { data: "healed", fallback: 8 } }, shape: { kind: "sphere", radius: 0.3 },
+                    direction: "up", speed: [0.03, 0.12], drag: 0.95,
+                    lifetime: [14, 22], size: [0.2, 0.06], sizeMode: "sin",
+                    color: 0xFF9AC1, alpha: [0.9, 0], light: "full", maxParticles: 40
                 }
             ]
         }

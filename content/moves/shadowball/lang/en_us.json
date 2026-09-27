@@ -19,7 +19,7 @@
   "worldcombat.skill.shadowball.value.shards": "Shadow wisps",
   "worldcombat.skill.shadowball.value.tempo": "Wind-up",
   "worldcombat.skill.shadowball.preference.dense": "Dense shadow",
-  "worldcombat.skill.shadowball.preference.dense.help": "On: ball power ×1.12 and trace ×1.15, but flight ×0.84, range −2 blocks, +4 ticks cooldown and +1 tick wind-up — a close-range hammer. Off: faster and longer but lighter, for mid-range poking.",
+  "worldcombat.skill.shadowball.preference.dense.help": "On: ball power ×1.12, but flight ×0.84, range −2 blocks, +1 tick wind-up and +4 ticks cooldown — a close-range hammer. Off: faster and longer but lighter, for mid-range poking. The trace radius does not change with this choice.",
   "worldcombat.skill.shadowball.preference.ai.maxChase": "Firing distance",
   "worldcombat.skill.shadowball.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it open fire from further away.",
   "worldcombat.skill.shadowball.preference.ai.sunderFirst": "Prefer un-sundered targets",

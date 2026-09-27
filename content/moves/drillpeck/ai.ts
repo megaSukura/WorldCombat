@@ -20,6 +20,21 @@ namespace PokemonSkills {
         return isFinite(range) && range > 0 ? range : 2.1;
     }
 
+    /** 按每口顶开的距离外推：目标被一口口顶到喙程之外时后面几口会落空，用来给近距离候选降分。 */
+    function drillpeckForecast(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
+        const range = Number(capability.data.range);
+        if (!isFinite(range) || range <= 0) return true;
+        const distance = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+        try {
+            const scope = factContext(CompanionBehavior.world(context));
+            const push = p("drillpeck", "push", scope);
+            const bites = p("drillpeck", "bites", scope);
+            if (isFinite(push) && push >= 0 && isFinite(bites) && bites >= 1)
+                return distance + push * (bites - 1) <= range + 0.4;
+        } catch (ignored) { }
+        return true;
+    }
+
     CompanionBehavior.registerUse("drillpeck", {
         protocols: ["world_combat:attack"],
         reach: function (context, capability) { return drillpeckApproach(capability); },
@@ -40,6 +55,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.ai<boolean>(capability, "diveAir", true) && target.grounded === false) score += 9;
             if (CompanionBehavior.ai<boolean>(capability, "finish", true) && CompanionBehavior.ratio(target) < 0.4) score += 6;
             if (distance >= 1.2 && distance <= 2.8) score += 3;
+            // 已被推得很远的目标，后面几口会够不到，降分但不排除（可能是唯一可用的招）。
+            if (!drillpeckForecast(context, capability, target)) score -= 8;
             return score;
         }
     });

@@ -11,9 +11,10 @@
  *   庆（execute）：提交后彩带整圈撒开，礼花在这一刻才爆；半径内的友方逐个被点亮，结果由 vigor 决定。
  *   退（受击）：蓄势中的庆祝被打断；已经散出的助兴行进劲也在受击那一刻收掉（managed effect 随之结束）。
  *
- * 助兴的行进劲用本单元自己的托管效果承载：start 里按施法者算出的比例给目标挂 movement_speed 修饰，
- *   效果自然到期、被驱散或受击提前结束时修饰随效果一起收回。标记「庆祝中」仍是原生 MobEffect。
- * 回复走共享健康写入：按已失生命的一截补，宝可梦经 NativeEffects.heal（含受治疗加成）。
+ * 助兴的行进劲用本单元自己的托管效果承载，并认领目标身上那一份「庆祝中」载体：start 里核对载体 key，
+ *   按施法者算出的比例挂 movement_speed 修饰。效果自然到期、被驱散、受击或载体先散，二者一起收回；
+ *   同一目标只保留一份，重新施放先收掉旧的持有者，不累加移速。标记「庆祝中」仍是原生 MobEffect。
+ * 回复走共享健康写入：按已失生命的一截补，宝可梦经 NativeEffects.heal（含受治疗加成），回执统一用 MC 生命单位。
  */
 namespace PokemonSkills {
     function celebrateAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.1, 0)); }
@@ -27,21 +28,27 @@ namespace PokemonSkills {
         ["speed", "motes", "scale"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid celebrate march: " + key);
         });
+        if (typeof value.spirit !== "string" || !value.spirit) throw new Error("Invalid celebrate march: spirit");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
+    // 这股行进劲由「庆祝中」载体承载：只认领 key 相符的那一份载体，之后载体被驱散/替换，
+    // 或这股劲自己走完，二者一起收回（lease 随本效果作用域释放）。
     WorldCombat.effectHandler(celebrateMarch, "start", function (effect) {
         const state = JSON.parse(effect.state()), world = effect.world(), target = effect.target();
         if (!world.valid(target)) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, celebrateEffect);
+        if (carrier === null || String(carrier.key()) !== String(state.spirit)) { effect.end(); return; }
+        MobEffects.bind(world, target, celebrateEffect, carrier);
         if (state.speed > 0) world.attribute(target, "minecraft:generic.movement_speed", state.speed, "add_multiplied_total");
     });
     WorldCombat.effectHandler(celebrateMarch, "operation:world_combat:dispel", function (effect) { effect.end(); });
-    WorldCombat.effectHandler(celebrateMarch, "end", function (effect) {
-        const world = effect.world(), target = effect.target();
-        if (!world.valid(target)) return;
+
+    /** 散劲：一份助兴被实际受伤或外力驱散时，在目标身上留一撮碎彩。 */
+    function celebrateBreak(world: CombatWorld, target: CombatActor): void {
         const body = world.observe(target);
         if (body === null) return;
         WorldFeedback.emit(world, celebrateScene, 1, body.position(), { moment: "break", target: String(target.ref()) }, 20);
-    });
+    }
 
     /** 慰劳：按目标已失生命的一截补回，宝可梦经 NativeEffects.heal（含受治疗加成），其他活体直接写 MC 生命。 */
     function celebrateMend(world: CombatWorld, target: CombatActor, fraction: number): number {
@@ -52,8 +59,9 @@ namespace PokemonSkills {
         if (amount <= 0) return 0;
         let healed = 0;
         if (String(target.domain()) === "cobblemon" && world.valid(target)) {
+            // NativeEffects.heal 按原生生命单位结算并返回原生单位，换算回 MC 单位，回执与其它活体统一。
             const pokemon = CobblemonCombat.pokemon(target), scale = Math.max(0.001, pokemon.healthScale());
-            healed = NativeEffects.heal(world, target, pokemon, amount / scale, celebrateId);
+            healed = NativeEffects.heal(world, target, pokemon, amount / scale, celebrateId) * scale;
         } else {
             healed = world.health(target, amount, "world_combat:" + celebrateId);
         }
@@ -78,7 +86,7 @@ namespace PokemonSkills {
         style: "party",
         stationary: true,
         interruptible: true,
-        defaults: { vigor: false, ai: { safeRange: 8, minAllies: 2, leaveStation: false } },
+        defaults: { vigor: false, ai: { safeRange: 8, minAllies: 2 } },
         fields: [flag("vigor", "慰劳")],
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[celebrateId], detail: { values: config }, world: world || null, actor: actor || null, attributes };
@@ -125,19 +133,25 @@ namespace PokemonSkills {
             WorldGeometry.select(world, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 4 }), function (target, facts) {
                 const self = String(target.key()) === String(actor.key());
                 if (!self && !facts.friendly()) return;
-                if (MobEffects.apply(world, target, celebrateEffect, ticks, 0) === null) return;
-                party++;
+                // 同一目标只保留一份助兴：先收掉旧的持有者，再把新的这一份挂上去，不累加移速。
+                const marchers = world.effects(target, celebrateMarch);
+                for (let index = 0; index < marchers.length; index++) world.operation(marchers[index].id(), "world_combat:dispel", "{}");
                 const at = facts.position(), motes = Math.max(8, Math.round(confetti / 3));
                 if (vigor) {
+                    if (MobEffects.apply(world, target, celebrateEffect, ticks, 0) === null) return;
+                    party++;
                     const gained = celebrateMend(world, target, mendFrac);
                     mended += gained;
                     WorldFeedback.emit(world, celebrateScene, 1, at,
                         { moment: "cheer", target: String(target.ref()), mend: 1, gained: Math.round(gained * 10) / 10,
                             motes: motes, scale: scale, intensity: 1 }, 28);
                 } else {
-                    // 助兴的行进劲：托管效果承载，随效果自然到期、被驱散或受击提前收回。
+                    // 助兴的行进劲：托管效果认领「庆祝中」载体，随载体消散、被驱散或受击同步收回。
+                    const carrier = MobEffects.apply(world, target, celebrateEffect, Math.max(ticks, marchTicks), 0);
+                    if (carrier === null) return;
+                    party++;
                     const march = world.effect(celebrateMarch, target,
-                        JSON.stringify({ speed: marchSpeed, motes: motes, scale: scale }), marchTicks);
+                        JSON.stringify({ speed: marchSpeed, motes: motes, scale: scale, spirit: String(carrier.key()) }), marchTicks);
                     if (march > 0) WorldFeedback.onEffect(world, march, "world_combat:move_celebrate/march/" + march, celebrateScene, 1, at,
                         { moment: "march", target: String(target.ref()), motes: motes, scale: scale });
                     WorldFeedback.emit(world, celebrateScene, 1, at,
@@ -154,7 +168,7 @@ namespace PokemonSkills {
         }
     });
 
-    // 受击：蓄势中的庆祝被打断；已散出的助兴行进劲也在受击那一刻收掉（movement_speed 修饰随效果收回）。
+    // 受击：蓄势中的庆祝被打断；已散出的助兴行进劲也在受击那一刻收掉，载体随之退去（movement_speed 修饰随效果收回）。
     WorldCombat.on("world_combat:move_celebrate/broken", "world_combat:damage_applied", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
@@ -165,6 +179,20 @@ namespace PokemonSkills {
         if (instance !== undefined) world.deliver(target, instance, "world_combat:interrupt");
         const marchers = world.effects(target, celebrateMarch);
         for (let index = 0; index < marchers.length; index++) world.operation(marchers[index].id(), "world_combat:dispel", "{}");
+        if (marchers.length) celebrateBreak(world, target);
+    });
+
+    // 「庆祝中」载体被外力清掉（牛奶、/effect clear、别的招式）时，助兴的行进劲同步收声；
+    // 重新施放只是换一份新的载体实例，不算清除。
+    WorldCombat.on("world_combat:move_celebrate/released", "world_combat:mob_effect_removed", "", function (event) {
+        const data = JSON.parse(String(event.data()));
+        if (String(data.id) !== celebrateEffect) return;
+        const world = event.world(), actor = event.actor();
+        if (!world.valid(actor)) return;
+        if (MobEffects.read(world, actor, celebrateEffect) !== null) return;
+        const marchers = world.effects(actor, celebrateMarch);
+        for (let index = 0; index < marchers.length; index++) world.operation(marchers[index].id(), "world_combat:dispel", "{}");
+        if (marchers.length && String(data.cause) !== "expired") celebrateBreak(world, actor);
     });
 
     // 蓄势被撤销或正常提交后清掉登记，避免陈旧的实例号留在表里。

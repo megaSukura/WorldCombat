@@ -1,15 +1,15 @@
 /**
  * 撕裂爪 / crushclaw 的客户端表现。
  *
- * 一句话：双爪交叉抬起后踏前一步，在身前那条矩形走廊里撕过，命中处划出一个红白的 X 爪痕，撕开护甲时目标身上
- * 再崩起一层与降防级数同量的碎屑。
+ * 一句话：爪尖聚光后踏前一步，单爪前伸够到第一个接触，再就着接触点向外拉出一条抓撕刃路；撕开护甲时目标身上
+ * 再崩起一层与降防级数同量的碎屑。十字刀的 X 不再出现，不靠后补图形扩大命中。
  * 色相家族：冷白与血锈红（slash／cut／scratch 原色、tinydust 中性）＋一处近白高光（glowingsparkle）。
- * 拍子：起（windup 抬爪）→ 击（slash 走廊与 cross 爪痕）→ 收（tear 撕口）。
- * 范围：slash 用 path 画出服务端 WorldGeometry.polygon 的同一组四个顶点，顶点在踏前位移、被墙截断之后重算；
- * 走廊有多宽、多长，画面就是那块地。两道 X 爪痕画在真实命中的走廊端点。
- * 运动：爪风沿走廊由近及远扫过，两道 X 爪痕在命中点交叉划过，被撕开时碎屑外翻。
- * 数：`data.notes`（撕抓威力换算）绑定走廊与命中火花量，`data.stages`（实际降防级数）绑定撕口崩屑数，
- * `data.hits`／`data.torn` 让命中与撕开各有一次强调。
+ * 拍子：起（windup 聚光）→ 击（slash 够到并外拉）→ 撕（tear 撕口崩屑）→ 空（miss 刃路停住）。
+ * 范围：slash 用 path 画出服务端刀路的同一组顶点（起点→接触点→外拉点），顶点在短踏与真实接触之后重算；
+ *   爪尖有多长、停在何处，画面就是那条刃路。
+ * 运动：三条同向爪尖沿同一条刃路先够到接触点，再随第三个顶点向外拉开；被撕开时碎屑自接触点外翻。
+ * 数：`data.notes`（撕抓威力换算）绑定够到的火花量，`data.stages`（实际降防级数）绑定撕口崩屑数，
+ *   `data.hits` 让命中各有一次强调。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const CrushclawDefinition: ParticleDefinition = {
@@ -34,20 +34,28 @@ const CrushclawDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "lane_fill", bind: "path", offset: [0, 0.5, 0],
-                    particle: "world_combat_core:cobblemon/generic/swipe",
-                    shape: { kind: "polygon" },
-                    rate: 44, direction: "shape", speed: [0.03, 0.12],
-                    lifetime: [8, 15], size: [0.28, 0.06],
-                    color: 0xE0C6C6, alpha: [0.3, 0], light: "full", maxParticles: 130
+                    name: "claw_low", bind: "path", offset: [0, 0.3, 0],
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    shape: { kind: "polyline", closed: false },
+                    rate: 40, direction: "shape", speed: [0.04, 0.16], spread: 10,
+                    lifetime: [6, 12], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0xE0C6C6, alpha: [0.7, 0], light: "full", bloom: 0.35, maxParticles: 70
                 },
                 {
-                    name: "lane_edge", bind: "path", offset: [0, 0.55, 0],
+                    name: "claw_mid", bind: "path", offset: [0, 0.52, 0],
                     particle: "world_combat_core:cobblemon/generic/cut",
-                    shape: { kind: "polyline", closed: true },
-                    rate: 34, direction: "shape", speed: [0.06, 0.2], spread: 12,
-                    lifetime: [5, 11], size: [0.24, 0.04], sizeMode: "index",
-                    color: 0xF0E0E0, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 120
+                    shape: { kind: "polyline", closed: false },
+                    rate: 42, direction: "shape", speed: [0.05, 0.18], spread: 10,
+                    lifetime: [6, 12], size: [0.22, 0.04], sizeMode: "index",
+                    color: 0xF0E0E0, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 80
+                },
+                {
+                    name: "claw_high", bind: "path", offset: [0, 0.74, 0],
+                    particle: "world_combat_core:cobblemon/generic/scratch",
+                    shape: { kind: "polyline", closed: false },
+                    rate: 30, direction: "shape", speed: [0.04, 0.16], spread: 12,
+                    lifetime: [5, 11], size: [0.16, 0.03], sizeMode: "index",
+                    color: 0xC05A5A, alpha: [0.65, 0], light: "world", maxParticles: 70
                 },
                 {
                     name: "strike_spark", bind: "point", offset: [0, 0.5, 0],
@@ -67,28 +75,6 @@ const CrushclawDefinition: ParticleDefinition = {
                     gravity: 0.05, drag: 0.9,
                     lifetime: [10, 18], size: [0.06, 0.02],
                     color: 0x8A6A6A, alpha: [0.4, 0], light: "world", maxParticles: 40
-                }
-            ]
-        },
-        cross: {
-            duration: 20,
-            exit: { stop: 8, drain: 12 },
-            emitters: [
-                {
-                    name: "stroke", bind: "path", offset: [0, 0.0, 0],
-                    particle: "world_combat_core:cobblemon/generic/slash",
-                    shape: { kind: "polyline" },
-                    rate: 60, direction: "shape", speed: [0.05, 0.18], spread: 10,
-                    lifetime: [5, 10], size: [0.4, 0.07], sizeMode: "index",
-                    color: 0xF4DADA, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 120
-                },
-                {
-                    name: "stroke_spark", bind: "path", offset: [0, 0.0, 0],
-                    particle: "world_combat_core:cobblemon/generic/scratch",
-                    shape: { kind: "polyline" },
-                    rate: 26, direction: "shape", speed: [0.05, 0.16], spread: 12,
-                    lifetime: [5, 10], size: [0.16, 0.03],
-                    color: 0xC05A5A, alpha: [0.7, 0], light: "world", maxParticles: 70
                 }
             ]
         },
@@ -121,6 +107,14 @@ const CrushclawDefinition: ParticleDefinition = {
             duration: 18,
             exit: { stop: 6, drain: 10 },
             emitters: [
+                {
+                    name: "reach", bind: "path", offset: [0, 0.5, 0],
+                    particle: "world_combat_core:cobblemon/generic/cut",
+                    shape: { kind: "polyline", closed: false },
+                    rate: 30, direction: "shape", speed: [0.03, 0.12], spread: 12,
+                    lifetime: [5, 11], size: [0.18, 0.03], sizeMode: "index",
+                    color: 0xD8C0C0, alpha: [0.5, 0], light: "world", maxParticles: 50
+                },
                 {
                     name: "whiff", bind: "point", offset: [0, 0.55, 0], height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/tinydust",

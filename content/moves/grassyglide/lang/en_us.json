@@ -24,7 +24,7 @@
   "worldcombat.skill.grassyglide.preference.ai.finish.help": "On: a low-health target ranks higher so an instant first-strike slam can finish it. Off: every target ranks the same.",
   "worldcombat.skill.grassyglide.preference.ai.onGrass": "Prefer on grass",
   "worldcombat.skill.grassyglide.preference.ai.onGrass.help": "On: while standing on Grassy Terrain, this move ranks higher (zero preparation, more reach and speed). Off: rank it as an ordinary melee candidate.",
-  "world_combat.move.grassyglide.text.plant": "Grass blades lift where it lands",
+  "world_combat.move.grassyglide.text.wake": "It only kicks up a tuft of grass where it lands",
   "world_combat.move.grassyglide.text.miss": "The slide found nothing",
   "worldcombat.skill.grassyglide.description.grass": "This move seeds no terrain of its own: it borrows grass that is already in the world (a Grassy Terrain move, the Grassy Surge ability and so on). Standing on real grass drops the preparation to zero and extends a faster, longer slide; the shared terrain rules (Grass moves x1.3, its own Earthquake and Bulldoze halved) come from that terrain, and airborne bodies do not count."
 }

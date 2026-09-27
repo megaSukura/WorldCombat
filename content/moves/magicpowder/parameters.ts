@@ -44,7 +44,7 @@ namespace PokemonSkills {
             "粉速", { unit: "格/刻", description: "粉团飘出去的速度；特攻与体重越大越快，越难在飘到前躲开。" }),
         cloud: formula(
             F.base(1.2, "基础").plus(F.body("width").minus(0.9).times(0.8).as("体型")).clamp(0.9, 2.2).round(2),
-            "粉团半径", { unit: "格", description: "命中处那团粉的半径，也是判定与画面尺度；体型越宽越广。" }),
+            "粉团视觉半径", { unit: "格", description: "命中处那团粉的画面半径；体型越宽越广。粉团真正的碰撞/判定半径约为它的 0.3 倍。" }),
         motes: formula(
             F.base(18, "基础").plus(F.stat("specialAttack").div(5).as("特攻")).clamp(16, 60).round(),
             "粉粒数", { unit: "点", description: "一把撒出与残留在身上的粉粒数量；特攻越高越密，画面里的粉点也按它画出。" }),

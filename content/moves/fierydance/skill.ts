@@ -83,7 +83,8 @@ namespace PokemonSkills {
             const radius = Math.max(0.15, p("fierydance", "edgeRadius", action));
             const power = p("fierydance", "blaze", action);
             const chance = Math.max(0.05, Math.min(0.95, p("fierydance", "blazeChance", action)));
-            const stages = Math.max(1, Math.round(p("fierydance", "blazeStages", action)));
+            // 整舞最多一次自身强化，硬上限 2 级（公式已夹取；再兜一次防止其它来源把它顶高）。
+            const stages = Math.max(1, Math.min(2, Math.round(p("fierydance", "blazeStages", action))));
             const dance = Math.max(4, Math.round(p("fierydance", "dance", action)));
             const spin = Math.max(6, Math.round(p("fierydance", "spin", action)));
             const push = Math.max(0, p("fierydance", "push", action));
@@ -130,14 +131,15 @@ namespace PokemonSkills {
             }
 
             /** 处理一条翼缘的接触：第一个身体或墙就是端点；每片翼对同一目标最多结算一次。 */
-            function land(current: CombatAction, contact: CombatImpact, endpoint: CombatPoint, struck: { [ref: string]: boolean }): void {
+            function land(current: CombatAction, contact: CombatImpact, endpoint: CombatPoint, struck: { [ref: string]: boolean }, strike: string): void {
                 const scope = current.world();
                 const lander = contact.hitEntity() ? contact.target() : null;
                 const victim = lander !== null && scope.valid(lander) && !scope.friendly(lander) ? lander : null;
                 if (victim !== null && !struck[String(victim.ref())]) {
                     struck[String(victim.ref())] = true;
+                    // 每片翼一个唯一 strike：两片翼各能对同一目标结算一次，单翼重复回执仍被原生去重。
                     const landed = impact(current, contact, "fierydance", power,
-                        { damage: damageSpec("fierydance", "blaze") });
+                        { damage: damageSpec("fierydance", "blaze") }, strike);
                     if (landed) {
                         hits++;
                         WorldFeedback.emit(scope, fierydanceScene, 1, endpoint,
@@ -148,7 +150,8 @@ namespace PokemonSkills {
                             const target = scope.observe(victim), self = scope.observe(actor);
                             if (target !== null && self !== null) {
                                 const away = fierydanceFlat(target.position().minus(self.position()));
-                                if (away.length() > 0.05) scope.displace(victim, away.unit().scale(push));
+                                // 用 hitDisplace：走原生击退事件与抗性，返回实际位移；被拒时不假装推开。
+                                if (away.length() > 0.05) scope.hitDisplace(victim, away.unit().scale(push));
                             }
                         }
                     }
@@ -173,17 +176,19 @@ namespace PokemonSkills {
                 const start = origin.plus(direction.scale(Math.max(0.2, width * 0.5 + 0.05)));
                 const tip = origin.plus(direction.scale(r));
                 const contact = current.trace(start, tip, radius, true);
+                const clipped = contact.position();
                 scenes.show(current, key, start,
-                    { moment: "dance", wing: key, point: fierydanceVertex(contact.position()),
-                        path: [fierydanceVertex(start), fierydanceVertex(contact.position())],
+                    { moment: "dance", wing: key, point: fierydanceVertex(clipped),
+                        path: [fierydanceVertex(start), fierydanceVertex(clipped)],
                         inner: inner, outer: outer, radius: r, spin: spin, scale: scale, intensity: intensity });
-                land(current, contact, contact.position(), struck);
+                land(current, contact, clipped, struck, key);
                 const last = previous[key];
                 if (last !== null) {
                     const swept = current.trace(last, tip, radius, true);
-                    land(current, swept, swept.position(), struck);
+                    land(current, swept, swept.position(), struck, key);
                 }
-                previous[key] = tip;
+                // 只存本刻的真实裁剪端点：下一段的扫掠从墙前起算，墙后的目标不会被误伤。
+                previous[key] = clipped;
             }
 
             function step(current: CombatAction, tick: number): void {

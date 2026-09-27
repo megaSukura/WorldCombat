@@ -1,15 +1,16 @@
 /**
  * 跺脚 / stompingtantrum 的出手方式。
  *
- * 核心念头：上一次出手落空的一口气没有咽下去，抬脚往地上一跺——地面从脚下朝目标裂开一条缝，
- *   站在缝上的人挨一记、被向上掀起并向外震开；带着那口气时这一脚更狠，裂缝更深、一拍更响。
+ * 核心念头：上一次出手落空的那口气没有咽下去，抬脚往地上一跺——地面从脚下朝目标裂开一条缝，
+ *   站在缝上的人挨一记、被向上掀起并向外震开；带着那口气时这一脚更狠，裂缝更宽、一拍更响。
  *
  * 三幕：
  *   起（stomp，提交前）：沉身、抬脚，脚边尘土一跳的预告。
- *   裂（fissure）：提交后地面沿一条真正有支撑的直线裂向目标，缝上每个站在地上的敌人各挨一次 `tremor`，
+ *   裂（fissure）：提交后从脚下真实顶面朝目标推进，逐段用共享 SurfacePaths 的原生碰撞顶面采样与
+ *       抬升/跨步/落步走廊；悬空、断崖或实墙处立即停下，不凭空延伸一米。判定沿实际走到的同一组
+ *       地表端点，逐小段取真实实体箱：站在缝带上、触地的非友方各挨一次 `tremor`（每敌一次），
  *       被向上抛起 `launch`、沿离中心的方向推开 `shove`；空中的目标不沾地所以安全。
- *       地面在前方断开（悬空／水面／不可踏）处，裂缝到此为止——不凭空贯穿空气。
- *   痕（rent）：缝上扬起一道贴地的裂痕与浮尘，停留一会儿自然散去；地面方块不动。
+ *   痕（rent）：缝上扬起一层短暂浮尘，很快散去；地面方块不动，它只是装饰，不封路。
  *
  * 受击运动统一走原生受击入口：横向格数用 `world.hitDisplace`，三维格/刻用 `world.hitImpulse`；
  *   抗性、无敌、权限、骑乘与事件取消由共享层处理。伤害被拒绝就不再推动目标。
@@ -21,50 +22,12 @@
  *                   它的身份是「憋着一口气的一脚」，不是持续的地面波。
  */
 namespace PokemonSkills {
-    /** 某一列在脚下附近是否有可踏的实心地面；返回其顶面高度，没有则返回一个很小的哨兵值。 */
-    function stompSurface(world: CombatWorld, x: number, baseY: number, z: number): number {
-        for (let dy = 2; dy >= -3; dy--) {
-            const block = world.block(WorldCombat.point(x, baseY + dy, z));
-            if (block === null) return -9999;
-            const id = String(block.id());
-            if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-            if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") return -9999;
-            return baseY + dy + 1;
-        }
-        return -9999;
-    }
-
-    /**
-     * 沿跺脚方向找出真正有地面支撑的裂缝：脚下向前每 0.5 格取一列，列里有实心地面才继续，
-     * 断层／悬空／水面处停下。返回实际长度与一条贴着地表走的中心线，判定与表现共用同一组数据。
-     */
-    function stompFissure(world: CombatWorld, centre: CombatPoint, heading: CombatPoint, maxLength: number): { length: number; path: number[][] } {
-        const baseY = Math.floor(centre.y());
-        const steps = Math.max(1, Math.round(maxLength / 0.5));
-        const path: number[][] = [[centre.x(), baseY + 0.08, centre.z()]];
-        let length = 0;
-        for (let i = 1; i <= steps; i++) {
-            const along = maxLength * i / steps;
-            const x = centre.x() + heading.x() * along, z = centre.z() + heading.z() * along;
-            const surface = stompSurface(world, Math.floor(x), baseY, Math.floor(z));
-            if (surface < -1000) break;
-            const y = Math.max(baseY - 1, Math.min(baseY + 1, surface));
-            path.push([x, y + 0.08, z]);
-            length = along;
-        }
-        if (length < 1) {
-            const end = centre.plus(heading.scale(1));
-            return { length: 1, path: [[centre.x(), baseY + 0.08, centre.z()], [end.x(), baseY + 0.08, end.z()]] };
-        }
-        return { length: length, path: path };
-    }
-
     define({
         requiresGround: true,
         id: stompId,
         cooldownParameter: "recharge",
         name: "Stomping Tantrum",
-        description: "把上一次出手落空的那口气跺进地里：地面朝目标裂开一条缝，站在缝上的人被掀起、向外震开；上一次打空了的话，这一脚翻倍、裂缝更深。地面断开处裂缝就停，不凭空裂过去。",
+        description: "把上一次出手落空的那口气跺进地里：地面从脚下朝目标裂开一条缝，站在缝上的人被掀起、向外震开；上一次打空了的话，这一脚翻倍、裂缝更宽。裂缝只在真实有支撑的地表上延伸，遇到悬空、断崖或实墙就停在上一段，不凭空裂过去。",
         uses: ["朝目标跺开一条地裂", "把站在缝上的人掀起来", "上一次打空后打出翻倍的一脚"],
         kind: "aim",
         range: 6.0,
@@ -104,47 +67,73 @@ namespace PokemonSkills {
             const centre = body.position();
             const heading = WorldGeometry.flatUnit(aim(action), action.direction());
             // 裂缝长度取自参数；方向由瞄准决定，实际能裂多远再由真实地面支撑收束，而不是缩到瞄准点。
-            const fissure = stompFissure(world, centre, heading, p(stompId, "fissure", action));
-            const length = fissure.length;
+            const reach = p(stompId, "fissure", action);
             const half = p(stompId, "halfWidth", action);
             const power = p(stompId, "tremor", action);
             const launch = p(stompId, "launch", action);
             const shove = p(stompId, "shove", action);
             const flows = Math.max(6, Math.round(p(stompId, "flows", action)));
-            const rentTicks = Math.max(40, Math.round(p(stompId, "rentTicks", action)));
+            const rentTicks = Math.max(24, Math.round(p(stompId, "rentTicks", action)));
             const rentCells = Math.max(6, Math.round(p(stompId, "rentCells", action)));
-            const doubled = CombatStatus.has(world, actor, stompStatus);
+            const doubled = stompWhiffed(world, actor, action);
             const scale = Math.max(0.5, Math.min(1.8, half / 0.7));
             const intensity = Math.max(0.5, Math.min(2.4, power / 75));
             let hits = 0;
 
+            // 从脚下真实顶面起步，沿实际地表推进；断口/悬空/实墙让 advance 立即结束，不补假缝。
+            // 起点允许沿脚下向下探 3 格，浮空施法者也从身下地面起步；推进本身仍只上 1／下 1。
+            const feet = WorldCombat.point(centre.x(), body.boundsMin().y(), centre.z());
+            const start = SurfacePaths.support(world, feet, 0.6, 3.0);
+            const walked = start === null ? null : SurfacePaths.advance(world, start, heading, reach,
+                { up: 1.0, down: 1.0, spacing: 0.5, samples: Math.max(2, Math.ceil(reach / 0.5) + 1) });
+            const ground = walked === null ? [] : walked.path;
+            const path: number[][] = [];
+            for (let i = 0; i < ground.length; i++) path.push([ground[i].x(), ground[i].y() + 0.08, ground[i].z()]);
+
             sound(action, "minecraft:item.mace.smash_ground_heavy");
             // 增强时一拍更响：在原本的重踩声上再叠一次厚实的落地闷响，不表达第二段伤害。
             if (doubled) world.sound("minecraft:block.anvil.land", centre, 18, "{}");
-            WorldFeedback.emit(world, stompScene, 1, centre,
-                { moment: "fissure", path: fissure.path, flows: flows, scale: scale,
-                    deep: doubled ? Math.round(flows * 0.6) : 0, doubled: doubled ? 1 : 0, intensity: intensity }, 26);
+            // polyline 需要两个已解析顶点；没有真实支撑可画时不发假缝。
+            if (path.length >= 2) {
+                WorldFeedback.emit(world, stompScene, 1, centre,
+                    { moment: "fissure", path: path, flows: flows, scale: scale,
+                        deep: doubled ? Math.round(flows * 0.6) : 0, doubled: doubled ? 1 : 0, intensity: intensity }, 26);
+            }
             sound(action, "cobblemon:impact.ground");
 
-            WorldGeometry.selectEnemies(world, WorldGeometry.lane(centre, heading, length, half, { below: 1.4, above: 2.0 }), function (enemy, facts) {
-                if (!facts.grounded()) return;
-                if (String(enemy.ref()) === String(actor.ref())) return;
-                if (!hurt(action, enemy, stompId, power, { damage: damageSpec(stompId, "tremor"), contact: true })) return;
-                hits++;
-                const away = facts.position().minus(centre);
-                if (world.valid(enemy)) {
-                    // 受击运动走原生入口：横向受碰撞限制的格数、竖向叠加速度；抗性/无敌/权限/骑乘统一处理。
-                    if (away.length() > 0.2)
-                        world.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
-                    world.hitImpulse(enemy, WorldCombat.point(0, launch, 0));
-                }
-                WorldFeedback.emit(world, stompScene, 1, facts.position(),
-                    { moment: "burst", target: String(enemy.ref()), flows: Math.max(4, Math.round(flows / 2)), scale: scale,
-                        doubled: doubled ? 1 : 0, intensity: intensity }, 22);
-            });
+            // 判定与表现共用同一组真实地表端点：逐小段落带，只按实际走到的地表取贴地的非友方，每敌一次。
+            const caught: { [ref: string]: boolean } = {};
+            for (let s = 0; s + 1 < ground.length; s++) {
+                const a = ground[s], b = ground[s + 1];
+                const flat = WorldCombat.point(b.x() - a.x(), 0, b.z() - a.z());
+                if (flat.length() < 0.05) continue;
+                const seg = WorldGeometry.flatUnit(flat, heading);
+                WorldGeometry.selectEnemies(world, WorldGeometry.lane(a, seg, flat.length(), half, { below: 1.4, above: 2.0 }),
+                    function (enemy, facts) {
+                        if (String(enemy.ref()) === String(actor.ref())) return;
+                        const ref = String(enemy.ref());
+                        if (caught[ref]) return;
+                        if (!facts.grounded()) return;
+                        caught[ref] = true;
+                        if (!hurt(action, enemy, stompId, power, { damage: damageSpec(stompId, "tremor"), contact: true })) return;
+                        hits++;
+                        const away = facts.position().minus(centre);
+                        if (world.valid(enemy)) {
+                            // 受击运动走原生入口：横向受碰撞限制的格数、竖向叠加速度；抗性/无敌/权限/骑乘统一处理。
+                            if (away.length() > 0.2)
+                                world.hitDisplace(enemy, WorldCombat.point(away.x(), 0, away.z()).unit().scale(shove));
+                            world.hitImpulse(enemy, WorldCombat.point(0, launch, 0));
+                        }
+                        WorldFeedback.emit(world, stompScene, 1, facts.position(),
+                            { moment: "burst", target: ref, flows: Math.max(4, Math.round(flows / 2)), scale: scale,
+                                doubled: doubled ? 1 : 0, intensity: intensity }, 22);
+                    });
+            }
 
-            WorldFeedback.emit(world, stompScene, 1, centre,
-                { moment: "rent", path: fissure.path, cells: rentCells, doubled: doubled ? 1 : 0, intensity: intensity }, rentTicks);
+            if (path.length >= 2) {
+                WorldFeedback.emit(world, stompScene, 1, centre,
+                    { moment: "rent", path: path, cells: rentCells, doubled: doubled ? 1 : 0, intensity: intensity }, rentTicks);
+            }
             WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.15, 0)),
                 doubled ? stompRageText : hits > 0 ? stompHitText : stompMissText, doubled || hits > 0 ? [hits] : [], 26);
             done(action);

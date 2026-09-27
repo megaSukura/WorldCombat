@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.venomdrench.summary": "Splash a ring of thick venom around the user: opponents already poisoned lose Attack, Sp. Atk and Speed together, while anyone not poisoned is only soaked and unaffected. A deep drench cuts 2 stages but covers less ground and is slower; a shallow one cuts 1 stage with a wider, quicker splash.",
+  "worldcombat.skill.venomdrench.summary": "Splash a ring of thick venom around the user: the venom pours a short way from the body to foes in range, so opponents already poisoned lose Attack, Sp. Atk and Speed together, anyone not poisoned is only soaked, and a solid block blocks the pour. A deep drench cuts 2 stages but covers less ground and is slower; a shallow one cuts 1 stage with a wider, quicker splash.",
   "worldcombat.skill.venomdrench.use.0": "Poison first, then reap: soften a poisoned foe in three stats at once",
   "worldcombat.skill.venomdrench.use.1": "Catch several poisoned enemies in one splash",
   "worldcombat.skill.venomdrench.use.2": "Stick to one tough poisoned target and drench it twice as hard",
   "worldcombat.skill.venomdrench.description.0": "Only a poisoned (or badly poisoned) foe inside the venom ring loses %1$s stages of Attack, Sp. Atk and Speed; the venom reaches %2$s blocks around the user.",
-  "worldcombat.skill.venomdrench.description.1": "Anyone not poisoned is only soaked and takes no penalty.",
+  "worldcombat.skill.venomdrench.description.1": "Anyone not poisoned is only soaked and takes no penalty; a solid block stops the pour, so nothing behind it is reached.",
   "worldcombat.skill.venomdrench.deep.on": "Deep drench: %1$s stages off each stat, but a smaller radius and a longer wind-up and cooldown.",
   "worldcombat.skill.venomdrench.deep.off": "Shallow drench: 1 stage off each stat, with a wider splash that is quicker and cheaper.",
   "worldcombat.skill.venomdrench.description.2": "%1$s wind-up, %2$s recovery, %3$s cooldown.",
@@ -25,7 +25,8 @@
   "worldcombat.skill.venomdrench.preference.ai.maxChase.help": "The companion walks in to drench only against a threat within this distance; larger means engaging from farther.",
   "worldcombat.skill.venomdrench.preference.ai.minFoes": "Minimum poisoned foes",
   "worldcombat.skill.venomdrench.preference.ai.minFoes.help": "Cast only when this many poisoned non-allies stand inside the splash radius, so the move is not wasted; 1 means one poisoned foe is enough.",
-  "world_combat.move.venomdrench.text.drenched": "Venom-soaked · Atk/SpA/Spe -%1$s",
+  "world_combat.move.venomdrench.text.drenched": "Venom-soaked · %1$s stages off Atk/SpA/Spe",
   "world_combat.move.venomdrench.text.washed": "Not poisoned, only soaked",
+  "world_combat.move.venomdrench.text.nogain": "Venom-soaked, but nothing left to cut",
   "effect.world_combat.venomdrench_drench": "Venom-Soaked"
 }

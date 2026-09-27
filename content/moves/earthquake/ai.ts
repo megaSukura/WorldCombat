@@ -1,20 +1,41 @@
 /**
  * 地震 / earthquake 的伙伴 AI 用途。
  *
- * 什么局面下出手：一个以自身为中心、只掀地面的重扫场。`ready` 要求身周 `ai.maxChase`（默认 8）格内
- * 至少站着 `ai.minFoes`（默认 2）个可见、敌对、存活、**站在地上**的目标——地震是拿来一次罩住一圈人的，
- * 只对着一个目标掀地不划算。`available` 还要求目标本身站在地上；空中的对手不在目标里，AI 不会为它转身。
- * 够不到交给共享接近逻辑；走到波及半径以内就原地砸下。
+ * 什么局面下出手：一个以自身为中心、只掀地面的重扫场。`ready` 要求**实际波及半径**内至少站着
+ * `ai.minFoes`（默认 2）个可见、敌对、存活、**站在地上**、且与施法者同层连续实地的目标——地震是拿来一次
+ * 罩住一圈人的，只对着一个目标掀地不划算。人数门槛读本个体算出的 `fissureRadius`，不是追击距离。
+ * `ai.maxChase`（默认 8）只管考虑距离，决定愿不愿意先追进去。`available` 还要求目标本身站在地上；
+ * 空中的对手不在目标里，AI 不会为它转身。够不到交给共享接近逻辑；走到波及半径以内就原地砸下。
  */
 namespace PokemonSkills {
+    /** 本个体这一招的真实波及半径；AI 人数门槛与指示圈、判定圈同源。 */
+    function earthquakeRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        return Math.max(2.8, p("earthquake", "fissureRadius",
+            { world: world, actor: world.source(), skill: skills["earthquake"], detail: { values: item.data.config } }));
+    }
+
+    /** 施法者脚面下的真实支撑点；AI 的波段与判定的波段同源。 */
+    function earthquakeCentre(context: WorldBehavior.Context, self: CompanionBehavior.Entity): CombatPoint {
+        const world = CompanionBehavior.world(context);
+        const feet = CompanionBehavior.point([self.point[0], self.point[1] - (self.height || 1.4) / 2, self.point[2]]);
+        return SurfacePaths.support(world, feet, 0.6, 3) || feet;
+    }
+
+    /** 实际波及半径内、站在地上、且与施法者同层连续实地的敌人数；悬台/另一楼层不计。 */
     function earthquakeCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
-        const limit = CompanionBehavior.ai<number>(item, "maxChase", 8);
+        const world = CompanionBehavior.world(context);
+        const centre = earthquakeCentre(context, self);
+        const band = WorldGeometry.ring(centre, 0, earthquakeRadius(context, item), { below: 2, above: 3 });
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible || other.grounded === false) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= limit) count++;
+            const point = CompanionBehavior.point(other.point);
+            if (!band.contains(point)) continue;
+            if (!earthquakeGroundLink(world, centre, point)) continue;
+            count++;
         }
         return count;
     }

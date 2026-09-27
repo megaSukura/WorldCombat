@@ -1,13 +1,13 @@
 /**
  * 变身 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者掌心展开一面镜子照住目标，一道扫描沿目标到自身的实际连线掠过；落定后一层镜壳裹住
+ * 一句话：施法者掌心展开一面镜子照住目标，一道扫描沿目标到自身的实际连线逐帧掠过；落定后一层镜壳裹住
  *   施法者，宝可梦按借到的招式数亮起镜青亮片、按特性色收束，普通主体只亮起有限的属性纹；形态撑住时
- *   镜壳低低流动，撑不住时整面壳碎开。外形模型不随形态改变——画的是「借了什么」，不是「变成了什么物种」。
+ *   镜壳低低流动，撑不住时整面壳碎开。外形模型不随形态改变——画的是「借了什么构成」，不是「变成了什么物种」。
  *
  * 色相家族：镜粉紫（0xE8B4FF）画壳与主光，镜青（0x9BE8FF）画招式亮片，虹彩只做披上那一下的强调。
- * 层次：起（windup 镜面展开）／扫（scan 目标到自身的扫描段）／披（shift 宝可梦壳 + 招式亮片；marks 普通属性纹）
- *   ／持续（hold 低密度镜光）／收（revert 自然走完、snap 被硬拆）／落空（fail）。
+ * 层次：起（windup 镜面展开）／扫（自定义 scan scene，沿两端真实连线逐帧推进）／披（shift 宝可梦壳 + 招式亮片；
+ *   marks 普通属性纹）／持续（hold 低密度镜光）／收（revert 自然走完、snap 被硬拆）／落空（fail）。
  * 数：镜面光点来自 data.motes，宝可梦分支的招式亮片数来自 data.moveCount，普通分支的属性纹数来自 data.marks，
  *   形态时长由 data.scale 派生——都由服务端按机制值算好，客户端只改数量与密度。
  */
@@ -32,28 +32,6 @@ const TransformDefinition: ParticleDefinition = {
                     rate: { data: "motes", fallback: 8 }, shape: { kind: "sphere", radius: 0.3 }, direction: "inward", speed: [0.02, 0.07],
                     lifetime: [10, 16], size: [0.16, 0.03],
                     color: 0x9BE8FF, alpha: [0.6, 0], light: "full", maxParticles: 24
-                }
-            ]
-        },
-        scan: {
-            duration: 20,
-            exit: { stop: 8, drain: 16 },
-            emitters: [
-                {
-                    name: "scan_line", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/thought_trail_small",
-                    rate: { data: "motes", fallback: 10 }, trail: { minDistance: 0.22 },
-                    shape: { kind: "polyline" }, direction: "shape", speed: [0.05, 0.13],
-                    lifetime: [8, 14], size: [0.14, 0.03],
-                    color: 0x9BE8FF, alpha: [0.8, 0], light: "full", bloom: 0.25, maxParticles: 90
-                },
-                {
-                    name: "scan_read", bind: "target", height: 0.7,
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
-                    burst: { count: { data: "moveCount", fallback: 0 } }, shape: { kind: "sphere_surface", radius: 0.5 },
-                    direction: "inward", speed: [0.03, 0.1],
-                    lifetime: [10, 16], size: [0.1, 0.02],
-                    color: 0x9BE8FF, alpha: [0.7, 0], light: "full", maxParticles: 40
                 }
             ]
         },
@@ -194,3 +172,58 @@ const TransformDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_transform", 1, TransformDefinition);
+
+/**
+ * 逐帧推进的扫描：不依赖 path+trail（静止的连线不会发射），而是每帧按 serverTick 算出进度，用真实 SDK 的
+ * sprite 从目标描到施法者。两端读 frame.anchor 的插值脚底＋身高，目标或施法者移动、换体型时扫线跟着走。
+ */
+const TransformScanScene = "world_combat:move_transform_scan";
+const TransformScanSprite = "cobblemon:particle/generic/sparkle/glowingsparkle_cyan";
+const TransformScanCapSprite = "cobblemon:particle/generic/sparkle/shinesparkle_rainbow";
+
+function transformScanPoint(frame: CombatClientFrame, vertex: any): number[] | null {
+    if (Array.isArray(vertex) && vertex.length >= 3) {
+        const x = Number(vertex[0]), y = Number(vertex[1]), z = Number(vertex[2]);
+        return isFinite(x) && isFinite(y) && isFinite(z) ? [x, y, z] : null;
+    }
+    if (typeof vertex === "string" && vertex) {
+        const raw = frame.anchor(vertex);
+        if (raw && raw !== "null") {
+            try {
+                const anchor: any = JSON.parse(raw);
+                if (anchor) {
+                    const x = Number(anchor.x), feet = Number(anchor.y), z = Number(anchor.z);
+                    const height = typeof anchor.height === "number" && isFinite(anchor.height) ? anchor.height : 1.4;
+                    if (isFinite(x) && isFinite(feet) && isFinite(z)) return [x, feet + height * 0.5, z];
+                }
+            } catch (error) { }
+        }
+    }
+    return null;
+}
+
+WorldCombatClient.scene(TransformScanScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const path = Array.isArray(data.path) ? data.path : [];
+    if (path.length < 2) return;
+    const from = transformScanPoint(frame, path[0]);
+    const to = transformScanPoint(frame, path[1]);
+    if (from === null || to === null) return;
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const duration = typeof data.duration === "number" && data.duration > 0 ? data.duration : 12;
+    const progress = Math.max(0, Math.min(1, (frame.serverTick() - start) / duration));
+    const marks = Math.max(3, Math.min(18, typeof data.moveCount === "number" && data.moveCount > 0 ? Math.round(data.moveCount) : 10));
+    const tick = frame.serverTick();
+    for (let i = 0; i < marks; i++) {
+        const t = (i + 1) / (marks + 1);
+        if (t > progress) break;
+        const x = from[0] + (to[0] - from[0]) * t;
+        const y = from[1] + (to[1] - from[1]) * t + Math.sin(tick * 0.35 + i) * 0.05;
+        const z = from[2] + (to[2] - from[2]) * t;
+        frame.sprite(TransformScanSprite, x, y, z, 0.2, 0, (0xCC9BE8FF | 0), i, true);
+    }
+    frame.sprite(TransformScanCapSprite, to[0], to[1], to[2], 0.28, 0, (0x99E8B4FF | 0), 0, true);
+});

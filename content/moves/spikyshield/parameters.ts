@@ -68,7 +68,7 @@ namespace PokemonSkills {
             F.base(1.6).plus(F.body("height").times(0.5)).clamp(1.5, 3.2).round(2),
             "藤刺半径", {
                 unit: "格",
-                description: "绕自身一圈炸开的藤刺半径；身板越大圈越宽，画面与判定同半径。"
+                description: "绕自身一圈炸开的藤刺半径；身板越大圈越宽，只决定藤刺画面的范围。护池按总量挡下敌人攻击，从不按距离结算。"
             }),
         /** 冷却：基础 80 刻 + 等级 ×0.5，夹在 80..130。 */
         charge: formula(

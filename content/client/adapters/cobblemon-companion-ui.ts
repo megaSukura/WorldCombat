@@ -17,6 +17,28 @@ namespace CobblemonCompanionUi {
         executeCommand?(item: any, aim: any, bridge: any): boolean;
         targetResolvers?: { [mode: string]: (state: any, item: any, bridge: any) => any };
     }
+    /** Logical GUI coordinates; reserve the native party rail, crosshair and bottom hotbar/status area. */
+    export function hudLayout(width: number, height: number, recalled = false): any {
+        const narrow = width < 480 || height < 280, gap = 4;
+        const columns = narrow ? 2 : 4;
+        const available = narrow ? Math.max(92, Math.floor(width / 2) - 22) : Math.max(180, width - 176);
+        const cardWidth = Math.min(88, Math.floor((available - gap * (columns - 1)) / columns));
+        const total = recalled ? Math.min(256, available) : cardWidth * columns + gap * (columns - 1);
+        const left = narrow ? width - total - 8 : Math.floor((width - total) / 2);
+        const cardHeight = 32, rows = recalled ? 0 : 4 / columns;
+        const cardsHeight = rows ? rows * cardHeight + (rows - 1) * gap : 0;
+        const hintHeight = narrow ? 24 : 12;
+        const top = height - 62 - hintHeight - cardsHeight - 16;
+        return { left, top: Math.max(5, top), width: total, columns, cardWidth, cardHeight, gap, cardsHeight, hintHeight, narrow, recalled };
+    }
+    /** Empty slots and unlimited resources are separate states, so native -1 sentinels never become player text. */
+    export function hudSlot(skill: any): any {
+        const occupied = !!(skill && skill.id), cooldown = occupied ? Math.max(0, Number(skill.cooldown) || 0) : 0;
+        const maximum = occupied && typeof skill.maximum === "number" && skill.maximum > 0 ? skill.maximum : null;
+        const remaining = maximum !== null && typeof skill.remaining === "number" && skill.remaining >= 0 ? Math.min(maximum, skill.remaining) : null;
+        return { occupied, cooldown, maximum, remaining, ratio: maximum !== null && remaining !== null ? remaining / maximum : 0,
+            exhausted: remaining === 0, unavailable: occupied && skill.available === false && !cooldown };
+    }
     export function install(config: Configuration): void {
         const J: any = Java;
         const Bridge: any = J.loadClass("dev.worldcombat.cobblemon.client.CompanionContentClient");
@@ -26,7 +48,7 @@ namespace CobblemonCompanionUi {
         const Element: any = J.loadClass("com.lowdragmc.lowdraglib2.gui.ui.UIElement");
         const Component: any = J.loadClass("net.minecraft.network.chat.Component");
         let state: any = {}, details: any = null, lastIdentity = "", ticks = 0;
-        let hud: any = null, title: any, hint: any, cards: any[] = [], bars: any[] = [];
+        let hud: any = null, title: any, phaseLabel: any, hint: any, cards: any[] = [], hudBox: any = null;
         let viewport = "", modal = "", pending: any = null, loadoutIdentity = "", language = "";
         let attributeRows: AttributeView.Row[] | null = null, attributeNature: any = null;
         const attributes = new AttributeView.View(() => close());
@@ -46,7 +68,7 @@ namespace CobblemonCompanionUi {
             change: (tab, field, value) => saveField(tab, field, value), reset: (tab, field) => {
                 if (revisions.begin(() => Bridge.request(config.channel, state.pokemon, JSON.stringify({op:"reset",move:tab.id,path:field.path,expected:tab.revision == null ? null : tab.revision})))) announce(tr("resetting", field.label));
             }, select: id => { requestedMove = id; requestedLoaded = ""; inspect(); showSettings(); }, close: () => close(), renderer: config.fieldRenderer });
-        const radial = new RadialMenu.View({ id:config.id + ":commands", legacyIds:(config.legacyIds||[]).map(id=>id+":commands"), customize:()=>{modal="layout";}, title: () => tr("command_title",state.name || tr("companion")), backLabel: () => state.backKey, confirmLabel: () => state.confirmKey, commandLabel: () => state.commandKey,
+        const radial = new RadialMenu.View({ id:config.id + ":commands", legacyIds:(config.legacyIds||[]).map(id=>id+":commands"), customize:()=>{modal="layout";}, customized:()=>{modal="radial";}, title: () => tr("command_title",state.name || tr("companion")), backLabel: () => state.backKey, confirmLabel: () => state.confirmKey, commandLabel: () => state.commandKey,
             choose: item => chooseCommand(item), close: () => close(), reject: reason => announce(reason), base: config.menuBase, highlight: config.menuHighlight, accent: config.accent,
             renderItem: config.menuRenderer });
         const picking = new UiState.Selection<any, any>({
@@ -90,21 +112,86 @@ namespace CobblemonCompanionUi {
             if (label && label.indexOf("cobblemon.move.") !== 0 && label.indexOf(config.actionPrefix) !== 0) return label;
             return id ? String(Component.translatable("cobblemon.move." + id).getString()) : tr("empty_slot");
         }
-        function buildHud(): void {
-            const r = root(), w = Host.width(), h = Host.height(), gap = 6, safe = Math.max(12, Math.round(w * 0.04));
-            const cardW = Math.max(64, Math.min(92, Math.floor((w - safe * 2 - gap * 3) / 4)));
-            const total = cardW * 4 + gap * 3, left = Math.max(safe, Math.floor((w - total) / 2));
-            const bottom = Math.max(64, Math.round(h * 0.14)), cardY = h - bottom - 32;
-            title = label(r, "", left, cardY - 22, total, 0xffeeeeee);
-            cards = []; bars = [];
-            for (let i = 0; i < 4; i++) {
-                const x = left + i * (cardW + gap), panel = UiSurfaces.panel(place(new Element(), x, cardY, cardW, 32));
-                r.addChild(panel);
-                cards.push({ name: label(panel, "", 5, 4, cardW - 14), status: label(panel, "", 5, 17, cardW - 14, 0xff444444), barWidth: cardW - 14 });
-                const bar = surface(place(new Element(), 5, 29, cardW - 14, 2), 0xff78a077, 0); panel.addChild(bar); bars.push(bar);
+        const palette = UiSurfaces.palette, labelCache: any[] = [];
+        function setLabel(widget: any, value: string, color?: number): void {
+            let cached = labelCache.filter(entry => entry.widget === widget)[0];
+            if (!cached) { cached = { widget }; labelCache.push(cached); }
+            if (cached.text !== value) { widget.setText(text(value)); cached.text = value; }
+            if (color !== undefined && cached.color !== color) { widget.getTextStyle().textColor(color | 0); cached.color = color; }
+        }
+        function fit(value: string, width: number): string { return UiSurfaces.fit(value, Math.max(1, width)); }
+        function bindingLabel(value: string, width: number): string {
+            if (UiSurfaces.measure(value) <= width) return value;
+            const at = value.lastIndexOf("+");
+            if (at < 0) return fit(value, width);
+            const key = value.slice(at);
+            return fit(value.slice(0, at), width - UiSurfaces.measure(key)) + key;
+        }
+        function buildHud(recalled: boolean): void {
+            labelCache.length = 0; const r = root(); hudBox = hudLayout(Host.width(), Host.height(), recalled);
+            const box = hudBox, header = surface(place(new Element(), box.left, box.top, box.width, 14), palette.panel, 0);
+            r.addChild(header);
+            title = label(header, "", 5, 1, box.width - 10, palette.text);
+            phaseLabel = label(header, "", 5, 1, box.width - 10, palette.muted);
+            UiSurfaces.align(phaseLabel, "right");
+            cards = [];
+            if (!recalled) for (let i = 0; i < 4; i++) {
+                const x = box.left + (i % box.columns) * (box.cardWidth + box.gap), y = box.top + 16 + Math.floor(i / box.columns) * (box.cardHeight + box.gap);
+                const panel = surface(place(new Element(), x, y, box.cardWidth, box.cardHeight), palette.panel, 0); r.addChild(panel);
+                const edge = surface(place(new Element(), 0, 0, box.cardWidth, 1), palette.border, 0); panel.addChild(edge);
+                const badge = surface(place(new Element(), 4, 15, 16, 12), palette.raised, 0); panel.addChild(badge);
+                const binding = label(badge, "", 2, 0, 12, palette.muted);
+                const name = label(panel, "", 4, 1, box.cardWidth - 8, palette.text);
+                const status = label(panel, "", 24, 14, box.cardWidth - 28, palette.muted); UiSurfaces.align(status, "right");
+                const cooldown = label(panel, "", 4, 1, box.cardWidth - 8, palette.warning); UiSurfaces.align(cooldown, "right");
+                const track = surface(place(new Element(), 4, 29, box.cardWidth - 8, 1), palette.border, 0); panel.addChild(track);
+                const bar = surface(place(new Element(), 4, 29, 0, 1), palette.accent, 0); panel.addChild(bar);
+                cards.push({ panel, edge, badge, binding, name, status, cooldown, track, bar, width: box.cardWidth, barWidth: box.cardWidth - 8, look: "" });
             }
-            hint = label(r, "", left, cardY + 38, total, 0xfff0e5c9);
+            const hintY = box.top + 16 + box.cardsHeight + (box.cardsHeight ? 3 : 0);
+            hint = label(r, "", box.left + 4, hintY, box.width - 8, palette.muted);
+            hint.lss("height", box.hintHeight); UiSurfaces.wrap(hint);
             hud = UiSurfaces.hud(config.id + ":companion", r);
+        }
+        function showHud(): void {
+            const recalled = state.entityId < 0, compact = recalled || !(state.skills || []).some((skill: any) => !!skill.id);
+            const size = Host.width() + "/" + Host.height() + "/" + compact;
+            if (!hud || viewport !== size) { viewport = size; buildHud(compact); }
+            const box = hudBox;
+            const queued = ["queued", "waiting-cooldown", "waiting-action", "approaching"].indexOf(state.reason) >= 0;
+            const phase = recalled ? tr("recalled") : queued ? tr("hud." + state.reason) : plain(phases[state.stage] || phases.idle || tr("ready"));
+            const identity = (state.name || tr("companion")) + (recalled ? "" : " · " + plain(intents[state.intent] || tr("follow")));
+            const phaseWidth = Math.min(Math.floor(box.width * .46), UiSurfaces.measure(phase));
+            setLabel(title, fit(identity, box.width - phaseWidth - 18), palette.text);
+            setLabel(phaseLabel, fit(phase, phaseWidth), queued ? palette.warning : palette.muted);
+            if (compact) return;
+            for (let i = 0; i < 4; i++) {
+                const skill = (state.skills || [])[i] || {}, facts = hudSlot(skill), card = cards[i];
+                const chosen = state.input && state.input.mode ? state.input.slot === i : state.precisionHeld && state.previewSlot === i;
+                const binding = String((state.castKeys || state.keys || [])[i] || "");
+                const keyWidth = Math.min(card.width - 24, Math.max(16, UiSurfaces.measure(binding) + 5));
+                if (card.keyWidth !== keyWidth) {
+                    card.keyWidth = keyWidth;
+                    card.badge.lss("width", keyWidth); card.binding.lss("width", keyWidth - 4);
+                    card.status.lss("left", keyWidth + 8).lss("width", card.width - keyWidth - 12);
+                }
+                setLabel(card.binding, bindingLabel(binding, keyWidth - 4), chosen ? palette.accent : palette.muted);
+                const seconds = facts.cooldown ? tr("hud.seconds", facts.cooldown < 60 ? (Math.ceil(facts.cooldown / 2) / 10).toFixed(1) : Math.ceil(facts.cooldown / 20)) : "";
+                const secondsWidth = seconds ? UiSurfaces.measure(seconds) + 5 : 0;
+                const name = facts.occupied ? localName(skill) : tr("empty_slot");
+                setLabel(card.name, fit(name, card.width - 8 - secondsWidth), facts.occupied && !facts.unavailable ? palette.text : palette.muted);
+                setLabel(card.cooldown, seconds, palette.warning);
+                let resource = facts.remaining !== null ? facts.remaining + "/" + facts.maximum : facts.occupied ? (facts.unavailable ? tr("hud.unavailable") : "—") : "";
+                if (facts.remaining !== null && UiSurfaces.measure(resource) > card.width - keyWidth - 12) resource = String(facts.remaining);
+                setLabel(card.status, fit(resource, card.width - keyWidth - 12), facts.exhausted ? palette.danger : palette.muted);
+                const look = String(chosen) + "/" + facts.occupied + "/" + facts.exhausted + "/" + facts.unavailable;
+                if (card.look !== look) {
+                    card.look = look; surface(card.panel, chosen ? palette.raised : palette.panel, 0);
+                    surface(card.edge, chosen ? palette.accent : facts.exhausted ? palette.danger : facts.unavailable ? palette.warning : palette.border, 0);
+                }
+                const width = Math.floor(card.barWidth * facts.ratio);
+                if (card.lastBar !== width) { card.bar.lss("width", width); card.lastBar = width; }
+            }
         }
         function showSettings(): void {
             modal = "settings"; picking.cancel();
@@ -145,10 +232,15 @@ namespace CobblemonCompanionUi {
             announce(tr("requested", command.label));
         }
         function chooseCommand(command: any): void {
+            if (!command.command) {
+                const aim = selectionAim(command);
+                if (config.executeCommand && config.executeCommand(command, aim, Bridge)) { close(); announce(tr("requested", command.label)); }
+                else { announce(tr("hud.no_command")); showRadial(false, true); }
+                return;
+            }
             close();
             if (command.command === "attributes") { showAttributes(); return; }
             if (command.command === "preferences") { requestedMove = command.move || ""; inspect(); showSettings(); return; }
-            if (!command.command) return;
             const resolve = config.targetResolvers && config.targetResolvers[command.target];
             if (resolve) { submit(command, resolve(state, command, Bridge)); return; }
             if (command.target === "none" || command.target === "self" || command.target === "owner") {
@@ -208,29 +300,12 @@ namespace CobblemonCompanionUi {
             if (pending && state.screen && !state.uiActive) { picking.cancel(); announce(tr("target_cancelled")); }
             // Summary dispatch supplies its selected move immediately after this identity update.
             if ((invalidated && (modal || pending || !details && !state.inspection)) || loadoutChanged && !state.inspection) inspect();
-            if (!hasAbilities()) { Host.hud(config.id + ":companion", null); hud = null; }
-            else {
-                const size = Host.width() + "/" + Host.height();
-                if (!hud || viewport !== size) { viewport = size; buildHud(); }
-                const prepared = config.hudExtra ? config.hudExtra(details) : "";
-                title.setText(text((state.name || tr("companion")) + "  ·  " + plain(intents[state.intent] || state.intent || tr("follow")) + "  ·  " +
-                    (state.entityId < 0 ? tr("recalled") : plain(phases[state.stage] || state.stage || tr("ready"))) + prepared));
-                (state.skills || []).forEach((skill: any, i: number) => {
-                    if (i > 3) return;
-                    if (!skill.id && details && details.skills) details.skills.forEach((known: any) => {
-                        if (known.slot === i) skill = { id: known.id, label: known.name, cooldown: 0, remaining: known.pp, maximum: known.maxPp };
-                    });
-                    const binding=(state.castKeys || state.keys || [])[i] || "";
-                    cards[i].name.setText(text("[" + binding + "] " + localName(skill)));
-                    UiSurfaces.tooltip(cards[i].name,[localName(skill)]);
-                    cards[i].status.setText(text(skill.cooldown > 0 ? tr("cooldown",Math.ceil(skill.cooldown / 20)) : tr("pp",skill.remaining,skill.maximum)));
-                    bars[i].lss("width", Math.max(0, Math.min(cards[i].barWidth, (skill.maximum ? skill.remaining / skill.maximum : 0) * cards[i].barWidth)));
-                });
-            }
+            if (!hasAbilities() || state.inspection || !state.pokemon) { Host.hud(config.id + ":companion", null); hud = null; }
+            else showHud();
             const reasonKey = String(state.hint || "").replace(/^worldcombat\.reason\./, "");
             const reason = plain(reasons[reasonKey] || reasons[reasonKey.replace(config.actionPrefix, "")] || config.world.explainReason(reasonKey));
             config.world.select(state, details, reason);
-            let message = reason || (noticeUntil > ticks ? notice : config.effects?.status?.(state.actor) || tr("controls",state.commandKey,state.settingsKey,state.precisionKey));
+            let message = reason || (noticeUntil > ticks ? notice : config.effects?.status?.(state.actor) || tr("hud.controls",state.commandKey,state.settingsKey));
             if (!pending && state.input && state.input.mode) {
                 const selected=(state.skills||[])[state.input.slot];
                 message=state.input.mode === "sustained" ? tr("channel_hint",selected?localName(selected):"",state.cancelKey,state.backKey)
@@ -258,7 +333,16 @@ namespace CobblemonCompanionUi {
                     Bridge.indicator(JSON.stringify({ key: config.id + ":command", type: config.selectionScene, version: 1, position: [at.x, at.y, at.z], data: data }));
                 }
             }
-            if (hud && hint) hint.setText(text(message));
+            if (hud && hint) {
+                const extra = config.hudExtra ? config.hudExtra(details) : "";
+                const quiet = !pending && !(state.input && state.input.mode) && !state.precisionHeld && !reason && noticeUntil <= ticks;
+                if (quiet && extra) message = extra + " · " + message;
+                const lines = UiSurfaces.lines(message, Math.max(1, hudBox.width - 8));
+                const maxLines = hudBox.narrow ? 2 : 1;
+                const visible = lines.slice(0, maxLines);
+                if (lines.length > maxLines) visible[maxLines - 1] = fit(visible[maxLines - 1] + "…", hudBox.width - 8);
+                setLabel(hint, visible.join("\n"), quiet ? palette.muted : palette.warning);
+            }
             const currentLanguage=UiSurfaces.locale();
             if(language!==currentLanguage){language=currentLanguage;if(modal==="settings")showSettings();else if(modal==="attributes")showAttributes(false);else if(modal==="radial")radial.open(false);else if(modal==="layout")radial.refreshLocale();}
             if (modal === "radial") radial.refresh();

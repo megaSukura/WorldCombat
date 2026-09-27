@@ -1,12 +1,12 @@
 /**
  * 杂技 / acrobatics 的客户端表现。
  *
- * 一句话：施法者压成弹簧蓄势，脚边卷起一圈风丝，随后腾身翻滚着撞出去，在接触点炸开一片近白气旋，
- * 再顺着势头从对方身侧滑过、留下一道贴地风尘。
+ * 一句话：施法者压成弹簧蓄势，脚边卷起一圈风丝，随后向一侧腾身、沿短侧弧切入对方身侧，在真实接触点炸开一片近白气旋，
+ * 再顺着余势从身侧掠过、留下一道贴地风尘。
  * 色相家族：近白与浅青（swirlingwind / impact_flying / speedlines）为体，没有饱和色；空手翻倍时颜色更亮、气旋更密。
- * 拍子：起（crouch 蓄势）→ 飞（launch 腾身）→ 击（impact 气旋爆）→ 收（miss 冲空 / 滑出）。
- * 范围：impact 绑命中点，画出的就是撞中的位置；launch 的风丝沿施法者实际翻过的轨迹铺开。
- * 运动：蓄势时风丝内旋，翻滚时气旋沿历史拖尾，命中是外向的浅青爆，滑出是贴地风尘。
+ * 拍子：起（crouch 蓄势）→ 腾（launch 侧弧腾身）→ 击（impact 气旋爆）→ 收（miss 冲空 / 余势滑出）。
+ * 范围：impact 绑真实接触的回执点，画出的就是撞中的位置；launch 的风丝绑施法者本体、沿它实际走出的侧弧拖尾。
+ * 运动：蓄势时风丝内旋，腾身时气旋沿本体移动的历史拖尾，命中是外向的浅青爆，收势是贴地风尘。
  * 数：`data.motes`（速度派生的气旋数）驱动腾身与命中的粒子量；`data.intensity`（本击伤害占比）放大爆发，`data.bare` 使空手那一翻更亮更密。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -32,7 +32,7 @@ const AcrobaticsDefinition: ParticleDefinition = {
             exit: { stop: 30, drain: 14 },
             emitters: [
                 {
-                    name: "spin", bind: "source", offset: [0, 0.4, 0], height: 0.3,
+                    name: "vault", bind: "source", offset: [0, 0.4, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     rate: { data: "motes", fallback: 14 }, trail: { minDistance: 0.34 },
                     shape: { kind: "sphere", radius: 0.34 },
@@ -55,7 +55,7 @@ const AcrobaticsDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 18 },
             emitters: [
                 {
-                    name: "core", bind: "target", height: 0.45,
+                    name: "core", bind: "point", offset: [0, 0.45, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_flying",
                     burst: { count: 16, at: 1 },
                     shape: { kind: "sphere", radius: 0.36 },
@@ -64,7 +64,7 @@ const AcrobaticsDefinition: ParticleDefinition = {
                     color: 0xF2FBFF, alpha: [1, 0], light: "full", bloom: 0.4, maxParticles: 50
                 },
                 {
-                    name: "gale", bind: "target", height: 0.4,
+                    name: "gale", bind: "point", offset: [0, 0.4, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
                     burst: { count: { data: "motes", fallback: 14 } },
                     shape: { kind: "sphere", radius: 0.42 },
@@ -73,7 +73,7 @@ const AcrobaticsDefinition: ParticleDefinition = {
                     color: 0xD6F0FF, alpha: [0.7, 0], light: "world", maxParticles: 130
                 },
                 {
-                    name: "ring", bind: "target", offset: [0, 0.08, 0], height: 0,
+                    name: "ring", bind: "point", offset: [0, 0.08, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 1 }, shape: { kind: "ring", radius: 0.9 },
                     direction: "outward", speed: [0.0, 0.0],

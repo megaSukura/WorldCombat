@@ -3,7 +3,7 @@
   "worldcombat.skill.faketears.use.0": "贴脸削掉一个特攻输出的特防",
   "worldcombat.skill.faketears.use.1": "为队友的特攻集火打开一个缺口",
   "worldcombat.skill.faketears.use.2": "在对手躲不开视线的距离上装哭",
-  "worldcombat.skill.faketears.description.0": "命中后目标特防下降 %1$s 级，这次下降不会随失神结束而恢复，要等脱战或特防被重置；目标还会挂上一段约 %2$s 的失神标记，它本身不改变属性或行动，只用来防止重复装哭。",
+  "worldcombat.skill.faketears.description.0": "命中后目标特防下降 %1$s 级，这次下降不会随失神结束而恢复，要等脱战或特防被重置；目标还会挂上一段约 %2$s 的失神标记，它本身不改变属性或行动，只用来防止重复装哭。它不造成伤害，所以打在睡着的目标身上也不会把它惊醒。",
   "worldcombat.skill.faketears.description.1": "假哭要在 %1$s 格内、且视线没有被挡住才送得到；不要求对方正看向施法者，命中也不会把它定住。",
   "worldcombat.skill.faketears.description.2": "憋红眼圈 %1$s，冷却 %2$s。",
   "worldcombat.skill.faketears.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

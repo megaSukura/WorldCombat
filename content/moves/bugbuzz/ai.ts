@@ -1,9 +1,10 @@
 /**
  * 虫鸣 / bugbuzz —— AI 用途。
  *
- * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 11）格内；声波是瞬时锥形，交战时先收身位再鸣。
+ * 出手局面：目标敌对、存活，且在 `ai.maxChase`（默认 11）格内；声波是瞬时锥形，交战时先收身位再鸣。
  * 对谁出手：`ai.crowd`（默认开）打开时，数一数目标方向前方的实际锥面里还挤着几个非友方（含目标），
  *   按本个体真实的音波张角判定——一道声波能同时判定多人，那正是它最值的时候；关闭则只按普通远程攻击排序。
+ *   声音穿墙，失去视线后可朝 3 秒内最后看见的敌人位置鸣叫。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进锥长之后再鸣。
  * 放完接什么：交回共享交战计划；它是一次性覆盖，不负责收尾。
  */
@@ -20,7 +21,7 @@ namespace PokemonSkills {
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly || other.health <= 0 || other.ref === String(context.actor)) continue;
+            if (!other.visible || other.friendly || other.health <= 0 || other.ref === String(context.actor)) continue;
             const ox = other.point[0] - self[0], oz = other.point[2] - self[2], distance = Math.sqrt(ox * ox + oz * oz);
             if (distance > length) continue;
             if (distance < 1e-6 || (ox / distance) * ux + (oz / distance) * uz >= cosHalf - 1e-12) count++;
@@ -30,6 +31,7 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("bugbuzz", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
+        memoryAim: true,
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
@@ -38,7 +40,7 @@ namespace PokemonSkills {
                 <= CompanionBehavior.ai<number>(capability, "maxChase", 11);
         },
         accepts: function (context, capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return !!target.memoryAim || target.visible && !target.friendly && target.health > 0;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;

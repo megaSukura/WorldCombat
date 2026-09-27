@@ -6,8 +6,9 @@
  *
  * 两幕：
  *   起（windup，提交前）：先在手心拢起一捧水（moment gather），只播预告；准备可被打断，不花代价。
- *   铺（execute，提交后）：水环从脚点开始按刻向外推，半径从 0 长到 radius；每推一格，圈内的自己与伙伴
- *     被扫到就回一次血（每个目标只回一次），同时续播 spread 的水环；走完整圈后 settle 收势。
+ *   铺（execute，提交后）：水环从脚点开始按刻向外推，半径从 0 长到 radius；每推一格，查当前水前缘半径内
+ *     贴地的自己与伙伴——身体要和脚点这一层接触，且水沿地面推进的路径上不被墙或台阶挡住；被扫到就回一次血
+ *     （每个目标只回一次），同时续播 spread 的水环；走完整圈后 settle 收势。
  *
  * 与同族分开：花疗是撒向单个伙伴、在伤者脚下开花；治愈波动是一圈会被身体挡下的波。生命水滴是**自我为心、
  *   贴地铺开的水**，一边走一边把圈里的自己与伙伴一起救回来。与丛林治疗分开：水会走、只回血、不留地面；
@@ -85,7 +86,8 @@ namespace PokemonSkills {
             const world = action.world(), self = action.actor(), body = world.observe(self);
             if (body === null) { done(action); return; }
             const origin = body.position();
-            const ground = WorldCombat.point(origin.x(), origin.y() - body.height() / 2 + 0.03, origin.z());
+            const groundY = origin.y() - body.height() / 2;
+            const ground = WorldCombat.point(origin.x(), groundY + 0.03, origin.z());
             const fraction = Math.max(0, Math.min(1, p(lifedewId, "heal", action)));
             const radius = Math.max(1.2, p(lifedewId, "radius", action));
             const spread = Math.max(4, Math.round(p(lifedewId, "spread", action)));
@@ -115,15 +117,25 @@ namespace PokemonSkills {
                 const scope = current.world();
                 elapsed++;
                 const ring = Math.max(0.3, radius * Math.min(1, elapsed / spread));
-                const actors = scope.query(ground, ring, false);
-                for (let i = 0; i < actors.length; i++) {
-                    const other = actors[i], ref = String(other.ref());
-                    if (swept[ref] || !scope.valid(other) || !scope.friendly(other)) continue;
+                const plane = ground.y();
+                // 按当前水前缘半径查真实身体箱：贴地接触、水路上无墙/台阶才入圈。
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySphere(ground, ring), function (other, facts) {
+                    const ref = String(other.ref());
+                    if (swept[ref] || !scope.valid(other) || !scope.friendly(other)) return;
+                    const min = facts.boundsMin(), max = facts.boundsMax();
+                    // 贴地：身体要与脚点这一层接触；悬空、站上台阶或隔层都扫不到。
+                    if (max.y() < plane - 0.35 || min.y() > plane + 1.6) return;
+                    const nx = Math.max(min.x(), Math.min(max.x(), ground.x()));
+                    const nz = Math.max(min.z(), Math.min(max.z(), ground.z()));
+                    if (Math.sqrt((nx - ground.x()) * (nx - ground.x()) + (nz - ground.z()) * (nz - ground.z())) > ring) return;
+                    // 阻挡：水沿地面推进，被墙或台阶挡住的伙伴不入圈；只按真实方块接触判定，畅通不算阻挡。
+                    const reach = WorldCombat.point(facts.position().x(), plane + 0.2, facts.position().z());
+                    if (WorldGeometry.blockHit(scope, ground, reach) !== null) return;
                     swept[ref] = true;
                     const before = scope.observe(other);
-                    if (before === null) continue;
+                    if (before === null) return;
                     const gained = lifedewHeal(scope, other, fraction, "lifedew");
-                    if (gained <= 0) continue;
+                    if (gained <= 0) return;
                     count++; total += gained;
                     const after = scope.observe(other);
                     const point = after === null ? before.position() : after.position();
@@ -132,7 +144,7 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, lifedewScene, 1, point,
                         { moment: "splash", target: ref, gained: Math.round(gained * 10) / 10, share: share,
                             motes: Math.max(8, Math.round(motes * (0.5 + share / 2))), scale: baseScale }, 20);
-                }
+                });
                 WorldFeedback.keep(scope, "world_combat:move_lifedew/wave/" + String(self.ref()), lifedewScene, 1, ground,
                     { moment: "spread", radius: ring, motes: motes, scale: ring / lifedewReferenceRadius, progress: elapsed / spread }, 10);
                 if (elapsed >= spread) { finish(); return; }

@@ -13,6 +13,10 @@
  *   落（settle）：风暴走完，被甩出去的花瓣落在地面、随即渐消（独立余波，按本身寿命）。
  *
  * 位移走共享受击位移契约：目标受击位移抗性拒绝或事件取消时位置不动，但这一阵的花瓣切割照常结算。
+ * 风暴锁在开招点：所有阵共用同一个中心，指示圈、判定圈与表现圈都是这个点上的 `stormRadius`。
+ * 隔墙不割：每一阵先把圈内每个目标从中心真实通视一遍，被挡住的既不结算、也不占本阵名额。
+ * 纯上下方的目标只免掉水平那一拽/一甩，垂直方向与后续阵的流程照常。
+ * 末阵留一段可读短尾再收势，最后一阵的向外甩方向能被看清，尾巴不产生任何伤害。
  *
  * 配置 `cyclone`（回旋式）由 resolve 改时序、由公式改半径与每阵威力：开启＝窄而重、多一阵、拽甩更猛。
  */
@@ -60,8 +64,8 @@ namespace PokemonSkills {
         execute: function (action, move, config, done) {
             const storm = WorldFeedback.actionScenes(petalblizzardScene, 1);
             const world = action.world();
-            const body = world.observe(action.actor());
-            const centre = body !== null ? body.position() : action.origin();
+            // 风暴锁在开招点：整个动作共用这一个中心，指示圈、判定圈与表现圈都是它。
+            const centre = action.origin();
             const radius = Math.max(2.4, p("petalblizzard", "stormRadius", action));
             const power = p("petalblizzard", "petal", action);
             const draw = p("petalblizzard", "draw", action);
@@ -72,6 +76,8 @@ namespace PokemonSkills {
             const settleTicks = Math.max(30, Math.round(p("petalblizzard", "settleTicks", action)));
             const cap = Math.max(1, Math.round(p("petalblizzard", "maxTargets", action)));
             const scale = radius / 4.0;
+            // 末阵之后留一段可读短尾：最后一阵继续发射、方向可读，短尾内不再造成任何伤害。
+            const tail = Math.max(6, Math.round(interval * 0.6));
             const touched: { [ref: string]: boolean } = {};
             let index = 0, targets = 0, hits = 0, settled = false, phase = "";
 
@@ -88,12 +94,16 @@ namespace PokemonSkills {
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, 0, radius, { below: 2.5, above: 3 }), function (enemy, facts) {
                     const ref = String(enemy.ref());
                     if (ref === String(current.actor().ref())) return;
+                    // 真实遮挡：墙/地形挡住的目标不进本阵名额，也不吃这一阵的切割。
+                    if (WorldGeometry.blockHit(scope, centre, facts.position()) !== null) return;
                     if (!touched[ref]) { if (targets >= cap) return; touched[ref] = true; targets++; }
                     if (!hurt(current, enemy, "petalblizzard", power, { damage: damageSpec("petalblizzard", "petal"), slice: true })) return;
                     hits++;
+                    // 纯上/下目标只免掉水平拽甩；先量水平长度再 unit，绝不对零向量求单位。
                     const away = facts.position().minus(centre);
-                    if (scope.valid(enemy) && away.length() > 0.15) {
-                        const direction = WorldCombat.point(away.x(), 0, away.z()).unit();
+                    const flat = WorldCombat.point(away.x(), 0, away.z());
+                    if (scope.valid(enemy) && flat.length() > 0.15) {
+                        const direction = flat.unit();
                         // 受击位移：抗性或事件取消时返回 0，位置不动，但这一阵的花瓣切割已经结算。
                         scope.hitDisplace(enemy, inward ? direction.scale(-draw) : direction.scale(lash));
                     }
@@ -102,7 +112,7 @@ namespace PokemonSkills {
                             count: Math.round(10 + power * 0.3), inward: inward ? 1 : 0 }, 20);
                 });
                 index++;
-                if (index >= gusts) { finish(current); return; }
+                if (index >= gusts) { current.after(tail, finish); return; }
                 current.after(interval, gust);
             }
 

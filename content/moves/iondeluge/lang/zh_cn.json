@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.iondeluge.summary": "在选定地面铺开带电粒子浴场：站在里面的任何人出一般属性招式时，那招变成电属性。对双方都生效，铺在哪里是真正的选择。",
+  "worldcombat.skill.iondeluge.summary": "在选定地面铺开带电粒子浴场：站在里面（或刚离开）的任何人出一般属性招式时，那招变成电属性，普通MC生物的普通近战攻击同样会被转电。对双方都生效，铺在哪里是真正的选择。",
   "worldcombat.skill.iondeluge.use.0": "把普通招转电",
   "worldcombat.skill.iondeluge.use.1": "铺场干扰对手",
   "worldcombat.skill.iondeluge.use.2": "电系队伍增益",
-  "worldcombat.skill.iondeluge.description.0": "在 %1$s 格内选定地面，铺开半径 %2$s 格、持续 %3$s 秒的浴场；站在里面、且与中心视线通畅的人身上挂一层离子膜，出一般属性招式时那招变成电属性。浴场铺下后固定在地面，中心离开你超过 48 格时自动结束。",
+  "worldcombat.skill.iondeluge.description.0": "在 %1$s 格内选定地面，铺开半径 %2$s 格、持续 %3$s 秒的浴场；站在里面、且与中心视线通畅的人身上挂一层离子膜，出一般属性招式时那招变成电属性（普通MC生物的普通近战攻击同样会被转电）。浴场铺下后固定在地面，中心离开你超过 48 格时自动结束。",
   "worldcombat.skill.iondeluge.description.1": "离开浴场后，身上的离子膜仍会停留约 %1$s 刻，其间出一般属性招式依旧会变成电属性。浴场对双方一视同仁：既能强化自己，也可能把对手的普通招变成电招（被地面免疫或被电吸收特性吃掉）。",
   "worldcombat.skill.iondeluge.wide.0": "广域浴场：半径 ×1.3，但持续 -30%、冷却 +0.6 秒，适合快速改变一条战线。",
   "worldcombat.skill.iondeluge.wide.1": "持久浴场：半径 ×0.85，但持续 +40%、冷却 -0.6 秒，适合守住一小块要地。",

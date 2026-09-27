@@ -1,15 +1,15 @@
 /**
  * 奇异之风 / ominouswind —— 注册与动作。
  *
- * 核心念头：一道贴着地面窜出的幽风追着目标跑，途中不伤人，到了实际终点才突然炸开、从四面朝中心收拢；
+ * 核心念头：一道幽风从施放点窜出、在真实 3D 空间里追着目标跑，途中不伤人，到了实际终点才突然炸开、从四面朝中心收拢；
  *   一缕冷气倒卷回自身，有概率把五项战斗能力各抬一级。
  *
  * 三幕：
- *   起（gather，提交前）：施法者脚边卷起一圈冷雾、幽丝朝身前收，只播预告。
- *   奔（travel）：提交后幽风从脚下窜出，沿实际航向以每刻限定的转角追踪目标；总路程等于 `travel`，
+ *   起（gather，提交前）：施法者身边卷起一圈冷雾、幽丝朝身前收，只播预告。
+ *   奔（travel）：提交后幽风从施放点窜出，沿实际航向以每刻限定的转角做 3D 追踪；总路程等于 `travel`，
  *       撞墙就在真实方块格提前收风，路程耗尽就在当前光标收风——绝不跳到目标位置瞬移。
- *   收（coil → hit / miss）：在实际终点炸开 `coilRadius` 一圈，只对可见且视线可达的敌人各结算一次 `squall`
- *       特殊伤害、朝中心收拢不超过 `pull`（不越过中心）；随后掷一次反哺，只按实际提高的项反馈，窗口保持一层。
+ *   收（coil → hit / miss）：在实际终点炸开 `coilRadius` 一圈，对与终点之间无遮挡的敌人各结算一次 `squall`
+ *       特殊伤害、朝中心收拢不超过 `pull`（不越过中心，走 hitDisplace 保留原生抗击退）；随后掷一次反哺，只按实际提高的项反馈，窗口保持一层。
  *
  * `kind: "aim"`：可对准任意实体或世界点；没有目标时朝瞄准方向前进，目标离场后按最后方向走完预算。
  */
@@ -35,7 +35,7 @@ namespace PokemonSkills {
         id: "ominouswind",
         cooldownParameter: "recharge",
         name: "Ominous Wind",
-        description: "放出一道贴地奔袭的幽风：它沿有限的总路程、每刻限角追踪目标，途中只聚势，到实际终点才炸开，把那一圈视线可达的敌人朝中心收拢并造成特殊伤害；若是撞墙，就在墙面真实碰点提前卷起。回卷的冷气有概率把自身五项战斗能力短时各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
+        description: "放出一道在真实三维空间里奔袭的幽风：它沿有限的总路程、每刻限角追踪目标，途中只聚势，到实际终点才炸开，把那一圈与终点之间无遮挡的敌人朝中心收拢并造成特殊伤害；若是撞墙，就在墙面真实碰点提前卷起。回卷的冷气有概率把自身五项战斗能力短时各抬一级。缠魄式窄而重、收得更紧；漫游式快而宽。",
         uses: ["对准一个远处目标，让幽风自己追上去收拢", "把目标从掩体或队友身边朝中心拽近", "抓住反哺后的短时强化窗口进攻"],
         kind: "aim",
         range: 11,
@@ -89,7 +89,7 @@ namespace PokemonSkills {
             const scale = Math.max(0.6, Math.min(2.2, coilRadius / 2.0));
             const intensity = Math.max(0.5, Math.min(2.4, power / 62));
             const initial = aimPoint.minus(start);
-            let heading = initial.length() > 0.05 ? initial.unit() : WorldGeometry.flatUnit(action.direction(), WorldCombat.point(0, 0, 1));
+            let heading = initial.length() > 0.05 ? initial.unit() : WorldGeometry.basis(action.direction(), WorldCombat.point(0, 0, 1)).forward;
             let cursor = start, travelled = 0;
             const maxSteps = Math.max(3, Math.ceil(reach / Math.max(0.3, speed)) + 8);
             const trail: number[][] = [[start.x(), start.y() + 0.4, start.z()]];
@@ -110,15 +110,16 @@ namespace PokemonSkills {
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(end, 0, coilRadius, { below: 2, above: 2.5 }), function (enemy, facts) {
                     if (String(enemy.ref()) === String(actor.ref())) return;
                     const point = facts.position();
-                    if (!facts.visible() || !scope.clear(end, point)) return;
+                    // 终点只按爆点到敌人的真实遮挡判定；初始选人仍遵守可见/显式记忆政策。
+                    if (!scope.clear(end, point)) return;
                     if (!hurt(current, enemy, "ominouswind", power, { damage: damageSpec("ominouswind", "squall") })) return;
                     hits++;
                     const inward = end.minus(point);
                     const distance = inward.length();
                     if (scope.valid(enemy) && distance > 0.15) {
-                        // 按当前真终点求值：只收拢到中心附近，不越过中心。
+                        // 按当前真终点求值：只收拢到中心附近，不越过中心；走原生受击入口，抗击退属性照常生效。
                         const pullNow = Math.min(pull, distance - 0.2);
-                        if (pullNow > 0.05) scope.displace(enemy, inward.unit().scale(pullNow));
+                        if (pullNow > 0.05) scope.hitDisplace(enemy, inward.unit().scale(pullNow));
                     }
                     WorldFeedback.emit(scope, ominouswindScene, 1, point,
                         { moment: "hit", target: String(enemy.ref()), radius: coilRadius, wisps: wisps, scale: scale, intensity: intensity }, 22);
@@ -184,8 +185,10 @@ namespace PokemonSkills {
                 travelled += moved;
                 trail.push([cursor.x(), cursor.y() + 0.4, cursor.z()]);
                 if (trail.length > 24) trail.shift();
+                // 前缘是当前光标点；尾迹只带最近几段，不靠整段历史线假装移动。
                 scenes.show(current, "travel", cursor,
-                    { moment: "travel", radius: coilRadius, wisps: wisps, scale: scale, intensity: intensity, path: trail.slice() });
+                    { moment: "travel", radius: coilRadius, wisps: wisps, scale: scale, intensity: intensity,
+                      path: trail.slice(Math.max(0, trail.length - 4)) });
                 if (face) { coil(current, cursor, face); return; }
                 if (moved < 0.02) { coil(current, cursor, ""); return; }
                 current.after(1, function (next2: CombatAction) { advance(next2, index + 1); });

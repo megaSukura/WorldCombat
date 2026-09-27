@@ -24,8 +24,6 @@
   "worldcombat.skill.celebrate.preference.ai.safeRange.help": "The partner will not start a party while a hostile is inside this range; smaller parties closer in, larger waits until the team is truly out of contact.",
   "worldcombat.skill.celebrate.preference.ai.minAllies": "Minimum company",
   "worldcombat.skill.celebrate.preference.ai.minAllies.help": "At least this many friendlies (itself included) must be nearby to celebrate; 1 parties even alone, larger waits for a crowd.",
-  "worldcombat.skill.celebrate.preference.ai.leaveStation": "Leave post",
-  "worldcombat.skill.celebrate.preference.ai.leaveStation.help": "When on, the partner will also leave its post to throw a party for the team.",
   "world_combat.move.celebrate.text.cheer": "Celebrate! %1$s allies gain a travel burst",
   "world_combat.move.celebrate.text.mend": "Celebrate! %1$s allies recover %2$s",
   "effect.world_combat.celebrate_spirit": "Celebrating"

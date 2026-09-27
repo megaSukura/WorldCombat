@@ -26,7 +26,7 @@ namespace PokemonSkills {
         id: "wavecrash",
         cooldownParameter: "recharge",
         name: "Wave Crash",
-        description: "冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳更注重防护，薄水刃提供更远射程。",
+        description: "冲撞并击退目标，使其湿透，自身承受反伤。施法者已湿透时威力提高；厚水壳威力更高、只减轻自身反伤、挂湿更久，薄水刃提供更远射程。",
         uses: ["裹水冲开一个目标", "把目标浇透，留给后续的水与电", "在雨里或水里冲出去，水势更盛"],
         kind: "aim",
         range: 4.2,
@@ -54,12 +54,11 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             action.present("world_combat:move_wavecrash:cloak", wavecrashScene, 1, action.origin(),
-                JSON.stringify({ moment: "cloak", thick: !!(config && config.thick) }));
+                JSON.stringify({ moment: "cloak", windup: prepare, thick: !!(config && config.thick) }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(wavecrashScene);
-            const world = action.world();
             const actor = action.actor();
             const length = p("wavecrash", "rush", action);
             const pace = p("wavecrash", "pace", action);
@@ -70,20 +69,18 @@ namespace PokemonSkills {
             const drenchTicks = Math.max(20, Math.round(p("wavecrash", "drench", action)));
             const push = p("wavecrash", "push", action);
             const spray = Math.round(p("wavecrash", "spray", action));
-            const thick = !!(config && config.thick);
-            const self = world.observe(actor);
-            const wet = self !== null && self.wet();
             const direction = WorldGeometry.flatUnit(aim(action), action.direction());
             // 喷流用显式后方向：surge 阶段把背向冲势的向量放进 data.direction，供 orient:"direction" 使用。
             const back = WorldCombat.point(-direction.x(), -direction.y(), -direction.z());
             const backData: number[] = [back.x(), back.y(), back.z()];
             const scale = radius / 0.6;
-            const shellRadius = Math.round(scale * (thick ? 1.15 : 1) * 100) / 100;
-            const boost = (wet ? 1.15 : 1) * (thick ? 1.08 : 1);
-            const intensity = Math.max(0.6, Math.min(2.6, power / 115 * boost));
+            // 水壳宽度就是本招的判定半径：presentation 的 shell 走 fit:"world"，这里传实际格数，只缩放一次。
+            const shell = radius;
+            // 威力公式已把湿身 ×1.12、厚壳 ×1.08 算进 power；强度不再重复乘这两项。
+            const intensity = Math.max(0.6, Math.min(2.6, power / 115));
             let travelled = 0, settled = false;
 
-            movementScenes.show(action, "surge", action.origin(), { moment: "surge", spray: spray, shell: shellRadius, scale: scale, intensity: intensity, direction: backData });
+            movementScenes.show(action, "surge", action.origin(), { moment: "surge", spray: spray, shell: shell, scale: scale, intensity: intensity, direction: backData });
             sound(action, "cobblemon:move.waterpulse.actor");
             sound(action, "minecraft:item.trident.riptide_1");
 
@@ -114,12 +111,14 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, wavecrashScene, 1, point,
                         { moment: "impact", target: target ? String(target.ref()) : "", spray: spray, scale: scale,
                             direction: [direction.x(), direction.y(), direction.z()],
-                            intensity: Math.max(0.6, Math.min(2.6, power / 110 * boost)) }, 30);
+                            intensity: Math.max(0.6, Math.min(2.6, power / 110)) }, 30);
                     sound(current, "cobblemon:impact.water");
                     if (landed && target !== null && scope.valid(target)) {
                         scope.hitDisplace(target, direction.scale(push));
-                        if (!CombatStatus.has(scope, target, "soaked")) {
-                            CombatStatus.apply(scope, target, "soaked", WavecrashSoaked, drenchTicks);
+                        // 湿身走共享来源策略：只刷新本招自己的载体，不写 unique，不清掉别的更强生产者的额外层。
+                        const hadSoak = CombatStatus.has(scope, target, "soaked");
+                        const drenched = CombatStatus.apply(scope, target, "soaked", WavecrashSoaked, drenchTicks);
+                        if (!hadSoak && drenched) {
                             WorldFeedback.emit(scope, wavecrashScene, 1, point,
                                 { moment: "drench", target: String(target.ref()), spray: spray, scale: scale }, 26);
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), wavecrashDrenchText, [], 26);
@@ -134,7 +133,7 @@ namespace PokemonSkills {
                 const moved = swept.moved;
                 travelled += moved;
                 if (hit.blocked() || moved < minimumMove || travelled >= length) { spill(current); return; }
-                movementScenes.show(current, "surge", origin, { moment: "surge", spray: spray, shell: shellRadius, scale: scale, intensity: intensity,
+                movementScenes.show(current, "surge", origin, { moment: "surge", spray: spray, shell: shell, scale: scale, intensity: intensity,
                         direction: backData, ratio: Math.min(1, travelled / Math.max(0.001, length)) });
                 current.after(1, advance);
             }

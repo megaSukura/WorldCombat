@@ -80,23 +80,6 @@ const PsychicDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.04, 0.14],
                     lifetime: [10, 18], size: [0.07, 0.01],
                     color: 0x8E7BC0, alpha: [0.6, 0], light: "full", maxParticles: 80
-                },
-                {
-                    name: "tether", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
-                    rate: { data: "spirals", fallback: 14 },
-                    shape: { kind: "polyline" }, direction: "shape", speed: [0.02, 0.09], spread: 14, spin: 8,
-                    lifetime: [8, 14], size: [0.12, 0.02],
-                    color: 0xB49CF0, alpha: [0.8, 0], light: "full", maxParticles: 70
-                },
-                {
-                    name: "anchor", bind: "point", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    burst: { count: 1, interval: 5, repeats: 3 },
-                    shape: { kind: "ring", radius: 0.22 },
-                    direction: "outward", speed: [0.02, 0.08], spin: 10,
-                    lifetime: [8, 14], size: [0.16, 0.34],
-                    color: 0x9B7BEE, alpha: [0.7, 0], light: "full", maxParticles: 8
                 }
             ]
         },
@@ -178,6 +161,21 @@ const PsychicDefinition: ParticleDefinition = {
                 }
             ]
         },
+        resist: {
+            duration: 22,
+            exit: { stop: 9, drain: 14 },
+            emitters: [
+                {
+                    name: "break", bind: "point", fit: "none", offset: [0, 0.2, 0],
+                    particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
+                    burst: { count: 10 },
+                    shape: { kind: "sphere", radius: 0.32 },
+                    direction: "outward", speed: [0.05, 0.2], spread: 24,
+                    lifetime: [8, 14], size: [0.16, 0.32],
+                    color: 0x6B58A0, alpha: [0.6, 0], light: "world", maxParticles: 20
+                }
+            ]
+        },
         release: {
             duration: 18,
             exit: { stop: 8, drain: 14 },
@@ -197,3 +195,44 @@ const PsychicDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_psychic", 1, PsychicDefinition);
+
+/**
+ * 持续操纵轮廓（自定义客户端场景，不生成粒子或实体）：
+ * 服务端把当刻真实锚点、剩余拖移预算、抗推张力与念力丝数交给客户端，这里每帧画出
+ * 施法者→目标的念力丝、目标→锚点的牵引头、锚点标记与「还能拖多远」的预算环；
+ * 抗推（strain）时念力丝转亮粉，读作念力手绷紧而没有把目标推走。
+ * 它绑在本招 carrier 上，松手、取消或驱散时随 carrier 一起消失，不留残影。
+ */
+WorldCombatClient.scene("world_combat:move_psychic_grip", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.moment !== "grip") return;
+    const source = JSON.parse(frame.anchor(typeof data.actor === "string" && data.actor ? data.actor : entry.source));
+    const target = typeof data.target === "string" && data.target ? JSON.parse(frame.anchor(data.target)) : null;
+    if (!source || !target) return;
+    const sh = source.height > 0 ? source.height : 1.4, th = target.height > 0 ? target.height : 1.4;
+    const sx = Number(source.x) || 0, sy = (Number(source.y) || 0) + sh * 0.62, sz = Number(source.z) || 0;
+    const tx = Number(target.x) || 0, ty = (Number(target.y) || 0) + th * 0.5, tz = Number(target.z) || 0;
+    const anchor = Array.isArray(data.point) && data.point.length === 3
+        ? [Number(data.point[0]) || 0, Number(data.point[1]) || 0, Number(data.point[2]) || 0] : [tx, ty, tz];
+    const budget = typeof data.budget === "number" && isFinite(data.budget) && data.budget > 0 ? data.budget : 1;
+    const remaining = typeof data.remaining === "number" && isFinite(data.remaining) ? Math.max(0, data.remaining) : budget;
+    const spentFrac = Math.max(0, Math.min(1, 1 - remaining / budget));
+    const strain = data.strain === 1;
+    const tick = frame.serverTick();
+    const pulse = 0.55 + 0.3 * Math.sin(tick * 0.4);
+    const strands = Math.max(3, Math.min(12, Math.round(typeof data.spirals === "number" ? data.spirals : 8)));
+    const charge = Math.max(0.35, Math.min(1, typeof data.intensity === "number" ? data.intensity : 1));
+    const thread = (strain ? (((Math.round(pulse * 255) << 24) | 0xE070D0) | 0) : (((Math.round(pulse * 210) << 24) | 0xB49CF0) | 0));
+    for (let i = 0; i < strands; i++) {
+        const lateral = (strands === 1 ? 0 : i / (strands - 1) - 0.5) * 0.22;
+        const wobble = Math.sin(i * 1.7 + tick * 0.05) * 0.06;
+        frame.line(sx + lateral, sy + wobble, sz + wobble * 0.5, tx, ty, tz, thread);
+    }
+    frame.line(tx, ty, tz, anchor[0], anchor[1], anchor[2], thread);
+    frame.sprite("cobblemon:particle/generic/psychic/psyring2", anchor[0], anchor[1] + 0.08, anchor[2], 0.34 + 0.08 * charge, 0, thread, 0, true);
+    const ringRadius = Math.max(0.16, remaining);
+    const budgetAlpha = Math.min(230, Math.round(60 + 150 * (1 - spentFrac)));
+    frame.ring(tx, (Number(target.y) || 0) + 0.08, tz, ringRadius, ((budgetAlpha << 24) | 0x7A52E6) | 0);
+});

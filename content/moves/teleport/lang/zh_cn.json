@@ -30,5 +30,5 @@
   "world_combat.move.teleport.text.blink": "瞬移 · %1$s 格",
   "world_combat.move.teleport.text.flee": "瞬移远遁 · %1$s 格",
   "worldcombat.skill.teleport.description.2": "野生的个体借逃走的劲挪得更远，落地后还会松开自己锁定的目标。",
-  "worldcombat.skill.teleport.description.3": "落点是自由三维点，可以落在高台上；只有实际成功离位后才清除追击关系，失败时既不清仇恨也不移动。"
+  "worldcombat.skill.teleport.description.3": "落点是自由三维点，可以落在高台，也不要求脚下有地面；只要整个身体放得下就成立。只有实际成功离位后才清除追击关系，失败时既不清仇恨也不移动。"
 }

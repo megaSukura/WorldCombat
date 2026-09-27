@@ -1,14 +1,15 @@
 /**
  * 金属音 的伙伴 AI 用途：这招自己的一套出手计划——找一段对方看不见自己的距离，站定把音磨出去。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标还没被磨出回响。声音不需要通视，掩体挡不住它，
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、目标特防还没到底。声音不需要通视，掩体挡不住它，
  *   但磨音要站定好几段，所以真正理想的局面是「有队友在前面承伤、目标又走不动」——此时把特防一层层刮开最值。
  *   自己贴得太近又刚挨过打时降低优先级，先别站着挨磨。`available` 不要求视线。
  * 什么时候最想出手：目标被掩体挡住（看不到施法者）时 +12；附近有队友最近在承伤时 +12；目标几乎不移动时 +10；
  *   自己贴身且刚被打过时 -16。
  * 对谁出手：当前威胁；已经带着「刮擦」身份的目标跳过，避免重复。
+ *   失去视线后也可朝最近确实看见的位置磨（`memoryAim`）：只提交那次记录下来的点，不把隐藏实体转成实时锁头。
  * 够不到怎么办：reach 就是回响距离，共享任务会先走近到听得见的距离再磨。
- * 放完之后：目标特防被分级磨低并带着很长一段回响；伙伴交回共享顺序。
+ * 放完之后：目标特防被分级磨低、带着很长一段回响；伙伴交回共享顺序。
  */
 namespace CompanionBehavior {
     function metalsoundHidden(context: WorldBehavior.Context, threat: Entity): boolean {
@@ -34,19 +35,23 @@ namespace CompanionBehavior {
 
     function metalsoundWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         if (context.facts.mounted) return false;
-        if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
+        if (threat.health <= 0 || threat.friendly) return false;
+        // 感知规则不变：看得见，或这是一个明确记下位置的记忆点（不把隐藏实体转成实时锁头）。
+        if (!threat.memoryAim && !threat.visible) return false;
         if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !ai<boolean>(item, "leaveStation", false)) return false;
         const self = source(context);
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 10)) return false;
-        if (status(context, threat, "grating")) return false;
+        // 记忆点读不到实时等级；此时只按记忆点本身成立。
+        if (!threat.memoryAim && stage(context, threat, "spd") <= -6) return false;
         return true;
     }
 
     registerUse("metalsound", {
         protocols: ["world_combat:control"],
+        memoryAim: true,
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) { return !target || metalsoundWants(context, item, target); },
-        accepts: function (_context, _item, target) { return !target.friendly && target.health > 0 && target.visible; },
+        accepts: function (_context, _item, target) { return !!target.memoryAim || target.visible && !target.friendly && target.health > 0; },
         approachTarget: function (_context, _item, target) { return target; },
         priority: function (context, item, target) {
             if (!target || !metalsoundWants(context, item, target)) return 0;

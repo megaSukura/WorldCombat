@@ -4,10 +4,12 @@
  * 什么局面下出手：挂在共享的 attack／ranged 位上。带双针的伙伴把它当**稳定的两下连刺**：目标可见、敌对、存活，
  *   在 `ai.maxChase`（默认 12）以内就出手；更远交给共享接近逻辑。
  * 对谁出手：两下几乎必定都落在同一个目标上（原生连续 2 次），所以 `ai.finishLow`（默认关）打开时残血目标
- *   排得更前，用这两下收尾；关闭则所有目标同等对待。
+ *   排得更前，用这两下收尾；关闭则所有目标同等对待。墙体挡住视线时两根针都会先撞墙，所以这类目标降权，
+ *   不把第二针当成一定能抵达。
  * 够不到怎么办：射程交给 `reach`，共享任务负责把身位送进射程。
  * 放完之后：两针各自结算，第一针留下的伤口让第二针更容易带毒，伙伴交回共享顺序。
- * 优先级：基础 24（在射程内）／6（还要先走近）；`ai.finishLow` 开启且目标生命低于四成时 +12。
+ * 优先级：基础 24（在射程内、通视）／6（还要先走近）；`ai.finishLow` 开启且目标生命低于四成时 +12；
+ *   视线被墙挡住时降到 2。
  */
 namespace PokemonSkills {
     CompanionBehavior.registerUse("twineedle", {
@@ -27,6 +29,9 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             const distance = CompanionBehavior.distance(self.point, target.point);
             if (distance > CompanionBehavior.ai<number>(capability, "maxChase", 12)) return 0;
+            // 两针都走同一条线；墙会先挡下，第二针到不了就不当优先目标。友方拦挡交给实际弹体自行判定。
+            const world = CompanionBehavior.world(context);
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) return 2;
             if (distance > capability.data.range) return 6;
             if (CompanionBehavior.ai<boolean>(capability, "finishLow", false) && CompanionBehavior.ratio(target) < 0.4) return 36;
             return 24;

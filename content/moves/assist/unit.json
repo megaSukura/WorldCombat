@@ -2,6 +2,7 @@
   "schema": 1,
   "id": "world_combat:move/assist",
   "version": "0.1",
+  "scenarioFixtures": ["content/moves/conversion"],
   "requires": {
     "world_combat:skill_runtime": "0.1",
     "world_combat:companion_runtime": "0.1",

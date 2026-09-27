@@ -5,10 +5,11 @@
  * 身子跟着一歪一歪。
  * 色相家族：幽紫（0xB15CE0）为主体，深紫（0x6A2FA0）压在核心，近白只做高光；没有第二个色相。
  * 拍子：起（windup 起势）→ 击（dance 舞圈荡开、daze 逐人晃晕）→ 收（sway 存续期一歪一歪，steady 无人被带进）。
- * 范围：dance 绑 `point`，形状半径读 `data.radius`（真实舞圈半径），玩家看到的圈就是会被晃到的人。
- * 运动：音波环整圈向外荡，音符沿圈起伏；被晃到的人每隔一小段从身侧甩出一小撮音符与飞鸟。
- * 数：音符与光点量按 `data.motes`（特攻派生）派生，舞圈拍数按 `data.beats`（等级派生）派生；
- *   sway 的尺寸读 `data.moved`（这一步真正移动了多少格），没移动就不发，玩家看到的就是实际被带偏的幅度。
+ * 范围：dance 绑 `point`，形状半径读 `data.radius`（真实舞圈半径），玩家看到的圈就是会被晃到的人；
+ *   载荷不传 `data.scale`，所以半径只按真实值缩放一次，不再被 body/data.scale 重复放大。
+ * 运动：先 tempo 阶段一拍一拍地踏小侧步（每拍一小簇音符跟着身体实际落点），末拍 dance 音波环整圈向外荡；
+ *   被晃到的人每隔一小段从身侧甩出一小撮音符与飞鸟，sway 只按这一步真正移动了多少格发射。
+ * 数：音符与光点量按 `data.motes`（特攻派生）派生，舞圈波数与每拍节奏按 `data.beats`、`data.beatTicks`（等级与速度派生）派生。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const TeeterdanceDefinition: ParticleDefinition = {
@@ -34,6 +35,30 @@ const TeeterdanceDefinition: ParticleDefinition = {
                     direction: "up", speed: [0.02, 0.08],
                     lifetime: [12, 20], size: [0.16, 0.05], sizeMode: "sin",
                     alpha: [0.5, 0], light: "full", maxParticles: 14
+                }
+            ]
+        },
+        tempo: {
+            duration: 0,
+            exit: { drain: 8 },
+            emitters: [
+                {
+                    name: "tempo_step", bind: "source", offset: [0, 0.1, 0], height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/note",
+                    burst: { count: { data: "motes", fallback: 6 }, at: 1 },
+                    shape: { kind: "circle", radius: 0.34 },
+                    direction: "up", speed: [0.02, 0.09],
+                    lifetime: [10, 16], size: [0.14, 0.04], sizeMode: "sin",
+                    color: 0x9A5CD0, alpha: [0.55, 0], light: "full", maxParticles: 18
+                },
+                {
+                    name: "tempo_puff", bind: "source", offset: [0, 0.05, 0], height: 0.08,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 1, at: 1 },
+                    shape: { kind: "ring", radius: 0.3 },
+                    direction: "outward", speed: [0.02, 0.06],
+                    lifetime: [8, 14], size: [{ data: "moved", fallback: 0.1 }, 0.2], sizeMode: "linear",
+                    color: 0x6A2FA0, alpha: [0.4, 0], light: "world", maxParticles: 8
                 }
             ]
         },

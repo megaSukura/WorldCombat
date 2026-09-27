@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.synchronoise.summary": "Hits nearby enemies that share the user’s frequency and briefly outlines them. Pokémon match by type; ordinary bodies match by kind.",
+  "worldcombat.skill.synchronoise.summary": "Hits nearby enemies that share the user’s frequency and briefly outlines them. Frequency follows effective types (including temporary changes); ordinary bodies without a type use their kind.",
   "worldcombat.skill.synchronoise.use.0": "Sweep a whole ring of same-type foes at once",
   "worldcombat.skill.synchronoise.use.1": "Pick out only the ones tuned to you in a melee",
   "worldcombat.skill.synchronoise.use.2": "Leave a resonance mark to follow up on",
@@ -20,11 +20,11 @@
   "worldcombat.skill.synchronoise.preference.tight": "Tight tuning",
   "worldcombat.skill.synchronoise.preference.tight.help": "On: the wave is about ×0.62 wide and about ×1.42 stronger with a longer resonance, wind-up +2 and cooldown +6 ticks, for punching through one same-type target. Off (wide broadcast): about ×1.0 wide and ×1.0 power, for sweeping as many same-type foes as possible in a melee.",
   "worldcombat.skill.synchronoise.preference.ai.maxChase": "Consider distance",
-  "worldcombat.skill.synchronoise.preference.ai.maxChase.help": "The companion only considers Synchronoise when a same-type target is this close; lower it to broadcast only at arm's reach, raise it to walk in further first.",
+  "worldcombat.skill.synchronoise.preference.ai.maxChase.help": "The companion only considers Synchronoise when a same-type target is this close; the real wave radius still comes from the individual's formula, so this only widens or narrows how far it will walk in first.",
   "worldcombat.skill.synchronoise.preference.ai.minMatches": "Same-type foes",
-  "worldcombat.skill.synchronoise.preference.ai.minMatches.help": "At least this many visible, hostile, same-type targets must stand within range before it broadcasts; raise it for clustered same-type use, set it to 1 to fire at a single match.",
+  "worldcombat.skill.synchronoise.preference.ai.minMatches.help": "At least this many visible, hostile, same-frequency targets must stand inside the real wave radius and height band before it broadcasts; raise it for clustered same-type use, set it to 1 to fire at a single match.",
   "world_combat.move.synchronoise.text.hit": "Resonated %1$s",
   "world_combat.move.synchronoise.text.pass": "No one on your frequency",
   "effect.world_combat.resonance": "Resonance lock",
-  "worldcombat.skill.synchronoise.description.3": "Ordinary frequencies: undead—Ghost; arthropods—Bug; aquatic bodies—Water; blazes and magma cubes—Fire; iron golems—Steel; snow golems—Ice; the ender dragon—Dragon. Others normally match Normal."
+  "worldcombat.skill.synchronoise.description.3": "Frequency first follows effective types: a Pokémon's current types and any temporary type changes on the body (Soak, added Grass, and so on) all count. Only ordinary bodies with no type fact fall back to kind: undead—Ghost; arthropods—Bug; aquatic bodies—Water; blazes and magma cubes—Fire; iron golems—Steel; snow golems—Ice; the ender dragon—Dragon; others normally match Normal. Mods may self-declare with the world_combat:resonance/<name> tag."
 }

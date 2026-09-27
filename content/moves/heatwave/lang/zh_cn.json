@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.heatwave.summary": "把一口气在胸腹间焐热、朝前整片吹出去：一道扇形热浪贴着地面向前推，掠过的敌人一起挨烧、被风沿离身方向推离原位，并可能被点着。烈日下更烈、雨天更淡，热风吹完不留残迹。",
+  "worldcombat.skill.heatwave.summary": "把一口气在胸腹间焐热、朝前整片吹出去：一道扇形热浪沿身前水平面向前推，掠过的敌人一起挨烧、被风沿离身方向推离原位，并可能被点着。烈日下更烈、雨天更淡，实心墙把扇面截短，热风吹完不留残迹。",
   "worldcombat.skill.heatwave.use.0": "一次灼到身前扇形里的几个敌人",
   "worldcombat.skill.heatwave.use.1": "把冲上来的人整片推离原位",
   "worldcombat.skill.heatwave.use.2": "在烈日下把热风推到最烈",
   "worldcombat.skill.heatwave.use.3": "制造一道能读出范围的扇形压制",
   "worldcombat.skill.heatwave.description.0": "热风扫过每人时造成 %1$s 点特殊伤害；对手特防、相性与暴击在命中时另算。",
-  "worldcombat.skill.heatwave.description.1": "身前 %1$s 格、张角 %2$s 度的扇面在 %3$s 秒内推开，扫到的人被推离原位。",
+  "worldcombat.skill.heatwave.description.1": "身前 %1$s 格、张角 %2$s 度的扇面在 %3$s 秒内推开，扫到的人被推离原位；被实心墙挡住的部分截短，墙后不受热。",
   "worldcombat.skill.heatwave.description.2": "被扫到的人有 %1$s 概率被点着；着火持续约 40 秒，每 5 秒受到自身最大生命约 6.25%% 的伤害（火属性或具相应免疫的目标不会被点着）。被扫到的人还会被沿离身方向推离约 %2$s 格。",
   "worldcombat.skill.heatwave.gale.on": "疾风式：扇面更宽、推得更远、扫得更快，代价是威力 ×0.88、灼伤 ×0.85、冷却 −2 刻。",
   "worldcombat.skill.heatwave.gale.off": "灼热式：威力 ×1.12、灼伤 ×1.15，但扇面更窄、推得更近、冷却 +4 刻。",

@@ -9,6 +9,7 @@
  *   推出真实大小——画面里的环就是撑起来的那道壳。
  * 运动：果屑从嘴边向外抛洒后下坠，护体环由内向外一撑并轻微脉动，饱嗝是一团向上散去的白雾。
  * 数：果屑数量绑 `data.motes`（体重＋物攻派生）；护体环的硬片数量绑 `data.plates`（防御等级派生，防御越高壳越密）。
+ * 手里的果子另用 `WorldCombatClient.scene` 画：按客户端实测的 yaw/pitch 放到真实嘴前，细嚼期间逐渐咬碎变小。
  */
 const StuffCheeksDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -18,7 +19,7 @@ const StuffCheeksDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "lift", bind: "source", offset: [0, 0.75, 0.2], height: 0.3,
+                    name: "lift", bind: "source", offset: [0, 0.75, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/mediumsparkle",
                     rate: 12, shape: { kind: "sphere", radius: 0.25 },
                     direction: "inward", speed: [0.01, 0.05],
@@ -26,7 +27,7 @@ const StuffCheeksDefinition: ParticleDefinition = {
                     color: 0xE0B67A, alpha: [0.7, 0], light: "full", maxParticles: 40
                 },
                 {
-                    name: "cheek", bind: "source", offset: [0, 0.72, 0.12], height: 0.3,
+                    name: "cheek", bind: "source", offset: [0, 0.72, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
                     rate: 6, shape: { kind: "sphere", radius: 0.18 },
                     direction: "up", speed: [0.01, 0.04],
@@ -40,7 +41,7 @@ const StuffCheeksDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "crumbs", bind: "source", offset: [0, 0.72, 0.15], height: 0.3,
+                    name: "crumbs", bind: "source", offset: [0, 0.72, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/grass/seed",
                     burst: { count: { data: "motes", fallback: 14 } }, shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.06, 0.24], spread: 30, gravity: 0.03, drag: 0.9, spin: 30,
@@ -48,7 +49,7 @@ const StuffCheeksDefinition: ParticleDefinition = {
                     color: 0xD2506A, alpha: [0.85, 0], light: "world", maxParticles: 50
                 },
                 {
-                    name: "juice", bind: "source", offset: [0, 0.7, 0.15], height: 0.3,
+                    name: "juice", bind: "source", offset: [0, 0.7, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/goo/acidsplash",
                     burst: { count: { data: "motes", fallback: 10 } }, shape: { kind: "sphere", radius: 0.28 },
                     direction: "outward", speed: [0.05, 0.2], gravity: 0.035, drag: 0.9,
@@ -92,7 +93,7 @@ const StuffCheeksDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 14 },
             emitters: [
                 {
-                    name: "burp", bind: "source", offset: [0, 0.7, 0.18], height: 0.3,
+                    name: "burp", bind: "source", offset: [0, 0.7, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 8 }, shape: { kind: "sphere", radius: 0.22 },
                     direction: "up", speed: [0.02, 0.09],
@@ -106,7 +107,7 @@ const StuffCheeksDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "empty", bind: "source", offset: [0, 0.7, 0.15], height: 0.3,
+                    name: "empty", bind: "source", offset: [0, 0.7, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     burst: { count: 5 }, shape: { kind: "sphere", radius: 0.2 },
                     direction: "up", speed: [0.01, 0.05],
@@ -119,3 +120,42 @@ const StuffCheeksDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_stuffcheeks", 1, StuffCheeksDefinition);
+
+/**
+ * 嘴里那颗果的图：用施法者当帧插值后的 yaw/pitch 把果的小图标放到真实嘴前（不再用固定世界 +Z 偏移）；
+ * `moment: "raise"` 举在嘴边，`moment: "eat"` 起算 `chew` 刻内逐渐咬碎、alpha 归零。
+ * 固定数量（每刻一枚），不生成粒子或实体；贴图取物品图集 `item/<path>`。
+ */
+function stuffcheeksBerryTexture(item: string): string {
+    const split = item.indexOf(":");
+    const namespace = split < 0 ? "minecraft" : item.slice(0, split);
+    const path = split < 0 ? item : item.slice(split + 1);
+    return namespace + ":item/" + path;
+}
+WorldCombatClient.scene("world_combat:move_stuffcheeks_berry", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (typeof data.item !== "string" || !data.item) return;
+    const anchor: any = JSON.parse(frame.anchor(entry.source));
+    if (!anchor || typeof anchor.x !== "number" || typeof anchor.yaw !== "number") return;
+    const yaw = Number(anchor.yaw) * Math.PI / 180, pitch = Number(anchor.pitch) * Math.PI / 180;
+    const forward = [-Math.sin(yaw) * Math.cos(pitch), -Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
+    const height = Math.max(0.16, Math.min(0.5, Number(anchor.height) * 0.3));
+    const reach = Number(anchor.width) * 0.5 + height * 0.55;
+    let size = height, alpha = 1;
+    if (data.moment === "eat") {
+        const start = typeof data.start === "number" ? data.start : frame.serverTick();
+        const chew = typeof data.chew === "number" && data.chew > 0 ? data.chew : 8;
+        const t = Math.max(0, Math.min(1, (frame.serverTick() - start) / chew));
+        if (t >= 1) return;
+        size = height * (1 - 0.9 * t);
+        alpha = 1 - t;
+    }
+    const color = ((Math.round(alpha * 255) << 24) | 0xFFFFFF) | 0;
+    frame.sprite(stuffcheeksBerryTexture(data.item),
+        Number(anchor.x) + forward[0] * reach,
+        Number(anchor.y) + height * 0.6 + forward[1] * reach + (data.moment === "raise" ? Math.sin(frame.serverTick() * 0.4) * 0.02 : 0),
+        Number(anchor.z) + forward[2] * reach,
+        size, 0, color, 0, true);
+});

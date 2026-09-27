@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     const dazzlinggleamScene = "world_combat:move_dazzlinggleam";
     const dazzlinggleamDazzled = "world_combat:dazzled";
+    const dazzlinggleamLingerMark = "world_combat:move_dazzlinggleam/linger";
     const dazzlinggleamHitText = "world_combat.move.dazzlinggleam.text.hit";
     const dazzlinggleamMissText = "world_combat.move.dazzlinggleam.text.miss";
 
@@ -70,6 +71,9 @@ namespace PokemonSkills {
             const motes = Math.max(16, Math.round(p("dazzlinggleam", "motes", action)));
             const cap = Math.max(1, Math.round(p("dazzlinggleam", "maxTargets", action)));
             const scale = radius / 3.4;
+            // 光道从判定球心射到球面为止：最慢到最快两条速度乘各自寿命都不超过实际半径，画面不越判定/实墙交代的范围。
+            const raySlow = Math.max(0.02, (radius - 0.5) / 26);
+            const rayFast = Math.max(0.03, (radius - 0.5) / 16);
             let hits = 0;
 
             // 真正的 3D 可见球面：用身体碰撞箱与球的精确相交挑人，再按原生通视把墙后的挡掉。
@@ -84,6 +88,9 @@ namespace PokemonSkills {
                 hits++;
                 // 伤害真的落地后，才尝试挂目眩；状态被拒（控免等）不再假装“变慢成功”。
                 const leftDazzled = world.valid(enemy) && MobEffects.apply(world, enemy, dazzlinggleamDazzled, dazzle, 0) !== null;
+                // 目眩存续的余光绑在真正拥有这次目眩的托管窗口上：窗口刷新用最新 carrier，被拒／到点不残留。
+                if (leftDazzled && world.effects(enemy, dazzlinggleamLingerMark).length === 0)
+                    world.effect(dazzlinggleamLingerMark, enemy, "{}", Math.max(1, Math.min(2400, dazzle)));
                 const eye = facts.position().plus(WorldCombat.point(0, facts.height() * 0.45, 0));
                 WorldFeedback.emit(world, dazzlinggleamScene, 1, facts.position(),
                     { moment: "hit", target: String(enemy.ref()), dazzle: leftDazzled ? 1 : 0,
@@ -94,6 +101,7 @@ namespace PokemonSkills {
 
             WorldFeedback.emit(world, dazzlinggleamScene, 1, centre,
                 { moment: "flash", radius: radius, rays: rays, motes: motes, scale: scale,
+                    raySlow: raySlow, rayFast: rayFast,
                     intensity: Math.max(0.6, Math.min(2.4, power / 90)) }, 30);
             if (hits === 0) WorldFeedback.emit(world, dazzlinggleamScene, 1, centre, { moment: "miss" }, 16);
             sound(action, "minecraft:block.amethyst_block.chime");
@@ -103,24 +111,36 @@ namespace PokemonSkills {
         }
     });
 
-    // 目眩存续期间，被闪花眼的人眼边留一枚短星点；效果一到头就不再续期，自然淡去。
-    WorldCombat.on("world_combat:move_dazzlinggleam/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== dazzlinggleamDazzled) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 6 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "dazzlinggleam:" + String(actor.ref()), dazzlinggleamScene, 1,
+    // 目眩存续的托管窗口：每次巡检读当前 carrier（刷新自然拿到最新 revision），把眼边余光绑在窗口自己身上，
+    // 窗口随载体到期、被牛奶／`/effect clear`清掉或载体被替换时结束，不留失效锚或驱散后的残留。
+    function dazzlinggleamLingerWatch(effect: CombatEffect): void {
+        const world = effect.world(), target = effect.target();
+        const body = world.valid(target) ? world.observe(target) : null;
+        if (body === null) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, dazzlinggleamDazzled);
+        if (carrier === null) { effect.end(); return; }
+        WorldFeedback.onEffect(world, effect.id(), "dazzle", dazzlinggleamScene, 1,
             body.position().plus(WorldCombat.point(0, body.height() * 0.45, 0)),
-            { moment: "dazzle", target: String(actor.ref()), height: body.height() }, 20);
-    });
-    // 效果被提前驱散/自然结束时，收掉那枚星点（keep 停止续期也会淡，这里给一个确定的收束）。
+            { moment: "dazzle", target: String(target.ref()), height: body.height() });
+        const remaining = carrier.duration() < 0 ? 2400 : Math.max(1, Math.min(2400, carrier.duration()));
+        effect.remaining(remaining);
+        effect.schedule("watch", "watch", 20, "{}");
+    }
+    WorldCombat.effect(dazzlinggleamLingerMark, 1, 2400, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (value === null || typeof value !== "object") throw new Error("Invalid dazzling gleam linger mark");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(dazzlinggleamLingerMark, "start", dazzlinggleamLingerWatch);
+    WorldCombat.effectHandler(dazzlinggleamLingerMark, "watch", dazzlinggleamLingerWatch);
+    WorldCombat.effectHandler(dazzlinggleamLingerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+    // 效果被提前驱散/自然结束时立即撤掉托管窗口（不等它的下一次巡检），再给一记明确的收束。
     WorldCombat.on("world_combat:move_dazzlinggleam/sober", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== dazzlinggleamDazzled) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
+        world.effects(actor, dazzlinggleamLingerMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, dazzlinggleamScene, 1, body.position().plus(WorldCombat.point(0, body.height() * 0.45, 0)),

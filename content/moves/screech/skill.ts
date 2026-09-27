@@ -5,7 +5,8 @@
  *   前沿每扫过一个敌人一次，就把它那层防御松开一次。它是本组射程最长、唯一能一次扫到多人、且唯一作用于物防的一招。
  *
  * 出手：短起手（windup 在喉间聚起声浪）后提交；声音不飞、不铺地，提交后前沿从嘴里逐刻向前推进。
- * 命中：走廊判定用 WorldGeometry.lane，只对前沿首次经过的敌人体积生效一次（同目标不叠降）。每个被扫到的敌人
+ * 命中：每刻只取「前一刻前沿到这一刻前沿」的薄片（WorldGeometry.bodyPolygon + selectBodies，真实实体箱相交），
+ *       只对首次被薄片扫过的敌人生效一次（同目标不叠降）；波过之后才走进来的人不会被补扫。每个被扫到的敌人
  *       挂共享身份 world_combat:status/deafened（本单元效果 world_combat:screech_ringing，只借身份），
  *       再 NativeEffects.boost 下降物防：宝可梦损失原生防御等级，其他生物落到护甲属性。
  * 反制：走廊很窄，侧移一步就出线；声音不需要通视，躲墙后没有用，但前沿到达之前离开走廊就不会被扫到。
@@ -63,6 +64,7 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor();
             const body = world.observe(actor);
             const origin = body === null ? action.origin() : body.position();
+            const actorRef = String(actor.ref());
             const heading = screechHeading(aim(action));
             const reach = Math.max(3, Math.min(13, p(screechId, "reach", action)));
             const half = Math.max(0.5, Math.min(2.4, p(screechId, "lane", action)));
@@ -70,41 +72,68 @@ namespace PokemonSkills {
             const ringing = Math.max(60, Math.round(p(screechId, "ringing", action)));
             const steps = Math.max(4, Math.min(16, Math.round(p(screechId, "front", action))));
             const direction = [heading.x(), heading.y(), heading.z()];
+            const side = WorldCombat.point(-heading.z(), 0, heading.x());
+            const below = 2, above = 3, yLow = origin.y() - below, yHigh = origin.y() + above;
             const rings = Math.round(4 + drop * 2);
             const hitRefs: { [ref: string]: boolean } = {};
-            let step = 0, hits = 0;
+            let step = 0, hits = 0, struckOnly = 0;
 
             sound(action, "minecraft:entity.fox.screech");
 
-            /** 前沿推进一刻；只对这一刻首次进入前沿的敌人降防，同一个人不再叠降。 */
+            /** 前一刻到这一刻的薄片区域；与画面同一组 prev/front 端点与走廊半宽、上下高度。 */
+            function screechSlice(prev: number, front: number): WorldGeometry.BodyRegion {
+                const a = origin.plus(heading.scale(prev)), b = origin.plus(heading.scale(front));
+                return WorldGeometry.bodyPolygon([a.minus(side.scale(half)), b.minus(side.scale(half)),
+                    b.plus(side.scale(half)), a.plus(side.scale(half))], yLow, yHigh);
+            }
+
+            /** 前沿那一面竖墙的四个角；高度与宽度跟判定同一组 below/above/half。 */
+            function screechWall(front: number): number[][] {
+                const b = origin.plus(heading.scale(front));
+                const left = b.minus(side.scale(half)), right = b.plus(side.scale(half));
+                return [[left.x(), yLow, left.z()], [right.x(), yLow, right.z()],
+                    [right.x(), yHigh, right.z()], [left.x(), yHigh, left.z()]];
+            }
+
+            /** 前沿推进一刻；只对这一刻薄片里、身体真正接触的敌人降防一次，同一个人不再叠降。 */
             function advance(current: CombatAction): void {
                 const scope = current.world();
+                const prev = reach * step / steps;
                 step++;
                 const front = reach * step / steps;
                 scenes.show(current, "front", origin.plus(heading.scale(front)),
-                    { moment: "front", dist: front, reach: reach, half: half, step: step, steps: steps,
-                        rings: rings, direction: direction, scale: 1 });
-                WorldGeometry.selectEnemies(scope, WorldGeometry.lane(origin, heading, reach, half, { below: 2, above: 3 }),
-                    function (target, facts) {
-                        const ref = String(target.ref());
-                        if (hitRefs[ref]) return;
-                        const centre = facts.position();
-                        const delta = WorldCombat.point(centre.x() - origin.x(), 0, centre.z() - origin.z());
-                        const along = WorldGeometry.dot(delta, heading);
-                        if (along < 0 || along - facts.width() / 2 > front) return;
-                        hitRefs[ref] = true;
-                        NativeEffects.boost(scope, target, "def", -drop);
-                        MobEffects.apply(scope, target, screechEffect, ringing, 0);
+                    { moment: "front", dist: front, prev: prev, reach: reach, half: half, below: below, above: above,
+                        path: screechWall(front), step: step, steps: steps, rings: rings, direction: direction, scale: 1 });
+                WorldGeometry.selectBodies(scope, screechSlice(prev, front), function (target, facts) {
+                    const ref = String(target.ref());
+                    if (ref === actorRef || scope.friendly(target) || hitRefs[ref]) return;
+                    hitRefs[ref] = true;
+                    const centre = facts.position();
+                    // 降阶按实际 delta 计数：免疫或已到底时 boost 返回 0，不发假提示。
+                    const lost = -NativeEffects.boost(scope, target, "def", -drop);
+                    // 耳鸣身份独立于能力等级：无论是否降阶都挂上，供别的单元按身份读取。
+                    MobEffects.apply(scope, target, screechEffect, ringing, 0);
+                    if (lost > 0) {
                         hits++;
                         WorldFeedback.emit(scope, screechScene, 1, centre,
-                            { moment: "stung", target: ref, drop: drop, shocks: Math.round(6 + drop * 6) }, 24);
-                    });
-                if (step < steps) { current.after(1, advance); return; }
-                if (hits > 0)
-                    WorldFeedback.text(scope, screechAbove(origin), "world_combat.move.screech.text.hit", [hits, drop], 34);
-                else
-                    WorldFeedback.text(scope, screechAbove(origin), "world_combat.move.screech.text.miss", [], 26);
-                scenes.finish(current, done);
+                            { moment: "stung", target: ref, drop: lost, shocks: Math.round(6 + lost * 6) }, 24);
+                    } else
+                        struckOnly++;
+                });
+                if (step >= steps) {
+                    // 最后前点独立显示：末步单独发一次，不再由复用的 front 实例承担。
+                    WorldFeedback.emit(scope, screechScene, 1, origin.plus(heading.scale(front)),
+                        { moment: "finale", dist: front, half: half, below: below, above: above, direction: direction }, 24);
+                    if (hits > 0)
+                        WorldFeedback.text(scope, screechAbove(origin), "world_combat.move.screech.text.hit", [hits, drop], 34);
+                    else if (struckOnly > 0)
+                        WorldFeedback.text(scope, screechAbove(origin), "world_combat.move.screech.text.deaf", [struckOnly], 34);
+                    else
+                        WorldFeedback.text(scope, screechAbove(origin), "world_combat.move.screech.text.miss", [], 26);
+                    scenes.finish(current, done);
+                    return;
+                }
+                current.after(1, advance);
             }
             advance(action);
         }

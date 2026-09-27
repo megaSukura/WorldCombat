@@ -37,12 +37,13 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
 
-    function meanlookHeld(world: CombatWorld, actor: CombatActor, victim: CombatActor, data: any, ticks: number): void {
+    /** 持续视线束挂在这次凝视的托管效果上：效果一结束，presentOn 的条目立刻释放，不会像独立 keep 那样多发射一段。 */
+    function meanlookHeld(world: CombatWorld, actor: CombatActor, victim: CombatActor, data: any, effectId: number): void {
         const body = world.observe(victim);
         if (body === null) return;
-        WorldFeedback.keep(world, meanlookKey + String(victim.ref()), meanlookScene, 1, body.position(),
+        WorldFeedback.onEffect(world, effectId, meanlookKey + String(victim.ref()), meanlookScene, 1, body.position(),
             { moment: "hold", target: String(victim.ref()), path: [String(actor.ref()), String(victim.ref())],
-                strands: data.strands, grip: data.grip, scale: data.scale, intensity: data.intensity }, ticks);
+                strands: data.strands, scale: data.scale, intensity: data.intensity });
     }
 
     WorldCombat.effectHandler(meanlookLock, "start", function (effect) {
@@ -65,7 +66,15 @@ namespace PokemonSkills {
             effect.end(); return;
         }
         effect.state(JSON.stringify(data));
-        meanlookHeld(world, effect.source(), victim, data, 20);
+        // 只有载体真的落定才播「锁定」并起持续线，避免免疫目标也亮一次成功反馈。
+        const held = world.observe(victim);
+        if (held !== null) {
+            WorldFeedback.emit(world, meanlookScene, 1, held.position(),
+                { moment: "lock", target: String(victim.ref()), path: [String(effect.source().ref()), String(victim.ref())],
+                    strands: data.strands, scale: data.scale, intensity: data.intensity }, 30);
+            world.sound("minecraft:entity.enderman.stare", held.position(), 12, "{}");
+        }
+        meanlookHeld(world, effect.source(), victim, data, effect.id());
     });
     WorldCombat.effectHandler(meanlookLock, "operation:world_combat:meanlook/snap", function (effect) {
         if (effect.caller().key() !== effect.source().key()) { effect.reject("effect-not-owned"); return; }
@@ -75,7 +84,10 @@ namespace PokemonSkills {
         if (!world.valid(victim)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
-        WorldFeedback.emit(world, meanlookScene, 1, body.position(), { moment: "snap", target: String(victim.ref()) }, 22);
+        // 断线时仍按两端实际位置补上 path，断线束才有真实的两个端点。
+        WorldFeedback.emit(world, meanlookScene, 1, body.position(),
+            { moment: "snap", target: String(victim.ref()), path: [String(effect.source().ref()), String(victim.ref())],
+                strands: state.strands, scale: state.scale, intensity: state.intensity }, 22);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), meanlookSnapText, [], 22);
         world.sound("minecraft:entity.enderman.teleport", body.position(), 12, "{}");
         effect.end();
@@ -122,12 +134,14 @@ namespace PokemonSkills {
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[meanlookId], detail: { values: config },
                 world: world || null, actor: actor || null, attributes };
+            // 实际可施距离取「施放距离」与「绷断距离」中较小者：选择范围之内必定维持得住，不会一锁就断。
+            const range = Math.min(p(meanlookId, "gazeRange", context), p(meanlookId, "leash", context));
             return {
                 prepare: Math.round(p(meanlookId, "tempo", context)),
                 recover: Math.round(p(meanlookId, "aftercast", context)),
                 cooldown: Math.round(p(meanlookId, "recharge", context)),
                 active: 1,
-                range: p(meanlookId, "gazeRange", context)
+                range: range
             };
         },
         windup: function (action, config, prepare) {
@@ -135,8 +149,13 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", deep: config && config.deep === true ? 1 : 0 }));
             return prepare;
         },
-        indicator: function (config) {
-            return { radius: p(meanlookId, "gazeRange"), geometry: "line", style: "gaze", color: 0x2A2140,
+        indicator: function (config, pokemon, inspection) {
+            const context: NumberContext | null = pokemon ? { pokemon, skill: skills[meanlookId], detail: { values: config },
+                world: inspection && inspection.world, actor: inspection && inspection.actor,
+                attributes: inspection && inspection.attributes, state: inspection && inspection.state } : null;
+            const range = context ? Math.min(p(meanlookId, "gazeRange", context), p(meanlookId, "leash", context))
+                : Math.min(p(meanlookId, "gazeRange"), p(meanlookId, "leash"));
+            return { radius: range, geometry: "line", style: "gaze", color: 0x2A2140,
                 label: config && config.deep === true ? "黑色目光·深凝视" : "黑色目光" };
         },
         execute: function (action, move, config, done) {
@@ -163,10 +182,6 @@ namespace PokemonSkills {
             const data = { leash: leash, strands: strands, grip: grip, scale: scale,
                 intensity: Math.max(0.6, Math.min(2.2, strands / 6)) };
             const lock = action.effect(meanlookLock, victim, JSON.stringify(data), hold);
-            WorldFeedback.emit(world, meanlookScene, 1, body.position(),
-                { moment: "lock", target: String(victim.ref()), path: [String(self.ref()), String(victim.ref())],
-                    strands: strands, grip: grip, scale: scale, intensity: data.intensity }, 30);
-            sound(action, "minecraft:entity.enderman.stare");
             let age = 0;
             function watch(current: CombatAction): void {
                 if (settled) return;
@@ -181,7 +196,6 @@ namespace PokemonSkills {
                     finish(current); return;
                 }
                 age++;
-                if (age % 4 === 0) meanlookHeld(scope, current.actor(), victim, data, 20);
                 if (age >= hold) { finish(current); return; }
                 current.after(1, watch);
             }

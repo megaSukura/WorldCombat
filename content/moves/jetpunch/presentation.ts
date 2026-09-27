@@ -6,7 +6,8 @@
  * 色相家族：水蓝与青白（0x3FA8E0 / 0xBFE8F8），近白（0xF0FBFF）只给水柱核心；没有第二组饱和色。
  * 拍子：起 squeeze（拢水）→ 击 thrust（水柱激射）→ 中 hit（水花迸溅）／熄 douse（白汽）→ 空 whiff（散水）。
  * 范围：hit 的水花环半径由 `data.scale`（判定半径 / 0.42）给出，玩家看出这一拳的水花铺开多大一圈。
- * 运动：thrust 绑拳头、沿出拳方向（orient: direction）铺一条长度为 `data.reach` 的水柱；hit 的水花从落点向外炸、受重力。
+ * 运动：thrust 绑拳头、沿出拳方向（orient: direction）铺一条世界单位长度的水柱，长度取 `data.reach`（服务端裁到真实首碰/墙的实际拳程）；
+ *   使用 fit: "world" 保证线长就是机制格数，不被体型拟合二次缩放。hit 的水花从落点向外炸、受重力。
  * 数：hit 与 thrust 的水花数量绑定 `data.spray`（速度／体重换算），亮度绑定 `data.intensity`（水柱威力换算），
  *   水柱长度绑定 `data.reach`（拳程换算）。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -41,7 +42,7 @@ const JetpunchDefinition: ParticleDefinition = {
             exit: { stop: 2, drain: 8 },
             emitters: [
                 {
-                    name: "jet", bind: "source", offset: [0, 0.5, 0.35], height: 0.5, orient: "direction",
+                    name: "jet", bind: "source", offset: [0, 0.5, 0], height: 0.5, orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/waterjet_head",
                     rate: 70, shape: { kind: "line", length: { data: "reach", fallback: 2.8 } },
                     direction: "shape", speed: [0.05, 0.16],
@@ -49,7 +50,7 @@ const JetpunchDefinition: ParticleDefinition = {
                     color: 0xBFE8F8, alpha: [0.9, 0], light: "full", maxParticles: 60
                 },
                 {
-                    name: "streak", bind: "source", offset: [0, 0.5, 0.35], height: 0.5, orient: "direction",
+                    name: "streak", bind: "source", offset: [0, 0.5, 0], height: 0.5, orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     rate: 26, shape: { kind: "line", length: { data: "reach", fallback: 2.8 } },
                     direction: "shape", speed: [0.04, 0.12],

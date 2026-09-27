@@ -68,8 +68,9 @@ const BindDefinition: ParticleDefinition = {
             ]
         },
         leash: {
+            // duration 0 = 跟随托管效果存活；不写 exit.stop，绳在整个束缚期间持续发射（原先 stop 2 只发头两刻）。
             duration: 0,
-            exit: { stop: 2, drain: 10 },
+            exit: { drain: 10 },
             emitters: [
                 {
                     name: "taut", bind: "path", fit: "none",

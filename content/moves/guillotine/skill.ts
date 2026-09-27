@@ -1,23 +1,11 @@
-/**
- * 断头钳 / guillotine 的出手方式。
- *
- * 核心念头：大钳从两侧张开、罩住身前那一段扇形，合拢一刻还在钳口里的目标被一次夹断。
- *   它最短、最快，代价是收招最久——贴身用，夹中就结束，夹空就要在原地晾上一会儿。
- *
- * 两幕：
- *   起（windup，提交前）：钳口缓缓张开、齿缝里透出寒光，只播预告，可被打断。
- *   夹（mark → snap / miss，提交后）：锁定身前的扇形并把它画出来，蓄势 `mark` 刻后合拢；
- *       扇形内最近的一个非友方目标被 `guillotineExecute` 一次夹断，钳口合在空处则只留下一声脆响。
- *
- * 反制：离开身前这段扇形（绕后、拉开）、或换成幽灵属性；打断起手也让这一记白费。
- */
+/** Two real finite edges close in a locked aim plane; the first body or wall ends the clamp. */
 namespace PokemonSkills {
     define({
         id: guillotineId,
         cooldownParameter: "recharge",
         name: "Guillotine",
-        description: "大钳从两侧张开、罩住身前那一段扇形，合拢一刻还在钳口里的目标被一次夹断（一击必杀）。",
-        uses: ["贴身用最短的起手夹断一个目标", "夹住正前方扇形里最近的一个对手", "夹空后要承担最久的收招，用时机换爆发"],
+        description: "两条钳刃沿锁定的瞄准平面逐刻收拢，最先碰到的身体或墙面结束这一夹；敌人承受一笔有限重击，真实死亡后才显示钳断。",
+        uses: ["贴身用最短的起手夹中一个目标", "夹住正前方扇形里第一个可夹到的对手", "夹空后要承担最久的收招，用时机换爆发"],
         kind: "aim",
         range: 2.4,
         maxRange: 4.2,
@@ -26,7 +14,7 @@ namespace PokemonSkills {
         recover: 16,
         cooldown: 80,
         style: "pincer",
-        defaults: { wide: false, ai: { maxChase: 5, executionAbove: 0.2 } },
+        defaults: { wide: false, ai: { maxChase: 5 } },
         fields: [],
         indicator: function (config, pokemon) {
             const context: NumberContext = { pokemon: pokemon!, skill: skills[guillotineId], detail: { values: config } };
@@ -58,50 +46,67 @@ namespace PokemonSkills {
                     target: action.target() === null ? "" : String(action.target()!.ref()) }));
             return prepare;
         },
-        execute: function (action, move, config, done) {
-            const world = action.world(), actor = action.actor(), target = action.target();
-            const origin = action.origin(), direction = aim(action);
+        execute: function (action, _move, _config, done) {
+            const world = action.world(), actor = action.actor(), self = world.observe(actor);
+            if (!self) { done(action); return; }
+            const plane = WorldGeometry.basis(action.targetPosition().minus(self.position()), action.direction());
+            const heading = plane.forward;
+            action.releaseTarget();
             const span = Math.max(1.8, p(guillotineId, "span", action));
-            const arc = Math.max(90, p(guillotineId, "arc", action));
+            const half = Math.max(90, p(guillotineId, "arc", action)) * Math.PI / 360;
             const mark = Math.max(6, Math.round(p(guillotineId, "mark", action)));
             const grip = Math.max(10, Math.round(p(guillotineId, "grip", action)));
-            const scale = span / guillotineReference;
-            const targetRef = target === null ? "" : String(target.ref());
-            const front = origin.plus(direction.scale(span));
-
-            WorldFeedback.emit(world, guillotineScene, 1, origin,
-                { moment: "mark", target: targetRef, direction: [direction.x(), direction.y(), direction.z()],
-                    span: span, arc: arc, grip: grip, scale: scale }, mark + 20);
-            sound(action, "minecraft:entity.player.attack.sweep");
-
-            action.releaseTarget();
-            action.after(mark, function (current: CombatAction) {
-                const scope = current.world();
-                const region = WorldGeometry.sector(current.origin(), direction, span, arc, { below: 2, above: 3 });
-                let victim: CombatActor | null = null, at = front, best = Infinity;
-                WorldGeometry.selectEnemies(scope, region, function (enemy, facts) {
-                    if (String(enemy.ref()) === String(current.actor().ref())) return;
-                    const delta = facts.position().minus(current.origin()), flat = WorldGeometry.flatUnit(direction, current.direction());
-                    const lateral = Math.abs(delta.x() * flat.z() - delta.z() * flat.x());
-                    const score = lateral * 100 + delta.length();
-                    if (score >= best) return;
-                    best = score; victim = enemy; at = facts.position();
-                });
-                const result = victim === null ? "miss" : guillotineExecute(current, victim);
-                if (result === "kill") {
-                    WorldFeedback.emit(scope, guillotineScene, 1, at,
-                        { moment: "snap", target: String(victim!.ref()), grip: grip, scale: scale }, 30);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), guillotineKillText, [], 28);
-                    scope.sound("cobblemon:impact.normal", at, 16, "{}");
-                    scope.sound("minecraft:entity.player.attack.strong", at, 14, "{}");
-                } else {
-                    WorldFeedback.emit(scope, guillotineScene, 1, front,
-                        { moment: "miss", direction: [direction.x(), direction.y(), direction.z()], span: span, arc: arc, grip: grip, scale: scale }, 22);
-                    WorldFeedback.text(scope, front.plus(WorldCombat.point(0, 0.9, 0)), result === "resisted" ? "world_combat.move.guillotine.text.resisted" : guillotineMissText, [], 22);
-                    scope.sound("minecraft:item.shield.break", front, 10, "{}");
+            const scale = span / guillotineReference, radius = Math.max(.1, Math.min(.22, span * .055));
+            const jaws = WorldFeedback.actionScenes("world_combat:move_guillotine/jaw");
+            let finished = false;
+            const vertex = (point: CombatPoint): number[] => [point.x(), point.y(), point.z()];
+            function end(current: CombatAction, contact: CombatImpact | null, blades: number[][][]): void {
+                if (finished) return;
+                finished = true;
+                const scope = current.world(), victim = contact && contact.hitEntity() ? contact.target() : null;
+                const at = contact ? contact.position() : current.origin().plus(heading.scale(span));
+                const ref = victim ? String(victim.ref()) : "";
+                const result = victim && scope.valid(victim) && !scope.friendly(victim) ? guillotineStrike(current, victim) : "miss";
+                if (result === "source-left") return;
+                WorldFeedback.emit(scope, "world_combat:move_guillotine/jaw", 1, at, { blades, radius }, 6);
+                WorldFeedback.emit(scope, guillotineScene, 1, at,
+                    { moment: result === "hit" ? "snap" : "miss", target: ref, grip, scale, intensity: 1, span, arc: half * 360 / Math.PI,
+                        direction: vertex(heading) }, result === "hit" ? 30 : 22);
+                WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1, 0)), result === "hit" ? guillotineHitText
+                    : result === "immune" || result === "resisted" ? "world_combat.move.guillotine.text.resisted" : guillotineMissText, [], 26);
+                scope.sound(result === "hit" ? "cobblemon:impact.normal" : "minecraft:item.shield.break", at, 14, "{}");
+                jaws.finish(current, done);
+            }
+            function step(current: CombatAction, index: number): void {
+                const scope = current.world(), body = scope.observe(actor);
+                if (!body) { jaws.finish(current, done); return; }
+                const apex = body.position();
+                // Subdivide angular travel: the very same clipped edges are tested and drawn.
+                const parts = Math.max(1, Math.ceil(span * half / mark / .14));
+                let blades: number[][][] = [];
+                for (let part = 1; part <= parts; part++) {
+                    const closure = (index + part / parts) / mark;
+                    let first: CombatImpact | null = null, distance = Infinity;
+                    blades = [];
+                    for (let side = -1; side <= 1; side += 2) {
+                        const angle = side * half * (1 - closure), c = Math.cos(angle), s = Math.sin(angle);
+                        const direction = heading.scale(c).plus(plane.right.scale(s));
+                        const hit = current.trace(apex, apex.plus(direction.scale(span)), radius, true);
+                        blades.push([vertex(apex), vertex(hit.position())]);
+                        if (hit.blocked() || hit.hitEntity()) {
+                            const reach = hit.position().minus(apex).length();
+                            if (reach < distance) { distance = reach; first = hit; }
+                        }
+                    }
+                    jaws.show(current, "jaws", apex, { blades, radius, closure });
+                    if (first) { end(current, first, blades); return; }
                 }
-                done(current);
-            });
+                if (index + 1 >= mark) { end(current, null, blades); return; }
+                current.after(1, next => step(next, index + 1));
+            }
+            sound(action, "minecraft:entity.player.attack.sweep");
+            step(action, 0);
         }
+
     });
 }

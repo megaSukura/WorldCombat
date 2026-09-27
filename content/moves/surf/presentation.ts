@@ -6,10 +6,11 @@
  * 色相家族：水蓝为主体（0x4F9FD4）、亮蓝作边缘（0x9BD2F5）、近白只给泡沫高光（0xEAF7FF）；灭火白汽用中性灰。
  * 拍子：起 gather 14t ／ 漫 surge 随浪头推进 ／ 击 hit 每个目标一处 ／ 收 settle 或空浪 miss。
  * 持续状态：surge 的水墙贴地低密度、不遮视线；douse 只在灭火处冒一小缕白汽。
- * 范围：surge 的环与泡沫按 `data.front`（这一拍浪头到哪）画出，圈到哪就会被淹到哪；
+ * 范围：surge 的环、水幕与泡沫按真实世界块结算（fit:world）；`data.front`（这一拍浪头到哪）是半径，
+ *   `data.crest`（浪高派生）是水幕立起的高度；圈到哪、立多高就会被淹到哪，不再被 data.scale 二次缩放。
  * 运动：水墙从脚下沿地面逐环向外推进，浪头带一点向上翻卷，最后在 `data.radius` 处拍散；
  * 数：`data.spray`（特攻与体宽派生）决定每秒溅水量，`data.intensity`（威力派生）抬高命中水花，
- *   `data.crest`（浪高派生）决定水墙立起多高，`data.scale`（浪墙半径/4.6）放大尺度。
+ *   `data.scale`（浪墙半径/4.6）只放大粒子尺寸。
  */
 const SurfDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -50,7 +51,7 @@ const SurfDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 20 },
             emitters: [
                 {
-                    name: "wall", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
+                    name: "wall", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
                     rate: { data: "spray", fallback: 24 }, shape: { kind: "ring", radius: { data: "front", fallback: 0.6 } },
                     direction: "outward", speed: [0.14, 0.42], spread: 8,
@@ -59,7 +60,16 @@ const SurfDefinition: ParticleDefinition = {
                     color: 0x5FA8DC, alpha: [0.7, 0], light: "full", maxParticles: 220
                 },
                 {
-                    name: "crest", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "none",
+                    name: "curtain", bind: "point", offset: [0, 0.02, 0], height: 0, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet",
+                    rate: { data: "spray", fallback: 18 }, shape: { kind: "cylinder", radius: { data: "front", fallback: 0.6 }, length: { data: "crest", fallback: 2.2 }, thickness: 1 },
+                    direction: "outward", speed: [0.08, 0.28], spread: 10,
+                    gravity: 0.04, drag: 0.96,
+                    lifetime: [10, 20], size: [0.22, 0.06],
+                    color: 0x7FC0E8, alpha: [0.6, 0], light: "world", maxParticles: 180
+                },
+                {
+                    name: "crest", bind: "point", offset: [0, 0.2, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
                     rate: { data: "spray", fallback: 16 }, shape: { kind: "ring", radius: { data: "front", fallback: 0.6 } },
                     direction: "outward", speed: [0.18, 0.5], spread: 14,
@@ -68,7 +78,7 @@ const SurfDefinition: ParticleDefinition = {
                     color: 0x9BD2F5, alpha: [0.75, 0], light: "full", maxParticles: 160
                 },
                 {
-                    name: "foam", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
+                    name: "foam", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
                     rate: { data: "spray", fallback: 18 }, shape: { kind: "ring", radius: { data: "front", fallback: 0.6 } },
                     direction: "outward", speed: [0.05, 0.2], spread: 12,
@@ -77,7 +87,7 @@ const SurfDefinition: ParticleDefinition = {
                     color: 0xEAF7FF, alpha: [0.7, 0], light: "world", maxParticles: 190
                 },
                 {
-                    name: "damp", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "damp", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: { data: "spray", fallback: 14 }, shape: { kind: "circle", radius: { data: "front", fallback: 0.6 } },
                     direction: "outward", speed: [0.04, 0.16], spread: 16,
@@ -143,7 +153,7 @@ const SurfDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 22 },
             emitters: [
                 {
-                    name: "recede", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "recede", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
                     rate: { data: "spray", fallback: 12 }, shape: { kind: "circle", radius: { data: "radius", fallback: 4.6 }, thickness: 0.9 },
                     direction: "inward", speed: [0.02, 0.08], spread: 10,
@@ -151,7 +161,7 @@ const SurfDefinition: ParticleDefinition = {
                     color: 0x6FB6E8, alpha: [0.35, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "mist", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
+                    name: "mist", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     rate: 16, shape: { kind: "circle", radius: { data: "radius", fallback: 4.6 } },
                     direction: "up", speed: [0.01, 0.05],
@@ -165,7 +175,7 @@ const SurfDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 16 },
             emitters: [
                 {
-                    name: "scuff", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "scuff", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
                     burst: { count: 18 },
                     shape: { kind: "ring", radius: 0.8 },

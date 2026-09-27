@@ -91,53 +91,72 @@ namespace PokemonSkills {
             const motes = Math.max(6, Math.round(p("gust", "motes", action)));
             const shove = !!(config && config.shove);
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.55));
+            // trail 模式忽略 rate；风纹密度接有效的 amount，数量由风团量派生但保持个位数。
+            const density = Math.max(1, Math.min(4, Math.round(motes / 7)));
             const intensity = Math.max(0.5, Math.min(2.0, power / 34));
-            const direction = aim(action);
             const scenes = WorldFeedback.actionScenes(gustScene);
-            let settled = false;
+            // 口前起点与原生弹出生处统一：同一个实际点既画放出，也交给 projectile 当起点与瞄准基准。
+            const body = world.observe(action.actor());
+            const launch = origin.plus(WorldCombat.point(0, body === null ? 0.8 : body.height() * 0.6, 0));
+            const wanted = target !== null ? action.targetPosition().minus(launch) : WorldCombat.point(0, 0, 0);
+            const direction = wanted.length() < 0.01 ? action.direction() : wanted.unit();
+            let settled = false, struck = false, flight = "";
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; scenes.finish(current, done); } }
 
             const appearance: any = { tint: 0xDCE9F0 };
-            if (target !== null) appearance.homing = { target: String(target.ref()), turn: 14, delay: 1, range: reach + 2 };
+            if (target !== null) appearance.homing = { target: String(target.ref()), turn: 14, delay: 1, range: reach };
 
             sound(action, "cobblemon:move.gust.actor");
-            WorldFeedback.emit(world, gustScene, 1, origin,
-                { moment: "release", motes: motes, scale: scale, intensity: intensity, shove: shove ? 1 : 0 }, 16, "gust:release");
+            WorldFeedback.emit(world, gustScene, 1, launch,
+                { moment: "release", motes: motes, density: density, scale: scale, intensity: intensity, shove: shove ? 1 : 0 }, 16, "gust:release");
 
-            const flight = LivingActions.projectile(action, {
-                speed: speed, direction: direction, gravity: 0, range: reach + 3, radius: radius, lifetime: 160,
+            flight = LivingActions.projectile(action, {
+                speed: speed, direction: direction, origin: launch, gravity: 0, range: reach, radius: radius, lifetime: 160,
                 appearance: appearance,
                 impact: function (inner: CombatAction, hit: CombatImpact): void {
-                    const scope = inner.world(), at = hit.position(), struck = hit.target();
+                    struck = true;
+                    const scope = inner.world(), at = hit.position(), struckTarget = hit.target();
                     scenes.stop(inner, "flight");
-                    if (hit.hitEntity() && struck !== null && scope.valid(struck) && !scope.friendly(struck)) {
+                    if (hit.hitEntity() && struckTarget !== null && scope.valid(struckTarget) && !scope.friendly(struckTarget)) {
                         if (!impact(inner, hit, "gust", power, { damage: damageSpec("gust", "blast"), flags: { wind: true } })) return;
-                        const body = scope.observe(struck);
-                        const airborne = body !== null && (!body.grounded()
-                            || CombatStatus.has(scope, struck, "fly") || CombatStatus.has(scope, struck, "magnetrise"));
-                        const heading = gustImpactHeading(hit, origin, at, direction);
+                        const before = scope.observe(struckTarget);
+                        const airborne = before !== null && (!before.grounded()
+                            || CombatStatus.has(scope, struckTarget, "fly") || CombatStatus.has(scope, struckTarget, "magnetrise"));
+                        const heading = gustImpactHeading(hit, launch, at, direction);
                         const distance = pushBase * (airborne ? 1.8 : 1);
-                        // 推动按实际收到的位移结算：推不动就不再把它当作被吹走。
-                        let moved = 0;
-                        if (scope.valid(struck))
-                            moved = scope.displace(struck, WorldCombat.point(heading.x() * distance, airborne ? 0.35 : 0, heading.z() * distance));
+                        const lift = airborne ? 0.35 : 0;
+                        // 敌方推动走受击位移：原生抗击退/事件生效，推不动就不算被吹走。
+                        const moved = scope.hitDisplace(struckTarget, WorldCombat.point(heading.x() * distance, lift, heading.z() * distance));
+                        // 托举只按实际向上的位移表现：被墙卡住的纯水平推动不会有升高，真正被抬起才亮。
+                        const after = scope.valid(struckTarget) ? scope.observe(struckTarget) : null;
+                        const climbed = before !== null && after !== null ? after.position().y() - before.position().y() : 0;
+                        const lifted = airborne && moved > 0.05 && climbed > 0.02;
                         WorldFeedback.emit(scope, gustScene, 1, at,
-                            { moment: "burst", target: String(struck.ref()), push: Math.round(moved * 100) / 100, motes: motes, scale: scale,
-                                intensity: intensity, airborne: airborne ? 1 : 0, lift: airborne && moved > 0.05 ? 12 : 0,
+                            { moment: "burst", target: String(struckTarget.ref()), push: Math.round(moved * 100) / 100, motes: motes, density: density,
+                                scale: scale, intensity: intensity, airborne: airborne ? 1 : 0, lift: lifted ? 12 : 0,
                                 direction: [heading.x(), heading.y(), heading.z()] }, 22);
                         sound(inner, "cobblemon:move.gust.target");
-                        // 空气托举只在真把离地目标吹动时表现。
-                        if (airborne && moved > 0.05) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), gustLiftText, [], 24);
+                        if (lifted) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), gustLiftText, [], 24);
                         return;
                     }
                     WorldFeedback.emit(scope, gustScene, 1, at,
-                        { moment: "dissipate", motes: Math.round(motes * 0.5), scale: scale }, 18);
+                        { moment: "dissipate", motes: Math.round(motes * 0.5), density: density, scale: scale }, 18);
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.5, 0)), gustMissText, [], 18);
                 }
-            }, function (inner: CombatAction) { finish(inner); });
-            scenes.show(action, "flight", origin,
-                { moment: "flight", projectile: flight, motes: motes, scale: scale, intensity: intensity });
+            }, function (inner: CombatAction) {
+                // 自然飞尽：用 projectilePosition 的真实末点散风，不用满射程点或发射原点假造终点。
+                scenes.stop(inner, "flight");
+                if (!struck) {
+                    const end = inner.world().projectilePosition(flight);
+                    if (end !== null)
+                        WorldFeedback.emit(inner.world(), gustScene, 1, end,
+                            { moment: "dissipate", motes: Math.round(motes * 0.5), density: density, scale: scale }, 18);
+                }
+                finish(inner);
+            });
+            scenes.show(action, "flight", launch,
+                { moment: "flight", projectile: flight, motes: motes, density: density, scale: scale, intensity: intensity });
         }
     });
 }

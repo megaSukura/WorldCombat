@@ -2,13 +2,14 @@
 namespace PokemonSkills {
     const fakeoutHitText = "world_combat.move.fakeout.text.hit";
     const fakeoutDazeText = "world_combat.move.fakeout.text.daze";
+    const fakeoutBreakText = "world_combat.move.fakeout.text.broken";
     const fakeoutMissText = "world_combat.move.fakeout.text.miss";
 
-    /** 拍懵：挂共享畏缩身份并把它正在执行的一手按停。 */
-    function fakeoutDaze(world: CombatWorld, target: CombatActor, ticks: number): boolean {
-        if (!CombatStatus.apply(world, target, "flinch", fakeoutDazeEffect, ticks, 0)) return false;
-        world.interrupt(target, "world_combat:interrupt");
-        return true;
+    /** 拍懵：挂共享畏缩身份，并投递一次普通打断，返回实际结束的动作数。 */
+    function fakeoutDaze(world: CombatWorld, target: CombatActor, ticks: number): { applied: boolean; ended: number } {
+        const applied = CombatStatus.apply(world, target, "flinch", fakeoutDazeEffect, ticks, 0);
+        // 只有回执数大于零才算真的按停了一手；没结束就只说拍懵，不冒充打断。
+        return { applied: applied, ended: applied ? LivingActions.requestInterrupt(world, target) : 0 };
     }
 
     define({
@@ -16,7 +17,7 @@ namespace PokemonSkills {
         id: fakeoutId,
         cooldownParameter: "recharge",
         name: "Fake Out",
-        description: "刚被放上场时闪身抢出的一记掌掴：优先度最高、几乎瞬发，未必有多疼，却能把对手拍懵并打断它正在展开的一手；一旦自己已经出过任何一手，这一记就再拍不出来了。",
+        description: "每次遭遇的第一手可用：短踏步后迅速拍掌，命中会尝试拍懵对手，并打断其可被普通打断的本作动作。提交其他招或已记录的原生实击会用掉开场机会；脱离实际交战后才能重新开场。",
         uses: ["刚上场就抢一记把对手拍懵", "打断对手正在展开的起手", "短踏步后近身拍掌"],
         kind: "aim",
         range: 1.8,
@@ -60,8 +61,8 @@ namespace PokemonSkills {
 
             function clap(current: CombatAction): void {
                 const scope = current.world(), here = current.origin();
-                const intended = here.plus(direction.scale(reach)), wall = scope.clipBlocks(here, intended);
-                const end = wall ? wall.position() : intended;
+                const intended = here.plus(direction.scale(reach)), wall = WorldGeometry.blockHit(scope, here, intended);
+                const end = wall !== null ? wall.position() : intended;
                 const candidates: { actor: CombatActor; point: CombatPoint }[] = [];
                 WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(here, end, radius), victim => {
                     if (String(victim.key()) === String(current.actor().key()) || scope.friendly(victim)) return;
@@ -72,17 +73,34 @@ namespace PokemonSkills {
                 const victim = candidates.length ? candidates[0].actor : null, point = candidates.length ? candidates[0].point : end;
                 const landed = victim !== null && hurt(current, victim, fakeoutId, power,
                     { damage: damageSpec(fakeoutId, "swat"), contact: true });
-                WorldFeedback.emit(scope, fakeoutScene, 1, point, { moment: "clap", direction: [direction.x(), direction.y(), direction.z()],
-                    scale: radius / 0.4, landed: landed ? 1 : 0 }, 10);
+                // 双掌的世界起点按真实朝向的右向量算，朝哪边都在这一掌两侧相对合拢，不再固定世界 X 轴。
+                const right = WorldGeometry.basis(direction).right;
+                const palmA = right.scale(0), palmB = palmA.scale(-1);
+                const at = LivingActions.coordinates(point);
                 if (landed && victim) {
-                    if (scope.valid(victim) && fakeoutDaze(scope, victim, dazeTicks)) {
-                        WorldFeedback.emit(scope, fakeoutScene, 1, point, { moment: "daze", target: String(victim.ref()),
-                            daze: dazeTicks, stars: Math.round(5 + dazeTicks / 6) }, dazeTicks);
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.5, 0)), fakeoutDazeText, [], 28);
+                    WorldFeedback.emit(scope, fakeoutScene, 1, point, { moment: "clap", direction: LivingActions.coordinates(direction),
+                        point: at, palmA: LivingActions.coordinates(palmA), palmB: LivingActions.coordinates(palmB),
+                        inA: LivingActions.coordinates(right.scale(-1)), inB: LivingActions.coordinates(right),
+                        scale: radius / 0.4, landed: 1 }, 10);
+                    if (scope.valid(victim)) {
+                        const outcome = fakeoutDaze(scope, victim, dazeTicks);
+                        if (outcome.applied) {
+                            WorldFeedback.emit(scope, fakeoutScene, 1, point, { moment: "daze", target: String(victim.ref()),
+                                daze: dazeTicks, stars: Math.round(5 + dazeTicks / 6) }, dazeTicks);
+                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.5, 0)), fakeoutDazeText, [], 28);
+                            // 只有确实结束了一个动作才报「打断」，并单独给一次短闪。
+                            if (outcome.ended > 0) {
+                                WorldFeedback.emit(scope, fakeoutScene, 1, point, { moment: "broken", target: String(victim.ref()),
+                                    ended: Math.min(3, outcome.ended) }, 22);
+                                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.75, 0)), fakeoutBreakText, [], 24);
+                            }
+                        }
                     }
                     scope.sound("minecraft:block.amethyst_block.hit", point, 14, "{}");
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.3, 0)), fakeoutHitText, [Math.round(power)], 24);
                 } else {
+                    WorldFeedback.emit(scope, fakeoutScene, 1, point, { moment: "miss", direction: LivingActions.coordinates(direction),
+                        point: at, scale: radius / 0.4 }, 18);
                     scope.sound("minecraft:entity.player.attack.nodamage", point, 12, "{}");
                     WorldFeedback.text(scope, point, fakeoutMissText, [], 20);
                 }
@@ -92,6 +110,12 @@ namespace PokemonSkills {
                 const swept = sweepStep(current, direction.scale(Math.min(step, length - travelled)), radius);
                 travelled += swept.moved;
                 if (swept.hit.hitEntity() || swept.hit.blocked() || swept.moved < p(fakeoutId, "minimumMove", current) || travelled >= length) {
+                    const here = current.origin(), hit = current.trace(here, here.plus(direction.scale(reach)), radius);
+                    const point = hit.position(), right = WorldGeometry.basis(direction).right;
+                    current.present("fakeout:closing", fakeoutScene, 1, point, JSON.stringify({ moment: "closing",
+                        point: LivingActions.coordinates(point), palmA: LivingActions.coordinates(right.scale(.3)),
+                        palmB: LivingActions.coordinates(right.scale(-.3)), inA: LivingActions.coordinates(right.scale(-1)),
+                        inB: LivingActions.coordinates(right), direction: LivingActions.coordinates(direction) }));
                     current.after(1, clap); return;
                 }
                 current.after(1, advance);

@@ -51,7 +51,7 @@ const TriplearrowsDefinition: ParticleDefinition = {
                 {
                     name: "sweep_hit", bind: "point", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fighting",
-                    burst: { count: 1, at: 0 },
+                    burst: { count: { data: "contact", fallback: 0 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.34 },
                     direction: "outward", speed: [0.05, 0.18], spread: 22,
                     lifetime: [6, 12], size: [0.3, 0.08], sizeMode: "index",
@@ -119,15 +119,30 @@ const TriplearrowsDefinition: ParticleDefinition = {
                     gravity: 0.06, drag: 0.9,
                     lifetime: [9, 16], size: [0.1, 0.02],
                     color: 0xB8C878, alpha: [0.6, 0], light: "world", maxParticles: 30
-                },
+                }
+            ]
+        },
+        crit: {
+            duration: 20,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
                 {
                     name: "crit_star", bind: "point", offset: [0, 0.6, 0],
                     particle: "world_combat_core:cobblemon/vanilla/critical_hit",
-                    burst: { count: { data: "crit", fallback: 0 }, at: 0 },
+                    burst: { count: { data: "crit", fallback: 1 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.35 },
                     direction: "outward", speed: [0.06, 0.24], spread: 26,
                     lifetime: [7, 13], size: [0.22, 0.05], sizeMode: "index",
                     color: 0xFFF4A8, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 20
+                },
+                {
+                    name: "crit_spark", bind: "point", offset: [0, 0.55, 0],
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
+                    burst: { count: 6, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 },
+                    direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [7, 13], size: [0.1, 0.02],
+                    color: 0xFFF4A8, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 24
                 }
             ]
         },

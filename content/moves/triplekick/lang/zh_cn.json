@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.triplekick.summary": "正面站定，朝释放时锁定的方向一脚接一脚地直踢：每一脚独立掷命中、取真正的短距离首碰，第 n 脚威力递增，任一脚落空这串就停。前两脚只是轻点把人留住，最后一脚才把整串的推力一次送出。抽射式踢得更重、顶得更远，但够得近、连得慢。",
+  "worldcombat.skill.triplekick.summary": "正面站定，朝释放时锁定的方向一脚接一脚地直踢：每一脚独立掷命中、取真正的短距离首碰，第 n 脚威力递增，任一脚落空这串就停。前两脚只是轻点、把目标留在踢线上，最后一脚才把整串的推力一次送出。抽射式踢得更重、顶得更远，但够得近、连得慢。",
   "worldcombat.skill.triplekick.description.0": "第一脚造成约 %1$s 点格斗属性接触伤害，连续 %2$s 脚；每中一脚，下一脚威力就在第一脚基础上再增加 %3$s 倍。",
   "worldcombat.skill.triplekick.description.1": "每脚沿身前 %1$s 格长、%2$s 格接触半径直线伸出，取真正碰到的第一个敌人结算，同一次踢击不重复打同一目标；每脚命中率 %3$s，两脚间隔 %4$s 秒。",
   "worldcombat.skill.triplekick.description.2": "三脚命中后沿踢击方向共顶开 %1$s 格；前两脚各只轻推四分之一、把目标留在踢线上，最后一脚一次补足余下的推力。",
@@ -8,9 +8,9 @@
   "worldcombat.skill.triplekick.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.triplekick.growth.0": "达到 %1$s 级，第一脚威力提升至 %2$s。",
   "worldcombat.skill.triplekick.growth.1": "达到 %1$s 级，第一脚威力提升至 %2$s，踢击距离延长至 %3$s 格。",
-  "worldcombat.skill.triplekick.use.0": "朝前的窄走廊连踢三脚",
+  "worldcombat.skill.triplekick.use.0": "朝前直线连踢三脚",
   "worldcombat.skill.triplekick.use.1": "每中一脚，下一脚更重",
-  "worldcombat.skill.triplekick.use.2": "贴地快踢，冷却短",
+  "worldcombat.skill.triplekick.use.2": "最后一脚把目标一次踢开",
   "worldcombat.skill.triplekick.value.kick": "第一脚威力",
   "worldcombat.skill.triplekick.value.kicks": "脚数",
   "worldcombat.skill.triplekick.value.ramp": "每中递增",

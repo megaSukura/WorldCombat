@@ -8,10 +8,11 @@
  * 拍子：起 windup（聚光刨地）→ 冲 charge（贴地冲刺）→ 扎 gore（命中峰值）／空 miss（刹停扬尘）→ 抽 sap（回流）。
  * 范围：gore 的环按 `data.scale`（角尖判定 / 0.42）铺开，charge 的尘迹沿施法者实际走过的方向铺开，
  *   玩家能直接从尘迹读出这一撞划过的路线。
- * 运动：charge 的粒子沿 `data.direction` 向外掠过；sap 的线发射器 orient=direction 沿「目标→自身」抽汁，
- *   path 把角与施法者连成实线；miss 在尽头刹出一圈尘。
- * 数：`data.motes`（贯穿威力与抽取比例换算）决定草屑、角影与汁点密度；`data.carried`（已扎中的目标数）
- *   让贯穿式扎到第几个从画面读出。
+ * 运动：charge 的粒子沿 `data.direction` 向外掠过；windup 的角端聚光用 orient=direction 放在朝向的前点上；
+ *   sap 不再是整段撒点，而是一枚亮点按 serverTick 从目标身上插值回到移动中的施法者（custom scene，不生成粒子或实体）；
+ *   miss 在尽头刹出一圈尘。
+ * 数：`data.motes`（贯穿威力与抽取比例换算）决定草屑与角影密度；`data.carried`（已扎中的目标数）
+ *   让贯穿式扎到第几个从画面读出；sap 只在服务端确认真的回了血时触发。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const HornLeechDefinition: ParticleDefinition = {
@@ -22,7 +23,7 @@ const HornLeechDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "horn_gather", bind: "source", height: 0.6, offset: [0, 0, 0.2],
+                    name: "horn_gather", bind: "source", height: 0.6, offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
                     rate: 12, shape: { kind: "sphere", radius: 0.26 },
                     direction: "inward", speed: [0.02, 0.08], spin: 30,
@@ -30,9 +31,9 @@ const HornLeechDefinition: ParticleDefinition = {
                     color: 0x6DA83A, alpha: [0.7, 0], light: "world", maxParticles: 34
                 },
                 {
-                    name: "horn_glow", bind: "source", height: 0.55, offset: [0, 0, 0.25],
+                    name: "horn_glow", bind: "source", height: 0.6, offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: 10, shape: { kind: "sphere", radius: 0.18 },
+                    rate: 10, shape: { kind: "line", length: 0.45 }, orient: "direction",
                     direction: "inward", speed: [0.01, 0.04],
                     lifetime: [6, 11], size: [0.08, 0.01],
                     color: 0xDCE775, alpha: [0.85, 0], light: "full", maxParticles: 24
@@ -100,29 +101,6 @@ const HornLeechDefinition: ParticleDefinition = {
                 }
             ]
         },
-        sap: {
-            duration: 30,
-            exit: { stop: 16, drain: 18 },
-            emitters: [
-                {
-                    name: "link", bind: "path",
-                    particle: "world_combat_core:cobblemon/generic/grass/xsseed",
-                    shape: { kind: "polyline" }, rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.01, 0.05], spread: 12,
-                    lifetime: [8, 16], size: [0.10, 0.02], sizeMode: "index",
-                    color: 0x4E7F26, alpha: [0.7, 0], light: "world", maxParticles: 90
-                },
-                {
-                    name: "flow", bind: "point", orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    shape: { kind: "line", length: { data: "span", fallback: 3 } },
-                    rate: { data: "motes", fallback: 14 },
-                    direction: "shape", speed: [0.12, 0.34], spread: 10,
-                    lifetime: [6, 14], size: [0.08, 0.01],
-                    color: 0xDCE775, alpha: [0.9, 0], light: "full", bloom: 0.2, maxParticles: 80
-                }
-            ]
-        },
         miss: {
             duration: 18,
             exit: { stop: 7, drain: 14 },
@@ -141,3 +119,31 @@ const HornLeechDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_hornleech", 1, HornLeechDefinition);
+
+/**
+ * 养分回流：服务端在确认真的回了血时，给出目标引用、施法者引用与起始刻。
+ * 这里按 serverTick 把一枚亮点从目标身体插值回施法者身上——是「从目标传到移动中的源体」，不是整条线同时撒点。
+ * 目标已倒下时退回接触点；亮点直接取图集贴图，不生成粒子或实体。
+ */
+WorldCombatClient.scene("world_combat:move_hornleech_flow", 1, function (frame) {
+    const entry: CombatSceneEntry<{ moment?: string; target?: string; source?: string; start?: number; duration?: number; carried?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    if (data.moment !== "sap") return;
+    const duration = typeof data.duration === "number" && data.duration > 0 ? data.duration : 1;
+    const start = typeof data.start === "number" ? data.start : frame.serverTick();
+    const progress = Math.max(0, Math.min(1, (frame.serverTick() - start) / duration));
+    if (progress >= 1) return;
+    const wound = JSON.parse(frame.anchor(data.target || ""));
+    const self = JSON.parse(frame.anchor(data.source || entry.source));
+    const destination = self ? { x: self.x, y: self.y + (typeof self.height === "number" ? self.height : 1.4) * 0.55, z: self.z }
+        : { x: entry.position[0], y: entry.position[1], z: entry.position[2] };
+    const from = wound ? { x: wound.x, y: wound.y + (typeof wound.height === "number" ? wound.height : 1.4) * 0.5, z: wound.z }
+        : { x: entry.position[0], y: entry.position[1], z: entry.position[2] };
+    // 缓入缓出：亮点先在伤口处亮一下，再加速收进施法者。
+    const t = progress * progress * (3 - 2 * progress);
+    const alpha = Math.max(0, Math.min(255, Math.round(235 * (1 - progress))));
+    frame.sprite("cobblemon:particle/generic/sparkle/glowingsparkle",
+        from.x + (destination.x - from.x) * t, from.y + (destination.y - from.y) * t, from.z + (destination.z - from.z) * t,
+        0.22, 0, (alpha << 24) | 0xDCE775, Math.floor(frame.serverTick() * 0.5) % 4, true);
+});

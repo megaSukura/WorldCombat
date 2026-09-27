@@ -19,7 +19,7 @@ Smoke.scenario("spark", function (stage) {
     }, function () {
         stage.expect(stage.casts("spark", caster) > 0, "spark was committed");
         stage.expect(stage.damageTo(foe) > 0, "the charged tackle landed");
-        stage.note("麻痹是概率结果（默认约 30%），这里只记录是否被麻住", {
+        stage.note("残血收尾倍率按真实撞到的第一个受害者当刻生命重算，不再沿用发射时锁住的瞄准目标；麻痹是概率结果（默认约 30%），这里只记录是否被麻住", {
             casts: stage.casts("spark", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             selfDamage: Math.round(stage.damageTo(caster) * 10) / 10,

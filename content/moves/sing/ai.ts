@@ -10,8 +10,14 @@
  * 优先级：基础 45；圈里每多一个醒着的非友方 +7，最高 85。
  */
 namespace PokemonSkills {
-    /** 与参数公式同源的声场半径估算（AI 读不到特攻，只用等级；实际命中仍走招式自己的公式）。 */
+    /** 与参数公式同源的声场半径：读本次真实 reach 公式（等级 + 特攻 + 悠长配置），不再只按等级近似。 */
     function singFieldRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            const value = PokemonSkills.p(singId, "reach",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills[singId], detail: { values: item.data.config || {} } });
+            if (typeof value === "number" && isFinite(value) && value > 0) return Math.max(3, Math.min(8, value));
+        } catch (error) { }
         const facts = CompanionBehavior.pokemonFacts(context, CompanionBehavior.source(context));
         const level = facts && typeof facts.level === "number" ? facts.level : 30;
         const soothing = !!(item.data.config && item.data.config.soothing);
@@ -35,9 +41,15 @@ namespace PokemonSkills {
     function singWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
-        if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
         const self = CompanionBehavior.source(context);
-        return singAwakeFoes(context, self.point, singFieldRadius(context, item)) >= CompanionBehavior.ai<number>(item, "minFoes", 1);
+        const radius = singFieldRadius(context, item);
+        const inField = singAwakeFoes(context, self.point, radius) >= CompanionBehavior.ai<number>(item, "minFoes", 1);
+        if (!inField) return false;
+        // 驻守：已经有人站在声场里就地开口；对方还在圈外、又不肯离位时不出手。
+        if ((context.facts.intent === "hold" || context.facts.intent === "stay")
+            && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)
+            && CompanionBehavior.distance(self.point, threat.point) > radius) return false;
+        return true;
     }
 
     CompanionBehavior.registerUse(singId, {

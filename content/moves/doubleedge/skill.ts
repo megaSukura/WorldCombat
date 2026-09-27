@@ -2,18 +2,18 @@
  * 舍身冲撞 / doubleedge 的出手方式。
  *
  * 核心念头：一次最朴素的全身正面猛冲——压低身体沿瞄准方向直线撞出去，撞实的一刻把惯性整个压进目标：
- * 目标被顶飞，自己不再被反震弹开，而是贴着它短促压身、再原地沉重收势，把破绽留在原地。
- * 它是这一族里最直白的一招，也是唯一“顶飞后原地贴住露破绽”的；反震中等，不追求极端自损。
+ * 目标被顶飞，自己不再被反震弹开，而是短促承震停顿、再原地沉重收势，把破绽留在原地。
+ * 它是这一族里最直白的一招，也是唯一“顶飞后原地停住露破绽”的；反震中等，不追求极端自损，也不按住目标。
  *
  * 两幕：
  *   起（windup，提交前）：压低身体、踏地蓄势，只播预告。
  *   撞（charge → press → settle）：提交后逐刻沿瞄准方向推进；trace 撞上活体即结算 tackle 接触伤害一次，
- *       按 recoil 比例反伤自己（共享结算），把目标沿冲撞方向顶飞 shove 格，随后原地压身 press 刻、不能自由转向追打，
+ *       按 recoil 比例反伤自己（共享结算），把目标沿冲撞方向顶飞 shove 格，随后自身承震停顿 press 刻、不能自由转向追打，
  *       再脚底两步收势；冲到底、撞墙或推不动就只是收势（settle）——这一招撞空不自伤，那是双刃头锤的代价。
  *
  * 与同族分开：勇鸟猛攻从空中俯冲打穿一条线；波动冲裹水撞击、把人浇透；木槌用坚硬躯体垂直砸下。
- * 舍身冲撞的辨识点是撞完之后不弹回、贴住压身再原地收势的那一下。
- * 配置 brace（定桩式）由 resolve 改时序、由公式改威力/反伤/顶飞/压身，提交后才触碰世界。
+ * 舍身冲撞的辨识点是撞完之后不弹回、原地承震停顿再收势的那一下。
+ * 配置 brace（定桩式）由 resolve 改时序、由公式改威力/反伤/顶飞/停顿，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const doubleedgeScene = "world_combat:move_doubleedge";
@@ -101,20 +101,28 @@ namespace PokemonSkills {
                 current.after(1, function (next: CombatAction) { hold(next, remaining - 1); });
             }
 
-            /** 撞实：伤害只结算一次，然后顶飞、贴压、再原地收势；自己不再被弹回。 */
+            /** 撞实：伤害只结算一次，然后顶飞、原地承震停顿、再收势；自己不再被弹回，也不按住目标。 */
             function collide(current: CombatAction, hit: CombatImpact): void {
                 const scope = current.world(), target = hit.target(), point = hit.position();
                 const landed = impact(current, hit, "doubleedge", power,
                     { damage: damageSpec("doubleedge", "tackle"), contact: true, recoil: recoil });
-                WorldFeedback.emit(scope, doubleedgeScene, 1, point,
-                    { moment: "impact", target: target ? String(target.ref()) : "", dust: dust, scale: scale,
-                        intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 30);
-                sound(current, "cobblemon:move.bodyslam.target");
-                if (landed && target !== null && scope.valid(target)) {
-                    scope.hitDisplace(target, direction.scale(shove));
-                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), doubleedgeHitText, [], 28);
+                // 只有真实造成伤害，才在目标身上留下接触冲击；免伤/拒绝不假称撞实或按住。
+                if (landed) {
+                    WorldFeedback.emit(scope, doubleedgeScene, 1, point,
+                        { moment: "impact", target: target ? String(target.ref()) : "", dust: dust, scale: scale,
+                            intensity: Math.max(0.6, Math.min(2.4, power / 110)) }, 30);
+                    sound(current, "cobblemon:move.bodyslam.target");
+                    if (target !== null && scope.valid(target)) {
+                        scope.hitDisplace(target, direction.scale(shove));
+                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), doubleedgeHitText, [], 28);
+                    }
                 }
                 movementScenes.stop(current, "charge");
+                // 自身承震停顿：身体真的停住时肩部向内一颤、脚下刹出短尘；目标按实际推距离开。
+                const body = scope.observe(current.actor());
+                if (body !== null) WorldFeedback.emit(scope, doubleedgeScene, 1, body.position(),
+                    { moment: "press", direction: [direction.x(), direction.y(), direction.z()], dust: dust, scale: scale,
+                        intensity: intensity }, press + 4);
                 hold(current, press);
             }
 

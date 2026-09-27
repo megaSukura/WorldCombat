@@ -155,3 +155,16 @@ const DoubleteamDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_doubleteam", 1, DoubleteamDefinition);
+
+/** Each real decoy displays its owner's native model, fitted to the decoy's current collision size. */
+WorldCombatClient.scene("world_combat:move_doubleteam_decoy", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data()), data: any = entry.data || {};
+    if (entry.lifecycle || data.lifecycle || typeof data.target !== "string" || typeof data.model !== "string") return;
+    const body = JSON.parse(frame.anchor(data.target)), source = JSON.parse(frame.anchor(data.model));
+    if (!body || !source || !(source.width > 0) || !(source.height > 0)) return;
+    const now = frame.serverTick(), fadeIn = Math.min(1, Math.max(0, (now - data.created) / 4));
+    const fadeOut = Math.min(1, Math.max(0, (data.expires - now) / 12));
+    const colour = ((Math.round(255 * .58 * fadeIn * fadeOut) << 24) | 0xC8D2E8) | 0;
+    frame.entityEcho(data.model, body.x, body.y, body.z,
+        body.width / source.width, body.height / source.height, body.width / source.width, 0, colour, false);
+});

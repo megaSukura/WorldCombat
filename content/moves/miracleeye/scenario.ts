@@ -26,7 +26,7 @@ Smoke.scenario("miracleeye", function (stage) {
         stage.expect(stage.hadMobEffect(target, "minecraft:glowing"), "the target was revealed with glowing");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/miracleeye_focus"), "the caster carried its own self-focus identity");
         stage.after(120, function () {
-            stage.note("奇迹之眼把共享身份挂在目标身上并照亮它；PokemonDamage.metadata 结算前把目标属性里的恶（dark）摘掉，超能因此接得上（此前对它为 0）。施法者同时在自专注窗口里被抬了命中，这段命中是绑定在 world_combat:miracleeye_focus 上的独立窗口，和目标印记分开到期。共享伤害预览不携带目标，伙伴 AI 评分仍按原生属性看，因此它此刻可能仍不用意念头锤；兑现由玩家操控的队友或手动输入完成。窗口、闪避剥离与心见级数由共享结算决定。窗口随等级与特攻、照亮随等级、自专注随等级与特攻、心眼数随特攻、距离随身高分别变化。", {
+            stage.note("奇迹之眼把共享身份挂在目标身上并照亮它；PokemonDamage.metadata 结算前把目标属性里的恶（dark）摘掉，超能因此接得上（此前对它为 0）。剥掉的闪避是本招挂在印记载体上的临时负贡献，印记到期或被清除时随载体收回，只撤本招这一份。施法者同时在自专注窗口里被抬了命中，这段命中是绑定在 world_combat:miracleeye_focus 上的独立窗口，和目标印记分开到期。共享伤害预览不携带目标，伙伴 AI 评分仍按原生属性看，因此它此刻可能仍不用意念头锤；兑现由玩家操控的队友或手动输入完成。窗口、闪避剥离与心见级数由共享结算决定。窗口随等级与特攻、照亮随等级、自专注随等级与特攻、心眼数随特攻、距离随身高分别变化。", {
                 casts: stage.casts("miracleeye", caster),
                 zenheadbuttCasts: stage.casts("zenheadbutt", caster),
                 damageToTarget: Math.round(stage.damageTo(target) * 10) / 10,

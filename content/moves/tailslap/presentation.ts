@@ -1,16 +1,16 @@
 /**
  * 扫尾拍打 / tailslap 的客户端表现。
  *
- * 一句话：施法者原地旋身，坚硬的尾巴贴着地面扫出一圈圈尾风环，每转一圈那个圈就重新亮起；圈内被拍中的人向外
- *   弹开、被向上挑起，圈的大小就是尾巴真正扫得到的范围。
- * 色相家族：尾风土黄（0xD8C9A6）与暖褐（0xB8A67E）做环与尘，命中近白（0xFFFFFF）只出现在被拍中的那一下。
+ * 一句话：施法者原地旋身，坚硬的尾巴贴着地面一段段扫过——每一刻场上只有**当前扫过的那段尾弧**，它一段接一段
+ *   转过一整圈；被拍中的人向外弹开、被向上挑起，扇面的半径与张角就是尾巴真正扫得到的范围。
+ * 色相家族：尾风土黄（0xD8C9A6）与暖褐（0xB8A67E）做尾弧与尘，命中近白（0xFFFFFF）只出现在被拍中的那一下。
  * 拍子：起 coil（绷尾扬尘）→ 转 lap / 砸 smash（旋扫整圈或砸尾前向一段）→ 中 hit（命中溅起）→ 收 settle。
- * 范围：lap 每段用 `data.radius` 与 `data.arc`（=90°）画贴地的一段扇面，四段随 `data.direction` 依次转过一圈，
- *   每圈开头另有一圈轮廓标出这一圈；smash 用 `data.arc` 画前向一段——半径与张角就是判定范围。
- * 运动：扇面段随 `data.direction` 依次旋转（不是整圈同时爆），尾风碎屑沿半径甩出；圈一个接一个亮起，
- *   读出「转了几圈、尾巴扫到哪了」。
- * 数：`data.dust`（物攻派生）绑定每一圈的发射量，`data.intensity`（每圈威力派生）抬高亮度，
- *   `data.index`／`data.laps` 让圈越转越明白还差几圈。
+ * 范围：lap 用 `data.radius` 与 `data.arc`（每段 90°）画贴地的一段扇面，随 `data.direction` 逐段转过一圈；
+ *   smash 用 `data.arc` 画前向一段——半径与张角就是判定范围。服务端始终只发同一个 key 的当前段，旧圈结束即停，
+ *   不再把上一圈/上一象限留在场上。
+ * 运动：当前扇面段随 `data.direction` 逐刻旋转（不是整圈同时爆），尾风碎屑沿半径甩出；读出「转了几圈、尾巴扫到哪了」。
+ * 数：`data.dust`（物攻派生）绑定当前段的发射量，`data.intensity`（每圈威力派生）抬高亮度，
+ *   `data.index`／`data.laps` 让当前段越转越明白还差几圈。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const TailslapDefinition: ParticleDefinition = {
@@ -21,7 +21,7 @@ const TailslapDefinition: ParticleDefinition = {
             exit: { stop: 3, drain: 10 },
             emitters: [
                 {
-                    name: "brace", bind: "source", offset: [0, 0.06, 0], height: 0, fit: "body",
+                    name: "brace", bind: "source", offset: [0, 0.06, 0], height: -0.5, fit: "body",
                     particle: "world_combat_core:cobblemon/generic/earth",
                     burst: { count: 5, interval: 2, repeats: 3 },
                     shape: { kind: "ring", radius: 0.7, rotation: [90, 0, 0] },
@@ -36,18 +36,9 @@ const TailslapDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "reach", bind: "point", fit: "world",
-                    particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    burst: { count: { data: "index", fallback: 1 }, repeats: { data: "index", fallback: 1 }, interval: 3, at: 0 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 }, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.05, 0.24], spread: 8, drag: 0.9,
-                    lifetime: [8, 14], size: [0.22, 0.05],
-                    color: 0xD8C9A6, alpha: [0.6, 0], light: "world", maxParticles: 260
-                },
-                {
                     name: "field", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 34, shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 90 } },
+                    rate: 46, shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 90 } },
                     direction: "shape", speed: [0.06, 0.28], spread: 18, drag: 0.9,
                     lifetime: [6, 11], size: [0.24, 0.05], sizeMode: "index",
                     color: 0xD8C9A6, alpha: [0.24, 0], light: "full", maxParticles: 240
@@ -67,18 +58,9 @@ const TailslapDefinition: ParticleDefinition = {
             exit: { drain: 12 },
             emitters: [
                 {
-                    name: "reach", bind: "point", fit: "world", orient: "heading",
-                    particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    burst: { count: { data: "index", fallback: 1 }, repeats: { data: "index", fallback: 1 }, interval: 3, at: 0 },
-                    shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 200 }, innerRadius: { data: "radius", fallback: 3.0 } },
-                    direction: "outward", speed: [0.05, 0.24], spread: 8, drag: 0.9,
-                    lifetime: [8, 14], size: [0.22, 0.05],
-                    color: 0xD8C9A6, alpha: [0.6, 0], light: "world", maxParticles: 240
-                },
-                {
                     name: "frontfield", bind: "point", fit: "world", orient: "heading",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
-                    rate: 36, shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 200 } },
+                    rate: 48, shape: { kind: "sector", radius: { data: "radius", fallback: 3.0 }, angleDegrees: { data: "arc", fallback: 200 } },
                     direction: "shape", speed: [0.08, 0.3], spread: 14, drag: 0.9,
                     lifetime: [6, 11], size: [0.26, 0.05], sizeMode: "index",
                     color: 0xD8C9A6, alpha: [0.34, 0], light: "full", maxParticles: 260
@@ -134,7 +116,7 @@ const TailslapDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "ring", bind: "source", offset: [0, 0.06, 0], height: 0, fit: "none",
+                    name: "ring", bind: "source", offset: [0, 0.06, 0], height: -0.5, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 }, rotation: [90, 0, 0] },

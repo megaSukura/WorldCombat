@@ -48,31 +48,25 @@ namespace PokemonSkills {
 
     /**
      * 以 `centre` 为墙心、`forward` 为法线（墙面因此垂直于施法方向），沿垂线取 `span` 宽的几列，
-     * 从地表往上立 `height` 格。只收空气格：实体占位或非空气处停下，缺口留给后面的实际格。
-     * 返回候选格子、墙根锚点和墙面垂线。
+     * 从所选落点高度附近的真实支撑往上立 `height` 格。支撑用 `SurfacePaths.support` 读原生顶面，
+     * 只找落点高度上下那条带内最高的真实面：瞄高台就在高台起墙，不会跑到施法者脚下的另一层。
+     * 只收空气格：实体占位或非空气处停下，缺口留给后面的实际格。返回候选格子、墙根锚点和墙面垂线。
      */
-    function barrierBuild(world: CombatWorld, centre: CombatPoint, forward: CombatPoint, baseY: number, span: number, height: number):
+    export function barrierBuild(world: CombatWorld, centre: CombatPoint, forward: CombatPoint, span: number, height: number):
         { cells: any[]; anchor: CombatPoint; side: CombatPoint } {
         const flat = WorldCombat.point(forward.x(), 0, forward.z());
         const heading = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
         const side = WorldCombat.point(-heading.z(), 0, heading.x());
         const half = Math.max(0, Math.floor(span / 2 - 0.001));
-        const base = Math.floor(baseY), cells: any[] = [];
+        const base = Math.floor(centre.y()), cells: any[] = [];
         for (let offset = -half; offset <= half; offset++) {
             const at = centre.plus(side.scale(offset));
             const x = Math.floor(at.x()), z = Math.floor(at.z());
-            let surface: number | null = null;
-            for (let probe = base + 3; probe >= base - 6; probe--) {
-                const block = world.block(WorldCombat.point(x, probe, z));
-                if (block === null) break;
-                const id = String(block.id());
-                if (barrierAir(id)) continue;
-                if (id === "minecraft:water" || id === "minecraft:lava") break;
-                surface = probe; break;
-            }
-            if (surface === null) continue;
-            for (let lift = 1; lift <= height; lift++) {
-                const atY = surface + lift;
+            const support = SurfacePaths.support(world, WorldCombat.point(x + 0.5, centre.y(), z + 0.5), 3, 6);
+            if (support === null) continue;
+            const first = Math.floor(support.y() + 1e-4);
+            for (let lift = 0; lift < height; lift++) {
+                const atY = first + lift;
                 const block = world.block(WorldCombat.point(x, atY, z));
                 if (block === null || !barrierAir(String(block.id()))) break;
                 if (barrierBlocked(world, x, atY, z)) break;
@@ -85,9 +79,10 @@ namespace PokemonSkills {
     /**
      * 从原生真正放下的格子里取墙心与顶边：每个真实列取最高的一格作顶点，按墙面垂线排序。
      * 被跳过或被破坏的列不会补上，画出来就是真实缺口；同时给出全部实际格子供逐格描边。
+     * `runs` 把相邻（沿垂线间距 <=1.5）的真实列切成一段段连通折线，表现只在同一段里连边，缺格自然断开。
      */
     function barrierOutline(placed: any[], centre: CombatPoint, side: CombatPoint):
-        { cells: number[][]; path: number[][]; columns: number; base: number } {
+        { cells: number[][]; path: number[][]; runs: number[][][]; columns: number; base: number } {
         const groups: { [key: string]: { x: number; z: number; top: number; bottom: number } } = Object.create(null);
         const cells: number[][] = [];
         let base = Infinity;
@@ -110,9 +105,18 @@ namespace PokemonSkills {
             const bo = (b.x + 0.5 - centre.x()) * side.x() + (b.z + 0.5 - centre.z()) * side.z();
             return ao - bo;
         });
-        const path: number[][] = [];
-        for (let i = 0; i < list.length; i++) path.push([list[i].x + 0.5, list[i].top + 1, list[i].z + 0.5]);
-        return { cells: cells, path: path, columns: list.length, base: isFinite(base) ? base : 0 };
+        const path: number[][] = [], runs: number[][][] = [];
+        let current: number[][] | null = null, previous = NaN;
+        for (let i = 0; i < list.length; i++) {
+            const item = list[i];
+            const top = [item.x + 0.5, item.top + 1, item.z + 0.5];
+            path.push(top);
+            const offset = (item.x + 0.5 - centre.x()) * side.x() + (item.z + 0.5 - centre.z()) * side.z();
+            if (current === null || !(offset - previous <= 1.5)) { current = []; runs.push(current); }
+            current.push(top);
+            previous = offset;
+        }
+        return { cells: cells, path: path, runs: runs, columns: list.length, base: isFinite(base) ? base : 0 };
     }
 
     function barrierWallData(json: string): string {
@@ -123,6 +127,8 @@ namespace PokemonSkills {
         [value.scale, value.placed, value.columns, value.levels].forEach(function (n: any) {
             if (typeof n !== "number" || !isFinite(n)) throw new Error("Invalid barrier wall number");
         });
+        if (value.runs !== undefined && (!Array.isArray(value.runs) || value.runs.some(function (run: any) { return !Array.isArray(run); })))
+            throw new Error("Invalid barrier wall runs");
         if (value.window !== undefined && (typeof value.window !== "number" || !isFinite(value.window))) throw new Error("Invalid barrier wall window");
         if (value.veil !== undefined && typeof value.veil !== "string") throw new Error("Invalid barrier wall veil");
         if (value.veilKey !== undefined && typeof value.veilKey !== "string") throw new Error("Invalid barrier wall veil key");
@@ -163,25 +169,25 @@ namespace PokemonSkills {
             if (carrier === null || String(carrier.key()) !== state.veilKey) { effect.end(); return; }
         }
         const body = world.observe(target);
-        // 核验真实租约：只有施法者还在墙附近时，空读才代表墙真的没了。
-        if (body !== null && body.position().minus(anchor).length() <= barrierWatchRange) {
-            const alive = world.terrainCells(state.terrain);
-            if (!alive || alive.length === 0) { effect.end(); return; }
-            // 用真正 remaining 的格子重算轮廓：局部被破坏时画面只画剩下的墙，不再是旧格。
-            const centre = WorldCombat.point(state.centre[0], anchor.y(), state.centre[1]);
-            const side = WorldCombat.point(state.side[0], 0, state.side[1]);
-            const placed: number[][] = [];
-            for (let i = 0; i < alive.length; i++) placed.push([alive[i].x(), alive[i].y(), alive[i].z()]);
-            const outline = barrierOutline(placed, centre, side);
-            state.cells = outline.cells; state.path = outline.path; state.columns = outline.columns;
-            state.placed = outline.cells.length;
-            effect.state(JSON.stringify(state));
-        }
+        if (body === null) { effect.end(); return; }
+        // 维护范围：施法者离开可观察范围后本墙不再可靠维护，主动收掉本次墙与防御（根决策取最简可靠做法）。
+        if (body.position().minus(anchor).length() > barrierWatchRange) { effect.end(); return; }
+        const alive = world.terrainCells(state.terrain);
+        if (!alive || alive.length === 0) { effect.end(); return; }
+        // 用真正 remaining 的格子重算轮廓：局部被破坏时画面只画剩下的墙，不再是旧格。
+        const centre = WorldCombat.point(state.centre[0], anchor.y(), state.centre[1]);
+        const side = WorldCombat.point(state.side[0], 0, state.side[1]);
+        const placed: number[][] = [];
+        for (let i = 0; i < alive.length; i++) placed.push([alive[i].x(), alive[i].y(), alive[i].z()]);
+        const outline = barrierOutline(placed, centre, side);
+        state.cells = outline.cells; state.path = outline.path; state.runs = outline.runs;
+        state.columns = outline.columns; state.placed = outline.cells.length;
+        effect.state(JSON.stringify(state));
         // 表现绑在这条墙效果上：墙效果结束（自然到期、被驱散或最后一格消失）时一并清理。
         WorldFeedback.onEffect(world, effect.id(), barrierWallMoteKey, barrierScene, 1, anchor,
             { moment: "hold", path: state.path, placed: state.placed, panels: state.panels, columns: state.columns, scale: state.scale });
         WorldFeedback.onEffect(world, effect.id(), barrierWallKey, barrierWallScene, 1, anchor,
-            { cells: state.cells, path: state.path, placed: state.placed, columns: state.columns, scale: state.scale });
+            { cells: state.cells, runs: state.runs, path: state.path, placed: state.placed, columns: state.columns, scale: state.scale });
         effect.schedule("watch", "watch", barrierWatchTicks, "{}");
     }
 
@@ -244,7 +250,7 @@ namespace PokemonSkills {
             }
         }
         const veil = MobEffects.read(world, actor, barrierVeil);
-        const data = { cells: outline.cells, path: outline.path, anchor: [anchor.x(), anchor.y(), anchor.z()],
+        const data = { cells: outline.cells, path: outline.path, runs: outline.runs, anchor: [anchor.x(), anchor.y(), anchor.z()],
             centre: [centre.x(), centre.z()], side: [plan.side.x(), plan.side.z()],
             terrain: receipt.id, placed: outline.cells.length, columns: outline.columns, panels: panels,
             scale: scale, levels: levels, window: windowId,
@@ -261,7 +267,7 @@ namespace PokemonSkills {
                 { moment: "hold", actor: String(actor.ref()), path: outline.path, placed: outline.cells.length,
                     panels: panels, columns: outline.columns, scale: scale });
             WorldFeedback.onEffect(world, wallEffect, barrierWallKey, barrierWallScene, 1, anchor,
-                { cells: outline.cells, path: outline.path, placed: outline.cells.length, columns: outline.columns, scale: scale });
+                { cells: outline.cells, runs: outline.runs, path: outline.path, placed: outline.cells.length, columns: outline.columns, scale: scale });
         }
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), barrierRaiseText,
             [levels, outline.columns, outline.cells.length], 34);
@@ -274,7 +280,7 @@ namespace PokemonSkills {
         id: "barrier",
         cooldownParameter: "wait",
         name: "屏障",
-        description: "点选一个落点，在它那里竖起一面垂直于施法方向的硬光板墙，同时提高自身防御。墙只在实际放得下的空气格里立起，缺口就留在那里；墙消失时，本次防御提升结束。",
+        description: "点选一个落点，在它附近的真实支撑上竖起一面垂直于施法方向的硬光板墙，同时提高自身防御。墙只在实际放得下的空气格里立起，缺口就留在那里；墙被拆光、到期或你离墙过远时，本次防御提升结束。",
         uses: ["在对手冲上来的通道上亲手立墙", "把墙立到侧路，而不是被迫朝最近的敌人", "用高墙遮住视线，断掉远程的射界"],
         kind: "aim",
         range: 4,
@@ -324,8 +330,7 @@ namespace PokemonSkills {
                 forward = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
                 centre = origin.plus(forward.scale(gap));
             } else forward = forward.unit();
-            const feet = origin.y() - body.height() / 2;
-            const plan = barrierBuild(world, centre, forward, feet, span, height);
+            const plan = barrierBuild(world, centre, forward, span, height);
             const scale = span / barrierReferenceSpan;
             if (!plan.cells.length) { barrierFizzle(world, actor, body, plan.anchor, panels); done(action); return; }
             action.effect(barrierWall, actor, JSON.stringify({ plan: plan.cells,

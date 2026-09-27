@@ -11,7 +11,6 @@ class PokemonCombatDomain : CombatDomain {
     override fun id() = "cobblemon"
     override fun supports(entity: LivingEntity) = entity is PokemonEntity
     override fun identity(entity: LivingEntity) = (entity as PokemonEntity).pokemon.uuid
-    override fun deferredDamage() = true
     override fun movementControl(entity: LivingEntity, controlled: Boolean) {
         val pokemon = entity as PokemonEntity
         if (controlled && !pokemon.isVehicle && !pokemon.isPassenger) {

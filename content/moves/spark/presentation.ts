@@ -5,7 +5,7 @@
  * 电流往对方身上缠住不放；冲空则电在脚下泄掉。
  * 色相家族：电黄（0xFFE96A）与冷白（0xEAF6FF），电弧的蓝（0x5AC8F0）只在命中核心一点。
  * 拍子：起 charge（收电）→ 突 dash（带电短冲）→ 行 wake（残电）→ 击 zap（命中电花）→ 空 fizzle（冲空泄放）。
- * 范围：dash 的冲刺线沿 `data.path` 两顶点铺成一条短电带（横向按 `data.scale` 缩放），画的就是这一个箭步的范围。
+ * 范围：电流集中在**当刻身体**上，随冲刺向后甩出短尾——不为整段箭步预撒一条线；划过的那截路只留一小段尾迹。
  * 运动：电花沿身体向内收拢、再随冲刺向后甩；命中后电流在目标身上缠一圈。
  * 数：`data.arcs`（速度派生）决定电花与命中电弧的数量，`data.intensity`（本次伤害派生）决定命中强度，
  * `data.finisher`（1 表示目标残血、吃收尾加成）决定命中是否再多一圈白热爆闪，`data.overcharge`（1 表示蓄电式）决定起手足不足。
@@ -46,14 +46,6 @@ const SparkDefinition: ParticleDefinition = {
             duration: 30,
             exit: { stop: 16, drain: 12 },
             emitters: [
-                {
-                    name: "track", bind: "path", offset: [0, 0.4, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
-                    shape: { kind: "polyline" },
-                    rate: { data: "arcs", fallback: 8 }, speed: [0.03, 0.12], spread: 22,
-                    lifetime: [5, 10], size: [0.13, 0.03], sizeMode: "index",
-                    color: 0xEAF6FF, alpha: [0.65, 0], light: "full", maxParticles: 120
-                },
                 {
                     name: "body", bind: "source", offset: [0, 0.5, 0], height: 0.45, orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",

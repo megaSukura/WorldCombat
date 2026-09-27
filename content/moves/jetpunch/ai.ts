@@ -3,7 +3,8 @@
  *
  * 同一只拳有两个用途，注册在两条协议上：
  *   `world_combat:attack`——对 `ai.maxChase`（默认 6）内可见、敌对的敌人出一记短直水拳；
- *   `world_combat:heal`  ——`ai.cureAllies`（默认开）时，对射程内**带灼伤**的同伴补一拳水、把火浇灭（无伤）。
+ *   `world_combat:heal`  ——`ai.cureAllies`（默认开）时，对视野内**着火（原生火焰或灼伤）**的同伴主动走近补一拳水、把火浇灭（无伤）；
+ *                           距离由 `reach`/接近逻辑处理，不再要求同伴已经站在拳程内。
  * 对谁出手：攻击分支不可见、友方或已倒下的不接受；救援分支只接受着火的同伴（不含自己）。
  * 选择偏好：攻击分支里 `ai.preserveBurn` 开（默认）时，对带灼伤的敌人降一档——浇灭会损失持续伤害；
  *   `ai.preferDry` 开（默认）时已带 soaked 的目标排后；`ai.finish` 开（默认）时残血目标优先。
@@ -25,8 +26,16 @@ namespace PokemonSkills {
         if (!CompanionBehavior.ai<boolean>(capability, "cureAllies", true)) return false;
         if (!target.friendly || target.health <= 0 || !target.visible) return false;
         if (String(target.ref) === String(CompanionBehavior.source(context).ref)) return false;
-        if (!CompanionBehavior.status(context, target, "burn")) return false;
-        return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point) <= capability.data.range;
+        // 距离交给 reach/approach：只要同伴真的着火就愿意走过去；原生火焰与 burn 身份都算。
+        return jetpunchAllyAflame(context, target);
+    }
+
+    /** 同伴此刻是否真的带着火：共享身份 burn，或原生实体的着火状态（普通 MC 火焰不挂 burn 标记）。 */
+    function jetpunchAllyAflame(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        if (CompanionBehavior.status(context, target, "burn")) return true;
+        const world = CompanionBehavior.world(context);
+        const actor = world.actor(String(target.ref));
+        return actor !== null && PokemonSkills.jetpunchAflame(world, actor);
     }
 
     CompanionBehavior.registerUse(jetpunchId, {
@@ -78,7 +87,7 @@ namespace PokemonSkills {
             help: "开启：目标生命低于三成时优先补这一拳；关闭：只按普通先制候选排序。"
         }),
         field(pathOf("ai.cureAllies"), "替同伴灭火", "boolean", {
-            help: "开启：射程内有着火的同伴时，AI 会主动走过去补一拳水把火浇灭（只灭火、无伤害）；关闭：只在攻击分支里用这一拳。"
+            help: "开启：同伴只要着火（原生火焰或被点着的灼伤），AI 就会主动走近补一拳水把火浇灭（只灭火、无伤害）；关闭：只在攻击分支里用这一拳。"
         })
     ]);
 }

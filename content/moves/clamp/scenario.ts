@@ -14,6 +14,7 @@ Smoke.scenario("clamp", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "cloyster", level: 45, moves: ["clamp"], at: [-2.2, 0, 0] });
+    stage.setPp(caster, "clamp", 1);
     var heavy = stage.mob({ type: "minecraft:iron_golem", at: [0.4, 0, 0] });
     var baseSpeed = stage.attribute(heavy, "minecraft:generic.movement_speed");
     stage.hostile(caster, heavy);
@@ -34,6 +35,20 @@ Smoke.scenario("clamp", function (stage) {
             heavyAlive: heavy.alive(),
             casterAlive: caster.alive()
         });
-        stage.done();
+        // 第二段：等夹持走满 holdTicks 自然收尾，核对本次的壳、施法者夹持态都随它精确撤掉、目标移速恢复。
+        stage.until(1200, function () {
+            return !stage.hasMobEffect(heavy, "world_combat:clamped_shell")
+                && !stage.hasMobEffect(caster, "world_combat:clamping");
+        }, function () {
+            stage.expect(stage.casts("clamp", caster) === 1, "only one clamp was cast");
+            stage.expect(!stage.hasMobEffect(heavy, "world_combat:clamped_shell"), "the shell was removed when the hold ended");
+            stage.expect(!stage.hasMobEffect(caster, "world_combat:clamping"), "the caster's clamping state ended with the hold");
+            stage.expect(stage.attribute(heavy, "minecraft:generic.movement_speed") >= baseSpeed - 0.001, "the target's movement recovered after the shell opened");
+            stage.note("normal expiry: clamp_bond's expire ends the hold, and only this cast's key-matched shell/clamping/rooted are removed", {
+                speed: [baseSpeed, stage.attribute(heavy, "minecraft:generic.movement_speed")],
+                heavyAlive: heavy.alive(), casterAlive: caster.alive()
+            });
+            stage.done();
+        }, "the shell opens after the full hold");
     }, "clamp seizes and crushes a target within 30 s");
 });

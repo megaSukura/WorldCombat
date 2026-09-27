@@ -9,9 +9,9 @@
  *   `data.height` 格高的下坠竖井；实体目标用 `mark_target` 把圈与竖井绑在目标身上，跟它的真实投影一起移动；
  *   点选落点用 `mark` 钉在地面投影上。顶棚低时 `height` 变短，竖井也随之缩短。
  * 运动：聚叶向内收，苹果沿竖井垂直加速下坠，命中向四周炸开、落叶带重力飘散，砸回地面时尘环贴地外扩。
- * 数：`data.crush`（实际降防级数）绑定撞击与砸地的草叶数，`data.height`（实际释放高度）绑定竖井长度与落点脉动，
- *   `data.speed`（下坠初速 / 0.42）绑定下坠尘叶的发射量，`data.intensity`（威力 / 78）放大整幕；
- *   `data.airborne` 让撞击在离地时更亮。
+ * 数：`data.crush`（实际压碎的防御级数）绑定撞击与砸地的草叶数，`data.height`（实际释放高度）绑定竖井长度与落点脉动，
+ *   `data.shaft`／`data.glow`／`data.leaf`（下坠初速换算的落点竖井、光点、落叶发射量）控制各段密度，
+ *   `data.intensity`（威力 / 78）放大整幕；`data.airborne` 让撞击在离地时更亮。
  * 参照节：视觉语言第一、二、三、四、六、七、九节。
  */
 const GravappleDefinition: ParticleDefinition = {
@@ -70,7 +70,7 @@ const GravappleDefinition: ParticleDefinition = {
                 {
                     name: "drop_shaft", bind: "point", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: { data: "speed", fallback: 14 }, shape: { kind: "line", length: { data: "height", fallback: 8 } },
+                    rate: { data: "shaft", fallback: 14 }, shape: { kind: "line", length: { data: "height", fallback: 8 } },
                     direction: "down", speed: [0.08, 0.18],
                     gravity: 0.03, drag: 0.98,
                     lifetime: [10, 18], size: [0.07, 0.02],
@@ -94,7 +94,7 @@ const GravappleDefinition: ParticleDefinition = {
                 {
                     name: "drop_shaft", bind: "target", offset: [0, 0, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: { data: "speed", fallback: 14 }, shape: { kind: "line", length: { data: "height", fallback: 8 } },
+                    rate: { data: "shaft", fallback: 14 }, shape: { kind: "line", length: { data: "height", fallback: 8 } },
                     direction: "down", speed: [0.08, 0.18],
                     gravity: 0.03, drag: 0.98,
                     lifetime: [10, 18], size: [0.07, 0.02],
@@ -109,7 +109,7 @@ const GravappleDefinition: ParticleDefinition = {
                 {
                     name: "fall_glow", bind: "projectile", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: { data: "speed", fallback: 30 }, shape: { kind: "sphere", radius: 0.18 },
+                    rate: { data: "glow", fallback: 30 }, shape: { kind: "sphere", radius: 0.18 },
                     direction: "outward", speed: [0.01, 0.05],
                     gravity: 0.03, drag: 0.99,
                     lifetime: [6, 11], size: [0.09, 0.02],
@@ -118,7 +118,7 @@ const GravappleDefinition: ParticleDefinition = {
                 {
                     name: "fall_leaf", bind: "projectile", offset: [0, 0, 0], trail: { minDistance: 0.3 },
                     particle: "world_combat_core:cobblemon/generic/grass/smallleaf",
-                    rate: { data: "speed", fallback: 26 }, shape: { kind: "sphere", radius: 0.16 },
+                    rate: { data: "leaf", fallback: 26 }, shape: { kind: "sphere", radius: 0.16 },
                     direction: "outward", speed: [0.02, 0.08],
                     gravity: 0.04, drag: 0.98,
                     lifetime: [8, 14], size: [0.08, 0.02],

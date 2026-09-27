@@ -1,4 +1,8 @@
-/** storedpower：行为、参数与目标条件以本单元实现为准。 */
+/**
+ * storedpower：行为、参数与目标条件以本单元实现为准。
+ * 选用倾向：按自身半径内可达的敌人数与被围程度评分，范围外只保留接近意愿；`boostFirst` 让蓄积越深越愿意放，
+ * 倾囊在真正围住时加一点解围价值、只为单个目标时压低，避免把整仓等级空耗。
+ */
 namespace PokemonSkills {
     /** 只读、回调内缓存的正面能力等级总数（宝可梦读原生等级，其他生物读 CombatStages）。 */
     CompanionBehavior.registerFact("world_combat:move_storedpower/boost", function (access, actor, _argument) {
@@ -24,10 +28,29 @@ namespace PokemonSkills {
             if (!target) return 0;
             const self = CompanionBehavior.source(context);
             const gap = CompanionBehavior.distance(self.point, target.point);
-            const limit = CompanionBehavior.ai<number>(capability, "maxChase", 6);
-            let value = gap <= capability.data.range ? 30 : gap <= limit ? 16 : 5;
-            if (CompanionBehavior.ai<boolean>(capability, "boostFirst", true)) value += Math.min(30, storedpowerBoostNow(context, self) * 5);
-            return Math.min(84, value);
+            const range = capability.data.range;
+            const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+            let reachable = 0, close = 0;
+            for (let i = 0; i < nearby.length; i++) {
+                const other = nearby[i];
+                if (!other.visible || other.friendly || other.health <= 0) continue;
+                const distance = CompanionBehavior.distance(self.point, other.point);
+                if (distance <= range) reachable++;
+                if (distance <= Math.max(1.6, range * 0.5)) close++;
+            }
+            if (reachable === 0 && gap <= range) reachable = 1;
+            const config = capability.data.config;
+            const spend = !!(config && config.spend === true);
+            // 按自身半径内可达敌人数与被围程度评分；范围外只保留接近意愿，不虚高。
+            let value = reachable * 9 + close * 4;
+            if (gap > range) value = Math.min(value, 8);
+            if (CompanionBehavior.ai<boolean>(capability, "boostFirst", true))
+                value += Math.min(30, storedpowerBoostNow(context, self) * 5);
+            if (spend) {
+                if (close >= 2) value += 10;      // 被围时倾囊解围的生存收益
+                if (reachable <= 1) value -= 8;   // 只为一个人不值得把整仓等级打光
+            }
+            return Math.max(0, Math.min(90, value));
         }
     });
 

@@ -5,7 +5,7 @@
  * 若寒霜已成，第二拳把霜壳收走，目标被一层厚冰壳裹住、动弹不得。
  * 色相家族：冰青（0x8FD8F0）与霜白（0xEAF8FF）；饱和青只出现在冰屑与霜壳的小面积。
  * 拍子：起 charge（凝霜）→ 击 hit（碎冰命中）→ 结 chill（结霜）/ freeze（冻实）/ resist（免冻抵抗）与 whiff（空拳）。
- * 范围：chill／freeze／resist 绑在目标身上，画的是被作用的那个人；近身直线判定由命中瞬间的冰屑朝向读出。
+ * 范围：chill／freeze／resist 绑在目标身上，画的是被作用的那个人；hit 的 fist_path 用命中当刻的源→接触点世界路径画一记短拳。
  * 运动：冰屑从拳面朝目标迸出，霜壳从命中点沿目标体表向上漫。
  * 数：冰屑数绑 `data.shards`（特攻换算），冻结强度绑 `data.intensity`，浸水时贴地霜数量由 `data.floor` 变多，
  *   冰壳脉冲数绑 `data.melt`（按真实冻结时长换算），所以画面停留与机制剩余时间一致。
@@ -56,6 +56,15 @@ const IcepunchDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.06, 0.2], spread: 26,
                     lifetime: [6, 12], size: [0.14, 0.03], sizeMode: "index",
                     color: 0xEAF8FF, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 60
+                },
+                {
+                    name: "fist_path", bind: "path",
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: 10 },
+                    shape: { kind: "polyline" },
+                    direction: "up", speed: [0.01, 0.05],
+                    lifetime: [4, 8], size: [0.16, 0.04], sizeMode: "index",
+                    color: 0xEAF8FF, alpha: [0.8, 0], light: "full", maxParticles: 24
                 }
             ]
         },

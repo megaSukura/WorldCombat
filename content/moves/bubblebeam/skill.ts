@@ -9,9 +9,10 @@
  * 幕：
  *   起（windup，提交前）：口边冒起成串小泡、越冒越密，只播预告（可被打断）。
  *   涌（stream，提交后）：按 gap 连吐三颗慢泡，空中可同时存在；每颗首次碰实体/墙/射程尽头就破，
- *       碰到非友方活体结算那一份 `foam` 伤害。
+ *       碰到非友方活体结算那一份 `foam` 伤害。玩家自由转点时不再叠原目标的速度预测，后发的泡落在新准线上。
  *   黏（cling / pop）：同一目标在这一串里至多判定一次黏滞与一次泡沫，且必须真的被泡伤到；
- *       泡沫在身上持续冒泡，走完 `clingTicks` 自然爆掉，或被外力清掉。
+ *       泡沫在身上持续冒泡，走完 `clingTicks` 自然爆掉，或被外力清掉——冒泡表现托管在泡沫载体上，
+ *       清掉即刻收，不留残影。
  *
  * 与同族分开：唯一会黏住目标、把一串慢泡布在敌人路线上的水属性喷射；画面上是三颗会飘、会挨个破的泡球。
  *
@@ -20,39 +21,52 @@
 namespace PokemonSkills {
     const bubblebeamScene = "world_combat:move_bubblebeam";
     const bubblebeamFoamEffect = "world_combat:bubblebeam_foam";
+    const bubblebeamClingVisual = "world_combat:bubblebeam_cling";
     const bubblebeamClingText = "world_combat.move.bubblebeam.text.cling";
     const bubblebeamMissText = "world_combat.move.bubblebeam.text.miss";
 
-    /** 在目标身上黏一层泡沫：借共享身份 foamed（本单元发明的概念），独一无二地替换同类载体。 */
-    function bubblebeamFoam(world: CombatWorld, victim: CombatActor, ticks: number): boolean {
-        return CombatStatus.apply(world, victim, "foamed", bubblebeamFoamEffect,
-            Math.max(40, Math.round(ticks)), 0, { unique: true, secondary: true });
+    // 黏着表现托管在这个效果上：泡沫被清除/替换/到期时效果结束，冒泡立即收掉，不留下不会散的残影。
+    WorldCombat.effect(bubblebeamClingVisual, 1, 1200, "actor", json => json, EffectProtocols.unchanged);
+    function bubblebeamWatchCling(effect: CombatEffect): void {
+        const world = effect.world(), data = JSON.parse(effect.state());
+        if (!world.valid(effect.target()) || !MobEffects.matches(world, effect.target(), data.carrier)) { effect.end(); return; }
+        effect.schedule("watch", "watch", 2, "{}");
+    }
+    WorldCombat.effectHandler(bubblebeamClingVisual, "start", bubblebeamWatchCling);
+    WorldCombat.effectHandler(bubblebeamClingVisual, "watch", bubblebeamWatchCling);
+
+    /** 在目标身上黏一层泡沫：借共享身份 foamed，独一无二地替换同类载体；返回真正的载体供降速窗口归属。 */
+    function bubblebeamFoam(world: CombatWorld, victim: CombatActor, ticks: number): CombatMobEffect | null {
+        const duration = Math.max(40, Math.round(ticks));
+        if (!CombatStatus.apply(world, victim, "foamed", bubblebeamFoamEffect, duration, 0, { unique: true, secondary: true })) return null;
+        return world.mobEffect(victim, bubblebeamFoamEffect);
     }
 
-    /** 按概率把速度降下来：共享能力等级阶梯，对宝可梦、原版生物、玩家同一条路。 */
-    function bubblebeamSlow(world: CombatWorld, victim: CombatActor, chance: number, stages: number): boolean {
-        if (world.random() >= chance) return false;
-        NativeEffects.boost(world, victim, "spe", -stages);
-        return true;
+    /** 按概率把速度降下来：限时窗口归属泡沫载体，反馈实际下降量；满级／免疫时返回 0，不假报黏住。 */
+    function bubblebeamSlow(world: CombatWorld, victim: CombatActor, chance: number, stages: number, carrier: CombatMobEffect, ticks: number): number {
+        if (world.random() >= chance) return 0;
+        const before = NativeEffects.effectiveStage(world, victim, "spe");
+        if (!NativeEffects.boostWindow(world, victim, { spe: -stages }, Math.max(40, Math.round(ticks)), "bubblebeam", carrier)) return 0;
+        return Math.max(0, before - NativeEffects.effectiveStage(world, victim, "spe"));
     }
 
-    /** 当刻自由瞄准：按住技能键时读控制点（逐颗可转向布弧），AI 或未声明的输入回退到动作选点。 */
-    function bubblebeamAim(action: CombatAction): CombatPoint {
+    /** 当刻自由瞄准：按住技能键时读控制点（逐颗可转向布弧）；同时返回这是否来自玩家的自由转点。 */
+    function bubblebeamAim(action: CombatAction): { point: CombatPoint; free: boolean } {
         try {
             const parsed = JSON.parse(action.control());
             const samples = parsed && parsed.samples;
             if (samples && samples.length && samples[0].point && samples[0].point.length === 3)
-                return WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]);
+                return { point: WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]), free: true };
         } catch (error) { }
-        try { return action.targetPosition(); } catch (error) { }
-        return action.origin().plus(WorldCombat.point(0, 0, 1));
+        try { return { point: action.targetPosition(), free: false }; } catch (error) { }
+        return { point: action.origin().plus(WorldCombat.point(0, 0, 1)), free: false };
     }
 
     define({
         id: "bubblebeam",
         cooldownParameter: "recharge",
         name: "Bubble Beam",
-        description: "连吐三颗慢泡泡，依次沿准线飘出：每颗首次碰到实体或墙就破并按实际首碰者结算伤害，三颗均分整招威力。被泡伤到的目标在同一串里至多判定一次黏滞与一次泡沫，掉速度并被黏住；转准心可以把后发的泡布到另一条路线上。浓沫更黏、泡更大更慢；急泡更快更远、泡更小。",
+        description: "连吐三颗慢泡泡，依次沿准线飘出：每颗首次碰到实体或墙就破并按实际首碰者结算伤害，三颗均分整招威力。被泡伤到的目标在同一串里至多判定一次黏滞与一次泡沫，掉速度并被黏住；转准心可以把后发的泡布到另一条路线上，自由转点后不再被原目标运动拖偏。浓沫更黏、泡更大更慢；急泡更快更远、泡更小。",
         uses: ["用一串慢泡堵住敌人横移的路线，逼它绕开", "把跑得快的对手黏住、压它速度", "给目标留下一层黏着的泡沫"],
         kind: "aim",
         range: 12,
@@ -105,6 +119,7 @@ namespace PokemonSkills {
             let fired = 0, active = 0, settled = false, landed = false;
 
             function finish(current: CombatAction): void {
+                // 后摇等所有泡球真正结束才开始：长空飞会占用这次动作。
                 if (settled || fired < shots || active > 0) return;
                 settled = true;
                 if (!landed) {
@@ -125,9 +140,11 @@ namespace PokemonSkills {
                 const origin = body !== null ? body.position() : current.origin();
                 const index = fired + 1;
                 fired++;
-                let aimed = bubblebeamAim(current);
+                const aim = bubblebeamAim(current);
+                let aimed = aim.point;
                 const watched = current.target();
-                if (watched !== null && scope.valid(watched)) {
+                // 玩家已自由转点时不再叠原先选中目标的 velocity 预测，否则新方向会被旧目标运动拖偏。
+                if (!aim.free && watched !== null && scope.valid(watched)) {
                     const state = scope.observe(watched);
                     if (state !== null) {
                         const delta = state.position().minus(origin);
@@ -162,13 +179,27 @@ namespace PokemonSkills {
                                 let slowed = 0;
                                 if (!hitOnce[ref]) {
                                     hitOnce[ref] = true;
-                                    slowed = bubblebeamSlow(stage, victim, chance, stages) ? 1 : 0;
-                                    bubblebeamFoam(stage, victim, cling);
+                                    const carrier = bubblebeamFoam(stage, victim, cling);
+                                    if (carrier !== null) {
+                                        slowed = bubblebeamSlow(stage, victim, chance, stages, carrier, cling);
+                                        // 冒泡挂在泡沫载体上：清掉/替换/到期即收。
+                                        const visual = stage.effect(bubblebeamClingVisual, victim,
+                                            JSON.stringify({ carrier: MobEffects.anchor(carrier) }), cling);
+                                        const foamBody = stage.observe(victim);
+                                        WorldFeedback.onEffect(stage, visual, "bubblebeam:cling:" + visual, bubblebeamScene, 1,
+                                            foamBody === null ? at : foamBody.position(),
+                                            { moment: "cling", target: ref, bubbles: 10 });
+                                    }
                                 }
                                 WorldFeedback.emit(stage, bubblebeamScene, 1, at,
                                     { moment: "burst", target: ref, bubbles: bubbles, stages: stages, slowed: slowed,
                                         scale: scale, intensity: intensity, index: index }, 24);
-                                if (slowed) WorldFeedback.text(stage, at.plus(WorldCombat.point(0, 1.2, 0)), bubblebeamClingText, [stages], 26);
+                                if (slowed > 0) {
+                                    // 真正掉速才补一层不同的下降记号与文字；失败只有泡膜。
+                                    WorldFeedback.emit(stage, bubblebeamScene, 1, at,
+                                        { moment: "slow", target: ref, stages: slowed, scale: scale, index: index }, 22);
+                                    WorldFeedback.text(stage, at.plus(WorldCombat.point(0, 1.2, 0)), bubblebeamClingText, [slowed], 26);
+                                }
                                 sound(inner, "cobblemon:move.bubblebeam.target");
                                 sound(inner, "minecraft:block.bubble_column.bubble_pop");
                             }
@@ -182,7 +213,9 @@ namespace PokemonSkills {
                 }, function (inner: CombatAction) {
                     if (!resolved) {
                         scenes.stop(inner, key);
-                        WorldFeedback.emit(inner.world(), bubblebeamScene, 1, origin.plus(direction.scale(range)),
+                        // 飞尽：读 projectilePosition 的真实弹体末点，不再用 origin + direction × range 预测点。
+                        const end = inner.world().projectilePosition(flight) || origin.plus(direction.scale(range));
+                        WorldFeedback.emit(inner.world(), bubblebeamScene, 1, end,
                             { moment: "splat", bubbles: Math.round(bubbles * 0.6), scale: scale,
                                 intensity: Math.max(0.4, intensity * 0.7), index: index }, 18);
                     }
@@ -214,17 +247,5 @@ namespace PokemonSkills {
         if (body === null) return;
         WorldFeedback.emit(world, bubblebeamScene, 1, body.position(),
             { moment: "pop", target: String(actor.ref()), cause: String(data.cause || "") }, 18);
-    });
-
-    // 黏着期间在脚边维持一小圈缓慢上浮的泡：少而稳，让出本体视线。
-    WorldCombat.on("world_combat:move_bubblebeam/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== bubblebeamFoamEffect || event.world().tick() % 20 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor)) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "bubblebeam:foam:" + String(actor.ref()), bubblebeamScene, 1, body.position(),
-            { moment: "cling", target: String(actor.ref()), bubbles: 10 }, 40);
     });
 }

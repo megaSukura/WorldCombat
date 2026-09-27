@@ -1,23 +1,27 @@
 /**
  * 冲浪 / surf 的伙伴 AI 用途。
  *
- * 什么局面下出手：一个以自身为中心、整圈漫开的水漫。`ready` 要求身周 `ai.maxChase`（默认 8）格内
- *   至少有 `ai.minFoes`（默认 2）个可见、敌对、存活的目标——一次只淹一个不划算，它本来就是拿来罩一圈的。
- *   空中目标也算数：水是体积，离地的人一样被淹。
+ * 什么局面下出手：一个以自身为中心、整圈漫开的水漫。`ready` 要求真正站在本道浪里——按本个体真实的
+ *   `waveRadius` 与浪高 `crest`（离地不超过浪高的目标也算）——的可见、存活目标至少有 `ai.minFoes`（默认 2）个，
+ *   一次只淹一个不划算，它本来就是拿来罩一圈的。空中目标只要不高于浪头也算数：水是体积，离地的人一样被淹。
  * 对谁出手：候选就是当前威胁；`accepts` 只排除友方、已死、看不见的。
  * 够不到怎么办：交给共享接近逻辑；走进浪墙半径以内就原地掀浪。
  * 放完接什么：交回共享交战计划；被浇透的人带着湿身份，接下来的追击或脱离由共享顺序决定。
  * 排序：目标每多一个 +8（上限 +30）；自己湿透（雨里、水里）时再 +12——那正是水势最盛的时候。
  */
 namespace PokemonSkills {
+    /** 数一数真正站在这道浪里的目标：按本个体真实的浪墙半径与浪高（离地不超过浪高才淹得到），不是笼统的 maxChase。 */
     function surfCount(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[], self = CompanionBehavior.source(context);
-        const limit = CompanionBehavior.ai<number>(item, "maxChase", 8);
+        const world = CompanionBehavior.world(context);
+        const radius = p("surf", "waveRadius", world);
+        const crest = p("surf", "crest", world);
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(self.point, other.point) <= limit) count++;
+            if (other.point[1] < self.point[1] - 2 || other.point[1] > self.point[1] + crest) continue;
+            if (CompanionBehavior.distance(self.point, other.point) <= radius) count++;
         }
         return count;
     }

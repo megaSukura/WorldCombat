@@ -2,7 +2,7 @@
   "worldcombat.skill.junglehealing.summary": "藤蔓与嫩芽围住自己和身边伙伴，回复生命并清除有害状态效果。脚下的自然地面提高回复与范围；深根进一步加强这两项，起手与冷却也更长。",
   "worldcombat.skill.junglehealing.use.0": "给身边的一队伙伴回血并一起解状态",
   "worldcombat.skill.junglehealing.use.1": "在自然地面上一次净化整组人",
-  "worldcombat.skill.junglehealing.description.0": "藤蔓缠上时，圈内自己与每个伙伴各自回复其最大生命的 %1$s，并清除身上的有害状态效果（有益与中性效果保留）；亲密度越高丛林越亲近，脚下的自然地面再滋养一层。",
+  "worldcombat.skill.junglehealing.description.0": "藤蔓缠上时，圈内自己与每个伙伴先被清除身上的有害状态效果（含阻止回复的效果，有益与中性效果保留），再各自回复其最大生命的 %1$s；亲密度越高丛林越亲近，脚下的自然地面再滋养一层。",
   "worldcombat.skill.junglehealing.description.1": "藤蔓作用到 %1$s 格。",
   "worldcombat.skill.junglehealing.description.2": "起手 %1$s、收招 %2$s、冷却 %3$s。",
   "worldcombat.skill.junglehealing.stance.deeproot": "深根：藤蔓半径 ×1.2、回复 ×1.1，代价是起手 +3 刻、冷却更久——适合一次救一整队。",

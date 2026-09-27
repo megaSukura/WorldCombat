@@ -7,8 +7,9 @@
  * 色相家族：深紫与近黑（0x2E1A47／0x4B2A6B）为主体，幽紫（0x8E5FD0）与惨白（0xB9AEC9）只做细节与高光。
  * 层次：收拢（起手）→ 遗念爆＋地环（倒下）→ 缠身鬼火（命中）→ 原地幽火（持续）→ 散尽的烟（落空/离场）。
  * 起击收：windup（聚拢）→ farewell／grief（爆开）→ remnant（留着）→ fade（散去）。
- * 数：爆开的遗念数量由服务端 data.darkness 派生；碎片半径与遗留圈的半径读 data.radius／data.scale，
- *   画出的正是判定里那个 giftRadius。遗念实体本身用 world.spawn 的外观（幽火）呈现。
+ * 数：爆开的遗念数量由服务端 data.darkness 派生；地环与遗留圈绑 point、fit none，几何由 data.scale 单次缩放
+ *   （data.scale = 机制半径 / 定义里的参考半径），画出的正是判定里那个 giftRadius／remnantRadius。
+ *   遗念实体本身用 world.spawn 的外观（幽火）呈现，持续形象挂在它自己的托管效果上。
  */
 const MementoDefinition: ParticleDefinition = {
     interrupt: "drain",
@@ -38,9 +39,9 @@ const MementoDefinition: ParticleDefinition = {
             duration: 34,
             emitters: [
                 {
-                    name: "farewell_ring", bind: "point", height: 0.1,
+                    name: "farewell_ring", bind: "point", height: 0.1, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
-                    burst: { count: 44 }, shape: { kind: "ring", radius: { data: "radius", fallback: 3.0 } },
+                    burst: { count: 44 }, shape: { kind: "ring", radius: 3.0 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [12, 22], size: [0.34, 0.8],
                     color: 0x4B2A6B, alpha: [0.6, 0], light: "full", maxParticles: 80
@@ -54,9 +55,9 @@ const MementoDefinition: ParticleDefinition = {
                     color: 0x2E1A47, alpha: [1, 0], light: "full", bloom: 0.2, maxParticles: 90
                 },
                 {
-                    name: "farewell_wisp", bind: "point", height: 0.3,
+                    name: "farewell_wisp", bind: "point", height: 0.3, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    burst: { count: 20 }, shape: { kind: "circle", radius: { data: "radius", fallback: 3.0 } },
+                    burst: { count: 20 }, shape: { kind: "circle", radius: 3.0 },
                     direction: "up", speed: [0.03, 0.12], drag: 0.92,
                     lifetime: [16, 30], size: [0.16, 0.03],
                     color: 0x8E5FD0, alpha: [0.85, 0], light: "full", maxParticles: 60
@@ -96,17 +97,17 @@ const MementoDefinition: ParticleDefinition = {
                     color: 0x8E5FD0, alpha: [0.5, 0], alphaMode: "sin", light: "full", maxParticles: 26
                 },
                 {
-                    name: "remnant_smoke", bind: "point", height: 0.2,
+                    name: "remnant_smoke", bind: "point", height: 0.2, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
-                    rate: 5, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                    rate: 5, shape: { kind: "circle", radius: 2.6 },
                     direction: "up", speed: [0.01, 0.03],
                     lifetime: [22, 38], size: [0.26, 0.06],
                     color: 0x2E1A47, alpha: [0.16, 0], light: "world", maxParticles: 24
                 },
                 {
-                    name: "remnant_dust", bind: "point", height: 0.15,
+                    name: "remnant_dust", bind: "point", height: 0.15, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: 8, shape: { kind: "circle", radius: { data: "radius", fallback: 2.6 } },
+                    rate: 8, shape: { kind: "circle", radius: 2.6 },
                     direction: "up", speed: [0.01, 0.04],
                     lifetime: [16, 28], size: [0.05, 0.01],
                     color: 0xB9AEC9, alpha: [0.3, 0], light: "world", maxParticles: 30

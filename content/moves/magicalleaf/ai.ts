@@ -2,9 +2,8 @@
  * 魔法叶 / magicalleaf 的 AI 用途。
  *
  * 什么局面下出手：考虑距离内有可见、且中间没有整面墙挡住的敌对目标就列入候选；够不到交给共享接近逻辑。
- * `ai.trackMovers`（默认开）：目标正在移动（追人或逃跑）时抬高 priority——叶会拐弯，移动的对手正合叶路；
- * 目标静止时按普通远程攻击排序。目标在射程远端也略微加权，因为叶会飞过去追。
- * 配置 envelop（合围／直取）改变叶的散开方式与单叶轻重。
+ * 叶会逐片重新读取准线并拐弯，所以正在移动的对手、以及射程远端的对手都略微加权（`ai.trackMovers` 默认开）。
+ * 目标在叶飞行途中离场时，尚未发出的叶会按下一片自己的准线重新选择；AI 因此重视持续开阔的输出窗口。
  */
 namespace PokemonSkills {
     /** 目标与自身之间是否有一条可以飞叶的空路；同一决策帧内缓存。 */
@@ -42,16 +41,13 @@ namespace PokemonSkills {
         }
     });
 
-    addPreferences("magicalleaf", { envelop: false, ai: { maxChase: 15, trackMovers: true } }, [
-        field(pathOf("envelop"), "合围", "boolean", {
-            help: "开启（合围）：叶从整圈散开、再加 2 片、转向更强，从对手四周收拢，但叶更慢更轻、起手多 2 刻、冷却多 3 刻。关闭（直取）：叶从前方小锥面直插，来得更快、单叶约 +35%。"
-        }),
+    addPreferences("magicalleaf", { ai: { maxChase: 15, trackMovers: true } }, [
         field(pathOf("ai.maxChase"), "射击距离", "number", {
             min: 4, max: 26, step: 1,
             help: "超过这个距离就不主动散叶，先走近。越大越会在更远处先手。"
         }),
         field(pathOf("ai.trackMovers"), "追动目标", "boolean", {
-            help: "开启后，正在移动的敌人优先成为散叶目标（叶会拐弯拦在前面）；关闭则只按普通远程攻击排序。"
+            help: "开启后，正在移动的敌人优先成为散叶目标（叶会逐片拐弯拦在前面）；关闭则只按普通远程攻击排序。"
         })
     ]);
 }

@@ -14,7 +14,7 @@ namespace PokemonSkills {
         const moves: { [type: string]: string } = {
             "minecraft:mob_attack": "tackle", "minecraft:mob_attack_no_aggro": "tackle", "minecraft:player_attack": "tackle",
             "minecraft:sting": "poisonsting", "minecraft:ram": "headbutt", "minecraft:mace_smash": "slam",
-            "minecraft:arrow": "furyattack", "minecraft:trident": "hornattack", "minecraft:fireball": "ember",
+            "minecraft:arrow": "poisonsting", "minecraft:trident": "pinmissile", "minecraft:fireball": "ember",
             "minecraft:unattributed_fireball": "ember", "minecraft:sonic_boom": "sonicboom", "minecraft:indirect_magic": "psybeam"
         };
         const id = moves[attack.type]; return id && skills[id] ? id : "";

@@ -5,7 +5,7 @@ namespace CompanionBehavior {
     });
     registerFact("world_combat:reflecttype-defence", function (access, actor, argument) {
         const pair = !!argument;
-        return CombatCopies.read(access, actor, pair ? CombatCopies.defence : [CombatCopies.defence[0]]);
+        return CombatCopies.read(access, actor, pair ? CombatCopies.defence.slice(0, 2) : [CombatCopies.defence[0]]);
     });
 
     /** 威胁当前属性；读不出（非宝可梦或没有属性）就返回 null，不据此宣称更优。 */
@@ -16,22 +16,28 @@ namespace CompanionBehavior {
         return types && types.length ? types : null;
     }
 
-    /** 一组防御属性面对威胁属性时的综合承伤倍率；越低说明这一面越硬。 */
+    /**
+     * 承伤倍率：威胁的每个攻击属性各自结算，取最坏（最高）的一路，而不是把不同攻击属性连乘。
+     * 防御方的双属仍按真实相性连乘（同一发攻击对两个属性各算一次），这正是属性相性的算法。
+     */
     function reflecttypeIncoming(threatTypes: string[], defenceTypes: string[]): number {
-        let factor = 1;
-        for (let i = 0; i < threatTypes.length; i++)
+        let worst = 0;
+        for (let i = 0; i < threatTypes.length; i++) {
+            let factor = 1;
             for (let j = 0; j < defenceTypes.length; j++) factor *= CobblemonCombat.typeEffectiveness(threatTypes[i], defenceTypes[j]);
-        return factor;
+            worst = Math.max(worst, factor);
+        }
+        return worst;
     }
 
-    /** 照住这个来源能把承伤倍率降多少；非宝可梦来源按可读防御事实的净提升算。不支持的来源返回 0。 */
+    /** 照住这个来源能把承伤倍率降多少；非宝可梦来源按可读防御事实的净损益算。不支持的来源返回 0。 */
     function reflecttypeImprovement(context: WorldBehavior.Context, item: WorldBehavior.Capability, candidate: Entity, threatTypes: string[] | null): number {
         const self = source(context), pair = !!(item.data.config && item.data.config.pair);
         if (domain(context, candidate) === "cobblemon") {
             if (threatTypes === null) return 0;
             const offered = fact<string[]>(context, "world_combat:reflecttype-types", candidate);
             const mine = fact<string[]>(context, "world_combat:reflecttype-types", self);
-            if (!offered || !offered.length || !mine || !mine.length) return 0;
+            if (!offered || !offered.length || !mine) return 0;
             const chosen = PokemonSkills.reflecttypeChoose(offered, pair);
             if (!chosen.length || chosen.slice().sort().join(",") === mine.slice().sort().join(",")) return 0;
             return reflecttypeIncoming(threatTypes, mine) - reflecttypeIncoming(threatTypes, chosen);
@@ -39,19 +45,32 @@ namespace CompanionBehavior {
         const own = fact<CombatCopies.Values>(context, "world_combat:reflecttype-defence", self, pair);
         const theirs = fact<CombatCopies.Values>(context, "world_combat:reflecttype-defence", candidate, pair);
         if (!own || !theirs) return 0;
+        // 净损益：加上来源更高的属性，也扣掉来源更低的属性，避免只看增益高估。
         let gain = 0;
         Object.keys(theirs).forEach(function (id) {
             const current = own[id];
-            if (typeof current === "number" && theirs[id] > current + 0.0001) gain += theirs[id] - current;
+            if (typeof current === "number") gain += theirs[id] - current;
         });
         return gain;
     }
 
+    /** 驻守且未开 leaveStation 时只在原地点得到的范围里挑，为此走远不被允许。 */
+    function reflecttypeStationary(context: WorldBehavior.Context, item: WorldBehavior.Capability): boolean {
+        return (context.facts.intent === "hold" || context.facts.intent === "stay")
+            && !ai<boolean>(item, "leaveStation", false);
+    }
+    function reflecttypeTooFar(context: WorldBehavior.Context, item: WorldBehavior.Capability, candidate: Entity): boolean {
+        const self = source(context), reach = Number(item.data.range) || 8;
+        if (reflecttypeStationary(context, item) && distance(self.point, candidate.point) > reach) return true;
+        if (candidate.ref === context.facts.focus) return false;
+        if (distance(self.point, candidate.point) > ai<number>(item, "maxChase", 12)) return true;
+        return reflecttypeStationary(context, item) && distance(self.point, candidate.point) > reach;
+    }
+
     function reflecttypeSourceWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, candidate: Entity): boolean {
         if (candidate.health <= 0 || !candidate.visible || candidate.ref === source(context).ref) return false;
-        const self = source(context);
-        if (candidate.ref !== context.facts.focus && distance(self.point, candidate.point) > ai<number>(item, "maxChase", 12)) return false;
-        if (!world(context).clear(point(self.point), point(candidate.point))) return false;
+        if (reflecttypeTooFar(context, item, candidate)) return false;
+        if (!world(context).clear(point(source(context).point), point(candidate.point))) return false;
         const threatTypes = reflecttypeThreatTypes(context);
         return reflecttypeImprovement(context, item, candidate, threatTypes) > 0.01;
     }
@@ -72,7 +91,7 @@ namespace CompanionBehavior {
         let best: Entity | null = null, bestScore = 0.01;
         (context.facts.nearby as Entity[]).forEach(function (candidate) {
             if (candidate.health <= 0 || !candidate.visible || candidate.ref === self.ref) return;
-            if (distance(self.point, candidate.point) > ai<number>(item, "maxChase", 12)) return;
+            if (reflecttypeTooFar(context, item, candidate)) return;
             if (!world(context).clear(point(self.point), point(candidate.point))) return;
             const score = reflecttypeImprovement(context, item, candidate, threatTypes);
             if (score > bestScore || score === bestScore && best !== null && distance(self.point, candidate.point) < distance(self.point, best.point)) {

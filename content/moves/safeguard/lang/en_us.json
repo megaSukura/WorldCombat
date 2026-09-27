@@ -3,7 +3,7 @@
   "worldcombat.skill.safeguard.use.0": "Block blanket burns, poison and paralysis",
   "worldcombat.skill.safeguard.use.1": "Raise the ward before the foe starts spreading conditions",
   "worldcombat.skill.safeguard.use.2": "Cover an ally about to step in",
-  "worldcombat.skill.safeguard.description.0": "The ward lasts %1$s and protects the user and allies within %2$s blocks from new harmful conditions such as burn, poison, paralysis and sleep. Displayed range and duration include the selected ward mode.",
+  "worldcombat.skill.safeguard.description.0": "The ward lasts %1$s and protects the user and allies within %2$s blocks from new harmful conditions such as burn, poison, paralysis and sleep. Displayed range and duration include the selected ward mode; it does not block a status the user deliberately applies to itself (such as Rest putting itself to sleep).",
   "worldcombat.skill.safeguard.description.1": "The ward does not cure existing conditions or block direct damage, knockback or lowered stat stages. Beneficial effects can still be received.",
   "worldcombat.skill.safeguard.description.2": "Raising it takes %1$s, the recovery is %2$s and the cooldown %3$s. See the ward note for the deep/early trade-off.",
   "worldcombat.skill.safeguard.ward.0": "Early: duration x0.75, radius x0.85, in exchange for -2 ticks wind-up and x0.8 cooldown — quick to raise and refresh.",
@@ -31,6 +31,6 @@
   "world_combat.move.safeguard.text.guard": "The ward turns the status away",
   "world_combat.move.safeguard.text.fade": "The ward closes",
   "effect.world_combat.safeguard_veil": "Safeguard",
-  "worldcombat.skill.safeguard.description.3": "The ward refreshes nearby allies once per second. Allies who leave the radius keep a short remnant of their own, up to about %1$s; when the user's field ends this protection is withdrawn with it. Overlapping wards are kept separately, so clearing one does not remove another; clearing the user's ward ends this field early.",
+  "worldcombat.skill.safeguard.description.3": "The ward refreshes nearby allies once per second. Allies who leave the radius keep a short remnant of their own, at most about 60% of the protection remaining when they joined (never more than 60% of the ward's full duration, up to about %1$s); when the user's field ends this protection is withdrawn with it. Overlapping wards are kept separately, so clearing one does not remove another; clearing the user's ward ends this field early.",
   "worldcombat.skill.safeguard.value.residualDuration": "Maximum lingering protection"
 }

@@ -7,16 +7,18 @@
  * 两幕：
  *   起（windup，提交前）：牙面挂起毒滴、毒雾绕口打转，只播预告表现。
  *   咬（bite）：提交后朝瞄准方向做一段真实短 trace；第一个碰到的人或墙就是这一口合上的地方，
- *       命中非友方即结算 fang 接触咬合，命中点炸开毒色迸溅与獠牙剪影。空咬、咬到友方或先撞墙都不注入。
- *   灌（venom / drip）：咬中后隔 `pump` 刻，毒液在伤口里渗开：掷中 toxicChance（或目标已中毒）则加重为剧毒
- *       （共享身份 world_combat:status/toxic），否则普通中毒。注毒时目标必须仍在口边且通视；
- *       挣脱或移开则无毒、毒滴落空，首咬伤已结算保留。
+ *       命中非友方即结算 fang 接触咬合，只在接触点短合牙、不下毒。空咬、咬到友方或先撞墙都不注入。
+ *   灌（pump / venom / drip / refuse）：咬中后隔 `pump` 刻，接触处攥起小毒囊。届时毒液在伤口里渗开：
+ *       掷中 toxicChance（或目标已中毒）则加重为剧毒（共享身份 world_combat:status/toxic），否则普通中毒；
+ *       只有真实 inflict 成功才向受体渗开。目标挣脱口边或不通视则毒滴落空（drip）；被拒（免疫等）只散落毒滴（refuse）；
+ *       两种情况首咬伤都已结算保留。
  *
  * 配置 `venom`（浓毒式）由公式改威力／毒液与注毒延迟，提交后才触碰世界。
  * 它没有畏缩，因此没有 flinch 载体与门禁。
  */
 namespace PokemonSkills {
     const poisonfangScene = "world_combat:move_poisonfang";
+    const poisonfangPumpKey = "world_combat:poisonfang:pump";
     const poisonfangHitText = "world_combat.move.poisonfang.text.hit";
     const poisonfangToxicText = "world_combat.move.poisonfang.text.toxic";
     const poisonfangVenomText = "world_combat.move.poisonfang.text.venom";
@@ -97,10 +99,13 @@ namespace PokemonSkills {
             const landed = impact(action, contact, "poisonfang", power,
                 { damage: damageSpec("poisonfang", "fang"), contact: true, bite: true });
             WorldFeedback.emit(world, poisonfangScene, 1, at,
-                { moment: "bite", target: victimRef, drops: drops, scale: scale, intensity: intensity }, 24);
+                { moment: "bite", target: victimRef, drops: drops, scale: scale, intensity: intensity }, 18);
             sound(action, "cobblemon:impact.poison");
             if (!landed || !world.valid(victim)) { done(action); return; }
             WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), poisonfangHitText, [], 22);
+            // 咬住后压一小拍：接触处攥起小毒囊，毒是否渗开要目标留在口边且通视，成功才向受体散开。
+            action.present(poisonfangPumpKey, poisonfangScene, 1, at,
+                JSON.stringify({ moment: "pump", drops: drops, scale: scale, intensity: intensity, hold: pump }));
             action.after(pump, function (next: CombatAction) { venom(next, victimRef, at); });
 
             /** 毒液在伤口里渗开：目标必须仍在口边（咬程之内）且通视；挣脱或移开则无毒、毒滴落空，首咬伤已结算保留。 */
@@ -121,11 +126,20 @@ namespace PokemonSkills {
                 }
                 const already = CombatStatus.has(scope, marked, "poison");
                 const heavy = already || scope.random() < toxicChance;
-                const landed = CombatStatus.inflict(scope, marked, heavy ? "toxic" : "poison", venomTicks, 0, { secondary: true });
+                const took = CombatStatus.inflict(scope, marked, heavy ? "toxic" : "poison", venomTicks, 0, { secondary: true });
+                if (!took) {
+                    // 被拒（免疫等）：只让毒滴在接触处散落，不声称渗开成功。
+                    WorldFeedback.emit(scope, poisonfangScene, 1, here,
+                        { moment: "refuse", target: ref, drops: drops, scale: scale, intensity: intensity }, 20);
+                    WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.15, 0)), poisonfangImmuneText, [], 24);
+                    sound(next, "cobblemon:impact.poison");
+                    done(next);
+                    return;
+                }
                 WorldFeedback.emit(scope, poisonfangScene, 1, here,
                     { moment: "venom", target: ref, drops: drops, scale: scale, intensity: intensity, toxic: heavy ? 1 : 0 }, 24);
                 WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.15, 0)),
-                    landed ? (heavy ? poisonfangToxicText : poisonfangVenomText) : poisonfangImmuneText, [], 24);
+                    heavy ? poisonfangToxicText : poisonfangVenomText, [], 24);
                 sound(next, "cobblemon:impact.poison");
                 done(next);
             }

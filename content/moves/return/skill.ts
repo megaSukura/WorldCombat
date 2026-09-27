@@ -76,6 +76,9 @@ namespace PokemonSkills {
             const chargeStart = action.origin();
             const scale = radius / 0.42;
             const intensity = Math.max(0.5, Math.min(2, 0.5 + bond * 1.5));
+            // 尾迹密度由 trail 模式真正读取的两个字段控制：威力越高，两点越近、每点越多；rate 在 trail 模式会被忽略，不用它。
+            const spacing = Math.max(0.16, Math.min(0.34, 0.34 - power * 0.0012));
+            const density = Math.max(1, Math.min(3, Math.round(power / 45)));
             const trail = Math.max(16, Math.round(power * 1.4));
             const sparks = Math.max(10, Math.round(power * 0.5));
             let travelled = 0, settled = false;
@@ -85,11 +88,11 @@ namespace PokemonSkills {
                 return [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]];
             }
 
-            movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: returnVector(direction), scale: scale, intensity: intensity, trail: trail });
+            movementScenes.show(action, "dash", action.origin(), { moment: "dash", direction: returnVector(direction), scale: scale, intensity: intensity, trail: trail, spacing: spacing, density: density });
             sound(action, "minecraft:entity.player.attack.strong");
 
-            /** 收势：把起点到实际终点连成同一条亮线；撞空补一行浮字。 */
-            function land(current: CombatAction, moment: string, missed: boolean, from?: CombatPoint, to?: CombatPoint): void {
+            /** 收势：由独立的 brake／through／miss 幕承担，撞空才补一行浮字；成功音画只在真实落地那一次播。 */
+            function settle(current: CombatAction, moment: string, missed: boolean, from?: CombatPoint, to?: CombatPoint): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
@@ -100,17 +103,17 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, returnScene, 1, body.position(), payload, 22);
                     if (missed) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.25, 0)), returnMissText, [], 22);
                 }
-                sound(current, missed ? "minecraft:entity.player.attack.sweep" : "cobblemon:impact.normal");
+                if (missed) sound(current, "minecraft:entity.player.attack.sweep");
                 movementScenes.finish(current, done);
             }
 
-            /** 受托式的余进：撞实后沿原方向继续直进，只把同一条亮线以更淡的一版续到实际终点。 */
+            /** 受托式的余进：撞实后沿原方向继续直进，只把同一条亮线以更淡的一版续到实际终点；不保证穿过大体型目标。 */
             function through(current: CombatAction, remaining: number, left: number, from: CombatPoint): void {
                 if (settled) return;
                 const scope = current.world();
-                if (remaining <= 0.02 || left <= 0) { land(current, "through", false, from, current.origin()); return; }
+                if (remaining <= 0.02 || left <= 0) { settle(current, "through", false, from, current.origin()); return; }
                 const moved = scope.displace(current.actor(), direction.scale(Math.min(remaining, speed * 0.62)));
-                if (moved < p("return", "minimumMove", current)) { land(current, "through", false, from, current.origin()); return; }
+                if (moved < p("return", "minimumMove", current)) { settle(current, "through", false, from, current.origin()); return; }
                 current.after(1, function (next: CombatAction) { through(next, remaining - moved, left - 1, from); });
             }
 
@@ -118,7 +121,7 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const origin = current.origin();
                 const step = Math.min(speed, Math.max(0, length - travelled));
-                if (step <= 0.001) { land(current, "miss", true, chargeStart, origin); return; }
+                if (step <= 0.001) { settle(current, "miss", true, chargeStart, origin); return; }
                 const delta = direction.scale(step);
                 const swept = sweepStep(current, delta, radius);
                 const hit = swept.hit;
@@ -127,16 +130,19 @@ namespace PokemonSkills {
                     const point = hit.position();
                     const landed = impact(current, hit, "return", power,
                         { damage: damageSpec("return", "power"), contact: true });
-                    WorldFeedback.emit(scope, returnScene, 1, point,
-                        { moment: "impact", target: target !== null ? String(target.ref()) : "", path: line(chargeStart, point),
-                            scale: scale, intensity: intensity, trail: trail, sparks: sparks }, 28);
-                    if (landed && target !== null && scope.valid(target)) {
-                        scope.hitDisplace(target, direction.scale(push));
+                    // 只有真实落上伤害的成功接触才播一次 impact；友方、免疫、被原生拒绝都不发成功回执。
+                    if (landed && target !== null && scope.valid(target) && !scope.friendly(target)) {
+                        WorldFeedback.emit(scope, returnScene, 1, point,
+                            { moment: "impact", target: String(target.ref()), path: line(chargeStart, point),
+                                scale: scale, intensity: intensity, trail: trail, sparks: sparks }, 28);
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), returnHitText, [], 22);
                         sound(current, "cobblemon:impact.normal");
+                        scope.hitDisplace(target, direction.scale(push));
+                        if (devoted) { through(current, carry, 8, point); return; }
+                        settle(current, "brake", false);
+                        return;
                     }
-                    if (landed && devoted) { through(current, carry, 8, point); return; }
-                    land(current, "impact", false);
+                    settle(current, "brake", false);
                     return;
                 }
                 const moved = swept.moved;
@@ -149,7 +155,7 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, returnScene, 1, at,
                             { moment: "wall", path: line(chargeStart, origin), face: hit.blockFace(), scale: scale, intensity: intensity }, 22);
                     }
-                    land(current, "miss", true, chargeStart, origin);
+                    settle(current, "miss", true, chargeStart, origin);
                     return;
                 }
                 current.after(1, advance);

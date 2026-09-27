@@ -119,6 +119,24 @@ const ElectricTerrainDefinition: ParticleDefinition = {
                     lifetime: [10, 18], size: [0.08, 0.02],
                     color: 0xDFFBFF, alpha: [0.9, 0], light: "full", maxParticles: 30 }
             ]
+        },
+        miss: {
+            duration: 20,
+            exit: { stop: 8, drain: 14 },
+            emitters: [
+                { name: "fizzle", bind: "point", offset: [0, 0.2, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
+                    burst: { count: 10 }, shape: { kind: "sphere", radius: 0.35 },
+                    direction: "outward", speed: [0.02, 0.06], gravity: 0.01,
+                    lifetime: [8, 14], size: [0.1, 0.02],
+                    color: 0x7E8A93, alpha: [0.5, 0], light: "world", maxParticles: 20 },
+                { name: "dust", bind: "point", offset: [0, 0.08, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    burst: { count: 12 }, shape: { kind: "circle", radius: 0.5 },
+                    direction: "outward", speed: [0.01, 0.04], gravity: 0.02,
+                    lifetime: [10, 16], size: [0.05, 0.01],
+                    color: 0x8E8E8E, alpha: [0.3, 0], light: "world", maxParticles: 20 }
+            ]
         }
     }
 };

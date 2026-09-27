@@ -12,19 +12,56 @@
  *     的同时仍然砸出去，是这招最像“逃也是打”的一刻。
  */
 namespace CompanionBehavior {
-    /** 头顶 1.5 格是否有净空；没观察到就当作开阔，不拦着伙伴。 */
+    /** 头顶 1.5 格是否有净空：按整身体积扫多个横截面，任一列顶到方块就不算开阔；没观察到就当作开阔。 */
     function flyOpen(context: WorldBehavior.Context): boolean {
         var access = world(context), actor = access.actor(source(context).ref);
         var body = actor === null ? null : access.observe(actor);
         if (body === null) return true;
-        var position = body.position();
-        var block = access.block(point([position.x(), position.y() + body.height() * 0.5 + 1.5, position.z()]));
-        return block === null || String(block.id()).indexOf("air") >= 0;
+        var position = body.position(), top = position.y() + body.height() * 0.5 + 1.5;
+        var halfW = Math.max(0.15, body.width() * 0.5 - 0.05);
+        var offsets = [[0, 0], [halfW, halfW], [-halfW, halfW], [halfW, -halfW], [-halfW, -halfW]];
+        for (var i = 0; i < offsets.length; i++) {
+            var block = access.block(point([position.x() + offsets[i][0], top, position.z() + offsets[i][1]]));
+            if (block !== null && String(block.id()).indexOf("air") < 0) return false;
+        }
+        return true;
+    }
+    /** 身体中心到第一块非空气方块之间的净空（AI 侧读同一事实，用于估算真实飞行高度）。 */
+    function flyClearance(access: CombatWorld, body: CombatObservation, limit: number): number {
+        var position = body.position(), top = position.y() + body.height() * 0.5;
+        var steps = Math.ceil(limit * 2) + 2;
+        for (var step = 0; step <= steps; step++) {
+            var block = access.block(point([position.x(), top + step * 0.5, position.z()]));
+            if (block !== null && String(block.id()).indexOf("air") < 0) return Math.max(0, step * 0.5 - 0.4);
+        }
+        return limit;
+    }
+    /** 整条飞行路径是否都在净空下：沿到威胁的直线在实际悬停高度采样几处，中途低顶也会被读到。 */
+    function flyRouteOpen(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
+        var access = world(context), actor = access.actor(source(context).ref);
+        var body = actor === null ? null : access.observe(actor);
+        if (body === null) return true;
+        var limit = PokemonSkills.p("fly", "altitude", { world: access, actor: access.source(),
+            skill: PokemonSkills.skills["fly"], detail: { values: item.data.config } });
+        var position = body.position(), y = position.y() + Math.max(0.5, Math.min(limit, flyClearance(access, body, limit)));
+        for (var step = 1; step <= 4; step++) {
+            var t = step / 4;
+            var block = access.block(point([position.x() + (threat.point[0] - position.x()) * t, y,
+                position.z() + (threat.point[2] - position.z()) * t]));
+            if (block !== null && String(block.id()).indexOf("air") < 0) return false;
+        }
+        return true;
     }
 
     /** 是不是配置里的定点击落：此时落点范围大，值得等落区聚起人再一起压。 */
     function flyPin(item: WorldBehavior.Capability): boolean {
         return !!item.data.config && item.data.config.track === false;
+    }
+    /** 本招当刻真实的定点半径（AI 聚群与判定共用公式），不另写一个近似值。 */
+    function flyPinRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        var access = world(context);
+        return PokemonSkills.p("fly", "impactRadius", { world: access, actor: access.source(),
+            skill: PokemonSkills.skills["fly"], detail: { values: item.data.config } }) * PokemonSkills.flyPinFactor;
     }
     /** 目标落区附近聚着几个敌人，用来决定定点击落值不值得飞。 */
     function flyNearbyEnemies(context: WorldBehavior.Context, threat: Entity, radius: number): number {
@@ -53,7 +90,7 @@ namespace CompanionBehavior {
         if (context.facts.focus !== threat.ref && distance(source(context).point, threat.point) > ai<number>(item, "maxChase", 14)) return false;
         if (flyPin(item)) {
             var need = ai<number>(item, "crowd", 1);
-            if (need > 1 && flyNearbyEnemies(context, threat, 3.0) < need) return false;
+            if (need > 1 && flyNearbyEnemies(context, threat, flyPinRadius(context, item)) < need) return false;
         }
         return true;
     }
@@ -63,13 +100,15 @@ namespace CompanionBehavior {
         reach: function (_context, item) { return item.data.range; },
         available: function (context, item, _purpose, target) {
             if (!flyOpen(context)) return false;
+            if (target && !flyRouteOpen(context, item, target)) return false;
             return !target || flyWants(context, item, target);
         },
         priority: function (context, item, target) {
             if (!target) return 0;
             var self = source(context), range = item.data.range;
-            // 带伤、目标又在射程内：飞上去既能躲开贴地的火力，又能砸下去。
-            if (ratio(self) < ai<number>(item, "minHealth", 0.5) && distance(self.point, target.point) <= range) return 60;
+            // 带伤、目标又在射程内，且确实是贴地的近战威胁、头顶有净空：才把飞翔当“逃也是打”。
+            if (ratio(self) < ai<number>(item, "minHealth", 0.5) && distance(self.point, target.point) <= range
+                && target.grounded !== false && flyOpen(context)) return 60;
             return 0;
         },
         accepts: function (context, item, target) {

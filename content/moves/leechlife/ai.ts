@@ -22,20 +22,24 @@ namespace CompanionBehavior {
         },
         priority: function (context, capability, target) {
             if (!target || !capability) return 0;
-            var dist = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+            var self = CompanionBehavior.source(context);
+            var dist = CompanionBehavior.distance(self.point, target.point);
             if (dist > CompanionBehavior.ai<number>(capability, "maxChase", 6)) return 0;
             var score = 18;
-            if (CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(capability, "healBelow", 0.88)) score += 15;
+            if (CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(capability, "healBelow", 0.88)) score += 15;
             if (CompanionBehavior.status(context, target, "paralysis") || CompanionBehavior.status(context, target, "sleep")
                 || CompanionBehavior.status(context, target, "rooted") || CompanionBehavior.protectedControl(target)) score += 10;
             if (target.maximum > 0 && target.health / target.maximum > 0.5) score += 4;
+            // 补「可站住及沿程无遮挡」：站着抽完、且到目标之间没有墙才值得咬。
+            if (self.grounded === true) score += 2; else score -= 3;
+            if (!CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) score -= 6;
             return score;
         }
     });
 
     PokemonSkills.addPreferences("leechlife", {}, [
         PokemonSkills.field(PokemonSkills.pathOf("deep"), "深咬式", "boolean", {
-            help: "开启：三拍重吸、每拍更狠、回血比例更高、钩子挂得更远，但起手收招更慢、每拍间隔更长，目标更容易在这段里跑掉。关闭：五拍快吸，节奏紧、回得快，但每口更轻、总抽量分得更散。"
+            help: "开启：三拍重吸、每拍更狠、回血比例更高，但起手收招更慢、每拍间隔更长，目标更容易在这段里跑掉。关闭：五拍快吸，节奏紧、回得快，但每口更轻、总抽量分得更散。"
         }),
         PokemonSkills.field(PokemonSkills.pathOf("ai.maxChase"), "追击距离", "number", {
             min: 2, max: 12, step: 1,

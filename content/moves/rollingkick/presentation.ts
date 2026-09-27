@@ -4,10 +4,12 @@
  * 一句话：施法者原地急旋，脚边卷起一圈橙黄火星；随后扑出半步，回旋腿正中目标炸开一记格斗冲击，
  * 被踢中的人沿踢击方向拖着一串火花抛到半空飞出去。
  * 色相家族：橙黄与暖白（impact_fighting / critical_hit 为主体，0xE8A96A），近白只给踢中的那一闪。
- * 拍子：起（whirl 急旋，火星围腿转）→ 扑（drive 跟本体扑出）→ 中（kick 只在接触那一刻）→ 飞（launch 画出实际位移）→ 懵（flinch）／空（miss）。
+ * 拍子：起（whirl 急旋，火星围腿转 + `move_rollingkick_leg` 的绕腿弧）→ 扑（drive 跟本体扑出）→ 中（kick 只在接触那一刻）→ 飞（launch 画出真实抛飞弧）→ 懵（flinch）／空（miss）。
+ * 主体：真正绕身体扫过的腿影与向外上踢痕由 custom scene `world_combat:move_rollingkick_leg` 画（固定数量的足影与短线，无粒子生灭）；
+ *   起旋弧覆盖全部 prepare，踢痕按服务端给出的真实冲量方向从接触点向外上铺，判定与表现共用端点。
  * 范围：这一招只作用在贴身一个目标身上；whirl 的火星围着施法者的腿脚转，作用点随 source 跟住本体。
- * 运动：起旋时火星绕脚边环转，扑出时跟本体向前拖尾；命中后目标那一串火星沿 `data.direction`（真实踢出方向）铺开，画出抛飞轨迹，只有真的推动了才播。
- * 数：`data.sparks`（速度与物攻派生）决定起旋、扑出与命中的火星量，`data.sparkles`（实际位移距离派生）决定抛飞轨迹的密度。
+ * 运动：起旋时火星绕脚边环转，扑出时跟本体向前拖尾；命中后目标沿原生冲量走真实抛体弧线，launch 那串火星沿 `data.direction` 铺在它自己身上。
+ * 数：`data.sparks`（速度与物攻派生）决定起旋、扑出与命中的火星量，`data.sparkles`（抛飞初速派生）决定抛飞轨迹的密度。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const RollingkickDefinition: ParticleDefinition = {
@@ -126,3 +128,84 @@ const RollingkickDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_rollingkick", 1, RollingkickDefinition);
+
+/**
+ * 绕腿弧与踢痕：固定数量的足影与短线，不生成粒子或实体。
+ * - `moment: "spin"`：起旋弧覆盖全部 `data.duration` 刻，圆心与身高取自施法者真实插值脚点（`frame.anchor(data.actor)`），
+ *   腿影绕身体扫过一整圈，身后留一小段尾迹。
+ * - `moment: "kick"`：从真实接触点沿 `data.direction`（服务端施加的冲量方向）向外上画一段短弧，脚影落在弧端。
+ */
+const RollingkickLegTexture = "cobblemon:particle/generic/foot";
+function rollingkickLegVec(value: any, fallback: number[]): number[] {
+    if (Array.isArray(value) && value.length === 3 && (value as any[]).every(function (n) { return typeof n === "number" && isFinite(n); }))
+        return [Number(value[0]), Number(value[1]), Number(value[2])];
+    return fallback;
+}
+function rollingkickLegNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+function rollingkickLegClamp(value: number, lo: number, hi: number): number { return Math.max(lo, Math.min(hi, value)); }
+function rollingkickLegColour(alpha: number, rgb: number): number { return ((Math.round(255 * rollingkickLegClamp(alpha, 0, 1)) << 24) | rgb) | 0; }
+function rollingkickLegUnit(value: number[]): number[] {
+    const length = Math.sqrt(value[0] * value[0] + value[1] * value[1] + value[2] * value[2]);
+    return length > 1e-6 ? [value[0] / length, value[1] / length, value[2] / length] : [0, 0, 1];
+}
+WorldCombatClient.scene("world_combat:move_rollingkick_leg", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const scale = rollingkickLegClamp(rollingkickLegNumber(data.scale, 1), 0.6, 2.0);
+    const intensity = rollingkickLegClamp(rollingkickLegNumber(data.intensity, 1), 0.6, 2.2);
+    const start = rollingkickLegNumber(data.start, frame.serverTick());
+
+    if (data.moment === "spin") {
+        const anchorText = frame.anchor(String(data.actor || ""));
+        const anchor = anchorText ? JSON.parse(anchorText) : null;
+        if (!anchor) return;
+        const cx = Number(anchor.x), cy = Number(anchor.y), cz = Number(anchor.z);
+        const height = typeof anchor.height === "number" && anchor.height > 0 ? anchor.height : 1.4;
+        const duration = Math.max(1, rollingkickLegNumber(data.duration, 12));
+        const progress = rollingkickLegClamp((frame.serverTick() - start) / duration, 0, 1);
+        const turn = progress * Math.PI * 2;
+        const radius = 0.5 * scale + height * 0.12;
+        const lift = cy + height * 0.22 + 0.16 * Math.sin(progress * Math.PI);
+        const tail = 0.5;
+        let px = 0, py = 0, pz = 0, started = false;
+        for (let k = 0; k <= 8; k++) {
+            const t = turn - tail * Math.PI * 2 * (1 - k / 8);
+            const x = cx + Math.cos(t) * radius, z = cz + Math.sin(t) * radius;
+            const y = lift + 0.05 * Math.sin(t * 2);
+            if (started) frame.line(px, py, pz, x, y, z, rollingkickLegColour(0.5, 0xE8A96A));
+            px = x; py = y; pz = z; started = true;
+        }
+        frame.sprite(RollingkickLegTexture, px, py, pz, 0.34 + 0.05 * intensity, 0, rollingkickLegColour(0.9, 0xFFF4E0), 0, true);
+        const dust = rollingkickLegClamp(Math.round(rollingkickLegNumber(data.sparks, 20) / 8), 2, 6);
+        for (let d = 0; d < dust; d++) {
+            const a = turn + d * 1.7, rr = radius * (0.8 + 0.5 * (d / dust));
+            frame.sprite("cobblemon:particle/generic/tinydust", cx + Math.cos(a) * rr, cy + 0.06, cz + Math.sin(a) * rr,
+                0.08 + 0.02 * intensity, 0, rollingkickLegColour(0.4, 0xD8C0A0), 0, false);
+        }
+        return;
+    }
+
+    if (data.moment === "kick") {
+        const axis = rollingkickLegUnit(rollingkickLegVec(data.direction, [0, 0, 1]));
+        const flat = Math.sqrt(axis[0] * axis[0] + axis[2] * axis[2]) || 1;
+        const ux = axis[0] / flat, uz = axis[2] / flat;
+        const p = entry.position;
+        const duration = 12;
+        const progress = rollingkickLegClamp((frame.serverTick() - start) / duration, 0, 1);
+        const reach = (1.0 + 0.5 * intensity) * (0.3 + 0.7 * progress);
+        let px = p[0], py = p[1] + 0.5, pz = p[2], started = false;
+        for (let k = 0; k <= 7; k++) {
+            const t = progress * k / 7;
+            const x = p[0] + ux * reach * t, z = p[2] + uz * reach * t;
+            const y = p[1] + 0.5 + 0.6 * axis[1] * t + 0.12 * Math.sin(Math.PI * t);
+            if (started) frame.line(px, py, pz, x, y, z, rollingkickLegColour(0.55, 0xE8A96A));
+            px = x; py = y; pz = z; started = true;
+        }
+        frame.sprite(RollingkickLegTexture, px, py, pz, 0.42 + 0.08 * intensity, 0, rollingkickLegColour(0.95, 0xFFFFFF), 0, true);
+        return;
+    }
+});

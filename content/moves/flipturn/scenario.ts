@@ -22,7 +22,7 @@ Smoke.scenario("flipturn", function (stage) {
         stage.expect(stage.casts("flipturn", caster) > 0, "flip turn was committed");
         stage.expect(stage.damageTo(foe) > 0, "the ram connected");
         stage.expect(stage.travelled(caster) > 1, "the user dashed in, vaulted over and glided away");
-        stage.note("冲撞威力随物攻与速度、越位与滑行随速度与体重；回身式默认关闭（深潜式越过目标继续远遁）。湿身加长滑行需在水面核对；目标过高/顶棚压顶的提前落下由原生碰撞驱动。", {
+        stage.note("冲撞威力随物攻与速度、越位与滑行随速度与体重；回身式默认关闭（深潜式越过目标继续远遁）。翻越前先按受体推开后的完整体积与头顶净空校验，翻不过去就在接触侧落下；逐刻确认地面支撑才换手，空中不假装落地；扑空只短退、不换手。湿身加长滑行需在水面核对。", {
             casts: stage.casts("flipturn", caster),
             onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             travelled: Math.round(stage.travelled(caster) * 10) / 10,

@@ -33,7 +33,7 @@
   "worldcombat.skill.bounce.preference.ai.maxChase": "Bounce distance",
   "worldcombat.skill.bounce.preference.ai.maxChase.help": "The partner only considers bouncing while a threat is this close; smaller keeps it for near hits, larger lets it pounce from farther out.",
   "worldcombat.skill.bounce.preference.ai.escapeBelow": "Escape health",
-  "worldcombat.skill.bounce.preference.ai.escapeBelow.help": "When the partner's health drops below this ratio it treats bounce as the leap that clears grounded melee, raising its priority; higher makes it hop away more often when being hit.",
+  "worldcombat.skill.bounce.preference.ai.escapeBelow.help": "Only when the partner's health drops below this ratio, a grounded melee threat is on top of it and it has headroom does it treat bounce as the leap that clears grounded melee, raising its priority; low HP alone is not a safe escape. Higher makes it hop away more often when being hit.",
   "worldcombat.skill.bounce.preference.ai.leaveStation": "Leave post",
   "worldcombat.skill.bounce.preference.ai.leaveStation.help": "When on, the partner will also leave its post to bounce out at an enemy.",
   "world_combat.move.bounce.text.land": "Landed x%1$s",

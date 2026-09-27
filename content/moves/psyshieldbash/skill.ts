@@ -5,9 +5,9 @@
  * **当场加固使用者**（NativeEffects.boostWindow 防 +N，并挂上共享身份 `world_combat:status/psyshield`）→
  * 带着盾沿瞄准方向冲出去（drive）→ 撞实的一刻壳在接触面炸成片、把目标顶开（impact）→
  * 碎片回卷重新合拢（reform）。原生命中 90 落成 `wobble`：瞄准可能偏开，偏开了不结算伤害，但壳已经成形、
- * 防御照拿。选取 aim：可点方向或实体、也可空放，空放只为立起这层防御；撞地形停止。
- * 壳的画面用 `WorldFeedback.onEffect` 绑在 boostWindow 本身，随它自然到期或提前清除一起收掉，
- * 不表现超出这层防御的容量。两幕：drive → impact + reform。提交后才触碰世界。
+ * 防御照拿。选取 aim：可点方向或实体、也可空放，空放只为立起这层防御；竖直/零瞄准先取水平分量再偏转，撞地形停止。
+ * 壳的画面用 `WorldFeedback.onEffect` 绑在 boostWindow 本身，随它自然到期或提前清除一起收掉，半径就是实际壳半径；
+ * 浮字按这次真正加到的防御级数写，封顶或免升时不虚报、也不留没有实际防御的壳。两幕：drive → impact + reform。提交后才触碰世界。
  */
 namespace PokemonSkills {
     const psyshieldbashScene = "world_combat:move_psyshieldbash";
@@ -63,12 +63,14 @@ namespace PokemonSkills {
             const wobble = p("psyshieldbash", "wobble", action);
             const push = p("psyshieldbash", "push", action);
             const base = aim(action);
+            // 地面冲撞只取瞄准方向的水平分量；竖直/零瞄准先落到合法水平朝向再偏转，正上正下空放不再抛出。
+            const heading = WorldGeometry.flatUnit(base);
             const angle = (world.random() * 2 - 1) * wobble * Math.PI / 180;
             const cos = Math.cos(angle), sin = Math.sin(angle);
-            const direction = WorldCombat.point(base.x() * cos - base.z() * sin, 0, base.x() * sin + base.z() * cos).unit();
+            const direction = WorldCombat.point(heading.x() * cos - heading.z() * sin, 0, heading.x() * sin + heading.z() * cos).unit();
             const scale = radius / 0.48;
             const intensity = Math.max(0.5, Math.min(2.2, power / 75));
-            let travelled = 0, settled = false;
+            let travelled = 0, settled = false, shellGain = 0;
 
             // 结壳：护盾成形的这一刻就加固使用者，撞空、空放也照拿——这是本招的底。
             const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
@@ -77,14 +79,20 @@ namespace PokemonSkills {
                 if (data.source === "world_combat:move/psyshieldbash") NativeEffects.windowClose(world, view.id());
             });
             const shell = MobEffects.apply(world, actor, PsyshieldShell, shellTicks, 0);
+            // 本次真实有效增益：封顶、免升时不虚报，也不留下一层没有实际防御的“壳”。
+            const before = NativeEffects.effectiveStages(world, actor);
             const shellWindow = shell ? NativeEffects.boostWindow(world, actor, { def: stages }, shellTicks, "world_combat:move/psyshieldbash", shell) : 0;
             const self = world.observe(actor);
-            if (self !== null) {
-                // 壳的持续画面绑在这层真正的 boostWindow 上，随它自然到期或提前清除一起收掉。
-                if (shellWindow)
-                    WorldFeedback.onEffect(world, shellWindow, "world_combat:move_psyshieldbash:shell", psyshieldbashScene, 1, self.position(),
-                        { moment: "shell", scale: scale, stages: stages, ticks: shellTicks, intensity: intensity });
-                WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.4, 0)), psyshieldShellText, [stages], 26);
+            if (shell !== null && shellWindow === 0) world.removeMobEffect(actor, PsyshieldShell, shell.key());
+            if (self !== null && shellWindow) {
+                const after = NativeEffects.effectiveStages(world, actor);
+                const gained = Math.max(0, Math.round((after["def"] || 0) - (before["def"] || 0)));
+                shellGain = gained;
+                // 壳的持续画面绑在这层真正的 boostWindow 上，随它自然到期或提前清除一起收掉；半径就是实际壳半径。
+                WorldFeedback.onEffect(world, shellWindow, "world_combat:move_psyshieldbash:shell", psyshieldbashScene, 1, self.position(),
+                    { moment: "shell", radius: radius, scale: scale, stages: gained, ticks: shellTicks, intensity: intensity });
+                if (gained > 0)
+                    WorldFeedback.text(world, self.position().plus(WorldCombat.point(0, 1.4, 0)), psyshieldShellText, [gained], 26);
             }
             movementScenes.show(action, "drive", action.origin(), { moment: "drive", scale: scale, intensity: intensity });
             sound(action, "minecraft:block.beacon.power_select");
@@ -96,11 +104,11 @@ namespace PokemonSkills {
                 const body = scope.observe(current.actor());
                 if (body !== null) {
                     if (!landed) {
-                        WorldFeedback.emit(scope, psyshieldbashScene, 1, body.position(), { moment: "miss", scale: scale }, 22);
+                        WorldFeedback.emit(scope, psyshieldbashScene, 1, body.position(), { moment: "miss", radius: radius, scale: scale }, 22);
                         WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.3, 0)), psyshieldMissText, [], 22);
                     }
                     WorldFeedback.emit(scope, psyshieldbashScene, 1, body.position(),
-                        { moment: "reform", scale: scale, stages: stages, shards: stages * 14, intensity: intensity }, 30);
+                        { moment: "reform", radius: radius, scale: scale, stages: shellGain, shards: Math.max(1, shellGain) * 14, intensity: intensity }, 30);
                 }
                 sound(current, landed ? "cobblemon:impact.psychic" : "minecraft:block.beacon.deactivate");
                 movementScenes.finish(current, done);
@@ -119,7 +127,7 @@ namespace PokemonSkills {
                     const point = hit.position();
                     const landed = impact(current, hit, "psyshieldbash", power, { damage: damageSpec("psyshieldbash", "bash"), contact: true });
                     WorldFeedback.emit(scope, psyshieldbashScene, 1, point,
-                        { moment: "impact", target: target !== null ? String(target.ref()) : "", scale: scale,
+                        { moment: "impact", target: target !== null ? String(target.ref()) : "", radius: radius, scale: scale,
                             stages: stages, intensity: intensity }, 28);
                     if (landed && target !== null && scope.valid(target)) {
                         scope.hitDisplace(target, direction.scale(push));

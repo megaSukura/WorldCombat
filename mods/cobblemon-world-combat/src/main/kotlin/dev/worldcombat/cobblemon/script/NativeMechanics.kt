@@ -73,6 +73,17 @@ object NativeMechanics {
         move.currentPp = value
         return true
     }
+    /** Exact native slot replacement; content decides eligibility and learning costs. PP changes preserve the old identity. */
+    fun replaceMove(world: WorldAccess, actor: ActorHandle, slot: Int, expectedMove: String, id: String): Boolean {
+        val pokemon = pokemon(world, actor)
+        require(slot in 0..3)
+        val current = pokemon.moveSet[slot]
+        if ((current?.let(NativeMoveKeys::key) ?: "") != expectedMove) return false
+        val template = com.cobblemon.mod.common.api.moves.Moves.getByName(id) ?: return false
+        val replacement = template.create()
+        pokemon.moveSet.setMove(slot, replacement)
+        return pokemon.moveSet[slot] === replacement
+    }
     /** Content takes over the native status clock for this Pokemon until it releases the lease (its individual effect ending). */
     fun statusLease(world: WorldAccess, actor: ActorHandle) {
         statusLeases[pokemon(world, actor)] = Long.MAX_VALUE

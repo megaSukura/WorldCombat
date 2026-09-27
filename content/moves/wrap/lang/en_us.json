@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.wrap.summary": "Hold to maintain close constriction: you move more slowly while the target temporarily loses Attack and takes periodic squeezes. Release, separation, obstruction or interruption ends the hold; the target remains mobile.",
   "worldcombat.skill.wrap.use.0": "Pin a dangerous target and crush its attack",
-  "worldcombat.skill.wrap.use.1": "Hold a target in place for an ally",
+  "worldcombat.skill.wrap.use.1": "Stick to a target and blunt it for an ally",
   "worldcombat.skill.wrap.use.2": "Grind down a stubborn melee target with the coil alone",
   "worldcombat.skill.wrap.description.0": "Whips vines out to wrap one target within %2$s blocks with a %3$s block grip radius, dealing about %1$s contact damage as it catches.",
   "worldcombat.skill.wrap.description.1": "Maintain for at most %1$s, squeezing every %2$s and temporarily lowering Attack by %3$s stages. Keep holding within close clear range; ending removes only this reduction.",

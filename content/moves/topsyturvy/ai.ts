@@ -11,7 +11,8 @@ namespace CompanionBehavior {
             else if (mode === "negative") { if (value < 0) total += Math.abs(value); }
             else total += value;
         }
-        return total + MobEffects.invertible(access, actor, mode === "negative" ? "harmful" : "beneficial").length;
+        const potions = MobEffects.invertible(access, actor, mode === "negative" ? "harmful" : mode === "positive" ? "beneficial" : undefined);
+        return total + potions.reduce(function(sum, effect) { return sum + (mode === "net" && String(effect.category()) === "harmful" ? -1 : 1); }, 0);
     });
 
     function topsyStageValue(context: WorldBehavior.Context, target: Entity, mode: string): number {
@@ -43,8 +44,9 @@ namespace CompanionBehavior {
 
     function topsyAllyWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, ally: Entity): boolean {
         if (!ally.friendly || String(ally.ref) === String(source(context).ref)) return false;
+        if (item.data.config && item.data.config.gain === true) return false;
         if (!topsyWants(context, item, ally)) return false;
-        return topsyStageValue(context, ally, "negative") > 0;
+        return topsyStageValue(context, ally, "negative") > topsyStageValue(context, ally, "positive");
     }
 
     registerUse("topsyturvy", {

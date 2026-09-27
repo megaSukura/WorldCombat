@@ -4,7 +4,7 @@
  * 什么局面下出手：对手可见、敌对、存活，且在 `ai.maxChase`（默认 12）之内，并且从自己到对手之间没有方块挡住
  *   （手下要飞过去，墙后会堵死；`ready` 用共享的 world.clear 挡住这种情况）。更远交给共享接近逻辑。
  * 对谁出手：这是一道把手下派出去的远程命令，够远时更值——`ai.swarm`（默认开）在对手离自己超过射程六成时抬高一档，
- *   趁对方还没贴上来先把虫群放出去；贴身后让位给更快的近身招。持续可追踪的目标优先。
+ *   趁对方还没贴上来先把虫群放出去；到敌的真实通道被方块截断时降权，射程之外交给共享接近逻辑、不靠无限追逐加分。
  * 够不到怎么办：指挥距离交给 `reach`，共享任务把目标收进射程内再下令。
  * 放完接什么：动作很快交回共享交战计划，施术者能继续战斗；手下在前方扑击，对手可以转而清掉它们——
  *   接下来由共享顺序决定追击还是脱离。
@@ -39,11 +39,16 @@ namespace PokemonSkills {
         },
         priority: function (context, capability, target) {
             if (!target || !attackorderWants(context, capability, target as CompanionBehavior.Entity)) return 0;
-            const gap = CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point);
+            const self = CompanionBehavior.source(context);
+            const gap = CompanionBehavior.distance(self.point, target.point);
+            // 射程之外不奖励「指挥距离」：够不到就交给共享接近逻辑，不靠无限追逐加分。
             if (gap > capability.data.range) return 0;
-            const base = 20;
-            if (!CompanionBehavior.ai<boolean>(capability, "swarm", true)) return base;
-            return gap > capability.data.range * 0.6 ? base + 8 : base;
+            let base = 20;
+            if (CompanionBehavior.ai<boolean>(capability, "swarm", true) && gap > capability.data.range * 0.6) base += 8;
+            // 到敌的真实通道被方块截断时降权：虫群会先撞墙，远距离先手也送不到。
+            const world = CompanionBehavior.world(context);
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) base = Math.max(4, base - 14);
+            return base;
         }
     });
 

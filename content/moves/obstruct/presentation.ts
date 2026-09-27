@@ -1,11 +1,11 @@
 /**
  * 拦堵的客户端表现。
  *
- * 一句话：一圈深色尖桩从地面顶起、贴身围住自己，撞上来的每一击在入射侧的桩面上爆开暗色冲击，
- * 撞的人被一根短刺从入射侧顶退、防御数值当场下降；量尽时桩环崩成一地碎石。
+ * 一句话：一排深色交叉尖桩从地面在身前顶起（按 `data.direction` 的固定正面、整张 120°），撞上来的每一击在入射侧的桩面上爆开暗色冲击，
+ * 撞的人被一根短刺从入射侧顶退、防御数值当场下降；量尽时桩列崩成一地碎石。
  * 色相家族：深岩灰蓝为主体（spike / smoke / groundquake），惩罚层用 impact_dark 的原色与琥珀火星强调。
- * 拍子：起（raise 0–14t，贴身尖桩自下而上顶出）→ 击（block 每次拦截、punish 每次扎退）→ 收（shatter 崩解）。
- * 范围：hold 的桩环直接读 `data.reach`（机制桩环半径），紧贴真实身体、不当作额外受击范围；block/punish 由 `data.direction` 决定打在哪一侧。
+ * 拍子：起（raise 0–14t，正面尖桩自下而上顶出）→ 击（block 每次拦截、punish 每次扎退）→ 收（shatter 崩解）。
+ * 范围：hold 的正面桩弧直接读 `data.reach`（机制桩环半径）与 `data.direction`（立起时固定的正面），紧贴真实身体、不当作额外受击范围；block/punish 由 `data.direction` 决定打在哪一侧。
  * 运动：起手尖桩向上顶出并扬尘；持罩几乎静止，只在被撞击处向内一震；惩罚时从入射侧朝攻击者顶出一束短刺。
  * 数：`data.punishCount`（降防级数 ×8）就是 dark 爆点数量，`data.intensity`（剩余量／初始量）决定亮度，`data.reach` 收紧桩环。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -18,26 +18,26 @@ const ObstructDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "stakes", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world",
+                    name: "stakes", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    rate: 34, shape: { kind: "ring", radius: { data: "reach", fallback: 0.7 } },
+                    rate: 34, shape: { kind: "arc", radius: { data: "reach", fallback: 0.7 }, arcDegrees: 120 },
                     direction: "up", speed: [0.04, 0.16],
                     lifetime: [10, 20], size: [0.22, 0.05], sizeMode: "index",
                     color: 0x4A5563, alpha: [0.9, 0], gravity: 0.03, drag: 0.92,
                     light: "world", maxParticles: 120
                 },
                 {
-                    name: "puff", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world",
+                    name: "puff", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 20, shape: { kind: "ring", radius: { data: "reach", fallback: 0.7 } },
+                    rate: 20, shape: { kind: "arc", radius: { data: "reach", fallback: 0.7 }, arcDegrees: 120 },
                     direction: "outward", speed: [0.03, 0.1],
                     lifetime: [12, 22], size: [0.26, 0.06],
                     color: 0x6A7078, alpha: [0.3, 0], light: "world", maxParticles: 90
                 },
                 {
-                    name: "grit", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world",
+                    name: "grit", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/earth",
-                    rate: 22, shape: { kind: "ring", radius: { data: "reach", fallback: 0.7 } },
+                    rate: 22, shape: { kind: "arc", radius: { data: "reach", fallback: 0.7 }, arcDegrees: 120 },
                     direction: "outward", speed: [0.04, 0.14],
                     lifetime: [8, 16], size: [0.08, 0.02], sizeMode: "index",
                     color: 0x7A6E5C, alpha: [0.55, 0], gravity: 0.04, light: "world", maxParticles: 110
@@ -48,18 +48,18 @@ const ObstructDefinition: ParticleDefinition = {
             // 持续状态：深色低密度贴身桩环，紧贴身体，让玩家看清拒马在哪。
             emitters: [
                 {
-                    name: "stake_ring", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world",
+                    name: "stake_ring", bind: "source", offset: [0, 0.02, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/spike",
-                    rate: 8, shape: { kind: "ring", radius: { data: "reach", fallback: 0.7 } },
+                    rate: 8, shape: { kind: "arc", radius: { data: "reach", fallback: 0.7 }, arcDegrees: 120 },
                     direction: "up", speed: [0.0, 0.01], spin: 4,
                     lifetime: [26, 44], size: [0.2, 0.2], sizeMode: "sin",
                     color: 0x59626E, alpha: [0.4, 0.12], alphaMode: "sin",
                     light: "world", maxParticles: 30
                 },
                 {
-                    name: "base_ring", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "world",
+                    name: "base_ring", bind: "source", offset: [0, 0.03, 0], height: 0, fit: "world", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    rate: 4, shape: { kind: "ring", radius: { data: "reach", fallback: 0.7 } },
+                    rate: 4, shape: { kind: "arc", radius: { data: "reach", fallback: 0.7 }, arcDegrees: 120 },
                     direction: "outward", speed: [0.0, 0.01],
                     lifetime: [24, 38], size: [0.5, 0.5], sizeMode: "sin",
                     color: 0x3E4652, alpha: [0.22, 0.06], alphaMode: "sin",

@@ -27,11 +27,6 @@ const LastRespectsDefinition: ParticleDefinition = {
         march: {
             exit: { stop: 0, drain: 12 },
             emitters: [
-                { name: "procession", bind: "projectile", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/fire/wisp",
-                    rate: { data: "ghosts", fallback: 3 }, trail: { minDistance: 0.22 },
-                    shape: { kind: "point" }, direction: "up", speed: [0.01, 0.03],
-                    lifetime: [12, 18], size: [0.24, 0.02], color: 0x9FE8D0, alpha: [0.75, 0], light: "full" },
                 { name: "front", bind: "projectile", fit: "none", orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring", rate: 8,
                     shape: { kind: "ring", radius: { data: "width", fallback: 0.5 } },
@@ -81,3 +76,33 @@ const LastRespectsDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_lastrespects", 1, LastRespectsDefinition);
+
+/**
+ * 鬼影队列：服务端每刻给出弹后实际排布点（`data.path`），客户端按固定数量各画一枚 wisp 贴图。
+ * 数量就是 `data.path` 的点数，不是发射速率；没有粒子生灭或额外实体成本。弹体消失后不再有更新，
+ * 随托管效果释放一起清理。
+ */
+const LastRespectsWisp = "cobblemon:particle/generic/fire/wisp";
+function lastrespectsNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+WorldCombatClient.scene("world_combat:move_lastrespects_ghosts", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle || data.moment !== "march" || !Array.isArray(data.path)) return;
+    const path: any[] = data.path;
+    const clock = frame.serverTick();
+    for (let index = 0; index < path.length; index++) {
+        const vertex = path[index];
+        if (!Array.isArray(vertex) || vertex.length < 3) continue;
+        const x = lastrespectsNumber(vertex[0], 0), y = lastrespectsNumber(vertex[1], 0), z = lastrespectsNumber(vertex[2], 0);
+        const phase = clock * 0.12 + index * 0.85;
+        const fade = Math.max(0.45, 1 - index / Math.max(4, path.length));
+        const alpha = Math.round(200 * fade + Math.sin(phase) * 30);
+        frame.sprite(LastRespectsWisp, x, y + 0.12 + Math.sin(phase) * 0.05, z,
+            0.22 + 0.03 * fade, Math.sin(phase * 0.6) * 12,
+            (Math.max(0, Math.min(255, alpha)) << 24 | 0x9FE8D0) | 0,
+            Math.floor(clock * 0.3 + index) % 11, true);
+    }
+});

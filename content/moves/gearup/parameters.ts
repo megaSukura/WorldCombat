@@ -27,11 +27,11 @@ namespace PokemonSkills {
     export const gearupId = "gearup";
     /** 共享身份名：被齿链传动的己方带的世界状态。 */
     export const gearupStatus = "geared";
-    /** 真实 MobEffect 注册 id（startup.ts 的 e.create），既是身份也是运转时限。 */
+    /** 真实 MobEffect 注册 id（startup.ts 的 e.create），既是身份，也是这次等级窗口的运转时限与载体。 */
     export const gearupEffect = "world_combat:gearup_drive";
-    /** 托管效果：记录这次传动各抬了几级，供收回时照数还原。 */
-    export const gearupMark = "world_combat:gearup_mark";
     export const gearupScene = "world_combat:move_gearup";
+    /** 齿轮本体的自定义绘制场景（presentation.ts 的 WorldCombatClient.scene）。 */
+    export const gearupGearScene = "world_combat:move_gearup/gear";
     export const gearupSpinText = "world_combat.move.gearup.text.spin";
     export const gearupDriveText = "world_combat.move.gearup.text.drive";
     export const gearupFadeText = "world_combat.move.gearup.text.fade";

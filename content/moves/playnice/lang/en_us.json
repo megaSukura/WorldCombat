@@ -3,7 +3,7 @@
   "worldcombat.skill.playnice.use.0": "Calm a ring of melee attackers around you",
   "worldcombat.skill.playnice.use.1": "Make a pursuer let go, then disengage",
   "worldcombat.skill.playnice.use.2": "Buy an ally time to reposition",
-  "worldcombat.skill.playnice.description.0": "A calmed target loses %1$s Attack stage(s) and will not attack on its own for %2$s.",
+  "worldcombat.skill.playnice.description.0": "A calmed target loses %1$s Attack stage(s) and holds its blows and target selection for %2$s.",
   "worldcombat.skill.playnice.description.1": "Peace radius %1$s; only non-friendly bodies that can see you are calmed, up to %2$s at once (those already at peace are skipped), cast over %3$s blocks (you are the centre).",
   "worldcombat.skill.playnice.description.2": "Opening your hands takes %1$s with a %2$s cooldown.",
   "worldcombat.skill.playnice.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",
@@ -23,6 +23,8 @@
   "worldcombat.skill.playnice.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.playnice.preference.ai.leaveStation.help": "When on, the companion may leave its post to calm enemies under a Hold order.",
   "world_combat.move.playnice.text.befriend": "Made peace (Atk -%1$s)",
+  "world_combat.move.playnice.text.held": "Made peace (holds its blows)",
   "world_combat.move.playnice.text.offer": "Calmed %1$s (Atk -%2$s)",
+  "world_combat.move.playnice.text.offer.held": "Calmed %1$s (they hold their blows)",
   "effect.world_combat.befriended_offer": "Peace"
 }

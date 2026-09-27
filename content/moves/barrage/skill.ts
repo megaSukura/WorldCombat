@@ -28,6 +28,39 @@ namespace PokemonSkills {
         return WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(), direction.x() * sin + direction.z() * cos);
     }
 
+    /** 沿预测弧线逐段查真实墙面/顶棚。clipBlocks 畅通也返回 MISS，所以用 WorldGeometry.blockHit 过滤成 BLOCK 或 null。 */
+    function barrageArcClear(world: CombatWorld, points: CombatPoint[]): boolean {
+        for (let index = 1; index < points.length; index++)
+            if (WorldGeometry.blockHit(world, points[index - 1], points[index]) !== null) return false;
+        return true;
+    }
+
+    /** 高抛式的实际可达高弧：求解真实弹道并逐段验墙，优先取最高的畅通解；都没有就是无解。 */
+    function barrageLobArc(world: CombatWorld, origin: CombatPoint, landing: CombatPoint, speed: number, gravity: number): LivingActions.BallisticSolution | null {
+        const solutions = LivingActions.ballisticSolutions(origin, landing, speed, gravity, barrageFlightTicks);
+        for (let index = solutions.length - 1; index >= 0; index--)
+            if (barrageArcClear(world, solutions[index].points)) return solutions[index];
+        return null;
+    }
+
+    /** 这一球当刻的落点：显式读取持续输入的瞄点，其次已选目标点，最后释放方向；一律夹在本招射程内，旧目标远移不扩大单球射程。 */
+    function barrageLanding(action: CombatAction, origin: CombatPoint, reach: number): CombatPoint {
+        try {
+            const parsed = JSON.parse(action.control());
+            const samples = parsed && parsed.samples;
+            if (samples && samples.length && samples[0].point && samples[0].point.length === 3) {
+                const streamed = WorldCombat.point(samples[0].point[0], samples[0].point[1], samples[0].point[2]).minus(origin);
+                if (streamed.length() >= 0.05) return origin.plus(streamed.unit().scale(Math.min(streamed.length(), reach)));
+            }
+        } catch (error) { }
+        let target: CombatPoint;
+        try { target = action.targetPosition(); } catch (error) { target = action.origin().plus(action.direction()); }
+        const delta = target.minus(origin);
+        if (delta.length() >= 0.05) return origin.plus(delta.unit().scale(Math.min(delta.length(), reach)));
+        const fallback = action.direction().length() < 1e-6 ? WorldCombat.point(0, 0, 1) : action.direction().unit();
+        return origin.plus(fallback.scale(reach));
+    }
+
     define({
         id: barrageId,
         cooldownParameter: "recharge",
@@ -41,7 +74,7 @@ namespace PokemonSkills {
         active: 0,
         recover: 7,
         cooldown: 25,
-        maximumTicks: 320,
+        maximumTicks: 600,
         style: "toss",
         defaults: { lob: true, ai: { maxChase: 11, cover: true } },
         fields: [],
@@ -80,6 +113,7 @@ namespace PokemonSkills {
             const radius = Math.max(0.14, p(barrageId, "radius", action));
             const spread = Math.max(1, p(barrageId, "spread", action));
             const chips = Math.max(10, Math.round(p(barrageId, "chips", action)));
+            const reach = Math.max(1, action.range());
             const lob = !!(config && config.lob === true);
             const scale = Math.max(0.6, Math.min(1.7, radius / 0.2));
             const intensity = Math.max(0.5, Math.min(2.0, power / 16));
@@ -99,16 +133,10 @@ namespace PokemonSkills {
                 finish(current);
             }
 
-            /** 当刻落区：实体随其身体移动、点与方向保持选点；没有有效落点时回退到准线。 */
-            function landingPoint(current: CombatAction, origin: CombatPoint): CombatPoint {
-                let landing: CombatPoint;
-                try { landing = current.targetPosition(); } catch (error) { landing = origin.plus(heading(current)); }
-                if (landing.minus(origin).length() < 0.05) landing = origin.plus(heading(current));
-                return landing;
-            }
-
-            function heading(current: CombatAction): CombatPoint {
-                return WorldGeometry.flatUnit(current.direction(), WorldCombat.point(0, 0, 1)).scale(Math.max(1, current.range()));
+            /** 这一串还在就再排一球，投完（含无解失败球）才收手报数。 */
+            function afterBall(current: CombatAction): void {
+                if (shot < throws) current.after(gap, function (next: CombatAction) { volley(next); });
+                else settle(current);
             }
 
             function volley(current: CombatAction): void {
@@ -117,35 +145,52 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const body = scope.observe(actor);
                 const origin = body !== null ? body.position() : current.origin();
-                const landing = landingPoint(current, origin);
-                let direction = lob ? LivingActions.ballistic(origin, landing, speed, gravity) : null;
-                if (direction === null) direction = aim(current);
-                direction = barrageScatter(direction, (scope.random() * 2 - 1) * spread * Math.PI / 180);
-                const distance = Math.max(1, landing.minus(origin).length());
+                const landing = barrageLanding(current, origin, reach);
                 const index = shot + 1;
                 shot = index;
                 const key = "ball:" + index;
+                const strike = "barrage:" + index;
                 const struck: { [ref: string]: boolean } = {};
                 // terminal 表示这颗球已经有终点（命中或最后一次落地）；bounce 不算终点，球还在飞。
                 let terminal = false, bouncesLeft = lob ? 0 : 1;
+                let direction: CombatPoint, flightRange: number, flightLifetime: number;
+                if (lob) {
+                    const solution = barrageLobArc(scope, origin, landing, speed, gravity);
+                    if (solution === null) {
+                        // 没有可达且畅通的高弧：明确失败，不抛假球、不追到任意远。
+                        WorldFeedback.emit(scope, barrageScene, 1, origin,
+                            { moment: "land", index: index, throws: throws, chips: Math.round(chips * 0.6), scale: scale,
+                                intensity: Math.max(0.4, intensity * 0.7), failed: 1 }, 16);
+                        WorldFeedback.text(scope, origin.plus(WorldCombat.point(0, 1.15, 0)), barrageNoArcText, [], 20);
+                        afterBall(current);
+                        return;
+                    }
+                    direction = solution.direction;
+                    flightRange = Math.max(1.5, solution.length + 0.6);
+                    flightLifetime = Math.max(16, Math.ceil(solution.ticks) + 8);
+                } else {
+                    const delta = landing.minus(origin);
+                    direction = delta.length() < 0.05 ? fallbackHeading(current) : delta.unit();
+                    flightRange = Math.max(1.5, delta.length() + 0.5);
+                    flightLifetime = Math.max(16, Math.ceil(delta.length() / Math.max(0.4, speed)) + 12);
+                }
+                direction = barrageScatter(direction.unit(), (scope.random() * 2 - 1) * spread * Math.PI / 180);
                 sound(current, "minecraft:entity.snowball.throw");
-                const flight = LivingActions.projectile(current, {
-                    speed: speed, range: distance + 4, radius: radius, direction: direction, gravity: gravity,
-                    lifetime: Math.max(24, Math.round(distance / Math.max(0.3, speed)) + 30),
-                    appearance: { item: "minecraft:snowball", scale: Math.max(0.4, Math.min(1.0, radius * 1.7)), glow: false,
-                        bounce: lob ? 0 : 1, restitution: 0.65 } as any,
-                    impact: function (inner: CombatAction, hit: CombatImpact): void {
+                const appearance: any = { item: "minecraft:snowball", scale: Math.max(0.4, Math.min(1.0, radius * 1.7)), glow: false,
+                    bounce: lob ? 0 : 1, restitution: 0.65 };
+                const flight = current.projectile(origin, direction.scale(speed), gravity, radius, flightRange, flightLifetime,
+                    function (inner: CombatAction, hit: CombatImpact): void {
                         const stage = inner.world();
                         const at = hit.position();
                         const victim = hit.target();
-                        // 打到实体：只有真实结算成功才算命中；同一颗球对同一个敌人至多一次。
+                        // 打到实体：只有真实结算成功才算命中；同一颗球对同一个敌人至多一次，每球各有独立 strike。
                         if (hit.hitEntity() && victim !== null && stage.valid(victim) && !stage.friendly(victim)) {
                             const victimRef = String(victim.ref());
                             if (struck[victimRef]) return;
                             struck[victimRef] = true;
                             terminal = true;
                             scenes.stop(inner, key);
-                            const landedHit = impact(inner, hit, barrageId, power, { damage: damageSpec(barrageId, "ball"), flags: { bullet: true } });
+                            const landedHit = impact(inner, hit, barrageId, power, { damage: damageSpec(barrageId, "ball"), flags: { bullet: true } }, strike);
                             if (landedHit) landed++;
                             WorldFeedback.emit(stage, barrageScene, 1, at,
                                 { moment: landedHit ? "hit" : "land", target: victimRef, index: index, throws: throws,
@@ -167,21 +212,28 @@ namespace PokemonSkills {
                         WorldFeedback.emit(stage, barrageScene, 1, at,
                             { moment: "land", index: index, throws: throws, chips: Math.round(chips * 0.6), scale: scale,
                                 intensity: Math.max(0.4, intensity * 0.7) }, 18);
-                    }
-                }, function (inner: CombatAction) {
-                    // 飞尽也没撞到东西：在准线尽头收一撮球尘，不冒充命中。
-                    if (!terminal) {
-                        scenes.stop(inner, key);
-                        WorldFeedback.emit(inner.world(), barrageScene, 1, origin.plus(direction.scale(distance)),
-                            { moment: "land", index: index, throws: throws, chips: Math.round(chips * 0.6), scale: scale,
-                                intensity: Math.max(0.4, intensity * 0.7) }, 18);
-                    }
-                    if (shot < throws) inner.after(gap, function (next: CombatAction) { volley(next); });
-                    else finish(inner);
-                });
+                    },
+                    function (inner: CombatAction): void {
+                        // 飞尽也没撞到东西：用弹体真实末点收一撮球尘，不冒充命中、不用准线尽头假造终点。
+                        if (!terminal) {
+                            terminal = true;
+                            scenes.stop(inner, key);
+                            const stage = inner.world();
+                            const end = stage.projectilePosition(flight) || origin;
+                            WorldFeedback.emit(stage, barrageScene, 1, end,
+                                { moment: "land", index: index, throws: throws, chips: Math.round(chips * 0.6), scale: scale,
+                                    intensity: Math.max(0.4, intensity * 0.7) }, 18);
+                        }
+                        afterBall(inner);
+                    }, JSON.stringify(appearance));
                 if (!settled) scenes.show(current, key, origin,
                     { moment: "throw", projectile: flight, index: index, throws: throws, chips: chips,
                         scale: scale, intensity: intensity, lob: lob ? 1 : 0 });
+            }
+
+            function fallbackHeading(current: CombatAction): CombatPoint {
+                const direction = current.direction();
+                return direction.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : direction.unit();
             }
 
             sound(action, "minecraft:entity.snowball.throw");
@@ -190,4 +242,7 @@ namespace PokemonSkills {
             volley(action);
         }
     });
+
+    // 玩家按住技能键逐球更新瞄点；AI 仍一次提交目标点/方向，读同一条控制输入。
+    WorldCombat.preview("world_combat:" + barrageId, JSON.stringify({ input: { version: 1, steps: ["point"], sustained: true } }));
 }

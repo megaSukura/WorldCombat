@@ -4,7 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内；更远交给共享接近逻辑。
  * 这是一道会被走位躲开的扇面横扫，所以要挑**退无可退的人**：目标背后一米多就是墙或方块时，
  * `ai.punishStuck`（默认开）把 priority 抬高——走不出扇面的目标必吃这一抡，还会被震懵。
- * 目标身边挤着别的敌人时也加分：一道扇面能一起罩住几个。
+ * 目标方向的本个体实际扇面里还挤着别的敌人时也加分：一道扇面能一起罩住几个。
  * 用完交回共享交战计划；拼命式风险更大，留给想一锤定音的局面。
  */
 namespace PokemonSkills {
@@ -19,6 +19,25 @@ namespace PokemonSkills {
         const front = WorldCombat.point(target.point[0], target.point[1] + 0.4, target.point[2]);
         const behind = WorldCombat.point(target.point[0] + ux * 1.5, target.point[1] + 0.4, target.point[2] + uz * 1.5);
         return !world.clear(front, behind);
+    }
+
+    /** 以目标方向为中线，按本个体实际的扇面拳程与张角数一数真正落在扇内的非友方（含目标）。 */
+    function dynamicpunchCrowd(context: WorldBehavior.Context, self: WorldMethods.Subject, target: WorldMethods.Subject): number {
+        const world = CompanionBehavior.world(context);
+        if (!world) return 0;
+        const origin = CompanionBehavior.point(self.point);
+        const aim = CompanionBehavior.point(target.point).minus(origin);
+        const reach = p("dynamicpunch", "swingReach", world);
+        const arc = p("dynamicpunch", "swingArc", world);
+        const region = WorldGeometry.sector(origin, aim, reach, arc, { below: 1.5, above: 2.6 });
+        const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
+        let count = 0;
+        for (let i = 0; i < nearby.length; i++) {
+            const other = nearby[i];
+            if (other.ref === self.ref || other.friendly || other.health <= 0 || !other.visible) continue;
+            if (region.contains(CompanionBehavior.point(other.point))) count++;
+        }
+        return count;
     }
 
     CompanionBehavior.registerUse("dynamicpunch", {
@@ -39,13 +58,8 @@ namespace PokemonSkills {
             if (CompanionBehavior.distance(self.point, target.point) > capability.data.range) return 0;
             let score = 22;
             if (CompanionBehavior.ai<boolean>(capability, "punishStuck", true) && dynamicpunchStuck(context, self, target)) score += 22;
-            let crowd = 0;
-            const nearby: WorldMethods.Subject[] = context.facts.nearby || [];
-            for (let i = 0; i < nearby.length; i++) {
-                const other = nearby[i];
-                if (other.friendly || other.health <= 0 || !other.visible || other.ref === target.ref) continue;
-                if (CompanionBehavior.distance(other.point, target.point) <= capability.data.range) crowd++;
-            }
+            // 真正落在本个体扇内的非友方数量（扣掉目标自己），比「目标周围有几个人」更贴近这一抡能扫到谁。
+            const crowd = Math.max(0, dynamicpunchCrowd(context, self, target) - 1);
             score += Math.min(18, crowd * 9);
             return score;
         }

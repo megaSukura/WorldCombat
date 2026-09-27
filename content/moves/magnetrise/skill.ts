@@ -10,13 +10,15 @@
  *   地表支撑把身体维持在 liftHeight 的离地高度，顶棚、悬崖、骑乘、液体、失去支撑都由原生处理。
  *   mark 结束时租约连同临时重力/移速修正一起释放，身体交回原生重力。
  * 归属：mark 只活在这次真实应用（anchor）还在的时候；被牛奶/清除/击落（smackdown）/重力类接地、或
- *   拿起黑色铁球，都会让本次 mark 与托举租约结束；重施先撤旧 mark 再按新应用挂新 mark，旧 mark 的
- *   结束不会误删新的那次。
+ *   拿起黑色铁球，都会让本次 mark 与托举租约结束。重施先确认新应用真的成功，再撤旧 mark、按新 anchor
+ *   挂新 mark 与其真实寿命，旧 mark 的结束不会误删新的那次。只有 groundLift 真正接受才宣告起浮。
  * 免疫：入场伤害里只清地面属性招式的伤害，保留原生铁球/接地规则；仙人掌、坠落、撞墙等真实碰撞仍按
- *   原生受伤——身体真的离地自然会避开地表触碰，不去伪装全危害免疫。
+ *   原生受伤——身体真的离地自然会避开地表触碰，不去伪装全危害免疫。水中或没有近地支撑时原生会自然下落。
  * 弹开：一记真实落下的接触命中（damage_applied 的 actual>0 且 contact）才会触发；由被护者自己的 mark
- *   经 EffectReactions 在其自身 scope 调用 world.hitDisplace，把贴地的攻击者真正推走，位移落实才算数。
- * 结束：到期是磁场自行衰退、身体落回（settle）；被清除/替换/铁球切断是硬切失托（cut），两幕不同。
+ *   经 EffectReactions 在其自身 scope 调用 world.hitDisplace，把贴地的攻击者真正推走，位移落实才算数，
+ *   显示的距离也用这次实际位移。判定半径读 mark 里与画面共用的 field。
+ * 结束：到期是磁场自行衰退、身体落回（settle）；被清除/替换/铁球切断是硬切失托（cut）。两幕之后另起
+ *   一个只等真实接地的观察效果，脚底真的落回地表才扬尘（land），不把到期当落地。
  * 反制：黑色铁球、清除效果、击落与接地类招式都能让它失效；射程与冷却照旧。
  */
 namespace PokemonSkills {
@@ -34,6 +36,17 @@ namespace PokemonSkills {
     }
     function magnetriseReleaseCarrier(world: CombatWorld, actor: CombatActor, anchor: any): void {
         if (anchor && MobEffects.matches(world, actor, anchor)) world.removeMobEffect(actor, anchor.id, anchor.key);
+    }
+    /** 本次悬浮真实的磁场半径：读 mark 里算出的 field，机制判定与画面共用同一个数。 */
+    function magnetriseFieldReach(world: CombatWorld, actor: CombatActor): number {
+        const marks = world.effects(actor, magnetriseMark);
+        for (let index = 0; index < marks.length; index++) {
+            try {
+                const state = JSON.parse(String(marks[index].data()));
+                if (state.anchor && MobEffects.matches(world, actor, state.anchor)) return Math.max(0.5, Number(state.field) || 0);
+            } catch (error) { }
+        }
+        return 0;
     }
     var magnetriseRepelUntil: { [ref: string]: number } = Object.create(null);
 
@@ -61,6 +74,26 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
 
+    // 租约申请本身返回是否被宿主接受；接受才宣告起浮（乘骑/无重力属性不宣告），拒绝只等下一次。
+    function magnetriseLift(effect: CombatEffect): boolean {
+        const world = effect.world(), self = effect.target(), state = JSON.parse(effect.state());
+        return world.groundLift(self, Math.max(0.15, Number(state.lift) || 0.4),
+            Math.max(0.08, Number(state.response) || magnetriseResponse), Math.max(0, Number(state.probe) || magnetriseProbe));
+    }
+    function magnetriseAnnounce(effect: CombatEffect, state: any): void {
+        if (state.announced) return;
+        const world = effect.world(), self = effect.target(), body = world.observe(self);
+        if (body === null) return;
+        WorldFeedback.emit(world, magnetriseScene, 1, body.position(),
+            { moment: "lift", target: String(self.ref()), sparks: state.sparks, field: state.field, lift: state.lift,
+                scale: Math.max(0.6, Math.min(2, state.field / 0.7)) }, 42);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), magnetriseLiftText,
+            [Math.round((state.max || 0) / 20)], 42);
+        world.sound("minecraft:block.conduit.activate", body.position(), 16, "{}");
+        state.announced = true;
+        effect.state(JSON.stringify(state));
+    }
+
     // mark 就是这次悬浮的拥有者：在自己的 scope 申请低空托举租约，并按形态挂上滑翔移速。
     WorldCombat.effectHandler(magnetriseMark, "start", function (effect) {
         const world = effect.world(), self = effect.target(), state = JSON.parse(effect.state());
@@ -68,13 +101,12 @@ namespace PokemonSkills {
         MobEffects.bind(world, self, state.anchor.id);
         const glide = Math.max(0, Number(state.glide) || 0);
         if (glide > 0) world.attribute(self, "minecraft:generic.movement_speed", glide, "add_multiplied_total");
-        world.groundLift(self, Math.max(0.15, Number(state.lift) || 0.4),
-            Math.max(0.08, Number(state.response) || magnetriseResponse), Math.max(0, Number(state.probe) || magnetriseProbe));
-        magnetrisePresent(effect, state);
+        // 施法动作仍在进行时会自己占用 movement，首次租约可能被拒；不宣告，等动作结束后 watch 再申请。
+        if (magnetriseLift(effect)) { magnetriseAnnounce(effect, state); magnetrisePresent(effect, state); }
         effect.schedule("watch", "watch", magnetriseWatchTicks, "{}");
     });
 
-    // 存续期每几刻核对一次：载体还在、脚底还有支撑、没有拿起接地物；租约按当前 lift 续订。
+    // 存续期每几刻核对一次：载体还在、没有拿起接地物/扎根；租约按当前 lift 续订。
     WorldCombat.effectHandler(magnetriseMark, "watch", function (effect) {
         const world = effect.world(), self = effect.target(), state = JSON.parse(effect.state());
         if (!world.valid(self) || !MobEffects.matches(world, self, state.anchor)
@@ -83,9 +115,7 @@ namespace PokemonSkills {
             effect.end();
             return;
         }
-        world.groundLift(self, Math.max(0.15, Number(state.lift) || 0.4),
-            Math.max(0.08, Number(state.response) || magnetriseResponse), Math.max(0, Number(state.probe) || magnetriseProbe));
-        magnetrisePresent(effect, state);
+        if (magnetriseLift(effect)) { magnetriseAnnounce(effect, state); magnetrisePresent(effect, state); }
         effect.schedule("watch", "watch", magnetriseWatchTicks, "{}");
     });
     WorldCombat.effectHandler(magnetriseMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
@@ -94,6 +124,28 @@ namespace PokemonSkills {
         if (world.valid(actor)) magnetriseReleaseCarrier(world, actor, JSON.parse(effect.state()).anchor);
         delete magnetriseRepelUntil[String(actor.ref())];
     });
+
+    // 托举消失后只等真实落地：脚底真的接地才扬尘，不把到期当落地。
+    WorldCombat.effect(magnetriseLanding, 1, 120, "actor", function (json) {
+        const value = JSON.parse(json || "{}");
+        if (typeof value.field !== "number" || !isFinite(value.field) || value.field <= 0) throw new Error("Invalid magnetrise landing: field");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+    function magnetriseWatchLanding(effect: CombatEffect): void {
+        const world = effect.world(), actor = effect.target();
+        if (!world.valid(actor)) { effect.end(); return; }
+        const body = world.observe(actor);
+        if (body === null) { effect.end(); return; }
+        if (body.grounded()) {
+            WorldFeedback.emit(world, magnetriseScene, 1, body.position(),
+                { moment: "land", target: String(actor.ref()), field: JSON.parse(effect.state()).field }, 26);
+            effect.end();
+            return;
+        }
+        effect.schedule("land-watch", "land-watch", 2, "{}");
+    }
+    WorldCombat.effectHandler(magnetriseLanding, "start", magnetriseWatchLanding);
+    WorldCombat.effectHandler(magnetriseLanding, "land-watch", magnetriseWatchLanding);
 
     // 磁场的兑现点：带 magnetrise 身份者被地面属性招式命中时伤害清零；黑色铁球（原生接地物）时不生效。
     // 地形危害不再被粗暴清零——身体真的离地，本来就碰不到地表；仍撞上仙人掌或墙就按原生受伤。
@@ -125,8 +177,10 @@ namespace PokemonSkills {
         const moved = world.hitDisplace(attacker, away.unit().scale(push));
         if (!(moved > 0)) return;
         WorldFeedback.emit(world, magnetriseScene, 1, from.position(),
-            { moment: "repel", target: String(self.ref()), power: push, burst: Math.max(8, Math.round(push / 0.4 * 24)) }, 22);
-        WorldFeedback.text(world, from.position().plus(WorldCombat.point(0, 1, 0)), magnetriseRepelText, [], 24);
+            { moment: "repel", target: String(self.ref()), power: push, moved: moved,
+                burst: Math.max(8, Math.round(moved / 0.4 * 24)) }, 22);
+        WorldFeedback.text(world, from.position().plus(WorldCombat.point(0, 1, 0)), magnetriseRepelText,
+            [Math.round(moved * 10) / 10], 24);
         world.sound("minecraft:block.respawn_anchor.charge", from.position(), 12, "{}");
     });
 
@@ -172,7 +226,7 @@ namespace PokemonSkills {
         indicator: function (config) { return { radius: 1.2, geometry: "circle", style: "magnet", color: 0xFFD54A,
             label: config && config.field === "anchor" ? "锚定悬浮" : "滑翔悬浮" }; },
         execute: function (action, move, config, done) {
-            const world = action.world(), actor = action.actor(), body = world.observe(actor);
+            const world = action.world(), actor = action.actor();
             const glideOn = config.field === "glide";
             const duration = Math.max(60, Math.round(p(magnetriseId, "hoverTicks", action) * (glideOn ? 0.8 : 1.25)));
             const radius = Math.max(0.4, p(magnetriseId, "fieldRadius", action) * (glideOn ? 1 : 1.15));
@@ -180,22 +234,15 @@ namespace PokemonSkills {
             const sparks = Math.max(1, Math.round(p(magnetriseId, "sparks", action)));
             const repel = Math.max(0.1, p(magnetriseId, "repel", action) * (glideOn ? 0.7 : 1.4));
             const glide = glideOn ? p(magnetriseId, "glide", action) * 1.35 : 0;
-            // 重施先撤旧 mark（连同其托举租约），再按这次真实应用挂新 mark：旧 mark 结束不会误删新的。
-            world.effects(actor, magnetriseMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+            // 先确认新的真实应用成功，再撤旧 mark（连同其托举租约），旧 mark 结束不会误删新的。
             const carrier = MobEffects.set(world, actor, magnetriseEffect, duration, 0);
-            if (carrier !== null) {
-                const mark = world.effect(magnetriseMark, actor, JSON.stringify({
-                    anchor: MobEffects.anchor(carrier), lift: lift, field: radius, sparks: sparks,
-                    repel: repel, glide: glide, response: magnetriseResponse, probe: magnetriseProbe, max: duration }), duration);
-                // The mark publishes its actual support gap once its native lease starts.
-            }
-            sound(action, "minecraft:block.conduit.activate");
-            if (body !== null) {
-                WorldFeedback.emit(world, magnetriseScene, 1, body.position(),
-                    { moment: "lift", target: String(actor.ref()), sparks: sparks, field: radius, lift: lift,
-                        scale: Math.max(0.6, Math.min(2, radius / 0.7)) }, 42);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), magnetriseLiftText, [Math.round(duration / 20)], 42);
-            }
+            if (carrier === null) { done(action); return; }
+            world.effects(actor, magnetriseMark).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
+            const markTicks = Math.max(1, Math.min(1200, carrier.duration() > 0 ? carrier.duration() : duration));
+            world.effect(magnetriseMark, actor, JSON.stringify({
+                anchor: MobEffects.anchor(carrier), lift: lift, field: radius, sparks: sparks,
+                repel: repel, glide: glide, response: magnetriseResponse, probe: magnetriseProbe, max: markTicks }), markTicks);
+            // 起浮的宣告与声音写在 mark 的 start：只有 groundLift 真正接受时才发出。
             done(action);
         }
     });
@@ -209,13 +256,15 @@ namespace PokemonSkills {
         const data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
         if (!CombatStatus.has(world, target, magnetriseStatus)) return;
+        if (magnetriseHoldsIronBall(world, target) || magnetriseAnchored(world, target)) return;
         if (!DamageSemantics.read(data).contact) return;
         const attacker = event.actor();
         if (attacker === null || String(attacker.ref()) === String(target.ref())) return;
         if (!world.valid(attacker) || world.allied(target, attacker)) return;
         const from = world.observe(attacker), body = world.observe(target);
         if (from === null || body === null || !from.grounded()) return;
-        if (from.position().minus(body.position()).length() > magnetriseContactRange) return;
+        const reach = magnetriseFieldReach(world, target);
+        if (reach <= 0 || from.position().minus(body.position()).length() > reach) return;
         const now = world.tick(), ref = String(target.ref());
         if (now - (magnetriseRepelUntil[ref] || -1000) < 20) return;
         const marks = world.effects(target, magnetriseMark);
@@ -232,10 +281,11 @@ namespace PokemonSkills {
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
         const expired = String(data.cause) === "expired";
-        let live = false;
+        let live = false, field = 0.7;
         world.effects(actor, magnetriseMark).forEach(function (view) {
-            let anchor: any = null;
-            try { anchor = JSON.parse(String(view.data())).anchor; } catch (error) { anchor = null; }
+            let anchor: any = null, radius = 0;
+            try { const state = JSON.parse(String(view.data())); anchor = state.anchor; radius = Number(state.field); } catch (error) { anchor = null; }
+            if (isFinite(radius) && radius > 0) field = radius;
             if (anchor && MobEffects.matches(world, actor, anchor)) { live = true; return; }
             world.operation(view.id(), "world_combat:dispel", "{}");
         });
@@ -246,5 +296,7 @@ namespace PokemonSkills {
             { moment: expired ? "settle" : "cut", target: String(actor.ref()), expired: expired ? 1 : 0 }, 30);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), expired ? magnetriseSettleText : magnetriseCutText, [], 30);
         world.sound(expired ? "minecraft:block.beacon.deactivate" : "minecraft:block.conduit.deactivate", body.position(), 12, "{}");
+        // 落地灰另起一段：身体真的接地后由 magnetriseLanding 触发，到期或硬切当刻都不假造落地。
+        world.effect(magnetriseLanding, actor, JSON.stringify({ field: field }), 120);
     });
 }

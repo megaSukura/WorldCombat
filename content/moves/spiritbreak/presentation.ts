@@ -5,8 +5,8 @@
  *   撞上对手的那一下炸开一朵妖精冲击花并把人推得踉跄 → 冲击点向外扩出一圈粉色光环。
  * 色相家族：妖精粉（0xF58CB8／0xFFD1E8）为主体，近白只给撞击高光。
  * 拍子：起 windup（收势）→ 冲 rush（贴地冲锋）→ 撞 smash（命中爆发）→ 余 aura（冲击点光环）。
- * 范围：单体接触招；判定是冲锋走廊，aura 的圆环半径读 `data.radius`（判定半径与冲击尺度的派生），
- *   玩家一眼看出撞的是身前那一条。
+ * 范围：单体接触招；判定是冲锋走廊，掌形与外沿由独立自定义场景（`world_combat:move_spiritbreak/palm`）贴真实
+ *   掌前 1 格检测段绘制，aura 的圆环半径读 `data.radius`（判定半径与冲击尺度的派生），玩家一眼看出撞的是身前那一条。
  * 运动：施法者沿瞄准方向贴地推进（服务端位移），气势粒子沿冲锋方向被甩在身后；光环从冲击点向外扩。
  * 数：光环碎光数量绑定 `data.sparks`（物攻与等级派生），掉特攻级数绑定 `data.drop`，强度绑定
  *   `data.intensity`（单发威力 / 75）。
@@ -112,3 +112,49 @@ const SpiritbreakDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_spiritbreak", 1, SpiritbreakDefinition);
+
+/**
+ * 掌形与掌前外沿：服务端每刻按真实身体位置与朝向重发掌前 1 格检测段的两个端点，
+ * 客户端沿同一段画两条外沿并把掌面贴在段尾，读得出掌挡住的是身前哪一条，而不是整段随机发射的掌线。
+ */
+const SpiritbreakPalmScene = "world_combat:move_spiritbreak/palm";
+const SpiritbreakPalmSprite = "cobblemon:particle/generic/hollowfist";
+
+function spiritbreakPalmPoint(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function spiritbreakPalmNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+WorldCombatClient.scene(SpiritbreakPalmScene, 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const path = Array.isArray(data.path) ? [spiritbreakPalmPoint(data.path[0]), spiritbreakPalmPoint(data.path[1])] : [];
+    if (path.length < 2 || path[0] === null || path[1] === null) return;
+    const from = path[0]!, to = path[1]!;
+    const radius = Math.max(0.25, Math.min(0.95, spiritbreakPalmNumber(data.radius, 0.4)));
+    const scale = Math.max(0.6, Math.min(1.8, spiritbreakPalmNumber(data.scale, 1)));
+    const dx = to[0] - from[0], dz = to[2] - from[2];
+    const length = Math.sqrt(dx * dx + dz * dz);
+    if (length < 1e-4) return;
+    const sx = -dz / length, sz = dx / length;
+    const y = (from[1] + to[1]) / 2 + 0.06;
+    const edge = 0xCCF58CB8 | 0;
+    const soft = 0x99FFD1E8 | 0;
+    // 两条外沿 + 段尾封口：就是掌前那 1 格的检测范围。
+    frame.line(from[0] + sx * radius, y, from[2] + sz * radius, to[0] + sx * radius, y, to[2] + sz * radius, edge);
+    frame.line(from[0] - sx * radius, y, from[2] - sz * radius, to[0] - sx * radius, y, to[2] - sz * radius, edge);
+    frame.line(to[0] + sx * radius, y, to[2] + sz * radius, to[0] - sx * radius, y, to[2] - sz * radius, edge);
+    const tick = frame.serverTick();
+    frame.sprite(SpiritbreakPalmSprite, to[0], to[1] + 0.12, to[2], radius * 1.5 * scale, 0,
+        0xE0FFD1E8 | 0, Math.floor(tick * 0.5) % 6, true);
+    frame.sprite("cobblemon:particle/generic/softswipe", to[0], to[1] + 0.08, to[2], radius * 1.2 * scale, 0,
+        soft, Math.floor(tick) % 8, true);
+});

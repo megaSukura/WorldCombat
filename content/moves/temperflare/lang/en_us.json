@@ -34,5 +34,5 @@
   "world_combat.move.temperflare.text.rage": "Desperation! %1$s",
   "world_combat.move.temperflare.text.miss": "The ram whiffed",
   "effect.world_combat.temperflare_frustration": "Temper Flare Desperation",
-  "worldcombat.skill.temperflare.description.additional": "When your last enemy-targeted move dealt no damage and you attack again within about 0.3–7.5 s, you carry a desperation; using Temper Flare while desperate doubles the ram and sets what it hits alight. Any later move that lands damage clears it at once, and it also fades after about 5.5 s."
+  "worldcombat.skill.temperflare.description.additional": "When your last enemy-targeted move truly whiffed and you attack again within about 5.5 s, you carry a desperation; using Temper Flare while desperate doubles the ram and sets what it hits alight. Any later move that lands damage clears it at once, and it also fades after about 5.5 s. A projectile still in flight with no resolved hit does not count as a whiff."
 }

@@ -21,10 +21,11 @@ Smoke.scenario("bubblebeam", function (stage) {
         stage.expect(stage.casts("bubblebeam", caster) > 0, "bubblebeam was committed");
         stage.expect(stage.damageTo(foe) > 0, "a slow bubble reached and struck the foe");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/foamed"), "the foe carried the shared foamed identity");
-        stage.note("three slow bubbles fire 3 ticks apart and pop on the first entity/wall, splitting the total power; the speed drop is a roughly 10% base roll bounded to one per string, and bubble radius, string spread and cling duration follow Sp. Atk/level/body and the dense/jet choice", {
+        stage.note("three slow bubbles fire 3 ticks apart and pop on the first entity/wall, splitting the total power; the speed drop is a roughly 10% base roll bounded to one per string, and bubble radius, string spread and cling duration follow Sp. Atk/level/body and the dense/jet choice. The cling bubbles are owned by the foam carrier and stop the moment it clears; a bubble that flies out ends at world.projectilePosition, not a predicted range point", {
             casts: stage.casts("bubblebeam", caster),
             damage: Math.round(stage.damageTo(foe) * 10) / 10,
             foamed: stage.hadMobEffect(foe, "world_combat:status/foamed"),
+            foeSpeedStage: stage.stages(foe)["spe"] || 0,
             foeAlive: foe.alive()
         });
         stage.done();

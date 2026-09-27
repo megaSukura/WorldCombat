@@ -6,7 +6,8 @@
  * 两幕：
  *   浇（windup 播「浇铸」，提交前只观察与预告，打断不花代价）。
  *   凝（提交后）：NativeEffects.boostWindow 把两级防御挂到共享身份 world_combat:status/irondefense
- *     的「铁壳」窗口上，窗口归属这层铁壳载体——铁壳本身带击退抗性与沉重减速（见 startup.ts）。
+ *     的「铁壳」窗口上，窗口归属这层铁壳载体——铁壳本身带固定的击退抗性与沉重减速，
+ *     由本文件的 MobEffects.fixedAttributes 按载体固定投影，不随防御级数（载体 amplifier）乘算。
  *     紧贴身体的金属片由一条托管效果随铁壳状态同寿渲染；受击时敲出铁火花。
  * 结束：铁壳被撕掉、被清除或到期时，这段防护抬起的等级随窗口原样收回，只收本次实际贡献；
  *   重复施放按同一载体的叠加约定刷新，不会扣走别处抬起的等级。
@@ -49,6 +50,13 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(ironDefenseShellMark, "start", ironDefenseWatch);
     WorldCombat.effectHandler(ironDefenseShellMark, "watch", ironDefenseWatch);
     WorldCombat.effectHandler(ironDefenseShellMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
+
+    // 固定抗击退 0.6 / 移速 -15% 按载体投影：Minecraft 会把效果自身的属性修饰乘 amplifier+1，
+    // 这里用 fixedAttributes 让这两项只按载体存在与否开关，不随防御级数（载体显示的 amplifier）被放大。
+    MobEffects.fixedAttributes("world_combat:irondefense_shell_hold", ironDefenseShell, [
+        { id: "minecraft:generic.knockback_resistance", amount: 0.6, operation: "add_value" },
+        { id: "minecraft:generic.movement_speed", amount: -0.15, operation: "add_multiplied_total" }
+    ]);
 
     define({
         id: "irondefense",
@@ -104,7 +112,7 @@ namespace PokemonSkills {
             if (carrier) {
                 NativeEffects.boostWindow(world, actor, { def: gift }, carrier.duration(), ironDefenseContribution, carrier, previous);
                 levels = Math.max(0, NativeEffects.effectiveStage(world, actor, "def") - before);
-                // 载体等级同时驱动铁壳的固定属性（击退抗性/减速按 amplifier+1 缩放），刷新到本次实际级数。
+                // 载体 amplifier 只用来显示这次实际抬起的防御级数；抗击退/减速由 fixedAttributes 固定，不受它影响。
                 if (carrier.amplifier() !== levels) {
                     const shown = MobEffects.apply(world, actor, ironDefenseShell, shell, levels);
                     if (shown) NativeEffects.boostWindow(world, actor, {}, shown.duration(), ironDefenseContribution, shown, carrier);

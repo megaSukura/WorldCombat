@@ -29,5 +29,6 @@
   "world_combat.move.focuspunch.text.hit": "真气拳！",
   "world_combat.move.focuspunch.text.broken": "真气散了",
   "world_combat.move.focuspunch.text.whiff": "踏空",
+  "world_combat.move.focuspunch.text.resist": "被挡下了",
   "worldcombat.skill.focuspunch.description.gather": "畏缩不会打断这段聚气，只有实际伤害能打断；被打断时不消耗 PP、也不进入冷却。"
 }

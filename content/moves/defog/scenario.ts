@@ -7,8 +7,8 @@
  *   被定住的蠹虫站在风圈之外当对照。
  *
  * 必然事实：本招被提交过；圈内的蠹虫身上出现过共享身份 world_combat:status/defogged，圈外的没有；护幕被
- *   掀掉后不再刷新 minecraft:glowing（余效走完即无残留场贡献）。级数、时长与风丝数取决于精灵数据与配置，
- *   写进 note 供读轨迹判断。
+ *   掀掉后不再刷新 minecraft:glowing（余效走完即无残留场贡献）。闪避级数、破绽时长与风丝数取决于精灵数据
+ *   与配置，写进 note 供读轨迹判断；闪避下降挂在破绽载体上，载体到期即原样收回。
  */
 namespace PokemonSkills {
     // 测试夹具：一片声明为共享类别 screen 的护幕，给成员刷一层可观察的真实 MobEffect。
@@ -43,7 +43,7 @@ Smoke.scenario("defog", function (stage) {
             stage.expect(stage.hadMobEffect(near, "minecraft:glowing"), "护幕场地先给了圈内一层场贡献");
             stage.expect(!stage.hasMobEffect(near, "minecraft:glowing"), "护幕被掀掉后不再刷新场贡献");
             stage.expect(!stage.hadMobEffect(far, "world_combat:status/defogged"), "风圈之外的对手没有被扫到");
-            stage.note("清扫半径、破防/闪避级数、破绽时长与风丝数由速度、体宽、等级公式决定；场地被整实例 dispel 后，余效走完即无残留。",
+            stage.note("清扫半径、闪避级数与破绽时长由速度、等级公式决定，风丝数再掺体宽；闪避下降挂在破绽载体上随载体收回；场地被整实例 dispel 后，余效走完即无残留。",
                 { casts: stage.casts("defog", caster), nearDefogged: stage.hadMobEffect(near, "world_combat:status/defogged"),
                   farDefogged: stage.hadMobEffect(far, "world_combat:status/defogged") });
             stage.done();

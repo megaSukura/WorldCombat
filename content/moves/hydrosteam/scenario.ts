@@ -26,7 +26,7 @@ Smoke.scenario("hydrosteam", function (stage) {
             stage.expect(stage.damageTo(foe) > 0, "the steam damaged the target");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/frozen"), "the target was frozen before the hit (staged)");
             stage.expect(!stage.hasMobEffect(foe, "world_combat:status/frozen"), "the steam thawed the frozen target");
-            stage.note("clear noon gives sunlight >= 0.85, so the steam is boosted x1.5 and spreads wider. The staged freeze is the native target state that the move thaws. Variables: hit chance, crit, push distance, and whether the target survives.", {
+            stage.note("clear noon gives sunlight >= 0.85, so the steam is boosted x1.5 and spreads wider. The staged freeze is the native target state that the move thaws. The fan is one short burst whose boundary vertices are clipped at real walls, and the shove uses native hitDisplace (knockback resistance applies). Variables: hit chance, crit, push distance, and whether the target survives.", {
                 casts: stage.casts("hydrosteam", caster),
                 damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

@@ -633,4 +633,61 @@ check('explicit duration design bases keep growth independent of absent preferen
     assert.equal(Number(P.parameterBinding(scope, 'wait').value), expected / 20);
   }
 });
+check('indicator reads inherit inspected preferences without leaking into other individuals or explicit scopes', () => {
+  const sample={...skill,id:'fixture_indicator_context',defaults:{wide:false},indicator:(_config,pokemon)=>({radius:P.p('fixture_indicator_context','radius',pokemon)})};
+  P.actionParameters.define(sample.id,{radius:P.formula(F.when(F.pref('wide'),F.const(5),F.const(2)),'Radius')});
+  P.define(sample);
+  const pokemon=nativeSnapshot(source),other={...pokemon,id:()=> 'another-individual'};
+  assert.equal(sample.indicator({wide:true},pokemon).radius,5);
+  assert.equal(sample.indicator({wide:false},pokemon).radius,2);
+  assert.equal(P.p(sample.id,'radius',pokemon),2);
+  P.withParameterContext({pokemon,skill:sample,detail:{values:{wide:true}}},()=>{
+    assert.equal(P.p(sample.id,'radius',pokemon),5);
+    assert.equal(P.p(sample.id,'radius',other),2);
+    assert.equal(P.p(sample.id,'radius',{pokemon,skill:sample,detail:{values:{wide:false}}}),2);
+    assert.throws(()=>P.withParameterContext({pokemon,skill:sample,detail:{values:{wide:false}}},()=>{throw Error('fixture');}));
+    assert.equal(P.p(sample.id,'radius',pokemon),5);
+  });
+  assert.equal(P.p(sample.id,'radius',pokemon),2);
+});
+check('independent projectiles have independent default strikes while one flight and explicit groups stay once per target', () => {
+  const seen=new Set(),keys=[];
+  const current={actor:()=>source,world:()=>world,sense:()=>world,id:()=>42,data:()=>null,
+    hit:(hit,_amount,key)=>{keys.push(key);const token=key+'/'+hit.target().ref();if(seen.has(token))return false;seen.add(token);return true;}};
+  const impact=id=>({target:()=>target,projectile:()=>id});
+  const features={damage:{base:2},critical:false};
+  assert(D.hit(current,impact('first-flight'),templates.get('sample_a'),features));
+  assert(!D.hit(current,impact('first-flight'),templates.get('sample_a'),features));
+  assert(D.hit(current,impact('second-flight'),templates.get('sample_a'),features));
+  assert(D.hit(current,impact('third-flight'),templates.get('sample_a'),features,'shared'));
+  assert(!D.hit(current,impact('fourth-flight'),templates.get('sample_a'),features,'shared'));
+  assert(D.hit(current,impact(''),templates.get('sample_a'),features));
+  assert(!D.hit(current,impact(''),templates.get('sample_a'),features));
+  assert.equal(keys[0],'projectile:first-flight');assert.equal(keys[keys.length-1],'primary');
+});
+check('a per-hit burn exception preserves burn and the penalty on other physical attacks', () => {
+  const pokemon={...nativeSnapshot(source),status:()=> 'cobblemon:burn'};
+  const burned=D.sourceFacts(pokemon),normal=D.sourceFacts(nativeSnapshot(source)),template=templates.get('sample_a');
+  const value=(facts,features={})=>D.explain(null,null,facts,template,{critical:false,...features},{value:30}).amount;
+  close(value(burned)*2,value(normal));
+  close(value(burned,{ignoreBurnPenalty:true}),value(normal));
+  close(value(burned)*2,value(normal));assert.equal(pokemon.status(),'cobblemon:burn');
+});
+check('weather overrides belong to a damage payload and fall back independently for other weather', () => {
+  assert.equal(D.weatherMultiplier({weatherMultipliers:{sun:1}},'sun',.5),1);
+  assert.equal(D.weatherMultiplier({weatherMultipliers:{sun:1}},'rain',1.5),1.5);
+  assert.equal(D.weatherMultiplier({},'sun',.5),.5);
+  assert.equal(D.weatherMultiplier({weatherMultipliers:{sun:0}},'sun',.5),0);
+  assert.throws(()=>D.weatherMultiplier({weatherMultipliers:{sun:-1}},'sun',.5),/Invalid weather multiplier/);
+});
+check('an explicit launch attack snapshot preserves that cast while later attacks read their reduced source', () => {
+  const original=D.sourceFacts(nativeSnapshot(source)),changed=D.sourceFacts(nativeSnapshot(source)),move=templates.get('sample_a');
+  const snapshot={stat:'atk',value:original.stats.atk,stage:0};
+  const measure=(facts,extra={})=>D.explain(null,null,facts,move,{critical:false,...extra},{value:30}).amount;
+  const before=measure(original);changed.stats.atk/=4;changed.data.native.state.stages.atk=-2;
+  assert(measure(changed)<before);
+  close(measure(changed,{attackSnapshot:snapshot}),before);
+  assert(measure(changed)<before,'reading a snapshot must not restore the source itself');
+  assert.throws(()=>measure(changed,{attackSnapshot:{...snapshot,value:-1}}),/Invalid attack snapshot/);
+});
 console.log(`PASS formula/context: ${count} scenarios; no emitted files or game processes`);

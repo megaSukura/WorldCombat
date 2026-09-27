@@ -23,7 +23,7 @@ Smoke.scenario("dualwingbeat", function (stage) {
         stage.after(80, function () {
             stage.expect(stage.casts("dualwingbeat", caster) >= 1, "the caster committed dualwingbeat");
             stage.expect(stage.damageTo(foe) > 0, "dualwingbeat dealt damage to the foe");
-            stage.note("the two wingbeats sweep opposite directions and roll separately; the second gains no bonus from the first; crit and dive/hover are variable", {
+            stage.note("the first beat sweeps a vertical front-down wing arc and the second the opposite back-up arc from the locked heading; hover beats are non-contact wind and dive beats are contact; the second gains no bonus from the first; crit and dive/hover are variable", {
                 casts: stage.casts("dualwingbeat", caster),
                 damage: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeAlive: foe.alive(),

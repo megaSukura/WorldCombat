@@ -81,10 +81,11 @@ namespace PokemonSkills {
     });
 
     GuardEffects.register(DetectRule, {
-        /** 只被敌对来源的攻击花掉读招，摔落、灼伤等自身来源不会误耗。 */
+        /** 只被敌对来源的**直接攻击**花掉读招：摔落、灼伤等残留伤害即使敌对来源也不误耗。 */
         accepts: function (effect, state, incoming) {
             const world = effect.world();
-            return !!incoming.source && String(incoming.source.ref()) !== String(effect.target().ref()) && !world.friendly(incoming.source);
+            return !!incoming.source && String(incoming.source.ref()) !== String(effect.target().ref())
+                && !world.friendly(incoming.source) && DamageSemantics.directOffense(incoming.data);
         },
         pulse: function (effect, state) {
             const world = effect.world(), body = world.observe(effect.target());
@@ -118,8 +119,10 @@ namespace PokemonSkills {
                 NativeEffects.boostWindow(world, target, changes, custom.opening,
                     "world_combat:move/detect", carrier, previous);
             }
-            WorldFeedback.keep(world, detectFocusKey, detectScene, 1, body.position(), { moment: "opening", target: String(target.ref()),
-                intensity: custom.boost / 2 }, Math.max(24, custom.opening));
+            // Speed and Attack openings get their own graphic, and the trail lives exactly as long as the boost.
+            WorldFeedback.keep(world, detectFocusKey, detectScene, 1, body.position(),
+                { moment: custom.stat === "atk" ? "opening_power" : "opening_speed", target: String(target.ref()),
+                  opening: custom.opening, intensity: custom.boost / 2 }, Math.max(24, custom.opening));
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.4, 0)), detectOpeningText, [custom.boost], 26);
             world.sound("minecraft:entity.evoker.cast_spell", body.position(), 16, "{}");
             effect.end();
@@ -160,7 +163,13 @@ namespace PokemonSkills {
         ready: function (action, config) {
             const key = "detect_fizzle", stored = action.data(key);
             if (stored !== null) return JSON.parse(stored).failed ? "world_combat:fizzle" : "";
-            const failed = action.sense().random() < p("detect", "fizzle", action);
+            const world = action.sense(), actor = action.actor();
+            // The roll must use the same timestamped repeat count execute will read, so a long pause
+            // really resets the failure chance before this attempt (the raw stored count can be stale).
+            const effective = GuardEffects.stall(state(world, actor, GuardEffects.stallKey), world.tick(), p("detect", "stallReset", action));
+            const variables: any = {}; variables["state." + GuardEffects.stallKey + "#stall"] = effective;
+            const context: FactContext = { world: world, actor: actor, skill: skills["detect"], detail: { values: config }, variables: variables };
+            const failed = world.random() < p("detect", "fizzle", context);
             action.data(key, JSON.stringify({ failed: failed }));
             return failed ? "world_combat:fizzle" : "";
         },
@@ -168,11 +177,13 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor();
             const window = p("detect", "readWindow", action);
             const radius = p("detect", "radius", action);
-            const previous = state(world, actor, GuardEffects.stallKey), now = world.tick();
-            const count = previous && typeof previous.stall === "number" && now - (previous.at || 0) <= p("detect", "stallReset", action) ? previous.stall : 0;
+            const now = world.tick();
+            const count = GuardEffects.stall(state(world, actor, GuardEffects.stallKey), now, p("detect", "stallReset", action));
             setState(world, actor, GuardEffects.stallKey, { stall: count + 1, at: now });
-            const guard: any = { rule: DetectRule, mode: "pool", capacity: 99999, fraction: 1,
-                minimumHealth: 0, charges: 0, linkRange: 0, radius: radius, boost: p("detect", "openingBoost", action),
+            // A single-use ward: the first accepted direct offense is turned aside whole and ends the window,
+            // instead of a huge pool that merely looks like one hit.
+            const guard: any = { rule: DetectRule, mode: "ward", capacity: 0, fraction: 1,
+                minimumHealth: 0, charges: 1, linkRange: 0, radius: radius, boost: p("detect", "openingBoost", action),
                 stat: config && config.strike ? "atk" : "spe", opening: p("detect", "opening", action) };
             const instance = GuardEffects.apply(world, actor, guard, window);
             world.effect(DetectWindow, actor, JSON.stringify({ guard: instance, radius: radius }), window);

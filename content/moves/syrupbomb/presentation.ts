@@ -5,7 +5,7 @@
  *   一阵阵发沉，落点地面摊开一汪会黏脚的糖洼。
  * 色相家族：琥珀 0xD89A3C / 0xE0A94E 为主，奶油 0xF4DFAE 提亮，暗褐 0x8A5E2E 只做阴影；一个暖色相。
  * 层次：搓糖（windup）→ 糖弹＋尾迹（lob）→ 爆散＋糖洼（burst／pool）→ 裹身（coat／slow）→ 余滴（linger）。
- * 范围：burst 的环半径直接读机制爆散半径（data.radius）；pool 的盘按 data.scale 摊开——画的就是糖真正铺到哪。
+ * 范围：burst 的环与糖面按 data.scale（机制爆散半径 / 2.2）缩放一次；pool 的盘按 data.scale（field.radius / 1.6）摊开——画的就是糖真正铺到哪。
  * 运动：糖弹走抛物线并拖一条蜜尾；落地时糖浆向外摊开、气泡上浮，之后糖洼缓慢冒泡，目标身上一滴一滴往下坠。
  * 数：服务端把 data.intensity（威力）与 data.coated（裹住几人）交给发射器，炸得越狠、裹得越多，糖浆越厚。
  * 参照节：视觉语言第二、三、四、五、六、七、九节。
@@ -74,7 +74,7 @@ const SyrupbombDefinition: ParticleDefinition = {
                     name: "splash_ring", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: { data: "coated", fallback: 1 } }, amount: 8,
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 }, rotation: [90, 0, 0] },
+                    shape: { kind: "ring", radius: 2.2 },
                     direction: "outward", speed: [0.06, 0.18], drag: 0.92,
                     lifetime: [12, 22], size: [0.3, 0.03],
                     color: 0xE0A94E, alpha: [0.6, 0], light: "full", maxParticles: 90
@@ -83,7 +83,7 @@ const SyrupbombDefinition: ParticleDefinition = {
                     name: "splash_goo", bind: "point", offset: [0, 0.16, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/goo/ooze",
                     burst: { count: 1 }, amount: 10,
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
+                    shape: { kind: "circle", radius: 2.2 },
                     direction: "outward", speed: [0.04, 0.14], gravity: 0.04, spin: 10,
                     lifetime: [14, 26], size: [0.16, 0.03],
                     color: 0x8A5E2E, alpha: [0.8, 0], light: "world", maxParticles: 90
@@ -136,8 +136,9 @@ const SyrupbombDefinition: ParticleDefinition = {
             ]
         },
         pool: {
-            duration: 40,
-            exit: { stop: 40, drain: 30 },
+            // 由托管 field 的 presentOn 续期，洼结束才收：不再有固定 40 刻的隐形窗口。
+            duration: 0,
+            exit: { drain: 30 },
             emitters: [
                 {
                     name: "pool_disc", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",

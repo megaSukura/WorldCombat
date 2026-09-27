@@ -60,7 +60,7 @@ const IronheadDefinition: ParticleDefinition = {
                     color: 0xF2F5F8, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 50
                 },
                 {
-                    name: "lead", bind: "source", height: 0.6, orient: "direction",
+                    name: "lead", bind: "source", height: 0.6, orient: "direction", fit: "world",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     burst: { count: 4, at: 0 },
                     shape: { kind: "line", length: { data: "reach", fallback: 0.7 } },

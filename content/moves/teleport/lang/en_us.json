@@ -30,5 +30,5 @@
   "world_combat.move.teleport.text.blink": "Teleport · %1$s blocks",
   "world_combat.move.teleport.text.flee": "Teleport escape · %1$s blocks",
   "worldcombat.skill.teleport.description.2": "A wild user rides the momentum of escape to blink farther, and releases its own target on arrival.",
-  "worldcombat.skill.teleport.description.3": "The landing is a free 3D point, including raised platforms; pursuit is shed only after a real, successful move, so a failed blink neither clears aggro nor moves you."
+  "worldcombat.skill.teleport.description.3": "The landing is a free 3D point, including raised platforms, and it does not need ground beneath it - only room for the whole body. Pursuit is shed only after a real, successful move, so a failed blink neither clears aggro nor moves you."
 }

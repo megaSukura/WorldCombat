@@ -34,5 +34,5 @@
   "world_combat.move.wildcharge.text.recoil": "Circuit recoil",
   "world_combat.move.wildcharge.text.shock": "Paralyzed",
   "world_combat.move.wildcharge.text.leak": "Soaked leak",
-  "worldcombat.skill.wildcharge.description.2": "Only the first target struck is resolved. If the charge runs its full distance or is stopped by a wall or an obstacle without connecting, the current discharges harmlessly on the spot (or into the wall) and the user takes no recoil. A soaked target takes more power and is conducted into paralysis for certain; a soaked user leaks at the very start of the charge, loses power and takes heavier recoil."
+  "worldcombat.skill.wildcharge.description.2": "Only the first target struck is resolved; an ally or a refused hit only grazes at the contact, never faking a strike, and only a real paralysis shows the strong conduction. If the charge runs its full distance or is stopped by a wall or an obstacle without connecting, the current discharges harmlessly on the spot (or into the wall) and the user takes no recoil. A soaked target takes more power and is conducted into paralysis for certain; a soaked user leaks at the very start of the charge (a discharge warning), loses power and takes heavier recoil."
 }

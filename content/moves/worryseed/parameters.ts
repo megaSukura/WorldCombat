@@ -37,7 +37,7 @@ namespace PokemonSkills {
             "种子数", { unit: "颗", description: "起手时绕着施法者转的种子数量；特攻越高越密。" }),
         worries: formula(
             F.base(4, "基础").plus(F.level().div(6).as("等级")).clamp(4, 16).round(),
-            "心绪数", { unit: "个", description: "命中处从目标身上冒出的「？」数量；等级越高越多。" }),
+            "心绪数", { unit: "片", description: "种子在目标头顶长出的顶芽叶片数；等级越高越多。" }),
         roots: formula(
             F.base(6, "基础").plus(F.stat("specialAttack").div(9).as("特攻")).plus(F.body("weight").div(8000).as("体重")).clamp(6, 24).round(),
             "扎根数", { unit: "条", description: "种子破土时顶出的根须数量；特攻与体重越大越多。" }),

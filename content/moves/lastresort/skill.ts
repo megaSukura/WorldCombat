@@ -5,8 +5,9 @@
  *   直直撞出全组最慢也最重的一下；自己伤得越重，这一下越狠。它是「先付出、后兑现」的那一端：
  *   要先走完其他每一招，这份珍藏才亮起来；一旦打出，账本清空，要重新攒。
  *
- * 就绪珠：其他有效招槽各对应一枚（最多呈现 3 枚），每提交一手、账本多一笔就点亮一枚；三枚齐了浮起珍藏光环。
- *   提交珍藏时整体熄灭，脱战 encounterIdle 后随账本一起失效。未解锁时尝试使用会列出真实还差的招名。
+ * 就绪标记：当前装备表里其他已实装的招各对应一个固定位置的小符号（自定义客户端场景持续绘制，不随 burst 消失），
+ *   每提交一手就点亮一个；全部齐了额外浮起珍藏光环。提交珍藏时整体熄灭，脱战 encounterIdle 后随账本一起失效。
+ *   未解锁时尝试使用会列出真实还差的招名。
  *
  * 三幕：
  *   起（windup，提交前）：站定沉腰，真实账本点亮的就绪珠汇入身体，脚下浮起金白光环；已损失的生命把光环点得更亮
@@ -24,7 +25,7 @@ namespace PokemonSkills {
     const lastresortWoundText = "world_combat.move.lastresort.text.wound";
     const lastresortMissingText = "world_combat.move.lastresort.text.missing";
 
-    /** 就绪珠载体：最多 3 枚依真实账本点亮，全部齐了浮起珍藏光环；提交珍藏或脱战一起熄灭。 */
+    /** 就绪标记载体：逐槽依真实账本点亮，全部齐了浮起珍藏光环；提交珍藏或脱战一起熄灭。 */
     const lastresortLedgerMark = "world_combat:move_lastresort/ledger_mark";
 
     function lastresortDisplay(effect: CombatEffect): void {
@@ -32,16 +33,21 @@ namespace PokemonSkills {
         const body = world.valid(actor) ? world.observe(actor) : null;
         if (body === null) { effect.end(); return; }
         const mark = JSON.parse(effect.state());
-        const shown = Math.min(3, Number(mark.total) || 0);
-        const lit = Math.min(shown, Number(mark.ready) || 0);
+        const marks: number[] = Array.isArray(mark.marks) ? mark.marks : [];
+        // Unlocked halo stays on the particle layer; each real table slot is drawn as a fixed sprite mark.
         WorldFeedback.onEffect(world, effect.id(), "ledger", lastresortScene, 1, body.position(),
-            { moment: "ledger", target: String(actor.ref()), ready: lit, missing: Math.max(0, shown - lit),
-              unlocked: mark.unlocked ? 1 : 0, halo: mark.unlocked ? 4 : 0 });
+            { moment: "ledger", target: String(actor.ref()), halo: mark.unlocked ? 4 : 0 });
+        WorldFeedback.onEffect(world, effect.id(), "marks", lastresortMarksScene, 1, body.position(),
+            { target: String(actor.ref()), marks: marks, total: marks.length, unlocked: mark.unlocked === true });
     }
     WorldCombat.effect(lastresortLedgerMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (typeof value.ready !== "number" || typeof value.total !== "number" || typeof value.unlocked !== "boolean")
             throw new Error("Invalid lastresort ledger mark");
+        const marks: number[] = [];
+        for (let i = 0; i < Math.max(0, Math.floor(value.total)); i++)
+            marks.push(Array.isArray(value.marks) && value.marks[i] ? 1 : 0);
+        value.marks = marks;
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(lastresortLedgerMark, "start", lastresortDisplay);
@@ -56,13 +62,17 @@ namespace PokemonSkills {
         });
     }
 
-    /** 每提交一手就刷新就绪珠；提交珍藏本身则整体熄灭。 */
+    /** 每提交当前表里的一手就刷新就绪标记；提交珍藏本身则整体熄灭。 */
     WorldCombat.on("world_combat:lastresort/readiness", "world_combat:committed", "", function (event) {
         const world = event.world(), actor = event.actor();
         if (actor === null || !world.valid(actor) || !lastresortKnown(world, actor)) return;
+        const pokemon = String(actor.domain()) === "cobblemon" ? CobblemonCombat.pokemon(actor) : null;
+        if (pokemon === null) return;
         const action = event.action(), body = world.observe(actor);
         let id = action === null ? "" : String(action.content());
         if (id.indexOf("world_combat:") === 0) id = id.substring("world_combat:".length);
+        // Commits unrelated to the current table neither light a mark nor extend its life.
+        if (id !== lastresortId && !lastresortInTable(pokemon, id)) return;
         lastresortReleaseMark(world, actor);
         if (id === lastresortId) {
             if (body !== null) WorldFeedback.emit(world, lastresortScene, 1, body.position(),
@@ -72,7 +82,7 @@ namespace PokemonSkills {
         const ledger = lastresortLedger(world, actor);
         if (ledger.total <= 0) return;
         world.effect(lastresortLedgerMark, actor,
-            JSON.stringify({ ready: ledger.ready, total: ledger.total, unlocked: ledger.unlocked }), NativeSemantics.encounterIdle);
+            JSON.stringify({ ready: ledger.ready, total: ledger.total, marks: ledger.marks, unlocked: ledger.unlocked }), NativeSemantics.encounterIdle);
     });
 
     /** 不可用时列出真实还差的招名（按招槽顺序），并同步就绪珠。 */
@@ -138,7 +148,7 @@ namespace PokemonSkills {
             action.present("lastresort:gather", lastresortScene, 1, action.origin(),
                 JSON.stringify({ moment: power > 0 ? "gather" : "whiff", wound: wound, bright: 0.35 + wound * 0.55,
                     orbs: Math.round(10 + wound * 40 + Math.max(0, power - 80) / 4),
-                    ready: Math.min(3, ledger.total), unlocked: ledger.unlocked ? 1 : 0,
+                    ready: ledger.ready, unlocked: ledger.unlocked ? 1 : 0,
                     desperation: config && config.desperation === true, windup: prepare }));
             return prepare;
         },

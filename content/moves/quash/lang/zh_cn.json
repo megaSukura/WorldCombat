@@ -18,6 +18,6 @@
   "effect.world_combat.quash": "压制",
   "world_combat.move.quash.text.pin": "被压制",
   "world_combat.move.quash.text.fizzle": "压制落空",
-  "worldcombat.skill.quash.description.additional": "压制期间目标的移动速度降低 30%×（压下次数+1），被压得越多越接近钉住；再次命中会刷新压制并重置可压次数。",
+  "worldcombat.skill.quash.description.additional": "压制期间目标的移动速度固定降低 30%，与剩余可压次数无关；可压次数只决定还能把几次出手压回去，再次命中会刷新压制并重置可压次数。",
   "worldcombat.skill.quash.timing": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒，消耗 %4$s PP。"
 }

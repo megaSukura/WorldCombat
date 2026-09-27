@@ -1,11 +1,12 @@
 /**
  * 假哭 的伙伴 AI 用途：这招自己的一套出手计划——先凑近到看得清脸，再挤出眼泪。
  *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、通视、目标还没被唬住。它是骗术，眼泪要能送到脸上，
+ * 什么局面有意义：有可见威胁、在 ai.maxChase 以内、通视、目标还没被唬住、特防也还没封底。它是骗术，眼泪要能送到脸上，
  *   所以 `available` 会真的比一次视线（只看地形遮挡，不看对方朝向）；被掩体挡住就先绕出角度，而不是硬凑。
  * 什么时候最想出手：按实际收益排序，不要求目标注意施法者——特防高于物防的目标最值得先松开；
- *   队友正在集火这个方向时更值。自己刚挨过打也给一点加成，但它只是处境，不是出手前提。
- * 对谁出手：当前威胁；已经带着「不知所措」身份的目标跳过。
+ *   队友正在集火这个方向时更值；已经睡、麻、冻住的目标不会因为这一记掉血而醒，可以在控制里安全叠削。
+ *   自己刚挨过打也给一点加成，但它只是处境，不是出手前提。
+ * 对谁出手：当前威胁；已经带着「不知所措」身份、或特防已经到 -6 封底的目标跳过（再降没有收益）。
  * 够不到怎么办：reach 就是假哭距离（很短），共享任务会先把身位压到射程内。
  * 放完之后：目标特防下降；伙伴随即交回共享顺序，让队友去打这段窗口。
  */
@@ -15,6 +16,11 @@ namespace CompanionBehavior {
         return world(context).clear(point(source(context).point), point(threat.point));
     }
 
+    /** 正在被控的目标：这一记不造成伤害，所以不会把它们打醒或解冻。 */
+    function faketearsControlled(context: WorldBehavior.Context, threat: Entity): boolean {
+        return status(context, threat, "sleep") || status(context, threat, "paralysis") || status(context, threat, "frozen");
+    }
+
     function faketearsWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, threat: Entity): boolean {
         if (context.facts.mounted) return false;
         if (threat.health <= 0 || threat.friendly || !threat.visible) return false;
@@ -22,6 +28,7 @@ namespace CompanionBehavior {
         const self = source(context);
         if (context.facts.focus !== threat.ref && distance(self.point, threat.point) > ai<number>(item, "maxChase", 8)) return false;
         if (status(context, threat, "flustered")) return false;
+        if (stage(context, threat, "spd") <= -6) return false;
         return faketearsVisible(context, threat);
     }
 
@@ -48,9 +55,10 @@ namespace CompanionBehavior {
             const facts = combatStats(context, target);
             const special = facts && facts.stats && typeof facts.stats.spd === "number" && typeof facts.stats.def === "number"
                 ? facts.stats.spd - facts.stats.def : 0;
+            const control = faketearsControlled(context, target) ? 8 : 0;
             const focus = (special > 0 ? 10 : 0) + (faketearsAllyFocus(context, target) ? 8 : 0);
             const pressured = self.hurtAgo < 40 ? 6 : 0;
-            return Math.min(92, 50 + focus + pressured);
+            return Math.min(92, 50 + focus + control + pressured);
         }
     });
 

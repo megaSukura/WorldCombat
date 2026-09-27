@@ -1,14 +1,13 @@
 /**
  * 地裂 / fissure 的客户端表现。
  *
- * 一句话：施法者蹲身把震荡压进土里，一道裂缝从脚下沿地表直窜到目标点、在那里张开一个坑；掉进去的人
- * 被土尘吞没，之后那道裂缝与碎土留在地上慢慢平息。
+ * 一句话：施法者蹲身把震荡压进土里，一道裂缝沿真实地表一条条窜到锁定的落点、在那里张开口；被卷进去的人
+ * 吃一记重创，之后裂缝沿同一条真实路线留下一道会散去的短裂纹。地面方块本身不会被替换，也没有持续危险。
  * 色相家族：土黄与灰岩（0x8D6E3A / 0x6E5A44 / 0xA08C6E）为主体，近白（0xE8DFC8）只给张口那一下的核心。
- * 拍子：起（windup 碎屑聚拢）→ 裂（mark 裂缝线路与预览坑，持续 `mark` 刻）→ 击（break 张口吞没 / miss 空响）→ 收（rent 裂缝余烬）。
- * 范围：`mark` 与 `break` 的地面环以固定参考半径书写、由服务端 `data.scale = 实际落点半径 / 1.7` 放大，
- *   玩家看到的那个坑就是掉下去的范围。
- * 运动：裂缝沿 `data.path` 的顶点（施法者→落点）贴合地表窜过去，碎屑在张口一刻向上崩、余烬从缝里缓缓上浮。
- * 数：`data.spall`（物攻派生）决定碎屑与崩土的密度，`data.cells`（裂缝块数）决定余烬密度。
+ * 拍子：起（windup 碎屑聚拢）→ 裂（mark 裂缝沿 `data.path` 推进、落点圈收紧，持续 `mark` 刻）→ 击（break 张口重击 / miss 空响）→ 收（rent 短裂纹余痕）。
+ * 范围：mark 与 break 的地面环以固定参考半径书写、由服务端 `data.scale = 实际落点半径 / 1.7` 放大。
+ * 路径：裂缝顶点是服务端沿真实支撑面走出来的世界点（`data.path`），推进到哪就画到哪；断口、高墙或另一楼层处自然停住。
+ * 数：`data.spall`（物攻派生）决定碎屑与崩土密度；`data.step`/`data.mark` 给落点圈一个收紧的倒计时读法。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
 const FissureDefinition: ParticleDefinition = {
@@ -125,25 +124,17 @@ const FissureDefinition: ParticleDefinition = {
             ]
         },
         rent: {
-            duration: 40,
-            exit: { stop: 14, drain: 26 },
+            duration: { data: "ticks", fallback: 40 },
+            exit: { drain: 24 },
             emitters: [
                 {
                     name: "seam_dust", bind: "path", offset: [0, 0.06, 0], fit: "none",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    shape: { kind: "polyline" }, rate: { data: "cells", fallback: 22 },
+                    shape: { kind: "polyline" }, rate: { data: "spall", fallback: 22 },
                     direction: "up", speed: [0.01, 0.04], spread: 10,
                     gravity: 0.02, drag: 0.9,
-                    lifetime: [18, 32], size: [0.05, 0.01],
-                    color: 0x6E5A44, alpha: [0.3, 0], light: "world", maxParticles: 120
-                },
-                {
-                    name: "fume", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: { data: "cells", fallback: 14 }, shape: { kind: "circle", radius: 1.6 },
-                    direction: "up", speed: [0.01, 0.04], spread: 10,
-                    lifetime: [24, 44], size: [0.3, 0.7], sizeMode: "linear",
-                    color: 0x7A6A55, alpha: [0.22, 0], light: "world", maxParticles: 80
+                    lifetime: [16, 28], size: [0.05, 0.01],
+                    color: 0x6E5A44, alpha: [0.28, 0], light: "world", maxParticles: 100
                 }
             ]
         }

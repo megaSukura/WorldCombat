@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：对手可见、敌对、还活着，且在自己 `ai.maxChase`（默认 6）格内。它是一趟身前火弧，
  *   `ai.cluster`（默认开）按「朝这个方向挥能罩住几个有效敌人」给朝向打分，把这一记当成一次清场：
- *   候选目标身后挤着越多敌人，分越高，伙伴因此会挑最能扫到一片的那个朝向。
+ *   候选目标身后挤着越多敌人，分越高，伙伴因此会挑最能扫到一片的那个朝向；与目标之间有墙的不算罩住。
  *   自身生命低于 `ai.hurtBelow`（默认 0.7）时再加一档——悔意让这一剑更沉、回得更多，残血正是它最好的燃料。
  * 对谁出手：当前威胁；友方、倒下或不可见的不接受。够不到交给共享接近逻辑，射程就是剑距。
  * 放完之后：弧内的敌人都挂了彩、施法者也回了血，交回共享顺序。
@@ -16,8 +16,10 @@ namespace CompanionBehavior {
         const length = Math.sqrt(dx * dx + dz * dz);
         if (length < 1e-4) return 1;
         const ux = dx / length, uz = dz / length;
-        const sweep = !!(item.data.config && item.data.config.sweep === true);
-        const cosHalf = Math.cos((sweep ? 75 : 25) * Math.PI / 180);
+        // 用本个体真实的张角（横扫 150、直斩 50，经公式夹取），不要写死另一份常数。
+        const arc = PokemonSkills.p("bitterblade", "arc", CompanionBehavior.world(context));
+        const cosHalf = Math.cos(Math.max(5, Math.min(180, arc)) * Math.PI / 360);
+        const world = CompanionBehavior.world(context);
         let count = 0;
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
@@ -25,7 +27,7 @@ namespace CompanionBehavior {
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const od = Math.sqrt(ox * ox + oz * oz);
             if (od > reach || od < 1e-4) continue;
-            if ((ox * ux + oz * uz) / od >= cosHalf) count++;
+            if ((ox * ux + oz * uz) / od >= cosHalf && world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) count++;
         }
         return count;
     }

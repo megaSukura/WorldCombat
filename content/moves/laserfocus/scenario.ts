@@ -1,35 +1,38 @@
-/**
- * 磨砺 / laserfocus 的可执行设计说明。
- *
- * 场面：一只物攻型的飞天螳螂带着「磨砺 + 撞击」对一只弱小的小拉达开战，隔开一小段距离。技能表里的两招
- * 都由本仓库实现，AI 会在贴身之前先磨好这一下，再出手把锐意用掉。
- * 必然事实：磨砺被提交过；施术者身上出现过共享身份 world_combat:status/laserfocus 的锐意窗口。
- * 要害是否真的被抬成必暴、锐意何时被用掉，是这一击的时机与共享结算结果，写进 note 供读轨迹判断
- * （私有装配没有读取原生暴击结果的读取原语，因此不断言暴击本身）。本次锐意带唯一 token：只有本招把
- * 非暴击改成暴击且 actual>0 才消费，打免疫者／原本已暴击／空挥都不消费。
- */
-Smoke.scenario("laserfocus", function (stage) {
-    stage.fill([-10, -1, -10], [10, -1, 10], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "scyther", level: 34, moves: ["laserfocus", "tackle"], at: [-3, 0, 0] });
-    var foe = stage.pokemon({ species: "rattata", level: 16, moves: ["tackle"], at: [4, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1200, function () {
-        return stage.casts("laserfocus", caster) > 0 && stage.hadMobEffect(caster, "world_combat:status/laserfocus");
-    }, function () {
-        stage.expect(stage.casts("laserfocus", caster) > 0, "the hone was committed");
-        stage.expect(stage.hadMobEffect(caster, "world_combat:status/laserfocus"), "the edge window carried the shared laserfocus identity");
-        stage.after(200, function () {
-            stage.note("磨砺把身上挂出带唯一 token 的锐意实例（身份 laserfocus），下一次伤害结算由 PokemonDamage.metadata 抬成必定要害、并在实际扣血后由 appliedRules 按 token 用掉。是否已经出手兑现、打出了多少伤害、锐意是否散去由时机与共享结算决定，留给完整装配的人工试玩。窗口时长随亲密度与等级阶梯、光点随物攻、长度随身高、冷却随特攻分别变化。", {
-                casterCasts: stage.casts("laserfocus", caster),
-                tackleCasts: stage.casts("tackle", caster),
-                damageByCaster: Math.round(stage.damageBy(caster) * 10) / 10,
-                damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,
-                foeAlive: foe.alive(),
-                tick: stage.tick()
-            });
-            stage.done();
-        });
-    }, "laser focus is cast");
+/** Real AI use: an ordinary strike and a move that is already critical both spend one edge. */
+Smoke.scenario("laserfocus", stage => {
+    stage.time("night");
+    const caster = stage.pokemon({ species: "scyther", level: 34, moves: ["laserfocus", "tackle"], at: [0, 0, 0] });
+    const natural = stage.pokemon({ species: "scyther", level: 34, moves: ["laserfocus", "frostbreath"], at: [20, 0, 0] });
+    const foe = stage.pokemon({ species: "snorlax", level: 60, moves: [], at: [2.4, 0, 0] });
+    const naturalFoe = stage.mob({ type: "minecraft:zombie", at: [22.4, 0, 0] });
+    stage.noai(foe, naturalFoe);
+    [naturalFoe].forEach(actor => {
+        const uuid = actor.ref.split("/")[0];
+        stage.command("attribute " + uuid + " minecraft:generic.max_health base set 500");
+        stage.command("data merge entity " + uuid + " {Health:500.0f}");
+    });
+    let completed = 0;
+    function observe(caster: Smoke.Actor, label: string): void {
+        stage.until(300, () => stage.hasMobEffect(caster, "world_combat:status/laserfocus"), () => {
+            const started = stage.tick(), criticals = stage.criticals(caster);
+            stage.until(60, () => stage.criticals(caster) > criticals, () => {
+                stage.after(2, () => {
+                    stage.expect(stage.casts("laserfocus", caster) === 1, label + " used one honed edge");
+                    stage.expect(stage.tick() - started < 100, label + " settled before natural expiry");
+                    stage.expect(!stage.hasMobEffect(caster, "world_combat:status/laserfocus"), label + " consumed the edge on a real critical");
+                    if (++completed === 2) {
+                        stage.note("Tackle is forced critical; Frost Breath already supplies critical=true. Both consume the carrier after actual HP damage.");
+                        stage.done();
+                    }
+                });
+            }, label + " lands a critical within its active edge");
+        }, label + " prepares its edge");
+    }
+    stage.after(20, () => {
+        stage.prefer(caster, "laserfocus", { ai: { minGap: 1 } });
+        stage.prefer(natural, "laserfocus", { ai: { minGap: 1 } });
+        stage.setPp(caster, "laserfocus", 1); stage.setPp(natural, "laserfocus", 1);
+        stage.hostile(caster, foe); stage.hostile(natural, naturalFoe);
+        observe(caster, "ordinary strike"); observe(natural, "already-critical strike");
+    });
 });

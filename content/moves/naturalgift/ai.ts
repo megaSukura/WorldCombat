@@ -3,8 +3,10 @@
  *
  * 出手局面：带着一颗表里的树果、目标是可见敌对的活体、且在 `ai.maxChase`（默认 6）格内时，作为近身攻击出手；
  * 空手或携带的不是树果时这招没有力量，直接不参与候选。焦点目标不受距离限制，由共享接近逻辑先走近。
- * 排序（珍惜果实）：默认排位较低；树果属性克制目标时抬到前列；目标生命低于 `ai.finish`（默认 0.5）再抬到最前，
- * 留着用这颗果收尾；属性免疫（倍率 0）则不出手。配置：多远考虑出手、收尾生命线、驻守指令下是否离位。
+ * 排序（珍惜果实）：默认排位较低；树果属性克制目标时抬到前列；被目标抗性削弱时降权；目标生命低于
+ * `ai.finish`（默认 0.5）再抬到最前，留着用这颗果收尾；属性免疫（倍率 0）则不出手。
+ * 实际可达路线也算进消耗决策：撞墙／被地形挡住的一步会白白花掉这颗果，先降权让给别的选择。
+ * 配置：多远考虑出手、收尾生命线、驻守指令下是否离位。
  */
 namespace CompanionBehavior {
     /** 现场读取施法者手里的树果恩赐；有可用的树果才值得出手，属性决定排序。 */
@@ -27,6 +29,12 @@ namespace CompanionBehavior {
         return factor;
     }
 
+    /** 这一步能否真的走到对手身上：视线／路径被地形挡住时不值得花掉这颗果。 */
+    function naturalgiftRouteClear(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
+        var world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
+        return world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+    }
+
     registerUse("naturalgift", {
         protocols: ["world_combat:attack"],
         reach: function (context: WorldBehavior.Context, item: WorldBehavior.Capability): number { return item.data.range; },
@@ -46,9 +54,11 @@ namespace CompanionBehavior {
             if (!gift) return 0;
             var factor = naturalgiftCoverage(context, target, gift.type);
             if (factor === 0) return 0;
-            var value = 14;
-            if (factor > 1) value = 40;
+            // factor < 0 表示目标类型未知（其他模组的普通生物）：按普通近身中性对待，不当成抗性。
+            var value = factor > 1 ? 40 : factor > 0 && factor < 1 ? 6 : 14;
             if (ratio(target) <= ai<number>(item, "finish", 0.5)) value = Math.max(value, 48);
+            // 路线被挡：撞墙／撞地形的一步会白白花掉这颗果，先降权。
+            if (!naturalgiftRouteClear(context, target)) value = Math.min(value, 6);
             return value;
         }
     });

@@ -6,8 +6,8 @@
  * 色相家族：粉白到淡紫（glowingsparkle_pink 原色、impact_fairy 亮帧、bigsparkle／star 强调、tinydust 中性）。
  * 拍子：起 bloom（花朵绽开、蓄光）→ 放 ray（贯穿光柱，撞墙处截束）→ 中 impact（花瓣爆开）／ 空 fizzle（散光）／
  *   墙 wall（墙面迸花瓣）→ 噬 recoil（回烧）。
- * 范围：ray 用 `data.path` 画出服务端走廊的同一组四个顶点——光柱有多长多粗、被哪面墙截断，画面就是那根柱。
- * 运动：光柱沿走廊由近及远铺开、边缘同时向前扫；命中花瓣向外炸开；反噬层从身前沿来路反向缩回施术者。
+ * 范围：ray 用 `data.path` 与服务端同轴的四个顶点、并沿 `data.direction` 摆正——光柱有多长多粗、被哪面墙截断，画面就是那根柱。
+ * 运动：光柱沿真实 3D 光轴由近及远铺开、边缘同时向前扫；命中花瓣向外炸开；反噬层从身前沿来路反向缩回施术者。
  * 数：`data.notes`（威力换算）与 `data.intensity`（威力 / 140）决定光柱与命中的密度，`data.petals`（特攻与身高派生）
  * 决定花瓣与爆开数量，`data.pierce`（贯穿上限）决定边缘强调，`data.damage`（本次实际反噬量）决定回烧的强度。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -50,7 +50,7 @@ const LightofruinDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 18 },
             emitters: [
                 {
-                    name: "lane_fill", bind: "path", offset: [0, 0.55, 0],
+                    name: "lane_fill", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/speedlines",
                     shape: { kind: "polygon" },
                     rate: { data: "notes", fallback: 120 }, direction: "shape", speed: [0.04, 0.2],
@@ -58,7 +58,7 @@ const LightofruinDefinition: ParticleDefinition = {
                     color: 0xF1E4FF, alpha: [0.55, 0], light: "full", maxParticles: 440
                 },
                 {
-                    name: "lane_glow", bind: "path", offset: [0, 0.5, 0],
+                    name: "lane_glow", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/sparkle/bigsparkle",
                     shape: { kind: "polygon" },
                     rate: { data: "petals", fallback: 28 }, direction: "shape", speed: [0.03, 0.16],
@@ -66,7 +66,7 @@ const LightofruinDefinition: ParticleDefinition = {
                     color: 0xFBD4F0, alpha: [0.5, 0], light: "full", bloom: 0.35, maxParticles: 300
                 },
                 {
-                    name: "lane_edge", bind: "path", offset: [0, 0.6, 0],
+                    name: "lane_edge", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/cut",
                     shape: { kind: "polyline", closed: true },
                     rate: { data: "pierce", fallback: 3 }, direction: "shape", spread: 10, speed: [0.06, 0.24],
@@ -74,7 +74,7 @@ const LightofruinDefinition: ParticleDefinition = {
                     color: 0xFFF3FF, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 220
                 },
                 {
-                    name: "muzzle", bind: "source", offset: [0, 0.65, 0], height: 0.3,
+                    name: "muzzle", bind: "source",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_fairy",
                     burst: { count: 16, at: 0 },
                     shape: { kind: "sphere", radius: 0.32 },

@@ -9,8 +9,9 @@
  *   撒（throw → dusted）：提交后粉团沿直线飞向瞄准点（自由 aim）；命中第一个非友方实体且它不是草属性、
  *      身上还没有粉时，就给它挂上共享身份 world_combat:status/powdered 的粉尘，并建一份属于施法者的机读 mark
  *      （写明爆炸比例 `blast`、尘粒数、判定半径与撒粉者归属），粘附 `dustTicks`；草属性、已有粉、拒粉者与落空都只散粉。
- *   爆（ignite）：此后该对手自己放出火攻时，由这份 mark 单次消费并引爆——脚本火招在提交时触发，烈焰人等原生
- *      对外火伤在真正造成第一笔时触发；火招照常放完，粉只埋一次。反噬走原生 hurt 许可、按实际扣血记账。
+ *   爆（ignite）：此后该对手自己放出**直接火攻**时，由这份 mark 单次消费并引爆——脚本火招按这次已提交动作的最终
+ *      整招 metadata 在提交时触发（含运行时属性改写，排除火辅助），原生／模组火攻在真正交付第一笔直接对外火伤时触发；
+ *      火招照常放完，粉只埋一次。反噬走原生 hurt 许可、按实际扣血记账。
  *
  * 与同族分开：粉系四式（毒粉／麻痹粉／催眠粉等）都是命中即施加状态；只有粉尘是**埋在对手身上、由它自己
  * 使用火招触发的一次性陷阱**——它惩罚的是对手的招法选择，而不是它的当下。
@@ -91,22 +92,26 @@ namespace PokemonSkills {
         effect.end();
     });
 
-    // 脚本火招：该对手提交火属性招式的当下引爆（火招照常放完）。
-    WorldCombat.on("world_combat:move_powder/committed", "world_combat:committed", "", function (event) {
-        const action = event.action(), world = event.world(), actor = event.actor();
-        if (action === null || !world.valid(actor)) return;
+    // 脚本火招：只认这次已提交动作的**最终**整招 metadata（含运行时改写），且必须是直接进攻火招。
+    // 火属性辅助（晴天、鬼火等）directOffense 为假，不会误引爆；被输电之类改走别的属性的火招也不再算火。
+    MoveExecutions.committed.define({ id: "world_combat:move_powder/commit", after: ["world_combat:move_electrify/commit"], apply: function (commitment) {
+        const world = commitment.world, actor = commitment.actor;
+        if (commitment.native || !world.valid(actor)) return;
         if (!world.effects(actor, powderMark).length) return;
-        const move = NativeLoadout.executing(action);
-        if (move === null || String(move.type()) !== "fire") return;
-        powderIgnite(world, actor);
-    });
+        const fire = commitment.metadata.some(function (data: any) {
+            return String(data && data.type) === "fire" && DamageSemantics.directOffense(data);
+        });
+        if (fire) powderIgnite(world, actor);
+    } });
 
-    // 原生／模组火攻：被撒粉者自己真正造成第一笔对外火伤时引爆；环境火烧与别人打来的火不算它的火招。
+    // 原生／模组火攻：被撒粉者自己真正交付第一笔**直接对外火伤**时引爆。
+    // directOffense 排除环境燃烧、残留与辅助；别人打来的火、以及旧的燃烧按时不触发。
     WorldCombat.on("world_combat:move_powder/native", "world_combat:damage_applied", "", function (event) {
         const world = event.world(), actor = event.actor(), target = event.target();
         if (target === null || !world.valid(actor)) return;
         const data: CombatNativeDamageFacts = JSON.parse(String(event.data()));
         if (!(typeof data.actual === "number" && data.actual > 0) || data.scripted) return;
+        if (!DamageSemantics.directOffense(data)) return;
         if (!data.sourceActor || String(actor.ref()) !== data.sourceActor) return;
         if (String(actor.key()) === String(target.key())) return;
         if (!world.effects(actor, powderMark).length) return;
@@ -188,10 +193,14 @@ namespace PokemonSkills {
                     if (carrier !== null) {
                         const views = scope.effects(primary!, powderMark);
                         for (let i = 0; i < views.length; i++) scope.operation(views[i].id(), "world_combat:dispel", "{}");
-                        scope.effect(powderMark, primary!, JSON.stringify({ blast: blast, motes: motes, radius: radius,
+                        const mark = scope.effect(powderMark, primary!, JSON.stringify({ blast: blast, motes: motes, radius: radius,
                             caster: actorRef, carrier: MobEffects.anchor(carrier) }), ticks);
                         const body = scope.observe(primary!);
                         const at = body === null ? point : body.position();
+                        // 粉尘粘附存续期间持续少量可读粉尘，绑在这份 mark 上：引爆或到期清除即随之一并散掉。
+                        if (mark) WorldFeedback.onEffect(scope, mark, "world_combat:move_powder/coat/" + String(primary!.ref()),
+                            powderScene, 1, at,
+                            { moment: "coat", target: String(primary!.ref()), drift: Math.max(2, Math.round(motes / 6)), scale: scale });
                         WorldFeedback.emit(scope, powderScene, 1, at,
                             { moment: "dust", target: String(primary!.ref()), motes: motes, scale: scale }, 28);
                         WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.05, 0)), powderDustText, [Math.round(ticks / 20)], 30);
@@ -204,11 +213,22 @@ namespace PokemonSkills {
             }
 
             sound(action, "cobblemon:move.powder.actor");
-            const flight = LivingActions.projectile(action, {
+            let flight = "";
+            flight = LivingActions.projectile(action, {
                 speed: speed, range: range, radius: radius, lifetime: lifetime, direction: direction,
-                appearance: { sprite: "cobblemon:particle/generic/powder", scale: 0.8, tint: 0xE8D9A0 },
-                impact: function (current, hit) { dusted(current, hit.position(), hit.target()); }
-            }, function (current) { dusted(current, current.targetPosition(), null); });
+                // 贯穿：草属性对粉末免疫，粉团从它身上穿过继续飞，而不是被它截停成一份无效的粉。
+                appearance: { sprite: "cobblemon:particle/generic/powder", scale: 0.8, tint: 0xE8D9A0, pierce: true },
+                impact: function (current, hit) {
+                    const primary = hit.target(), scope = current.world();
+                    if (primary !== null && scope.valid(primary) && !scope.friendly(primary)
+                        && powderGrassImmune(scope, primary)) return;
+                    dusted(current, hit.position(), primary);
+                }
+            }, function (current) {
+                // 无碰撞结束：读弹体真正的结束点（撞墙或飞尽），不补到旧瞄准点。
+                const end = current.world().projectilePosition(flight);
+                dusted(current, end !== null ? end : origin, null);
+            });
             WorldFeedback.emit(world, powderScene, 1, origin,
                 { moment: "throw", projectile: flight, motes: motes, scale: scale }, 28);
         }

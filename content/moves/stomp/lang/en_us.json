@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.stomp.summary": "A whole-body downward slam: it drops onto a chosen nearby patch of ground, crushing whatever stands inside the footprint for the heaviest single hit and a chance to flinch, while a ground shock also reaches other grounded foes around the landing (never repeating the main victim) - step out of the footprint to dodge the main hit, and anything airborne dodges the shock.",
+  "worldcombat.skill.stomp.summary": "A whole-body downward slam: it drops onto a chosen nearby patch of ground, crushing whatever stands inside the footprint for the heaviest single hit and a chance to flinch, while a ground shock also reaches other grounded foes on connected ground around the landing (never repeating the main victim) - step out of the footprint to dodge the main hit, anything airborne dodges the shock, and foes behind a wall or on another floor are not shaken.",
   "worldcombat.skill.stomp.description.0": "The stomp deals about %1$s contact damage; the target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.stomp.description.1": "The landing shakes a %1$s block radius; each other grounded foe inside takes about %2$s, at most 3 of them and never the main victim, and heavier bodies shake wider.",
+  "worldcombat.skill.stomp.description.1": "The landing shakes a %1$s block radius; each other grounded foe on connected ground inside takes about %2$s, at most 3 of them and never the main victim, and heavier bodies shake wider. A wall, a step or another floor between stops the shock.",
   "worldcombat.skill.stomp.description.2": "The landing point is locked during the wind-up, so a target that steps out of the footprint dodges the main hit. On a landed main hit there is a %1$s flinch chance and a %2$s chance for those only caught by the shock, for %3$s; flinching interrupts interruptible actions and prevents new moves and ordinary attacks. An airborne target is missed, though the shock still spreads below it; the user must also be standing on the ground.",
   "worldcombat.skill.stomp.heavy.on": "Heavy form: raises higher, slams harder, cracks and shakes wider and staggers more often, but winds up slower and has a longer cooldown.",
   "worldcombat.skill.stomp.heavy.off": "Quick press: faster, smaller and slightly lighter.",
@@ -15,8 +15,8 @@
   "worldcombat.skill.stomp.value.aftershock": "Aftershock power",
   "worldcombat.skill.stomp.value.shock": "Shock radius",
   "worldcombat.skill.stomp.value.foot": "Foot radius",
-  "worldcombat.skill.stomp.value.crater": "Crater radius",
-  "worldcombat.skill.stomp.value.craterTicks": "Crater duration",
+  "worldcombat.skill.stomp.value.crater": "Footprint radius",
+  "worldcombat.skill.stomp.value.craterTicks": "Footprint duration",
   "worldcombat.skill.stomp.value.flinchChance": "Main flinch chance",
   "worldcombat.skill.stomp.value.staggerChance": "Shock flinch chance",
   "worldcombat.skill.stomp.value.flinchTicks": "Flinch duration",
@@ -34,5 +34,5 @@
   "world_combat.move.stomp.text.shock": "Shook %1$s more",
   "world_combat.move.stomp.text.miss": "Missed the landing",
   "effect.world_combat.stomp_flinch": "Flinched",
-  "worldcombat.skill.stomp.description.crater": "The landing cracks the surface: within a %1$s block radius, dirt, stone, sand and the like briefly turn into coarse dirt, cobblestone or sandstone, reverting after %2$s."
+  "worldcombat.skill.stomp.description.crater": "The landing leaves a %1$s block-radius pressed-in footprint that fades after %2$s; it is only a visual and changes no blocks."
 }

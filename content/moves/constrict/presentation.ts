@@ -5,8 +5,8 @@
  * （缠）→ 目标身上留下一圈持续收束的藤环（持）→ 攀缠式还有一根连着双方、随身体更新的藤（牵）→ 藤环散开、
  * 叶片落下（解）；撞墙时藤尖停在墙面，拉断时连接崩开、叶片掉落。
  * 色相家族：深草绿（0x4E7A32 藤环、0x6FA83C 叶）与米白绞痕为主，无第二个色相。
- * 拍子：起 reach（绷藤）→ 爬 grow（随伸展路程增长）→ 缠 bind／squeeze（接触与收紧）→ 持 hold（藤环绕身）
- *      → 牵 latch（随双方身体更新，张力越高越细越亮）→ 解 release（散开）→ 断 snap／空 miss／墙 wall。
+ * 拍子：起 reach（绷藤）→ 爬 grow（随伸展路程增长）→ 缠 root／bind／squeeze（踏根、接触与收紧）→ 持 hold（藤环绕身，
+ *      随真实载体持续、载体结束即停发）→ 牵 latch（随双方身体更新，张力越高越细越亮）→ 解 release（散开）→ 断 snap／空 miss／墙 wall。
  * 范围：grow 与 bind 的 polyline 沿 `data.path` 画出触手爬过的真实线段，线的末端就是它够到的方向；
  *      latch 的 polyline 以 path ["source","target"] 直接连住施法者与目标，两端每帧跟随身体；squeeze／hold
  *      绑目标，说明「被缠住的是它」。
@@ -35,7 +35,7 @@ const ConstrictDefinition: ParticleDefinition = {
         },
         grow: {
             duration: 0,
-            exit: { stop: 2, drain: 12 },
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "tendril", bind: "path", fit: "none",
@@ -112,9 +112,25 @@ const ConstrictDefinition: ParticleDefinition = {
                 }
             ]
         },
+        root: {
+            duration: 18,
+            exit: { stop: 8, drain: 12 },
+            emitters: [
+                {
+                    name: "pin", bind: "target", offset: [0, 0.03, 0], height: 0.05,
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    burst: { count: { data: "notes", fallback: 8 } },
+                    shape: { kind: "ring", radius: 0.44, rotation: [90, 0, 0] },
+                    direction: "down", speed: [0.02, 0.08],
+                    spin: 4, gravity: 0.02,
+                    lifetime: [10, 16], size: [0.2, 0.05], sizeMode: "index",
+                    color: 0x3F5E27, alpha: [0.85, 0], light: "world", maxParticles: 24
+                }
+            ]
+        },
         hold: {
-            duration: 30,
-            exit: { stop: 20, drain: 20 },
+            duration: 0,
+            exit: { drain: 20 },
             emitters: [
                 {
                     name: "ring", bind: "target", offset: [0, 0.05, 0], height: 0.35,
@@ -136,7 +152,7 @@ const ConstrictDefinition: ParticleDefinition = {
         },
         latch: {
             duration: 0,
-            exit: { stop: 2, drain: 16 },
+            exit: { drain: 16 },
             emitters: [
                 {
                     name: "vine", bind: "path", fit: "none",

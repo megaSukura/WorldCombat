@@ -1,9 +1,10 @@
 /**
  * 巨声 / hypervoice 的伙伴 AI 用途。
  *
- * 什么局面下出手：朝当前威胁那条线推出的一整片声墙。收益按**实际朝向**计算——只数从自身指向目标的
- *   3D 声锥内、射程里的可见非友方，背后的敌人不抬高这一声的价值；锥内起码要有 `ai.minFoes`
- *   （默认 1）个敌人才值得张开。它比爆音波便宜、也推得开人，所以单个目标也值得放。
+ * 什么局面下出手：朝当前威胁那条线推出的一整片声墙。收益按**实际朝向与本次实际张角**计算——张角取参数公式
+ *   里本个体这一口（含散声／聚声、体重与等级），命中含高低差；只数从自身指向目标的 3D 声锥内、射程里的可见
+ *   非友方，背后的敌人不抬高这一声的价值；锥内起码要有 `ai.minFoes`（默认 1）个敌人才值得张开。它比爆音波
+ *   便宜、也推得开人，所以单个目标也值得放。
  * `available` 另外要求目标在考虑距离 `ai.maxChase`（默认 9）内；不看目标站不站在地上、也不要求通视
  *   （声音穿墙）。站位：共享接近逻辑把身位收到锥长以内，然后朝目标方向整片扫出。
  * 另外：自己被贴身围攻（生命低于一半）时 priority 抬一段——一声把贴上来的人推回去比继续硬拼更值。
@@ -11,17 +12,22 @@
  * 配置：`ai.maxChase` 限制考虑距离；`ai.minFoes` 决定朝向锥内要几个目标才值得张开这一片。
  */
 namespace PokemonSkills {
-    /** 声锥的相对半角；取参数公式里散声/聚声之间的代表值，只用来判断前后，不代替真实判定。 */
-    const hypervoiceAiHalfAngle = 50 * Math.PI / 180;
+    /** 本次实际声锥整角（含聚声／散声与体重、等级），与执行读同一个公式；取不到时退回散声附近值。 */
+    function hypervoiceAiArc(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        try {
+            const world = CompanionBehavior.world(context);
+            return Math.max(10, Math.min(360, p("hypervoice", "arc", { world: world, actor: world.source(), detail: { values: item.data.config } })));
+        } catch (error) { return 100; }
+    }
 
-    /** 从自身指向 `target` 的 3D 声锥内、射程里的非友方数量；与真实判定的朝向一致，背后不计入。 */
+    /** 从自身指向 `target` 的 3D 声锥内、射程里的非友方数量；用本次实际张角，含高低差，背后不计入。 */
     function hypervoiceCaught(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const self = CompanionBehavior.source(context);
         const dx = target.point[0] - self.point[0], dy = target.point[1] - self.point[1], dz = target.point[2] - self.point[2];
         const span = Math.sqrt(dx * dx + dy * dy + dz * dz);
         if (span < 1e-4) return 1;
         const ax = dx / span, ay = dy / span, az = dz / span;
-        const reach = item.data.range, cosHalf = Math.cos(hypervoiceAiHalfAngle);
+        const reach = item.data.range, cosHalf = Math.cos(hypervoiceAiArc(context, item) * Math.PI / 360);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {

@@ -2,9 +2,9 @@
  * 薄雾场地 / mistyterrain 的伙伴 AI 用途与自己的漫雾计划。
  *
  * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 14）格内，自己还不在薄雾里。开启净化雾且队友（含自己）
- * 带着可清的有害状态时 priority 抬到 62——雾把异常洗掉，落点也按在那个队友身上，净化价值最高；威胁带龙属性
- * 时 56——薄雾削掉它的龙招；其余 40。插在 `world_combat:defend` 之前当作开打前的布置，`ai.advance` 开启时把
- * 薄雾按向威胁。
+ * 带着可清的有害状态时 priority 抬到 62——雾把异常洗掉，落点取施放范围内能罩住最多受害友方的位置，净化价值最高；
+ * 威胁带龙属性时 56——薄雾削掉它的龙招；其余 40。插在 `world_combat:defend` 之前当作开打前的布置，`ai.advance`
+ * 开启时把薄雾按向威胁。
  *
  * 己方依赖异常进攻（读得到的宝可梦招式里有对敌的变化招）时避用：薄雾连同队友的异常施加一起挡掉。唯一的例外
  * 是净化雾正要去救一个已经中异常的队友——救人优先，洗完仍按正常防异常。净化只在首次进入本次雾时清一次。
@@ -62,6 +62,38 @@ namespace PokemonSkills {
         }
         return false;
     }
+    /** 这份配置实际铺出的薄雾半径，与出招走的同一棵公式。 */
+    function mistyRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const access = CompanionBehavior.world(context);
+        try {
+            return Math.max(2.2, PokemonSkills.p(mistyterrainId, "fieldRadius",
+                { world: access, actor: access.source(), skill: PokemonSkills.skills[mistyterrainId],
+                    detail: { values: item.data.config || {} } }));
+        } catch (error) { return 3.2; }
+    }
+    /** 施放范围内能罩住最多受害友方（含自己）的净化落点；没有则 null。 */
+    function mistyRescuePoint(context: WorldBehavior.Context, item: WorldBehavior.Capability): CompanionBehavior.Entity | null {
+        const self = CompanionBehavior.source(context), reach = Number(item.data.range) || 15;
+        const afflicted: CompanionBehavior.Entity[] = [];
+        if (CompanionBehavior.fact<boolean>(context, "world_combat:move_mistyterrain/harmful", self)) afflicted.push(self);
+        (context.facts.nearby as CompanionBehavior.Entity[]).forEach(function (other) {
+            if (other.friendly && other.health > 0 && other.ref !== self.ref
+                && CompanionBehavior.fact<boolean>(context, "world_combat:move_mistyterrain/harmful", other)) afflicted.push(other);
+        });
+        if (!afflicted.length) return null;
+        const radius = mistyRadius(context, item);
+        let best: CompanionBehavior.Entity | null = null, bestCovered = 0;
+        ([self].concat(afflicted)).forEach(function (candidate) {
+            if (CompanionBehavior.distance(self.point, candidate.point) > reach) return;
+            let covered = 0;
+            afflicted.forEach(function (ally) {
+                const dx = ally.point[0] - candidate.point[0], dz = ally.point[2] - candidate.point[2];
+                if (Math.sqrt(dx * dx + dz * dz) <= radius) covered++;
+            });
+            if (covered > bestCovered) { bestCovered = covered; best = candidate; }
+        });
+        return best;
+    }
     function mistyDragon(target: CompanionBehavior.Entity): boolean {
         const facts = target.facts;
         return !!(facts && Array.isArray(facts.types) && facts.types.indexOf("dragon") >= 0);
@@ -104,8 +136,8 @@ namespace PokemonSkills {
             const item = choice.offer.capabilities![0];
             return CompanionBehavior.castNode(item.id, "prepare", function (current) {
                 const self = CompanionBehavior.source(current), threat: CompanionBehavior.Entity | null = current.senses["world_combat:threat"];
-                // 净化雾优先罩住正需要救回的队友（净化价值最高的落点），否则前压威胁或按在脚下。
-                const rescue = mistyPurify(item) ? mistyStatusedAlly(current) : null;
+                // 净化雾优先罩住带异常的队友：在施放范围内选一个能罩住最多受害友方的落点。
+                const rescue = mistyPurify(item) ? mistyRescuePoint(current, item) : null;
                 const found = rescue || (CompanionBehavior.ai<boolean>(item, "advance", false) && threat ? CompanionBehavior.entity(current, threat.ref) : null);
                 return JSON.parse(JSON.stringify(found || self));
             });

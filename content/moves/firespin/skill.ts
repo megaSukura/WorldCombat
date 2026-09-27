@@ -13,11 +13,13 @@
  *       真的造成伤害，才执行本次附带点燃／灼伤并短亮；未命中就不假装成功。目标一旦湿透，火柱立刻熄灭
  *       （doused）；时长走完或被外力清掉状态时散去。
  *
- * 与同族分开：潮旋锚定一点往回拽；火柱贴着目标走，靠持续灼烧与点燃施压，水是它唯一的直接反制。
- * 旧火柱先关、再种新载体并记下实际 key，重复施放只替换本招拥有的火柱，绝不让旧结束误删新火柱。
+ * 与同族分开：潮旋锚定一点往回拽；火柱贴着目标走，靠持续灼烧与点燃施压，湿身是它唯一的直接反制——
+ * 原生入水／淋雨和共享湿身身份 `world_combat:status/soaked`（水流招式留下的湿）都算湿透。
+ * 新载体确认成立后再换旧火柱，重复施放只替换本招拥有的火柱，绝不让旧结束误删新火柱。
  */
 namespace PokemonSkills {
     const firespinScene = "world_combat:move_firespin";
+    const firespinColumnScene = "world_combat:move_firespin/column";
     const firespinBlaze = "world_combat:firespin_blaze";
     const firespinBond = "world_combat:firespin_bond";
     const firespinColumnKey = "firespin:column:";
@@ -35,13 +37,36 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
+    /** 原生水／雨与共享湿身身份是两种不同事实，火柱遇到任一种都立刻浇灭。 */
+    function firespinDoused(world: CombatWorld, victim: CombatActor, body: CombatObservation): boolean {
+        return body.wet() || CombatStatus.has(world, victim, "soaked");
+    }
+
+    /**
+     * 火柱载荷：radius／height 已是 world 方块单位，自定义场景直接用一次，不再乘 scale。
+     * 只有目标真的站在支撑面上，才把实测地面点交给地痕；空中只包体、不落焦痕。
+     */
+    function firespinColumnData(world: CombatWorld, victim: CombatActor, body: CombatObservation, data: any, pulses: number): any {
+        let ground: number[] | null = null;
+        if (body.grounded()) {
+            const feet = WorldCombat.point(body.position().x(), body.position().y() - body.height() / 2, body.position().z());
+            const support = WorldGeometry.ground(world, feet, 4);
+            ground = [support.x(), support.y() + 0.02, support.z()];
+        }
+        return { moment: "column", target: String(victim.ref()), radius: data.radius, height: data.height,
+            flow: Math.round(30 + data.radius * 40), pulses: pulses, ground: ground };
+    }
+
     WorldCombat.effect(firespinBond, 1, 500, "actor", firespinBondData, EffectProtocols.unchanged);
     WorldCombat.effectHandler(firespinBond, "start", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim) || !MobEffects.matches(world, victim, data.carrier)) { effect.end(); return; }
         MobEffects.bind(world, victim, firespinBlaze);
         const body = world.observe(victim);
-        if (body && !body.wet()) world.ignite(victim, 40);
+        if (body === null) { effect.end(); return; }
+        // 命中时已经湿透（或被水浇透）：火柱一上身就熄，不点燃、不装柱。
+        if (firespinDoused(world, victim, body)) { data.doused = true; effect.state(JSON.stringify(data)); effect.end(); return; }
+        world.ignite(victim, 40);
         effect.schedule("lick", "lick", 1, "{}");
     });
     WorldCombat.effectHandler(firespinBond, "lick", function (effect) {
@@ -49,7 +74,7 @@ namespace PokemonSkills {
         if (!world.valid(victim) || !MobEffects.matches(world, victim, data.carrier)) { effect.end(); return; }
         const body = world.observe(victim);
         if (body === null) { effect.end(); return; }
-        if (body.wet()) { data.doused = true; effect.state(JSON.stringify(data)); effect.end(); return; }
+        if (firespinDoused(world, victim, body)) { data.doused = true; effect.state(JSON.stringify(data)); effect.end(); return; }
         if (world.tick() >= data.next) {
             data.next = world.tick() + Math.max(4, Math.round(data.interval));
             data.pulses = (data.pulses || 0) + 1;
@@ -68,9 +93,8 @@ namespace PokemonSkills {
                 world.sound("minecraft:block.fire.ambient", body.position(), 14, "{}");
             }
         }
-        WorldFeedback.onEffect(world, effect.id(), firespinColumnKey + String(victim.ref()), firespinScene, 1, body.position(),
-            { moment: "column", target: String(victim.ref()), radius: data.radius, height: data.height,
-                scale: data.radius / 0.85, flow: Math.round(30 + data.radius * 40), pulses: data.pulses || 0 });
+        const column = firespinColumnData(world, victim, body, data, data.pulses || 0);
+        WorldFeedback.onEffect(world, effect.id(), firespinColumnKey + String(victim.ref()), firespinColumnScene, 1, body.position(), column);
         effect.schedule("lick", "lick", 2, "{}");
     });
     WorldCombat.effectHandler(firespinBond, "end", function (effect) {
@@ -110,7 +134,7 @@ namespace PokemonSkills {
         id: "firespin",
         name: "Fire Spin",
         description: "把一撮自由瞄准的火甩到目标身上，立成一道绕着它打转、跟着它走的火柱：火柱持续灼烧目标并尝试点燃它，目标跑也躲不开自己的火。想摆脱只能把火扑灭——变得湿透（入水、雨中、被水招式打湿）火柱立刻熄灭。重复施放只替换掉旧火柱，不会叠出多道。猛火式更凶更快但持续更短；缓燃式更稳更久。",
-        uses: ["粘住一个高机动目标持续灼烧", "用点燃的持续掉血压制厚目标", "逼对手为灭火而改变站位", "把目标从水里逼出来再点火"],
+        uses: ["粘住一个高机动目标持续灼烧", "用点燃的持续掉血压制厚目标", "逼对手为灭火而改变站位", "点着干燥的目标，逼它主动找水灭火"],
         kind: "aim",
         range: 10,
         maxRange: 17,
@@ -182,19 +206,19 @@ namespace PokemonSkills {
                     const scale = radius / 0.85;
                     const body = scope.observe(victim);
                     if (body === null) return;
-                    // 旧火柱先关：它的结束只撤自己那一次载体，随后再种新的并记下新 key。
-                    const existing = scope.effects(victim, firespinBond);
-                    for (let i = 0; i < existing.length; i++) scope.operation(existing[i].id(), "world_combat:dispel", "{}");
+                    // 新承载先确认成立：被原生拒绝时不立柱、也不误清旧火柱。
                     if (!CombatStatus.apply(scope, victim, "partiallytrapped", firespinBlaze, duration, 0, { unique: true })) return;
                     const carrier = MobEffects.read(scope, victim, firespinBlaze);
                     if (carrier === null) return;
+                    // 确认新承载成立后再换旧火柱：旧绑定结束只撤自己那一次载体，不会误删新载体。
+                    const existing = scope.effects(victim, firespinBond);
+                    for (let i = 0; i < existing.length; i++) scope.operation(existing[i].id(), "world_combat:dispel", "{}");
                     const state = { scorch: scorch, interval: interval, radius: radius, height: height,
                         burnChance: burnChance, burnTicks: burnTicks, next: scope.tick() + interval, pulses: 0, doused: false,
                         carrier: MobEffects.anchor(carrier) };
                     const bond = scope.effect(firespinBond, victim, JSON.stringify(state), duration + 30);
-                    WorldFeedback.onEffect(scope, bond, firespinColumnKey + String(victim.ref()), firespinScene, 1, body.position(),
-                        { moment: "column", target: String(victim.ref()), radius: radius, height: height, scale: scale,
-                            flow: Math.round(30 + radius * 40), pulses: 0 });
+                    const column = firespinColumnData(scope, victim, body, state, 0);
+                    WorldFeedback.onEffect(scope, bond, firespinColumnKey + String(victim.ref()), firespinColumnScene, 1, body.position(), column);
                     WorldFeedback.emit(scope, firespinScene, 1, body.position(),
                         { moment: "wrap", target: String(victim.ref()), radius: radius, height: height, scale: scale }, 26);
                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), firespinGripText,

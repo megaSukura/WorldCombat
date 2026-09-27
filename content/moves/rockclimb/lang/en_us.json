@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.rockclimb.summary": "Approach a real wall and climb upward, cresting only after your feet clear its edge and your body fits. Ceilings and budgets stop the climb. On flat ground use one low pounce; only real body contact deals a strike and possible confusion.",
   "worldcombat.skill.rockclimb.use.0": "A heavy close-range pounce",
-  "worldcombat.skill.rockclimb.use.1": "Leap a short distance into a group",
-  "worldcombat.skill.rockclimb.use.2": "Climb a real short ledge to reach high ground",
+  "worldcombat.skill.rockclimb.use.1": "Climb a real short ledge to reach high ground",
+  "worldcombat.skill.rockclimb.use.2": "Crest the wall edge and drop onto the high ground",
   "worldcombat.skill.rockclimb.description.0": "Rushes up to %2$s blocks, striking the first enemy for about %1$s damage; hits only %3$s contacted target.",
   "worldcombat.skill.rockclimb.description.1": "On a solid hit, %1$s chance to leave the target confused for %2$s; while confused, each action it starts has %3$s chance to be broken, and that action is wasted.",
   "worldcombat.skill.rockclimb.description.2": "Original aim spread is %1$s degrees per missing accuracy point; climb up to %2$s blocks, with native collision limiting reach.",

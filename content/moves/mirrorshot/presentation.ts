@@ -5,8 +5,9 @@
  *   命中处炸开一片刺目的星点；散射式下光在目标身上反出一小片扇形，溅到身后的人身上。
  * 色相家族：近白（0xFFFFFF）为主，冷蓝（0xCFE8FF）与钢灰（0x9FB4C8）为衬；彩虹星点只做强调层的小面积。
  * 拍子：起 polish（磨亮聚光）→ 射 flash（光矛）→ 击 dazzle（炸开星点）／ 折 refract ／ 空 miss → 收 linger／clear。
- * 范围：flash 用 `data.path`（射击的起点到落点）画出一条线；refract 用 `data.stages` 与固定扇形铺在目标身后。
- * 运动：光矛沿 `data.path` 直线射出、几乎瞬到；命中处星点向外炸开，残光在目标眼位慢慢暗下去。
+ * 范围：flash 用 `data.path`（真实发射口到真实接触点）画出一条线，只在光真正到达时出现，不预涂到原瞄点；
+ *   refract 从真实命中点到每个获准旁体描一条 `data.path` 分叉线，并在命中点收一撮散光，不再只在旁人身上闪星。
+ * 运动：光矛沿准线直线射出、几乎瞬到；命中处星点向外炸开，残光在目标眼位慢慢暗下去。
  * 数：`data.glints`（特攻＋等级换算的光点数量）绑定各处发射量，`data.intensity`（光矛威力 / 65）放大整幕，
  *   `data.stages` 让掉命中那一下更亮，`data.scale` 让光柱按粗细变化。
  */
@@ -96,7 +97,15 @@ const MirrorshotDefinition: ParticleDefinition = {
             exit: { stop: 7, drain: 12 },
             emitters: [
                 {
-                    name: "splash", bind: "target", height: 0.5,
+                    name: "branch", bind: "path", fit: "none", shape: { kind: "polyline" },
+                    particle: "world_combat_core:cobblemon/generic/lightbeam",
+                    rate: { data: "glints", fallback: 16 },
+                    direction: "up", speed: [0.0, 0.02],
+                    lifetime: [6, 11], size: [0.2, 0.06], sizeMode: "sin",
+                    color: 0xCFE8FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 80
+                },
+                {
+                    name: "splash", bind: "point", fit: "none", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/shinesparkle_rainbow",
                     burst: { count: { data: "glints", fallback: 16 }, at: 0 },
                     shape: { kind: "sphere", radius: 0.26 },

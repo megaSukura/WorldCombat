@@ -7,8 +7,8 @@
  *   并不夺走（原生也不取走），所以命中后东西仍在对方手里。目标空手时这一招无从下手，起手即失败、不花 PP。
  *   它是本族的压轴招：威力最高、PP 最少、射程最远且不接触。
  * - 参数分散到精灵数据：威力取特攻（隔空的念力）与物攻（挥出的那一下），射程、起手与飞行速度取特攻，判定半径取体型高度，
- *   顶开与碎屑取体重，缠身时长取等级。
- * 配置 bind（道具缠身）：命中后让那件道具贴着目标不放、使其减速一段时间，代价是本击 ×0.8；关闭则纯是重砸。
+ *   顶开与碎屑取体重。
+ * 装备只是被隔空借了个形象：灵影从手边被扯出、绕一段短弧再撞回主人身上；真实装备从不被搬运，命中后仍在对方手里。
  *
  * 伤害段名 whip：这一甩随精灵数据变化的那部分。
  */
@@ -39,16 +39,15 @@ namespace PokemonSkills {
     }
 
     actionParameters.define("poltergeist", {
-        /** 甩击威力：特攻每比 70 多 1 加 0.34（夹 -16..+34），物攻每比 70 多 1 加 0.22（夹 -10..+24）；bind 开 ×0.8；夹在 70..175。 */
+        /** 甩击威力：特攻每比 70 多 1 加 0.34（夹 -16..+34），物攻每比 70 多 1 加 0.22（夹 -10..+24）；夹在 70..175。 */
         whip: formula(
             F.base(110)
                 .plus(F.stat("specialAttack").minus(70).times(0.34).clamp(-16, 34))
                 .plus(F.stat("attack").minus(70).times(0.22).clamp(-10, 24))
-                .times(F.when(F.pref("bind"), F.const(0.8), F.const(1.0)))
                 .clamp(70, 175).round(1),
             "甩击威力", {
                 base: 110, unit: "威力",
-                description: "这一甩随精灵数据变化的那部分：特攻代表隔空操纵的念力，物攻是道具砸上去的重量感；bind 开启时 ×0.8。对手防御、相性与暴击在命中时另算。"
+                description: "这一甩随精灵数据变化的那部分：特攻代表隔空操纵的念力，物攻是道具砸上去的重量感。对手防御、相性与暴击在命中时另算。"
             }),
         /** 聚念时间：特攻每比 70 多 1 减 0.02 秒（下限 4 秒），夹在 4..8 秒。 */
         charge: seconds(
@@ -89,11 +88,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "命中时把目标沿甩出方向推开的距离；越重推得越远。"
             }),
-        /** 缠身时长：基础 60 刻，等级每比 20 高 1 加 1.5 刻；bind 关闭时为 0；夹在 40..140 刻。 */
-        slowTicks: seconds(
-            F.when(F.pref("bind"), F.base(60).plus(F.level().minus(20).max(0).times(1.5)).clamp(40, 140), F.const(0))
-                .round(0),
-            "缠身时长", "bind 开启时，命中后那件道具贴着目标不放、让它减速多久。"),
         /** 幽火数量：特攻每比 70 多 1 加 0.3（夹 -4..+16），夹在 10..30 个；驱动命中粒子。 */
         motes: formula(
             F.base(14).plus(F.stat("specialAttack").minus(70).times(0.3).clamp(-4, 16)).clamp(10, 30).round(0),
@@ -115,8 +109,6 @@ namespace PokemonSkills {
         { key: "description.1", values: ["reach", "boltSpeed", "verge"] },
         { key: "description.2", values: ["push"] },
         { key: "description.item", values: [] },
-        { key: "bind.on", values: ["slowTicks"], when: function (context) { return read(context.detail.values, ["bind"]) === true; } },
-        { key: "bind.off", values: [], when: function (context) { return read(context.detail.values, ["bind"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.whip"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.whip", "tier.1.reach"] }

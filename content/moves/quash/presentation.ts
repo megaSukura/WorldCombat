@@ -72,7 +72,7 @@ const QuashDefinition: ParticleDefinition = {
                 {
                     name: "nail_ring", bind: "target", offset: [0, 0.06, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    rate: 4, shape: { kind: "ring", radius: 0.5, rotation: [90, 0, 0] },
+                    rate: 4, shape: { kind: "ring", radius: 0.5 },
                     direction: "up", speed: [0.0, 0.01],
                     lifetime: [24, 36], size: [0.42, 0.28], sizeMode: "sin",
                     color: 0x6A4FA8, alpha: [0.35, 0.06], alphaMode: "sin", light: "world", maxParticles: 16
@@ -84,6 +84,20 @@ const QuashDefinition: ParticleDefinition = {
                     direction: "down", speed: [0.03, 0.1],
                     lifetime: [18, 30], size: [0.06, 0.02],
                     color: 0x3A2E5A, alpha: [0.5, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        marks: {
+            duration: 18,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "deflect", bind: "target", offset: [0, 0.95, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
+                    burst: { count: { data: "denies", fallback: 1 } }, shape: { kind: "ring", radius: 0.55 },
+                    direction: "up", speed: [0.02, 0.06],
+                    lifetime: [12, 18], size: [0.15, 0.03], sizeMode: "sin",
+                    color: 0xB79BE8, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 6
                 }
             ]
         },

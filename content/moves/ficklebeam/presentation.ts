@@ -4,13 +4,15 @@
  * 一句话：施法者身前聚起几股明灭不定的龙光，随后一束细长的光沿准线射出去；命中处如果所有的光股一起亮起，
  * 就是那一次翻倍的齐射——玩家能靠光束里的股数和命中处的爆亮认出中没中。它没有自损，代价全押在这一掷。
  * 色相家族：青蓝到紫（glowingsparkle／glowing_dots_cyan 原色、impact_dragon 亮帧、star 强调），核心近白。
- * 拍子：起 gather（聚光、明灭，并先亮出将醒来的股数）→ 射 beam（每股各自的窄线）→ 中 hit／齐心 unison（爆亮）／
- *   空 fizzle（散光）。齐心的股数在准备期就可见；unison 只在真的齐射时亮。
- * 范围：beam 每股用 `data.path` 画出该股判定走廊的同一组四个顶点——每股有多长、被哪面墙截断，画面就是那条线。
- * 运动：每股沿走廊由近及远铺开；齐射时同一命中处爆亮并泛起更大的环。
+ * 拍子：起 gather（聚光、明灭，并先亮出将醒来的股数）→ 口 port（每个将射出的光股各自亮一处射口）→
+ *   射 beam（每股中心线粗光核＋稀外晕，判定同刻爆亮）→ 中 hit／齐心 unison（爆亮）／空 fizzle（散光）。
+ *   齐心的股数与各射口在准备期就可见；unison 只在真的齐射时亮。
+ * 范围：beam 每股用 `data.path` 画出该股判定中心线的同一组两个世界端点——每股有多长、被哪面墙截断，画面就是那条线；
+ *   中心线粗光核由 `data.core`（光束半宽）决定，外晕稀疏包在两侧，不再铺平面四边框。
+ * 运动：每股中心线在判定同刻整条亮起、短促收束；齐射时同一命中处爆亮并泛起更大的环。
  * 数：`data.notes`（每股威力换算）决定光柱密度，`data.strands`（齐射＝股数，否则 1）决定醒来的股线数量，
- * `data.glow`／`data.edge`（均由每股 notes 派生）控制每股的亮芯与边缘，`data.heads`（体型派生）与
- * `data.intensity`（威力 / 80）决定齐射爆开的强度，`data.motes` 决定散点数量。
+ * `data.glow` 决定外晕稀疏程度，`data.heads`（体型派生）与 `data.intensity`（威力 / 80）决定齐射爆开的强度，
+ * `data.motes` 决定散点数量。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
 const FicklebeamDefinition: ParticleDefinition = {
@@ -55,36 +57,54 @@ const FicklebeamDefinition: ParticleDefinition = {
                 }
             ]
         },
-        beam: {
-            duration: 24,
-            exit: { stop: 8, drain: 16 },
+        port: {
+            duration: 16,
+            exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "lane_fill", bind: "path", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    shape: { kind: "polygon" },
-                    rate: { data: "notes", fallback: 90 }, direction: "shape", speed: [0.04, 0.2],
-                    lifetime: [5, 10], size: [0.14, 0.03], sizeMode: "index",
-                    color: 0xBFE0FF, alpha: [0.55, 0], light: "full", bloom: 0.35, maxParticles: 360
-                },
-                {
-                    name: "lane_glow", bind: "path", offset: [0, 0.5, 0],
+                    name: "port_glow", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/glowing_dots_cyan",
-                    shape: { kind: "polygon" },
-                    rate: { data: "glow", fallback: 40 }, direction: "shape", speed: [0.03, 0.16],
-                    lifetime: [6, 12], size: [0.12, 0.03], sizeMode: "index",
-                    color: 0x9CCBFF, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 260
+                    burst: { count: 3, interval: 2, repeats: 3 },
+                    shape: { kind: "sphere", radius: 0.16 },
+                    direction: "inward", speed: [0.02, 0.08],
+                    lifetime: [6, 12], size: [0.14, 0.03], sizeMode: "sin",
+                    color: 0xBFE0FF, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 24
                 },
                 {
-                    name: "lane_edge", bind: "path", offset: [0, 0.55, 0],
-                    particle: "world_combat_core:cobblemon/generic/lightbeam",
-                    shape: { kind: "polyline", closed: true },
-                    rate: { data: "edge", fallback: 10 }, direction: "shape", spread: 10, speed: [0.05, 0.22],
-                    lifetime: [5, 11], size: [0.24, 0.05], sizeMode: "index",
-                    color: 0xDFF1FF, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 160
+                    name: "port_spark", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/star",
+                    burst: { count: 1, at: 0, interval: 4, repeats: 2 },
+                    shape: { kind: "ring", radius: 0.2 },
+                    direction: "outward", speed: [0.01, 0.05],
+                    lifetime: [8, 14], size: [0.11, 0.02],
+                    color: 0xDFF1FF, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 18
+                }
+            ]
+        },
+        beam: {
+            duration: 12,
+            exit: { stop: 5, drain: 12 },
+            emitters: [
+                {
+                    name: "core", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/orb/glowing_dots_cyan",
+                    burst: { count: { data: "notes", fallback: 90 }, at: 0 },
+                    shape: { kind: "polyline", closed: false },
+                    direction: "outward", speed: [0.02, 0.1], spread: 6,
+                    lifetime: [4, 8], size: [{ data: "core", fallback: 0.4 }, 0.05], sizeMode: "index",
+                    color: 0xBFE0FF, alpha: [0.85, 0], light: "full", bloom: 0.4, maxParticles: 240
                 },
                 {
-                    name: "muzzle", bind: "source", offset: [0, 0.7, 0], height: 0.3,
+                    name: "halo", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    burst: { count: { data: "glow", fallback: 40 }, at: 0 },
+                    shape: { kind: "polyline", closed: false },
+                    direction: "outward", speed: [0.02, 0.08], spread: 14,
+                    lifetime: [5, 10], size: [0.13, 0.02],
+                    color: 0x9CCBFF, alpha: [0.42, 0], light: "full", bloom: 0.3, maxParticles: 200
+                },
+                {
+                    name: "muzzle", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_dragon",
                     burst: { count: { data: "strand", fallback: 1 }, at: 0, interval: 2, repeats: 2 },
                     shape: { kind: "sphere", radius: 0.3 },

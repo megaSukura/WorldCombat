@@ -67,8 +67,9 @@ const OctolockDefinition: ParticleDefinition = {
             ]
         },
         hold: {
+            // 持续缠线：不设 stop，触手一直绷在两端，直到托管效果结束或被驱散。
             duration: 0,
-            exit: { stop: 2, drain: 12 },
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "hold_tendrils", bind: "path", fit: "none",
@@ -77,6 +78,14 @@ const OctolockDefinition: ParticleDefinition = {
                     shape: { kind: "polyline" }, direction: "away", speed: [0.01, 0.05], spread: 8, spin: 2,
                     lifetime: [7, 12], size: [0.11, 0.02], sizeMode: "sin",
                     color: 0x8E4FA8, alpha: [{ data: "tension", fallback: 0.4 }, 0.02], alphaMode: "sin", light: "world", maxParticles: 48
+                },
+                {
+                    name: "hold_girth", bind: "target", height: 0.45, fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/grab",
+                    rate: 8, shape: { kind: "ring", radius: { data: "girth", fallback: 0.4 } },
+                    direction: "inward", speed: [0.01, 0.05], spin: 2,
+                    lifetime: [8, 13], size: [0.12, 0.02], sizeMode: "sin",
+                    color: 0x8E4FA8, alpha: [{ data: "tension", fallback: 0.4 }, 0.02], light: "world", maxParticles: 32
                 },
                 {
                     name: "hold_glint", bind: "path", fit: "none",

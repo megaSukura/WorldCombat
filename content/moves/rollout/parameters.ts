@@ -139,12 +139,12 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "撞中之后石球弹回来的距离；越重的个体弹得越远，也越需要重新贴上去。"
             }),
-        /** 连滚窗口：35 + (等级 − 20) × 0.6；重滚 +8；夹 25..90。 */
+        /** 连滚窗口：80 + (等级 − 20) × 0.4；重滚 +8；夹 80..150。窗口必须容得下冷却 + 起手 + 这一趟实际滚行，低等级重滚才接得上。 */
         window: seconds(
-            F.base(35).plus(F.level().minus(20).times(0.6))
+            F.base(80).plus(F.level().minus(20).times(0.4))
                 .plus(F.when(F.pref("heavy", { key: "worldcombat.skill.rollout.preference.heavy", fallback: "重滚式" }), F.const(8), F.const(0)))
-                .clamp(25, 90).round(0),
-            "连滚窗口", "在这段时间内继续滚动，层数就保留；落空或任何别的招式提交都会立刻清零。等级越高维持越久。"),
+                .clamp(80, 150).round(0),
+            "连滚窗口", "在这段时间内继续滚动，层数就保留；落空或任何别的招式提交都会立刻清零。窗口足够覆盖冷却、起手与下一趟滚行，等级越高维持越久。", { base: 80 }),
         /** 碎石点数：14 + 物攻偏移[−3,16]；夹 10..44。 */
         grains: formula(
             F.base(14).plus(F.stat("attack").minus(50).times(0.12).clamp(-3, 16)).clamp(10, 44).round(0),
@@ -158,8 +158,8 @@ namespace PokemonSkills {
                 .plus(F.when(F.pref("heavy", { key: "worldcombat.skill.rollout.preference.heavy", fallback: "重滚式" }), F.const(1), F.const(0)))
                 .clamp(4, 10).round(0),
             "起手", "蜷身缩成石球的时间；速度越快越短，重滚式多花一刻。"),
-        /** 收招：5 − 速度偏移[−0.6,1.2]；重滚 +2；夹 3..9。 */
-        recover: seconds(
+        /** 收招：5 − 速度偏移[−0.6,1.2]；重滚 +2；夹 3..9。用非保留键，resolve 才真正读到这条公式。 */
+        aftercast: seconds(
             F.base(5).minus(F.stat("speed").minus(50).times(0.015).clamp(-0.6, 1.2))
                 .plus(F.when(F.pref("heavy", { key: "worldcombat.skill.rollout.preference.heavy", fallback: "重滚式" }), F.const(2), F.const(0)))
                 .clamp(3, 9).round(0),
@@ -175,7 +175,7 @@ namespace PokemonSkills {
     defineDamage(rolloutId, "roll", {}, { contact: true });
 
     stages(rolloutId, [
-        { level: 30, values: { roll: 9, window: 45 } },
+        { level: 30, values: { roll: 9, window: 110 } },
         { level: 55, values: { roll: 12, reach: 3.8 } }
     ]);
 

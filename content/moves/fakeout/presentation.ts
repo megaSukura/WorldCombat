@@ -34,16 +34,22 @@ const FakeoutDefinition: ParticleDefinition = {
         clap: {
             duration: 10, exit: { stop: 3, drain: 6 },
             emitters: [
-                { name: "left_palm", bind: "point", orient: "direction", offset: [-0.3, 0, 0],
-                    particle: "world_combat_core:cobblemon/generic/hollowfist", burst: { count: 1 },
-                    shape: { kind: "point" }, direction: [1, 0, 0], speed: 0.1, lifetime: 3,
-                    size: [0.24, 0.2], alpha: [0.9, 0], color: 0xFFE9A8, light: "full" },
-                { name: "right_palm", bind: "point", orient: "direction", offset: [0.3, 0, 0],
-                    particle: "world_combat_core:cobblemon/generic/hollowfist", burst: { count: 1 },
-                    shape: { kind: "point" }, direction: [-1, 0, 0], speed: 0.1, lifetime: 3,
-                    size: [0.24, 0.2], alpha: [0.9, 0], color: 0xFFE9A8, light: "full" },
+                // 双掌的世界方向由服务端按真实朝向算出：offset 取两侧掌位，direction 取向中线的合拢方向。
+                { name: "left_palm", bind: "point", fit: "world",
+                    offset: [{ data: "palmA.0", fallback: -0.3 }, { data: "palmA.1", fallback: 0 }, { data: "palmA.2", fallback: 0 }],
+                    particle: "world_combat_core:cobblemon/generic/hollowfist", burst: { count: 1, at: 0 },
+                    shape: { kind: "point" },
+                    direction: [{ data: "inA.0", fallback: 0 }, { data: "inA.1", fallback: 0 }, { data: "inA.2", fallback: 0 }],
+                    speed: 0, lifetime: 3, size: [0.24, 0.2], alpha: [0.9, 0], color: 0xFFE9A8, light: "full" },
+                { name: "right_palm", bind: "point", fit: "world",
+                    offset: [{ data: "palmB.0", fallback: 0.3 }, { data: "palmB.1", fallback: 0 }, { data: "palmB.2", fallback: 0 }],
+                    particle: "world_combat_core:cobblemon/generic/hollowfist", burst: { count: 1, at: 0 },
+                    shape: { kind: "point" },
+                    direction: [{ data: "inB.0", fallback: 0 }, { data: "inB.1", fallback: 0 }, { data: "inB.2", fallback: 0 }],
+                    speed: 0, lifetime: 3, size: [0.24, 0.2], alpha: [0.9, 0], color: 0xFFE9A8, light: "full" },
+                // 只在这一掌真的打实（clap 只在命中时播放）时才在接触点炸开，与真实伤害同刻。
                 { name: "contact", bind: "point", particle: "world_combat_core:cobblemon/generic/hit_yellow",
-                    burst: { count: { data: "landed", fallback: 0 }, at: 3 }, shape: { kind: "point" },
+                    burst: { count: 1, at: 0 }, shape: { kind: "point" },
                     speed: 0, lifetime: 5, size: [0.28, 0.08], alpha: [1, 0], color: 0xFFF6DC, light: "full" }
             ]
         },
@@ -60,6 +66,21 @@ const FakeoutDefinition: ParticleDefinition = {
                     lifetime: [11, 17], size: [0.13, 0.04],
                     color: 0xFFF2C0, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 26
                 }
+            ]
+        },
+        broken: {
+            duration: 20, exit: { stop: 8, drain: 12 },
+            emitters: [
+                { name: "stop_flash", bind: "target", offset: [0, 0.9, 0], height: 0.6,
+                    particle: "world_combat_core:cobblemon/generic/hit_yellow",
+                    burst: { count: { data: "ended", fallback: 1 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.3 }, direction: "outward", speed: [0.05, 0.18],
+                    lifetime: [7, 12], size: [0.26, 0.06], color: 0xFFF6DC, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 18 },
+                { name: "stop_ring", bind: "target", offset: [0, 0.7, 0],
+                    particle: "world_combat_core:cobblemon/generic/ring/mediumring",
+                    burst: { count: 1, at: 0 }, shape: { kind: "ring", radius: 0.28 },
+                    direction: "outward", speed: [0.04, 0.12],
+                    lifetime: [8, 14], size: [0.22, 0.5], sizeMode: "sin", color: 0xFFE9A8, alpha: [0.6, 0], light: "full", maxParticles: 12 }
             ]
         },
         whiff: {

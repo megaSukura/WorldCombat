@@ -4,11 +4,14 @@
  * 核心念头：从身体向上喷起一柱高热烟流，底窄、上端略散，威胁上方与贴身空间——竖直的第一幕是这招与同族最不同的地方；
  * 被烧到的可能灼伤。浓烟式让余热继续留在这根柱子里反复烫人，爆燃式一发即收。
  *
- * 三幕：
- *   起（windup，提交前）：身上腾起火星与浓烟的预告。
+ * 三幕（提交前只播预告）：
+ *   起（stoke，提交前）：身上腾起火星与浓烟的预告。
  *   击（plume → hit）：提交后烟柱自下而上逐层升起，每层扫到的敌人各挨一记主伤、掷一次灼伤，只结算一次；
- *       烟柱升到 `plumeHeight`，中途遇到顶棚则截断在顶棚处（顶棚横散只作画面）。
- *   收（ember / fade）：浓烟式让余热留在同一根柱内，按 `emberPulse` 反复烫仍站在柱内的人，到 `emberTicks` 散去；爆燃式一次即止。
+ *       烟柱升到 `plumeHeight`，中途遇到真实顶棚则截断在顶棚处（顶棚横散只作画面）。
+ *   收（ember / fade）：浓烟式让余热留在**同一根**柱内，按 `emberPulse` 反复烫仍站在柱内的人，到 `emberTicks` 散去；
+ *       爆燃式一次即止。
+ *
+ * 整根柱（升柱与余热）都锁在提交时记下的同一个 `base` 上：施法者走开，旧柱仍在原地继续收尾，画面与判定同源。
  *
  * 配置 `fume`（浓烟式）由 resolve 改时序、由公式改威力与半径：开启＝封在柱内，关闭＝一发更重。
  */
@@ -21,7 +24,7 @@ namespace PokemonSkills {
     define({
         id: "lavaplume",
         name: "Lava Plume",
-        description: "从身体竖起一柱高热烟流：底窄、上端略散，自下而上扫过，被烧到的敌人一起挨伤、可能灼伤；烟柱升到设定高度，遇到顶棚就截断。浓烟式让余热留在同一根柱子里反复烫人；爆燃式一发更重、没有余热。",
+        description: "从身体竖起一柱高热烟流：底窄、上端略散，自下而上扫过，被烧到的敌人一起挨伤、可能灼伤；烟柱升到设定高度，遇到顶棚就截断。浓烟式让余热留在同一根柱子里反复烫人；爆燃式一发更重、没有余热。整根柱子锁在初次喷发的位置，施法者走开后旧柱仍在原地收尾。",
         uses: ["烧到贴身与正上方的敌人", "让贴身的几个人灼伤", "用柱内余热逼人离开你的正上方与脚边", "打断贴身与低空的攻击节奏"],
         kind: "self",
         range: 3.2,
@@ -57,6 +60,7 @@ namespace PokemonSkills {
             const scene = WorldFeedback.actionScenes(lavaplumeScene, 1);
             const world = action.world();
             const body = world.observe(action.actor());
+            // 锁定柱底：升柱与余热都用这一个 base，施法者之后移动不再拖动旧柱。
             const base = body !== null ? body.position() : action.origin();
             const radius = Math.max(2.2, p("lavaplume", "ringRadius", action));
             const power = p("lavaplume", "plume", action);
@@ -69,26 +73,28 @@ namespace PokemonSkills {
             const cap = Math.max(1, Math.round(p("lavaplume", "maxTargets", action)));
             const fume = !!(config && config.fume);
             const scale = radius / 3.2;
+            // 柱体下缘：从身体中心向下够到脚/地面，让贴在脚边的小目标按它们真实的脚/身体采样进柱。
+            const lower = Math.max(0.8, (body !== null ? body.height() : 1.4) / 2 + 0.15);
             const hitRefs: { [ref: string]: boolean } = {};
+            const actorRef = String(action.actor().ref());
             let step = 0, elapsed = 0, total = 0, settled = false, top = height;
 
-            /** 沿中心线向上探顶：有顶棚就把实际喷发高度截断在它下面。 */
+            /** 沿锁定 base 的中心线向上探真实顶棚：BLOCK-only，花草/液体不算；有顶棚就截断在它下面。 */
             function ceiling(scope: CombatWorld): number {
-                const probe = Math.max(0.4, height / 8);
-                for (let h = probe; h <= height + 1e-6; h += probe) {
-                    if (!scope.clear(base, base.plus(WorldCombat.point(0, h, 0)))) return Math.max(0.6, h - probe);
-                }
-                return height;
+                const hit = WorldGeometry.blockHit(scope, base, base.plus(WorldCombat.point(0, height + 0.2, 0)));
+                return hit !== null ? Math.max(0.6, hit.position().y() - base.y()) : height;
             }
 
-            /** 柱内一层：以 `midY` 为高度中心、半径 `layerRadius` 的一圈，命中者交给 `visit`。 */
-            function layer(scope: CombatWorld, midY: number, band: number, layerRadius: number, capped: boolean,
+            /** 柱内到 `layerTop` 为止的一层：以锁定 base 为轴，半径 `layerRadius`，下缘够到脚/地面；命中者交给 `visit`。 */
+            function layer(scope: CombatWorld, layerTop: number, layerRadius: number, capped: boolean,
                 visit: (enemy: CombatActor, facts: CombatObservation) => void): void {
                 WorldGeometry.selectEnemies(scope,
-                    WorldGeometry.ring(WorldCombat.point(base.x(), midY, base.z()), 0, layerRadius, { below: band, above: band }),
+                    WorldGeometry.ring(base, 0, layerRadius, { below: lower, above: layerTop }),
                     function (enemy, facts) {
                         const ref = String(enemy.ref());
-                        if (ref === String(action.actor().ref())) return;
+                        if (ref === actorRef) return;
+                        // 局部障碍阻传播：从柱底到目标有真实墙挡就不算被这一层烧到。
+                        if (WorldGeometry.blockHit(scope, base, facts.position()) !== null) return;
                         if (capped && hitRefs[ref]) return;
                         if (capped && total >= cap) return;
                         hitRefs[ref] = true;
@@ -113,14 +119,12 @@ namespace PokemonSkills {
             /** 主喷：烟柱自下而上逐层升起，每个敌人只吃一次主伤；顶棚截断实际高度。 */
             function advance(current: CombatAction): void {
                 const scope = current.world();
-                const layerTop = top * (step + 1) / layers, layerBottom = top * step / layers;
-                const midY = base.y() + (layerTop + layerBottom) / 2;
+                const layerTop = top * (step + 1) / layers;
                 const layerRadius = radius * (0.9 + 0.1 * (step + 1) / layers);
-                const band = Math.max(0.5, (layerTop - layerBottom) / 2 + 0.8);
                 scene.show(current, "plume", base,
                     { moment: "plume", height: layerTop, radius: layerRadius, core: layerRadius * 0.7, scale: scale,
                       flow: Math.round(40 + layerTop * 24), intensity: Math.max(0.5, Math.min(2.2, power / 70)) });
-                layer(scope, midY, band, layerRadius, true, function (enemy, facts) {
+                layer(scope, layerTop, layerRadius, true, function (enemy, facts) {
                     const alreadyBurned = CombatStatus.has(scope, enemy, "burn");
                     if (!hurt(current, enemy, "lavaplume", power,
                         { damage: damageSpec("lavaplume", "plume"), status: "burn", chance: chance })) return;
@@ -145,18 +149,19 @@ namespace PokemonSkills {
                 top = ceiling(scope);
                 const pulseLayers = Math.max(2, Math.round(top / 0.9));
                 const seen: { [ref: string]: boolean } = {};
+                // 托管余热视觉：时长跟随实际余热总长，到 `emberTicks` 由 finish 收掉，不早于真实危险结束。
                 scene.show(current, "ember", base,
-                    { moment: "ember", height: top, radius: radius, scale: scale, flow: Math.round(30 + radius * 14), intensity: 0.6 });
+                    { moment: "ember", height: top, radius: radius, scale: scale, duration: emberTicks,
+                      flow: Math.round(30 + radius * 14), intensity: 0.6 });
                 for (let i = 0; i < pulseLayers; i++) {
-                    const layerTop = top * (i + 1) / pulseLayers, layerBottom = top * i / pulseLayers;
-                    const midY = base.y() + (layerTop + layerBottom) / 2;
+                    const layerTop = top * (i + 1) / pulseLayers;
                     const layerRadius = radius * (0.9 + 0.1 * (i + 1) / pulseLayers);
-                    const band = Math.max(0.5, (layerTop - layerBottom) / 2 + 0.8);
                     WorldGeometry.selectEnemies(scope,
-                        WorldGeometry.ring(WorldCombat.point(base.x(), midY, base.z()), 0, layerRadius, { below: band, above: band }),
+                        WorldGeometry.ring(base, 0, layerRadius, { below: lower, above: layerTop }),
                         function (enemy, facts) {
                             const ref = String(enemy.ref());
-                            if (ref === String(current.actor().ref()) || seen[ref]) return;
+                            if (ref === actorRef || seen[ref]) return;
+                            if (WorldGeometry.blockHit(scope, base, facts.position()) !== null) return;
                             seen[ref] = true;
                             if (!hurt(current, enemy, "lavaplume", emberPower, { damage: damageSpec("lavaplume", "ember") })) return;
                             total++;

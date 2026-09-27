@@ -40,6 +40,7 @@
 namespace PokemonSkills {
     export const icicleSpearChill = "world_combat:iciclespear_chill";
     export const icicleSpearScene = "world_combat:move_iciclespear";
+    export const icicleSpearRankScene = "world_combat:move_iciclespear/rank";
 
     actionParameters.define("iciclespear", {
         /** 单锥威力：基础 25；特攻每比 55 多 1 加 0.18（夹 −5..15）；等级每比 25 多 1 加 0.28（夹 0..8）；
@@ -82,12 +83,13 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "单根冰锥飞行与命中的判定大小；体型越高冰锥越粗。画出的锥长与它一致。"
             }),
-        /** 射程：基础 8，特攻每比 55 多 1 加 0.03（夹 −1..2.5），等级每比 25 多 1 加 0.05（夹 0..1.5）；夹 6..13。 */
+        /** 射程：基础 11，特攻每比 55 多 1 加 0.03（夹 −1..2.5），等级每比 25 多 1 加 0.05（夹 0..1.5）；夹 9..16。
+         *  旧版把 +3 藏在投射物里，现并进本参数，面板与实际飞行距离一致。 */
         reach: formula(
-            F.base(8)
+            F.base(11)
                 .plus(F.stat("specialAttack").minus(55).times(0.03).clamp(-1, 2.5))
                 .plus(F.level().minus(25).times(0.05).clamp(0, 1.5))
-                .clamp(6, 13).round(1),
+                .clamp(9, 16).round(1),
             "射程", {
                 unit: "格",
                 description: "冰锥能打到多远；特攻与等级越高送得越远。它也是本招的实际射程来源。"
@@ -134,7 +136,7 @@ namespace PokemonSkills {
 
     stages("iciclespear", [
         { level: 28, values: { spear: 31, shots: 3 } },
-        { level: 44, values: { spear: 38, reach: 10 } }
+        { level: 44, values: { spear: 38, reach: 13 } }
     ]);
 
     defineDamage("iciclespear", "spear", {});

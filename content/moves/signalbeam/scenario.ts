@@ -13,7 +13,7 @@ Smoke.scenario("signalbeam", function (stage) {
         var receipts = stage.damageEvents(), halves = 0;
         for (var i = 0; i < receipts.length; i++) if (receipts[i].to === machop.name && receipts[i].amount > 0) halves++;
         stage.expect(halves >= 2, "交点对准身体时两束各结算一次（各半、重叠即满）");
-        stage.note("瞄点距离改变张开几何、单束被墙挡只剩半束，都是位置/配置结果，只作记录。",
+        stage.note("瞄点距离改变张开几何、单束被墙挡只剩半束，都是位置/配置结果，只作记录。束长严格等于结算出的 reach，焦点更远不会被强行延长；收焦只发生在 AI 决策里，手动瞄点在 execute 原样使用。",
             { casts: stage.casts("signalbeam", venomoth), damage: Math.round(stage.damageTo(machop) * 10) / 10, halves: halves,
               jammed: stage.hasMobEffect(machop, "world_combat:status/confusion") });
         stage.done();

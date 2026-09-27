@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.confusion.summary": "Fire a faint telekinetic pulse that skims the ground in a straight line: it deals special damage on hit and may leave the target dazed. While dazed the target fumbles its actions, and each fumble is jabbed again.",
+  "worldcombat.skill.confusion.summary": "Fire a faint telekinetic pulse that flies in a straight line along the aim: it deals special damage on hit and may leave the target dazed. While dazed the target fumbles its actions, and each fumble is jabbed again.",
   "worldcombat.skill.confusion.use.0": "Cheap, fast ranged harassment",
   "worldcombat.skill.confusion.use.1": "Chip health down with repeated light hits",
   "worldcombat.skill.confusion.use.2": "Suppress a target that likes to act often",

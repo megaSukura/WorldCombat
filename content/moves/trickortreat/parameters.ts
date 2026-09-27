@@ -29,6 +29,7 @@
 namespace PokemonSkills {
     export const trickortreatId = "trickortreat";
     export const trickortreatScene = "world_combat:move_trickortreat";
+    export const trickortreatShellScene = "world_combat:move_trickortreat_shell";
     export const trickortreatShellEffect = "world_combat:trick_shell";
     export const trickortreatRecordEffect = "world_combat:trick_record";
     export const trickortreatStatus = "trickortreat";

@@ -27,7 +27,7 @@
   "worldcombat.skill.fly.preference.ai.maxChase": "Dive distance",
   "worldcombat.skill.fly.preference.ai.maxChase.help": "How far a foe may be before the companion considers Fly; lower keeps it close, higher lets it fly out farther.",
   "worldcombat.skill.fly.preference.ai.minHealth": "Minimum HP",
-  "worldcombat.skill.fly.preference.ai.minHealth.help": "The companion treats Fly as an escape strike below this HP fraction, moving it up the order; higher makes it fly more often when hurt.",
+  "worldcombat.skill.fly.preference.ai.minHealth.help": "The companion treats Fly as an escape strike only below this HP fraction, with a grounded melee threat nearby and headroom overhead, moving it up the order; low HP alone, or a low ceiling, is not a safe escape. Higher makes it fly more often when hurt.",
   "worldcombat.skill.fly.preference.ai.crowd": "Foes at the landing",
   "worldcombat.skill.fly.preference.ai.crowd.help": "In a pinned drop, only fly when at least this many foes cluster near the landing, so one drop presses a group; a tracked dive ignores this, and 1 means a lone target is enough.",
   "worldcombat.skill.fly.preference.ai.leaveStation": "Leave post",

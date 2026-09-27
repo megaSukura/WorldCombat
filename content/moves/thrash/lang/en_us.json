@@ -35,6 +35,7 @@
   "worldcombat.skill.thrash.preference.ai.leaveStation.help": "On: leaves a hold or stay post to push into a crowd. Off: only thrashes when it reaches someone from where it stands.",
   "world_combat.move.thrash.text.flail": "Thrash %1$s",
   "world_combat.move.thrash.text.stomp": "Stomp %1$s",
+  "world_combat.move.thrash.text.air": "Stomped air",
   "world_combat.move.thrash.text.daze": "Reeling after the rampage",
   "world_combat.move.thrash.text.chip": "Hurt itself %1$s",
   "effect.world_combat.thrash_daze": "Thrash (dazed)"

@@ -174,8 +174,9 @@ const SynchronoiseDefinition: ParticleDefinition = {
             ]
         },
         echo: {
-            duration: 30,
-            exit: { stop: 12, drain: 24 },
+            // 余音可见时长与 echoTicks 严格一致：由服务端 keep(...echoTicks) 控制，duration 0 表示直到释放。
+            duration: 0,
+            exit: { drain: 24 },
             emitters: [
                 {
                     name: "tone", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",

@@ -4,13 +4,13 @@
  * 原生事实：Water／物理／威力 85／命中 100／PP 10／接触、啃咬（bite）；「如果比对手先出手攻击，威力翻倍」（Cobblemon 1.8）。
  *
  * 翻译：即时战斗里没有先手判定，本实现把「比对手先出手」翻成可观察的事实——命中那一刻，目标还没有打过施法者
- * （最近窗口内施法者没被这个目标击中，且目标此刻没有朝施法者出手）。满足时这一口翻倍。
+ * （施法者最近 22 刻没被这个目标击中，且目标最近一次真正出手的原生攻击不是打向施法者）。满足时这一口翻倍。
  * 与「先咬住」相配的形状是一次**贴身咬合**：扑上去咬住，把目标往自己这边拖、并压住它的速度（共享能力等级）。
  *
  * 数值来源（每项依赖不同的精灵数据，分散到不同参数上）：
  *   rend       鳃咬威力 85 + 物攻偏移 + 体重偏移；先咬住 ×2。
- *   lead       先咬住：命中时目标尚未打过施法者（自定义事实）。
- *   window     先手窗口 1.1 秒 − 速度偏移。
+ *   lead       先咬住：命中时目标尚未真正出手打过施法者（自定义事实）。
+ *   window     先手窗口 22 刻（约 1.1 秒）− 速度偏移。
  *   lunge      扑咬距离 2.8 格 + 速度偏移 + 等级偏移；也是射程来源。
  *   speed      每刻位移 0.9 格/刻 + 速度偏移（带鳃的沉重身体）。
  *   collisionRadius 咬合判定 0.5 格 + 体型高度偏移。
@@ -36,16 +36,15 @@ namespace PokemonSkills {
         // 先咬住以实际咬中的那个身体为准：显式 target 优先于动作选定的目标。
         const target = context.target && context.target.actor ? context.target.actor : context.action ? context.action.target() : null;
         if (!target || !world.valid(target) || world.friendly(target)) return 0;
-        const window = p(fishiousrendId, "window", <NumberContext>context);
-        const self = world.observe(actor), foe = world.observe(target);
+        const window = Math.max(1, p(fishiousrendId, "window", <NumberContext>context));
+        const self = world.observe(actor);
         if (self !== null) {
             const last = self.lastAttacker();
             if (self.hurtAgo() <= window && last !== null && String(last.ref()) === String(target.ref())) return 0;
         }
-        if (foe !== null) {
-            const swinging = foe.attacking();
-            if (swinging !== null && String(swinging.ref()) === String(actor.ref())) return 0;
-        }
+        // 真正出手的事实：目标最近一次原生攻击的目标就是施法者。仇恨/追踪字段不算出手。
+        const recent = DamageSemantics.recentAttack(world, target, window);
+        if (recent !== null && String(recent.target) === String(actor.ref())) return 0;
         return 1;
     }
 
@@ -68,10 +67,10 @@ namespace PokemonSkills {
                 unit: "威力",
                 description: "这一口鳃咬的基准威力；物攻越高、身体越沉咬得越重。命中时目标尚未打过施法者就翻倍。对手防御、相性与暴击在命中时另算。"
             }),
-        /** 先手窗口：1.1 秒 − 速度偏移[−0.2,0.4]；夹 0.6..1.8 秒。 */
+        /** 先手窗口：22 刻（约 1.1 秒）−（速度 − 55）× 0.08 [−4,8]；夹 12..36 刻（0.6..1.8 秒）。 */
         window: seconds(
-            F.base(1.1).minus(F.stat("speed").minus(55).times(0.004).clamp(-0.2, 0.4)).clamp(0.6, 1.8).round(2),
-            "先手窗口", "目标在这段时间内打过施法者，就被算作抢先、不再翻倍。"),
+            F.base(22).minus(F.stat("speed").minus(55).times(0.08).clamp(-4, 8)).clamp(12, 36).round(0),
+            "先手窗口", "目标在这段时间内真正出手打过施法者，就被算作抢先、不再翻倍；执行、AI 与说明共用同一个值。"),
         /** 扑咬距离：2.8 格 + 速度偏移[−0.5,1.3] + 等级偏移[0,1.2]；夹 2.2..5.5。 */
         lunge: formula(
             F.base(2.8).plus(F.stat("speed").minus(55).times(0.013).clamp(-0.5, 1.3))

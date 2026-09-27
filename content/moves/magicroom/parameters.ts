@@ -8,8 +8,9 @@
  * 世界化：以落点为心租出一片场地（WorldEffects.field），半径内的活体带共享身份
  *   world_combat:status/magicroom 的 MobEffect，每人另有一份跟随自己的接收者投影
  *   （world_combat:move_magicroom/holder）。投影在有效期内调用 world.suppressEquipment，
- *   暂停原生装备槽 ItemStack 声明的属性增益；宝可梦再叠加共享的临时压制层（NativeModifiers 的
- *   suppressItems）封住携带物效果。装备与附魔不会移动或销毁，走出去／空间结束即恢复当前装备的贡献。
+ *   暂停原生装备槽 ItemStack 声明的属性效果（无论增减）；宝可梦再叠加共享的临时压制层
+ *   （NativeModifiers 的 suppressItems）封住携带物效果。装备与附魔不会移动或销毁，走出去／空间结束
+ *   即恢复当前装备的贡献。
  *   第三方自定义槽位与其他模组的主动能力不在这个契约内，文本如实说明。
  *
  * 数值来源（每个参数读不同的个体数据）：

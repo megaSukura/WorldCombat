@@ -53,15 +53,15 @@ namespace PokemonSkills {
 
     function thrashSpent(current: CombatAction, state: ThrashState): void {
         const world = current.world(), actor = current.actor(), body = world.observe(actor);
+        if (body === null) return;
         const ticks = Math.max(80, Math.round(p(thrashId, "dazeTicks", current)));
         const fumble = Math.round(Math.max(0.05, Math.min(0.9, p(thrashId, "fumble", current))) * 100);
-        if (body !== null) {
-            CombatStatus.apply(world, actor, "confusion", thrashDaze, ticks, fumble, { unique: true });
-            WorldFeedback.emit(world, thrashScene, 1, body.position(),
-                { moment: "spent", target: String(actor.ref()), strikes: state.strikes, fumble: fumble, ticks: ticks, intensity: 1 }, 30);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), thrashDazeText, [], 30);
-            world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
-        }
+        // 只有这次真的挂上了本单元的恍惚载体才报代价；被免疫或他人身份优先时不发成功提示。
+        if (!CombatStatus.apply(world, actor, "confusion", thrashDaze, ticks, fumble, { unique: true })) return;
+        WorldFeedback.emit(world, thrashScene, 1, body.position(),
+            { moment: "spent", target: String(actor.ref()), strikes: state.strikes, fumble: fumble, ticks: ticks, intensity: 1 }, 30);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), thrashDazeText, [], 30);
+        world.sound("cobblemon:status.volatile.confusion.actor", body.position(), 16, "{}");
     }
 
     /** 挥扫之间的一小步踉跄：优先按玩家当刻移动意图，没输入就交替左右；被墙／身体挡住，不随机掉崖。 */
@@ -89,10 +89,10 @@ namespace PokemonSkills {
         sweepStep(current, direction.scale(step), radius);
     }
 
-    function thrashStrike(current: CombatAction, state: ThrashState, scenes: WorldFeedback.ActionScenes, done: (action: CombatAction) => void): void {
+    function thrashStrike(current: CombatAction, state: ThrashState, scenes: WorldFeedback.ActionScenes, sweepScenes: WorldFeedback.ActionScenes, done: (action: CombatAction) => void): void {
         const world = current.world(), actor = current.actor();
         const self = world.observe(actor);
-        if (self === null) { scenes.finish(current, done); return; }
+        if (self === null) { sweepScenes.stop(current); scenes.finish(current, done); return; }
         const centre = self.position();
         const radius = Math.max(1.6, p(thrashId, "radius", current));
         const push = Math.max(0, p(thrashId, "push", current));
@@ -106,22 +106,23 @@ namespace PokemonSkills {
         const aim = thrashInput(current) || WorldGeometry.flatUnit(current.direction());
 
         let hits = 0;
-        scenes.stop(current, "sweep");
         scenes.stop(current, "stomp");
+        sweepScenes.stop(current, "sweep");
 
         if (final) {
-            // 末记：脚踩实地的贴地跺击；离地时只自己踉跄、不结算伤害。
+            // 末记：脚踩实地的贴地跺击；离地时显示踏空、不掀起地震、也不结算伤害。
             const grounded = self.grounded();
             current.face(centre.plus(aim), 15, 15);
-            sound(current, "minecraft:entity.generic.big_fall");
-            WorldFeedback.emit(world, thrashScene, 1, centre,
-                { moment: "stomp", target: String(actor.ref()), index: state.index,
-                    left: state.left, strikes: state.strikes, dust: dust, scale: scale, intensity: intensity }, 28);
             if (grounded) {
+                sound(current, "minecraft:entity.generic.big_fall");
                 sound(current, "minecraft:entity.player.attack.sweep");
+                WorldFeedback.emit(world, thrashScene, 1, centre,
+                    { moment: "stomp", target: String(actor.ref()), index: state.index,
+                        left: state.left, strikes: state.strikes, dust: dust, scale: scale, intensity: intensity }, 28);
                 WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: 1.8, above: 2.4 }),
                     function (target, facts) {
-                        if (current.trace(centre, facts.position(), Math.max(0.3, radius * 0.25), true).blocked()) return;
+                        // 纯块遮挡：只看中心到目标之间有没有墙，不再让更近的实体替目标挡下这一记。
+                        if (!world.clear(centre, facts.position())) return;
                         if (!hurt(current, target, thrashId, power, { damage: damageSpec(thrashId, "bash"), contact: true })) return;
                         hits++;
                         const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
@@ -129,21 +130,27 @@ namespace PokemonSkills {
                         WorldFeedback.emit(world, thrashScene, 1, facts.position(),
                             { moment: "knock", target: String(target.ref()), dust: dust, scale: scale, intensity: intensity }, 20);
                     });
+            } else {
+                // 踏空：脚下没有实地，掀起一撮空响的尘土，不落地震。
+                WorldFeedback.emit(world, thrashScene, 1, centre,
+                    { moment: "whiff", target: String(actor.ref()), dust: dust, scale: scale, intensity: intensity }, 22);
+                WorldFeedback.text(world, centre.plus(WorldCombat.point(0, 1.4, 0)), thrashAirText, [], 22);
             }
         } else {
-            // 左／右交替的 150° 贴身扇扫：方向由当刻 aim 转向一侧，被墙／身体真截断。
+            // 左／右交替的 150° 贴身扇扫：方向由当刻 aim 转向一侧，手臂代理只在扫过的那一侧走过。
             const heading = aim;
             const side = WorldCombat.point(-heading.z(), 0, heading.x());
             const sweepDirection = WorldGeometry.flatUnit(heading.plus(side.scale(state.index % 2 === 0 ? 1 : -1)));
             current.face(centre.plus(sweepDirection), 20, 20);
             const path = thrashArc(centre, sweepDirection, radius, 150);
-            scenes.show(current, "sweep", centre,
+            sweepScenes.show(current, "sweep", centre,
                 { moment: "sweep", path: path, direction: [sweepDirection.x(), 0, sweepDirection.z()], index: state.index,
-                    left: state.left, strikes: state.strikes, dust: dust, scale: scale, intensity: intensity });
+                    left: state.left, strikes: state.strikes, dust: dust, scale: scale, intensity: intensity,
+                    start: world.tick(), duration: 20, target: String(actor.ref()) });
             sound(current, "cobblemon:impact.normal");
             WorldGeometry.selectEnemies(world, WorldGeometry.sector(centre, sweepDirection, radius, 150, { below: 1.8, above: 2.4 }),
                 function (target, facts) {
-                    if (current.trace(centre, facts.position(), Math.max(0.3, radius * 0.25), true).blocked()) return;
+                    if (!world.clear(centre, facts.position())) return;
                     if (!hurt(current, target, thrashId, power, { damage: damageSpec(thrashId, "bash"), contact: true })) return;
                     hits++;
                     const away = WorldCombat.point(facts.position().x() - centre.x(), 0, facts.position().z() - centre.z());
@@ -173,9 +180,10 @@ namespace PokemonSkills {
         state.index = state.index + 1;
         if (state.left > 0) {
             const pause = Math.max(5, Math.round(p(thrashId, "gap", current)));
-            current.after(pause, function (next: CombatAction) { thrashStrike(next, state, scenes, done); });
+            current.after(pause, function (next: CombatAction) { thrashStrike(next, state, scenes, sweepScenes, done); });
         } else {
             thrashSpent(current, state);
+            sweepScenes.stop(current);
             scenes.finish(current, done);
         }
     }
@@ -221,12 +229,13 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const scenes = WorldFeedback.actionScenes(thrashScene);
+            const sweepScenes = WorldFeedback.actionScenes(thrashSweepScene);
             const world = action.world(), actor = action.actor();
-            if (world.observe(actor) === null) { done(action); return; }
+            if (world.observe(actor) === null) { sweepScenes.stop(action); done(action); return; }
             const strikes = Math.max(2, Math.min(3, Math.round(p(thrashId, "strikes", action))));
             const state: ThrashState = { left: strikes, strikes: strikes, index: 0 };
             sound(action, "minecraft:entity.ravager.roar");
-            thrashStrike(action, state, scenes, done);
+            thrashStrike(action, state, scenes, sweepScenes, done);
         }
     });
 

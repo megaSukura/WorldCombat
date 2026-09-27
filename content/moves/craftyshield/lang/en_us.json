@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.craftyshield.summary": "Weaves a lattice of trick sigils over the user and nearby allies, turning whole status moves aside. The lattice is held up by a limited number of glyphs and falls once a few are spent; damaging moves pass straight through.",
+  "worldcombat.skill.craftyshield.summary": "Weaves a lattice of trick sigils over the user and nearby allies, turning aside hostile status moves and sourced harmful effects. The lattice is held up by a limited number of glyphs; each deflection spends one, and it falls once they run out or its window ends. Damaging moves pass straight through.",
   "worldcombat.skill.craftyshield.use.0": "Turn aside a blanket of conditions and debuffs",
   "worldcombat.skill.craftyshield.use.1": "Weave the lattice before a taunt or lock lands",
   "worldcombat.skill.craftyshield.use.2": "Cover an ally about to step in from status moves",
-  "worldcombat.skill.craftyshield.description.0": "The lattice turns aside only hostile status moves; damaging moves pass straight through. Each covered fighter can deflect %1$s of them whole, spending one charge per move turned aside, collapsing once they run out or after about %2$s s at most.",
+  "worldcombat.skill.craftyshield.description.0": "The lattice turns aside only hostile status moves and sourced harmful effects; damaging moves pass straight through. Each covered fighter can deflect %1$s of them whole, spending one charge per move turned aside, collapsing once they run out or after about %2$s s at most. With no charge left, or several arriving at once past the balance, the excess lands instead.",
   "worldcombat.skill.craftyshield.description.1": "At the moment it is woven, the lattice covers the user and allies within a %1$s block radius; anyone entering later is not covered.",
   "worldcombat.skill.craftyshield.description.2": "Telegraph %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.craftyshield.weave.fine": "Fine: deflections x1.3, duration x1.15, radius x0.9, at +2 ticks wind-up and x1.1 cooldown — turns more aside and holds tight.",

@@ -31,5 +31,6 @@
   "worldcombat.skill.firepunch.preference.ai.preferUnlit.help": "开启：还没被点着的目标排得更前，避免浪费火种；关闭则所有目标同价。",
   "world_combat.move.firepunch.text.hit": "火焰拳命中",
   "world_combat.move.firepunch.text.spread": "火势蔓延",
-  "world_combat.move.firepunch.text.miss": "空拳"
+  "world_combat.move.firepunch.text.miss": "空拳",
+  "world_combat.move.firepunch.text.blocked": "拳被挡住了"
 }

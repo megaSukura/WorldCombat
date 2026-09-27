@@ -6,6 +6,8 @@
   "worldcombat.skill.bugbite.description.0": "The bite deals about %1$s Bug contact damage with a %2$s block hit radius; the target's Defence, type match-up and criticals settle on impact.",
   "worldcombat.skill.bugbite.description.1": "Lunge up to %1$s blocks along your aim at %2$s blocks per tick; a landed hit shoves the target about %3$s blocks.",
   "worldcombat.skill.bugbite.description.2": "The torn-off Berry is taken from the target; after %1$s seconds of chewing you absorb its effect at %2$s times strength: healing and any spike recoil are multiplied by that factor, while a status cure or stat boost applies at the Berry's own level.",
+  "worldcombat.skill.bugbite.description.interrupt": "If the chew is interrupted, the Berry already torn off is lost with no effect.",
+  "worldcombat.skill.bugbite.description.kill": "If the bite itself finishes the target, the Berry goes down with it before it can be taken.",
   "worldcombat.skill.bugbite.devour.on": "Devour on: longer chewing, absorption x1.25 and one extra stat stage, at the cost of a x0.9 hit.",
   "worldcombat.skill.bugbite.devour.off": "Devour off: absorption x0.8 and a x1.08 hit; a heavier bite with a shallower absorb.",
   "worldcombat.skill.bugbite.timing": "Cast within %1$s blocks; after %2$s seconds of preparation it costs %4$s PP, then %3$s seconds of recovery and a %5$s second cooldown from commit.",

@@ -9,8 +9,8 @@
  *   起（windup，提交前）：铃音在身侧收拢，只观察与预告；可被打断，不花任何代价。
  *   响（提交后）：每一声铃响都洗一次——先洗自己，再洗 chimeRadius 内每个友善伙伴的全部有害状态效果；
  *     共响 peals 声，每声间隔 pealGap。铃声在**当前所在一处**响起（可一边移动一边带铃声），
- *     表现里环的半径就是 chimeRadius 本身，站在环外就知道不会被洗到。
- *   净化对象只在真正洗掉东西时亮起；身上已经干净时铃照样响完，但不再刷清除光柱。
+ *     表现里的环画在脚下地面、半径就是 chimeRadius 本身，站在环外就知道不会被洗到；声波穿过方块，遮挡不算躲开。
+ *   净化对象只在真正洗掉东西时亮起；身上已经干净时铃照样响完，但不再刷清除光柱；最后一响只剩一圈将散的余韵。
  *
  * 反制：铃声只在响的那一下起作用，绕过半径或等铃声过去再挂异常即可；它不治疗，带伤硬吃反而更亏。
  * 宝可梦层：洗的是共享默认效果，清掉后原生队伍面板同步干净；没有新状态需要声明。
@@ -30,7 +30,7 @@ namespace PokemonSkills {
     define({
         id: healbellId,
         cooldownParameter: "recharge", name: "治愈铃声",
-        description: "以自己为心敲响一圈铃声，一次施放连响数声；每一声都洗掉半径内自己与所有伙伴身上的全部有害状态效果（包括原版与其他模组的效果）。不回复生命，也不留下持续状态。",
+        description: "以自己为心敲响一圈铃声，声波穿过遮挡，一次施放连响数声；每一声都洗掉半径内自己与所有伙伴身上的全部有害状态效果（包括原版与其他模组的效果）。不回复生命，也不留下持续状态。",
         uses: ["对方一次挂上多个异常时一震全清", "把睡着的伙伴震醒、把麻痹的伙伴松开", "队友都围在身边时一次洗掉整队的异常"],
         kind: "self", range: 0, prepare: 11, active: 0, recover: 8, cooldown: 150, style: "bell",
         stationary: false, maximumTicks: 200,
@@ -83,6 +83,8 @@ namespace PokemonSkills {
                 const access = current.world(), body = access.observe(self);
                 if (body === null) { done(current); return; }
                 const origin = body.position();
+                // 声波以身体为中心（query 用身体中心距离），地面圈画在脚下高度，玩家按脚下这圈读范围。
+                const ringPoint = WorldCombat.point(origin.x(), origin.y() - body.height() / 2 + 0.04, origin.z());
                 let cleansed = 0;
                 // 净化对象只在真正洗掉东西时亮起：逐个记录这一声实际清掉的角色与项数。
                 const cured: { ref: string; point: CombatPoint; removed: number }[] = [];
@@ -99,7 +101,7 @@ namespace PokemonSkills {
                     cured.push({ ref: String(other.ref()), point: facts === null ? origin : facts.position(), removed: removed });
                 }
                 access.sound(index === 0 ? "minecraft:block.bell.use" : "minecraft:block.note_block.bell", origin, index === 0 ? 16 : 14, "{}");
-                WorldFeedback.emit(access, healbellScene, 1, origin,
+                WorldFeedback.emit(access, healbellScene, 1, ringPoint,
                     { moment: "peal", target: String(self.ref()), index: index, cleansed: cleansed, motes: motes,
                         radius: radius, scale: scale }, 26);
                 for (let c = 0; c < cured.length; c++) {
@@ -113,7 +115,7 @@ namespace PokemonSkills {
                 else if (index + 1 >= peals)
                     WorldFeedback.text(access, healbellAbove(origin), healbellNoneText, [], 24);
                 if (index + 1 >= peals) {
-                    WorldFeedback.emit(access, healbellScene, 1, origin,
+                    WorldFeedback.emit(access, healbellScene, 1, ringPoint,
                         { moment: "fade", target: String(self.ref()), motes: motes, radius: radius, scale: scale }, 30);
                     done(current); return;
                 }

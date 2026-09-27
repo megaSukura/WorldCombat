@@ -27,6 +27,8 @@ namespace PokemonSkills {
     export const aurasphereId = "aurasphere";
     export const aurasphereScene = "world_combat:move_aurasphere";
     export const aurasphereMissText = "world_combat.move.aurasphere.text.miss";
+    /** 追踪弹在锁定距离之外实际多出的飞行余量（格）：总飞行路程 = 锁定距离 + 这个数。 */
+    export const aurasphereHomingBuffer = 6;
 
     actionParameters.define(aurasphereId, {
         /** 波导威力：78 + 特攻偏移[−12,30] + 等级(≥25)偏移[0,9]，远追 ×0.92、撞波 ×1.12；夹 56..128。 */
@@ -49,7 +51,7 @@ namespace PokemonSkills {
                 .clamp(12, 22).round(2),
             "射程", {
                 unit: "格",
-                description: "波导球能打到多远；等级高、特攻高的个体扔得更远。它也是本招的实际射程。"
+                description: "能够到多远，等级高、特攻高的个体扔得更远；只朝方向或世界点空放时，球就飞这么远。锁定活体时球还会额外飞一段追程（见锁定距离）。"
             }),
         /** 球速：2.0 + 速度偏移[−0.25,0.5]，远追 ×0.9；夹 1.5..3.0。 */
         velocity: formula(
@@ -79,7 +81,7 @@ namespace PokemonSkills {
                 .clamp(16, 28).round(1),
             "锁定距离", {
                 unit: "格",
-                description: "波导球能一路咬住目标的最远距离；比射程更远，所以目标在球射出后继续跑也甩不掉。"
+                description: "球开始咬住目标时允许的最远距离；比射程更远。锁定后球的实际飞行路程还要再留一段追程余量（锁定距离 + 6 格），所以目标在球射出后继续跑通常甩不掉——但急转向、离场或撞墙仍会让球落空。"
             }),
         /** 判定半径：0.32 + 体型高度偏移[−0.05,0.18]，撞波 ×1.15；夹 0.26..0.6。 */
         radius: formula(

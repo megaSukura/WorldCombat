@@ -5,8 +5,8 @@
  *   在 `ai.maxChase`（默认 14）以内出手；更远先走近。
  * 对谁出手：`accepts` 只筛阵营、存活与可见。
  * 放完之后：两枚齿轮各自飞、各自结算，伙伴交回共享顺序；交错式下侧向走位的目标更难躲。
- * 可达射线：出手前用只读世界入口 `CompanionBehavior.world(context).clear` 探自身到目标这条线；被地形挡住时两枚
- *   齿轮都会先撞上掩体，优先级随之压低。交错式靠两侧兜住宽身架的目标（`target.width`），直射式更适合窄目标。
+ * 可达射线：出手前用只读世界入口 `CompanionBehavior.world(context).clear` 分别探左右两侧出口到目标；交错式两枚
+ *   齿轮从身体两侧出发，中心一条 clear 不能代表侧弹可达。交错式靠两侧兜住宽身架的目标（`target.width`），直射式更适合窄目标。
  * 优先级：基础 32（在射程内且保持 3 格以上）／20（贴脸时）／8（还要先走近）。
  */
 namespace PokemonSkills {
@@ -17,10 +17,19 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(item, "maxChase", 14);
     }
 
-    /** 自身到目标是否有一条通视射线；齿轮撞墙会先弹开，够不到目标。 */
+    /** 左右两侧出口是否至少有一条通视；中心 clear 不能代表侧弹可达（交错式齿轮从身体两侧出发）。 */
     function geargrindReachable(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
-        const self = CompanionBehavior.source(context);
-        return CompanionBehavior.world(context).clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point));
+        const self = CompanionBehavior.source(context), world = CompanionBehavior.world(context);
+        const from = CompanionBehavior.point(self.point), to = CompanionBehavior.point(target.point);
+        const cross = item.data.config.cross === true;
+        const width = typeof self.width === "number" ? self.width : 0.9;
+        const offset = cross ? Math.max(0, Math.min(2.4, 0.9 + (width - 0.9) * 0.9)) : 0;
+        if (offset <= 0.01) return world.clear(from, to);
+        const dx = to.x() - from.x(), dz = to.z() - from.z(), length = Math.sqrt(dx * dx + dz * dz);
+        const sx = length < 1e-4 ? 1 : -dz / length, sz = length < 1e-4 ? 0 : dx / length;
+        const left = WorldCombat.point(from.x() + sx * offset, from.y(), from.z() + sz * offset);
+        const right = WorldCombat.point(from.x() - sx * offset, from.y(), from.z() - sz * offset);
+        return world.clear(left, to) || world.clear(right, to);
     }
 
     CompanionBehavior.registerUse("geargrind", {

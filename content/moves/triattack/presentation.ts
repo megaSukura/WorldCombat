@@ -7,9 +7,10 @@
  *   三个色相按机制次序依次出现，每一束自己的 moment 只用自己那一色，绝不预先三色齐放。
  * 拍子：起（windup 三色拢光）→ 放（release_ember→release_frost→release_spark 依次迸发）→
  *   中（hit 中性命中光；余痕真落上才转 spark／ember／frost）→ 空（fizzle 散光／撞墙收光）。
- * 范围：release_* 绑 `source`（fit body），三束的爆开绑 `point`（fit none），爆开半径用 `data.scale`
- *   跟随机制里的实际爆开半径；`data.fan`（张角）让空放与广域式下三束明显分开。
- * 运动：起手三色光向内收；release_* 只让当束那一色向外炸开；命中处元素光向外爆、并有内层贴在 `target` 上做余痕。
+ * 范围：release_* 绑 `point`（服务端按当刻肩位给出，fit none），三束的爆开绑 `point`（fit none），爆开半径用 `data.scale`
+ *   跟随机制里的实际爆开半径；`data.fan`（张角）让空放与广域式下三束明显分开；trail_* 绑 `projectile`，尾迹跟真实弹体走。
+ * 运动：起手三色光向内收（准备位置按面向转好）；release_* 只让当束那一色从肩位向外炸开；trail_* 从弹体拖出短尾；
+ *   命中处元素光向外爆、并有内层贴在 `target` 上做余痕。
  * 数：`data.motes`（特攻派生）决定每束爆开的粒子数、`data.rays`（本次束数）决定 release 环的点数、
  *   `data.intensity`（每束威力派生）抬亮命中那一下、`data.order` 标记这是第几束。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -22,7 +23,7 @@ const TriattackDefinition: ParticleDefinition = {
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
-                    name: "ember_gather", bind: "source", offset: [-0.28, 0.5, 0.32], height: 0.45,
+                    name: "ember_gather", bind: "source", offset: [{ data: "gather.0.0", fallback: -0.28 }, { data: "gather.0.1", fallback: 0.5 }, { data: "gather.0.2", fallback: 0.32 }], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     rate: 12, shape: { kind: "sphere", radius: 0.24 },
                     direction: "inward", speed: [0.02, 0.09], spin: 24,
@@ -30,7 +31,7 @@ const TriattackDefinition: ParticleDefinition = {
                     color: 0xFF7A3D, alpha: [0.8, 0], light: "full", maxParticles: 30
                 },
                 {
-                    name: "frost_gather", bind: "source", offset: [0, 0.5, 0.32], height: 0.45,
+                    name: "frost_gather", bind: "source", offset: [{ data: "gather.1.0", fallback: 0 }, { data: "gather.1.1", fallback: 0.5 }, { data: "gather.1.2", fallback: 0.32 }], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
                     rate: 12, shape: { kind: "sphere", radius: 0.24 },
                     direction: "inward", speed: [0.02, 0.09], spin: 18,
@@ -38,7 +39,7 @@ const TriattackDefinition: ParticleDefinition = {
                     color: 0xBFEFFF, alpha: [0.8, 0], light: "full", maxParticles: 30
                 },
                 {
-                    name: "spark_gather", bind: "source", offset: [0.28, 0.5, 0.32], height: 0.45,
+                    name: "spark_gather", bind: "source", offset: [{ data: "gather.2.0", fallback: 0.28 }, { data: "gather.2.1", fallback: 0.5 }, { data: "gather.2.2", fallback: 0.32 }], height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     rate: 12, shape: { kind: "sphere", radius: 0.24 },
                     direction: "inward", speed: [0.02, 0.1], spin: 20,
@@ -48,12 +49,13 @@ const TriattackDefinition: ParticleDefinition = {
             ]
         },
         // 每束离手只亮自己那一色：火（红）→ 冰（蓝）→ 电（黄）依次发，不把三种预先一起播。
+        // 离手点由服务端按当刻肩位给出（bind point），三色核从这里向外炸开。
         release_ember: {
             duration: 22,
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "ember_launch", bind: "source", offset: [-0.28, 0.5, 0.35], height: 0.45,
+                    name: "ember_launch", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/fire/ember",
                     burst: { count: { data: "motes", fallback: 24 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.22 },
@@ -62,7 +64,7 @@ const TriattackDefinition: ParticleDefinition = {
                     color: 0xFF7A3D, alpha: [0.9, 0], light: "full", bloom: 0.3, maxParticles: 60
                 },
                 {
-                    name: "ember_ring", bind: "source", offset: [0, 0.5, 0.3], height: 0.45,
+                    name: "ember_ring", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: { data: "rays", fallback: 3 }, at: 2 },
                     shape: { kind: "ring", radius: 0.3, arcDegrees: { data: "fan", fallback: 26 } },
@@ -77,7 +79,7 @@ const TriattackDefinition: ParticleDefinition = {
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "frost_launch", bind: "source", offset: [0, 0.58, 0.35], height: 0.5,
+                    name: "frost_launch", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
                     burst: { count: { data: "motes", fallback: 24 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.22 },
@@ -86,7 +88,7 @@ const TriattackDefinition: ParticleDefinition = {
                     color: 0xBFEFFF, alpha: [0.85, 0], light: "full", bloom: 0.3, maxParticles: 60
                 },
                 {
-                    name: "frost_ring", bind: "source", offset: [0, 0.5, 0.3], height: 0.45,
+                    name: "frost_ring", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: { data: "rays", fallback: 3 }, at: 2 },
                     shape: { kind: "ring", radius: 0.3, arcDegrees: { data: "fan", fallback: 26 } },
@@ -101,7 +103,7 @@ const TriattackDefinition: ParticleDefinition = {
             exit: { stop: 9, drain: 14 },
             emitters: [
                 {
-                    name: "spark_launch", bind: "source", offset: [0.28, 0.5, 0.35], height: 0.45,
+                    name: "spark_launch", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     burst: { count: { data: "motes", fallback: 24 }, at: 1 },
                     shape: { kind: "sphere", radius: 0.22 },
@@ -110,13 +112,56 @@ const TriattackDefinition: ParticleDefinition = {
                     color: 0xFFE14D, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },
                 {
-                    name: "spark_ring", bind: "source", offset: [0, 0.5, 0.3], height: 0.45,
+                    name: "spark_ring", bind: "point", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: { data: "rays", fallback: 3 }, at: 2 },
                     shape: { kind: "ring", radius: 0.3, arcDegrees: { data: "fan", fallback: 26 } },
                     direction: "outward", speed: [0.05, 0.14],
                     lifetime: [8, 16], size: [0.18, 0.4],
                     color: 0xFFE14D, alpha: [0.5, 0], light: "full", maxParticles: 20
+                }
+            ]
+        },
+        // 短尾：每一束从真实弹体拖一条自己那一色的尾迹，命中或收光即停；尾迹跟着弹体走，不改已生粒子。
+        trail_ember: {
+            duration: 200,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "wake", bind: "projectile", fit: "none", trail: { minDistance: 0.3 },
+                    particle: "world_combat_core:cobblemon/generic/fire/ember",
+                    rate: 22, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "outward", speed: [0.02, 0.1], spread: 30, drag: 0.9,
+                    lifetime: [6, 11], size: [0.1, 0.02],
+                    color: 0xFF7A3D, alpha: [0.7, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
+        trail_frost: {
+            duration: 200,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "wake", bind: "projectile", fit: "none", trail: { minDistance: 0.3 },
+                    particle: "world_combat_core:cobblemon/generic/ice/iceshard",
+                    rate: 22, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "outward", speed: [0.02, 0.1], spread: 30, spin: 16, drag: 0.9,
+                    lifetime: [7, 12], size: [0.1, 0.02],
+                    color: 0xBFEFFF, alpha: [0.7, 0], light: "full", maxParticles: 90
+                }
+            ]
+        },
+        trail_spark: {
+            duration: 200,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "wake", bind: "projectile", fit: "none", trail: { minDistance: 0.3 },
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    rate: 24, shape: { kind: "sphere", radius: 0.14 },
+                    direction: "outward", speed: [0.02, 0.12], spread: 30, drag: 0.9,
+                    lifetime: [6, 11], size: [0.11, 0.02],
+                    color: 0xFFE14D, alpha: [0.75, 0], light: "full", maxParticles: 90
                 }
             ]
         },

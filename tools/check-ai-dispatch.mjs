@@ -90,6 +90,7 @@ function harness() {
       : state.effects.filter(effect => !effect.ended && effect.definition() === id && effect.target().ref() === actor.ref()),
     effect: startEffect, controlled: value => state.controls.push(value),
     mobEffect: (_actor, id) => state.probes['marker:' + id] || null,
+    matchesMobEffect(target, id, key) { const value = this.valid(target) && this.mobEffect(target, id); return !!value && String(value.key()) === key; },
     mobEffects: () => Object.keys(state.probes).filter(key => key.startsWith('status:') && state.probes[key]).map(key => ({
       tagged: tag => tag === 'world_combat:status/' + key.slice(7), amplifier: () => 0,
     })),
@@ -955,6 +956,46 @@ check('focus death, disappearance and changed allegiance restore the previous st
     if(ending==='death')h.threat.health=0;else if(ending==='friendly')h.threat.friendly=true;else h.state.subjects=h.state.subjects.filter(s=>s!==h.threat);
     h.state.tick+=4;manager.update(view);assert.equal(intent,'stay',ending);assert.deepEqual(coordinates(at),[1,0,2]);assert.equal(target,null);
   }
+});
+check('declared memory aim uses last visible point while ordinary attacks retain visibility rules', () => {
+  const h = harness();
+  h.add('test:touch', 'world_combat:attack', { priority: () => 80 }, { kind: 'enemy', range: 8 });
+  h.add('test:signal', 'world_combat:attack', { memoryAim: true }, { kind: 'aim', range: 8 });
+  h.tick(); assert.equal(h.state.casts[0].target, h.threat.ref);
+  h.threat.visible = false; h.threat.point = [19, 0, 12]; h.state.casts.length = 0;
+  h.state.world.closestPoint = () => { throw Error('Hidden body read'); };
+  h.tick();
+  assert.equal(h.state.casts.length, 1); assert.equal(h.state.casts[0].id, 'test:signal');
+  assert.equal(h.state.casts[0].target, null); assert.deepEqual(h.state.casts[0].point, [4, 0, 0]);
+  h.state.tick = 65; h.state.casts.length = 0; h.tick(); assert.equal(h.state.casts.length, 0);
+});
+check('memory aim neither discovers hidden enemies nor survives identity loss or command changes', () => {
+  for (const boundary of ['unseen', 'gone', 'command', 'capture']) {
+    const h = harness(); h.add('test:signal', 'world_combat:attack', { memoryAim: true }, { kind: 'aim', range: 8 });
+    if (boundary !== 'unseen') h.tick();
+    h.threat.visible = false; h.state.casts.length = 0;
+    if (boundary === 'gone') h.state.subjects = [h.self];
+    if (boundary === 'command') h.state.intent = 'stay';
+    if (boundary === 'capture') {
+      const frame = h.frame(); frame.facts.capture = h.threat.ref; h.agent.tick(frame);
+    } else h.tick();
+    assert.equal(h.state.casts.length, 0, boundary);
+  }
+});
+check('remembered aim retains station range and focus boundaries, then reacquires visible identity', () => {
+  const h = harness(); h.state.intent = 'stay';
+  h.add('test:signal', 'world_combat:attack', { memoryAim: true }, { kind: 'aim', range: 8 });
+  h.tick(); h.threat.visible = false; h.self.point = [-15, 0, 0]; h.state.casts.length = 0; h.state.moves.length = 0;
+  h.tick(); assert.equal(h.state.casts.length, 0);
+  assert(h.state.moves.every(move => move.point.every((value, index) => value === [0, 0, 0][index])), 'A station may return home but cannot chase remembered aim');
+  h.self.point = [0, 0, 0]; h.threat.visible = true; h.threat.point = [6, 0, 0]; h.tick();
+  assert.equal(h.state.casts.at(-1).target, h.threat.ref); assert.deepEqual(h.state.casts.at(-1).point, [6, 0, 0]);
+  const f = harness(); f.add('test:signal', 'world_combat:attack', { memoryAim: true }, { kind: 'aim', range: 8 });
+  const focused = issue => { const frame = f.frame(); frame.facts.intent = 'focus'; frame.facts.focus = f.threat.ref; frame.facts.focusIssue = issue; f.agent.tick(frame); f.state.tick += 4; };
+  focused(''); f.threat.visible = false; f.threat.point = [60, 0, 0]; f.state.casts.length = 0;
+  focused('target-not-visible'); focused('target-not-visible');
+  assert.equal(f.state.casts[0].target, null); assert.deepEqual(f.state.casts[0].point, [4, 0, 0]);
+  f.state.casts.length = 0; focused('out-of-range'); assert.equal(f.state.casts.length, 0);
 });
 console.log(`PASS ${cases} neutral AI dispatch regressions; in-memory output only`);
 assert.equal(errors.length, 0, ts.formatDiagnosticsWithColorAndContext(errors, {

@@ -482,6 +482,8 @@ public final class ActionRuntime {
             var ended = new com.google.gson.JsonObject();
             ended.addProperty("instance", context.id()); ended.addProperty("content", context.definition.id());
             ended.addProperty("reason", reason); ended.addProperty("committed", context.committed);
+            ended.addProperty("originInstance", context.executionOrigin.instance());
+            ended.addProperty("pendingEffects", effects.countOrigin(context.executionOrigin));
             content.hooks().emit(this, "world_combat:action_ended", context.actor(), context.target(), ended.toString(), null, false);
         }
     }

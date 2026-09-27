@@ -1,6 +1,6 @@
 {
-  "worldcombat.skill.facade.summary": "Grit through your own affliction. While poisoned, badly poisoned, burned, paralyzed or frozen the slam deals double damage, and the worse your health the harder it hits. Shoves the target back; Brutal hits harder still but makes you hurt yourself.",
-  "worldcombat.skill.facade.description.0": "The slam deals about %1$s contact damage; it is doubled while you carry poison/badly poisoned, burn, paralysis or frozen, and the more health you have lost the harder it hits. It strikes only the first enemy it meets, and your status is not consumed.",
+  "worldcombat.skill.facade.summary": "Grit through your own affliction. While poisoned, badly poisoned, burned or paralyzed the slam deals double damage, the worse your health the harder it hits, and it ignores the burn attack penalty. Shoves the target back; Brutal hits harder still but makes you hurt yourself.",
+  "worldcombat.skill.facade.description.0": "The slam deals about %1$s contact damage; it is doubled while you carry poison/badly poisoned, burn or paralysis, and the more health you have lost the harder it hits, with the burn attack penalty ignored for this strike. It strikes only the first enemy it meets, and your status is not consumed.",
   "worldcombat.skill.facade.description.1": "On a hit, the target is shoved %1$s blocks along the charge; the lunge reaches %2$s blocks in total and ends early (a whiff) if it meets a block or cannot keep moving.",
   "worldcombat.skill.facade.description.2": "Advance speed %1$s blocks per tick, collision radius %2$s blocks.",
   "worldcombat.skill.facade.use.0": "Grit through an affliction",

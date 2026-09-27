@@ -3,13 +3,13 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-const handlers=new Map(), phases=[];let carrier=true, blocked=false, live=true, factor=1, owned=null, after=0;
+const handlers=new Map(), phases=[];let carrier=true, blocked=false, live=true, factor=1, owned=null, after=0, refuseAttribute=false, refuseEffect=false, clampScale=false;
 const point=(x,y,z)=>({x:()=>x,y:()=>y,z:()=>z,plus:v=>point(x+v.x(),y+v.y(),z+v.z()),minus:v=>point(x-v.x(),y-v.y(),z-v.z())});
 const actor={key:()=>'body'};
 const world={valid:()=>live,observe:()=>live?{width:()=>2*factor,height:()=>4*factor,position:()=>point(0,2*factor,0)}:null,
-  effects:()=>owned?[{data:owned.state}]:[],attributeValue:(_actor,_id,exclude)=>({value:()=>exclude?2:2*factor}),
-  attribute:(_actor,_id,value)=>{factor=1+value;return true;},freeSpace:()=>!blocked,clear:()=>true,
-  effect:(_def,_actor,data)=>{let state=data;owned={target:()=>actor,world:()=>world,id:()=>1,state(value){if(value!==undefined)state=value;return state;},
+  effects:()=>owned?[{data:owned.state,id:owned.id}]:[],attributeValue:(_actor,_id,exclude)=>{const value=exclude?2:2*factor;return {value:()=>value};},
+  attribute:(_actor,_id,value)=>{if(refuseAttribute)return false;if(!clampScale)factor=1+value;return true;},freeSpace:()=>!blocked,clear:()=>true,
+  effect:(_def,_actor,data)=>{if(refuseEffect)return -1;let state=data;owned={target:()=>actor,world:()=>world,id:()=>1,state(value){if(value!==undefined)state=value;return state;},
     schedule:(_key,_handler,ticks)=>{after=ticks;},remaining(){},end(){factor=1;owned=null;}};handlers.get('start')(owned);return 1;}};
 const context=vm.createContext({WorldCombat:{point,effect(){},effectHandler:(_def,event,fn)=>handlers.set(event,fn)},
   MobEffects:{anchor:()=>({id:'neutral:carrier',key:'one'}),matches:()=>carrier},LivingActions:{freeSpot:()=>null}});
@@ -23,4 +23,8 @@ assert.equal(factor,.5);assert(owned,'A sealed pocket retains an owned restorati
 assert.deepEqual(phases,['active','waiting']);handlers.get('restore')(owned);assert.deepEqual(phases,['active','waiting'],'Waiting feedback does not spam each retry');
 blocked=false;handlers.get('restore')(owned);assert.equal(factor,1);assert.equal(owned,null);assert.deepEqual(phases,['active','waiting','restored']);
 carrier=true;B.shrink(world,actor,.5,{},'neutral');live=false;handlers.get('restore')(owned);assert.equal(owned,null);assert.equal(factor,1,'Actor lifecycle releases its only owned native contribution');
+live=true;refuseEffect=true;assert(!B.shrink(world,actor,.5,{},'neutral'));assert.equal(owned,null);refuseEffect=false;
+refuseAttribute=true;assert(!B.shrink(world,actor,.5,{},'neutral'));assert.equal(owned,null);refuseAttribute=false;
+carrier=false;assert(!B.shrink(world,actor,.5,{},'neutral'));assert.equal(owned,null);carrier=true;
+clampScale=true;assert(!B.shrink(world,actor,.5,{},'neutral'),'A native lower bound cannot produce a successful shrink receipt');assert.equal(owned,null);clampScale=false;
 console.log('PASS body scale: owned shrink, single pending window, sealed restoration state, low-frequency retry, safe restoration and departure cleanup');

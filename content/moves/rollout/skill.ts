@@ -28,18 +28,24 @@ namespace PokemonSkills {
         try { return action.targetPosition(); } catch (error) { }
         return action.origin().plus(action.direction().scale(2));
     }
-    /** 每刻把滚动方向朝瞄准方向转，最多 `degrees` 度；这就是石球的惯性，不能瞬间拐回。 */
+    /**
+     * 每刻把滚动方向朝瞄准方向绕 Y 有符号转，最多 `degrees` 度；这就是石球的惯性，不能瞬间拐回。
+     * 用水平面 atan2 求有符号角差再限幅，正后 180° 会取确定的一侧并逐帧转过去；
+     * 线性向量混合在正后会互相抵消成零向量，永远卡死不转。
+     */
     function rolloutTurn(from: CombatPoint, to: CombatPoint, degrees: number): CombatPoint {
         const a = WorldCombat.point(from.x(), 0, from.z());
         const b = WorldCombat.point(to.x(), 0, to.z());
         if (a.length() < 1e-6) return b.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : b.unit();
         if (b.length() < 1e-6) return a.unit();
-        const unitA = a.unit(), unitB = b.unit();
-        const dot = Math.max(-1, Math.min(1, unitA.x() * unitB.x() + unitA.z() * unitB.z()));
-        const angle = Math.acos(dot) * 180 / Math.PI;
-        if (angle <= 1e-3 || angle <= degrees) return unitB;
-        const amount = Math.max(0, Math.min(1, degrees / angle));
-        return unitA.scale(1 - amount).plus(unitB.scale(amount)).unit();
+        const angleA = Math.atan2(a.z(), a.x()), angleB = Math.atan2(b.z(), b.x());
+        let delta = angleB - angleA;
+        while (delta > Math.PI) delta -= Math.PI * 2;
+        while (delta < -Math.PI) delta += Math.PI * 2;
+        const step = Math.max(-degrees, Math.min(degrees, delta * 180 / Math.PI));
+        if (Math.abs(step) < 1e-3) return b.unit();
+        const angle = angleA + step * Math.PI / 180;
+        return WorldCombat.point(Math.cos(angle), 0, Math.sin(angle));
     }
     /** 起滚方向：优先当刻瞄准，其次动作选点；都没有就沿原方向。 */
     function rolloutHeading(action: CombatAction, origin: CombatPoint): CombatPoint {
@@ -78,7 +84,7 @@ namespace PokemonSkills {
                 world: world || null, actor: actor || null, attributes: attributes };
             return {
                 prepare: Math.round(p(rolloutId, "tempo", context)),
-                recover: Math.round(p(rolloutId, "recover", context)),
+                recover: Math.round(p(rolloutId, "aftercast", context)),
                 cooldown: Math.round(p(rolloutId, "recharge", context)),
                 active: skills[rolloutId].active,
                 range: p(rolloutId, "reach", context)
@@ -108,7 +114,8 @@ namespace PokemonSkills {
             const grains = Math.max(6, Math.round(p(rolloutId, "grains", action)));
             const stage = rolloutStage(world, actor);
             const intensity = Math.max(0.6, Math.min(2.6, power / 12));
-            const scale = Math.max(0.7, Math.min(2.2, (radius + stage * 0.08) / rolloutReference));
+            // 石壳固定为实际碰撞尺寸；层数只进 rim／density／亮裂，不再放大一个虚假的碰撞球。
+            const scale = Math.max(0.7, Math.min(2.2, radius / rolloutReference));
             const up = WorldCombat.point(0, 1.1, 0);
             const scenes = WorldFeedback.actionScenes(rolloutScene);
             let direction = rolloutHeading(action, self.position());
@@ -127,15 +134,18 @@ namespace PokemonSkills {
                     const next = stage + 1;
                     if (held !== null) scope.removeMobEffect(actor, held.id(), held.key());
                     if (next >= chain) {
-                        WorldFeedback.emit(scope, rolloutScene, 1, where, { moment: "cap", stage: next, chain: chain, scale: 1.8, intensity: intensity }, 26);
+                        WorldFeedback.emit(scope, rolloutScene, 1, where, { moment: "cap", stage: next, chain: chain, scale: scale, intensity: intensity }, 26);
                         WorldFeedback.text(scope, where.plus(up), rolloutCapText, [chain], 28);
                         sound(current, "minecraft:entity.generic.big_fall");
                     } else {
-                        MobEffects.apply(scope, actor, rolloutMomentum, windowTicks, next);
-                        WorldFeedback.emit(scope, rolloutScene, 1, where,
-                            { moment: "rise", stage: next, power: Math.round(power * 10) / 10, grains: grains, scale: 0.7 + next * 0.3 }, 24);
-                        WorldFeedback.text(scope, where.plus(up), rolloutRiseText, [next], 26);
-                        sound(current, "minecraft:entity.player.attack.strong");
+                        // 增层载体真的挂上去了才报层数：被拒绝时不喊连中，也不留下失效的层数提示。
+                        const carrier = MobEffects.apply(scope, actor, rolloutMomentum, windowTicks, next);
+                        if (carrier !== null) {
+                            WorldFeedback.emit(scope, rolloutScene, 1, where,
+                                { moment: "rise", stage: next, power: Math.round(power * 10) / 10, grains: grains, scale: scale }, 24);
+                            WorldFeedback.text(scope, where.plus(up), rolloutRiseText, [next], 26);
+                            sound(current, "minecraft:entity.player.attack.strong");
+                        }
                     }
                 } else if (held !== null && scope.removeMobEffect(actor, held.id(), held.key())) {
                     WorldFeedback.emit(scope, rolloutScene, 1, where, { moment: "drop" }, 22);
@@ -149,6 +159,17 @@ namespace PokemonSkills {
                     { moment: "whiff", stage: stage, scale: scale }, 20);
                 WorldFeedback.text(scope, origin.plus(up), rolloutMissText, [], 24);
                 sound(current, "minecraft:block.stone.break");
+                finishRoll(current, false);
+            }
+
+            /** 真实撞到敌对活体却没能结算：在真实接触点按入射方向留下一道可读的擦偏，然后当场断链。 */
+            function graze(current: CombatAction, at: CombatPoint): void {
+                const scope = current.world();
+                WorldFeedback.emit(scope, rolloutScene, 1, at,
+                    { moment: "graze", stage: stage, scale: scale, intensity: Math.max(0.5, intensity * 0.7),
+                        direction: [direction.x(), direction.y(), direction.z()] }, 20);
+                WorldFeedback.text(scope, at.plus(up), rolloutMissText, [], 24);
+                sound(current, "minecraft:block.stone.hit");
                 finishRoll(current, false);
             }
 
@@ -184,15 +205,13 @@ namespace PokemonSkills {
                             return;
                         }
                     }
-                    if (hostile) { finishRoll(current, false); return; }
-                    // 非敌对实体只是挡了一下，滚过它继续走，不算命中也不断链。
+                    if (hostile) { graze(current, hit.position()); return; }
+                    // 非敌对实体只是挡了一下，滚过它、用剩余步继续扫，不算命中也不断链。
                     if (swept.remaining.length() > 0.001) progressed += scope.displace(actor, swept.remaining);
                 }
                 travelled += progressed;
                 if (hit.blocked()) {
-                    const wall = hit.blockPosition();
-                    const at = wall !== null ? wall : hit.position();
-                    WorldFeedback.emit(scope, rolloutScene, 1, at,
+                    WorldFeedback.emit(scope, rolloutScene, 1, hit.position(),
                         { moment: "wall", stage: stage, scale: scale, face: hit.blockFace() }, 22);
                     sound(current, "minecraft:block.stone.hit");
                     finishRoll(current, false);

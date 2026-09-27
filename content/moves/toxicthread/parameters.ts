@@ -17,7 +17,7 @@
  *   strandRadius 0.28 + (身高 − 1.4) × 0.08 格，夹 0.2..0.5；身量越高，判定越宽。
  *   reach        4.5 + (速度 − 50) × 0.02 格，夹 4..7；吐得越快够得越远。
  *   threads      16 + (特攻 − 50) × 0.4 个，夹 12..44；特攻越高，一次吐出的丝股越多（画面里的数量）。
- *   tempo        速度 ÷ 9 + 4 刻，夹 6..13；速度越快，起手越短。
+ *   tempo        13 − (速度 − 20) × 0.09 刻，夹 6..13；速度越快，起手越短。
  *   recharge     100 + (等级 − 30) × 1.5 刻，夹 90..220；等级越高越熟练。
  */
 namespace PokemonSkills {
@@ -70,7 +70,7 @@ namespace PokemonSkills {
                 description: "一次吐出的丝股数量；特攻越高越多，画面里的丝也按它画出。"
             }),
         tempo: seconds(
-            F.stat("speed").div(9).plus(4).clamp(6, 13),
+            F.base(13).minus(F.stat("speed").minus(20).max(0).times(0.09)).clamp(6, 13),
             "起手", "把毒丝蓄到口边需要多久；速度越快越早吐出。"),
         recharge: seconds(
             F.base(100).plus(F.level().minus(30).max(0).times(1.5)).clamp(90, 220),

@@ -5,6 +5,7 @@
  *   一直愿意用它换位；有正经攻击手段的伙伴则只在**被近身逼住**（贴到 `ai.keepAway` 以内、正被它打、
  *   或刚挨了它一下）且侧向/背离方向存在可站落点时才跳开，不再仅因有攻击招就彻底禁用。
  * 对谁出手：不选对象——落点由 `target` 钩子算成背离威胁或侧向的一个点，并用原生 freeSpace 探针挑能站下的。
+ *   验证落点时有支撑（实地或有水面）、沿跳跃弧线净空，不能只看终点 freeSpace；没有攻击手段的个体同样要求安全落点。
  * 够不到怎么办：射程就是这一跳的距离，以自身为落点参照，不需要先走近谁。
  * 放完之后：只换了位置，交回共享顺序继续；高跃／低远由配置 leap 切换。
  */
@@ -19,6 +20,29 @@ namespace PokemonSkills {
         return false;
     }
 
+    /** 用机制自己解出的跳跃高度做弧线探针，不在 AI 里另写一份常数。 */
+    function splashHopHeight(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        try {
+            const access = CompanionBehavior.world(context), actor = access.actor(CompanionBehavior.source(context).ref);
+            if (!actor) return 0.5;
+            const value = PokemonSkills.p("splash", "hopHeight",
+                { world: access, actor: actor, skill: PokemonSkills.skills[splashId], detail: { values: item.data.config } });
+            return typeof value === "number" && isFinite(value) && value > 0 ? value : 0.5;
+        } catch (error) { return 0.5; }
+    }
+
+    /** 落点脚底是否有支撑：freeSpace 之外，方块必须非空气，或该处有水面。 */
+    function splashSupported(world: CombatWorld, feet: CombatPoint, width: number, height: number): boolean {
+        if (!world.freeSpace(feet, width, height)) return false;
+        const probe = WorldCombat.point(feet.x(), feet.y() - 0.25, feet.z());
+        const fluid = world.fluid(probe);
+        if (fluid !== null && !fluid.empty()) return true;
+        const block = world.block(probe);
+        if (block === null) return false;
+        const id = String(block.id());
+        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air";
+    }
+
     /** 当前是否被可见威胁贴住或正被它打（近身逼近）。 */
     function splashPressed(context: WorldBehavior.Context, item: WorldBehavior.Capability,
                            threat: CompanionBehavior.Entity): boolean {
@@ -27,7 +51,7 @@ namespace PokemonSkills {
         return threat.attacking === self.ref || self.lastAttacker === threat.ref || self.hurtAgo <= 20;
     }
 
-    /** 侧向或背离威胁的方向上有没有一个能站下的落点；用原生 freeSpace 探针（脚底坐标）。 */
+    /** 侧向或背离威胁的方向上有没有一个安全落点：终点有支撑、沿跳跃弧线净空、且到终点视线不被墙挡。 */
     function splashLandingFree(context: WorldBehavior.Context, item: WorldBehavior.Capability,
                                threat: CompanionBehavior.Entity | null): boolean {
         const world = CompanionBehavior.world(context), body = world.observe(world.source());
@@ -35,6 +59,8 @@ namespace PokemonSkills {
         const self = CompanionBehavior.source(context);
         const reach = Math.max(0.8, Number(item.data.range) || 0.8);
         const feet = self.point[1] - body.height() / 2;
+        const apex = self.point[1] + splashHopHeight(context, item);
+        const eye = WorldCombat.point(self.point[0], self.point[1], self.point[2]);
         const candidates: number[][] = [];
         if (threat) {
             const dx = self.point[0] - threat.point[0], dz = self.point[2] - threat.point[2];
@@ -47,7 +73,11 @@ namespace PokemonSkills {
         }
         for (let index = 0; index < candidates.length; index++) {
             const point = WorldCombat.point(self.point[0] + candidates[index][0], feet, self.point[2] + candidates[index][1]);
-            if (world.freeSpace(point, body.width(), body.height())) return true;
+            if (!splashSupported(world, point, body.width(), body.height())) continue;
+            const middle = WorldCombat.point((self.point[0] + point.x()) / 2, apex, (self.point[2] + point.z()) / 2);
+            if (!world.freeSpace(middle, body.width(), body.height())) continue;
+            if (!world.clear(eye, point)) continue;
+            return true;
         }
         return false;
     }
@@ -61,8 +91,9 @@ namespace PokemonSkills {
             if (!threat || threat.health <= 0 || !threat.visible || threat.friendly) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.distance(self.point, threat.point) > CompanionBehavior.ai<number>(item, "maxChase", 14)) return false;
+            if (!splashLandingFree(context, item, threat)) return false;
             if (!splashHasAttack(context)) return true;
-            return splashPressed(context, item, threat) && splashLandingFree(context, item, threat);
+            return splashPressed(context, item, threat);
         },
         accepts: function () { return true; },
         approachTarget: function (context) { return CompanionBehavior.source(context); },
@@ -75,6 +106,7 @@ namespace PokemonSkills {
             const ax = dx / length, az = dz / length;
             const world = CompanionBehavior.world(context), body = world.observe(world.source());
             const feet = self.point[1] - (body ? body.height() / 2 : 0.7);
+            const eye = WorldCombat.point(self.point[0], self.point[1], self.point[2]);
             const options: number[][] = [
                 [self.point[0] + (-az) * reach, self.point[2] + ax * reach],
                 [self.point[0] + az * reach, self.point[2] + (-ax) * reach],
@@ -82,7 +114,8 @@ namespace PokemonSkills {
             ];
             if (body !== null) {
                 for (let index = 0; index < options.length; index++) {
-                    if (world.freeSpace(WorldCombat.point(options[index][0], feet, options[index][1]), body.width(), body.height())) {
+                    const point = WorldCombat.point(options[index][0], feet, options[index][1]);
+                    if (splashSupported(world, point, body.width(), body.height()) && world.clear(eye, point)) {
                         copy.point = [options[index][0], self.point[1], options[index][1]];
                         return copy;
                     }
@@ -95,8 +128,9 @@ namespace PokemonSkills {
             const threat = context.senses["world_combat:threat"] as CompanionBehavior.Entity | null;
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
+            if (!splashLandingFree(context, item, threat)) return 0;
             if (!splashHasAttack(context)) return CompanionBehavior.distance(self.point, threat.point) > 1.5 ? 20 : 8;
-            if (!splashPressed(context, item, threat) || !splashLandingFree(context, item, threat)) return 0;
+            if (!splashPressed(context, item, threat)) return 0;
             return CompanionBehavior.ratio(self) < CompanionBehavior.ai<number>(item, "retreatBelow", 0.5) ? 70 : 45;
         }
     });

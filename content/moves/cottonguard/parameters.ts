@@ -3,9 +3,10 @@
  *
  * 原生事实：Grass、变化、威力 —、命中必中、PP 10、目标 self、boosts { def: +3 }（巨幅提高防御）。
  *
- * 翻译：把「用软绵绵的绒毛包裹住自己的身体」翻成**一层层鼓出来、把自己裹住的绒衣**——白绒从身上一圈圈炸开，
- *   越裹越厚，防御大幅提高；裹厚了就迈不开步。取原生「+3 防御、10 PP、纯自我防护」；放弃回合制里永久保留的等级 →
- *   即时交战里防御等级立刻写入公共能力阶梯，绒衣是一段可见窗口，被撕光/到期时等级一起收回（对手有一次磨掉它的反制）。
+ * 翻译：把「用软绵绵的绒毛包裹住自己的身体」翻成**一层贴身白绒做的软缓冲**——白绒裹在身上，防御大幅提高；
+ *   近身被打中时，受击一侧的绒被压瘪、弹散，把打击者温和推开一步，同时压掉一层、防御随剩余层数收回；
+ *   远程打不到绒团，只吃这份防御；层被磨光或窗口到期，防御一起收回。裹厚了就迈不开步。取原生「+3 防御、10 PP、
+ *   纯自我防护」；放弃回合制里永久保留的等级——即时交战里等级立刻写入公共能力阶梯，绒衣是一段可见窗口。
  *   本族里它与三招速度提升相对：它是唯一的防护，也是唯一会让自己变慢的一招（厚裹时）。
  *
  * 数值来源（每个参数读不同的精灵数据，分散开）：
@@ -13,7 +14,8 @@
  *   bloom     鼓开半径：基础 1.0 格 + 碰撞箱宽度×1.0；夹 0.9..2.6。体型越宽，绒层铺得越开。
  *   coatTicks 绒衣时长：基础 180 刻 + 等级×3；夹 150..420。等级越高绒衣撑得越久，厚裹再 ×1.2。
  *   fluff     绒团数量：基础 26 + 体重（kg）×0.25；夹 26..90。身体越沉，一次鼓出的绒团越多（也是画面里的数量）。
- *   layers    绒层数：基础 3 + 等级/12；夹 3..6。等级越高，裹的层数越多。
+ *   layers    绒层数：基础 3 + 等级/12；夹 3..6。等级越高裹得越多层，也就是能挡下几次近战接触。
+ *   rebound   回弹推距：基础 0.22 格 + 碰撞箱宽度×0.08；夹 0.12..0.35。身体越宽反弹越远，始终是一小步。
  *   tempo     起手：基础 8 刻 + 体重（kg）×0.01，厚裹再 +2；夹 7..16。越沉、裹得越厚，鼓起来越慢。
  *   aftercast 收招：基础 6 刻 + 碰撞箱高度×1.4；夹 6..12。身板越高大收得越慢。
  *   wait      冷却：基础 110 刻 − 等级×0.4，厚裹 ×1.15；夹 75..130。PP 10 的代价。
@@ -27,7 +29,7 @@ namespace PokemonSkills {
             F.when(F.pref("cocoon", text("worldcombat.skill.cottonguard.preference.cocoon")), F.const(3), F.const(2)).clamp(2, 3).round(0),
             "防御等级", {
                 unit: " 级",
-                description: "绒衣抬高的防御等级；厚裹 3 级，轻裹 2 级。"
+                description: "绒衣满层时抬高的防御等级；厚裹 3 级，轻裹 2 级。近战每压掉一层，按剩余比例收回，最后仍保留 1 级到结束。"
             }),
         /** 鼓开半径：体型越宽铺得越开。 */
         bloom: formula(
@@ -51,12 +53,19 @@ namespace PokemonSkills {
                 unit: " 团",
                 description: "一次鼓开的绒团数量；身体越沉鼓得越多，粒子按它发射。"
             }),
-        /** 绒层数：等级越高裹得越多层。 */
+        /** 绒层数：等级越高裹得越多层；每挨一次近战接触压掉一层。 */
         layers: formula(
             F.base(3).plus(F.level().div(12)).clamp(3, 6).round(0),
             "绒层数", {
                 unit: " 层",
-                description: "绒衣裹了几层；等级越高层数越多，表现里的绒环按它一圈圈推开。"
+                description: "绒衣裹了几层，也就是能挡几次近战接触；每挡下一次压掉一层，层数越少防御越低，最后一层或到期结束。"
+            }),
+        /** 回弹推距：身体越宽反弹越远，始终是一小步。 */
+        rebound: formula(
+            F.base(0.22).plus(F.body("width").times(0.08)).clamp(0.12, 0.35).round(2),
+            "回弹推距", {
+                unit: " 格",
+                description: "近战接触压瘪绒层时把打击者推开的最大水平距离；体型越宽越远，始终不超过 0.35 格。"
             }),
         /** 起手：越沉、裹得越厚，鼓得越慢。 */
         tempo: seconds(
@@ -82,9 +91,10 @@ namespace PokemonSkills {
     ]);
 
     describe("cottonguard", [
-        { key: "description.0", values: ["gift"] },
+        { key: "description.0", values: ["gift", "layers"] },
         { key: "description.1", values: ["coatTicks"] },
         { key: "description.2", values: ["tempo", "aftercast", "wait"] },
+        { key: "description.3", values: ["rebound"] },
         { key: "cocoon.on", values: [], when: function (context) { return read(context.detail.values, ["cocoon"]) === 1; } },
         { key: "cocoon.off", values: [], when: function (context) { return read(context.detail.values, ["cocoon"]) !== 1; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

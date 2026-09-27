@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.comeuppance.summary": "把最近一次受到的伤害记成一笔仇，隔一拍放出会自行追人的暗影，按 1.5 倍返还给选定的敌人；没有账可讨时暗记消散。",
+  "worldcombat.skill.comeuppance.summary": "把最近一次受到的伤害记成一笔仇，隔一拍放出会自行追人的暗影，按 1.5 倍返还给选定的敌人（可改选任意敌人，不限原攻击者）；没有账可讨时暗记消散。",
   "worldcombat.skill.comeuppance.use.0": "挨打后隔空追讨远处的对手",
   "worldcombat.skill.comeuppance.use.1": "惩罚先手打中自己的远程敌人",
   "worldcombat.skill.comeuppance.use.2": "把承伤转成一记延迟的重击",
@@ -27,7 +27,7 @@
   "worldcombat.skill.comeuppance.preference.grudge.help": "开启：记账窗口多 2 秒、追讨延迟多 0.5 秒，暗影更沉得住气、能从更久以前的那笔仇出发，但起手多 2 刻、冷却多 8 刻。关闭：更快追讨、只认眼前的账。",
   "worldcombat.skill.comeuppance.preference.ai.maxChase": "追讨距离",
   "worldcombat.skill.comeuppance.preference.ai.maxChase.help": "账主离自己这么远以内才放出暗影；调大愿意在更远处先手追债。",
-  "world_combat.move.comeuppance.text.hit": "复仇！",
+  "world_combat.move.comeuppance.text.hit": "复仇！造成了 %1$s 点伤害",
   "world_combat.move.comeuppance.text.whiff": "仇无可记",
   "worldcombat.skill.comeuppance.description.ledger": "这笔账在施放时就被取走，命中与否都不会保留，想再追讨得重新挨打记账；账本为空时暗记消散，招式不产生任何效果。"
 }

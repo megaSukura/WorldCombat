@@ -36,7 +36,7 @@ const WrapDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 16 },
             emitters: [
                 {
-                    name: "cinch", bind: "target", offset: [0, 0, 0], height: 0.5,
+                    name: "cinch", bind: "target", offset: [0, 0, 0], height: 0.5, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/wrap",
                     burst: { count: { data: "notes", fallback: 14 }, interval: 2, repeats: 3 },
                     shape: { kind: "cylinder", radius: 0.42, length: { data: "height", fallback: 1.3 }, thickness: 0.5 },
@@ -57,10 +57,19 @@ const WrapDefinition: ParticleDefinition = {
         },
         coil: {
             duration: 0,
-            exit: { stop: 2, drain: 12 },
+            exit: { drain: 12 },
             emitters: [
                 {
-                    name: "cocoon", bind: "target", offset: [0, 0, 0], height: 0.5,
+                    // 真实维持连线：两端读施法者与目标的实体顶点，被拉开/断束时随效果一起消失。
+                    name: "tether", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/wrap",
+                    rate: 22, shape: { kind: "polyline" },
+                    direction: "away", speed: [0.01, 0.05], spread: 8,
+                    spin: 8, lifetime: [6, 11], size: [0.1, 0.02],
+                    color: 0x7E9C5A, alpha: [0.5, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "cocoon", bind: "target", offset: [0, 0, 0], height: 0.5, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/wrap",
                     rate: 7, shape: { kind: "cylinder", radius: 0.44, length: { data: "height", fallback: 1.3 }, thickness: 0.55 },
                     direction: "inward", speed: [0.01, 0.05],
@@ -82,7 +91,7 @@ const WrapDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 12 },
             emitters: [
                 {
-                    name: "tighten", bind: "target", height: 0.5,
+                    name: "tighten", bind: "target", height: 0.5, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/wrap",
                     burst: { count: { data: "notes", fallback: 14 } },
                     shape: { kind: "cylinder", radius: 0.44, length: { data: "height", fallback: 1.3 }, thickness: 0.5 },

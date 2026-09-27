@@ -23,7 +23,7 @@
   "worldcombat.skill.iciclespear.value.aftercast": "收招",
   "worldcombat.skill.iciclespear.value.recharge": "冷却",
   "worldcombat.skill.iciclespear.preference.rime": "霜附式",
-  "worldcombat.skill.iciclespear.preference.rime.help": "开启：每根命中的霜寒高一个减速档次、霜寒时长 ×1.6、结霜范围 ×1.3、散布 ×0.8，适合粘住目标并冻地；代价是锥数收在 3 根、间隔 +1 刻、单锥威力 ×0.9、起手 +2 刻、冷却 +4 刻。关闭（纯碎式）：锥数可到 5 根、单锥威力 ×1.1、冷却 −4 刻，代价是只留最浅的霜寒、更小的霜圈与更大的散布。",
+  "worldcombat.skill.iciclespear.preference.rime.help": "开启：每根命中的霜寒高一个减速档次（约 30% 减速）、霜寒时长 ×1.6、冰屑范围 ×1.3，适合粘住目标；代价是锥数收在 3 根、单锥威力 ×0.9、起手 +2 刻、冷却 +4 刻。关闭（纯碎式）：锥数可到 5 根、单锥威力 ×1.1、冷却 −4 刻，代价是只留最浅的霜寒（约 15% 减速）与更小的冰屑范围。",
   "worldcombat.skill.iciclespear.preference.ai.maxChase": "出手距离",
   "worldcombat.skill.iciclespear.preference.ai.maxChase.help": "超过这个距离就不主动射锥，先走近。越大越愿意从更远处先手。",
   "worldcombat.skill.iciclespear.preference.ai.finish": "优先收残血",

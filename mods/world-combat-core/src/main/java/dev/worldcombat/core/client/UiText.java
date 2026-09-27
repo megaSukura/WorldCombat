@@ -75,7 +75,7 @@ public final class UiText {
         if(row.has("label"))lines.add(Component.translatable("worldcombat.ui.value_line",parse(row.get("label"),bindings,resolving),value.copy()));
         explain(row,bindings,resolving,lines,1);
         var tooltip=Component.empty();for(int i=0;i<lines.size();i++){if(i>0)tooltip.append("\n");tooltip.append(lines.get(i));}
-        return value.withStyle(style->style.withColor(0xb07818).withUnderlined(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,tooltip)));
+        return value.withStyle(style->style.withColor(0xe8c77b).withUnderlined(true).withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,tooltip)));
     }
     private static final int MAX_DEPTH=6;
     /**

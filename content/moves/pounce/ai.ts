@@ -9,16 +9,31 @@
  * 放完之后：目标被缠身、速度等级下降，交回共享交战计划；残血目标让这一扑更有收尾价值。
  */
 namespace PokemonSkills {
-    /** 跳跃拱顶（弧的中点、脚高度 + apex）处是否能容下施法者的身体；同一决策帧内缓存。 */
+    /**
+     * 沿整条弧逐点检查身体净空，并核对终点支撑：不只看拱顶一个点；目标高过拱顶、或沿弧有实体/方块占位时返回 false。
+     * 明确可接触的空中目标不要求落脚面；同一决策帧内缓存。
+     */
     function pounceArcClear(context: WorldBehavior.Context, target: WorldMethods.Subject): boolean {
         return CompanionBehavior.observedFlag(context, "pounce:arc:" + target.ref, function () {
             const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
-            const apex = p("pounce", "apex", world);
+            const apex = p("pounce", "apex", world), leap = p("pounce", "leap", world);
             const width = self.width === undefined ? 0.9 : self.width, height = self.height === undefined ? 1.4 : self.height;
             const selfFeet = self.point[1] - height / 2;
-            const probe = CompanionBehavior.point([(self.point[0] + target.point[0]) / 2, selfFeet + apex,
-                (self.point[2] + target.point[2]) / 2]);
-            return world.freeSpace(probe, width, height);
+            const targetFeet = target.point[1] - (target.height === undefined ? 1.4 : target.height) / 2;
+            const dx = target.point[0] - self.point[0], dz = target.point[2] - self.point[2];
+            const gap = Math.sqrt(dx * dx + dz * dz);
+            if (gap < 0.01) return false;
+            const distance = Math.min(leap, Math.max(1.5, gap));
+            const ux = dx / gap, uz = dz / gap, drop = targetFeet - selfFeet;
+            if (drop > apex - 0.15) return false;
+            for (let i = 0; i <= 6; i++) {
+                const t = i / 6;
+                const y = selfFeet + drop * t + apex * 4 * t * (1 - t);
+                if (!world.freeSpace(CompanionBehavior.point([self.point[0] + ux * distance * t, y, self.point[2] + uz * distance * t]), width, height)) return false;
+            }
+            // 贴地目标要有真实落脚支撑；空中目标只要弧线可达即可。
+            return drop >= 0.3 || SurfacePaths.support(world,
+                CompanionBehavior.point([self.point[0] + ux * distance, selfFeet + drop, self.point[2] + uz * distance]), 0.6, 3) !== null;
         });
     }
 

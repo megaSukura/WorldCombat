@@ -36,7 +36,7 @@ Smoke.scenario("shoreup", function (stage) {
             stage.expect(caster.health() > woundedAt + 3, "shoring up restored the caster");
             var dug = stage.changedBlocks().some(function (change) { return change.before === "minecraft:sand" && change.after !== "minecraft:sand"; });
             stage.expect(!dug, "shore up left the sand surface intact instead of digging load-bearing blocks");
-            stage.note("集沙只读取探沙范围内的真实沙位并据此扬起沙粒，不挖走承重沙块；只有明确掉落的松散沙物品会被收走。回复按 heal 读沙那一刻的散沙密度（身边 3×3 一层的沙块密度）与共享身份 world_combat:status/sandstorm，所以站在沙地上明显更足、沙暴中回到约 2/3。取沙量随等级、回复随防御与散沙密度、沙粒密度随体重、探沙范围随身高变化；沙暴分支需要另一个施法者的沙暴场地，留给完整装配的人工试玩。", {
+            stage.note("集沙只读取探沙范围内的真实沙位并据此扬起沙粒，不挖走方块、也不消耗任何掉落物，世界完全不被改动。回复按 heal 读同一脚点（身体中心减半身高）下方 3×3 一层的散沙密度与 WorldEnvironment 的沙暴读数，所以站在沙地上明显更足、沙暴中回到约 2/3、离开沙暴即时失效；疗量、AI 与画面读同一份读数。取沙量随等级、回复随防御与散沙密度、沙粒密度随体重、探沙范围随身高变化；沙暴分支需要另一个施法者的沙暴场地，留给完整装配的人工试玩。掉落的 64 个沙栈不再被整删，属源码级事实（已删除 shoreupDrawDrops 的 discard 流程）。", {
                 casterCasts: stage.casts("shoreup", caster),
                 woundedHealth: Math.round(woundedAt * 10) / 10,
                 casterHealthNow: Math.round(caster.health() * 10) / 10,

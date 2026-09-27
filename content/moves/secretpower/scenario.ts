@@ -16,7 +16,7 @@ Smoke.scenario("secretpower", function (stage) {
         stage.expect(stage.casts("secretpower", sentret) > 0, "秘密之力被放出来了");
         stage.expect(stage.damageTo(zombie) > 0, "借力一击打到了目标身上");
         stage.expect(stage.travelled(sentret) > 0, "借力的突进把施法者带向了目标");
-        stage.note("目标脚下是草地（应抽睡眠）；追加是否抽中、以及命中/暴击都是随机结果。",
+        stage.note("目标真实脚点落在草方块上（预告、AI 与命中共用同一取样，应读作草木→睡眠）；追加是否抽中、以及命中/暴击都是随机结果。",
             { casts: stage.casts("secretpower", sentret), damage: stage.damageTo(zombie),
                 slept: stage.hadMobEffect(zombie, "world_combat:status/sleep"), travelled: stage.travelled(sentret) });
         stage.done();

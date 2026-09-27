@@ -23,19 +23,24 @@ namespace PokemonSkills {
     const surfMissText = "world_combat.move.surf.text.miss";
     const surfDouseText = "world_combat.move.surf.text.douse";
 
-    /** 在浪头圈里按预算沤熄明火：一列只认最上面那层非空气方块，是火就灭掉；火灭掉不会自己烧回来。 */
-    function surfQuench(world: CombatWorld, centre: CombatPoint, radius: number, budget: number): number {
+    /**
+     * 浪头这一拍到过的环带里按剩余预算沤熄明火：一列只认最上面那层非空气方块，是火就灭掉；
+     * 火本身从浪根看被墙挡住时浇不到，与人的判定同一遮挡；总预算跨整道浪累计。
+     */
+    function surfQuenchFront(world: CombatWorld, centre: CombatPoint, inner: number, outer: number, budget: number): number {
         const base = Math.floor(centre.y()), cx = Math.floor(centre.x()), cz = Math.floor(centre.z());
-        const reach = Math.ceil(radius), limit = Math.max(1, Math.round(budget));
+        const reach = Math.ceil(outer), limit = Math.max(0, Math.round(budget));
         let doused = 0;
         for (let dx = -reach; dx <= reach && doused < limit; dx++) for (let dz = -reach; dz <= reach && doused < limit; dz++) {
-            if (dx * dx + dz * dz > radius * radius) continue;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            if (distance < inner || distance > outer) continue;
             for (let dy = 1; dy >= -2; dy--) {
                 const point = WorldCombat.point(cx + dx + 0.5, base + dy + 0.5, cz + dz + 0.5), block = world.block(point);
                 if (block === null) continue;
                 const id = String(block.id());
                 if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
                 if (id !== "minecraft:fire" && id !== "minecraft:soul_fire") break;
+                if (!world.clear(centre, point)) break;
                 if (world.breakBlock(point, false) !== "") break;
                 WorldFeedback.emit(world, surfScene, 1, point, { moment: "douse", scale: 1 }, 22);
                 doused++;
@@ -96,32 +101,37 @@ namespace PokemonSkills {
             const cap = Math.max(1, Math.round(p("surf", "maxTargets", action)));
             const scale = radius / 4.6;
             const struck: { [ref: string]: boolean } = {};
-            let step = 0, hits = 0, settled = false;
+            const selfRef = String(action.actor().ref());
+            // 浪墙由动作托管：同样 key 每拍更新前沿，动作一结束就停，不留一圈已经推完的危险轮廓。
+            const scenes = WorldFeedback.actionScenes(surfScene, 1);
+            let step = 0, hits = 0, doused = 0, settled = false;
 
             sound(action, "minecraft:item.trident.riptide_2");
 
-            /** 浪推完：收势、沤火、报数。 */
+            /** 浪推完：收势、报数。 */
             function finish(current: CombatAction): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const doused = surfQuench(scope, centre, radius, quench);
                 WorldFeedback.emit(scope, surfScene, 1, centre,
                     { moment: hits > 0 ? "settle" : "miss", radius: radius, front: radius, crest: crest,
                         spray: spray, scale: scale, hits: hits, doused: doused }, 30);
                 WorldFeedback.text(scope, centre.plus(WorldCombat.point(0, 1.2, 0)),
                     hits > 0 ? surfHitText : surfMissText, hits > 0 ? [hits] : [], 26);
+                scenes.stop(current);
                 done(current);
             }
 
-            /** 一环环向外推：每环扫到的非友方各挨一次。 */
+            /** 一环环向外推：每环扫到的非友方各挨一次；同一环里浪头到达的地面明火按剩余预算浇灭。 */
             function advance(current: CombatAction): void {
                 const scope = current.world();
                 const outer = radius * (step + 1) / steps, inner = Math.max(0, radius * step / steps - 0.4);
                 WorldGeometry.selectEnemies(scope, WorldGeometry.ring(centre, inner, outer, { below: 2, above: crest }),
                     function (enemy, facts) {
                         const ref = String(enemy.ref());
-                        if (ref === String(current.actor().ref()) || struck[ref] || hits >= cap) return;
+                        if (ref === selfRef || struck[ref] || hits >= cap) return;
+                        // 墙挡住的这一段浪到不了：通视与画面里的同一前沿一致。
+                        if (!scope.clear(centre, facts.position())) return;
                         struck[ref] = true;
                         if (!hurt(current, enemy, "surf", power, { damage: damageSpec("surf", "surge") })) return;
                         hits++;
@@ -139,8 +149,10 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, surfScene, 1, facts.position(),
                             { moment: "hit", target: ref, scale: scale, spray: spray, intensity: Math.max(0.5, Math.min(2.2, power / 95)) }, 24);
                     });
-                WorldFeedback.keep(scope, "surf:front:" + String(current.actor().ref()), surfScene, 1, centre,
-                    { moment: "surge", radius: radius, front: outer, crest: crest, spray: spray, scale: scale, progress: (step + 1) / steps }, 10);
+                doused += surfQuenchFront(scope, centre, inner, outer, quench - doused);
+                scenes.show(current, "surge", centre,
+                    { moment: "surge", radius: radius, front: outer, crest: crest, spray: spray, scale: scale,
+                        doused: doused, progress: (step + 1) / steps });
                 step++;
                 if (step >= steps) { finish(current); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });

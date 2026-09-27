@@ -24,6 +24,7 @@ Smoke.scenario("afteryou", function (stage) {
         stage.expect(stage.casts("afteryou", caster) > 0, "the helper paid for its transfer");
         stage.expect(afteryouPreparationAdvanced > 0, "the recipient's declared preparation was actually shortened");
         stage.expect(stage.attribute(ally, "world_combat:skill_haste") === 0, "the transfer did not become a persistent recipient cooldown buff");
+        stage.expect(!stage.hasMobEffect(ally, "world_combat:status/afteryou"), "consuming the lead removed the exact waiting carrier");
         stage.expect((stage.pp(ally, "focuspunch") || 0) < 20, "the advanced action still paid its original move resource");
         stage.note("actual preparation advance", { ticks: afteryouPreparationAdvanced, helper: stage.casts("afteryou", caster), receiver: stage.casts("focuspunch", ally) });
         stage.done();

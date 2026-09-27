@@ -46,12 +46,20 @@ const TeraBlastDefinition: ParticleDefinition = {
             exit: { stop: 60, drain: 24 },
             emitters: [
                 {
+                    name: "spear_axis", bind: "projectile", fit: "none", orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",
+                    shape: { kind: "cylinder", radius: 0.07, length: { data: "spear", fallback: 3.2 }, thickness: 1 },
+                    rate: 90, direction: "shape", speed: [0.0, 0.02],
+                    lifetime: [4, 8], size: [0.20, 0.05], sizeMode: "index",
+                    color: TypeColors.binding("type", 0xD6ECFF), alpha: [0.95, 0], light: "full", bloom: 0.45, maxParticles: 110
+                },
+                {
                     name: "spear_body", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ice/iceshard",
-                    rate: 60, shape: { kind: "sphere", radius: 0.20 },
+                    rate: 44, shape: { kind: "sphere", radius: 0.13 },
                     direction: "shape", speed: [0.0, 0.03], spin: 10,
-                    lifetime: [6, 14], size: [0.24, 0.05],
-                    color: 0xD6ECFF, alpha: [0.95, 0], light: "full", bloom: 0.3, maxParticles: 90
+                    lifetime: [6, 14], size: [0.20, 0.05],
+                    color: TypeColors.binding("type", 0xD6ECFF), alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 70
                 },
                 {
                     name: "shard_trail", bind: "projectile", fit: "none",
@@ -59,7 +67,7 @@ const TeraBlastDefinition: ParticleDefinition = {
                     rate: 40, shape: { kind: "sphere", radius: 0.18 },
                     direction: "away", speed: [0.02, 0.08], spin: 9,
                     lifetime: [6, 14], size: [0.14, 0.02],
-                    color: 0xC7E6FF, alpha: [0.9, 0], light: "full", maxParticles: 60
+                    color: TypeColors.binding("type", 0xC7E6FF), alpha: [0.9, 0], light: "full", maxParticles: 60
                 },
                 {
                     name: "shard_dust", bind: "projectile", fit: "none",
@@ -111,7 +119,7 @@ const TeraBlastDefinition: ParticleDefinition = {
                     burst: { count: { data: "bursts", fallback: 10 } }, shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.12, 0.30], gravity: 0.02, spin: 12,
                     lifetime: [10, 22], size: [0.22, 0.03],
-                    color: 0xD6ECFF, alpha: [1, 0], light: "full", maxParticles: 120
+                    color: TypeColors.binding("type", 0xD6ECFF), alpha: [1, 0], light: "full", maxParticles: 120
                 },
                 {
                     name: "flash", bind: "target", height: 0.5,
@@ -136,6 +144,28 @@ const TeraBlastDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.14], gravity: 0.015,
                     lifetime: [12, 24], size: [0.05, 0.01],
                     color: 0xF0F6FF, alpha: [0.6, 0], light: "full", maxParticles: 120
+                }
+            ]
+        },
+        beam_hit: {
+            duration: 20,
+            exit: { stop: 6, drain: 16 },
+            emitters: [
+                {
+                    name: "flare", bind: "target", height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_ice",
+                    burst: { count: { data: "bursts", fallback: 8 } }, shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.08, 0.22], spin: 8,
+                    lifetime: [7, 14], size: [0.28, 0.06], sizeMode: "index",
+                    color: TypeColors.binding("type", 0xFFFFFF), alpha: [1, 0], light: "full", bloom: 0.45, maxParticles: 60
+                },
+                {
+                    name: "ring", bind: "target", offset: [0, 0.05, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
+                    burst: { count: 1 }, shape: { kind: "ring", radius: { data: "cover", fallback: 0.8 } },
+                    direction: "outward", speed: [0.0, 0.0],
+                    lifetime: [8, 14], size: [0.4, 0.16],
+                    color: TypeColors.binding("type", 0xEAF6FF), alpha: [0.7, 0], light: "full", maxParticles: 4
                 }
             ]
         },

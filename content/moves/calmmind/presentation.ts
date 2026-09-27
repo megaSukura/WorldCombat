@@ -8,15 +8,16 @@
  * 层次：收心（起）／静环、念力与气息（击）／贴身的淡光（收）／散开（末）。
  * 起击收：gather（凝神）→ settle（静定）→ calm（维持）→ fade（散功）。
  * 范围：静环绑脚点、fit none，半径按 `data.scale`（实际涟漪半径 / 1.4）推出，画出来的圈就是静气铺到的范围。
- * 运动：念力微粒由外向内收拢；静环一圈圈向外推开；维持时淡光贴着身体缓慢上浮。
- * 数：微粒量绑 `data.motes`（特攻＋特防派生），静环圈数绑 `data.breaths`（等级派生），尺寸与范围绑 `data.scale`。
- * 持续状态：维持期低密度、贴身，玩家仍看得清目标。
+ * 运动：念力微粒由外向内收拢；静环按拍数一拍一圈从脚下推开；维持时淡光贴着身体缓慢上浮。
+ * 数：微粒量绑 `data.motes`（特攻＋特防派生），静环圈数绑 `data.breaths`（等级派生），每拍只发一圈、从中心散开，
+ *   不再在一圈上随机撒多个环；起手时长绑 `data.prepare`（真实起手），尺寸与范围绑 `data.scale`。
+ * 持续状态：维持期低密度、贴身，玩家仍看得清目标；这段清明由真实窗口持有，随刷新/到期/驱散一起收束。
  */
 const CalmMindDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         gather: {
-            duration: 14,
+            duration: { data: "prepare", fallback: 14 },
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
@@ -26,20 +27,12 @@ const CalmMindDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.05, 0.15], drag: 0.9, spin: 10,
                     lifetime: [8, 14], size: [0.09, 0.02],
                     color: 0xB9A6F2, alpha: [0.5, 0], light: "full", bloom: 0.3, maxParticles: 44
-                },
-                {
-                    name: "gather_ring", bind: "point", fit: "none", offset: [0, 0.12, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 2, interval: 4 }, shape: { kind: "ring", radius: 1.15 },
-                    direction: "inward", speed: [0.03, 0.09],
-                    lifetime: [10, 16], size: [0.3, 0.6], sizeMode: "index",
-                    color: 0xEDE8FF, alpha: [0.5, 0], light: "full", maxParticles: 10
                 }
             ]
         },
         settle: {
             duration: 34,
-            exit: { stop: 14, drain: 20 },
+            exit: { stop: { data: "settleStop", fallback: 14 }, drain: 20 },
             emitters: [
                 {
                     name: "settle_mote", bind: "source", fit: "none", height: 0.45,
@@ -53,11 +46,11 @@ const CalmMindDefinition: ParticleDefinition = {
                 {
                     name: "settle_ring", bind: "point", fit: "none", offset: [0, 0.15, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyring1",
-                    burst: { count: { data: "breaths", fallback: 2 }, interval: 6 },
-                    shape: { kind: "ring", radius: 1.4 },
-                    direction: "outward", speed: [0.05, 0.14],
-                    lifetime: [16, 26], size: [0.5, 0.95], sizeMode: "index",
-                    color: 0xEDE8FF, alpha: [0.6, 0], light: "full", maxParticles: 36
+                    burst: { count: 1, interval: 6, repeats: { data: "breaths", fallback: 2 } },
+                    shape: { kind: "circle", radius: 0.12 },
+                    direction: "outward", speed: [0.02, 0.06],
+                    lifetime: [16, 26], size: [0.45, 1.05],
+                    color: 0xEDE8FF, alpha: [0.6, 0], light: "full", maxParticles: 8
                 },
                 {
                     name: "settle_dust", bind: "source", fit: "none", height: 0.3,

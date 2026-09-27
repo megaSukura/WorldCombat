@@ -4,7 +4,7 @@
  * 一句话：施法者沉肩、钢甲上掠过一层冷光 → 地面先亮出一圈计划落点，整个人腾空翻了半圈、身后甩下碎石与速度线 →
  * 以身躯砸在**实际落地处**，该处炸开一圈灰白冲击与碎石 → 被砸中的目标身上爆出钢色钝击并被顶开时扬起一撮尘。
  * 色相家族：冷灰与钢白（impact_steel / groundquake / large_rock）为主体，土褐（earth / tinydust）作坑尘，无饱和色。
- * 拍子：起（windup 蓄势）→ 行（leap 腾空、mark 计划落点）→ 击（crash 跟随实际落地、impact 命中、shove 被顶开）→ 收（crash 的余尘）。
+ * 拍子：起（windup 蓄势）→ 行（leap 腾空、mark 计划落点铺满整个腾空时长）→ 击（crash 跟随实际落地、impact 命中、shove 被顶开）→ 收（crash 的余尘）。
  * 范围：crash 绑**实际落点**、fit none，地面环半径按 `data.scale`（实际落点半径 / 2.0）铺开，画出的就是被罩住的地块。
  * 运动：跃起时碎石向上外甩，落地是贴地向外扩张的震环加向上崩起的碎块，余尘缓慢下沉。
  * 数：crash 的碎石量绑 `data.bursts`（命中目标数派生），强度绑 `data.intensity`（威力 / 90），impact 的尘量同样随威力变化。
@@ -62,8 +62,8 @@ const HeavySlamDefinition: ParticleDefinition = {
             ]
         },
         mark: {
-            duration: 32,
-            exit: { stop: 8, drain: 14 },
+            duration: { data: "air", fallback: 20 },
+            exit: { drain: 14 },
             emitters: [
                 {
                     name: "planned_ring", bind: "point", fit: "none", offset: [0, 0.04, 0],

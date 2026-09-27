@@ -2,18 +2,32 @@
  * 电磁飘浮 的伙伴 AI 用途：这是这招自己的一套出手计划。
  *
  * 什么局面有意义：有可见威胁、自己还没浮起来，且它在 ai.maxChase 以内；
- *   ai.opening=躲地面招（默认）时只在附近有地面属性威胁、或贴地近战敌人贴到 4.5 格时才起浮——
- *   这招本来就是躲地面招的，对着砍不动的敌人不必浪费；=随时时见威胁就起浮，当常备防御。
+ *   ai.opening=躲地面招（默认）时只在附近有真的会出地面招的威胁（配招里有地面招、或近期打出过地面属性攻击）、
+ *   或贴地近战敌人贴到 4.5 格时才起浮——这招本来就是躲地面招的，对着砍不动的敌人不必浪费；
+ *   =随时时见威胁就起浮，当常备防御。地面属性身份本身不是理由，要看到实际的招。
  * 对谁出手：自己；不需要接近，原地完成（reach 0，accepts 只收自己）。
  * 够不到怎么办：不需要够——威胁太远就先不理会，等它靠近。
- * 候选之间怎么排：附近是地面属性威胁时排在更前（72），其余局面 55；地面前排优先于普通接近。
+ * 候选之间怎么排：附近确实会出地面招的威胁排在更前（72），其余局面 55；地面前排优先于普通接近。
  * 放完之后：身体真的低空托起来，地面招打不到、贴地近战被同极弹开；跟随移动受真实空间与原生碰撞限制。
  * 配置 field（滑翔／锚定）改变时长、弹力与移速；ai.maxChase、ai.opening 决定追多远、什么时候起浮。
  */
 namespace PokemonSkills {
+    /**
+     * 真正的证据，而不是属性身份：威胁的配招里确实有一招地面招式，或它刚刚真实打出过一次地面属性攻击。
+     * 单纯是地面属性、却不带地面招的对手不当作躲地面招的理由（它仍可因贴地近战被排斥而触发本招）。
+     */
     function magnetriseGroundThreat(context: WorldBehavior.Context, threat: CompanionBehavior.Entity): boolean {
-        const facts = CompanionBehavior.pokemonFacts(context, threat);
-        return !!facts && !!facts.types && facts.types.indexOf("ground") >= 0;
+        const access = CompanionBehavior.world(context), actor = access.actor(threat.ref);
+        if (actor === null || !access.valid(actor)) return false;
+        if (String(actor.domain()) === "cobblemon") {
+            const pokemon = CobblemonCombat.pokemon(actor);
+            for (let slot = 0; slot < pokemon.moveSlots(); slot++) {
+                const move = pokemon.move(slot);
+                if (move && String(move.type()).toLowerCase() === "ground") return true;
+            }
+        }
+        const recent = DamageSemantics.recentAttack(access, actor, 200);
+        return recent !== null && String(recent.type || "").toLowerCase() === "ground";
     }
 
     CompanionBehavior.registerUse(magnetriseId, {

@@ -1,8 +1,8 @@
 /**
  * 圆瞳 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者睁圆一双眼睛（两圈粉色瞳环在脸侧张开），一道眼波沿视线落到对手身上，把它身上炸开一层
- *   软化的粉雾，之后头顶持续浮着一点没脾气的眼波。
+ * 一句话：施法者睁圆一双眼睛（两只圆眼按朝向与体型贴在脸前，短开合），一道眼波沿视线落到对手身上，
+ *   把它身上炸开一层软化的粉雾，之后头顶持续浮着一点没脾气的眼波。
  *
  * 色相家族：妖精粉（0xF7A8C4／0xE87BA8）为主体，近白粉（0xFFE0EC）只做瞳环高光与眼波小点，
  *   灰白（0xCCC6CC）只在被挡住那一刻出现。没有第二个色相。
@@ -21,22 +21,6 @@ const BabydolleyesDefinition: ParticleDefinition = {
             duration: 12,
             exit: { stop: 5, drain: 10 },
             emitters: [
-                {
-                    name: "pupil_left", bind: "source", offset: [-0.18, 1.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 6, interval: 3, repeats: 2 }, shape: { kind: "ring", radius: 0.16 },
-                    direction: "outward", speed: [0.02, 0.07],
-                    lifetime: [10, 16], size: [0.16, 0.04],
-                    color: 0xFFE0EC, alpha: [0.8, 0], light: "full", bloom: 0.15, maxParticles: 12
-                },
-                {
-                    name: "pupil_right", bind: "source", offset: [0.18, 1.05, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/smallring",
-                    burst: { count: 6, interval: 3, repeats: 2 }, shape: { kind: "ring", radius: 0.16 },
-                    direction: "outward", speed: [0.02, 0.07],
-                    lifetime: [10, 16], size: [0.16, 0.04],
-                    color: 0xFFE0EC, alpha: [0.8, 0], light: "full", bloom: 0.15, maxParticles: 12
-                },
                 {
                     name: "blink_motes", bind: "source", height: 0.9,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
@@ -159,3 +143,45 @@ const BabydolleyesDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_babydolleyes", 1, BabydolleyesDefinition);
+
+// 睁眼：一双随朝向与体型贴在脸前的圆眼短开合。位置由服务端给的方向、宽高与起始刻算出，
+// 转身、体型不同都贴脸；开合只在这段起手内从 0 张到满再合上，不生成粒子或实体。
+WorldCombatClient.scene("world_combat:move_babydolleyes_eyes", 1, function (frame) {
+    const entry: CombatSceneEntry<{
+        self?: string; dir?: number[]; width?: number; height?: number; startTick?: number; duration?: number; stare?: number;
+    }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data || {};
+    const anchor = JSON.parse(frame.anchor(data.self || entry.source));
+    if (!anchor) return;
+    const dir = Array.isArray(data.dir) && data.dir.length === 3 ? data.dir : [0, 0, 1];
+    const flat = Math.sqrt(dir[0] * dir[0] + dir[2] * dir[2]);
+    const fwd = flat < 1e-4 ? [0, 0, 1] : [dir[0] / flat, 0, dir[2] / flat];
+    const right = [fwd[2], 0, -fwd[0]];
+    const width = typeof data.width === "number" && data.width > 0 ? data.width : 0.9;
+    const height = typeof data.height === "number" && data.height > 0 ? data.height : 1.4;
+    const now = frame.serverTick();
+    const start = typeof data.startTick === "number" ? data.startTick : now;
+    const duration = typeof data.duration === "number" && data.duration > 0 ? data.duration : 6;
+    const progress = Math.max(0, Math.min(1, (now - start) / duration));
+    const open = Math.sin(Math.PI * progress);
+    if (open <= 0.02) return;
+    const cx = anchor.x, cy = anchor.y + height * 0.62, cz = anchor.z;
+    const depth = width * 0.32, gap = width * 0.22;
+    const eyeR = 0.04 + open * 0.05, pupilR = 0.02 + open * 0.035;
+    const white = (0xF0 << 24) | 0xFFE0EC, pink = (0xFF << 24) | 0xF7A8C4;
+    const steps = 12;
+    function eye(offset: number, radius: number, color: number): void {
+        const ex = cx + fwd[0] * depth + right[0] * offset, ez = cz + fwd[2] * depth + right[2] * offset;
+        for (let i = 0; i < steps; i++) {
+            const a = i * Math.PI * 2 / steps, b = (i + 1) * Math.PI * 2 / steps;
+            const ay = Math.sin(a) * radius * (0.7 + 0.3 * open), by = Math.sin(b) * radius * (0.7 + 0.3 * open);
+            frame.line(ex + right[0] * Math.cos(a) * radius, cy + ay, ez + right[2] * Math.cos(a) * radius,
+                ex + right[0] * Math.cos(b) * radius, cy + by, ez + right[2] * Math.cos(b) * radius, color);
+        }
+    }
+    eye(-gap, eyeR, white);
+    eye(gap, eyeR, white);
+    eye(-gap, pupilR, pink);
+    eye(gap, pupilR, pink);
+});

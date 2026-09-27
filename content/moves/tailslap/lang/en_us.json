@@ -30,7 +30,7 @@
   "worldcombat.skill.tailslap.preference.ai.maxChase": "Engage distance",
   "worldcombat.skill.tailslap.preference.ai.maxChase.help": "Beyond this distance the companion closes in first instead of starting the spin.",
   "worldcombat.skill.tailslap.preference.ai.crowd": "Aim at the crowd",
-  "worldcombat.skill.tailslap.preference.ai.crowd.help": "On: opens the spin more readily when other enemies stand near the target, since the full ring catches several at once; off: ranks only by the ordinary melee order.",
+  "worldcombat.skill.tailslap.preference.ai.crowd.help": "On: opens the spin more readily when other enemies stand inside its own real sweep (the full ring, or the smash front arc), since one sweep catches several at once; off: ranks only by the ordinary melee order.",
   "worldcombat.skill.tailslap.preference.ai.leaveStation": "May leave a station",
   "worldcombat.skill.tailslap.preference.ai.leaveStation.help": "On: under a hold order it will still leave its post to spin; off: only casts when the target is already in range.",
   "world_combat.move.tailslap.text.tally": "%1$s laps, %2$s clean hits"

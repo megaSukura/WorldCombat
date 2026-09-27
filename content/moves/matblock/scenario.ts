@@ -6,6 +6,6 @@ Smoke.scenario("matblock", function (stage) {
   stage.setPp(caster, "matblock", 0);
   stage.expect(stage.hadMobEffect(caster, "world_combat:status/matblock"), "caster covered");
   stage.expect(stage.hadMobEffect(ally, "world_combat:status/matblock"), "nearby ally receives sheet membership");
-  stage.note("Shared membership verified. Actual native source-position plane intersection controls each interception; front/back crossing and the fixed sheet are manual interaction checks."); stage.done();
+  stage.note("Shared membership verified. Each interception reads the real native projectile flight (or source position) against the fixed sheet face; front/back crossing, the sheet weave and per-member remaining are manual interaction checks."); stage.done();
  }, "mat sheet membership");
 });

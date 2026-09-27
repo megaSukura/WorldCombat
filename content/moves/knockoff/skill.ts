@@ -16,28 +16,21 @@ namespace PokemonSkills {
     const knockoffMissText = "world_combat.move.knockoff.text.miss";
 
     /**
-     * 把被拍掉的道具以真实掉落物抛出：`scatter` 是真正的落点距离——用弹道解出飞向该点的初速，
+     * 把被拍掉的道具以真实掉落物抛出：`scatter` 是意图中的落点距离——用弹道解出飞向该点的初速，
      * 原生掉落物自己沿这条低弧翻滚落地，过 `pickup` 刻才能被捡起。移除与生成在同一事务里完成；
      * 原生拒绝时返回失败、原物留在原槽。
-     * 回执里的 `drop` 是那件掉落物的实体 UUID，表现用它跟随真实落物；`land` 是按同一初速与
-     * 原版掉落物阻力估算的落地刻，供落地小闪对时。
+     * 回执里的 `drop` 是那件掉落物的实体 UUID，表现用它跟随真实落物；落地时刻由原生掉落物自己决定，
+     * 这里不再估算，也不在估出的刻上硬播「落地」。
      */
     function knockoffToss(scope: CombatWorld, target: CombatActor, point: CombatPoint, held: NativeItems.Held,
-        direction: CombatPoint, scatter: number, tossSpeed: number, pickup: number): { receipt: NativeItems.Receipt; land: number } {
+        direction: CombatPoint, scatter: number, tossSpeed: number, pickup: number): NativeItems.Receipt {
         var flat = WorldCombat.point(direction.x(), 0, direction.z());
         if (flat.length() < 0.01) flat = WorldCombat.point(0, 0, 1);
         var destination = point.plus(flat.unit().scale(scatter));
         var arc = LivingActions.ballistic(point.plus(WorldCombat.point(0, 0.4, 0)), destination, tossSpeed, 0.04);
         var velocity = arc ? arc.scale(tossSpeed) : flat.unit().scale(tossSpeed);
-        var horizontal = Math.sqrt(velocity.x() * velocity.x() + velocity.z() * velocity.z()), land = 40;
-        if (horizontal > 0.02 && scatter > 0.05) {
-            var remaining = 1 - 0.01 * scatter / horizontal;
-            if (remaining > 0.02 && remaining < 1) land = Math.log(remaining) / Math.log(0.99);
-        }
-        land = Math.max(6, Math.min(110, Math.round(land)));
-        var receipt = NativeItems.dropHeld(scope, target, held, JSON.stringify({ pickupDelay: Math.max(0, Math.round(pickup)),
+        return NativeItems.dropHeld(scope, target, held, JSON.stringify({ pickupDelay: Math.max(0, Math.round(pickup)),
             velocity: [velocity.x(), velocity.y(), velocity.z()] }));
-        return { receipt: receipt, land: land };
     }
 
     /** 本场对局的临时记忆：某件拍不掉的东西在哪个目标身上被拒过，AI 据此不再反复尝试缴械。 */
@@ -89,21 +82,28 @@ namespace PokemonSkills {
                     intensity: intensity, scale: scale, motes: Math.round(motes * (0.7 + intensity * 0.2)),
                     armed: held !== null ? 1 : 0 }, 32);
                 sound(current, "cobblemon:impact.dark");
-                var targetBody = scope.valid(target) ? scope.observe(target) : null;
-                var toss = landed && held !== null && targetBody !== null
-                    ? knockoffToss(scope, target, targetBody.position(), held, direction, scatter, tossSpeed, pickup) : null;
-                var knocked = toss !== null && toss.receipt.ok && toss.receipt.drop !== "";
-                if (knocked && targetBody !== null && toss !== null) {
-                    var itemPoint = targetBody.position();
-                    WorldFeedback.emit(scope, knockoffScene, 1, itemPoint,
-                        { moment: "knock", path: [toss.receipt.drop, toss.receipt.drop], item: held!.id,
+                // 取物顺序：先按下伤害，落地成功才在同一事务里把整栈取下并抛出；伤害没落上就什么都不动。
+                // 这一拍直接打倒对方时，若原生已关掉那个槽就不再取物，也不谎报「拍掉」或「拍不动」。
+                var toss = landed && held !== null
+                    ? knockoffToss(scope, target, point, held, direction, scatter, tossSpeed, pickup) : null;
+                var knocked = toss !== null && toss.ok && toss.drop !== "";
+                if (knocked && toss !== null) {
+                    WorldFeedback.emit(scope, knockoffScene, 1, point,
+                        { moment: "knock", path: [toss.drop, toss.drop], item: held!.id,
                             direction: [direction.x(), direction.y(), direction.z()], scale: scale, scatter: scatter,
-                            land: toss.land, motes: Math.round(motes) }, Math.max(30, Math.min(150, Math.round(toss.land + 30))));
-                    WorldFeedback.text(scope, itemPoint.plus(WorldCombat.point(0, 0.9, 0)), knockoffKnockText, [], 30);
+                            motes: Math.round(motes) }, 100);
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffKnockText, [], 30);
                     sound(current, "minecraft:item.trident.throw");
-                } else if (landed && held !== null) {
+                } else if (!landed) {
+                    // 伤害没落上（属性免疫/原生拒绝）：既不是裸手也不是拍不动，这一记只是没咬实。
+                    var missSelf = scope.observe(actor);
+                    if (missSelf !== null) WorldFeedback.text(scope, missSelf.position().plus(WorldCombat.point(0, 1.1, 0)), knockoffMissText, [], 22);
+                } else if (held !== null && after !== null) {
+                    // 有物、伤害也落上了，但原生拒绝卸下：只报「拍不动」，不计入裸手。
                     knockoffResist(scope, actor, target, 600);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffRefusedText, [], 28);
+                } else if (held !== null) {
+                    // 一拍拍倒：道具来不及被取下，不谎报结果。
                 } else {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), knockoffBareText, [], 28);
                 }

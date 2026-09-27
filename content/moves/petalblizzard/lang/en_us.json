@@ -26,7 +26,7 @@
   "worldcombat.skill.petalblizzard.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.petalblizzard.preference.ai.maxChase.help": "The companion only considers Petal Blizzard when a threat is this close; lower it to whirl only at arm's reach, raise it to walk in further first.",
   "worldcombat.skill.petalblizzard.preference.ai.minFoes": "Foes in range",
-  "worldcombat.skill.petalblizzard.preference.ai.minFoes.help": "At least this many visible foes must stand within its consider distance before it whirls; raise it for surrounded-only use, set it to 1 to whirl at a single target.",
+  "worldcombat.skill.petalblizzard.preference.ai.minFoes.help": "At least this many visible foes with a clear line from the storm centre must stand inside the real storm radius before it whirls; foes behind a wall do not count. Raise it for surrounded-only use, set it to 1 to whirl at a single target; whether it walks in first is still decided by Consider distance.",
   "world_combat.move.petalblizzard.text.hit": "Cut %1$s times",
   "world_combat.move.petalblizzard.text.miss": "Petals missed"
 }

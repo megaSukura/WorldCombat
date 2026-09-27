@@ -3,7 +3,7 @@
   "worldcombat.skill.batonpass.use.0": "Hand the whole stack of stat changes to a teammate",
   "worldcombat.skill.batonpass.use.1": "Pass your growth on before it can be stripped away",
   "worldcombat.skill.batonpass.use.2": "Pass the baton and disengage when badly hurt",
-  "worldcombat.skill.batonpass.description.0": "Passes up to %1$s levels: the largest absolute stat changes first, then native buffs within the remaining allowance. Transferred effects leave the user and retain their remaining time; the baton icon lasts %2$s.",
+  "worldcombat.skill.batonpass.description.0": "Pass up to %1$s levels: Attack, Defence, Sp. Atk, Sp. Def and Speed changes in descending absolute size, including negative stages. Remaining capacity transfers native buffs. Transferred contributions leave the giver and keep their remaining duration; the handoff icon lasts %2$s.",
   "worldcombat.skill.batonpass.description.1": "Hand-off range %1$s blocks; after the pass you step %2$s blocks away from the ally.",
   "worldcombat.skill.batonpass.relay.on": "Relay style: carry cap ×1.0, step ×0.6, longer cooldown — give the whole baton to your ally.",
   "worldcombat.skill.batonpass.relay.off": "Solo style: carry cap ×0.65, step ×1.2, shorter cooldown — keep part for yourself and pull farther away.",
@@ -24,8 +24,9 @@
   "worldcombat.skill.batonpass.preference.ai.maxChase.help": "Only hands off when a teammate is this close; lower it to pass only at point-blank, raise it to walk over to them.",
   "worldcombat.skill.batonpass.preference.ai.leaveStation": "Leave post while holding",
   "worldcombat.skill.batonpass.preference.ai.leaveStation.help": "When on, the user leaves its post under a hold order to hand the baton to a teammate.",
-  "world_combat.move.batonpass.text.handoff": "Baton pass · inherits %1$s",
+  "world_combat.move.batonpass.text.handoff": "Baton pass · +%1$s / −%2$s",
   "world_combat.move.batonpass.text.lone": "Baton pass · no taker",
+  "world_combat.move.batonpass.text.preview": "Planned stages: Atk%1$s Def%2$s SpA%3$s SpD%4$s Spe%5$s",
   "effect.world_combat.baton_pass": "Baton Pass",
   "worldcombat.skill.batonpass.world": "Ordinary creatures and players can receive the baton. Each native buff transfers whole, with level I costing one level. It stays with the user if the remaining allowance is too small or the recipient already has a stronger instance."
 }

@@ -9,17 +9,21 @@ namespace BodyScale {
     export function shrink(world: CombatWorld, actor: CombatActor, factor: number, carrier: CombatMobEffect, key: string): boolean {
         if (!isFinite(factor) || factor <= 0 || factor > 1) throw new Error("Shrink factor must be in (0,1]");
         if (!world.attributeValue(actor, attribute) || pending(world, actor, key)) return false;
-        world.effect(definition, actor, JSON.stringify({ key: key, factor: factor, carrier: MobEffects.anchor(carrier), waiting: false }), 1200000);
-        return true;
+        const id = world.effect(definition, actor, JSON.stringify({ key: key, factor: factor, carrier: MobEffects.anchor(carrier), waiting: false }), 1200000);
+        return id > 0 && world.effects(actor, definition).some(view => view.id() === id && JSON.parse(String(view.data())).applied === true);
     }
     function publish(effect: CombatEffect, state: any, phase: Change["phase"]): void {
         changes.apply({ world: effect.world(), actor: effect.target(), effect: effect.id(), key: state.key, phase: phase });
     }
     WorldCombat.effect(definition, 1, 1200000, "actor", json => json, () => { throw new Error("Body scale ownership cannot migrate"); });
     WorldCombat.effectHandler(definition, "start", effect => {
-        const state = JSON.parse(effect.state()), world = effect.world();
+        const state = JSON.parse(effect.state()), world = effect.world(), before = world.attributeValue(effect.target(), attribute);
+        const previous = before ? before.value() : null;
         if (!MobEffects.matches(world, effect.target(), state.carrier)
             || !world.attribute(effect.target(), attribute, state.factor - 1, "add_multiplied_total")) { effect.end(); return; }
+        const after = world.attributeValue(effect.target(), attribute);
+        if (previous === null || !after || state.factor < 1 && after.value() >= previous - 0.000001) { effect.end(); return; }
+        state.applied = true; effect.state(JSON.stringify(state));
         publish(effect, state, "active"); effect.schedule("restore", "restore", 1, "{}");
     });
     WorldCombat.effectHandler(definition, "restore", effect => {

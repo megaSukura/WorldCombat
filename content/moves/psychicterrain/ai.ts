@@ -2,8 +2,8 @@
  * 精神场地 / psychicterrain 的伙伴 AI 用途与自己的铺场计划。
  *
  * 什么局面下出手：有可见威胁在 `ai.maxChase`（默认 14）格内，自己还不在精神域里。威胁已经逼近到 4 格内时
- * priority 抬到 58——先制招式随时会到，护场最值钱；否则 42，插在 `world_combat:defend` 之前当作开打前的布置。
- * `ai.advance` 开启时把精神域按在威胁与我方之间。
+ * priority 抬到 58——最近的击退随时会来，稳在阵地最值钱；否则 42，插在 `world_combat:defend` 之前当作开打前的布置。
+ * `ai.advance` 开启时把精神域按在威胁与我方之间。精神域对双方一视同仁，靠得越近，替对手削掉位移的代价也越大。
  */
 namespace PokemonSkills {
     function psychicCapability(context: WorldBehavior.Context): WorldBehavior.Capability | null {

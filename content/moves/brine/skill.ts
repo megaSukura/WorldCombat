@@ -67,20 +67,22 @@ namespace PokemonSkills {
             const scale = brineScale(radius);
             const intensity = Math.max(0.6, Math.min(2.0, power / 65));
             const perTarget = damageFeatures(brineId, "jet");
-            let settled = false, struck = false;
+            const direction = aim(action);
+            let settled = false, contacted = false;
 
             sound(action, "cobblemon:move.watergun.actor");
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            LivingActions.projectile(action, {
+            const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, lifetime: 200,
                 appearance: { sprite: "cobblemon:generic/water/waterjet_head", tint: 0xC8ECFF, glow: true,
                     scale: Math.max(0.35, Math.min(1.0, 0.5 + scale * 0.3)) },
                 impact: function (current: CombatAction, hit: CombatImpact) {
+                    // 一次真实接触：收束表现只在这里播一次，飞尽回调不再重复。
+                    contacted = true;
                     const scope = current.world(), point = hit.position(), victim = hit.target();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
-                        struck = true;
                         const foe = scope.observe(victim);
                         const landing = foe !== null ? foe.position() : point;
                         // 命中前先读它当刻的血量：残血才翻倍，满血 Boss 不假设以后会掉到一半。
@@ -89,35 +91,40 @@ namespace PokemonSkills {
                             { damage: damageSpec(brineId, "jet"), resolve: perTarget.resolve });
                         if (dealt) {
                             CombatStatus.apply(scope, victim, "soaked", brineSoaked, soakTicks, 0, { secondary: true, unique: true });
+                            // 命中的收束只播一次：主体水花在落点，残血才额外添盐晶裂口。
                             WorldFeedback.emit(scope, brineScene, 1, landing,
-                                { moment: "sting", target: String(victim.ref()), wounded: wounded ? 1 : 0, drops: drops,
-                                    shards: wounded ? Math.max(16, Math.round(drops * 1.5)) : 0,
-                                    scale: scale, intensity: (wounded ? 1.5 : 1) * intensity }, 28);
-                            if (wounded)
+                                { moment: "burst", drops: drops, scale: scale, press: press ? 1 : 0, intensity: intensity }, 22);
+                            if (wounded) {
+                                WorldFeedback.emit(scope, brineScene, 1, landing,
+                                    { moment: "sting", target: String(victim.ref()), wounded: 1, drops: drops,
+                                        shards: Math.max(16, Math.round(drops * 1.5)), scale: scale, intensity: 1.5 * intensity }, 28);
                                 WorldFeedback.text(scope, landing.plus(WorldCombat.point(0, 1.25, 0)), brineWoundedText, [], 26);
+                            }
                             scope.sound("cobblemon:impact.water", landing, 14, "{}");
                         }
                     } else {
-                        // 打中墙／底面：没有可结算的活体，只散开一簇水花。
-                        const blockPoint = hit.blockPosition();
-                        WorldFeedback.emit(scope, brineScene, 1, blockPoint === null ? point : blockPoint,
+                        // 打中墙／底面：没有可结算的活体，在真实接触点散开一簇水花（不画方块格角）。
+                        WorldFeedback.emit(scope, brineScene, 1, point,
                             { moment: "miss", drops: drops, scale: scale, block: hit.blocked() ? 1 : 0 }, 20);
                         scope.sound("minecraft:entity.generic.splash", point, 14, "{}");
                     }
-                    WorldFeedback.emit(scope, brineScene, 1, point,
-                        { moment: "burst", drops: drops, scale: scale, press: press ? 1 : 0, intensity: intensity }, 22);
                     finish(current);
                 }
             }, function (current: CombatAction) {
-                if (!struck) {
+                if (!contacted) {
                     const scope = current.world();
-                    WorldFeedback.emit(scope, brineScene, 1, action.origin(), { moment: "miss", scale: scale, drops: Math.round(drops * 0.6) }, 18);
-                    WorldFeedback.text(scope, action.origin().plus(WorldCombat.point(0, 1.0, 0)), brineMissText, [], 20);
+                    // 飞满射程没碰到任何东西：用弹体移除后仍可读的真实末点收束，不拿施者身上或旧瞄准点假造终点。
+                    const end = scope.projectilePosition(flight);
+                    const at = end !== null ? end : current.origin();
+                    WorldFeedback.emit(scope, brineScene, 1, at, { moment: "miss", scale: scale, drops: Math.round(drops * 0.6) }, 18);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), brineMissText, [], 20);
                 }
                 finish(current);
             });
+            // 起手（windup 的 charge）之后发射是另一个短读：口边一瞬前冲的盐卤束，和收水预告区分开。
             WorldFeedback.emit(world, brineScene, 1, body.position(),
-                { moment: "charge", reach: action.range(), nozzle: radius, scale: scale, press: press ? 1 : 0 }, 20);
+                { moment: "launch", reach: action.range(), nozzle: radius, scale: scale, press: press ? 1 : 0,
+                    direction: [direction.x(), direction.y(), direction.z()] }, 10);
         }
     });
 }

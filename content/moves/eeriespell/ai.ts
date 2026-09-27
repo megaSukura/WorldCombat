@@ -2,7 +2,8 @@
  * 诡异咒语 / eeriespell —— AI 用途。
  *
  * 出手局面：目标是可见、敌对、存活的活体，且在 `ai.maxChase`（默认 14）格内时出手。
- * 优先挑正在出手、贴近施加压力的敌人（本作没有逐目标的攻击频率表，正在攻击与贴身是当前可读的代理）；
+ * 这是一记会真的伤血的远程招，所以对任何活着的威胁都保留基础分，不会因为对方一时没出手就永久变成 0 分；
+ * 优先挑正在出手、贴近施加压力、或刚与自己交过手的敌人（正在攻击、贴身与近期受击是当前可读的节奏代理）；
  * 目标已带着「诡异」且还远未到期时降低优先级，避免把咒念浪费在同一层干扰上。
  * 宝可梦身份只作为「还能扣上一招 PP」的附加评分，不再决定是否加优先。
  */
@@ -22,13 +23,22 @@ namespace CompanionBehavior {
         priority: function (context: WorldBehavior.Context, item: WorldBehavior.Capability, target: WorldMethods.Subject | null): number {
             if (!target)
                 return 0;
-            var score = 0;
+            var self = source(context);
+            // 这是一记远程伤害招：对活着的威胁先保留基础分，再按交战节奏加权。
+            var score = 22;
             if (target.attacking)
-                score += 40;
-            if (distance(source(context).point, target.point) <= 4)
+                score += 24;
+            if (distance(self.point, target.point) <= 4)
                 score += 15;
+            else if (distance(self.point, target.point) > ai(item, "maxChase", 14))
+                score -= 12;
             if (status(context, target, "eerie"))
                 score -= 30;
+            // 最近互相交火的敌人更值得压制：刚被打过或正盯着自己。
+            if (typeof target.hurtAgo === "number" && target.hurtAgo < 60)
+                score += 8;
+            if (target.lastAttacker === self.ref)
+                score += 8;
             if (domain(context, target) === "cobblemon")
                 score += 10;
             return Math.max(0, score);

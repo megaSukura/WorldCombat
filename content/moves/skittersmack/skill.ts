@@ -16,6 +16,13 @@ namespace PokemonSkills {
         for (let i = 0; i < points.length; i++) result.push([points[i].x(), points[i].y() + 0.1, points[i].z()]);
         return result;
     }
+    /** 一处可站落脚点：原生顶面支撑与起走点同层高，且容得下完整身体箱；悬空或断崖端点不成立。 */
+    function skittersmackStandable(world: CombatWorld, point: CombatPoint, width: number, height: number, floorY: number): CombatPoint | null {
+        const at = SurfacePaths.support(world, point, 4, 4);
+        if (at === null || Math.abs(at.y() - floorY) > 1.0) return null;
+        if (!world.freeSpace(WorldCombat.point(point.x(), at.y() + 0.05, point.z()), width, height)) return null;
+        return at;
+    }
 
     define({
         freeMovement: true,
@@ -74,11 +81,18 @@ namespace PokemonSkills {
             const sideSign = WorldGeometry.dot(start.minus(base), side) < 0 ? -1 : 1;
             const clearance = victim ? (self.width() + victim.width()) / 2 + standoff : standoff;
             const sideways = Math.max(scuttle, clearance);
-            let phase: "side" | "rear" = "side", travelled = 0;
+            const floorY = self.position().y() - self.height() / 2;
+            const selfWidth = self.width(), selfHeight = self.height();
+            const sweepRadius = Math.max(0.1, Math.min(1, selfWidth / 2));
+            let phase: "side" | "rear" = "side", travelled = 0, sidePick = sideSign, settled = false;
             const distanceBudget = scuttle * 2 + reach;
             const scenes = WorldFeedback.actionScenes(skittersmackScene);
             sound(action, "minecraft:entity.silverfish.step");
+
+            /** 最后肢端横扫：一次全扇视觉按真实 reach 与 smackWidth 画，判定与它共用起点与朝向。 */
             function strike(current: CombatAction): void {
+                if (settled) return;
+                settled = true;
                 scenes.stop(current);
                 const scope = current.world(), origin = current.origin();
                 const live = target && scope.valid(target) ? scope.observe(target) : null;
@@ -87,17 +101,26 @@ namespace PokemonSkills {
                 const look = live && target ? WorldGeometry.facing(scope, target) : null;
                 const back = live ? skittersmackFlat(origin.minus(live.position())) : null;
                 const behind = deep && look !== null && back !== null && WorldGeometry.dot(skittersmackFlat(look), back) < -0.35;
+                WorldFeedback.emit(scope, skittersmackSweepScene, 1, origin,
+                    { moment: "sweep", point: [origin.x(), origin.y(), origin.z()], start: scope.tick(),
+                        direction: [direction.x(), direction.y(), direction.z()], radius: reach, span: width,
+                        motes: Math.round(motes), back: behind ? 1 : 0 }, 26);
                 let hits = 0;
                 WorldGeometry.selectBodies(scope, WorldGeometry.bodySector(origin, direction, reach, width, { below: 1.6, above: 2.4 }), (enemy, body) => {
                     if (String(enemy.key()) === String(actor.key()) || scope.friendly(enemy)) return;
                     const contact = scope.closestPoint(enemy, origin); if (!scope.clear(origin, contact)) return;
-                    const primary = target !== null && String(enemy.ref()) === String(target.ref()), bonus = primary && behind ? 1 + backstab : 1;
+                    const primary = target !== null && String(enemy.ref()) === String(target.ref()), backHit = primary && behind;
+                    const bonus = backHit ? 1 + backstab : 1;
                     if (!hurt(current, enemy, skittersmackId, power * bonus, { damage: damageSpec(skittersmackId, "strike"), contact: true })) return;
-                    if (scope.valid(enemy)) NativeEffects.boost(scope, enemy, "spa", -stages);
                     hits++;
-                    WorldFeedback.emit(scope, skittersmackScene, 1, contact, { moment: "strike", target: String(enemy.ref()),
-                        direction: [direction.x(), direction.y(), direction.z()], motes: motes, back: primary && behind ? 1 : 0 }, 26);
-                    WorldFeedback.text(scope, contact, primary && behind ? skittersmackHitText : skittersmackFocusText, [stages], 24);
+                    // 只按实际削掉的特攻回执；原生拒绝或已触底时不发成功提示。
+                    const applied = scope.valid(enemy) ? NativeEffects.boost(scope, enemy, "spa", -stages) : 0;
+                    WorldFeedback.emit(scope, skittersmackScene, 1, contact, { moment: backHit ? "back" : "strike", target: String(enemy.ref()),
+                        direction: [direction.x(), direction.y(), direction.z()], motes: Math.round(motes), back: backHit ? 1 : 0 }, 26);
+                    if (applied !== 0) {
+                        WorldFeedback.emit(scope, skittersmackScene, 1, contact, { moment: "focus", target: String(enemy.ref()), motes: Math.round(motes) }, 24);
+                        WorldFeedback.text(scope, contact, backHit ? skittersmackHitText : skittersmackFocusText, [Math.abs(applied)], 24);
+                    }
                 });
                 if (!hits) {
                     WorldFeedback.emit(scope, skittersmackScene, 1, origin, { moment: "miss" }, 16);
@@ -105,23 +128,41 @@ namespace PokemonSkills {
                 }
                 sound(current, hits ? "cobblemon:impact.bug" : "minecraft:entity.player.attack.sweep"); done(current);
             }
+
+            /** 绕行用原生身体扫掠，落点先确认可站；被墙或身体挡住就停在原地侧拍，不穿身体也不伪称已经绕背。 */
             function flank(current: CombatAction): void {
+                if (settled) return;
                 const scope = current.world(), here = current.origin();
                 const body = target && scope.valid(target) ? scope.observe(target) : null;
                 const centre = body ? body.position() : base;
-                const desired = phase === "side" ? centre.plus(side.scale(sideSign * sideways)) : centre.minus(forward.scale(clearance));
-                // A ground maneuver keeps its own foot height; looking at a tall boss does not launch the attacker upward.
+                const desired = phase === "side" ? centre.plus(side.scale(sidePick * sideways)) : centre.minus(forward.scale(clearance));
                 const goal = WorldCombat.point(desired.x(), here.y(), desired.z()), want = goal.minus(here);
                 if (want.length() <= 0.3) {
-                    if (phase === "side" && deep && body) { phase = "rear"; current.after(1, flank); return; }
+                    if (phase === "side" && deep && body) {
+                        // 先确认背后落脚可站；站不住就从侧位出手，不伪称已经绕背。
+                        const rear = WorldCombat.point(centre.x() - forward.x() * clearance, here.y(), centre.z() - forward.z() * clearance);
+                        if (skittersmackStandable(scope, rear, selfWidth, selfHeight, floorY) === null) { strike(current); return; }
+                        phase = "rear"; current.after(1, flank); return;
+                    }
+                    strike(current); return;
+                }
+                if (skittersmackStandable(scope, goal, selfWidth, selfHeight, floorY) === null) {
+                    // 首选侧位不可站时换另一侧；两侧都不可站就在原地侧拍。
+                    if (phase === "side" && sidePick === sideSign) {
+                        const other = centre.plus(side.scale(-sideSign * sideways));
+                        const otherGoal = WorldCombat.point(other.x(), here.y(), other.z());
+                        if (skittersmackStandable(scope, otherGoal, selfWidth, selfHeight, floorY) !== null) { sidePick = -sideSign; current.after(1, flank); return; }
+                    }
                     strike(current); return;
                 }
                 const step = Math.min(pace, want.length(), distanceBudget - travelled);
                 if (!(step > 0)) { strike(current); return; }
-                const moved = scope.displace(actor, want.unit().scale(step)); travelled += moved;
+                const swept = sweepStep(current, want.unit().scale(step), sweepRadius);
+                travelled += swept.moved;
                 scenes.show(current, "scuttle", current.origin(), { moment: "scuttle",
                     path: skittersmackVertices([here, current.origin()]), deepflank: deep ? 1 : 0 });
-                if (moved < 0.01 || travelled >= distanceBudget) { strike(current); return; }
+                if (swept.hit.hitEntity() || swept.hit.blocked()) { strike(current); return; }
+                if (swept.moved < 0.01 || travelled >= distanceBudget) { strike(current); return; }
                 current.after(1, flank);
             }
             flank(action);

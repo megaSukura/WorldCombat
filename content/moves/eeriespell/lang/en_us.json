@@ -18,5 +18,6 @@
   "worldcombat.skill.eeriespell.preference.ai.leaveStation.help": "When on, a stationed companion leaves its post to cast the spell; when off it stays put.",
   "effect.world_combat.eerie": "Eerie",
   "world_combat.move.eeriespell.text.drain": "Memory -%1$s",
+  "world_combat.move.eeriespell.text.fog": "Eerie clings",
   "world_combat.move.eeriespell.text.none": "Nothing to drain"
 }

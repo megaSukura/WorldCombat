@@ -2,12 +2,13 @@
  * 迁怒 / frustration 的出手方式。
  *
  * 念头的形状：把憋着的不满在身前攥成一簇暗色刺团（windup，提交前只播预告）→ 朝选定的方向/对手扑近一小段（rush）→
- * 贴上去后连续抓出几爪，每爪独立结算一次接触伤害；中间几爪只是贴身的接触反馈，不把对手推走，最后一爪才把攒下的劲
- * 一次性送出去、明确抛开目标（rake × rakes、fling）→ 收势时吐出一口余恨（spite / miss）。
+ * 贴上去后连续抓出几爪，每爪独立结算一次接触伤害；每爪朝当前可及方向重取一条左右交替的短扫段（判定与表现共用端点）。
+ * 从扑近转入连抓即停掉扑近拖尾；中间爪只是贴身接触，不把对手推走，最后一爪才把**本次实际命中爪数**攒下的顶开一次送出去
+ * （命中几爪就推几爪的量，绝不按计划爪数虚报）→ 收势时吐出一口余恨（spite / miss）。
  * 亲密度越低，抓击越重、次数越多、间隔越短；它和报恩读同一个数、方向相反，靠「多段快抓」与「单次重击」分开。
  *
- * 每一爪都重取一次短距并重新判定：中间爪不再推开，所以不会自己把对手顶出连抓范围；对手主动走开仍能躲掉后面的爪。
- * 总伤害与总推力不变，只是把原本分散在每爪的顶开预算集中到最后一爪。
+ * 每一爪都重取一次短距并重新判定：中间爪不推开，所以不会自己把对手顶出连抓范围；对手主动走开仍能躲掉后面的爪，
+ * 躲掉的那几爪不计入末爪的顶开量。
  *
  * 选取：`kind: "aim"`——可空扑、空抓；提交方向与短转向按现范围，不要求提交时存在敌人。
  *
@@ -15,6 +16,8 @@
  */
 namespace PokemonSkills {
     const frustrationScene = "world_combat:move_frustration";
+    /** 每爪的短扫段主体：服务端把判定用的同一组世界端点交给它画，命中的接触点也在这里标出。 */
+    const frustrationClawScene = "world_combat:move_frustration/claw";
     const frustrationSpiteText = "world_combat.move.frustration.text.spite";
     const frustrationMissText = "world_combat.move.frustration.text.miss";
 
@@ -78,7 +81,7 @@ namespace PokemonSkills {
             const embers = Math.max(8, Math.round(intensity * 14));
             const start = world.observe(self);
             if (start === null) { movementScenes.finish(action, done); return; }
-            let travelled = 0, settled = false, anyLanded = false;
+            let travelled = 0, settled = false, anyLanded = false, raking = false, landedCount = 0;
             let heading = frustrationAim(action);
 
             movementScenes.show(action, "rush", action.origin(), { moment: "rush", scale: scale, rakes: rakes, intensity: intensity, vent: vent });
@@ -105,6 +108,8 @@ namespace PokemonSkills {
                 if (settled) return;
                 const scope = current.world();
                 const origin = current.origin();
+                // 从扑近转入连抓：立即停掉扑近拖尾，避免冲刺视觉延伸到原地抓挠。
+                if (!raking) { raking = true; movementScenes.stop(current, "rush"); }
                 if (foe !== null && scope.valid(foe)) {
                     const body = scope.observe(foe);
                     const want = body === null ? null : body.position().minus(origin);
@@ -113,8 +118,14 @@ namespace PokemonSkills {
                 const index = rakes - left + 1;
                 const isLast = left <= 1;
                 const side = index % 2 === 0 ? 1 : -1;
-                const hit = current.trace(origin, origin.plus(heading.scale(p("frustration", "reachAhead", current))), radius);
-                let landed = false;
+                // 每爪用实际 heading 的 right 轴生成一条左右交替的短扫段；这一组端点同时用于判定与表现。
+                const frame = WorldGeometry.basis(heading);
+                const reach = p("frustration", "reachAhead", current);
+                const span = Math.max(0.12, radius);
+                const near = origin.plus(frame.right.scale(-side * span));
+                const far = origin.plus(frame.forward.scale(reach)).plus(frame.right.scale(side * span));
+                const hit = current.trace(near, far, radius);
+                let landed = false, contactAt: CombatPoint | null = null;
                 if (hit.hitEntity()) {
                     const target = hit.target();
                     if (target !== null && !scope.friendly(target)) {
@@ -122,21 +133,28 @@ namespace PokemonSkills {
                             { damage: damageSpec("frustration", "rake"), contact: true });
                         if (landed) {
                             anyLanded = true;
-                            // 中间爪不推开，避免自己把对手顶出连抓范围；最后一爪集中送出整段顶开预算。
+                            landedCount++;
+                            contactAt = hit.position();
+                            WorldFeedback.emit(scope, frustrationScene, 1, contactAt,
+                                { moment: "hit", target: String(target.ref()), sparks: sparks, intensity: intensity, scale: scale }, 16);
+                            sound(current, "cobblemon:impact.dark");
+                            // 中间爪不推开，避免自己把对手顶出连抓范围；最后一爪把本次实际命中爪数攒下的顶开一次送出去。
                             if (isLast && scope.valid(target)) {
-                                const moved = scope.hitDisplace(target, heading.scale(push * rakes));
+                                const moved = scope.hitDisplace(target, frame.forward.scale(push * landedCount));
                                 if (moved > 0.001)
-                                    WorldFeedback.emit(scope, frustrationScene, 1, hit.position(),
+                                    WorldFeedback.emit(scope, frustrationScene, 1, contactAt,
                                         { moment: "fling", direction: [heading.x(), heading.y(), heading.z()],
                                             moved: Math.round(moved * 10) / 10, scale: scale, intensity: intensity }, 20);
                             }
                         }
                     }
                 }
-                WorldFeedback.emit(scope, frustrationScene, 1, origin.plus(heading.scale(0.65)),
-                    { moment: landed ? "rake" : "swipe", index: index, side: side, sideX: side * 0.18, tilt: side * 18,
-                        last: isLast ? 1 : 0, rakes: rakes, sparks: sparks, intensity: intensity, scale: scale }, 18);
-                if (landed) sound(current, "cobblemon:impact.dark");
+                // 命中在真实接触点爆一下，挥空只留刃迹；每爪独立短寿命，替换同一 key 保持一次一对爪。
+                current.present("frustration:claw", frustrationClawScene, 1, origin,
+                    JSON.stringify({ moment: landed ? "rake" : "swipe", index: index, side: side, last: isLast ? 1 : 0,
+                        near: [near.x(), near.y(), near.z()], far: [far.x(), far.y(), far.z()],
+                        hit: contactAt !== null ? [contactAt.x(), contactAt.y(), contactAt.z()] : null,
+                        intensity: intensity, scale: scale, start: scope.tick() }));
                 if (isLast) { finish(current); return; }
                 current.after(pace, function (next: CombatAction) { strike(next, left - 1); });
             }

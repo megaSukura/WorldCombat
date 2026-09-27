@@ -87,7 +87,7 @@ const IngrainDefinition: ParticleDefinition = {
         },
         roots: {
             duration: 0,
-            exit: { stop: 8, drain: 20 },
+            exit: { drain: 20 },
             emitters: [
                 {
                     name: "root_glow", bind: "point", fit: "none", offset: [0, 0.05, 0],

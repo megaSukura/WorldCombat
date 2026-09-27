@@ -63,7 +63,7 @@ namespace PokemonSkills {
         stationary: true,
         defaults: { rush: false, ai: { maxChase: 12 } },
         fields: [
-            field(pathOf("rush"), "疾战", "boolean", { help: "开启（疾战）：只顶起攻击、特攻、速度三项，立誓时长减半、冷却 ×0.75——出手快、脱身快，但放弃双防。关闭（背水）：五项全 +1，站得更久、冷却更长——全面强化，但在阵界内迎战更久。" })
+            field(pathOf("rush"), "疾战", "boolean", { help: "开启（疾战）：只顶起攻击、特攻、速度三项，立誓时长缩短（受公式下限限制）、冷却 ×0.75——出手快、脱身快，但放弃双防。关闭（背水）：五项全 +1，站得更久、冷却更长——全面强化，但在阵界内迎战更久。" })
         ],
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[noRetreatId], detail: { values: config },

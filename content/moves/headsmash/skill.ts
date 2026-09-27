@@ -72,16 +72,16 @@ namespace PokemonSkills {
             sound(action, "minecraft:entity.goat.long_jump");
             let travelled = 0;
 
-            // 冲空：一头栽在地上，按自身最大生命比例自伤。
+            // 冲空：一头栽在地上，按自身最大生命比例自伤；只有确实掉血才报出这个代价。
             function crash(current: CombatAction): void {
                 const scope = current.world();
                 const body = scope.observe(current.actor());
                 if (body !== null) {
                     const loss = -scope.health(current.actor(), -body.maxHealth() * selfCrash, "world_combat:headsmash_crash");
                     WorldFeedback.emit(scope, headsmashScene, 1, body.position(),
-                        { moment: "crash", scale: scale, intensity: intensity, loss: Math.round(loss * 10) / 10 }, 30);
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.4, 0)), headsmashCrashText,
-                        [Math.round(loss * 10) / 10], 30);
+                        { moment: "crash", scale: scale, intensity: intensity, loss: Math.round(Math.max(0, loss) * 10) / 10 }, 22);
+                    if (loss > 0) WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), headsmashCrashText,
+                        [Math.round(loss * 10) / 10], 22);
                 }
                 sound(current, "minecraft:item.mace.smash_ground_heavy");
                 sound(current, "minecraft:entity.generic.big_fall");
@@ -98,20 +98,26 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const victim = hit.target();
                     const point = hit.position();
+                    const before = scope.observe(current.actor());
+                    const healthBefore = before === null ? 0 : before.health();
                     const landed = victim !== null && impact(current, hit, "headsmash", power,
                         { damage: damageSpec("headsmash", "smash"), contact: true, recoil: recoil });
-                    WorldFeedback.emit(scope, headsmashScene, 1, point,
-                        { moment: "impact", target: victim ? String(victim.ref()) : "", scale: scale,
-                            intensity: intensity, hits: Math.round(18 + power * 0.14) }, 32);
-                    sound(current, "minecraft:entity.goat.ram_impact");
-                    if (landed && victim !== null && scope.valid(victim)) {
-                        scope.hitDisplace(victim, direction.scale(shove));
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), headsmashHitText, [], 30);
+                    const after = scope.observe(current.actor());
+                    const lost = after === null ? 0 : Math.max(0, healthBefore - after.health());
+                    // 接触但没造成伤害（免伤/拒绝）不算撞实：不发冲击，也不进入空冲自损。
+                    if (landed) {
+                        WorldFeedback.emit(scope, headsmashScene, 1, point,
+                            { moment: "impact", target: victim ? String(victim.ref()) : "", scale: scale,
+                                intensity: intensity, hits: Math.round(18 + power * 0.14) }, 32);
+                        sound(current, "minecraft:entity.goat.ram_impact");
+                        if (victim !== null && scope.valid(victim)) {
+                            scope.hitDisplace(victim, direction.scale(shove));
+                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.4, 0)), headsmashHitText, [], 30);
+                        }
                     }
-                    // 这一撞的反震由共享结算按 recoil 比例落在自己身上；这里只补表现。
-                    const self = scope.observe(current.actor());
-                    if (self !== null) WorldFeedback.emit(scope, headsmashScene, 1, self.position(),
-                        { moment: "recoil", scale: scale, intensity: Math.max(0.5, Math.min(2.4, power * recoil / 60)) }, 26);
+                    // 反震由共享结算按 recoil 比例落在自己身上；只有真的掉了血才发源体反震表现。
+                    if (lost > 0 && after !== null) WorldFeedback.emit(scope, headsmashScene, 1, after.position(),
+                        { moment: "recoil", scale: scale, intensity: Math.max(0.5, Math.min(2.4, lost / 6)) }, 26);
                     movementScenes.finish(current, done);
                     return;
                 }

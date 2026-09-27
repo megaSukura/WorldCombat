@@ -5,8 +5,8 @@
  * 所以 `priority` 把它当「开局或贴身时的一记小打断」：对手贴得很近且还没被吓懵时排前，身处昏暗再加一档
  * （黑暗里威力与畏缩都更强）。
  *
- * `ai.opening`（默认「随时」）实际改变出手条件：选「只潜吓」时，只有在施法者所处的方块光低于 7 才允许出手，
- * 其余时候这一声留到阴影里再用；单独使用时它会等到暗处才叫。
+ * `ai.opening`（默认「随时」）实际改变出手条件：选「只潜吓」时，只有在施法者所处的真实可见光够暗
+ * （方块光低于 7 且含天空/天气的日光低于 0.5）才允许出手，其余时候这一声留到阴影里再用；单独使用时它会等到暗处才叫。
  */
 namespace PokemonSkills {
     function astonishWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -18,9 +18,9 @@ namespace PokemonSkills {
     }
 
     function astonishGloom(context: WorldBehavior.Context): boolean {
-        const environment = WorldEnvironment.read(CompanionBehavior.world(context), CompanionBehavior.point(CompanionBehavior.source(context).point));
-        const light = Number(environment.blockLight);
-        return !isFinite(light) || light < 7;
+        const world = CompanionBehavior.world(context), at = CompanionBehavior.point(CompanionBehavior.source(context).point);
+        const environment = WorldEnvironment.read(world, at), light = Number(environment.blockLight);
+        return (!isFinite(light) || light < 7) && WorldEnvironment.sunlight(world, at) < 0.5;
     }
 
     CompanionBehavior.registerUse("astonish", {

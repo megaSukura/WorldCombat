@@ -55,7 +55,7 @@ namespace CompanionBehavior {
 
     PokemonSkills.addPreferences(PokemonSkills.thrashId, {}, [
         PokemonSkills.field(PokemonSkills.pathOf("wild"), "狂乱", "boolean", {
-            help: "开启：罩得更宽、推得更狠、末挥更重，但每一挥都会磕伤自己、冷却更久、闹完晕得更久——被围住时用。关闭（乱打）：只震不伤己、收放更快，代价是范围与击退都收窄。"
+            help: "开启：罩得更宽、推得更狠、恍惚更长、起手与冷却更久，但每一挥都会按自身最大生命磕伤自己（单次威力略降，末挥倍率不变）——被围住时用。关闭（乱打）：不伤己、范围与击退更小，但起手更快、冷却更短、单次威力略高。"
         }),
         PokemonSkills.number("ai.maxChase", "考虑距离", 2, 14, 1),
         PokemonSkills.number("ai.minFoes", "罩住人数", 1, 5, 1),

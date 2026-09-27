@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.stuffcheeks.summary": "Eats its held Berry whole and sharply boosts its Defense; the Berry's own effect (healing, status cure or a stat boost) also lands on the user. Cannot be used with no Berry held. Savoring draws more healing from the Berry and boosts Defense further, at the cost of chewing longer and a longer cooldown.",
+  "worldcombat.skill.stuffcheeks.summary": "Eats its held Berry whole: the Berry's own effect (healing, status cure or a stat boost) lands at once, and Defense only rises on the swallow after chewing. Cannot be used with no Berry held. Savoring draws more healing and a bigger Defense boost, at the cost of chewing longer and a longer cooldown.",
   "worldcombat.skill.stuffcheeks.use.0": "Trade a held Berry for a layer of Defense before a fight",
   "worldcombat.skill.stuffcheeks.use.1": "Save yourself with the Berry's healing or status cure",
   "worldcombat.skill.stuffcheeks.use.2": "Eat a stat Berry such as a Liechi whole, effect included",
   "worldcombat.skill.stuffcheeks.description.0": "Swallowing this raises the user's Defense by %1$s stage(s); a heavier body braces harder.",
-  "worldcombat.skill.stuffcheeks.description.1": "The Berry's healing is absorbed at %1$s times, while its status cure and stat boost still apply as they are; it then takes %2$s of chewing to finish. It cannot be used with no Berry held.",
+  "worldcombat.skill.stuffcheeks.description.1": "The Berry's healing is absorbed at %1$s times, while its status cure and stat boost apply at once; it then takes %2$s of chewing to swallow and raise Defense. Interrupted during that chew, the Defense never lands.",
   "worldcombat.skill.stuffcheeks.description.2": "Wind-up %1$s, recovery %2$s and cooldown %3$s.",
   "worldcombat.skill.stuffcheeks.stance.savor": "Savor: x1.35 Berry healing and +1 Defense, at the cost of +2 ticks of wind-up, longer chewing and a longer cooldown - for a good Berry and some spare time.",
   "worldcombat.skill.stuffcheeks.stance.gulp": "Gulp: fast and cheap with a shorter cooldown, but x0.85 Berry healing and only the base Defense - for bracing right before a hit.",

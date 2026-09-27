@@ -2,31 +2,42 @@
  * 高速旋转 / rapidspin 的伙伴 AI 用途。
  *
  * 什么局面下出手：一记原地旋开的脱身招。缠在身上的 rooted 世界效果或共享身份 partiallytrapped／trapped／
- *   leechseed 还在时，它立刻出手（priority 115，抢在所有行动前）——这招就是用来甩脱的。没有束缚时，威胁
- *   进入 `ai.maxChase`（默认 8）格内也可以旋一记、顺手提速（priority 44）。
- * 对谁出手：自己；没有束缚时把它当成一记近距扫场，由共享任务把目标带进 `radius` 内再原地旋开。
- * `ai.cluster`（默认开）打开时，目标身边 3.5 格内还挤着别的敌人就抬高 priority，一次扫开一圈。
- * 够不到怎么办：交给共享接近逻辑；走不到就先不旋。
+ *   leechseed 还在时，它立刻出手（priority 115，抢在所有行动前）——这招就是用来甩脱的，原地就能解，不需要先追到谁。
+ *   没有束缚时，威胁进入 `ai.maxChase`（默认 8）格内也可以旋一记、顺手提速（priority 44）。
+ * 对谁出手：自己；没有束缚时把它当成一记近距扫场，由共享任务把目标带进实际旋风半径内再原地旋开。
+ * `ai.cluster`（默认开）打开时，以本招公式算出的真实半径内还挤着别的敌人就抬高 priority，一次扫开一圈。
+ * 够不到怎么办：有束缚就原地旋（approachTarget 固定自身）；没束缚才交给共享接近逻辑走进半径。
  * 放完之后：束缚被甩掉、速度抬起来，交回共享交战计划。
  */
 namespace PokemonSkills {
     function rapidspinBound(context: WorldBehavior.Context): boolean {
         return CompanionBehavior.bound(context, CompanionBehavior.source(context));
     }
-    function rapidspinCluster(context: WorldBehavior.Context, target: CompanionBehavior.Entity): number {
+    /** 与出招同一棵公式的实际旋风半径（含特攻之外的速度、体型、等级与广旋配置），AI 不再自写近似值。 */
+    function rapidspinRadius(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
+        const world = CompanionBehavior.world(context);
+        try {
+            return Math.max(1.6, PokemonSkills.p("rapidspin", "radius",
+                { world: world, actor: world.source(), skill: PokemonSkills.skills.rapidspin, detail: { values: capability.data.config || {} } }));
+        } catch (error) {
+            return typeof capability.data.range === "number" && isFinite(capability.data.range) ? capability.data.range : 2.8;
+        }
+    }
+    function rapidspinCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const self = CompanionBehavior.source(context), radius = rapidspinRadius(context, capability);
         let count = 1;
         for (let index = 0; index < nearby.length; index++) {
             const other = nearby[index];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (CompanionBehavior.distance(other.point, target.point) <= 3.5) count++;
+            if (CompanionBehavior.distance(other.point, self.point) <= radius) count++;
         }
         return count;
     }
 
     CompanionBehavior.registerUse("rapidspin", {
         protocols: ["world_combat:fortify", "world_combat:attack"],
-        reach: function (context, capability) { return capability.data.range; },
+        reach: function (context, capability) { return rapidspinRadius(context, capability); },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
             if (rapidspinBound(context)) return true;
@@ -39,13 +50,16 @@ namespace PokemonSkills {
             const self = CompanionBehavior.source(context);
             return target.ref === self.ref || (!target.friendly && target.health > 0 && target.visible);
         },
-        approachTarget: function (context, capability, target) { return target || CompanionBehavior.source(context); },
+        // 被束缚时固定原地解缚；没束缚才把目标当作接近点，由共享任务带进半径。
+        approachTarget: function (context, capability, target) {
+            return rapidspinBound(context) ? CompanionBehavior.source(context) : (target || CompanionBehavior.source(context));
+        },
         priority: function (context, capability, target) {
             if (context.facts.mounted) return 0;
             if (rapidspinBound(context)) return 115;
             if (!target) return 0;
             let score = 44;
-            if (CompanionBehavior.ai<boolean>(capability, "cluster", true) && !target.friendly && rapidspinCluster(context, target) >= 2) score += 14;
+            if (CompanionBehavior.ai<boolean>(capability, "cluster", true) && !target.friendly && rapidspinCluster(context, capability, target) >= 2) score += 14;
             return score;
         }
     });
@@ -59,7 +73,7 @@ namespace PokemonSkills {
             help: "没有束缚时，威胁进入这个距离内才主动旋一记；越大越早旋开并提速，也越容易空转。"
         }),
         field(pathOf("ai.cluster"), "被围时优先", "boolean", {
-            help: "开启后，目标身边 3.5 格内还挤着别的敌人时优先高速旋转，一次扫开一圈；关闭则只按普通自卫节奏出手。"
+            help: "开启后，本招实际旋风半径内还挤着别的敌人时优先高速旋转，一次扫开一圈；关闭则只按普通自卫节奏出手。"
         })
     ]);
 }

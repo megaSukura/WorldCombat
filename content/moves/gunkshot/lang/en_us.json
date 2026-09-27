@@ -28,12 +28,12 @@
   "worldcombat.skill.gunkshot.preference.ai.maxChase": "Consider distance",
   "worldcombat.skill.gunkshot.preference.ai.maxChase.help": "Only foes within this distance become firing candidates; the shared approach logic then walks the companion into range. Higher starts the chase earlier.",
   "worldcombat.skill.gunkshot.preference.ai.preferBig": "Prefer big targets",
-  "worldcombat.skill.gunkshot.preference.ai.preferBig.help": "On, larger targets (harder to slip past, shoved farther) are ranked higher; off ranks by distance alone.",
+  "worldcombat.skill.gunkshot.preference.ai.preferBig.help": "On, larger targets are easier for the straight shell to catch and are ranked higher; off ranks by distance alone. Shove distance comes only from the user's own attack and weight, not the target's size.",
   "worldcombat.skill.gunkshot.preference.ai.leaveStation": "Leave post to cast",
   "worldcombat.skill.gunkshot.preference.ai.leaveStation.help": "On, the companion may leave its post to fire; off restricts it to shots it can make from where it stands.",
   "world_combat.move.gunkshot.text.hit": "Slammed",
   "world_combat.move.gunkshot.text.poison": "Poisoned",
-  "world_combat.move.gunkshot.text.immune": "Poison-immune",
+  "world_combat.move.gunkshot.text.immune": "No effect",
   "world_combat.move.gunkshot.text.whiff": "Wide",
   "world_combat.move.gunkshot.text.wall": "Smeared"
 }

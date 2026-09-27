@@ -44,9 +44,6 @@ namespace PokemonSkills {
     });
 
     addPreferences("superpower", {}, [
-        field(pathOf("aftershock"), "震荡式", "boolean", {
-            help: "开启：命中点再荡一圈余震，把落点周围的敌人一起震开、地面坑更大；代价是自身防御再降一级、单发威力 ×0.9、起手 +2 刻、收招 +4 刻、冷却 +6 刻。关闭（贯穿式）：全力集中在单个目标、出手更快、只降原生一级。"
-        }),
         field(pathOf("ai.maxChase"), "出手距离", "number", {
             min: 2, max: 14, step: 1,
             help: "超过这个距离就不主动发起蛮力，先走近。调大愿意从更远处就冲，也越容易在冲刺途中被走位甩开。"

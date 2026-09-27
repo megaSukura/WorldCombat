@@ -17,7 +17,6 @@
   "worldcombat.skill.heavyslam.value.hop": "Leap height",
   "worldcombat.skill.heavyslam.value.airTicks": "Air time",
   "worldcombat.skill.heavyslam.value.leap": "Leap distance",
-  "worldcombat.skill.heavyslam.value.collisionRadius": "Hit radius",
   "worldcombat.skill.heavyslam.preference.anchor": "Sinking form",
   "worldcombat.skill.heavyslam.preference.anchor.help": "On: a shorter leap with more single-target power and a tighter landing, but less shove and a longer recovery and cooldown. Off: a pouncing form that leaps further and shoves wider, but hits lighter.",
   "worldcombat.skill.heavyslam.preference.ai.maxChase": "Leap distance",

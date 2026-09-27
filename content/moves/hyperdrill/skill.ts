@@ -22,6 +22,7 @@
  */
 namespace PokemonSkills {
     const hyperdrillScene = "world_combat:move_hyperdrill";
+    const hyperdrillHeadScene = "world_combat:move_hyperdrill_head";
     const hyperdrillBoreText = "world_combat.move.hyperdrill.text.bore";
     const hyperdrillDrillText = "world_combat.move.hyperdrill.text.drill";
     const hyperdrillMissText = "world_combat.move.hyperdrill.text.miss";
@@ -78,6 +79,7 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const movementScenes = WorldFeedback.actionScenes(hyperdrillScene);
+            const heads = WorldFeedback.actionScenes(hyperdrillHeadScene);
             const world = action.world();
             const actor = action.actor();
             const body = world.observe(actor);
@@ -88,24 +90,34 @@ namespace PokemonSkills {
             const drill = p("hyperdrill", "drill", action);
             const shred = Math.max(1, Math.round(p("hyperdrill", "shred", action)));
             const pierce = Math.max(1, Math.round(p("hyperdrill", "pierce", action)));
-            const push = p("hyperdrill", "push", action);
             const grains = Math.max(8, Math.round(p("hyperdrill", "grains", action)));
             const scale = radius / hyperdrillReferenceRadius;
             const minimumMove = 0.03;
             const direction = WorldGeometry.flatUnit(aim(action), WorldCombat.point(0, 0, 1));
             const struck: string[] = [];
-            let travelled = 0, strikes = 0, settled = false;
+            // 接触尝试数与成功数分开：`pierce` 限制接触次数，`landed`／`broken` 只记真正发生的事。
+            let travelled = 0, contacts = 0, landed = 0, broken = 0, settled = false;
 
-            /** 收势于真实停点：撞到过目标就 skid，一路空钻就 miss。 */
+            function headData(at: CombatPoint, drillPoint: CombatPoint, intensityValue: number): any {
+                return { moment: "head", at: [at.x(), at.y(), at.z()], head: [drillPoint.x(), drillPoint.y(), drillPoint.z()],
+                    direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale, intensity: intensityValue };
+            }
+            /** 短钻头贴当前身体前缘：每刻按真实身体位置重发，转速/亮度读威力。 */
+            function showHead(current: CombatAction, at: CombatPoint, intensityValue: number): void {
+                heads.show(current, "head", at, headData(at, at.plus(direction.scale(radius * 0.9)), intensityValue));
+            }
+
+            /** 收势于真实停点：有实际效果（凿盾或伤害）就 skid，一路空钻就 miss。 */
             function finish(current: CombatAction, at: CombatPoint): void {
                 if (settled) return;
                 settled = true;
-                const scope = current.world();
+                const scope = current.world(), scored = landed + broken;
                 WorldFeedback.emit(scope, hyperdrillScene, 1, at,
-                    { moment: strikes > 0 ? "skid" : "miss", target: "", landed: strikes > 0 ? 1 : 0,
-                        strikes: strikes, grains: grains, scale: scale, intensity: Math.max(0.6, Math.min(2.3, drill / 90)) }, 22);
-                if (strikes === 0)
+                    { moment: scored > 0 ? "skid" : "miss", target: "", landed: landed, broken: broken, contacts: contacts,
+                        grains: grains, scale: scale, intensity: Math.max(0.6, Math.min(2.3, drill / 90)) }, 22);
+                if (scored === 0)
                     WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.0, 0)), hyperdrillMissText, [], 20);
+                heads.stop(current);
                 movementScenes.finish(current, done);
             }
 
@@ -119,31 +131,38 @@ namespace PokemonSkills {
                 if (travelled >= reach) { finish(current, stopPoint(scope, here)); return; }
                 const delta = direction.scale(Math.min(rush, reach - travelled));
                 const swept = sweepStep(current, delta, radius), hit = swept.hit;
+                const intensityValue = Math.max(0.6, Math.min(2.3, drill / 90));
                 if (hit.hitEntity()) {
                     const victim = hit.target(), at = hit.position();
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)
                         && struck.indexOf(String(victim.ref())) < 0) {
                         struck.push(String(victim.ref()));
-                        // 真实首接触点：先凿守护，再结算这一记；bore 的钻尖与拆盾碎片都在这个点。
-                        const broken = hyperdrillShred(scope, victim, shred);
-                        const landed = hurt(current, victim, "hyperdrill", drill,
+                        // 真实首接触点：先凿守护，再结算这一记；拆盾与伤害各发各的回执。
+                        const layers = hyperdrillShred(scope, victim, shred);
+                        const actualPush = p("hyperdrill", "push", withTarget(factContext(current), victim));
+                        const struckHome = hurt(current, victim, "hyperdrill", drill,
                             { damage: damageSpec("hyperdrill", "drill"), contact: true });
-                        WorldFeedback.emit(scope, hyperdrillScene, 1, at,
-                            { moment: broken > 0 ? "bore" : "drill", target: String(victim.ref()), broken: broken,
-                                grains: grains, scale: scale, intensity: Math.max(0.6, Math.min(2.3, drill / 90)) }, 26);
-                        if (broken > 0) {
+                        if (layers > 0) {
+                            broken += layers;
+                            WorldFeedback.emit(scope, hyperdrillScene, 1, at,
+                                { moment: "bore", target: String(victim.ref()), broken: layers,
+                                    grains: grains, scale: scale, intensity: intensityValue }, 26);
                             sound(current, "minecraft:block.glass.break");
-                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), hyperdrillBoreText, [broken], 28);
-                        } else if (landed) {
+                            WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.25, 0)), hyperdrillBoreText, [layers], 28);
+                        }
+                        if (struckHome) {
+                            landed++;
+                            WorldFeedback.emit(scope, hyperdrillScene, 1, at,
+                                { moment: "drill", target: String(victim.ref()), grains: grains, scale: scale, intensity: intensityValue }, 22);
                             WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.15, 0)), hyperdrillDrillText, [], 22);
                         }
-                        let shoved = 0;
-                        if (landed && scope.valid(victim)) shoved = scope.hitDisplace(victim, direction.scale(push));
-                        sound(current, "cobblemon:impact.steel");
-                        strikes++;
-                        if (strikes >= pierce) { finish(current, stopPoint(scope, at)); return; }
-                        // 目标推不动（Boss／硬碰撞）：在真实接触点收势，不拿剩余位移穿过去。
-                        if (shoved <= 0.01) { finish(current, stopPoint(scope, at)); return; }
+                        if (struckHome || layers > 0) sound(current, "cobblemon:impact.steel");
+                        // 只有真的推过才知道推不动：没落伤害不算「推不动」，继续把这一钻用完。
+                        let shoved = -1;
+                        if (struckHome && scope.valid(victim)) shoved = scope.hitDisplace(victim, direction.scale(actualPush));
+                        contacts++;
+                        if (contacts >= pierce) { finish(current, stopPoint(scope, at)); return; }
+                        if (shoved >= 0 && shoved <= 0.01) { finish(current, stopPoint(scope, at)); return; }
                     } else {
                         // 撞到友方或已经钻过的目标：停在真实接触点，不重复结算。
                         finish(current, stopPoint(scope, at)); return;
@@ -151,16 +170,18 @@ namespace PokemonSkills {
                 }
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
                 travelled += moved;
+                showHead(current, stopPoint(scope, here), intensityValue);
                 movementScenes.show(current, "spin", stopPoint(scope, here),
-                    { moment: "spin", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale,
-                        intensity: Math.max(0.6, Math.min(2.3, drill / 90)) });
+                    { moment: "spin", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale, intensity: intensityValue });
                 if (hit.blocked() || moved < minimumMove || travelled >= reach) { finish(current, stopPoint(scope, here)); return; }
                 current.after(1, function (next: CombatAction) { advance(next); });
             }
 
             sound(action, "minecraft:block.grindstone.use");
+            const startIntensity = Math.max(0.6, Math.min(2.3, drill / 90));
             movementScenes.show(action, "charge", origin, { moment: "charge", direction: [direction.x(), 0, direction.z()], grains: grains, scale: scale,
-                    intensity: Math.max(0.6, Math.min(2.3, drill / 90)) });
+                    intensity: startIntensity });
+            showHead(action, origin, startIntensity);
             advance(action);
         }
     });

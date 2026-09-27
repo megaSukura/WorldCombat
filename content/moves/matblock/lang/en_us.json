@@ -27,6 +27,6 @@
   "worldcombat.skill.matblock.preference.ai.cover.help": "When on, the mat is only raised while another ally is inside the alert radius; when off, pressure on the user is enough.",
   "world_combat.move.matblock.text.raise": "Mat Block (absorb %1$s / %2$s covered / %3$s s)",
   "world_combat.move.matblock.text.block": "The mat ate %1$s (left %2$s)",
-  "world_combat.move.matblock.text.fall": "The mat falls",
+  "world_combat.move.matblock.text.fall": "This mat corner tears",
   "effect.world_combat.mat_block": "Mat Block"
 }

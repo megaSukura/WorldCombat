@@ -4,7 +4,7 @@
  * 一句话：施法者口边先压出一道咸水细线（白汽与水滴往里收）→ 盐卤拖着水尾笔直射出，命中处炸开一簇紧束的水花；
  *   命中前目标已在半血以下时，伤口处迸出成片盐晶与一道裂口 → 打中墙或射空只散开一小滩水。
  * 色相家族：水蓝到近白的咸水族（0x7FD4E8／0xC8ECFF 为主体，0xF2FBFF 只做伤口强调，余韵是中性灰白）。
- * 拍子：起（charge 收水）→ 击（burst 紧束溅开、sting 残血裂口）→ 收（miss 空弹散水）。
+ * 拍子：起（charge 收水，提交前预告）→ 发（launch 口边一瞬前冲，与收水区分）→ 击（burst 紧束溅开、sting 残血裂口）→ 收（miss 空弹在真实接触点散水）。
  * 范围：判定半径按服务端 `data.scale`（真实 nozzle / 参考半径）缩放，圈到哪就是会被浇湿、被翻倍的范围。
  * 数：`data.drops`（特攻派生的水滴数）决定溅出的水滴数量，`data.shards`（残血时的盐晶数）只在伤口上出现，
  *   `data.intensity`（命中强度与是否残血）决定明暗，画面里的数与机制里的数一致。
@@ -31,6 +31,28 @@ const BrineDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.03, 0.12],
                     lifetime: [8, 14], size: [0.07, 0.02],
                     color: 0xC8ECFF, alpha: [0.7, 0], light: "full", maxParticles: 40
+                }
+            ]
+        },
+        launch: {
+            duration: 10,
+            exit: { stop: 4, drain: 8 },
+            emitters: [
+                {
+                    name: "muzzle", bind: "source", height: 0.55, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/water/waterjet_head",
+                    rate: 40, shape: { kind: "line", length: 0.55 },
+                    direction: "shape", speed: [0.06, 0.2],
+                    lifetime: [4, 8], size: [0.2, 0.04], sizeMode: "index",
+                    color: 0xC8ECFF, alpha: [0.9, 0], light: "full", maxParticles: 26
+                },
+                {
+                    name: "spit", bind: "source", height: 0.5, orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    rate: 18, shape: { kind: "line", length: 0.4 },
+                    direction: "shape", speed: [0.08, 0.24], spread: 12,
+                    lifetime: [4, 8], size: [0.08, 0.02],
+                    color: 0x7FD4E8, alpha: [0.8, 0], light: "full", maxParticles: 20
                 }
             ]
         },

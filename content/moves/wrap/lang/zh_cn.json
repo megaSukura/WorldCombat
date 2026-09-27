@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.wrap.summary": "按住技能维持贴身紧束，自己放慢脚步，目标暂时降低攻击并定期受到绞击。松手、拉开距离、断视线或被打断会松开；目标仍能移动。",
   "worldcombat.skill.wrap.use.0": "贴身维持紧束并压住危险目标的攻击",
-  "worldcombat.skill.wrap.use.1": "把对手按在原地交给队友",
+  "worldcombat.skill.wrap.use.1": "贴住对手、替队友压住一个强攻目标",
   "worldcombat.skill.wrap.use.2": "用藤茧独自磨掉一个难缠的近战目标",
   "worldcombat.skill.wrap.description.0": "在 %2$s 格内甩出藤蔓裹住一个目标，抓取判定半径 %3$s 格，裹上先结算约 %1$s 的接触伤害。",
   "worldcombat.skill.wrap.description.1": "最多维持 %1$s，每 %2$s 绞一次，目标攻击临时下降 %3$s 级。必须持续按住并保持贴身视线；结束时只撤这份压制。",

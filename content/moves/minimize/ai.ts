@@ -16,6 +16,9 @@ namespace PokemonSkills {
             if (context.facts.mounted) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "minimize")) return false;
+            // 增益已撤但体型还在等待安全空间时，BodyScale 的同源恢复任务仍在；此时不再重复提交。
+            const world = CompanionBehavior.world(context);
+            if (BodyScale.pending(world, world.source(), "minimize")) return false;
             const threat = context.senses["world_combat:threat"];
             if (!threat) return false;
             if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "minGap", 2)) return false;
@@ -28,7 +31,13 @@ namespace PokemonSkills {
             if (!threat) return 0;
             const self = CompanionBehavior.source(context), gap = CompanionBehavior.distance(self.point, threat.point);
             if (gap < CompanionBehavior.ai<number>(capability, "minGap", 2)) return 0;
-            return gap <= CompanionBehavior.ai<number>(capability, "maxChase", 14) * 0.75 ? 104 : 96;
+            const base = gap <= CompanionBehavior.ai<number>(capability, "maxChase", 14) * 0.75 ? 104 : 96;
+            // 明显更大的体型在旁近战：大胆缩小会把破绽放得更大，降低优先级、宁可谨慎。
+            const big = typeof threat.width === "number" && typeof threat.height === "number"
+                && typeof self.width === "number" && typeof self.height === "number"
+                && threat.width * threat.width * threat.height > self.width * self.width * self.height * 1.6;
+            const bold = !!(capability.data.config && capability.data.config.bold === true);
+            return big && bold ? Math.max(0, base - 24) : base;
         }
     });
 

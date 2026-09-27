@@ -10,20 +10,20 @@
  * 配置 deep（深回声）换取更长的记忆窗口与更密的回声，代价是更慢的起手与更长的冷却。
  */
 namespace PokemonSkills {
-    /** 借来的那一手是不是会给满血自己用的回复招；是的话这次复制没有收益。 */
+    /** 借来的那一手若是只给满血自己用的回复招，这次复制没有收益；友方回复另按受益者算。 */
     function copycatWasteful(context: WorldBehavior.Context, id: string): boolean {
         const skill = skills[id];
-        if (!skill || skill.kind !== "self" && skill.kind !== "friend") return false;
+        if (!skill || skill.kind !== "self") return false;
         let heal = false;
         try { heal = !!NativeLoadout.facts(CobblemonCombat.moveTemplate(id)).flags.heal; } catch (error) { heal = false; }
         return heal && CompanionBehavior.ratio(CompanionBehavior.source(context)) >= 1;
     }
 
-    /** 附近最新的一条合法回声；用本个体这次解析出的回荡距离筛掉远处战斗。 */
+    /** 附近最新的一条合法回声；用本个体这次解析出的回荡距离与真实位置筛掉远处、跨墙或自己的出手。 */
     function copycatEchoFor(context: WorldBehavior.Context, item: WorldBehavior.Capability): CopycatEcho | null {
         const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
         const radius = Math.max(1, Number(item.data.range) || 1);
-        return copycatCandidate(world, CompanionBehavior.point(self.point), radius);
+        return copycatCandidate(world, CompanionBehavior.point(self.point), radius, String(self.ref));
     }
 
     CompanionBehavior.registerUse(copycatId, {
@@ -48,7 +48,13 @@ namespace PokemonSkills {
             const id = copycatReadable(CompanionBehavior.world(context), echo);
             if (id === "") return 0;
             const move = CobblemonCombat.moveTemplate(id);
-            return String(move.category()) !== "status" && move.power() >= 60 ? 24 : -6;
+            if (String(move.category()) === "status") {
+                // 变化招按真实作用评分：回复（可给受伤的友方或自己）与布置类仍值得借，不能只看自己满血。
+                let heal = false;
+                try { heal = !!NativeLoadout.facts(move).flags.heal; } catch (error) { heal = false; }
+                return heal ? 14 : 16;
+            }
+            return move.power() >= 60 ? 24 : 6;
         }
     });
 

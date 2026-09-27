@@ -2,11 +2,11 @@
  * 舍身冲撞 / doubleedge 的客户端表现。
  *
  * 一句话：压低身体沿一条直线把整个人砸出去，撞实的一刻只在接触点上留下单枚沉重的挤压纹，身体随之明显减速、
- * 贴住目标压一小会儿，再在脚底两步尘埃里原地收势——不弹回、没有第二击，这正是这招的身份：贴压后露破绽。
+ * 原地承震停一小会儿，再在脚底两步尘埃里收势——不弹回、没有第二击，也不按住目标：停住承震后露破绽。
  * 色相家族：一般系的灰白与暖土（0xE9E2D3 / 0xC9C2B4），土褐只出现在贴地尘里，饱和暖橙只给挤压核心一点。
- * 拍子：起 tempo（踏地蓄势）→ 撞 charge（直线冲刺）→ impact（单枚挤压纹）→ settle（脚底两步收势）。
- * 范围：charge 的冲刺尘沿 `data.path` 与身体一起铺开；impact 绑命中点，画的就是压到哪；settle 贴身体。
- * 运动：速度线沿冲撞方向掠过；命中只向内一收（挤压），随后收势尘贴地两步落定。
+ * 拍子：起 tempo（踏地蓄势）→ 撞 charge（直线冲刺）→ impact（单枚挤压纹）→ press（自身承震）→ settle（脚底两步收势）。
+ * 范围：charge 的冲刺尘沿 `data.path` 与身体一起铺开；impact 绑命中点，画的就是压到哪；press/settle 贴身体。
+ * 运动：速度线沿冲撞方向掠过；命中只向内一收（挤压），身体停住时肩部向内一颤、脚下刹出短尘，随后收势尘贴地落定。
  * 数：`data.dust`（速度与体重派生）决定冲刺与命中的尘屑总量，`data.intensity`（威力 / 115）抬高密度与亮度，
  * `data.scale`（判定半径 / 0.55）放大撞面与尘环，`data.ratio` 让冲刺尘随路程变浓。
  */
@@ -57,12 +57,37 @@ const DoubleedgeDefinition: ParticleDefinition = {
                 }
             ]
         },
+        press: {
+            duration: 16,
+            exit: { stop: 6, drain: 12 },
+            emitters: [
+                {
+                    name: "shoulder", bind: "source", offset: [0, 0.85, 0], height: 0.1,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: 10, shape: { kind: "sphere", radius: 0.24 },
+                    direction: "inward", speed: [0.02, 0.07],
+                    lifetime: [6, 11], size: [0.07, 0.02],
+                    color: 0xE9E2D3, alpha: [0.5, 0], light: "world", maxParticles: 30
+                },
+                {
+                    name: "skid", bind: "source", offset: [0, 0.04, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/earth",
+                    burst: { count: { data: "dust", fallback: 12 }, interval: 4, repeats: 2 },
+                    shape: { kind: "sector", radius: 0.5, angleDegrees: 70 },
+                    orient: "heading", fit: "world",
+                    direction: "outward", speed: [0.04, 0.14], spread: 12,
+                    gravity: 0.04, drag: 0.92,
+                    lifetime: [7, 13], size: [0.09, 0.02],
+                    color: 0xBFAE94, alpha: [0.5, 0], light: "world", maxParticles: 50
+                }
+            ]
+        },
         impact: {
             duration: 26,
             exit: { stop: 12, drain: 20 },
             emitters: [
                 {
-                    name: "press", bind: "target", height: 0.5,
+                    name: "core", bind: "target", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_normal",
                     burst: { count: 10, at: 0 },
                     shape: { kind: "sphere", radius: 0.2 },

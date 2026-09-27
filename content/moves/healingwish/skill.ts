@@ -1,35 +1,14 @@
-/**
- * 治愈之愿 / Healing Wish —— 执行组织。
- *
- * 核心念头：把自己整个交出去，在倒下的地方留下一颗治愈之愿；愿望等着，第一个来到它身边、又伤又病的伙伴
- *   被整口治好——按最大生命回复，并洗掉全部有害状态效果。这是本家族里唯一**以命换命**的一招：不净化别人，
- *   而是把自己变成一次救援。
- *
- * 两幕（加愿景自身的一段等待）：
- *   起（windup，提交前）：半跪合掌，周身升起愿光；只观察与预告，可被打断（此时不会倒下）。
- *     同时标出真正可接者与愿星将留下的地面位置，提交前就看得出这次牺牲救不救得到人。
- *   献（提交后）：把自己当前生命全部交出去（倒下），原地放出一颗独立的愿星（WorldBodies 持久实体，
- *     脑 world_combat:move/healingwish/wish）。愿望不受施法者被收回、区块卸载与重启影响。
- *   兑（愿星期内）：愿星每 4 刻检查半径内是否有「受伤或有有害状态效果」的友善伙伴（不含自己）；有就整口治好、
- *     洗掉异常，随即散去；到点无人需要就自行散去（fade）。
- *
- * 反制：愿望只认「走到它身边的第一个需要救助的人」——把残血伙伴带离愿望、或先让自己人占掉它即可；
- *   愿望有时间限制，等待期本身就是对手的余地。附近一个可接收的伙伴都没有时，许愿者不会倒下（忠实原生 ifHit）。
- * 宝可梦层：治好与洗掉都走共享默认效果，原生队伍面板随之同步；本招不新增状态。
- */
+/** 牺牲确认后的单颗愿星，只由本次已认定友军中的实际受益者消费。 */
 namespace PokemonSkills {
     function healingwishAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1.0, 0)); }
 
-    /** 受益者是否「需要」这次愿望：受伤或带有害状态效果。健康且干净的人不会被消耗掉愿望。 */
+
     function healingwishNeeds(world: CombatWorld, actor: CombatActor, facts: CombatObservation): boolean {
         if (facts.health() < facts.maxHealth() - 0.01) return true;
         return CombatStatus.hasHarmful(world, actor);
     }
 
-    /**
-     * 半径内真正「可接收」的友善战斗者（不含自己）：又伤又病、愿望用得上的人。
-     * 满状态又干净的伙伴不会领取愿望，也就不算合格接收者——没有他们时不该交出生命（原生 ifHit）。
-     */
+
     function healingwishReceivers(world: CombatWorld, point: CombatPoint, radius: number, owner: string): CombatActor[] {
         var near = world.query(point, radius, false), found: CombatActor[] = [];
         for (var index = 0; index < near.length; index++) {
@@ -37,19 +16,12 @@ namespace PokemonSkills {
             if (String(other.ref()) === owner || !world.friendly(other)) continue;
             var facts = world.observe(other);
             if (facts === null || facts.health() <= 0) continue;
-            if (!healingwishNeeds(world, other, facts)) continue;
+            if (!healingwishNeeds(world, other, facts) || !world.clear(point.plus(WorldCombat.point(0, .8, 0)), facts.position())) continue;
             found.push(other);
         }
         return found;
     }
 
-    /** 阵营快照：愿星不属于原施法者的阵营，所以在交出生命前先记下「谁是自己人」与阵营名。 */
-    function healingwishTeam(world: CombatWorld, actor: CombatActor): string {
-        var entity = world.nativeEntity(actor);
-        if (entity === null || typeof entity.getTeam !== "function") return "";
-        var team = entity.getTeam();
-        return team === null || team === undefined ? "" : String(team.getName());
-    }
 
     function healingwishAllySet(world: CombatWorld, owner: CombatActor, point: CombatPoint): { [ref: string]: boolean } {
         var set: { [ref: string]: boolean } = Object.create(null), near = world.query(point, 16, false);
@@ -61,12 +33,12 @@ namespace PokemonSkills {
         return set;
     }
 
-    /** 洗掉一个战斗者身上的全部有害状态效果，返回实际洗掉的项数。 */
+
     function healingwishCleanse(world: CombatWorld, actor: CombatActor): number {
         return CombatStatus.cureHarmful(world, actor);
     }
 
-    /** 回复走共享健康写入；宝可梦经过 NativeEffects.heal（含受治疗加成），其他战斗者直接写 MC 生命。 */
+
     function healingwishHeal(world: CombatWorld, target: CombatActor, amount: number, cause: string): number {
         var body = world.observe(target);
         if (body === null) return 0;
@@ -75,7 +47,7 @@ namespace PokemonSkills {
         var healed = 0;
         if (String(target.domain()) === "cobblemon" && world.valid(target)) {
             var pokemon = CobblemonCombat.pokemon(target), scale = Math.max(0.001, pokemon.healthScale());
-            healed = NativeEffects.heal(world, target, pokemon, Math.min(missing, amount) / scale, cause);
+            healed = NativeEffects.heal(world, target, pokemon, Math.min(missing, amount) / scale, cause) * scale;
         } else {
             healed = world.health(target, Math.min(missing, amount), "world_combat:" + cause);
         }
@@ -84,23 +56,20 @@ namespace PokemonSkills {
         return healed;
     }
 
-    /** 等待期的一帧画面：只续播等待表现，不结算、不结束。`start` 里结束会让 body 生成失败（见下）。 */
+
     function healingwishAwait(brain: CombatEffect): void {
         var world = brain.world(), state = JSON.parse(brain.state());
         var centre = WorldCombat.point(state.ground[0], state.ground[1], state.ground[2]);
         var scale = Math.max(0.6, Math.min(2.0, state.radius / healingwishReferenceRadius));
         var data = { moment: "wait", radius: state.radius, motes: state.motes, scale: scale, owner: state.owner };
-        // 等待画面挂在愿星自己的托管效果上：兑现、被驱散或到点，随效果一起结束，不留残影。
+
         if (!WorldFeedback.onEffect(world, brain.id(), "healingwish:wait", healingwishScene, 1, centre, data))
             WorldFeedback.keep(world, "healingwish:wait:" + String(brain.target().ref()), healingwishScene, 1, centre, data, 16);
     }
 
-    /**
-     * 愿星的一次检查：续播等待画面；找到需要救助的伙伴就兑现，随即散去。
-     * 只在周期刻度与重启恢复里调用：`start` 必须在返回前保持存活，否则 WorldBodies 在 start 之后
-     * 为周期刻度补排定时器时会因效果已结束而抛错，连带让召唤它的这次施放作废。
-     */
+
     function healingwishPulse(brain: CombatEffect): void {
+        if (DeferredSacrifice.waiting(brain)) return;
         var world = brain.world(), at = world.observe(brain.target());
         if (at === null) { brain.end(); return; }
         var state = JSON.parse(brain.state());
@@ -113,17 +82,19 @@ namespace PokemonSkills {
             var ref = String(other.ref());
             if (ref === String(brain.target().ref()) || ref === String(state.owner)) continue;
             var allied = !!(state.allies && state.allies[ref]);
-            if (!allied && state.team) allied = healingwishTeam(world, other) === String(state.team);
+
             if (!allied) continue;
             var facts = world.observe(other);
-            if (facts === null || facts.health() <= 0 || !healingwishNeeds(world, other, facts)) continue;
+            if (facts === null || facts.health() <= 0 || !healingwishNeeds(world, other, facts)
+                || !world.clear(centre.plus(WorldCombat.point(0, .8, 0)), facts.position())) continue;
             var healed = healingwishHeal(world, other, facts.maxHealth() * state.fraction, "healingwish");
-            var removed = healingwishCleanse(world, other);
+            var removed = world.valid(other) ? healingwishCleanse(world, other) : 0;
+            if (!(healed > 0) && removed <= 0) continue;
             world.sound("minecraft:entity.player.levelup", facts.position(), 16, "{}");
-            // deliver 只在真正领取时连线：愿星 → 接收者的一段金色交接，读得出「谁用掉了它」。
+
             WorldFeedback.emit(world, healingwishScene, 1, facts.position(),
                 { moment: "deliver", target: String(other.ref()),
-                    path: [String(brain.target().ref()), String(other.ref())],
+                    path: [[at.position().x(), at.position().y(), at.position().z()], [facts.position().x(), facts.position().y(), facts.position().z()]],
                     motes: state.motes, radius: state.radius, scale: scale,
                     healed: Math.round(healed * 10) / 10, removed: removed,
                     intensity: Math.max(0.7, Math.min(2.0, 0.6 + state.fraction)) }, 40);
@@ -133,31 +104,39 @@ namespace PokemonSkills {
             brain.end();
             return;
         }
+        brain.schedule("watch", "watch", 4, "{}");
     }
 
     WorldBodies.define(healingwishWishBrain, {
-        schema: 1,
-        maxTicks: 600,
-        start: function (brain) { healingwishAwait(brain); },
-        resume: function (brain) { healingwishPulse(brain); },
-        tick: { every: 4, handler: function (brain) { healingwishPulse(brain); } },
+        schema: 2, maxTicks: 600, migrate: (_version, json) => json,
+        start: brain => { brain.schedule("watch", "watch", 1, "{}"); },
+        resume: healingwishPulse,
+        handlers: { watch: healingwishPulse },
+        observedDeath: function (brain, death) {
+            const state = DeferredSacrifice.confirm(brain, death);
+            if (!state) return;
+            brain.remaining(state.wait);
+            const world = brain.world(), ground = HealingwishDeparture.point(state.ground);
+            world.configure(brain.target(), JSON.stringify({ size: [.6, .9], glow: true,
+                appearance: { sprite: "cobblemon:moves/wish_star", scale: 1, tint: 0xFFD36A, glow: true } }));
+            WorldFeedback.emit(world, healingwishScene, 1, ground, { moment: "offer", motes: state.motes,
+                radius: state.radius, scale: state.radius / healingwishReferenceRadius }, 34);
+            WorldFeedback.text(world, healingwishAbove(ground), healingwishOfferText, [Math.round(state.wait / 20)], 34);
+            healingwishAwait(brain);
+        },
         end: function (brain) {
-            var state: any = {};
-            try { state = JSON.parse(brain.state()); } catch (error) { state = {}; }
-            if (state.delivered) return;
-            var world = brain.world(), at = world.observe(brain.target());
-            if (at === null) return;
-            var ground = WorldCombat.point(state.ground ? state.ground[0] : 0, state.ground ? state.ground[1] : 0, state.ground ? state.ground[2] : 0);
-            world.presentFor("healingwish:fade:" + String(brain.target().ref()), healingwishScene, 1, ground,
-                JSON.stringify({ moment: "fade", motes: state.motes, radius: state.radius,
-                    scale: Math.max(0.6, Math.min(2.0, (state.radius || 3) / healingwishReferenceRadius)) }), 24);
+            DeferredSacrifice.forget(brain);
+            const state = JSON.parse(brain.state());
+            if (!state.active || state.delivered) return;
+            WorldFeedback.emit(brain.world(), healingwishScene, 1, HealingwishDeparture.point(state.ground),
+                { moment: "fade", motes: state.motes, radius: state.radius, scale: state.radius / healingwishReferenceRadius }, 24);
         }
     });
 
     define({
         id: healingwishId,
         cooldownParameter: "recharge", name: "治愈之愿",
-        description: "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，第一个来到它身边、受伤或带有害状态效果的伙伴按其最大生命的比例回复并清除全部有害状态效果；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
+        description: "把自己整个交出去：当场倒下，在倒下的地方留下一颗愿星。愿望会等一段时间，施放时附近已认定的伙伴中，第一个来到愿星身边、受伤或带有害状态效果者按其最大生命的比例回复并清除全部有害状态效果；无人需要时愿望自行散去。附近没有可接收的伙伴时，许愿者不会倒下。",
         uses: ["残血时把命换成伙伴的一次大幅回复", "在必死前为缠斗中的伙伴留一颗愿望", "把倒下的地方变成一处救援点"],
         kind: "self", range: 0, prepare: 14, active: 1, recover: 0, cooldown: 320, style: "wish", maximumTicks: 300,
         defaults: { broadcast: false },
@@ -181,7 +160,9 @@ namespace PokemonSkills {
             const world = action.sense(), self = action.actor(), body = world.observe(self);
             if (body === null) return "invalid-target";
             const radius = Math.max(1.5, p(healingwishId, "wishReach", action));
-            return healingwishReceivers(world, body.position(), radius, String(self.ref())).length > 0 ? "" : "no-one-to-receive";
+            const ground = SurfacePaths.support(world, body.position().minus(WorldCombat.point(0, body.height() / 2, 0)), .5, 3);
+            if (!ground) return "no-ground";
+            return healingwishReceivers(world, ground, radius, String(self.ref())).length > 0 ? "" : "no-one-to-receive";
         },
         windup: function (action, config, prepare) {
             const world = action.sense(), self = action.actor(), body = world.observe(self);
@@ -190,8 +171,9 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "windup", target: String(self.ref()), motes: motes,
                     broadcast: config && config.broadcast === true ? 1 : 0 }));
             if (body !== null) {
-                // 准备期先把「愿星将留在哪里」和「谁真的能接」指示出来：提交前看得出值不值得交出生命。
-                const feet = body.position();
+
+                const feet = SurfacePaths.support(world, body.position().minus(WorldCombat.point(0, body.height() / 2, 0)), .5, 3);
+                if (!feet) return prepare;
                 const radius = Math.max(1.5, p(healingwishId, "wishReach", action));
                 const scale = Math.max(0.6, Math.min(2.0, radius / healingwishReferenceRadius));
                 action.present("healingwish:ground", healingwishScene, 1, feet,
@@ -208,33 +190,17 @@ namespace PokemonSkills {
         },
         execute: function (action, _move, _config, done) {
             const world = action.world(), self = action.actor(), body = world.observe(self);
-            if (body === null) { done(action); return; }
-            const feet = body.position();
+            if (!body) { done(action); return; }
+            const feet = SurfacePaths.support(world, body.position().minus(WorldCombat.point(0, body.height() / 2, 0)), .5, 3);
             const radius = Math.max(1.5, p(healingwishId, "wishReach", action));
-            const fraction = Math.max(0, Math.min(1, p(healingwishId, "wishHeal", action)));
+            if (!feet || healingwishReceivers(world, feet, radius, String(self.ref())).length === 0) { done(action); return; }
             const wait = Math.max(60, Math.round(p(healingwishId, "wishWait", action)));
-            const motes = Math.max(12, Math.round(p(healingwishId, "motes", action)));
-            const scale = Math.max(0.6, Math.min(2.0, radius / healingwishReferenceRadius));
-            if (healingwishReceivers(world, feet, radius, String(self.ref())).length === 0) {
-                WorldFeedback.emit(world, healingwishScene, 1, feet, { moment: "wasted", target: String(self.ref()), motes: motes }, 22);
-                WorldFeedback.text(world, healingwishAbove(feet), healingwishWasteText, [], 26);
-                done(action); return;
-            }
-            const at = feet.plus(WorldCombat.point(0, 0.9, 0));
-            const allies = healingwishAllySet(world, self, feet), team = "";
-            WorldBodies.spawn(world, at,
-                { size: [0.6, 0.9], health: 8, gravity: false, pushable: false, invulnerable: true, silent: true,
-                    knockbackResistance: 1, glow: true,
-                    appearance: { sprite: "cobblemon:moves/wish_star", scale: 1.0, tint: 0xFFD36A, glow: true } },
-                healingwishWishBrain,
-                { owner: String(self.ref()), radius: radius, fraction: fraction, motes: motes,
-                    ground: [feet.x(), feet.y(), feet.z()], allies: allies, team: team, delivered: false }, wait + 40);
-            WorldFeedback.emit(world, healingwishScene, 1, at,
-                { moment: "offer", target: String(self.ref()), motes: motes, radius: radius, scale: scale }, 34);
-            WorldFeedback.text(world, healingwishAbove(at), healingwishOfferText, [Math.round(wait / 20)], 34);
-            const last = world.observe(self);
-            if (last !== null) world.health(self, -last.health(), "world_combat:healingwish_cost");
-            done(action);
+            const state = { owner: String(self.ref()), ground: [feet.x(), feet.y(), feet.z()], radius: radius,
+                fraction: Math.max(0, Math.min(1, p(healingwishId, "wishHeal", action))), wait: wait,
+                motes: Math.max(12, Math.round(p(healingwishId, "motes", action))),
+                allies: healingwishAllySet(world, self, feet), delivered: false };
+            if (!DeferredSacrifice.arm(action, feet.plus(WorldCombat.point(0, .6, 0)),
+                healingwishWishBrain, state, wait, done, "world_combat:healingwish_cost")) done(action);
         }
     });
 }

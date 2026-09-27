@@ -5,48 +5,51 @@
  * 地面结出一小片霜；被这道冷光刺到的人偶尔攻击下降。它只打最前面的一个，比冰冻光束轻、快、便宜。
  *
  * 折射：虹光撞到**已有的雪／冰表面**时，按原生 `blockFace()` 的法线把入射方向做一次镜面反射，
- *   剩余射程继续前进；只折一次，第二次碰块（或碰到任何身体）就结束。石墙、泥土、木头都不会折射。
+ *   剩余射程继续前进；只折一次，第二次碰块（或碰到任何身体）就结束。反射起点在接触面上有一小段偏移，
+ *   这段偏移也算进总路程，所以折射不会凭空增加射程；石墙、泥土、木头都不会折射。
  *   新结的霜只在最终落点铺出，本发不会把自己刚结的霜当成反射面。
  *
  * 两幕：
  *   起（windup，提交前）：身前把冷光折成一点棱镜，只播预告。
  *   射（travel → reflect/hit/rime，提交后）：虹光从肢体前端沿瞄准方向冲出；连续光带绑在真实投影上，
- *       命中身体结算 beam 伤害、按 chillChance 把攻击压 1 级；命中冰雪表面且有有效方块面时在真实角点
- *       折一下，剩余射程走第二段；最终落点才结霜。路径表现由真实飞行段拼成，不做命中后整条追补。
+ *       命中身体结算 beam 伤害、按 chillChance 与原生实际接受的 delta 把攻击压 1 级（已经到底或免疫时不假报）；
+ *       命中冰雪表面且有有效方块面时在真实接触点折一下，剩余射程走第二段；最终落点在真实顶面逐格结霜。
+ *       一路没碰到任何东西时在 `world.projectilePosition` 的真实末点消散，不结霜、不拿满射程点假造终点。
  *
  * 与冰冻光束分开：冰冻光束是瞬发贯穿一条线的白蓝光、冻住人、留冰线；极光束是看得见轨迹、可借冰面
  * 折射一次的彩虹缎带、只打最前一个、留霜斑、压攻击。配置 `spectrum`（虹谱）由 resolve 改时序、
  * 由公式改射程／霜斑／概率。
  */
 namespace PokemonSkills {
-    /** 在落点周围的地面租出一小片霜（packed_ice），到期原方块回来；返回实际铺出的格数。 */
+    /** 在落点找真实地面，租借一小片霜（packed_ice）：逐格取原生顶面、要求当刻为空并带 expectedState，被拒就少一格。 */
     function aurorabeamFrost(world: CombatWorld, point: CombatPoint, band: number, ticks: number): number {
-        const cells: any[] = [];
+        const surface = SurfacePaths.support(world, point, 1.5, 4);
+        if (surface === null) return 0;
+        const centre = WorldCombat.point(Math.floor(surface.x()), Math.floor(surface.y()), Math.floor(surface.z()));
         const limit = Math.max(6, Math.round(band));
-        const baseY = Math.floor(point.y()), centreX = Math.floor(point.x()), centreZ = Math.floor(point.z());
-        for (let dx = -2; dx <= 2 && cells.length < limit; dx++) {
-            for (let dz = -2; dz <= 2 && cells.length < limit; dz++) {
-                if (dx * dx + dz * dz > 5) continue;
-                const x = centreX + dx, z = centreZ + dz;
-                for (let dy = 1; dy >= -3; dy--) {
-                    const y = baseY + dy;
-                    const block = world.block(WorldCombat.point(x, y, z));
-                    if (block === null) break;
-                    const id = String(block.id());
-                    if (id === "minecraft:air" || id === "minecraft:cave_air" || id === "minecraft:void_air") continue;
-                    if (id === "minecraft:water" || id === "minecraft:lava" || id === "minecraft:bedrock" || id === "minecraft:barrier") break;
-                    const above = world.block(WorldCombat.point(x, y + 1, z));
-                    const over = above === null ? "" : String(above.id());
-                    if (over === "minecraft:air" || over === "minecraft:cave_air" || over === "minecraft:void_air")
-                        cells.push({ x: x, y: y, z: z, block: "minecraft:packed_ice" });
-                    break;
-                }
-            }
+        const seen: { [key: string]: boolean } = Object.create(null);
+        let laid = 0;
+        for (let index = 0; index < limit; index++) {
+            const angle = index * 2.399963229728653;
+            const spread = index === 0 ? 0 : 1.0;
+            const x = Math.round(centre.x() + Math.cos(angle) * spread);
+            const z = Math.round(centre.z() + Math.sin(angle) * spread);
+            // 每格各取真实表面：不把空隙、植被或竖直墙面当成冰地基，也不重复冻同一格。
+            const face = SurfacePaths.support(world, WorldCombat.point(x + 0.5, centre.y() + 1.5, z + 0.5), 1, 4);
+            if (face === null) continue;
+            const cell = { x: Math.floor(face.x()), y: Math.floor(face.y()), z: Math.floor(face.z()) };
+            const id = cell.x + "," + cell.y + "," + cell.z;
+            if (seen[id]) continue;
+            seen[id] = true;
+            const block = world.block(WorldCombat.point(cell.x, cell.y, cell.z));
+            if (block === null || String(block.id()) !== "minecraft:air") continue;
+            try {
+                if (world.terrain(JSON.stringify({ cells: [{ x: cell.x, y: cell.y, z: cell.z, block: "minecraft:packed_ice", expectedState: String(block.state()) }], replace: true, linger: true }), ticks) <= 0) continue;
+            } catch (error) { continue; }
+            laid++;
+            WorldFeedback.emit(world, aurorabeamScene, 1, WorldCombat.point(cell.x + 0.5, cell.y + 0.4, cell.z + 0.5), { moment: "rime" }, 20);
         }
-        if (!cells.length) return 0;
-        try { world.terrain(JSON.stringify({ cells: cells, replace: true, linger: true }), Math.max(40, Math.round(ticks))); }
-        catch (error) { return 0; }
-        return cells.length;
+        return laid;
     }
 
     /** 原生命中的方块面法线；空 face 表示没有具体方块接触。 */
@@ -75,8 +78,8 @@ namespace PokemonSkills {
         id: aurorabeamId,
         cooldownParameter: "recharge",
         name: "Aurora Beam",
-        description: "射出一条会跑的虹色光束：命中最前面的敌人造成特殊伤害、可能让它的攻击下降 1 级，并在落点地面结出一小片霜。首次撞到已有的雪或冰表面时会按入射角镜面折射一次、继续走完剩余射程，石墙不会折射。广谱更远更宽更易降攻，聚谱更快更强。",
-        uses: ["中远距离的直线点名", "压制物理攻击手", "瞄冰墙斜角，折射后打到掩体后的敌人", "在通道上留下一小片难走的霜"],
+        description: "射出一条会跑的虹色光束：命中最前面的敌人造成特殊伤害、按原生实际接受的量让它的攻击下降 1 级（已经到底或免疫时不降），并在落点地面结出一小片霜。首次撞到已有的雪或冰表面时会按入射角镜面折射一次、继续走完剩余射程，石墙不会折射。广谱更远更宽更易降攻，聚谱更快更强。",
+        uses: ["中远距离的直线点名", "压制物理攻击手", "瞄冰墙斜角，折射后打到掩体后的敌人", "在通道上留下一小片湿滑的霜"],
         kind: "aim",
         range: 14,
         maxRange: 19,
@@ -139,9 +142,8 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, aurorabeamScene, 1, point, { moment: "beam", path: waypoints, shimmer: shimmer, scale: scale }, 22);
             }
             function rime(scope: CombatWorld, point: CombatPoint): void {
-                const placed = aurorabeamFrost(scope, point, band, bandTicks);
-                WorldFeedback.emit(scope, aurorabeamScene, 1, point,
-                    { moment: "rime", cells: placed, band: band, scale: Math.max(0.6, Math.min(2.2, band / 10)) }, 28);
+                // 逐格按真实顶面落霜；结出的每格各自播一小簇霜花，实际格数由原生接受结果决定。
+                aurorabeamFrost(scope, point, band, bandTicks);
             }
             function strikeBody(current: CombatAction, hit: CombatImpact, point: CombatPoint, victim: CombatActor): void {
                 const scope = current.world();
@@ -150,9 +152,12 @@ namespace PokemonSkills {
                 if (landed) {
                     WorldFeedback.emit(scope, aurorabeamScene, 1, point, { moment: "hit", target: String(victim.ref()), shimmer: shimmer, scale: scale, intensity: intensity }, 24);
                     if (scope.valid(victim) && scope.random() < chance) {
-                        NativeEffects.boost(scope, victim, "atk", -stages);
-                        WorldFeedback.emit(scope, aurorabeamScene, 1, point, { moment: "chill", target: String(victim.ref()), shimmer: shimmer }, 24);
-                        WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), aurorabeamChillText, [stages], 26);
+                        // 降攻按原生实际接受的 delta 报告：已经到底或免疫时不闪 chill、也不浮字。
+                        const delta = NativeEffects.boost(scope, victim, "atk", -stages);
+                        if (delta < 0) {
+                            WorldFeedback.emit(scope, aurorabeamScene, 1, point, { moment: "chill", target: String(victim.ref()), shimmer: shimmer }, 24);
+                            WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), aurorabeamChillText, [-delta], 26);
+                        }
                     }
                     sound(current, "cobblemon:move.aurorabeam.target");
                 } else {
@@ -196,27 +201,32 @@ namespace PokemonSkills {
                                 const dot = heading.x() * normal.x() + heading.y() * normal.y() + heading.z() * normal.z();
                                 const reflected = heading.minus(normal.scale(2 * dot));
                                 const unit = reflected.length() < 1e-6 ? heading.scale(-1) : reflected.unit();
-                                waypoints.push([point.x(), point.y(), point.z()]);
-                                WorldFeedback.emit(scope, aurorabeamScene, 1, cell,
+                                // 折角用两段实际路径：先把入射段画到真实接触点，再在接触点闪一下。
+                                beamPath(scope, point);
+                                WorldFeedback.emit(scope, aurorabeamScene, 1, point,
                                     { moment: "glint", point: [point.x(), point.y(), point.z()], face: face,
                                         shimmer: Math.round(shimmer * 0.6), scale: scale }, 18);
+                                const start = point.plus(normal.scale(0.08)).plus(unit.scale(0.06));
+                                // 反射起点偏移也算进总路程，第二段不吃额外射程；棱镜长度按剩余射程有界展示。
+                                const remaining = Math.max(0, left - start.minus(point).length());
                                 WorldFeedback.emit(scope, aurorabeamScene, 1, point,
-                                    { moment: "prism", direction: [unit.x(), unit.y(), unit.z()], face: face,
+                                    { moment: "prism", direction: [unit.x(), unit.y(), unit.z()], face: face, left: remaining,
+                                        fold: Math.max(0.4, Math.min(2.0, remaining * 0.12)),
                                         shimmer: shimmer, scale: scale, intensity: intensity }, 22);
                                 sound(inner, "cobblemon:impact.ice");
-                                const start = point.plus(normal.scale(0.08)).plus(unit.scale(0.06));
-                                inner.after(1, function (next: CombatAction): void { fireLeg(next, start, unit, left); });
+                                inner.after(1, function (next: CombatAction): void { fireLeg(next, start, unit, remaining); });
                                 return;
                             }
                         }
                         landBlock(inner, point);
                     },
                     function (inner: CombatAction): void {
-                        // 一路没碰到任何东西：在剩余射程尽头消散，不结霜。
+                        // 一路没碰到任何东西：在 projectilePosition 读到的真实弹体末点消散，不结霜、不拿满射程点假造终点。
                         if (resolved || settled) return;
                         resolved = true;
-                        const endPoint = from.plus(heading.scale(legRange));
-                        WorldFeedback.emit(inner.world(), aurorabeamScene, 1, endPoint, { moment: "miss", target: "", scale: scale }, 20);
+                        const end = inner.world().projectilePosition(flight);
+                        if (end !== null)
+                            WorldFeedback.emit(inner.world(), aurorabeamScene, 1, end, { moment: "miss", target: "", scale: scale }, 20);
                         finish(inner);
                     }, JSON.stringify(appearance));
                 trail(flight);

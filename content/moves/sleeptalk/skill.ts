@@ -9,30 +9,89 @@
  * target/move rejects without paying.
  */
 namespace PokemonSkills {
-    function sleeptalkEnemy(action: CombatAction, origin: CombatPoint, radius: number): { actor: CombatActor; body: CombatObservation } | null {
-        var world = action.sense(), found = world.query(origin, Math.min(32, Math.max(1, radius)), false);
-        var best: { actor: CombatActor; body: CombatObservation } | null = null, distance = Infinity;
+    /** A live body chosen as the borrowed move's recipient or aim point. */
+    interface SleeptalkTarget { actor: CombatActor; body: CombatObservation; }
+    /** The borrowed move's own resolved range for this individual (configuration and level), or its design range. */
+    function sleeptalkRange(world: CombatWorld, actor: CombatActor, id: string): number {
+        var skill = skills[id]; if (!skill) return 0;
+        if (!skill.resolve) return skill.range;
+        var runtime = skill.resolve(CobblemonCombat.pokemon(actor), config(world, actor, id), world, actor);
+        return runtime.range === undefined ? skill.range : runtime.range;
+    }
+    /** Nearest non-friendly body actually in sight within reach; one wall does not discard the whole candidate. */
+    function sleeptalkEnemy(world: CombatWorld, origin: CombatPoint, maxDistance: number): SleeptalkTarget | null {
+        var found = world.query(origin, Math.min(32, Math.max(1, maxDistance)), false);
+        var best: SleeptalkTarget | null = null, distance = Infinity;
         for (var i = 0; i < found.length; i++) {
             var actor = found[i];
             if (world.friendly(actor) || !world.valid(actor)) continue;
-            var body = world.observe(actor);
-            if (!body) continue;
-            var current = body.position().minus(origin).length();
-            if (current < distance) { distance = current; best = { actor: actor, body: body }; }
+            var body = world.observe(actor); if (!body) continue;
+            var point = body.position(), current = point.minus(origin).length();
+            if (current > maxDistance || current >= distance || !world.clear(origin, point)) continue;
+            distance = current; best = { actor: actor, body: body };
         }
         return best;
     }
-    /** Map a candidate move onto the caller's field: self casts on the caller, friendly moves on the caller, everything else at the nearest enemy. */
+    /** The friendly body (the sleeper included) most in need of the borrowed move, reachable in sight. */
+    function sleeptalkFriend(world: CombatWorld, origin: CombatPoint, selfRef: string, maxDistance: number): SleeptalkTarget | null {
+        var found = world.query(origin, Math.min(32, Math.max(1, maxDistance)), false);
+        var best: SleeptalkTarget | null = null, need = Infinity;
+        for (var i = 0; i < found.length; i++) {
+            var actor = found[i];
+            if (!world.valid(actor) || !world.friendly(actor)) continue;
+            var body = world.observe(actor); if (!body) continue;
+            var point = body.position();
+            if (point.minus(origin).length() > maxDistance) continue;
+            if (String(actor.ref()) !== selfRef && !world.clear(origin, point)) continue;
+            var ratio = body.health() / Math.max(1, body.maxHealth());
+            if (ratio < need) { need = ratio; best = { actor: actor, body: body }; }
+        }
+        return best;
+    }
+    /** Forward point on the sleeper's heading for a borrowed placement/aim move. */
+    function sleeptalkAimPoint(action: CombatAction, reach: number): CombatPoint {
+        var heading = WorldGeometry.flatUnit(action.direction(), action.targetPosition().minus(action.origin()));
+        return action.origin().plus(heading.scale(reach));
+    }
+    /** Map a candidate move by its kind: self on the sleeper, friend on the most wounded partner, enemy on a visible foe, point/aim on the nearest visible foe or the sleeper's heading. */
     function sleeptalkCall(action: CombatAction, id: string): NativeLoadout.CallOptions | null {
         var skill = skills[id]; if (!skill) return null;
+        var world = action.sense(), origin = action.origin(), selfRef = String(action.actor().ref());
+        var reach = Math.min(action.range(), sleeptalkRange(world, action.actor(), id));
         var input: NativeLoadout.CallOptions["input"] | null;
-        if (skill.kind === "self" || skill.kind === "friend") input = NativeLoadout.inputFor(action, id, action.actor());
-        else {
-            var found = sleeptalkEnemy(action, action.origin(), action.range() + 2);
-            if (!found) return null;
-            input = NativeLoadout.inputFor(action, id, found.actor, found.body.position());
+        if (skill.kind === "self") input = NativeLoadout.inputFor(action, id, action.actor());
+        else if (skill.kind === "friend") {
+            var friend = sleeptalkFriend(world, origin, selfRef, reach);
+            input = NativeLoadout.inputFor(action, id, friend ? friend.actor : action.actor());
+        } else if (skill.kind === "enemy") {
+            var foe = sleeptalkEnemy(world, origin, reach);
+            if (!foe) return null;
+            input = NativeLoadout.inputFor(action, id, foe.actor, foe.body.position());
+        } else {
+            var target = sleeptalkEnemy(world, origin, reach);
+            input = target ? NativeLoadout.inputFor(action, id, target.actor, target.body.position())
+                : NativeLoadout.inputFor(action, id, null, sleeptalkAimPoint(action, reach));
         }
         return input ? { eligibility: "caller", input: input } : null;
+    }
+    /** True when the sleeper's own set holds a callable move that currently has a legal recipient. */
+    export function sleeptalkReady(world: CombatWorld, selfRef: string): boolean {
+        var actor = world.actor(selfRef); if (!actor) return false;
+        var body = world.observe(actor); if (!body) return false;
+        var origin = body.position();
+        var pokemon = CobblemonCombat.pokemon(actor);
+        for (var slot = 0; slot < pokemon.moveSlots(); slot++) {
+            var known = pokemon.move(slot);
+            if (!known) continue;
+            var id = String(known.id());
+            if (!skills[id]) continue;
+            var info = NativeLoadout.facts(known);
+            if (info.flags.nosleeptalk || info.flags.charge) continue;
+            var kind = skills[id].kind;
+            if (kind === "self" || kind === "friend" || kind === "point" || kind === "motion" || kind === "aim") return true;
+            if (sleeptalkEnemy(world, origin, Math.min(16, sleeptalkRange(world, actor, id)))) return true;
+        }
+        return false;
     }
 
     define({
@@ -67,9 +126,11 @@ namespace PokemonSkills {
             };
         },
         run: function (action, move, config) {
-            var echoes = p("sleeptalk", "echoes", action);
-            action.present("sleeptalk:murmur", "world_combat:move_sleeptalk", 1, action.origin(), JSON.stringify({ moment: "murmur", echoes: echoes }));
-            action.after(p("sleeptalk", "murmur", action), function (current) {
+            var echoes = p("sleeptalk", "echoes", action), murmur = p("sleeptalk", "murmur", action);
+            action.present("sleeptalk:murmur", "world_combat:move_sleeptalk", 1, action.origin(), JSON.stringify({ moment: "murmur", echoes: echoes, murmur: murmur }));
+            action.after(murmur, function (current) {
+                // The dream only holds while the shared sleep identity is present: waking ends it before anything is drawn.
+                if (!CombatStatus.behaves(current.sense(), current.actor(), "sleep")) { current.reject("not-asleep"); return; }
                 var pokemon = CobblemonCombat.pokemon(current.actor()), ids: string[] = [];
                 for (var slot = 0; slot < pokemon.moveSlots(); slot++) {
                     var known = pokemon.move(slot);

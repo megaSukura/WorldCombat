@@ -3,22 +3,28 @@
  *
  * 机制与数值来源：
  * - 原生（Cobblemon 1.8 / Showdown）：威力 40、恶、物理、命中 100、PP 20；对手替换下场时威力翻倍。
- * - 即时战斗里没有换人，本实现把「对手正在撤离」翻译成可观察的事实：命中那一刻目标的速度矢量朝远离
- *   施法者的方向（点积 > 0.35）。满足时这一扑的威力翻倍，画面多一层暗色碎片并浮出「追击！」。
+ * - 即时战斗里没有换人，本实现把「对手正在撤离」翻译成可观察的事实：命中那一刻目标相对施法者的
+ *   水平速度方向朝远离一侧（水平点积 > 0.35）。满足时这一扑的威力翻倍，画面多一层暗色碎片并浮出「追击！」。
+ *   只看水平相对速度：纯坠落或原地起跳不会把 Y 上的位移误算成撤离。
  * - 参数分散到精灵数据：威力取物攻与等级，扑击距离与每刻位移取速度，碰撞半径取体型高度。
  */
 namespace PokemonSkills {
     export const pursuitId = "pursuit";
     export const pursuitScene = "world_combat:move_pursuit";
+    /** 接触爪痕的固定轮廓场景：真实接触点上按实际冲刺方向摆固定数量的刮痕。 */
+    export const pursuitMarkScene = "world_combat:move_pursuit/marks";
 
-    /** 命中时目标是否正背身远离施法者。 */
+    /** 命中时目标是否正相对施法者拉开距离（水平相对速度朝远离方向）。 */
     export function pursuitRetreating(world: CombatWorld, attacker: CombatActor, target: CombatActor): boolean {
         const self = world.observe(attacker), other = world.observe(target);
         if (!self || !other) return false;
-        const velocity = other.velocity(), away = other.position().minus(self.position());
-        const speed = velocity.length(), gap = away.length();
+        const velocity = other.velocity().minus(self.velocity());
+        const away = other.position().minus(self.position());
+        const flatVelocity = WorldCombat.point(velocity.x(), 0, velocity.z());
+        const flatAway = WorldCombat.point(away.x(), 0, away.z());
+        const speed = flatVelocity.length(), gap = flatAway.length();
         if (speed < 0.02 || gap < 0.05) return false;
-        const dot = (velocity.x() * away.x() + velocity.y() * away.y() + velocity.z() * away.z()) / (speed * gap);
+        const dot = (flatVelocity.x() * flatAway.x() + flatVelocity.z() * flatAway.z()) / (speed * gap);
         return dot > 0.35;
     }
 

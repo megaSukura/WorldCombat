@@ -8,8 +8,8 @@
  *   只会撞击的小拉达。施术者由服务端 /damage 分小步压到自身最大生命约 50%，跨过祈愿阈值。敌人不宣战、也不
  *   在近处，避免施术者在兑现前被打断或走出落点圈。
  *
- * 必然事实：施术者提交过祈愿；落点就在施术者脚下那块地面，施术者留在原地，所以愿星兑现后必定进圈回血。愿星
- *   悬停与落下的视觉、落点圈半径、被推出圈而落空都属于位置与时机的随机项，写进 note 而不作断言。
+ * 必然事实：施术者提交过祈愿；落点落在施术者脚边那株矮草下方的真实地面，施术者留在原地，所以愿星兑现后必定
+ *   按同一层进圈回血。愿星悬停与落下的视觉、落点圈半径、被推出圈而落空都属于位置与时机的随机项，写进 note。
  *
  * 共享前置：私有装配只注册本单元的动作；目标的小拉达「撞击」不在装配里，不会真正出招。愿星是 WorldBodies
  *   持久实体，舞台没有直接读它的原语，只能从施术者回血侧确认它兑现了。
@@ -17,6 +17,8 @@
 Smoke.scenario("wish", function (stage) {
     stage.weather("clear");
     stage.time("day");
+    // 落点脚下放一株矮草：它不构成支撑，愿星落点必须取矮草下面真实的地面，而不是把草当成整格地板。
+    stage.block([-3, 0, 0], "minecraft:short_grass");
 
     var caster = stage.pokemon({ species: "clefairy", level: 30, moves: ["wish"], at: [-3, 0, 0] });
     var foe = stage.pokemon({ species: "rattata", level: 20, moves: ["tackle"], at: [16, 0, 0] });
@@ -42,7 +44,7 @@ Smoke.scenario("wish", function (stage) {
         stage.expect(stage.casts("wish", caster) >= 1, "the wounded clefairy committed wish below its threshold");
         stage.after(200, function () {
             stage.expect(caster.health() > woundedAt + 5, "the wish star landed in the ring under the caster and restored it above the wound floor");
-            stage.note("愿星落点是所选地面，兑现时只按落点圈筛选：施术者留在圈里才会回血，走远或换人都会改变受益者。落点圈半径（约 2.6-4 格）、悬停/下落视觉、分享档的比例摊薄与圈外落空属于位置与设计的随机项。本场景只有施术者一人且原地不动，愿星落点就在它脚下，所以进圈回血必然发生。", {
+            stage.note("愿星落点用真实方块碰撞找出脚底平面：脚下的草不构成支撑，星落在草下的真实地面；兑现时只按落点圈筛选、且只治疗与落点同一层的友善战斗者。落点圈半径（约 2.6-4 格）、悬停/下落视觉、分享档的比例摊薄与圈外落空属于位置与设计的随机项。本场景只有施术者一人且原地不动，愿星落点就在它脚下，所以进圈回血必然发生。", {
                 casterCasts: stage.casts("wish", caster),
                 woundedHealth: Math.round(woundedAt * 10) / 10,
                 casterHealthNow: Math.round(caster.health() * 10) / 10,

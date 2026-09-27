@@ -53,14 +53,14 @@ namespace PokemonSkills {
         },
         execute: function (action, move, config, done) {
             const world = action.world();
-            const actor = action.actor();
-            const direction = aim(action);
             const power = p(aquacutterId, "jet", action);
             const speed = p(aquacutterId, "pressure", action);
             const bore = Math.max(1, Math.round(p(aquacutterId, "bore", action)));
             const radius = p(aquacutterId, "radius", action);
             const soak = Math.max(40, Math.round(p(aquacutterId, "soakTicks", action)));
             const spray = Math.max(8, Math.round(p(aquacutterId, "spray", action)));
+            const range = action.range();
+            const life = Math.max(30, Math.round(range / Math.max(0.2, speed) + 20));
             const scale = Math.max(0.6, Math.min(2.0, radius / aquacutterReference));
             const intensity = Math.max(0.6, Math.min(2.4, power / 70));
             let settled = false, hits = 0;
@@ -80,7 +80,7 @@ namespace PokemonSkills {
             sound(action, "cobblemon:move.waterpulse.actor");
 
             const flight = LivingActions.projectile(action, {
-                speed: speed, range: action.range(), gravity: 0, radius: radius, lifetime: 160,
+                speed: speed, range: range, gravity: 0, radius: radius, lifetime: life,
                 appearance: appearance,
                 impact: function (current: CombatAction, hit: CombatImpact) {
                     const scope = current.world(), victim = hit.target(), point = hit.position();
@@ -90,7 +90,12 @@ namespace PokemonSkills {
                     if (!landed) return;
                     hits++;
                     // 加压的水切开时把目标淋透：借共享身份 soaked，与水流尾、波动冲、水流裂破是同一件事。
-                    if (!CombatStatus.has(scope, victim, "soaked"))
+                    // 只在本招窗口更久时才续期，已经带着湿身的目标不会被一次短湿吞掉这次完整窗口。
+                    let remaining = 0;
+                    CombatStatus.tagged(scope, victim, "soaked").forEach(function (effect) {
+                        const left = effect.duration(); remaining = Math.max(remaining, left < 0 ? soak : left);
+                    });
+                    if (remaining < soak)
                         CombatStatus.apply(scope, victim, "soaked", aquacutterSoaked, soak);
                     WorldFeedback.emit(scope, aquacutterScene, 1, point,
                         { moment: "cut", target: String(victim.ref()), spray: spray, scale: scale,
@@ -101,16 +106,20 @@ namespace PokemonSkills {
             }, function (current: CombatAction) {
                 if (settled) return;
                 settled = true;
-                const scope = current.world(), body = scope.observe(actor);
-                if (hits === 0 && body !== null) {
-                    WorldFeedback.emit(scope, aquacutterScene, 1, body.position(), { moment: "miss", scale: scale }, 18);
-                    WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.0, 0)), aquacutterMissText, [], 20);
+                const scope = current.world();
+                if (hits === 0) {
+                    // 空击在真实弹末点散开；拿不到真实终点就不再假造一个落点。
+                    const end = scope.projectilePosition(flight);
+                    if (end !== null) {
+                        WorldFeedback.emit(scope, aquacutterScene, 1, end, { moment: "miss", scale: scale }, 18);
+                        WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 0.6, 0)), aquacutterMissText, [], 20);
+                    }
                     sound(current, "cobblemon:impact.water");
                 }
                 done(current);
             });
             WorldFeedback.keep(world, "aquacutter:jet:" + action.id(), aquacutterScene, 1, action.origin(),
-                { moment: "jet", projectile: flight, scale: scale, intensity: intensity, spray: spray }, 90);
+                { moment: "jet", projectile: flight, scale: scale, intensity: intensity, spray: spray, life: life }, life + 10);
         }
     });
 

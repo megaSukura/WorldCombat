@@ -17,6 +17,8 @@ Smoke.scenario("snaptrap", function (stage) {
     var heavy = stage.mob({ type: "minecraft:iron_golem", at: [3, 0, 0] });
     var baseSpeed = stage.attribute(heavy, "minecraft:generic.movement_speed");
     stage.hostile(caster, heavy);
+    // 傀儡站定不动，夹子抛到它脚下后撑开，再由触发圈捕获；直击也不再绕过布设。
+    stage.command("data merge entity @e[type=minecraft:iron_golem,distance=..16,limit=1] {NoAI:1b}");
     stage.until(900, function () {
         return stage.casts("snaptrap", caster) >= 1 && stage.damageTo(heavy) > 0
             && stage.hadMobEffect(heavy, "world_combat:snared_jaw");
@@ -27,7 +29,7 @@ Smoke.scenario("snaptrap", function (stage) {
             stage.expect(stage.hadMobEffect(heavy, "world_combat:snared_jaw"), "the target was caught in the jaws");
             stage.expect(stage.hasMobEffect(heavy, "world_combat:snared_jaw"), "the jaws are still holding the target");
             stage.expect(stage.attribute(heavy, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the jaws pinned the iron golem's movement speed");
-            stage.note("where the trap landed, the arm timing and the crit roll are positional/random", {
+            stage.note("夹子先真实落地、在脚下有支撑处撑开臂刻，再捕获首位踏进触发圈的目标；直击活物也走同一条布设路，不再当场合上。落点、布设臂刻与暴击是位置/随机项，空射末点取真实弹体位置。", {
                 casts: stage.casts("snaptrap", caster),
                 heavyDamage: Math.round(stage.damageTo(heavy) * 10) / 10,
                 speed: [baseSpeed, stage.attribute(heavy, "minecraft:generic.movement_speed")],

@@ -1,8 +1,11 @@
-/** 在脚下展开磁场，暂时提高场内正负电伙伴、铁傀儡和穿金属护甲友方的防御与特防。离开磁场后提升消失。 */
+/**
+ * 在脚下展开磁场，暂时提高场内正负电伙伴、铁傀儡和穿金属护甲友方的防御与特防。离开磁场后提升消失。
+ *
+ * 每片磁场只拥有自己那一份贡献：进入时为每个受益者建一条 boostWindow，按 field.data.windows 记账，
+ * 离开本场、本场到位或本场结束时就只关这一条，别的场地（哪怕同一个施法者）留下的标记不受影响。
+ * 可见的磁化状态是 actor 身上的真实 MobEffect；它必须先真正挂上，本场才建立窗口。
+ */
 namespace PokemonSkills {
-    function magneticfluxStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return NativeEffects.stage(NativeEffects.read(world, actor), stat);
-    }
     /** 资格来自当前正负电特性，或普通活体的身体/装备材料。 */
     export function magneticfluxPolarity(world: CombatWorld, actor: CombatActor): string {
         if (!world.valid(actor)) return "";
@@ -23,33 +26,44 @@ namespace PokemonSkills {
     function magneticfluxQualifies(world: CombatWorld, actor: CombatActor): boolean {
         return magneticfluxPolarity(world, actor) !== "";
     }
-    /** 记录这次磁场各抬了几级，供收回时照数还原。 */
-    WorldCombat.effect(magneticfluxLink, 1, 1200, "actor", function (json) {
-        const value = JSON.parse(json || "{}");
-        if (typeof value.guard !== "number" || !isFinite(value.guard) || typeof value.ward !== "number" || !isFinite(value.ward))
-            throw new Error("Invalid magnetic flux link");
-        return JSON.stringify(value);
-    }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(magneticfluxLink, "start", function () { });
-    WorldCombat.effectHandler(magneticfluxLink, "operation:world_combat:dispel", function (effect) { effect.end(); });
-
-    /** 给一个正负电友方上磁场状态并记录这次抬起的等级；已在身上的人不重复叠加。 */
-    function magneticfluxGrant(world: CombatWorld, actor: CombatActor, guard: number, ward: number, ticks: number): boolean {
-        if (MobEffects.read(world, actor, magneticfluxEffect) !== null) return false;
-        NativeEffects.boost(world, actor, "def", Math.max(1, Math.min(6, Math.round(guard))));
-        NativeEffects.boost(world, actor, "spd", Math.max(1, Math.min(6, Math.round(ward))));
-        MobEffects.apply(world, actor, magneticfluxEffect, ticks, 0);
-        world.effect(magneticfluxLink, actor, JSON.stringify({ guard: Math.round(guard), ward: Math.round(ward) }), ticks);
-        return true;
+    /** 本场在这一名受益者身上建立的那条窗口是否仍然真实有效。 */
+    function magneticfluxOwned(world: CombatWorld, actor: CombatActor, id: number): boolean {
+        if (!(id > 0)) return false;
+        const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+        return world.effects(actor, definition).some(function (view) {
+            return view.id() === id && CombatStages.windowAlive(world, actor, JSON.parse(String(view.data())));
+        });
     }
-    function magneticfluxRevoke(world: CombatWorld, actor: CombatActor): void {
-        MobEffects.consume(world, actor, magneticfluxEffect);
+    function magneticfluxWindows(field: WorldEffects.Field): { [ref: string]: number } {
+        return field.data.windows || (field.data.windows = {});
     }
-    /** 磁场每一遍扫描：只有正负电特性的友方（自己也算）被咬住。 */
+    /** 只撤销本场在这一名身上留下的窗口；别的场地留下的标记不动。 */
+    function magneticfluxClose(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
+        const windows = magneticfluxWindows(field), ref = String(actor.ref()), id = Number(windows[ref] || 0);
+        if (id) NativeEffects.windowClose(world, id);
+        delete windows[ref];
+    }
+    /** 除本场之外，是否还有别的磁场正罩着这名受益者；用来决定磁化状态是否还有人需要。 */
+    function magneticfluxElsewhere(world: CombatWorld, actor: CombatActor, exceptId: number): boolean {
+        const areas = WorldEffects.areas(world, magneticfluxRule);
+        for (let i = 0; i < areas.length; i++) {
+            if (Number(areas[i].id) === exceptId) continue;
+            if (WorldEffects.covers(world, areas[i], actor)) return true;
+        }
+        return false;
+    }
+    /** 磁场每一遍扫描：只有正负电特性的友方（自己也算）被咬住，且要先把可见状态真正挂上才给窗口。 */
     function magneticfluxLinkActor(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-        if (!magneticfluxQualifies(world, actor) || !world.friendly(actor)) { magneticfluxRevoke(world, actor); return; }
+        const ref = String(actor.ref());
+        const windows = magneticfluxWindows(field);
+        if (!magneticfluxQualifies(world, actor) || !world.friendly(actor)) {
+            magneticfluxClose(world, actor, field);
+            // 不合资格：只撤本场贡献；没有别的磁场再罩着它时，可见状态也不留。
+            if (!magneticfluxElsewhere(world, actor, Number(field.id || 0))) MobEffects.consume(world, actor, magneticfluxEffect);
+            return;
+        }
         const body = world.observe(actor);
-        if (body === null) return;
+        if (body === null) { magneticfluxClose(world, actor, field); return; }
         const data: any = field.data || {};
         const guard = Math.max(1, Math.min(2, Math.round(Number(data.guard) || 1)));
         const ward = Math.max(1, Math.min(2, Math.round(Number(data.ward) || 1)));
@@ -57,52 +71,72 @@ namespace PokemonSkills {
         const radius = Number(data.radius) || magneticfluxReferenceRadius;
         const motes = Math.max(8, Math.round(Number(data.motes) || 22));
         const scale = Math.max(0.5, Math.min(2, radius / magneticfluxReferenceRadius));
-        const ref = String(actor.ref());
-        if (magneticfluxGrant(world, actor, guard, ward, ticks)) {
-            WorldFeedback.emit(world, magneticfluxScene, 1, body.position(),
-                { moment: "link", target: ref, guard: guard, ward: ward, motes: motes,
-                  polarity: magneticfluxPolarity(world, actor), scale: scale }, 28);
-            WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), magneticfluxLinkText, [guard, ward], 28);
-            world.sound("cobblemon:impact.electric", body.position(), 12, "{}");
+        const life = Math.max(1, Math.round(field.remaining || ticks));
+        const existing = Number(windows[ref] || 0);
+        if (magneticfluxOwned(world, actor, existing)) {
+            // 窗口还在；若可见状态被清除，补挂回同一条状态，保持「站在场里就带磁化」。
+            if (MobEffects.read(world, actor, magneticfluxEffect) === null) MobEffects.apply(world, actor, magneticfluxEffect, ticks, 0);
+            return;
         }
-        WorldFeedback.keep(world, "world_combat:move_magneticflux/link/" + ref, magneticfluxScene, 1, body.position(),
-            { moment: "held", target: ref, guard: guard, ward: ward, motes: Math.max(4, Math.round(motes * 0.4)), scale: scale }, 30);
+        // 先把可见的磁化状态真正挂上；挂不上就不给增益。
+        const carrier = MobEffects.apply(world, actor, magneticfluxEffect, ticks, 0);
+        if (carrier === null) { magneticfluxClose(world, actor, field); return; }
+        // 一条只属于本场的临时窗口：由 field.data.windows 记账，离开本场或本场结束时只关这一条。
+        const source = "magneticflux:" + field.id;
+        const id = NativeEffects.boostWindow(world, actor, { def: guard, spd: ward }, life, source);
+        if (!id) { magneticfluxClose(world, actor, field); return; }
+        const owner = { actor: String(world.source().ref()), definition: "world_combat:field", id: field.id };
+        if (!world.operation(id, "world_combat:stage_owner", JSON.stringify(owner))) {
+            NativeEffects.windowClose(world, id); return;
+        }
+        windows[ref] = id;
+        WorldFeedback.emit(world, magneticfluxScene, 1, body.position(),
+            { moment: "link", target: ref, guard: guard, ward: ward, motes: motes,
+              polarity: magneticfluxPolarity(world, actor), scale: scale }, 28);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), magneticfluxLinkText, [guard, ward], 28);
+        world.sound("cobblemon:impact.electric", body.position(), 12, "{}");
     }
-    /** 磁场还在时，让磁环持续可见——环本身画出的就是范围。 */
+    /** 磁场还在时，每场用自己的 key 让磁环持续可见——环本身画出的就是范围。 */
     function magneticfluxSustain(world: CombatWorld, field: WorldEffects.Field): void {
         const data: any = field.data || {};
         const radius = Number(data.radius) || magneticfluxReferenceRadius;
         const point = WorldCombat.point(field.position[0], field.position[1], field.position[2]);
-        WorldFeedback.keep(world, "world_combat:move_magneticflux/aura", magneticfluxScene, 1, point,
+        const windows = magneticfluxWindows(field);
+        WorldFeedback.keep(world, "world_combat:move_magneticflux/aura/" + field.id, magneticfluxScene, 1, point,
             { moment: "field", radius: radius, motes: Math.max(6, Math.round((Number(data.motes) || 22) * 0.4)),
               scale: Math.max(0.5, Math.min(2, radius / magneticfluxReferenceRadius)) }, 30);
+        // 每名仍被本场咬住的受益者一条明确磁力线，从场心连到人身上；线只给本场的窗口拥有者。
+        Object.keys(windows).forEach(function (ref) {
+            const target = world.actor(ref);
+            if (target === null || !world.valid(target)) { delete windows[ref]; return; }
+            if (!magneticfluxOwned(world, target, Number(windows[ref]))) return;
+            const body = world.observe(target);
+            if (body === null) return;
+            const at = body.position();
+            WorldFeedback.keep(world, "world_combat:move_magneticflux/link/" + field.id + "/" + ref, magneticfluxScene, 1, at,
+                { moment: "held", target: ref, guard: Number(data.guard) || 1, ward: Number(data.ward) || 1,
+                  motes: Math.max(4, Math.round((Number(data.motes) || 22) * 0.4)), scale: Math.max(0.5, Math.min(2, radius / magneticfluxReferenceRadius)),
+                  path: [field.position, [at.x(), at.y(), at.z()]] }, 30);
+        });
     }
 
     WorldEffects.fieldRule(magneticfluxRule, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field) { magneticfluxLinkActor(world, actor, field); },
         stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field) { magneticfluxLinkActor(world, actor, field); },
-        leave: function (world: CombatWorld, actor: CombatActor) { magneticfluxRevoke(world, actor); },
+        leave: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field) {
+            magneticfluxClose(world, actor, field);
+            if (!magneticfluxElsewhere(world, actor, Number(field.id || 0)))
+                MobEffects.consume(world, actor, magneticfluxEffect);
+        },
         scan: function (_effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field) { magneticfluxSustain(world, field); }
     });
 
-    // 磁场散去、被人解除，或被离场收回：按记录把这次抬起的防御与特防原样收回（只收当前实际持有的正等级）。
+    // 磁化状态散去（到期或被清除）：只播收场表现并补一条浮字，等级回收已由各自的场窗口自己负责。
     WorldCombat.on("world_combat:move_magneticflux/revert", "world_combat:mob_effect_removed", "", function (event: CombatWorldEvent) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== magneticfluxEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const views = world.effects(actor, magneticfluxLink);
-        let guard = 0, ward = 0;
-        if (views.length) {
-            const mark = JSON.parse(String(views[0].data()));
-            guard = Math.max(0, Math.round(Number(mark.guard) || 0));
-            ward = Math.max(0, Math.round(Number(mark.ward) || 0));
-            world.operation(views[0].id(), "world_combat:dispel", "{}");
-        }
-        const lostDef = Math.min(guard, Math.max(0, magneticfluxStage(world, actor, "def")));
-        const lostSpd = Math.min(ward, Math.max(0, magneticfluxStage(world, actor, "spd")));
-        if (lostDef > 0) NativeEffects.boost(world, actor, "def", -lostDef);
-        if (lostSpd > 0) NativeEffects.boost(world, actor, "spd", -lostSpd);
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, magneticfluxScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 24);
@@ -113,7 +147,7 @@ namespace PokemonSkills {
         id: magneticfluxId,
         cooldownParameter: "wait",
         name: "磁场操控",
-        description: "在脚下展开磁场，暂时提高场内正负电伙伴、铁傀儡和穿金属护甲友方的防御与特防。离开磁场后提升消失。",
+        description: "在脚下展开磁场，暂时提高场内正负电伙伴、铁傀儡和穿金属护甲友方的防御与特防。提升跟着磁场走：离开磁场后消失。",
         uses: ["在交战位置保护正负电伙伴和金属护甲队友", "在己方电系核心脚下立一片磁场", "接下成片攻击前先把双防垫起来"],
         kind: "self",
         range: 1,

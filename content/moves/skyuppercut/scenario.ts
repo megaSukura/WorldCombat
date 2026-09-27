@@ -2,9 +2,9 @@
  * 冲天拳 / skyuppercut 的可执行设计说明。
  *
  * 场面：只会冲天拳的火焰鸡（Blaziken，格斗上勾）对着被点住、拔掉击退抗性、不会走开的铁傀儡（体型高大、耐打），
- * 晴天平地，初始距离约 1 格（拳程内）。默认配置为冲天式。铁傀儡 `NoAI` 定住、`knockback_resistance` 清零，
- * 既站得稳又真的会被上勾顶离地面，便于读轨迹。
- * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（上勾命中）。
+ * 晴天平地，初始距离约 1 格（拳程内）。默认配置为冲天式。铁傀儡 NoAI 定住、`knockback_resistance` 清零，
+ * 既站得稳又真的会被上勾顶离地面，便于读轨迹：拳尖沿一条由低到高的真实弧逐段扫过，判定与表现共用端点。
+ * 必然事实：本招被提交过（`stage.casts`）；目标受到过伤害（上勾命中，且每个目标整招只结算一次）。
  * 被顶起多少（体重与配置决定的 `lift`）、是否吃到离地加成，写进 note 供读轨迹判断。
  */
 Smoke.scenario("skyuppercut", function (stage) {
@@ -22,7 +22,7 @@ Smoke.scenario("skyuppercut", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("skyuppercut", caster) > 0, "sky uppercut was committed");
             stage.expect(stage.damageTo(foe) > 0, "the uppercut dealt damage");
-            stage.note("上勾把目标顶离地面（垂直位移）；离地目标吃 airBonus，竖直覆盖由身高决定", {
+            stage.note("拳尖沿低→高真实弧逐段扫，命中始终有接触回执、真的顶起才加上冲；上勾把目标顶离地面（垂直位移）；离地目标吃 airBonus，竖直覆盖由身高决定", {
                 casts: stage.casts("skyuppercut", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 foeMoved: Math.round(stage.travelled(foe) * 10) / 10,

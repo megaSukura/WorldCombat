@@ -15,11 +15,12 @@ namespace CompanionBehavior {
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 
-    /** 与参数公式同源的声浪半径估算，用来判断值不值得挤进去喊；实际命中仍走招式自己的公式。 */
+    /** 直接读本招自己的声浪半径公式（含体型与特攻），AI 排序与实际命中同源。 */
     function uproarRadiusOf(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const self = source(context);
-        const height = self.height === undefined ? 1.4 : self.height;
-        return Math.max(3.6, Math.min(9.0, 5 + (height - 1.4) * 1.1));
+        const access = CompanionBehavior.world(context);
+        const values = { world: access, actor: access.source(), skill: PokemonSkills.skills["uproar"],
+            detail: { values: item.data.config || {} } };
+        return Math.max(3.6, Math.min(9.0, PokemonSkills.p("uproar", "radius", values)));
     }
 
     function uproarFoes(context: WorldBehavior.Context, centre: number[], radius: number): number {

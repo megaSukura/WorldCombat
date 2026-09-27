@@ -1,14 +1,15 @@
 /**
  * 污泥攻击 / sludge —— 出手方式。
  *
- * 核心念头：一记**低弧丢出去的湿泥团**。施法者从脚边抓起一团泥甩出去，泥团拖着泥点飞向目标，
- *   落在谁身上就在谁身上摊开、顺着往下淌；够脏的时候，毒顺着泥缝钻进对方身体。
+ * 核心念头：一记**低弧丢出去的湿泥团**。施法者从脚边抓起一团泥甩出去，泥团从朝向构造的炮口脱手、
+ *   拖着泥点飞向目标，落在谁身上就在谁身上摊开、顺着往下淌；够脏的时候，毒顺着泥缝钻进对方身体。
  *   它是这一族最便宜、最快、PP 最多的那一招，靠一次接一次地丢把毒累上去。
  *
  * 幕：
  *   起（windup，提交前）：脚边泥泡鼓起、泥点在掌中聚拢的预告（`action.present`，可被打断、不花 PP）。
- *   丢（throw，提交后）：泥团沿低弧飞出，身后甩出细小泥点，弧线让对手读得出落点。
- *   落（hit / splat）：命中活物→吃 `glob`、按概率挂共享中毒身份、在目标身上摊开；落地/落空→只在落点溅一摊泥。
+ *   丢（throw，提交后）：泥团从按朝向算出的炮口沿低弧飞出，身后甩出细小泥点，弧线让对手读得出落点。
+ *   落（impact）：主碰撞走 `impact` 结算真实弹体回执；命中活物→吃 glob、按概率挂共享中毒身份、
+ *       在目标身上摊开；真中毒才另发一份毒确认。落地/落空→只在落点溅一摊泥。
  *
  * 与同族分开：污泥炸弹是落地插引信的延时爆弹、垃圾射击是负重直线炮、浊雾是正前方的雾锥；
  *   只有污泥攻击是**一记便宜的低弧小泥团**，反制方式是走位躲开这条弧线或撑过毒。
@@ -20,11 +21,27 @@ namespace PokemonSkills {
     const sludgeImmuneText = "world_combat.move.sludge.text.immune";
     const sludgeSplatText = "world_combat.move.sludge.text.splat";
 
+    /**
+     * 炮口：身体中心沿高度略抬、再按朝向向前探出一小段；起手与投掷共用同一构造。
+     * 探出的这一段先经真实方块射线，贴墙的窄体型不会把泥团生成到墙的另一侧。
+     */
+    function sludgeMuzzle(action: CombatAction, sense: CombatWorld): CombatPoint {
+        const body = sense.observe(action.actor());
+        const height = body === null ? 1.4 : body.height();
+        const facing = WorldGeometry.basis(action.direction(), action.targetPosition().minus(action.origin()), WorldCombat.point(0, 1, 0));
+        const base = action.origin().plus(WorldCombat.point(0, height * 0.15, 0));
+        const desired = base.plus(facing.forward.scale(0.35));
+        const wall = WorldGeometry.blockHit(sense, base, desired);
+        if (wall === null) return desired;
+        const leg = wall.position().minus(base), length = leg.length();
+        return length < 1e-4 ? base : base.plus(leg.scale(Math.max(0, (length - 0.05) / length)));
+    }
+
     define({
         id: "sludge",
         cooldownParameter: "recharge",
         name: "Sludge",
-        description: "从脚边抓一团湿泥低弧甩向对手：便宜、出手快、PP 多；糊中后按概率让对手中毒，泥团在身上摊开往下淌。黏附形态更黏更毒，代价是威力更低、出手更慢。",
+        description: "从脚边抓起一团湿泥，沿朝向低弧甩向对手：便宜、出手快、PP 多；糊中并造成伤害后按概率让对手中毒，泥团在身上摊开往下淌。黏附形态更黏、更大、更易中毒，代价是威力更低、出手更慢。",
         uses: ["远距离反复消耗、让对手一直挂着中毒", "PP 多、随时补一发", "逼对手走位躲这条泥弧"],
         kind: "enemy",
         range: 9,
@@ -53,13 +70,14 @@ namespace PokemonSkills {
         },
         windup: function (action, config, prepare) {
             const drops = Math.max(4, Math.round(p("sludge", "drops", action)));
-            action.present("sludge:gather:" + action.id(), sludgeScene, 1, action.origin(),
+            const muzzle = sludgeMuzzle(action, action.sense());
+            action.present("sludge:gather:" + action.id(), sludgeScene, 1, muzzle,
                 JSON.stringify({ moment: "gather", windup: prepare, drops: drops, cling: config && config.cling === true }));
             return prepare;
         },
         execute: function (action, move, config, done) {
             const world = action.world();
-            const origin = action.origin();
+            const muzzle = sludgeMuzzle(action, world);
             const speed = p("sludge", "globSpeed", action);
             const gravity = p("sludge", "globGravity", action);
             const radius = p("sludge", "globRadius", action);
@@ -69,15 +87,18 @@ namespace PokemonSkills {
             const drops = Math.max(6, Math.round(p("sludge", "drops", action)));
             const scale = Math.max(0.6, Math.min(1.8, radius / 0.22));
             const intensity = Math.max(0.6, Math.min(2, power / 65));
-            const launch = LivingActions.ballistic(origin, action.targetPosition(), speed, gravity) || aim(action);
-            let settled = false;
+            const launch = LivingActions.ballistic(muzzle, action.targetPosition(), speed, gravity) || aim(action);
+            let impacted = false, settled = false;
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            /** 命中活物：结算伤害、按概率挂毒，在目标身上摊开。 */
-            function clump(current: CombatAction, point: CombatPoint, primary: CombatActor | null): void {
+            /** 命中活物：走真实弹体 `impact` 结算伤害，按概率挂毒；真中毒才另发一份毒确认。 */
+            function clump(current: CombatAction, hit: CombatImpact): void {
+                impacted = true;
                 const scope = current.world();
+                const point = hit.position();
+                const primary = hit.target();
                 if (primary !== null && scope.valid(primary) && !scope.friendly(primary)) {
-                    const dealt = hurt(current, primary, "sludge", power,
+                    const dealt = impact(current, hit, "sludge", power,
                         { damage: damageSpec("sludge", "glob"), contact: false });
                     let poisoned = false;
                     if (dealt && scope.valid(primary) && scope.random() < chance)
@@ -87,10 +108,14 @@ namespace PokemonSkills {
                     WorldFeedback.emit(scope, sludgeScene, 1, where,
                         { moment: dealt ? "hit" : "immune", target: String(primary.ref()), drops: drops,
                             sparks: Math.max(6, Math.round(power * 0.35)), scale: scale, intensity: intensity }, 24);
-                    if (dealt) WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.0, 0)),
-                        poisoned ? sludgePoisonText : sludgeHitText, [], 24);
+                    if (dealt) WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.0, 0)), sludgeHitText, [], 24);
                     else WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.0, 0)), sludgeImmuneText, [], 22);
-                    if (poisoned) scope.sound("cobblemon:impact.poison", where, 14, "{}");
+                    if (poisoned) {
+                        WorldFeedback.emit(scope, sludgeScene, 1, where,
+                            { moment: "poison", target: String(primary.ref()), drops: drops, scale: scale, intensity: intensity }, 26);
+                        WorldFeedback.text(scope, where.plus(WorldCombat.point(0, 1.3, 0)), sludgePoisonText, [], 24);
+                        scope.sound("cobblemon:impact.poison", where, 14, "{}");
+                    }
                 } else {
                     WorldFeedback.emit(scope, sludgeScene, 1, point,
                         { moment: "splat", drops: Math.round(drops * 0.6), scale: scale }, 20);
@@ -103,12 +128,22 @@ namespace PokemonSkills {
             sound(action, "minecraft:entity.slime.squish");
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: radius, gravity: gravity, lifetime: 180,
-                direction: launch,
+                origin: muzzle, direction: launch,
                 appearance: { sprite: "cobblemon:generic/goo/chemicalball", tint: 0x7FB84A, glow: false,
                     scale: Math.max(0.7, radius / 0.2) },
-                impact: function (current: CombatAction, hit: CombatImpact) { clump(current, hit.position(), hit.target()); }
-            }, function (current: CombatAction) { finish(current); });
-            WorldFeedback.keep(world, "sludge:fly:" + action.id(), sludgeScene, 1, origin,
+                impact: function (current: CombatAction, hit: CombatImpact) { clump(current, hit); }
+            }, function (current: CombatAction) {
+                // 真落空（未命中任何东西）时在弹体最后一个真实位置溅一摊泥，不用发射点或瞄准点假造落点。
+                if (!impacted) {
+                    const end = current.world().projectilePosition(flight);
+                    const spot = end === null ? muzzle : end;
+                    WorldFeedback.emit(current.world(), sludgeScene, 1, spot,
+                        { moment: "splat", drops: Math.round(drops * 0.6), scale: scale }, 20);
+                    WorldFeedback.text(current.world(), spot.plus(WorldCombat.point(0, 0.5, 0)), sludgeSplatText, [], 20);
+                }
+                finish(current);
+            });
+            WorldFeedback.keep(world, "sludge:fly:" + action.id(), sludgeScene, 1, muzzle,
                 { moment: "flight", projectile: flight, drops: drops, scale: scale, intensity: intensity }, 60);
         }
     });

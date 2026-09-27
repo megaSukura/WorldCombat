@@ -17,7 +17,7 @@ Smoke.scenario("spiderweb", function (stage) {
         stage.expect(stage.casts("spiderweb", caster) >= 1, "caster committed spider web");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/trapped"), "the target carried the shared trapped identity");
         stage.expect(stage.attribute(foe, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the silk slowed the target's movement");
-        stage.note("layers are recorded as the carrier's amplifier: a second hit on the same target adds a layer, three or more pin it fully, and any fire damage or being on fire burns the whole web away. Those branches are not asserted here.", {
+        stage.note("层数记在当前 carrier 的增幅等级里：移动/飞行属性与导航速度都用同一个『层数×本次 slow』（dynamicAttributes 跟随当前 carrier），第二层起各加一层、三层以上完全钉住。命中墙/地面时按实际碰撞面裁剪出贴面的薄网，失去支撑或被拆就退场；空射末点取真实弹体位置。任何火属性伤害或身上的火都会先判定、把整圈丝一次烧光——火判定完成前不会给接触者加层。这些分支不在本场景断言。", {
             casts: stage.casts("spiderweb", caster),
             baseSpeed: baseSpeed,
             speed: stage.attribute(foe, "minecraft:generic.movement_speed"),

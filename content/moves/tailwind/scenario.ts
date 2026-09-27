@@ -1,5 +1,5 @@
-// 顺风的执行性设计说明：这是一招托住全队的动作，所以场面要有队友、也要有让 AI 起风的威胁。
-// 必然事实：施法者提交过顺风；施法者与半径内的队友身上都出现过共享身份 world_combat:status/tailwind。
+// 顺风的执行性设计说明：这是一招把当时圈内的人分别托住的自我招式，所以场面要有队友、也要有让 AI 起风的威胁。
+// 必然事实：施法者提交过顺风；施法者与半径内的队友各自出现过共享身份 world_combat:status/tailwind 的独立窗口。
 // 具体提速等级随速度与配置变化，属于随机/环境结果，写进 note 供自己读轨迹。
 Smoke.scenario("tailwind", function (stage) {
     stage.weather("clear");
@@ -20,7 +20,7 @@ Smoke.scenario("tailwind", function (stage) {
         stage.expect(stage.casts("tailwind", caster) > 0, "tailwind was cast");
         stage.expect(stage.hadMobEffect(caster, "world_combat:status/tailwind"), "caster rode the shared tailwind identity");
         stage.expect(stage.hadMobEffect(ally, "world_combat:status/tailwind"), "the nearby ally rode the shared tailwind identity");
-        stage.note("顺风以施法者为锚，提交时把半径内的友方一起托住并写进公共能力阶梯；提速等级随速度与配置（广风/长风）变化，实际数值留给完整装配试玩核对。", {
+        stage.note("顺风以施法者为锚，提交时把半径内的友方各自托住：每人一份共享身份加一层由该载体拥有的速度窗口，到期或被清除时只收回自己那一份。提速等级随速度与配置（广风/长风）变化，实际数值留给完整装配试玩核对。", {
             casts: stage.casts("tailwind", caster), casterHp: caster.health(), allyHp: ally.health(), tick: stage.tick()
         });
         stage.done();

@@ -4,8 +4,9 @@
  * 一句话：身体蜷成一团火轮、卷着向前滚，轮缘的火一路旋转碾过挡路的东西；滚完展开时身上腾起一圈热气。
  * 色相家族：橙（0xF08030）与暗红（0xC03818），轮缘高光近白（0xFFE8A0）。
  * 拍子：蜷 curl（收火成轮）→ 滚 roll（火轮旋转前进）→ 行 wake（余焰）→ 碾 impact（每次命中）→ 化 thaw（自身解冻）→ 熄 fizzle（空滚）。
- * 范围：roll 的滚动线沿 `data.path` 两顶点铺成一条火带（横向按 `data.scale` 缩放），画的就是碾过的区域。
- * 运动：轮缘粒子绕身体轴自转（`spin`）并向前滚；wake 沿路径留下慢慢暗下去的火。
+ * 范围：roll 的 track 只接服务端每刻给出的「刚滚过的那一小段」两个顶点，火沿真实走过的路留下；未到与墙后不显。
+ * 朝向：roll 的 `data.direction` 是水平的侧向轴，wheel/rim 用 orient:direction 把环面转成与前进方向平行，火轮立着滚。
+ * 运动：轮缘粒子绕自身轴自转（`spin`）并向外翻卷；wake 在身体处留下慢慢暗下去的火。
  * 数：`data.flames`（速度派生）决定火星与命中的密度，`data.intensity`（本次伤害派生，后续目标按碾过占比递减）决定命中亮度，
  * `data.fierce`（1 表示烈焰轮）在起手多压一圈更暗的火；thaw 一幕只在实际解除冰冻时由服务端触发。
  */
@@ -13,8 +14,8 @@ const FlamewheelDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         curl: {
-            duration: 16,
-            exit: { stop: 6, drain: 12 },
+            duration: { data: "windup", fallback: 16 },
+            exit: { drain: 12 },
             emitters: [
                 {
                     name: "coil", bind: "source", offset: [0, 0.4, 0], height: 0.4,
@@ -57,14 +58,14 @@ const FlamewheelDefinition: ParticleDefinition = {
                     name: "wheel", bind: "source", offset: [0, 0.42, 0], height: 0.42,
                     particle: "world_combat_core:cobblemon/generic/fire/flame",
                     rate: { data: "flames", fallback: 22 }, shape: { kind: "torus", radius: 0.5, thickness: 0.18 },
-                    direction: "shape", speed: [0.08, 0.3], spin: 34, drag: 0.9,
+                    orient: "direction", direction: "shape", speed: [0.08, 0.3], spin: 34, drag: 0.9,
                     lifetime: [6, 11], size: [0.32, 0.08], sizeMode: "index",
                     color: 0xF08030, alpha: [0.8, 0], light: "full", bloom: { data: "intensity", fallback: 0.3 }, maxParticles: 130
                 },
                 {
                     name: "rim", bind: "source", offset: [0, 0.42, 0], height: 0.42,
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
-                    rate: 8, shape: { kind: "ring", radius: 0.5 }, direction: "outward", speed: [0.05, 0.18],
+                    rate: 8, shape: { kind: "ring", radius: 0.5 }, orient: "direction", direction: "outward", speed: [0.05, 0.18],
                     spin: 40, lifetime: [6, 12], size: [0.28, 0.46],
                     color: 0xFFE8A0, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },

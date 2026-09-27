@@ -1,34 +1,29 @@
 /**
  * 流星光束 / meteorbeam 的伙伴 AI 用途。
  *
- * 什么局面下出手：目标可见、敌对、存活，且在 `ai.maxChase`（默认 20）格内。
- * 对谁出手：`ai.overCover`（默认开）打开时，如果直线视线被挡，会沿真实抛物线探一遍——弧线真的越得过去才抬价，
- *   越不过去反而压价，避免对着挡死的弧线空抛。目标落点周围的人越多越优先（可以预判群敌落点）。
- * 优先级：`ai.boostFirst`（默认开）打开时，自己特攻还没满段就抬价——先攒下这 1 级再去打别的；
- *   目标贴到 `ai.minRange` 以内时压价，避免站着拉星。
+ * 什么局面下出手：目标敌对、还活着，且在 `ai.maxChase`（默认 20）格内，而且执行时真能用当前速度解出一条
+ *   从施法者到目标的通达弧（低弧优先、挡不住时用能越掩体的高弧）。可达性由执行与 AI 共用的 `meteorbeamPlan`
+ *   判断：拿 AI 自己的世界作用域与目标点求解，找不到弧就不选它，避免提交后被拒。
+ * 对谁出手：目标落点周围的人越多越优先（预判群敌落点）。`ai.overCover`（默认开）打开时，直线视线被挡、
+ *   而规划出的弧确实越得过去，就抬价；掩体后的人不再因为「直线被挡」被一律排除，但射程与可达弧仍说了算。
+ * 优先级：`ai.boostFirst`（默认开）打开时，自己特攻还没满段就抬价；目标贴到 `ai.minRange` 以内时压价。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程之后再抛。
  * 放完接什么：交回共享交战计划；特攻提升留在身上，由共享战斗计划继续使用。
  */
 namespace PokemonSkills {
-    /** 沿服务端同一条 ballistic 弧线走一遍，看看真实路径是否被方块截断。 */
-    function meteorbeamArcClears(context: WorldBehavior.Context, goal: CompanionBehavior.Entity): boolean {
+    /** 与执行同一份规划：AI 用自己的世界作用域、真实原点与目标点，解当前速度下的可达弧。 */
+    function meteorbeamAiPlan(context: WorldBehavior.Context, target: CompanionBehavior.Entity): MeteorbeamPlan | null {
         const world = CompanionBehavior.world(context);
-        const self = CompanionBehavior.source(context);
-        const origin = CompanionBehavior.point(self.point);
-        const target = CompanionBehavior.point(goal.point);
-        const distance = CompanionBehavior.distance(self.point, goal.point);
-        const speed = 0.85, gravity = 0.05;
-        const launch = LivingActions.ballistic(origin, target, speed, gravity);
-        if (launch === null) return false;
-        let velocity = launch.scale(speed), position = origin;
-        for (let step = 0; step < 80; step++) {
-            velocity = WorldCombat.point(velocity.x() * 0.99, velocity.y() * 0.99 - gravity, velocity.z() * 0.99);
-            const next = position.plus(velocity);
-            if (!world.clear(position, next)) return false;
-            position = next;
-            if (position.minus(origin).length() >= distance + 0.4) break;
-        }
-        return true;
+        const key = "meteorbeam-plan:" + String(target.ref) + ":" + target.point.join(",");
+        const cached = context.scratch[key] as { tick: number; plan: MeteorbeamPlan | null } | undefined;
+        if (cached !== undefined && cached.tick === context.tick) return cached.plan;
+        let speed = 0;
+        try { speed = meteorbeamSpeed(world); } catch (error) { speed = 0; }
+        const plan = speed > 0
+            ? meteorbeamPlan(world, CompanionBehavior.point(CompanionBehavior.source(context).point), CompanionBehavior.point(target.point), speed)
+            : null;
+        context.scratch[key] = { tick: context.tick, plan: plan };
+        return plan;
     }
 
     /** 目标落点周围当前可见的敌人数；用于预判这一颗能溅射到几个。 */
@@ -51,27 +46,31 @@ namespace PokemonSkills {
 
     CompanionBehavior.registerUse("meteorbeam", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
+        memoryAim: true,
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, target) {
             if (context.facts.mounted) return false;
             if (!target) return true;
-            return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
-                <= CompanionBehavior.ai<number>(capability, "maxChase", 20);
+            if (CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
+                > CompanionBehavior.ai<number>(capability, "maxChase", 20)) return false;
+            return meteorbeamAiPlan(context, target) !== null;
         },
+        // memoryAim 只含共享层核实的三秒内最后目击点；不读取隐藏身体的现位置或生命值。
         accepts: function (_context, _capability, target) {
-            return !target.friendly && target.health > 0 && target.visible;
+            return !!target.memoryAim || target.visible && !target.friendly && target.health > 0;
         },
         priority: function (context, capability, target) {
             if (!target) return 0;
             const world = CompanionBehavior.world(context);
             const self = CompanionBehavior.source(context);
+            const plan = meteorbeamAiPlan(context, target);
+            if (plan === null) return 0;
             const distance = CompanionBehavior.distance(self.point, target.point);
             let score = 26;
             if (CompanionBehavior.ai<boolean>(capability, "boostFirst", true) && meteorbeamSpaStage(context, self) < 4) score += 10;
+            // 直线被挡、而规划出的弧真实越得过去：掩体不再是拒答理由，而是这招的价值所在。
             if (CompanionBehavior.ai<boolean>(capability, "overCover", true)
-                && !world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) {
-                score += meteorbeamArcClears(context, target) ? 16 : -10;
-            }
+                && !world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(target.point))) score += 16;
             const cluster = meteorbeamCluster(context, target);
             if (cluster >= 3) score += 12; else if (cluster >= 2) score += 6;
             if (distance < CompanionBehavior.ai<number>(capability, "minRange", 4)) score -= 8;
@@ -89,7 +88,7 @@ namespace PokemonSkills {
     const meteorbeamBoostFirst = flag("ai.boostFirst", "先攒特攻");
     meteorbeamBoostFirst.help = "开启：自己特攻还没到 +4 级时抬价，先把这 1 级特攻攒下来；关闭则不特意为增益出手。";
     const meteorbeamOverCover = flag("ai.overCover", "越过掩体");
-    meteorbeamOverCover.help = "开启：直线视线被挡时，沿真实抛物线探一遍——弧线真的越得过去才优先出手，越不过去反而压低；关闭则不看掩体，只按普通远程攻击排序。";
+    meteorbeamOverCover.help = "开启：通达弧能越过掩体时抬高优先级；失去视线后，最多朝 3 秒内最后看见的位置抛射。关闭则不为掩体抬价，仍须解出可达弧。";
 
     addPreferences("meteorbeam", { deep: false, ai: { maxChase: 20, minRange: 4, boostFirst: true, overCover: true } },
         [meteorbeamDeep, meteorbeamChase, meteorbeamMin, meteorbeamBoostFirst, meteorbeamOverCover]);

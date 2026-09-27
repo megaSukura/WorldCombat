@@ -4,10 +4,9 @@
  * 一句话：施法者身前聚起打着旋的气流，随即一道竖立的淡青白风幕贴着地面向前推出去；风幕的推进端沿每条风线
  *   按墙起伏——被墙挡住的一段停在原地、向两侧散尘，开口处风丝继续向前；被扫到的敌人被托起、挂着风尘沿风向滑出。
  * 色相家族：淡青白（0xCFE8EC 主体、0xA9CBD4 余韵）＋近白（0xF2FCFF）只做风锋高光；没有第二个色相。
- * 拍子：起（windup 聚风）→ 推（gust 风幕每拍更新到实际风面）→ 结果（swept 逐目标）→ 空（miss 落空）。
- * 范围：gust 的风幕用 `data.path`（两条竖边连成的起伏带）以 polygon 填充，画出来的就是当拍风面；
- *   每条风线的推进端由服务端按真实方块给出，墙后自然缺一段。
- * 运动：风幕沿 `data.direction` 每拍向前推进；风尘从风幕向外、向上翻卷，被吹者沿风向滑走。
+ * 拍子：起（windup 聚风）→ 推（逐列风幕每拍更新到实际风面）→ 结果（swept 逐目标）→ 空（miss 落空）。
+ * 主体在自定义场景 move_whirlwind_curtain：服务端每拍给出每条风线的真实推进端点与真实帘高，客户端逐列画竖立
+ *   风段，只有相邻列前沿接近时才连线——被墙截住的一列停住、空隙自然断开，不再连成一面斜墙。
  * 数：风尘数量由 `data.motes`（速度派生）驱动；风幕半径随 `data.scale`（风道半径 / 1.7）伸缩。
  * 参照节：视觉语言第二、三、四、七、九节。
  */
@@ -34,37 +33,6 @@ const WhirlwindDefinition: ParticleDefinition = {
                     direction: "inward", speed: [0.02, 0.08],
                     lifetime: [6, 12], size: [0.06, 0.01],
                     color: 0xA9CBD4, alpha: [0.5, 0], light: "world", maxParticles: 40
-                }
-            ]
-        },
-        gust: {
-            exit: { drain: 26 },
-            emitters: [
-                {
-                    name: "curtain", bind: "path", fit: "none", offset: [0, 0, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: { data: "motes", fallback: 16 },
-                    shape: { kind: "polygon" },
-                    direction: "shape", speed: [0.12, 0.5], spread: 24, spin: 18,
-                    lifetime: [8, 16], size: [0.3, 0.08],
-                    color: 0xCFE8EC, alpha: [0.6, 0], light: "full", maxParticles: 420
-                },
-                {
-                    name: "edge", bind: "path", fit: "none", offset: [0, 0.05, 0], height: 0,
-                    particle: "world_combat_core:cobblemon/generic/screen",
-                    burst: { count: { data: "motes", fallback: 12 } }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.04, 0.16],
-                    lifetime: [6, 13], size: [0.34, 0.1],
-                    color: 0xF2FCFF, alpha: [0.5, 0], light: "full", maxParticles: 120
-                },
-                {
-                    name: "ground", bind: "point", fit: "none", height: 0.08,
-                    particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "motes", fallback: 16 },
-                    shape: { kind: "circle", radius: 1.7, thickness: 0 },
-                    direction: "outward", speed: [0.18, 0.55], spread: 16, gravity: 0.015,
-                    lifetime: [6, 13], size: [0.08, 0.02],
-                    color: 0xA9CBD4, alpha: [0.5, 0], light: "world", maxParticles: 380
                 }
             ]
         },
@@ -109,3 +77,76 @@ const WhirlwindDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_whirlwind", 1, WhirlwindDefinition);
+
+const WhirlwindWind = "cobblemon:particle/generic/swirlingwind";
+const WhirlwindGrit = "cobblemon:particle/generic/tinydust";
+
+function whirlwindNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+function whirlwindPoints(value: any): number[][] {
+    if (!Array.isArray(value)) return [];
+    const out: number[][] = [];
+    for (let i = 0; i < value.length; i++) {
+        const p = value[i];
+        if (Array.isArray(p) && p.length === 3 && (p as any[]).every(n => typeof n === "number" && isFinite(n)))
+            out.push([Number(p[0]), Number(p[1]), Number(p[2])]);
+    }
+    return out;
+}
+function whirlwindColour(alpha: number, rgb: number): number {
+    return ((Math.round(255 * Math.max(0, Math.min(1, alpha))) << 24) | rgb) | 0;
+}
+
+/**
+ * 逐列风幕：服务端每拍给出每条风线的真实推进端点与真实帘高。每列单独画一段竖立风段，只有相邻列前沿接近时才在
+ * 中间与顶部连线；被墙截住的一列停在原地，于是和前进列之间自然留出缺口，不再连成一面斜墙。风尘与前沿高光按
+ * `data.motes` 与真实带宽/高度铺开，判定与画面读同一组端点。
+ */
+WorldCombatClient.scene("world_combat:move_whirlwind_curtain", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const base = whirlwindPoints(data.path);
+    if (!base.length) return;
+    const fronts: number[] = Array.isArray(data.fronts) ? (data.fronts as any[]).map(n => whirlwindNumber(n, 0)) : [];
+    const height = Math.max(0.6, whirlwindNumber(data.height, 1.4));
+    const scale = Math.max(0.5, Math.min(2.4, whirlwindNumber(data.scale, 1)));
+    const motes = Math.max(6, Math.min(48, Math.round(whirlwindNumber(data.motes, 16))));
+    const depth = Math.max(0.25, whirlwindNumber(data.depth, 0.8));
+    const front = Math.max(0, whirlwindNumber(data.front, 0));
+    const tick = frame.serverTick();
+    const wind = whirlwindColour(0.55, 0xCFE8EC);
+    const windSoft = whirlwindColour(0.36, 0xA9CBD4);
+    const windTip = whirlwindColour(0.6, 0xF2FCFF);
+
+    for (let i = 0; i < base.length; i++) {
+        const p = base[i];
+        frame.line(p[0], p[1], p[2], p[0], p[1] + height, p[2], wind);
+    }
+    for (let i = 1; i < base.length; i++) {
+        const a = base[i - 1], b = base[i];
+        const gap = fronts.length > i ? Math.abs(fronts[i] - fronts[i - 1]) : 0;
+        if (gap > depth) continue;
+        frame.line(a[0], a[1] + height * 0.72, a[2], b[0], b[1] + height * 0.72, b[2], windSoft);
+        frame.line(a[0], a[1] + height, a[2], b[0], b[1] + height, b[2], windTip);
+    }
+    const perColumn = Math.max(2, Math.round(motes / base.length));
+    for (let i = 0; i < base.length; i++) {
+        const p = base[i];
+        for (let k = 0; k < perColumn; k++) {
+            const t = (k + 0.5) / perColumn;
+            const phase = i * 1.7 + k * 0.9 + tick * 0.18;
+            const wobble = Math.sin(phase) * 0.09;
+            const size = (0.16 + 0.12 * (1 - t)) * scale * (1 + 0.1 * Math.sin(phase));
+            frame.sprite(WhirlwindWind, p[0] + wobble, p[1] + height * t, p[2] + wobble * 0.5, size, 0,
+                whirlwindColour(0.5, 0xCFE8EC), (i + k) % 27, true);
+        }
+    }
+    for (let i = 0; i < base.length; i++) {
+        if (fronts.length > i && fronts[i] + 0.05 < front) continue;
+        const p = base[i];
+        frame.sprite(WhirlwindGrit, p[0], p[1] + height + 0.12, p[2], 0.16 + 0.1 * scale, 0, windTip, 0, false);
+    }
+});

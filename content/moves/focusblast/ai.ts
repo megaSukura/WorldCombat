@@ -4,10 +4,21 @@
  * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 20）格内时列入候选；焦点目标不受距离限制。
  * 对谁出手：`ai.bulkFirst`（默认开）打开时，血量比例还高的目标优先——这最重的一发砸在满血目标身上最值；
  *   同时离得越近越压价：`ai.minRange`（默认 6）以内站着蓄势容易被贴脸打断，此时让其它招先上。
+ * 命中收益：远距离只加基础分，还要乘上目标张角与本招残余散布的比——散布越吃不下目标（越远、越瘦、越横移），
+ *   残余散布吞掉的收益越多，推荐越低，避免隔着半场对着灵活目标空砸。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程；进了射程就不再前压，留出蓄势空间。
  * 放完接什么：交回共享交战计划；它只负责这一记重击，不追人、不留场。
  */
 namespace PokemonSkills {
+    /** 当前距离下目标张角与本招残余散布（最坏：稳定为 0，用满公式值）的比；越接近、目标越宽越吃得下散布。 */
+    function focusblastHitFactor(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity, distance: number): number {
+        const world = CompanionBehavior.world(context), actor = world.source();
+        const scatter = p("focusblast", "scatter", { world: world, actor: actor, skill: skills["focusblast"], detail: { values: capability.data.config || {} } });
+        const halfWidth = Math.max(0.25, (target.width || 0.6) / 2);
+        const tolerance = Math.atan2(halfWidth, Math.max(1, distance)) * 180 / Math.PI;
+        return Math.max(0, Math.min(1, tolerance / Math.max(0.5, scatter)));
+    }
+
     CompanionBehavior.registerUse("focusblast", {
         protocols: ["world_combat:attack", "world_combat:ranged"],
         reach: function (context, capability) { return capability.data.range; },
@@ -28,7 +39,11 @@ namespace PokemonSkills {
             let score = distance <= capability.data.range ? 24 : 0;
             if (CompanionBehavior.ai<boolean>(capability, "bulkFirst", true) && CompanionBehavior.ratio(target) > 0.6) score += 10;
             if (distance < CompanionBehavior.ai<number>(capability, "minRange", 6)) score -= 14;
-            else if (distance > capability.data.range * 0.6) score += 8;
+            else if (distance > capability.data.range * 0.6) {
+                // 远距离的残余散布要计入命中收益：张角越小，越可能打空。
+                const hit = focusblastHitFactor(context, capability, target, distance);
+                score += Math.round(8 * hit) - Math.round(6 * (1 - hit));
+            }
             const velocity=CompanionBehavior.velocity(context,target),pace=velocity?Math.sqrt(velocity[0]*velocity[0]+velocity[2]*velocity[2]):0;
             score += pace<.08 || (target.width||.6)>1.8 ? 10 : -6;
             return score;

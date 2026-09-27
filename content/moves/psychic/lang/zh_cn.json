@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.psychic.summary": "用念力抓住瞄准到的敌人：定住它、抓取时造成特殊伤害并可能让特防下降 1 级；在短暂的操纵窗口里按住技能键持续瞄准，把念力锚点拖到初始目标周围，它就会被朝锚点带；窗口结束时若仍握得住，再挤一记。",
+  "worldcombat.skill.psychic.summary": "用念力抓住瞄准到的敌人：定住它、抓取时造成特殊伤害并可能让特防下降 1 级；在短暂的操纵窗口里按住技能键持续瞄准，把念力锚点拖到初始目标周围，它就会被朝锚点带；放手、断视线或被打断即松开定身，窗口结束时若仍握得住，再挤一记。",
   "worldcombat.skill.psychic.use.0": "中远距离点名一个高威胁目标",
   "worldcombat.skill.psychic.use.1": "把冲上来的敌人按在原地",
   "worldcombat.skill.psychic.use.2": "把目标从队友面前、门口或通道中间拖到一侧",
   "worldcombat.skill.psychic.description.0": "抓取命中造成约 %1$s 点特殊伤害；只要这次抓取成立、目标仍在范围且通视，稍后再造成约 %2$s 点。",
-  "worldcombat.skill.psychic.description.1": "念力把目标按在原地、无法移动 %1$s；随后约 %3$s 的操纵窗口里，按住技能键持续瞄准可把念力锚点移动到初始位置周围最多 %2$s 格内，目标被朝锚点推动，整场最多被推走 %2$s 格（大个子抵抗更强）；没有手动瞄准时默认朝自己带。窗口结束若仍握得住就挤压。",
+  "worldcombat.skill.psychic.description.1": "念力抓住目标并按在原地、最多持续 %1$s；松手、断视线、目标走出范围或被打断会提前放它走。抓住后约 %3$s 的操纵窗口里，按住技能键持续瞄准可把念力锚点移动到初始位置周围最多 %2$s 格内，目标被朝锚点推动，整场最多被推走 %2$s 格（大个子抵抗更强）；没有手动瞄准时锚点朝推离自己的一侧，把它推开、拖到一边而不是拉近。窗口结束若仍握得住就挤压。",
   "worldcombat.skill.psychic.description.2": "抓取命中时有 %1$s 概率让目标特防下降 %2$s 级。",
   "worldcombat.skill.psychic.hold.on": "当前为缠握：定身更久、操纵预算更远、挤压更重、特防下降更易触发，代价是擒压略轻、射程更近、起手与冷却更久。",
   "worldcombat.skill.psychic.hold.off": "当前为点握：更远更快更重的一抓，代价是按得短、操纵预算更小、挤得轻、压特防更少见。",
@@ -34,5 +34,5 @@
   "world_combat.move.psychic.text.grip": "被念力擒住",
   "world_combat.move.psychic.text.sunder": "特防 -%1$s",
   "world_combat.move.psychic.text.squeeze": "念力挤压",
-  "worldcombat.skill.psychic.description.failure": "抓取没打中或没有生效时，不会定身、不会进入操纵窗口，也不会有挤压；操纵窗口内失去通视或目标走出范围就松手，挤压同样不落。挤压只认这次抓取是否成立，不要求目标接受定身。"
+  "worldcombat.skill.psychic.description.failure": "抓取没打中或没有生效时，不会进入操纵窗口，也不会有挤压；操纵窗口内失去通视、目标走出范围或被抓取无效打断就松手，挤压同样不落。挤压只认这次抓取是否成立，不要求目标接受定身；被免疫控制的目标不会被假装握住——擒压与窗口末的挤压照常结算。"
 }

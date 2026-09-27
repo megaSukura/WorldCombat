@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.fakeout.summary": "刚被放上场时闪身抢出的一记掌掴：优先度最高、几乎瞬发，未必有多疼，却能把对手拍懵并打断它正在展开的一手；一旦自己已经出过任何一手，这一记就再拍不出来了。",
+  "worldcombat.skill.fakeout.summary": "每次遭遇的第一手可用：短踏步后迅速拍掌，命中尝试拍懵并打断可中断的本作动作。自己提交其他招或产生已记录原生实击后机会用尽；脱离实际交战后恢复。",
   "worldcombat.skill.fakeout.use.0": "刚上场就抢一记把对手拍懵",
   "worldcombat.skill.fakeout.use.1": "打断对手正在展开的起手",
   "worldcombat.skill.fakeout.use.2": "短踏步后近身拍掌",
   "worldcombat.skill.fakeout.description.0": "这一掌造成约 %1$s 的接触伤害；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.fakeout.description.1": "先踏步最多 %1$s 格（每刻 %2$s 格），停步后向前 %4$s 格拍掌，接触半径 %3$s 格；拍空同样用掉本场首动机会。",
-  "worldcombat.skill.fakeout.description.2": "拍实后目标被拍懵 %1$s：正在执行的可中断动作立即被打断，期间无法发动新招或进行普通攻击。",
+  "worldcombat.skill.fakeout.description.2": "拍实后尝试拍懵 %1$s，限制共享招式及已接入的普通攻击入口。实际结束了可中断动作才显示“打断”；原生 Boss 的私有行为由其自身规则决定。",
   "worldcombat.skill.fakeout.feint.on": "佯攻式：伤害 ×0.85，拍懵时长 ×1.35、起手快 1 刻，但冷却 +4 刻。",
   "worldcombat.skill.fakeout.feint.off": "硬拍式（默认）：伤害 ×1.12，但拍懵时长 ×0.9。",
   "worldcombat.skill.fakeout.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。只限本场第一手；脱离实际交战后才恢复，等待冷却不会恢复。",
@@ -25,6 +25,7 @@
   "worldcombat.skill.fakeout.preference.ai.maxChase.help": "对手离自己这么远以内才闪身拍过去；本招闪身距离短，调大也常够不到，调小则只在贴身开场时用。",
   "world_combat.move.fakeout.text.hit": "啪！%1$s",
   "world_combat.move.fakeout.text.daze": "被拍懵",
+  "world_combat.move.fakeout.text.broken": "一手被打断",
   "world_combat.move.fakeout.text.miss": "挥空",
   "effect.world_combat.fakeout_daze": "拍懵",
   "worldcombat.skill.fakeout.value.palmReach": "掌击距离"

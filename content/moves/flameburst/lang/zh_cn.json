@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.flameburst.summary": "射出一颗沿低弧飞行的火焰弹：命中点炸开时主目标吃主爆，爆点周围的每个其他对手各吃一记独立溅射。主爆没打中活体就不会有溅射，火只落到主目标之外的人身上。",
-  "worldcombat.skill.flameburst.description.0": "主爆命中并造成伤害后，主目标受到约 %1$s 点特殊伤害，爆点周围的每个其他对手各受到一记独立的约 %2$s 点溅射伤害。",
-  "worldcombat.skill.flameburst.description.1": "溅射以爆点为圆心、半径 %1$s 格，范围内的每个其他对手只结算一次。",
+  "worldcombat.skill.flameburst.summary": "射出一颗沿低弧飞行的火焰弹：命中点炸开时主目标吃主爆，同一刻爆点周围每个身体可达的其他对手各吃一记独立溅射。主爆没打中活体就不会有溅射，火只落到主目标之外、且没有被墙挡住的对手身上。",
+  "worldcombat.skill.flameburst.description.0": "主爆命中并造成伤害后，主目标受到约 %1$s 点特殊伤害；同一刻，爆点周围的每个其他对手各受到一记独立的约 %2$s 点溅射伤害（与主爆同时结算，不是火滴飞行）。",
+  "worldcombat.skill.flameburst.description.1": "溅射以爆点为圆心、半径 %1$s 格，范围内的每个其他对手只受到一次；爆点与对手之间隔着墙的不会受到溅射。",
   "worldcombat.skill.flameburst.description.2": "射程 %1$s 格、弹速 %2$s 格每刻、弹体判定 %3$s 格。",
   "worldcombat.skill.flameburst.spread.on": "当前为扇溅式：火分得更远更重、火滴更多，但主爆威力略低、火球收得更近。",
   "worldcombat.skill.flameburst.spread.off": "当前为直爆式：主爆更重、射得更远，但溅射范围与威力都收小。",

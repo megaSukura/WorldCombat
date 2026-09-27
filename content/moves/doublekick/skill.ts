@@ -20,6 +20,8 @@
 namespace PokemonSkills {
     /** 身前扇面的竖直判定带：踢击贴地，只够到站立身位。 */
     const doublekickBand = { below: 1.0, above: 2.0 };
+    /** 每脚的动作回执：第一脚低位短弧收束后由第二脚向前足影更新，两脚不并排重叠。 */
+    const doublekickKickScene = "world_combat:move_doublekick_kick";
 
     define({
         id: doublekickId,
@@ -73,9 +75,11 @@ namespace PokemonSkills {
             const lift = alternate ? p(doublekickId, "lift", action) : 0;
             const push = p(doublekickId, "push", action);
             const dust = Math.max(8, Math.round(p(doublekickId, "dust", action)));
+            // 两脚共用一个回执 key：第一脚的动作在第二脚开始时被直接更新成前踹，不再并排重叠。
+            const kicks = WorldFeedback.actionScenes(doublekickKickScene, 1);
             let settled = false;
 
-            function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
+            function finish(current: CombatAction): void { if (!settled) { settled = true; kicks.stop(current); done(current); } }
 
             function kick(current: CombatAction, index: number): void {
                 const scope = current.world();
@@ -87,38 +91,48 @@ namespace PokemonSkills {
                 const direction = flat.length() < 0.01 ? WorldCombat.point(0, 0, 1) : flat.unit();
                 const power = index === 0 ? hook : finisher;
                 const intensity = Math.max(0.5, Math.min(2, power / 40));
-                WorldFeedback.emit(scope, doublekickScene, 1, origin,
-                    { moment: index === 0 ? "hook" : "finisher", index: index + 1, reach: reach, span: span, dust: dust,
-                        intensity: intensity, direction: [direction.x(), direction.y(), direction.z()], alternate: alternate ? 1 : 0 }, 20);
-                let hits = 0;
+                // 第一脚低位短弧、第二脚向前足影；判定与表现共用同一方向与扇面。
+                kicks.show(current, "kick", origin,
+                    { moment: index === 0 ? "hook" : "finisher", index: index + 1, reach: Math.round(reach * 100) / 100,
+                        span: Math.round(span), dust: dust, intensity: intensity, alternate: alternate ? 1 : 0,
+                        lift: lift > 0 ? Math.round(lift * 100) / 100 : 0,
+                        direction: [direction.x(), direction.y(), direction.z()],
+                        start: scope.tick(), duration: index === 0 ? gap : 10 });
+                let hits = 0, lifted = 0, pushed = 0;
                 WorldGeometry.selectEnemies(scope, WorldGeometry.sector(origin, direction, reach, span, doublekickBand),
                     function (victim, facts) {
+                        // 实际扫掠：被墙挡住的对手这一脚够不到。
+                        if (!scope.clear(origin, facts.position())) return;
                         const segment = index === 0 ? "hook" : "finisher";
                         if (!hurt(current, victim, doublekickId, power, { damage: damageSpec(doublekickId, segment), contact: true })) return;
                         hits++;
                         if (!scope.valid(victim)) return;
+                        // 挑/推都走原生受击位移；取实际位移，抗拒退的对手只吃伤害、不被硬移。
                         if (index === 0 && lift > 0) {
-                            scope.hitDisplace(victim, WorldCombat.point(direction.x() * 0.15, lift, direction.z() * 0.15));
+                            lifted = Math.max(lifted, scope.hitDisplace(victim, WorldCombat.point(direction.x() * 0.15, lift, direction.z() * 0.15)));
                         } else if (index === 1) {
-                            scope.hitDisplace(victim, direction.scale(push));
+                            pushed = Math.max(pushed, scope.hitDisplace(victim, direction.scale(push)));
                         }
                         const at = scope.observe(victim);
                         const point = at === null ? facts.position() : at.position();
                         WorldFeedback.emit(scope, doublekickScene, 1, point,
                             { moment: index === 0 ? "hit1" : "hit2", target: String(victim.ref()), index: index + 1,
-                                dust: dust, lift: lift, push: push, intensity: intensity,
-                                liftParticles: index === 0 && lift > 0 ? dust : 0 }, 20);
+                                dust: dust, lift: Math.round(lifted * 100) / 100, push: Math.round(pushed * 100) / 100,
+                                intensity: intensity, direction: [direction.x(), direction.y(), direction.z()],
+                                liftParticles: index === 0 && lifted > 0.02 ? dust : 0,
+                                launch: index === 1 && pushed > 0.02 ? dust : 0 }, 20);
                         scope.sound("cobblemon:impact.fighting", point, 14, "{}");
-                        if (index === 0 && lift > 0)
+                        if (index === 0 && lifted > 0.02)
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), doublekickLiftText, [], 18);
-                        if (index === 1)
+                        if (index === 1 && pushed > 0.02)
                             WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.0, 0)), doublekickLaunchText, [], 18);
                     });
                 if (hits === 0)
                     WorldFeedback.emit(scope, doublekickScene, 1, origin,
-                        { moment: "whiff", direction: [direction.x(), direction.y(), direction.z()], index: index + 1, reach: reach, span: span, dust: Math.round(dust * 0.6) }, 16);
+                        { moment: "whiff", direction: [direction.x(), direction.y(), direction.z()], index: index + 1,
+                            reach: Math.round(reach * 100) / 100, span: Math.round(span), dust: Math.round(dust * 0.6) }, 16);
                 if (index === 0) { current.after(gap, function (next: CombatAction) { kick(next, 1); }); return; }
-                WorldFeedback.emit(scope, doublekickScene, 1, origin, { moment: "settle", reach: reach, span: span, dust: dust }, 16);
+                WorldFeedback.emit(scope, doublekickScene, 1, origin, { moment: "settle", reach: Math.round(reach * 100) / 100, span: Math.round(span), dust: dust }, 16);
                 finish(current);
             }
 

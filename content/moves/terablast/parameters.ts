@@ -39,19 +39,36 @@ namespace PokemonSkills {
         // 晶矛命中把目标顶开多远：体重越重顶得越开。
         push: formula(
             F.base(0.35).plus(F.body("weight").div(10).times(0.03)).clamp(0.2, 1.1).round(2),
-            "晶矛顶开", { unit: " 格", description: "体重越大，撞开越远。" }),
-        // 晶束扫描步长：越小，被方块截断的位置越贴近真实墙面。
-        beamScan: hidden(0.5)
+            "晶矛顶开", { unit: " 格", description: "体重越大，撞开越远。" })
     });
-    // 伤害属性与分类在命中/预览时由同一读取器决定：属性取原生主属性，分类取物攻/特攻较高者。
+    /** Actual current type, including temporary type layers, for preview and for a release without a stored snapshot. */
+    export function terablastEffectiveType(world: CombatWorld, actor: CombatActor): string {
+        if (!world.valid(actor)) return "";
+        var facts = PokemonDamage.combatants.read(world, actor);
+        return facts.types.length ? String(facts.types[0]) : "";
+    }
+    // 伤害属性与分类在释放那一刻统一决定并随动作保存；预览或没有快照时退回现场读取。
     defineDamage("terablast", "power", { defenceCoefficient: 0.005, rationale: "太晶能量穿透略强，让最强一面的成长更明显。" }, {
         resolve: function (context) {
-            var native = context.sourceFacts && context.sourceFacts.data.native;
-            var pokemon = native && native.pokemon;
-            if (!pokemon)
+            var world = context.world, actor = context.actor;
+            if (!world || !actor || !world.valid(actor))
                 return undefined;
-            var stats = context.sourceFacts.stats, attack = stats.atk || 0, special = stats.spa || 0;
-            return { type: String(pokemon.type(0)), category: attack > special ? "physical" : "special" };
+            var type = terablastEffectiveType(world, actor);
+            if (!type)
+                return undefined;
+            var stored: any = null;
+            if (context.action) {
+                var raw = context.action.data("world_combat:terablast/launch");
+                if (raw !== null) { try { stored = JSON.parse(raw); } catch (error) { stored = null; } }
+            }
+            if (stored && typeof stored.type === "string" && stored.type && (stored.category === "physical" || stored.category === "special")) {
+                var value: any = { type: stored.type, category: stored.category };
+                if (stored.attack && stored.attack.stat) value.attackSnapshot = stored.attack;
+                if (typeof stored.sameType === "number") { value.sameTypeMultiplier = stored.sameType; value.sameTypeType = stored.type; }
+                return value;
+            }
+            var atk = PokemonDamage.snapshotAttack(world, actor, "atk"), spa = PokemonDamage.snapshotAttack(world, actor, "spa");
+            return { type: type, category: atk.value * NativeEffects.multiplier(atk.stage) > spa.value * NativeEffects.multiplier(spa.stage) ? "physical" : "special" };
         }
     });
     describe("terablast", [

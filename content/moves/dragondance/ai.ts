@@ -8,7 +8,7 @@
  * 放完之后：攻速各 +1、身上挂着龙势窗口；窗口还在且已到上限时不再重复起舞，交回共享交战计划。
  */
 namespace PokemonSkills {
-    /** 头顶是否真的容得下这次盘升；贴地配置不需要顶棚。按决策帧缓存一次原生空域探针。 */
+    /** 整条螺旋是否真的容得下：横向一圈 8 个方位、纵向从起盘高度到最高点都探一遍。贴地配置不需要顶棚。 */
     function dragondanceRoom(context: any, capability: any): boolean {
         const config = capability && capability.data ? capability.data.config : null;
         if (config && config.soar === false) return true;
@@ -18,8 +18,23 @@ namespace PokemonSkills {
             if (typeof world.freeSpace !== "function") return true;
             const width = typeof self.width === "number" && self.width > 0 ? self.width : 0.9;
             const height = typeof self.height === "number" && self.height > 0 ? self.height : 1.4;
-            const probe = CompanionBehavior.point([self.point[0], self.point[1] + Math.max(1, height), self.point[2]]);
-            return world.freeSpace(probe, width, height);
+            let gyre = 0.7, turns = 2, lift = 0.36;
+            try {
+                gyre = Math.max(0.4, Math.min(0.95, PokemonSkills.p("dragondance", "gyre", world)));
+                turns = Math.max(2, Math.min(4, Math.round(PokemonSkills.p("dragondance", "turns", world))));
+                lift = Math.max(0.12, Math.min(0.42, PokemonSkills.p("dragondance", "lift", world)));
+            } catch (error) { }
+            const base = self.point[1] + Math.max(1, height), top = base + Math.max(1, lift * turns);
+            if (!world.freeSpace(CompanionBehavior.point([self.point[0], base, self.point[2]]), width, height)) return false;
+            if (!world.freeSpace(CompanionBehavior.point([self.point[0], top, self.point[2]]), width, height)) return false;
+            const dirs = 8;
+            for (let i = 0; i < dirs; i++) {
+                const a = Math.PI * 2 * i / dirs;
+                const x = self.point[0] + Math.sin(a) * gyre, z = self.point[2] + Math.cos(a) * gyre;
+                if (!world.freeSpace(CompanionBehavior.point([x, base, z]), width, height)) return false;
+                if (!world.freeSpace(CompanionBehavior.point([x, top, z]), width, height)) return false;
+            }
+            return true;
         });
     }
 

@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.roost.summary": "Folds its wings and settles to the ground, then rests there: the healing is paid out in several portions for about half of maximum health. While resting it loses the Flying type and lies open to ground moves and Grassy Terrain; clearing the roosting state cuts the remaining portions.",
+  "worldcombat.skill.roost.summary": "Folds its wings and settles to the ground, then rests there: the healing is paid out in several portions for about half of maximum health. Cast in the air, it first folds and descends; while resting it loses the Flying type and lies open to ground moves and Grassy Terrain. Clearing the roosting state cuts the remaining portions.",
   "worldcombat.skill.roost.use.0": "Portion a heal out between blows",
   "worldcombat.skill.roost.use.1": "Trade a grounded window for a steadier restore",
   "worldcombat.skill.roost.use.2": "Bring a flier down to the ground and the terrain",
-  "worldcombat.skill.roost.description.0": "Rest on the ground for %2$s, restoring %1$s of maximum health over that time; while resting you lose the Flying type and lie open to ground moves and Grassy Terrain (a pure Flying type is unaffected). It can only be used while grounded and below full health.",
-  "worldcombat.skill.roost.description.1": "The healing is paid out in %1$s portions across the resting window; if the roosting state is cleared or the user leaves, the remaining portions are lost.",
+  "worldcombat.skill.roost.description.0": "Rest on the ground for %2$s, restoring %1$s of maximum health over that time. Cast in the air, it first sinks to solid ground in collision-limited steps and only then begins healing. While resting you lose the Flying type and lie open to ground moves and Grassy Terrain (a pure Flying type is left with no type). It can only be used while below full health.",
+  "worldcombat.skill.roost.description.1": "The healing is paid out in %1$s portions across the resting window; if the roosting state is cleared (milk / `/effect clear`) or the user leaves, the remaining portions are lost and the lost Flying type is withdrawn with it.",
   "worldcombat.skill.roost.description.2": "Wind-up %1$s and recovery %2$s, driven by Speed and weight.",
   "worldcombat.skill.roost.stance.deep": "Deep roost: a little more healing and a 1.5x resting window, at the cost of a longer cooldown and a longer grounded window - for a safe moment.",
   "worldcombat.skill.roost.stance.shallow": "Shallow roost: quicker to settle and a shorter cooldown, with slightly less healing and less time on the ground - for a gap between blows.",

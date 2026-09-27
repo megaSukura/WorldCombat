@@ -9,12 +9,18 @@ Smoke.scenario("shellsmash", function (stage) {
     stage.until(1200, function () {
         return stage.casts("shellsmash", caster) > 0;
     }, function () {
-        stage.expect(stage.casts("shellsmash", caster) > 0, "the shell smash was committed");
-        stage.note("the move trades Defence and Special Defence stages for Attack, Special Attack and Speed; this scenario verifies the cast because the stage reader does not expose native stat stages", {
-            casts: stage.casts("shellsmash", caster),
-            foeCasts: stage.casts("tackle", foe),
-            casterAlive: caster.alive(), casterHp: caster.health()
+        stage.after(5, function () {
+            var stages = stage.stages(caster);
+            stage.expect(stage.casts("shellsmash", caster) > 0, "the shell smash was committed");
+            stage.expect(stages.atk > 0 && stages.spa > 0 && stages.spe > 0, "the smash raised Attack, Special Attack and Speed");
+            stage.expect(stages.def < 0 && stages.spd < 0, "the broken shell lowered Defence and Special Defence");
+            stage.note("the same move pays Defence/Special Defence stages for Attack/Special Attack/Speed; the numbers depend on the config (steady vs full) and body size, and the stages cap at +6/-6 or stop early when a stat-drop immunity applies", {
+                casts: stage.casts("shellsmash", caster),
+                stages: stages,
+                foeCasts: stage.casts("tackle", foe),
+                casterAlive: caster.alive(), casterHp: caster.health()
+            });
+            stage.done();
         });
-        stage.done();
     }, "shell smash is cast within 60 s");
 });

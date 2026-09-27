@@ -4,8 +4,9 @@
  * 一句话：整座场地上刚刚响过的那一手，在施法者身上重新亮起——脚下先荡开一圈低低的青白回声，
  *   那一手的光随即在身周聚成一阵环流；若场上还没人出过手，只余一撮发闷的灰烟。
  * 色相家族：青白 0x9FE8DC（回声本身）加一点镜面虹彩（提示这是别人的手迹）；灰只用在落空。
- * 拍子：listen 起（0–16t 脚下回声）→ replay 击（0–14t 聚光，收 14–30t 散去）／empty 空（0–20t 灰烟）。
- * 范围：listen 的环以施法者为心向外扩；replay 的环流绑施法者随其移动。
+ * 拍子：listen 起（0–16t 脚下回声）→ replay 击（0–14t 聚光，收 14–30t 散去）；来源看得见时另补 replay_source
+ *   （0–16t 贴着出手位置的短回声线）；／empty 空（0–20t 灰烟）。
+ * 范围：listen 的环以施法者为心向外扩；replay 的环流绑施法者随其移动；replay_source 只沿来源处的短顶点线发射。
  * 运动：回声圈由内向外荡开，聚光由外向内收回。
  * 数：服务端把 echoes（特攻派生）交给回声圈、环流与虹彩的数量，层数随它增减。
  * 参照节：视觉语言第二、三、四、六、七、九节。
@@ -42,15 +43,6 @@ const copycatDefinition: ParticleDefinition = {
             exit: { stop: 16, drain: 22 },
             emitters: [
                 {
-                    name: "replay_thread", bind: "path", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/thought_trail_small",
-                    rate: { data: "echoes", fallback: 6 }, trail: { minDistance: 0.25 },
-                    shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.14, 0.3],
-                    lifetime: [8, 14], size: [0.12, 0.02],
-                    color: 0x9FE8DC, alpha: [0.85, 0], light: "full", maxParticles: 80
-                },
-                {
                     name: "replay_shell", bind: "source", height: 0.5,
                     particle: "world_combat_core:cobblemon/generic/orb/accentorb",
                     burst: { count: { data: "echoes", fallback: 6 } },
@@ -76,6 +68,31 @@ const copycatDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.12, 0.26], spread: 12,
                     lifetime: [10, 18], size: [0.08, 0.02],
                     alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 90
+                }
+            ]
+        },
+        // 来源处只有在实际看得见时才补一道贴着出手位置、朝向自己的短回声线；它不代表光沿全线推进。
+        replay_source: {
+            duration: 16,
+            exit: { stop: 7, drain: 12 },
+            emitters: [
+                {
+                    name: "echo_line", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/thought_trail_small",
+                    rate: { data: "echoes", fallback: 6 },
+                    shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.08, 0.2],
+                    lifetime: [7, 12], size: [0.12, 0.02],
+                    color: 0x9FE8DC, alpha: [0.7, 0], light: "full", maxParticles: 50
+                },
+                {
+                    name: "echo_glint", bind: "path", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_cyan",
+                    burst: { count: { data: "echoes", fallback: 6 } },
+                    shape: { kind: "polyline" },
+                    direction: "outward", speed: [0.03, 0.1],
+                    lifetime: [8, 14], size: [0.09, 0.01],
+                    color: 0xD8F6FF, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 40
                 }
             ]
         },

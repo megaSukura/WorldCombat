@@ -4,7 +4,7 @@
  * 什么局面下出手：对手可见、敌对、还活着，且在 `ai.maxChase` 之内。它是一次带电冲锋，价值不只在伤害，
  * 还在那一记传导——所以优先湿透的敌人（电流在湿身上走得更实、还会被必然传导）；
  * `ai.spareParalyzed`（默认开）把已经麻痹的目标明显排后，把电流留给还没被挂上的人，但仍保留补伤害的用处，不再硬跳过。
- * 自己湿透时反噬更重：生命已经偏低时明显降低评分，不拿命去漏电。过载与否由玩家配置承担，不由 AI 选项重复。
+ * 反噬不轻：生命已经偏低时整体降低评分（自己湿透漏电更重时降得更多），不拿残血去赌这一趟回路。过载与否由玩家配置承担，不由 AI 选项重复。
  * 放完之后：这是一记反噬不轻的招，伙伴不会专门追击，交回共享目标顺序。
  */
 namespace PokemonSkills {
@@ -29,8 +29,9 @@ namespace PokemonSkills {
             if (target.wet) score += 10;
             if (CompanionBehavior.status(context, target, "paralysis"))
                 score = CompanionBehavior.ai<boolean>(capability, "spareParalyzed", true) ? 8 : 18;
-            // 自己湿透漏电更狠；血少时明显降低，不用残血去赌这一趟回路。
-            if (self.wet && CompanionBehavior.ratio(self) < 0.4) score -= 20;
+            // 本招反噬不轻：血少时整体降低评分，自己湿透漏电更狠时降得更多，不用残血去赌这一趟回路。
+            const ratio = CompanionBehavior.ratio(self);
+            if (ratio < 0.4) score -= self.wet ? 20 : 10;
             return Math.max(0, score);
         }
     });

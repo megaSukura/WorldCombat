@@ -137,7 +137,7 @@ const ScorchingDefinition: ParticleDefinition = {
         },
         smolder: {
             duration: 0,
-            exit: { stop: 8, drain: 22 },
+            exit: { drain: 22 },
             emitters: [
                 {
                     name: "embers", bind: "point", fit: "none", offset: [0, 0.06, 0],

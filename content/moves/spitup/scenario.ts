@@ -18,7 +18,7 @@ Smoke.scenario("spitup", function (stage) {
     }, function () {
         stage.expect(stage.casts("spitup") > 0, "spitup was committed");
         stage.expect(stage.damageTo(foe) > 0, "the spit dealt damage");
-        stage.note("spitup requires the shared stockpile identity; the AI stockpiles first (its own plan hoards to 2 layers) then spits. Power is per-layer base x layers, and all layers are consumed: the stockpile unit takes back the Defence/Sp. Def stages and scatters the shell.", {
+        stage.note("spitup requires the shared stockpile identity; the AI stockpiles first (its own plan hoards to 2 layers) then spits. Power is per-layer base x layers, and all layers are consumed: the stockpile unit takes back the Defence/Sp. Def stages and scatters the shell. A direct shot ends where world.projectilePosition last held it (wall contact or run-out), never at the old aim point. Whether a layer-count snapshot held after consumption and the exact end point are read from the trace.", {
             spitCasts: stage.casts("spitup"),
             stockpileCasts: stage.casts("stockpile"),
             damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,

@@ -2,10 +2,18 @@
 namespace PokemonSkills {
     const eggbombScene = "world_combat:move_eggbomb";
     const eggbombRoll = "world_combat:eggbomb_roll";
+    const eggbombLease = "world_combat:eggbomb_lease";
     WorldBodies.define(eggbombRoll, { maxTicks: 40, start: function () {},
         blocked: function (brain, input) { if (input.horizontal) { const data = JSON.parse(brain.state()); data.stopped = true; brain.state(JSON.stringify(data)); } },
         touch: function (brain, other) { const world = brain.world(); if (world.friendly(other)) return;
-            const data = JSON.parse(brain.state()); if (!data.contact) { data.contact = String(other.ref()); brain.state(JSON.stringify(data)); } }
+            const data = JSON.parse(brain.state()); if (!data.contact) { data.contact = String(other.ref()); brain.state(JSON.stringify(data)); } },
+        operations: { "world_combat:dispel": function (brain) { brain.end(); } }
+    });
+    // 滚蛋载体随出手动作一起结束：动作被取消/打断时收掉滚蛋，不把它留在场上继续滚。
+    WorldCombat.effect(eggbombLease, 1, 60, "action", function (json) { return json; }, EffectProtocols.unchanged);
+    WorldCombat.effectHandler(eggbombLease, "start", function () {});
+    WorldCombat.effectHandler(eggbombLease, "end", function (effect) {
+        if (effect.world().valid(effect.target())) WorldBodies.operate(effect.world(), effect.target(), "world_combat:dispel", {});
     });
     define({
         id: "eggbomb",
@@ -22,7 +30,7 @@ namespace PokemonSkills {
         cooldown: 20,
         style: "egg",
         maximumTicks: 160,
-        defaults: { heavy: false, ai: { maxChase: 13, opportunist: true } },
+        defaults: { heavy: false, ai: { maxChase: 13, opportunist: true, lead: 8 } },
         fields: [],
         indicator: function (config, pokemon) {
             return { radius: p("eggbomb", "splash", pokemon), geometry: "area", style: "egg", color: 0xF2E4B8,
@@ -74,11 +82,21 @@ namespace PokemonSkills {
             const cos = Math.cos(angle), sin = Math.sin(angle);
             direction = WorldCombat.point(direction.x() * cos - direction.z() * sin, direction.y(), direction.x() * sin + direction.z() * cos);
 
+            const eggType = String(CobblemonCombat.moveTemplate("eggbomb").type());
             function crack(current: CombatAction, at: CombatPoint): void {
                 if (burst) return; burst = true;
                 const scope = current.world();
-                const victims = scope.query(at, splash, false).filter(function (actor) { const body = scope.observe(actor); return !scope.friendly(actor) && !!body && scope.clear(at, body.position()); });
-                victims.forEach(function (victim) { hurt(current, victim, "eggbomb", power / Math.max(1, victims.length), { damage: damageSpec("eggbomb", "egg") }); });
+                // 只让真的会被这一记打到的身体参与分摊：免疫/无效的身体不吃这一份，也不稀释别人的份。
+                const victims = scope.query(at, splash, false).filter(function (actor) {
+                    const body = scope.observe(actor);
+                    if (!body || scope.friendly(actor) || !scope.clear(at, body.position())) return false;
+                    const facts = PokemonDamage.combatants.read(scope, actor);
+                    for (let index = 0; index < facts.types.length; index++)
+                        if (CobblemonCombat.typeEffectiveness(eggType, facts.types[index]) === 0) return false;
+                    return true;
+                });
+                const share = power / Math.max(1, victims.length);
+                victims.forEach(function (victim) { hurt(current, victim, "eggbomb", share, { damage: damageSpec("eggbomb", "egg") }); });
                 WorldFeedback.emit(scope, eggbombScene, 1, at, { moment: "shatter", shards: shards, radius: splash, scale: scale, intensity: intensity }, 24);
                 scope.sound("minecraft:entity.turtle.egg_break", at, 14, "{}");
             }
@@ -99,6 +117,7 @@ namespace PokemonSkills {
                     const egg = WorldBodies.spawn(scope, at.plus(WorldCombat.point(0, .05, 0)),
                         { appearance: { item: "minecraft:egg", spin: true, scale: scale }, size: [radius * 2, radius * 2],
                             health: 1, gravity: true, pushable: true, invulnerable: true, silent: true }, eggbombRoll, {}, 30);
+                    action.effect(eggbombLease, egg, "{}", 30);
                     const velocity = WorldCombat.point(direction!.x(), 0, direction!.z()).scale(speed * .3);
                     scope.motion(egg, velocity, false);
                     WorldFeedback.emit(scope, eggbombScene, 1, at, { moment: "splash", shards: 4, scale: scale, radius: radius }, 12);
@@ -106,10 +125,12 @@ namespace PokemonSkills {
                     function roll(current: CombatAction): void {
                         const access = current.world(), body = access.valid(egg) ? access.observe(egg) : null;
                         if (!body) { finish(current); return; }
+                        // 滚痕：每刻把当前真实蛋位交给同一个 roll 表现实例，画的是实际滚动路线。
+                        scenes.show(current, "roll", body.position(), { moment: "roll", scale: scale, radius: radius, shards: shards, intensity: intensity });
                         const state = access.effects(egg, eggbombRoll)[0], facts = state ? JSON.parse(state.data()) : {};
                         const velocity = body.velocity(), speed = Math.sqrt(velocity.x() * velocity.x() + velocity.z() * velocity.z());
                         if (facts.contact || facts.stopped || access.tick() - began >= rollTicks || access.tick() - began >= 3 && speed < .03) {
-                            const actual = body.position(); access.dismiss(egg); crack(current, actual); finish(current); return;
+                            const actual = body.position(); scenes.stop(current, "roll"); access.dismiss(egg); crack(current, actual); finish(current); return;
                         }
                         current.after(1, roll);
                     }

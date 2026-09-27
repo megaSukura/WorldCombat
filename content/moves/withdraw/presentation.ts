@@ -8,9 +8,9 @@
  * 层次：合拢（起）／壳环与水泡（击）／壳面的水纹（收）／熄灭的壳瓣与水花（受击）／炸开的壳片与回弹（末）。
  * 起击收：tuck（收身）→ seal（合壳）→ hollow（持壳）／block（挡击）→ open（开壳）。
  * 范围：壳环绑身体、fit none，半径按 `data.scale`（实际壳半径 / 1.3）推出，画出来的壳就是护到的体积。
- * 运动：壳片与水光由外向内合拢、身体中心在合壳时压低；持壳时水纹沿壳面流转；挡击时水花沿 `data.direction`（真实来袭接触侧）荡开；
+ * 运动：壳片与水光由外向内合拢；持壳时水纹沿壳面流转；挡击时水花落在真实壳面接触点，另画被消费的那一枚壳瓣从它的壳面起点脱落；
  *   开壳时壳片受重力落下、身体向上回弹。
- * 数：壳瓣用 `data.left`（真实剩余 1–3 次全挡）由托管场景逐枚点亮，挡一次灭一枚；挡击强度绑 `data.intensity`，尺寸绑 `data.scale`。
+ * 数：壳瓣用 `data.petals`（真实剩余 1–3 枚的索引）由托管场景逐枚点亮，挡一次按来袭方向熄一枚；挡击强度绑 `data.intensity`，尺寸绑 `data.scale`。
  * 持续状态：持壳期低密度、贴身，绑在 guard 池上：池被驱散或结束时同步停止，玩家仍看得清目标。
  */
 const WithdrawDefinition: ParticleDefinition = {
@@ -89,29 +89,20 @@ const WithdrawDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "block_petal", bind: "source", fit: "none", height: 0.4, offset: [0, -0.12, 0], orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/orb/scalingshaded",
-                    burst: { count: 1, at: 1 },
-                    shape: { kind: "arc", radius: 0.5, arcDegrees: 40 },
-                    direction: "shape", speed: [0.12, 0.22], gravity: 0.04, drag: 0.9, spin: 28,
-                    lifetime: [12, 20], size: [0.5, 0.06],
-                    color: 0x4C7FA8, alpha: [0.9, 0], light: "world", maxParticles: 4
-                },
-                {
-                    name: "block_splash", bind: "source", fit: "none", height: 0.4, offset: [0, -0.12, 0], orient: "direction",
+                    // 水花落在真实壳面接触点（服务端把 emit 点设为壳面交点），不再靠 orient 猜方向。
+                    name: "block_splash", bind: "point", fit: "none", height: 0.4,
                     particle: "world_combat_core:cobblemon/generic/water/giantsplash",
                     burst: { count: 12 },
-                    shape: { kind: "arc", radius: 0.7, arcDegrees: 130 },
-                    direction: "shape", speed: [0.05, 0.2], gravity: 0.03, drag: 0.9, spin: 20,
+                    shape: { kind: "sphere", radius: 0.42 },
+                    direction: "outward", speed: [0.05, 0.2], gravity: 0.03, drag: 0.9, spin: 20,
                     lifetime: [10, 18], size: [0.18, 0.03],
                     color: 0x8FC7D6, alpha: [0.85, 0], light: "world", maxParticles: 100
                 },
                 {
-                    name: "block_flash", bind: "source", fit: "none", height: 0.45, offset: [0, -0.12, 0], orient: "direction",
+                    name: "block_flash", bind: "point", fit: "none", height: 0.45,
                     particle: "world_combat_core:cobblemon/generic/impact/impact_water",
                     burst: { count: 1, at: 1 },
-                    shape: { kind: "arc", radius: 0.4, arcDegrees: 120 },
-                    direction: "shape",
+                    shape: { kind: "sphere", radius: 0.35 },
                     lifetime: [10, 12], size: [0.5, 0.9],
                     color: 0x8FC7D6, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 4
                 }
@@ -149,18 +140,28 @@ WorldCombatParticles.scene("world_combat:move_withdraw", 1, WithdrawDefinition);
 // 壳瓣：按真实剩余的全挡次数画 1–3 枚大壳瓣围着身体；挡一次灭一枚，位置上不动，剩几枚一眼可见。
 // 绑定在本招的 guard 池上，随它存续、随它收（提前破壳或驱散时同步停止）。
 WorldCombatClient.scene("world_combat:move_withdraw_shell", 1, function (frame) {
-    const entry: CombatSceneEntry<{ blocks: number; left: number; radius: number; scale: number }> = JSON.parse(frame.data());
+    const entry: CombatSceneEntry<{ blocks: number; left: number; petals?: number[]; radius: number; scale: number }> = JSON.parse(frame.data());
     if (entry.lifecycle) return;
     const data = entry.data;
     const blocks = Math.max(1, Math.round(data.blocks || 1));
     const left = Math.max(0, Math.min(blocks, Math.round(data.left == null ? blocks : data.left)));
+    // 剩余壳瓣索引来自服务端状态：按来袭方向消费那一枚，剩哪几枚画哪几枚。
+    let petals: number[] = [];
+    if (Array.isArray(data.petals)) {
+        for (let i = 0; i < data.petals.length; i++) {
+            const index = Math.round(Number(data.petals[i]));
+            if (isFinite(index) && index >= 0 && index < blocks) petals.push(index);
+        }
+    } else {
+        for (let i = 0; i < left; i++) petals.push(i);
+    }
     let x = entry.position[0], y = entry.position[1], z = entry.position[2], height = 1.4;
     const anchor = JSON.parse(frame.anchor(entry.source));
     if (anchor) { x = anchor.x; y = anchor.y; z = anchor.z; height = Math.max(0.6, anchor.height); }
     const radius = Math.max(0.4, data.radius || (data.scale || 1) * 1.3);
     const size = Math.max(0.04, Math.min(0.1, 0.06 * (data.scale || 1)));
-    for (let i = 0; i < left; i++) {
-        const angle = (i / blocks) * Math.PI * 2 - Math.PI / 2;
+    for (let k = 0; k < petals.length; k++) {
+        const angle = (petals[k] / blocks) * Math.PI * 2 - Math.PI / 2;
         const px = x + Math.cos(angle) * radius;
         const pz = z + Math.sin(angle) * radius;
         const py = y + height * 0.38;
@@ -169,5 +170,53 @@ WorldCombatClient.scene("world_combat:move_withdraw_shell", 1, function (frame) 
             surface.fill(-10, -5, 20, 4, 0xF08FC7D6);
             surface.fill(-8, -13, 16, 4, 0xF02F5A78);
         });
+    }
+});
+
+// 挡下一击：被消费的那一枚壳瓣从它与持壳共用的索引/壳面起点脱落，沿该瓣外法线飞出并受重力落下，
+// 一瓣大壳瓣加几点壳屑；没有索引时退回身体前方沿来击方向。和按次池同一个 moment，一次受击一次。
+WorldCombatClient.scene("world_combat:move_withdraw_knock", 1, function (frame) {
+    const entry: CombatSceneEntry<{ direction?: number[]; petal?: number; blocks?: number; scale?: number; radius?: number; start?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    const scale = Math.max(0.4, typeof data.scale === "number" && isFinite(data.scale) ? data.scale : 1);
+    let x = entry.position[0], y = entry.position[1], z = entry.position[2], height = 1.4;
+    const anchor = JSON.parse(frame.anchor(entry.source));
+    if (anchor) { x = anchor.x; y = anchor.y; z = anchor.z; height = Math.max(0.6, anchor.height); }
+    const blocks = Math.max(1, Math.round(data.blocks || 1));
+    const radius = Math.max(0.4, typeof data.radius === "number" && isFinite(data.radius) ? data.radius : scale * 1.3);
+    // 起点与持壳同一索引、同一壳面几何；没有索引才退回身体前方沿来击方向。
+    const index = typeof data.petal === "number" && isFinite(data.petal) ? Math.round(data.petal) : -1;
+    let ox = x, oz = z, dirx = 0, dirz = 1;
+    if (index >= 0 && index < blocks) {
+        const angle = (index / blocks) * Math.PI * 2 - Math.PI / 2;
+        dirx = Math.cos(angle); dirz = Math.sin(angle);
+        ox = x + dirx * radius; oz = z + dirz * radius;
+    } else if (Array.isArray(data.direction) && data.direction.length === 3) {
+        const dx = Number(data.direction[0]), dz = Number(data.direction[2]);
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (length > 1e-6) { dirx = dx / length; dirz = dz / length; }
+    }
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const age = Math.max(0, frame.serverTick() - start);
+    const t = Math.min(1, age / 18);
+    const dist = radius * (0.15 + 1.0 * t);
+    const px = ox + dirx * dist, pz = oz + dirz * dist;
+    const py = y + height * 0.38 - 0.5 * t * t;
+    const alpha = Math.round(240 * (1 - 0.85 * t));
+    const size = Math.max(0.04, Math.min(0.1, 0.07 * scale)) * (1 - 0.35 * t);
+    frame.billboard(px, py, pz, size, function (surface) {
+        surface.fill(-8, -9, 16, 18, (alpha << 24 | 0x4C7FA8) | 0);
+        surface.fill(-10, -5, 20, 4, (alpha << 24 | 0x8FC7D6) | 0);
+        surface.fill(-8, -13, 16, 4, (alpha << 24 | 0x2F5A78) | 0);
+    });
+    const chips = 6;
+    for (let i = 0; i < chips; i++) {
+        const a = i * 2.39996;
+        const r = 0.1 + 0.5 * t;
+        const chip = Math.round(200 * (1 - t));
+        frame.sprite("cobblemon:particle/generic/orb/scalingshaded", px + Math.cos(a) * r,
+            py + Math.sin(a * 1.3) * 0.15, pz + Math.sin(a) * r,
+            Math.max(0.05, 0.12 * scale * (1 - t)), 0, (chip << 24 | 0x4C7FA8) | 0, 0, false);
     }
 });

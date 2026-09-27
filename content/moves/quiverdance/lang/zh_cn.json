@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.quiverdance.summary": "轻巧地跳起一段蝶舞：只抖几拍，鳞粉从身上落下，在身周悬停成一圈薄幕，提高自己的特攻、特防和速度。鳞幕只维持一段可见的窗口，窗口走完时抬起的这三项会被收回。",
+  "worldcombat.skill.quiverdance.summary": "轻巧地跳起一段蝶舞：只抖几拍，每一步向侧方轻点，鳞粉从身上落下，在身周悬停成一圈薄幕。跳完最后一拍才提高自己的特攻、特防和速度；鳞幕只维持一段可见的窗口，窗口走完时抬起的这三项会被收回。",
   "worldcombat.skill.quiverdance.use.0": "开战前把特攻特防速度一起垫起来",
   "worldcombat.skill.quiverdance.use.1": "被法术压着打时先扬一层鳞幕",
-  "worldcombat.skill.quiverdance.use.2": "边走位边铺开鳞粉，把身周变成自己的场地",
-  "worldcombat.skill.quiverdance.description.0": "起式后特攻、特防、速度各提升 %1$s 级，每拍向侧方交替点踏 %2$s 格（贴墙按净空缩步）。",
+  "worldcombat.skill.quiverdance.use.2": "边走位边扬鳞，跳完再收下这一身强化",
+  "worldcombat.skill.quiverdance.description.0": "舞完最后一拍后特攻、特防、速度各提升 %1$s 级；在此之前只有舞迹，舞被打断就拿不到强化。每拍向侧方交替点踏 %2$s 格（贴墙或临空时按净空与脚底支撑缩步）。",
   "worldcombat.skill.quiverdance.description.1": "鳞幕持续 %1$s；幕还在时再起舞会各再抬一级、把窗口重新计满，三项各最多累计 6 级；窗口走完时按累计级数一并收回。",
   "worldcombat.skill.quiverdance.veil.on": "厚幕：鳞幕窗口 ×1.35；代价是起式 +2 刻、冷却 +12。",
   "worldcombat.skill.quiverdance.veil.off": "轻缀：鳞粉更少、窗口按常规长度，出手更快。",
@@ -28,7 +28,7 @@
   "worldcombat.skill.quiverdance.preference.ai.maxChase.help": "威胁进入这个距离内才考虑先扬鳞；越大越早开始铺幕。",
   "worldcombat.skill.quiverdance.preference.ai.minGap": "贴身下限",
   "worldcombat.skill.quiverdance.preference.ai.minGap.help": "威胁近于这个距离时不再起舞、直接攻击；调大更常在近身时放弃强化。",
-  "world_combat.move.quiverdance.text.bloomed": "鳞幕 · 特攻／特防／速度 +%1$s",
+  "world_combat.move.quiverdance.text.bloomed": "鳞幕 · 特攻 +%1$s／特防 +%2$s／速度 +%3$s",
   "world_combat.move.quiverdance.text.dispersed": "鳞粉散落",
   "effect.world_combat.quiverdance_bloom": "鳞幕"
 }

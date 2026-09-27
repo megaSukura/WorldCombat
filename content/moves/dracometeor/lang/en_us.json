@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.dracometeor.summary": "Calls comets straight down onto their own fixed impact points: each deals special damage once to every foe in its impact radius, a foe that leaves the point dodges it, and a roof intercepts a falling comet so it bursts at the upper collision point. The barrage form's overlapping circles can catch the same foe several times. The summon immediately costs the user a harsh Sp. Atk drop.",
+  "worldcombat.skill.dracometeor.summary": "Calls comets straight down onto their own fixed impact points: each deals special damage once to every foe in its impact radius, a foe that leaves the point dodges it, and a roof intercepts a falling comet so it bursts at the upper collision point without reaching through the roof. The barrage form's overlapping circles can catch the same foe several times. The summon immediately costs the user a harsh Sp. Atk drop, and the move's own comets use the Sp. Atk captured at summon time.",
   "worldcombat.skill.dracometeor.use.0": "Long-range comet nuke",
   "worldcombat.skill.dracometeor.use.1": "Barrage form: scatter impacts over a clustered group",
   "worldcombat.skill.dracometeor.use.2": "Best against foes that stay put or a large Boss",
@@ -35,5 +35,5 @@
   "worldcombat.skill.dracometeor.preference.ai.still": "Only hit foes that stay",
   "worldcombat.skill.dracometeor.preference.ai.still.help": "On: impact points are fixed at summon time and do not chase, so foes that hold still rank higher and moving ones are strongly de-prioritised; off: ordered normally regardless of movement.",
   "world_combat.move.dracometeor.text.miss": "The comets land wide",
-  "worldcombat.skill.dracometeor.description.land": "All impact points are fixed at summon time and do not chase the target; a comet that grazes a foe on the way down bursts on it, otherwise it bursts on the ground, so a foe that steps out of the impact radius dodges it. A roof intercepts a comet, which bursts at the upper collision point."
+  "worldcombat.skill.dracometeor.description.land": "All impact points are fixed at summon time and do not chase the target; a comet that grazes a foe on the way down bursts on it, otherwise it bursts on the ground, so a foe that steps out of the impact radius dodges it. A roof intercepts a comet, which bursts at the upper collision point; foes below screened by solid roof or wall take nothing. A comet that hits nothing simply fades at its real projectile end point instead of faking a burst at the planned point."
 }

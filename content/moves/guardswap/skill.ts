@@ -1,6 +1,7 @@
 /** Temporarily exchange current defensive stage advantages through owned layers. */
 namespace PokemonSkills {
     export const guardswapScene = "world_combat:move_guardswap";
+    export const guardswapStreamScene = "world_combat:move_guardswap_stream";
     export const guardswapWindow = "world_combat:guardswap_window";
     export const guardswapMark = "world_combat:guardswap_mark";
     export const guardswapSwapText = "world_combat.move.guardswap.text.swapped";
@@ -27,7 +28,7 @@ namespace PokemonSkills {
         if (String(actor.domain()) === "cobblemon") return NativeEffects.stage(NativeEffects.read(world, actor), stat);
         return CombatStages.stage(world, actor, stat);
     }
-    /** 守势合计（防 + 特防的等级），供本招 AI 判断值不值得换。 */
+    /** 守势合计（防 + 特防的等级），供外部只读消费；AI 决策按实际来袭种类加权，见 ai.ts。 */
     export function guardswapGuard(world: CombatWorld, actor: CombatActor): number {
         return guardswapStageOf(world, actor, "def") + guardswapStageOf(world, actor, "spd");
     }
@@ -104,63 +105,83 @@ namespace PokemonSkills {
             const world = action.world(), actor = action.actor(), target = action.target();
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
+            const origin = body.position();
+
+            // 轻散：无目标、被挡、重复或载体失败都只做一次轻散与一行说明，不假装完成了双向移交。
+            function lightScatter(moment: string, key: string, ticks: number): void {
+                WorldFeedback.emit(world, guardswapScene, 1, origin, { moment: moment, target: target === null ? "" : String(target.ref()) }, ticks);
+                WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), key, [], ticks + 6);
+            }
+
             if (target === null || !world.valid(target) || String(target.key()) === String(actor.key())) {
-                WorldFeedback.emit(world, guardswapScene, 1, body.position(), { moment: "fizzle" }, 16);
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), guardswapMissText, [], 22);
+                lightScatter("fizzle", guardswapMissText, 16);
                 done(action);
                 return;
             }
             const foe = world.observe(target);
-            if (foe === null) { done(action); return; }
+            if (foe === null) { lightScatter("fizzle", guardswapMissText, 16); done(action); return; }
+            // 提交时再次确认双方资格与可达；任一方不再满足就按实际结果轻散。
+            if (foe.position().minus(origin).length() > p("guardswap", "reach", action) || !world.clear(origin, foe.position())
+                || CombatStatus.has(world, actor, "guardswap") || CombatStatus.has(world, target, "guardswap")) {
+                lightScatter("fizzle", guardswapMissText, 18);
+                done(action);
+                return;
+            }
             const window = Math.max(80, Math.round(p("guardswap", "span", action)));
             const threads = Math.max(1, Math.round(p("guardswap", "threads", action)));
             const scale = (body.width() + body.height()) / 2.3;
             const mine = guardswapStages(world, actor), theirs = guardswapStages(world, target);
             const gap = Math.abs(theirs[0] - mine[0]) + Math.abs(theirs[1] - mine[1]);
             const spread = Math.max(0.5, Math.min(1.5, 0.6 + gap * 0.14));
-            let changed = mine[0] !== theirs[0] || mine[1] !== theirs[1];
-            if (changed) {
-                const selfCarrier = MobEffects.apply(world, actor, guardswapWindow, window, 0);
-                const otherCarrier = MobEffects.apply(world, target, guardswapWindow, window, 0);
-                changed = selfCarrier !== null && otherCarrier !== null;
-                if (changed) {
-                    guardswapLayer(world, actor, mine, theirs, window, selfCarrier!);
-                    guardswapLayer(world, target, theirs, mine, window, otherCarrier!);
-                    const selfMark = world.effect(guardswapMark, actor, JSON.stringify({ def: mine[0], spd: mine[1], pair: String(target.ref()) }), window);
-                    const otherMark = world.effect(guardswapMark, target, JSON.stringify({ def: theirs[0], spd: theirs[1], pair: String(actor.ref()) }), window);
-                    [{ id: selfMark, actor: actor, pair: target }, { id: otherMark, actor: target, pair: actor }].forEach(function (entry) {
-                        const facts = world.observe(entry.actor);
-                        if (facts) WorldFeedback.onEffect(world, entry.id, "guardswap:hum:" + String(entry.actor.ref()), guardswapScene, 1,
-                            facts.position(), { moment: "hum", target: String(entry.actor.ref()), pair: String(entry.pair.ref()),
-                                path: [String(entry.actor.ref()), String(entry.pair.ref())], threads: 3, remaining: window });
-                    });
-                } else {
-                    if (selfCarrier) MobEffects.consume(world, actor, guardswapWindow);
-                    if (otherCarrier) MobEffects.consume(world, target, guardswapWindow);
-                }
+            const even = mine[0] === theirs[0] && mine[1] === theirs[1];
+
+            if (even) {
+                lightScatter("even", guardswapEvenText, 22);
+                sound(action, "minecraft:entity.evoker.cast_spell");
+                done(action);
+                return;
             }
+
+            const selfCarrier = MobEffects.apply(world, actor, guardswapWindow, window, 0);
+            const otherCarrier = MobEffects.apply(world, target, guardswapWindow, window, 0);
+            if (selfCarrier === null || otherCarrier === null) {
+                if (selfCarrier) MobEffects.consume(world, actor, guardswapWindow);
+                if (otherCarrier) MobEffects.consume(world, target, guardswapWindow);
+                lightScatter("fizzle", guardswapMissText, 18);
+                world.sound("minecraft:block.beacon.deactivate", origin, 12, "{}");
+                done(action);
+                return;
+            }
+            guardswapLayer(world, actor, mine, theirs, window, selfCarrier);
+            guardswapLayer(world, target, theirs, mine, window, otherCarrier);
+            // 持续只标在双方身上；连线不暗示超远仍有新增作用。
+            const selfMark = world.effect(guardswapMark, actor, JSON.stringify({ def: mine[0], spd: mine[1], pair: String(target.ref()) }), window);
+            const otherMark = world.effect(guardswapMark, target, JSON.stringify({ def: theirs[0], spd: theirs[1], pair: String(actor.ref()) }), window);
+            [{ id: selfMark, owner: actor, pair: target }, { id: otherMark, owner: target, pair: actor }].forEach(function (entry) {
+                const facts = world.observe(entry.owner);
+                if (facts) WorldFeedback.onEffect(world, entry.id, "guardswap:hum:" + String(entry.owner.ref()), guardswapScene, 1,
+                    facts.position(), { moment: "hum", target: String(entry.owner.ref()), pair: String(entry.pair.ref()) });
+            });
+
+            // 两束从两端交叉移交：自定义场景读双方真实位置，逐刻把护光从一端送到另一端。
             const intensity = Math.max(0.7, Math.min(2.2, gap / 3 + 0.6));
-            WorldFeedback.emit(world, guardswapScene, 1, body.position(),
-                { moment: "cross", path: [String(actor.ref()), String(target.ref())], target: String(target.ref()),
-                    threads: threads, gap: gap, spread: spread, scale: scale, intensity: intensity, even: changed ? 0 : 1 }, 34);
-            WorldFeedback.emit(world, guardswapScene, 1, body.position(),
-                { moment: "take", path: [String(target.ref()), String(actor.ref())], target: String(target.ref()),
-                    threads: threads, gap: gap, spread: spread, scale: scale, intensity: intensity, even: changed ? 0 : 1 }, 34);
-            if (changed) {
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardswapSwapText,
-                    [theirs[0] >= 0 ? "+" + theirs[0] : String(theirs[0]), theirs[1] >= 0 ? "+" + theirs[1] : String(theirs[1])], 30);
-                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.0, 0)), guardswapSwapText,
-                    [mine[0] >= 0 ? "+" + mine[0] : String(mine[0]), mine[1] >= 0 ? "+" + mine[1] : String(mine[1])], 30);
-            } else {
-                WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.25, 0)), guardswapEvenText, [], 26);
-            }
+            WorldFeedback.emit(world, guardswapStreamScene, 1, origin,
+                { self: String(actor.ref()), target: String(target.ref()),
+                    selfDef: mine[0], selfSpd: mine[1], foeDef: theirs[0], foeSpd: theirs[1],
+                    count: threads, gap: gap, spread: spread, scale: scale, intensity: intensity,
+                    start: world.tick(), duration: 46 }, 52);
+
+            WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.3, 0)), guardswapSwapText,
+                [theirs[0] >= 0 ? "+" + theirs[0] : String(theirs[0]), theirs[1] >= 0 ? "+" + theirs[1] : String(theirs[1])], 30);
+            WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.0, 0)), guardswapSwapText,
+                [mine[0] >= 0 ? "+" + mine[0] : String(mine[0]), mine[1] >= 0 ? "+" + mine[1] : String(mine[1])], 30);
             sound(action, "minecraft:entity.evoker.cast_spell");
-            world.sound("minecraft:block.amethyst_block.resonate", body.position(), 14, "{}");
+            world.sound("minecraft:block.amethyst_block.resonate", origin, 14, "{}");
             done(action);
         }
     });
 
-    // 窗口走完或被清除：按记号把守势等级换回原处，画面静收；其余修饰不受影响。
+    // 窗口走完或被清除：只结束本次守势交换层，画面静收；其余修饰不受影响。
     WorldCombat.on("world_combat:move_guardswap/revert", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== guardswapWindow) return;
@@ -176,7 +197,7 @@ namespace PokemonSkills {
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, guardswapScene, 1, body.position(),
-            { moment: "revert", target: String(actor.ref()), pair: pair, path: [String(actor.ref()), pair] }, 24);
+            { moment: "revert", target: String(actor.ref()), pair: pair }, 24);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), guardswapBackText, [], 26);
         world.sound("minecraft:block.beacon.deactivate", body.position(), 12, "{}");
     });

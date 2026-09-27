@@ -33,6 +33,8 @@ namespace PokemonSkills {
     export const spikesId = "spikes";
     export const spikesRule = "world_combat:hazard/spikes";
     export const spikesScene = "world_combat:move_spikes";
+    /** 场自身的持续表现由客户端自定义场景绘制固定刺位与层数，不再用随机粒子冒充。 */
+    export const spikesFieldScene = "world_combat:move_spikes_field";
     export const spikesLayText = "world_combat.move.spikes.text.lay";
     export const spikesTreadText = "world_combat.move.spikes.text.tread";
 

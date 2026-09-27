@@ -4,7 +4,9 @@
  * 一句话：身体一沉把一口气吸满（windup）→ 一圈净息从脚下炸开，抖落的毒／灼／麻化成暗紫污浊四散（purge）→
  *   残留的清爽光环在身侧轻轻升散（clear）→ 有人想再挂异常时，一圈薄薄的护膜把他弹开（ward）。
  * 色相家族：清爽草绿 0x9CE07A 为主体，近白高光 0xE8FFD8 只做强调；被抖落的污浊用低饱和暗紫 0x8A6BB0 画小面积。
- * 拍子：起 windup 0–12t ／ 击 purge 0–26t ／ 收 clear 0–40t；ward 是反制的一下闪光。
+ * 拍子：起 windup 0–12t ／ 击 purge 0–26t；ward 是反制的一下闪光。
+ * 持续：clear 没有固定时长，绑在服务端真正挂上的 clearheaded 载体上（WorldFeedback.onEffect），
+ *   载体到期、被驱散或刷新时才由服务端释放，画面跟着一起收——所以玩家看得到清爽窗口何时结束。
  * 范围：purge 与 clear 的环半径随 `data.scale`（服务端按净息半径算出的倍率）缩放，站在环外就没事。
  * 运动：净息自下向上升腾、污浊向外四散、护膜向外弹开。
  * 数：purge 的爆发粒子数绑 `data.motes`（特防与体型派生），起手强度随 `data.cured` 提高。
@@ -95,8 +97,9 @@ const RefreshDefinition: ParticleDefinition = {
             ]
         },
         clear: {
-            duration: 40,
-            exit: { stop: 12, drain: 22 },
+            // 窗口长度由真实载体决定，不写死 stop。
+            duration: 0,
+            exit: { drain: 22 },
             emitters: [
                 {
                     name: "calm", bind: "target", offset: [0, 0.42, 0], height: 0.3,
@@ -107,7 +110,7 @@ const RefreshDefinition: ParticleDefinition = {
                     color: 0xE8FFD8, alpha: [0.4, 0], alphaMode: "sin", light: "full", maxParticles: 22
                 },
                 {
-                    name: "halo", bind: "point", offset: [0, 0.05, 0], height: 0,
+                    name: "halo", bind: "target", offset: [0, 0.05, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: 4, shape: { kind: "circle", radius: 0.9, thickness: 0.8 },
                     direction: "up", speed: [0.004, 0.014],

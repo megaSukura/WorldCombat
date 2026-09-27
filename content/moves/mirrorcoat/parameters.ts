@@ -11,7 +11,7 @@
  * 数据分散：
  *   refund            返还伤害 = min(记账额 × 2, 返还上限)；读当前账本与最大生命。
  *   capFraction       返还上限比例随特防（镜面越厚，能映回的越多）。
- *   window            记账窗口随特防；抛光式更长。
+ *   window            记账窗口随特防（特防越高镜面越薄、忘得越快，窗口越短）；抛光式更长。
  *   boltSpeed／boltRange  光束速度与射程随特攻。
  *   collisionRadius／mirrorRadius 判定与镜面尺寸随体型高度。
  *   focus／settle／recharge 起手／收招／冷却随速度；抛光式更慢更费。
@@ -25,8 +25,9 @@ namespace PokemonSkills {
     export interface MirrorcoatRecord { amount: number; tick: number; source: string; }
     export var mirrorcoatLedger: { [ref: string]: MirrorcoatRecord } = Object.create(null);
 
-    export function mirrorcoatRemember(world: CombatWorld, victim: CombatActor, source: CombatActor, amount: number): void {
-        mirrorcoatLedger[String(victim.ref())] = { amount: amount, tick: world.tick(), source: String(source.ref()) };
+    export function mirrorcoatRemember(world: CombatWorld, victim: CombatActor, source: CombatActor | null, amount: number): void {
+        // 来源为空（没有可归因的施法者）时记空串，账本身仍然成立、仍可被射向新敌。
+        mirrorcoatLedger[String(victim.ref())] = { amount: amount, tick: world.tick(), source: source === null ? "" : String(source.ref()) };
         var refs = Object.keys(mirrorcoatLedger);
         if (refs.length > 512) {
             var now = world.tick();
@@ -34,12 +35,16 @@ namespace PokemonSkills {
         }
     }
     export function mirrorcoatConsume(actor: CombatActor): void { delete mirrorcoatLedger[String(actor.ref())]; }
+    /** 记账窗口随「持有账的那只宝可梦」求值，显式给出当前施法者事实，而不是把 world 交给 p 去读 world.source()。 */
+    function mirrorcoatWindowFor(world: CombatWorld, actor: CombatActor): number {
+        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return p(mirrorcoatId, "window");
+        return p(mirrorcoatId, "window", <ParameterSource>{ world: world, actor: actor, pokemon: CobblemonCombat.pokemon(actor) });
+    }
     export function mirrorcoatRecord(world: CombatWorld | null, actor: CombatActor | null): MirrorcoatRecord | null {
         if (!world || !actor || !world.valid(actor)) return null;
         var record = mirrorcoatLedger[String(actor.ref())];
         if (!record || !(record.amount > 0)) return null;
-        var window = p(mirrorcoatId, "window", String(actor.domain()) === "cobblemon" ? world : undefined);
-        return world.tick() - record.tick <= window ? record : null;
+        return world.tick() - record.tick <= mirrorcoatWindowFor(world, actor) ? record : null;
     }
     /** Fixed-damage settlement shared by the family: typing decides immunity, armour is the only mitigation. */
     export function mirrorcoatRawHit(action: CombatAction, target: CombatActor, amount: number, contact: boolean): boolean {
@@ -69,7 +74,7 @@ namespace PokemonSkills {
         var data = JSON.parse(String(event.data()));
         if (!(data.actual > 0)) return;
         if (DamageSemantics.read(data).category !== "special") return;
-        var source = event.actor();
+        var source: CombatActor | null = event.actor();
         if (source !== null && String(source.key()) === String(victim.key())) return;
         mirrorcoatRemember(world, victim, source, data.actual);
     });
@@ -138,7 +143,7 @@ namespace PokemonSkills {
             F.const(70).minus(F.stat("specialDefence").minus(55).times(0.2).clamp(-10, 16))
                 .plus(F.when(F.pref("polish", text("worldcombat.skill.mirrorcoat.preference.polish")), F.const(24), F.const(0)))
                 .clamp(44, 120).round(0),
-            "记账窗口", "最近这段时间内挨的特殊打才会被镜面记住；特防高的个体把影子留得更久，抛光式更久。"),
+            "记账窗口", "最近这段时间内挨的特殊打才会被镜面记住；特防高的个体镜面更薄、忘得更快，所以窗口更短，抛光式更久。"),
         /** 光束速度：0.95 格/刻 + 特攻偏移[−0.1,0.4]；夹 0.75..1.4。 */
         boltSpeed: formula(
             F.base(0.95).plus(F.stat("specialAttack").minus(60).times(0.004).clamp(-0.1, 0.4)).clamp(0.75, 1.4).round(2),

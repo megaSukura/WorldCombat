@@ -1,4 +1,9 @@
-/** gastroacid：行为、参数与目标条件以本单元实现为准。 */
+/**
+ * 胃液 / gastroacid 的参数。
+ *
+ * 同一层酸膜作用于所有活体：护甲被蚀薄（载体 startup 的 -25% 乘 amplifier+1，浓酸 -50%），每 40 刻受 1 点残留
+ * 酸伤；宝可梦有可压制特性时才额外附抑制。蚀刻时长、冷却、酸滴数、酸泡数各自依赖不同精灵数据。
+ */
 namespace PokemonSkills {
     actionParameters.define("gastroacid", {
         reach: formula(
@@ -45,6 +50,7 @@ namespace PokemonSkills {
     describe("gastroacid", [
         { key: "description.0", values: ["reach", "tempo", "velocity"] },
         { key: "description.1", values: ["hold"] },
+        { key: "description.limit", values: [] },
         { key: "thick.0", values: [], when: function (context) { return !!(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "thick.1", values: [], when: function (context) { return !(context.detail && context.detail.values && context.detail.values.thick); } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

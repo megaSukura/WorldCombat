@@ -2,6 +2,8 @@
 namespace PokemonSkills {
     export const storedpowerId = "storedpower";
     export const storedpowerScene = "world_combat:move_storedpower";
+    /** 确定中心与真实半径的一圈边界／球壳由这个客户端场景绘制。 */
+    export const storedpowerRingsScene = "world_combat:move_storedpower/rings";
     export const storedpowerSpendText = "world_combat.move.storedpower.text.spend";
     export const storedpowerHitText = "world_combat.move.storedpower.text.hit";
     export const storedpowerMissText = "world_combat.move.storedpower.text.miss";

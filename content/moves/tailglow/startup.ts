@@ -1,5 +1,5 @@
 // 凝神：一段可见的窗口状态，只承载共享身份 world_combat:status/tailglow。
-// 特攻等级本身由 NativeEffects.boost 写入公共能力阶梯；窗口走完、或被攻击打散时由本单元 skill.ts 从移除事件里原样收回。
+// 特攻等级本身是本单元 skill.ts 用 NativeEffects.boostWindow 挂在这条载体上的临时窗口（+gift 正贡献）；窗口走完、或被攻击打散时随载体一起收回，只撤本招自己那一份。
 // 启动脚本不引用服务端共享库，标签用字符串字面量。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:tailglow_focus")
     .beneficial()

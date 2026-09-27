@@ -19,8 +19,8 @@
  *   recharge  冷却：速度决定多久能再踩一段。
  *   beats     节拍数：速度决定沿连线排开的拍子数量。
  *   sway      摆幅数：特攻决定落在对方身上时那一圈摆动的密度。
- * 配置项 snap（紧拍／缓拍）：紧拍把步速拉得更近但维持更短、冷却更长；缓拍拉得松些但维持更久、
- *   冷却更短。贴近程度与持续时间互相取舍。
+ * 配置项 snap（紧拍／缓拍）：紧拍起手更快、把步速拉得更近但维持更短、冷却更长；缓拍起手稍慢、拉得松些
+ *   但维持更久、冷却更短。贴近程度与持续时间互相取舍，能力分支也吃到更快的起手，不再是纯亏档。
  */
 
 namespace PokemonSkills {
@@ -38,8 +38,10 @@ namespace PokemonSkills {
                 .clamp(0.6, 1.5).round(2),
             "节拍速度", { unit: "格/刻", description: "拍子跑向目标的速度；速度与特攻越大越快。" }),
         tempo: seconds(
-            F.base(8, "基础").minus(F.stat("speed").minus(40).times(0.05).clamp(-2, 5).as("速度")).clamp(3, 11).round(),
-            "起舞起手", "踩出这段节拍所需时间；速度越快起得越快。"),
+            F.base(8, "基础").minus(F.stat("speed").minus(40).times(0.05).clamp(-2, 5).as("速度"))
+                .times(F.when(F.pref("snap").as("紧拍"), F.const(0.82), F.const(1)).as("拍点"))
+                .clamp(3, 11).round(),
+            "起舞起手", "踩出这段节拍所需时间；速度越快起得越快，紧拍起手更快。"),
         aftercast: seconds(
             F.base(7, "基础").plus(F.stat("specialDefence").minus(50).div(48).clamp(-1, 2.2).as("特防")).clamp(4, 11).round(),
             "收势", "舞步停下后的收势；特防越高压得越稳。"),

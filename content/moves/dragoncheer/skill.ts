@@ -9,7 +9,8 @@
  *   吼（提交后）：以自身为中心推开声浪，给半径内每个友方挂共享身份 world_combat:status/dragoncheer 的士气窗口
  *     （本单元效果 world_combat:dragon_cheer），并把附加概率、光点数与是否龙属性写进各自的 world_combat:dragoncheer_mark。
  * 兑现：带身份者的每一次伤害结算，按 mark 的附加概率抬升要害机会（PokemonDamage.metadata 在结算前读取 mark）。
- * 持：每个受鼓舞者自己的效果每 20 刻续一层低密度光环（各自读自己的 mark）。
+ * 持：每个受鼓舞者自己的 mark 就是本招持续的 owned 实例，每 20 刻用 presentOn 续同一份光环；
+ *   mark 只认当前 carrier 实例的 key，载体被刷新/驱散后旧 mark 不再兑现，光也随 mark 一起收。
  * 散：士气到期或被清除时收回 mark；自然走完时轻轻散去。
  * 互斥：已聚气（focusenergy）的友方不吃鼓舞（原生同一份 volatile 不能并存），跳过他们。
  */
@@ -21,26 +22,29 @@ namespace PokemonSkills {
 
     WorldCombat.effect(dragonCheerMark, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
-        ["chance", "motes", "dragon"].forEach(function (key) {
+        ["chance", "motes", "dragon", "scale"].forEach(function (key) {
             if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid dragoncheer mark: " + key);
         });
-        // 载体实例 key：刷新或结束都按这一份实例处理，旧载体的移除不会清掉新标记。
+        // 载体实例 key：mark 只认这一份 carrier，刷新或结束都按这一份实例处理。
         if (typeof value.key !== "string" || !value.key) throw new Error("Invalid dragoncheer mark: key");
         if (value.chance < 0 || value.chance > 1) throw new Error("Invalid dragoncheer mark range");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(dragonCheerMark, "start", function () { });
     WorldCombat.effectHandler(dragonCheerMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     function dragoncheerMarkOf(world: CombatWorld, actor: CombatActor): any {
         const views = world.effects(actor, dragonCheerMark);
-        return views.length ? JSON.parse(String(views[0].data())) : null;
+        if (!views.length) return null;
+        const mark = JSON.parse(String(views[0].data()));
+        // 硬归属：只有 mark 记录的 carrier 实例仍是当前应用时，标记才算数。
+        const carrier = MobEffects.read(world, actor, dragonCheerEffect);
+        return carrier !== null && String(carrier.key()) === String(mark.key) ? mark : null;
     }
     function dragoncheerReleaseMark(world: CombatWorld, actor: CombatActor): void {
         const views = world.effects(actor, dragonCheerMark);
         if (views.length) world.operation(views[0].id(), "world_combat:dispel", "{}");
     }
-    /** 是否龙属性：宝可梦读其当前属性，其他生物没有这个概念，按非龙属性处理。 */
+    /** 是否龙属性：宝可梦读其当前有效属性，其他生物没有这个概念，按非龙属性处理。 */
     function dragoncheerIsDragon(world: CombatWorld, actor: CombatActor): boolean {
         return PokemonDamage.combatants.read(world, actor).types.indexOf("dragon") >= 0;
     }
@@ -69,23 +73,26 @@ namespace PokemonSkills {
         }
     });
 
-    // 持：受鼓舞者自己的士气每 20 刻续一层低密度光环，数量读自己的 mark，龙属性档更亮。
-    WorldCombat.on("world_combat:move_dragoncheer/rally", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== dragonCheerEffect || event.world().tick() % 20 !== 0) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || MobEffects.read(world, actor, dragonCheerEffect) === null) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        const mark = dragoncheerMarkOf(world, actor);
-        const motes = mark ? Math.max(8, Math.round(Number(mark.motes) || 24)) : 24;
-        const dragon = mark && Number(mark.dragon) >= 1 ? 1 : 0;
-        WorldFeedback.keep(world, "world_combat:move_dragoncheer/rally/" + String(actor.ref()), dragonCheerScene, 1, body.position(),
+    // 持：mark 自己就是受鼓舞者身上的 owned 实例，每 20 刻用 presentOn 续同一份光环；载体换新或散去时 mark 一并收。
+    function dragoncheerRally(effect: CombatEffect): void {
+        const world = effect.world(), actor = effect.target();
+        const body = world.valid(actor) ? world.observe(actor) : null;
+        if (body === null) { effect.end(); return; }
+        const mark = JSON.parse(String(effect.state()));
+        const carrier = MobEffects.read(world, actor, dragonCheerEffect);
+        // 当前 carrier 已不是这份 mark 记录的实例（被刷新/驱散）：散场，不再续光。
+        if (carrier === null || String(carrier.key()) !== String(mark.key)) { effect.end(); return; }
+        const motes = Math.max(8, Math.round(Number(mark.motes) || 24));
+        const dragon = Number(mark.dragon) >= 1 ? 1 : 0;
+        WorldFeedback.onEffect(world, effect.id(), "world_combat:move_dragoncheer/rally", dragonCheerScene, 1, body.position(),
             { moment: "rally", target: String(actor.ref()), motes: motes, dragon: dragon, runes: dragon ? 2 : 1,
-                scale: dragon ? 1.25 : 1, intensity: dragon ? 1.2 : 1 }, 40);
-    });
+                scale: Math.max(0.5, Number(mark.scale) || 1), intensity: dragon ? 1.2 : 1 });
+        effect.schedule("rally", "rally", 20, "{}");
+    }
+    WorldCombat.effectHandler(dragonCheerMark, "start", dragoncheerRally);
+    WorldCombat.effectHandler(dragonCheerMark, "rally", dragoncheerRally);
 
-    // 散：士气到期或被清除时收回 mark；自然走完时轻轻散去。
+    // 散：士气到期或被清除时收回 mark；自然走完时轻轻散去。mark 的光随 mark 结束自动清理，不再延迟残留。
     WorldCombat.on("world_combat:move_dragoncheer/fade", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== dragonCheerEffect) return;
@@ -169,7 +176,8 @@ namespace PokemonSkills {
                 if (carrier === null) continue;
                 dragoncheerReleaseMark(world, other);
                 world.effect(dragonCheerMark, other,
-                    JSON.stringify({ chance: chance, motes: motes, dragon: dragon ? 1 : 0, key: String(carrier.key()) }), ticks);
+                    JSON.stringify({ chance: chance, motes: motes, dragon: dragon ? 1 : 0, scale: scale, key: String(carrier.key()) }),
+                    Math.max(1, carrier.duration()));
                 cheered++;
                 if (dragon) dragons++;
                 const ally = world.observe(other);

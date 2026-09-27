@@ -55,6 +55,11 @@ public final class EffectRuntime {
         host.checkThread(); var instance = active.get(id);
         return instance == null ? null : instance.origin;
     }
+    /** Surviving derived effects are a lifecycle fact, not a claim that they will deal damage. */
+    public long countOrigin(ExecutionOrigin origin) {
+        host.checkThread();
+        return origin == null ? 0 : active.values().stream().filter(instance -> instance.origin == origin).count();
+    }
     public long create(String id, ActorHandle source, ActorHandle target, UUID controller, long action, String data, int ticks, ExecutionOrigin origin) {
         host.checkThread(); current();
         var definition = registry.get(id);

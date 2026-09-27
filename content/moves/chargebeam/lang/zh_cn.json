@@ -5,7 +5,7 @@
   "worldcombat.skill.chargebeam.use.2": "在中远距离用细束先手点射弱点",
   "worldcombat.skill.chargebeam.description.0": "从喷口朝自由准心放出一道细束，最远连到 %2$s 格；线的第一处实体或墙会截住它，首碰到的敌人吃约 %1$s 点特殊伤害。前排与墙都会挡束，空扫合法。",
   "worldcombat.skill.chargebeam.description.1": "细束判定半径 %1$s 格；开火第一刻命中后，%2$s 概率让余流回灌，使自身特攻提升 %3$s 级。之后扫到的新目标不再补主击。",
-  "worldcombat.skill.chargebeam.description.2": "命中后继续把束压在同一个受击者身上 %2$s 秒，收束时余流会再咬一口、造成主击 %1$s 的伤害；中途转开、目标离场或隔墙断束都会失去余流。",
+  "worldcombat.skill.chargebeam.description.2": "命中后继续把束压在同一个受击者身上 %2$s 秒，收束时余流会再咬一口、造成主击 %1$s 的伤害（按首击抬升后的特攻结算）；中途任何一拍转开、目标离场或隔墙断束都会永久失去余流。",
   "worldcombat.skill.chargebeam.overcharge.on": "过充：起手多 5 刻、冷却更久，但射程 ×1.2、威力 ×1.2、回灌几率更高、电弧更密。",
   "worldcombat.skill.chargebeam.overcharge.off": "速射：更短更便宜，射程更短、威力 ×0.9、回灌几率更低。",
   "worldcombat.skill.chargebeam.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

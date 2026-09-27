@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.powerwhip.summary": "把青藤或触手盘起探高，再激烈地甩出一道横扫：弧面填出的那块扇形就是被打到的范围，站在里面的敌人一起挨这一记并被推开。",
+  "worldcombat.skill.powerwhip.summary": "把青藤或触手盘起探高，再激烈地甩出一道横扫：鞭尖从身前顺次扫过长弧或整圈，扫过的那一块就是被打到的范围，站在里面的敌人一起挨这一记并被推开。可点任意目标，也可只朝一个方向原地解围、空甩；墙外扫不到。",
   "worldcombat.skill.powerwhip.use.0": "一道横扫清空身前一片",
   "worldcombat.skill.powerwhip.use.1": "隔着中距离先手扫开成群的对手",
   "worldcombat.skill.powerwhip.use.2": "被围住时原地整圈甩开",
-  "worldcombat.skill.powerwhip.description.0": "弧面扫过前方的非友方，造成约 %1$s 点接触伤害，触及 %2$s 格、张角 %3$s 度；画面里填出的扇形就是命中范围。",
+  "worldcombat.skill.powerwhip.description.0": "鞭尖从身前顺次扫过前方的非友方，造成约 %1$s 点接触伤害，触及 %2$s 格、张角 %3$s 度；鞭尖扫过的那一块就是命中范围，墙外扫不到。",
   "worldcombat.skill.powerwhip.description.1": "一道弧面最多同时结算 %1$s 个目标并各推开 %2$s 格；目标越重推得越近。",
   "worldcombat.skill.powerwhip.extend.on": "长鞭式：够得更远、把少数目标推得更开，但弧度窄、只扫身前一线。",
   "worldcombat.skill.powerwhip.extend.off": "旋身式：原地整圈甩开、一次罩住四面八方，单发更重、冷却较短，但够得更近、收招更久。",
@@ -20,11 +20,11 @@
   "worldcombat.skill.powerwhip.value.aftercast": "收招",
   "worldcombat.skill.powerwhip.value.recharge": "冷却",
   "worldcombat.skill.powerwhip.preference.extend": "长鞭式",
-  "worldcombat.skill.powerwhip.preference.extend.help": "开启：够得更远、把少数目标推得更开，但弧度窄、只扫身前一线。关闭（旋身式）：原地整圈甩开、一次罩住四面八方，但够得更近、单发略轻、收招与冷却更久。",
+  "worldcombat.skill.powerwhip.preference.extend.help": "开启：够得更远、把少数目标推得更开，但弧度窄、只扫身前一线。关闭（旋身式）：原地整圈甩开、一次罩住四面八方，单发更重、冷却更短，但够得更近、收招更久。",
   "worldcombat.skill.powerwhip.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.powerwhip.preference.ai.maxChase.help": "超过这个距离就不主动挥鞭，先走近。弧面够远，调大可以更早出手。",
   "worldcombat.skill.powerwhip.preference.ai.preferGroups": "先扫成群的",
   "worldcombat.skill.powerwhip.preference.ai.preferGroups.help": "开启：身边还挤着别的敌人的目标排得更前——一道弧面把一片清干净；关闭：只按威胁与距离排序。",
-  "world_combat.move.powerwhip.text.hit": "扫中",
+  "world_combat.move.powerwhip.text.hit": "扫中 %1$s 人",
   "world_combat.move.powerwhip.text.miss": "扫了个空"
 }

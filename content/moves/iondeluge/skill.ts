@@ -8,13 +8,14 @@
  * 持场：`world_combat:field` 效果承载位置、半径、持续与密度；每 5 刻扫描一次，给区域内的人补离子膜，
  *       并按本招算出的半径与密度续一次画面；边界表现绑在同一个场效果上，随它自然结束或提前驱散一起收走。
  * 命中：离子膜是 `world_combat:ion_film`（共享身份 ionized）；带着膜的施法者出一般属性招式时，
- *       由 rules.ts 的伤害元数据规则把有效属性改成电——之后属性相性与电吸收特性照常参与结算。
+ *       由 rules.ts 的伤害元数据规则把有效属性改成电；普通 MC 生物带的膜则由共享 `NativeAttackTypes`
+ *       把它的普通原生攻击改成电，两条路之后都照常进入属性相性与电吸收特性结算。
  * 反制：走出浴场膜就脱落；浴场固定在地面、不跟随；对双方生效，可能反过来把对手的普通招变成电招。
  * 配置项 wide（广域）：覆盖更大但更短；关闭则更小但更久。
  */
 namespace PokemonSkills {
     define({
-        id: "iondeluge", name: "等离子浴", description: "在选定地面铺开带电粒子浴场：站在里面的任何人出一般属性招式时，那招变成电属性。对双方都生效，铺在哪里是真正的选择。",
+        id: "iondeluge", name: "等离子浴", description: "在选定地面铺开带电粒子浴场：站在里面（或刚离开）的任何人出一般属性招式时，那招变成电属性，普通MC生物的普通近战攻击同样会被转电。对双方都生效，铺在哪里是真正的选择。",
         uses: ["把普通招转电", "铺场干扰对手", "电系队伍增益"], kind: "point", range: 10, prepare: 10, active: 0, recover: 8, cooldown: 120, style: "field",
         defaults: { wide: false },
         fields: [flag("wide", "广域浴场")],
@@ -39,9 +40,11 @@ namespace PokemonSkills {
             const film = p("iondeluge", "filmTicks", action);
             const density = p("iondeluge", "ionDensity", action);
             const fieldId = WorldEffects.field(world, ionField, point, radius, { film: film, density: density }, duration);
-            sound(action, "minecraft:block.beacon.activate");
-            // 初始边界拿场效果自己的 id 播报，之后的扫描续期与结束都跟随同一个拥有者。
-            if (fieldId > 0) WorldFeedback.onEffect(world, fieldId, "field", ionDelugeScene, 1, point, { moment: "field", density: density, duration: duration, scale: radius / 3.0 });
+            // 场效果没成功建立就不播成功音与边界表现；之后的扫描续期与结束都跟随同一个拥有者。
+            if (fieldId > 0) {
+                sound(action, "minecraft:block.beacon.activate");
+                WorldFeedback.onEffect(world, fieldId, "field", ionDelugeScene, 1, point, { moment: "field", density: density, scale: radius / 3.0 });
+            }
             done(action);
         }
     });

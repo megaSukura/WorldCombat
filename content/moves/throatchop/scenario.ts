@@ -26,7 +26,7 @@ Smoke.scenario("throatchop", function (stage) {
         stage.expect(stage.casts("throatchop", caster) >= 1, "the absol committed Throat Chop");
         stage.expect(stage.damageTo(foe) > 0, "the thrust dealt physical damage to the target");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/throatchop"), "the target carried the throat-seal identity");
-        stage.note("the silence window lasts 90-260 ticks (chokehold x1.25 / slash x0.75); the gate that turns back sound moves is a shared action policy, not observable with a passive target, so playtest it against a sound-move user", {
+        stage.note("the silence window lasts 90-260 ticks (chokehold x1.25 / slash x0.75); the gate that turns back sound moves and native sound attacks (e.g. a Warden's sonic boom) is a shared action policy, not observable with a passive target, so playtest it against a sound attacker", {
             castsByCaster: stage.casts("throatchop", caster),
             damageToFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10,

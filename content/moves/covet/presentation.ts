@@ -2,7 +2,8 @@
  * 渴望 / covet 的客户端表现。
  *
  * 一句话：施法者头顶飘起心形、指尖聚起粉色微光，缓缓蹭近时拖一条贴地粉痕；贴上的一刻在目标身上炸开一蓬
- * 心形与粉光（攻势被这份可爱分掉），若得手，那件道具带贴图沿一条归巢弧线飞回施法者、指尖闪一点金色。
+ * 心形与粉光（攻势被这份可爱分掉），若得手，那件道具带贴图从真实接触点沿一条归巢弧线飞回施法者、指尖闪一点金色。
+ * 归巢的物品与短伸的手走 `world_combat:move_covet_flow` 自定义场景，由反馈效果自持、随真实锚点收束。
  * 色相家族：粉（infatuation_heart / glowingsparkle_pink）为主，近白细节（smallsparkle / tinydust）作衬，
  * 金色（glowingsparkle_yellow）只在“得手”那一小处出现。
  * 拍子：起（whisper 撒娇）→ 贴（approach 蹭近）→ 击（charm 心神被分）→ 得（steal 归巢弧）／空（flop 收势）。
@@ -109,14 +110,6 @@ const CovetDefinition: ParticleDefinition = {
                     color: 0xE48FB5, alpha: [0.7, 0], light: "world", maxParticles: 50
                 },
                 {
-                    name: "homebound", bind: "projectile", fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 40, shape: { kind: "sphere", radius: 0.1 },
-                    direction: "away", speed: [0.01, 0.05],
-                    lifetime: [5, 11], size: [0.05, 0.01],
-                    color: 0xF0D27A, alpha: [0.85, 0], light: "full", maxParticles: 60
-                },
-                {
                     name: "acquired", bind: "source", offset: [0, 0.6, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
                     burst: { count: 6, at: 8 }, shape: { kind: "sphere", radius: 0.16 },
@@ -152,3 +145,50 @@ const CovetDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_covet", 1, CovetDefinition);
+
+/**
+ * 渴望每次真的伸手与真的拿回：服务端给出当刻身体起点与真实接触点 `reach`，或真实接触点与施法者 `homeward`。
+ * 这里用 `serverTick` 让一枚手贴图短伸再收回，或让一枚物品贴图沿低弧飞回移动中的施法者。
+ * 回执由反馈效果自持（不挂在动作弹上），动作收招也不影响它走完；固定图形，不生成粒子或实体。
+ */
+WorldCombatClient.scene("world_combat:move_covet_flow", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry<{ moment?: string; from?: number[]; at?: number[]; item?: string; target?: string; start?: number; dur?: number }> = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data = entry.data;
+    if (!data) return;
+    const start = typeof data.start === "number" && isFinite(data.start) ? data.start : frame.serverTick();
+    const duration = typeof data.dur === "number" && data.dur > 0 ? data.dur : 12;
+    const elapsed = frame.serverTick() - start;
+    if (elapsed < 0 || elapsed > duration) return;
+    const from = Array.isArray(data.from) && data.from.length === 3 ? data.from : null;
+    if (!from) return;
+    if (data.moment === "reach") {
+        const at = Array.isArray(data.at) && data.at.length === 3 ? data.at : null;
+        if (!at) return;
+        const phase = elapsed / duration;
+        const extend = phase < 0.5 ? phase / 0.5 : Math.max(0, 1 - (phase - 0.5) / 0.5);
+        frame.sprite("cobblemon:particle/generic/grab",
+            from[0] + (at[0] - from[0]) * extend, from[1] + (at[1] - from[1]) * extend, from[2] + (at[2] - from[2]) * extend,
+            0.34, extend * 16, (((0xFF << 24) | 0xF7A6C8) | 0), 0, true);
+        return;
+    }
+    if (data.moment === "homeward") {
+        const caster = data.target ? JSON.parse(frame.anchor(data.target)) : null;
+        const to = caster ? { x: caster.x, y: caster.y + (typeof caster.height === "number" ? caster.height : 1.4) * 0.55, z: caster.z }
+            : { x: entry.position[0], y: entry.position[1], z: entry.position[2] };
+        const progress = Math.max(0, Math.min(1, elapsed / duration));
+        const t = progress * progress * (3 - 2 * progress);
+        const lift = Math.sin(progress * Math.PI) * 0.6;
+        const alpha = Math.max(0, Math.min(255, Math.round(240 * (1 - progress * 0.4))));
+        frame.sprite(covetItemSprite(data.item), from[0] + (to.x - from[0]) * t, from[1] + (to.y - from[1]) * t + lift,
+            from[2] + (to.z - from[2]) * t, 0.32, progress * 360, (alpha << 24) | 0xFFE9A8, 0, true);
+    }
+});
+
+/** 物品注册 id 到原版物品图集贴图 id：`cobblemon:oran_berry` -> `cobblemon:item/oran_berry`。 */
+function covetItemSprite(id: unknown): string {
+    const value = String(id || "");
+    if (!value) return "cobblemon:particle/generic/sparkle/glowingsparkle_yellow";
+    const split = value.indexOf(":");
+    return split < 0 ? "minecraft:item/" + value : value.slice(0, split) + ":item/" + value.slice(split + 1);
+}

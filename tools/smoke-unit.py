@@ -206,6 +206,7 @@ def main():
         return unit_dir, json.loads((unit_dir / "unit.json").read_text(encoding="utf-8-sig"))
 
     units = []
+    scenario_fixtures = []
     for arg in positional:
         found = read_unit(arg)
         if found is None: return 2
@@ -213,14 +214,20 @@ def main():
         scenario = unit_dir / "scenario.ts"
         if not scenario.is_file():
             print("FAIL: " + arg + " has no scenario.ts"); return 2
+        declared = unit.get("scenarioFixtures", [])
+        if not isinstance(declared, list) or any(not isinstance(value, str) or not value for value in declared):
+            print("FAIL: " + arg + " scenarioFixtures must be unit-directory strings"); return 2
+        scenario_fixtures.extend(declared)
         units.append({"id": unit["id"], "name": unit["id"].split("/")[-1], "directory": unit_dir.relative_to(ROOT).as_posix(), "scenario": scenario.relative_to(ROOT).as_posix()})
     fixtures = []
-    for arg in with_unit_dirs:
+    for arg, automatic in [(value, False) for value in with_unit_dirs] + [(value, True) for value in scenario_fixtures]:
         found = read_unit(arg)
         if found is None: return 2
         unit_dir, unit = found
         if any(u["id"] == unit["id"] for u in units):
+            if automatic: continue
             print("FAIL: --with-units lists a tested unit: " + arg); return 2
+        if any(f["id"] == unit["id"] for f in fixtures): continue
         fixtures.append({"id": unit["id"], "name": unit["id"].split("/")[-1], "directory": unit_dir.relative_to(ROOT).as_posix()})
     if fixtures:
         assembler = (ROOT / "tools/build-content.mjs").read_text(encoding="utf-8")

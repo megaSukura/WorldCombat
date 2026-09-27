@@ -91,15 +91,15 @@ namespace PokemonSkills {
                 description: "能从多远把草种到对手脚下；驱动目标接受范围。"
             }),
         /** 起手：基础 8 刻；速度每比 60 快 1 减 0.04 刻（上限 −3）；夹在 5..14。 */
-        prepare: seconds(
+        charge: seconds(
             F.base(8).minus(F.stat("speed").minus(60).times(0.04).clamp(-1, 3)).clamp(5, 14).round(0),
             "起手", "俯身把手按进土里、把草唤起来的时间。"),
         /** 收招：基础 7 刻；速度每比 60 快 1 减 0.03 刻（上限 −3）；夹在 4..12。 */
-        recover: seconds(
+        settle: seconds(
             F.base(7).minus(F.stat("speed").minus(60).times(0.03).clamp(-1, 3)).clamp(4, 12).round(0),
             "收招", "藤蔓收拢后的收势。"),
         /** 冷却：基础 26 刻；速度每比 60 快 1 减 0.1 刻（上限 −8）；缠绞 +8；夹在 14..48。 */
-        cooldown: seconds(
+        rest: seconds(
             F.base(26).minus(F.stat("speed").minus(60).times(0.1).clamp(-2, 8))
                 .plus(F.when(F.pref("knot", text("worldcombat.skill.grassknot.preference.knot")), F.const(8), F.const(0)))
                 .clamp(14, 48).round(0),
@@ -119,7 +119,7 @@ namespace PokemonSkills {
         { key: "description.2", values: ["rootTicks","tripTicks","tripStages"] },
         { key: "knot.on", values: [], when: function (context) { return read(context.detail.values, ["knot"]) === true; } },
         { key: "knot.off", values: [], when: function (context) { return read(context.detail.values, ["knot"]) !== true; } },
-        { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
+        { key: "timing", values: ["range", "charge", "settle", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.snare"] },
         { key: "growth.1", values: ["tier.1.level", "tier.1.snare", "tier.1.snareRadius"] }
     ]);

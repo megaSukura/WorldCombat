@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.disarmingvoice.summary": "A charming cry fills the whole space around the singer, so foes inside it cannot escape and it makes no random accuracy roll; only a foe that actually takes the damage is rattled, and the soothing form also takes the edge off their attacks and leaves them Charmed. It can be sung with no enemies around.",
-  "worldcombat.skill.disarmingvoice.description.0": "A sound field centred on the singer catches every foe within %2$s blocks, each taking about %1$s damage once; it needs neither aim nor line of sight, so it makes no random accuracy roll.",
-  "worldcombat.skill.disarmingvoice.description.1": "A foe that actually takes the damage loses %1$s stage(s) of Speed; this is an ability stage that fades once combat ends. Untouched targets gain no extra effect.",
+  "worldcombat.skill.disarmingvoice.description.0": "A sound field centred on the singer catches every foe within %2$s blocks, each taking about %1$s damage once; it needs neither aim nor line of sight and passes through walls and cover, so it makes no random accuracy roll.",
+  "worldcombat.skill.disarmingvoice.description.1": "A foe that actually takes the damage loses %1$s stage(s) of Speed; this is an ability stage that does not wear off on its own, only resetting when stages are reset or combat ends. Untouched targets gain no extra effect.",
   "worldcombat.skill.disarmingvoice.description.2": "The soothing form also drops Attack by %1$s stage(s) on damaged foes (likewise an ability stage, fading after combat) and leaves a Charmed mark for %2$s. A target immune to hard control still takes the sound damage, it just cannot be Charmed.",
   "worldcombat.skill.disarmingvoice.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.disarmingvoice.growth.0": "At level %1$s: sound power %2$s.",

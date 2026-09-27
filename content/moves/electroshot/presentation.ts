@@ -80,6 +80,14 @@ const ElectroShotDefinition: ParticleDefinition = {
                     color: 0xFFF6C8, alpha: [0.95, 0], light: "full", bloom: 0.5, maxParticles: 40
                 },
                 {
+                    name: "travel_lance", bind: "projectile", fit: "none", orient: "velocity",
+                    particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
+                    shape: { kind: "line", length: 0.7 },
+                    rate: 120, direction: "shape", speed: [0.0, 0.04], spread: 6,
+                    lifetime: [3, 8], size: [0.14, 0.03],
+                    color: 0xFFF6C8, alpha: [0.95, 0], light: "full", bloom: 0.4, maxParticles: 60
+                },
+                {
                     name: "travel_arcs", bind: "projectile", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     trail: { minDistance: 0.3 }, rate: { data: "arcs", fallback: 16 },
@@ -157,7 +165,7 @@ const ElectroShotDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "fizzle_arcs", bind: "point", offset: [0, 0.35, 0],
+                    name: "fizzle_arcs", bind: "point", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_yellow",
                     burst: { count: { data: "arcs", fallback: 12 } },
                     shape: { kind: "sphere", radius: 0.3 },

@@ -8,14 +8,15 @@
  * 两幕：
  *   起（windup，提交前）：沉腰、把力气聚到拳上，只播预告表现。
  *   击（punch → impact）：提交后朝指定方向或目标做一次直线 trace，限定原拳程、首接触结算；命中活体结算
- *       接触+拳伤害，并把目标沿出拳方向顶退；随后从目标身体中心沿出拳方向做一次原生方块射线，只有身体
- *       确实贴到墙面才结算撞墙冲击。推不动的 Boss 若与墙仍有缝隙，不算撞墙，只吃普通直拳。
+ *       接触+拳伤害，并把目标沿出拳方向顶退；随后沿出拳方向从**目标真实身体后缘**做一次原生方块射线，
+ *       只有身体确实贴到墙面才结算撞墙冲击，落点取真实接触面。推不动的 Boss 若与墙仍有缝隙，不算撞墙，只吃普通直拳。
  *
  * 与同族分开：爆裂拳走弧线、可被走出、打中必乱；怪力是直线、必中、纯粹。
  * 配置 plant（扎根式）由 resolve 改时序、由公式改威力/顶退/撞墙，提交后才触碰世界。
  */
 namespace PokemonSkills {
     const strengthScene = "world_combat:move_strength";
+    const strengthFistScene = "world_combat:move_strength_fist";
     const strengthHitText = "world_combat.move.strength.text.hit";
     const strengthSlamText = "world_combat.move.strength.text.slam";
     const strengthMissText = "world_combat.move.strength.text.miss";
@@ -26,21 +27,24 @@ namespace PokemonSkills {
         return flat.length() > 0.05 ? flat.unit() : direction;
     }
 
-    /**
-     * 目标此刻是不是真被这一拳按在墙上：从目标身体中心沿出拳方向做原生方块碰撞射线，只有身体贴到墙面
-     * 才算；墙在身后更远处有缝隙时不算。射线只看方块，不会把被推的活体自己算成墙。
-     */
-    function strengthPinned(world: CombatWorld, body: CombatObservation, direction: CombatPoint): boolean {
-        const axis = strengthWallAxis(direction);
-        const probe = Math.max(0.2, body.width() * 0.5 + 0.15);
-        const from = body.position();
-        return !world.clear(from, from.plus(axis.scale(probe)));
+    /** 真实身体沿推轴的后缘距离：AABB 在轴向上的支撑半长，和体型一起决定拳后还有多少身位。 */
+    function strengthBackReach(body: CombatObservation, axis: CombatPoint): number {
+        const min = body.boundsMin(), max = body.boundsMax();
+        return Math.abs(axis.x()) * (max.x() - min.x()) * 0.5
+            + Math.abs(axis.y()) * (max.y() - min.y()) * 0.5
+            + Math.abs(axis.z()) * (max.z() - min.z()) * 0.5;
     }
 
-    /** 墙面接触点：同一条射线走到身体外侧，作为撞墙尘的落点，让尘土留在墙面而不是免推目标的空中。 */
-    function strengthWallPoint(body: CombatObservation, direction: CombatPoint): CombatPoint {
+    /**
+     * 目标此刻是不是真被这一拳按在墙上：从目标真实身体中心沿出拳方向做原生方块碰撞射线，探到身体后缘再往外
+     * 一点；只有身体贴到墙面才算，墙在身后更远处有缝隙时不算。射线只看方块，不会把被推的活体自己算成墙。
+     * 返回真实接触的 BLOCK Impact（含接触点与方块格），未贴墙返回 null。
+     */
+    function strengthWallContact(world: CombatWorld, body: CombatObservation, direction: CombatPoint): CombatImpact | null {
         const axis = strengthWallAxis(direction);
-        return body.position().plus(axis.scale(Math.max(0.2, body.width() * 0.5 + 0.15)));
+        const from = body.position();
+        const to = from.plus(axis.scale(strengthBackReach(body, axis) + 0.15));
+        return WorldGeometry.blockHit(world, from, to);
     }
 
     define({
@@ -63,7 +67,7 @@ namespace PokemonSkills {
             return { radius: p("strength", "punchRadius", pokemon) * 1.8, geometry: "line", style: "punch", color: 0xC9A06A, label: "怪力" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            var context: NumberContext = { pokemon: pokemon, skill: skills["strength"], detail: { values: config }, world: world || null, actor: actor || null, attributes: attributes };
+            var context: NumberContext = { pokemon, skill: skills["strength"], detail: { values: config }, world: world || null, actor: actor || null, attributes: attributes };
             return {
                 prepare: Math.round(p("strength", "tempo", context)),
                 recover: Math.round(p("strength", "aftercast", context)),
@@ -95,25 +99,31 @@ namespace PokemonSkills {
             const wallCell = hit.blocked() ? hit.blockPosition() : null;
             const path = [[origin.x(), origin.y(), origin.z()], [endpoint.x(), endpoint.y(), endpoint.z()]];
             sound(action, "minecraft:entity.player.attack.strong");
-            WorldFeedback.emit(world, strengthScene, 1, origin,
-                { moment: "punch", path: path, direction: [direction.x(), direction.y(), direction.z()], scale: scale, intensity: intensity }, 20);
+            // 一拳短送到首接触：自定义场景画一枚拳沿这条真实拳路送出并停住。
+            WorldFeedback.emit(world, strengthFistScene, 1, endpoint,
+                { moment: "punch", path: path, direction: [direction.x(), direction.y(), direction.z()], scale: scale,
+                    intensity: intensity, start: world.tick(), duration: 4 }, 22);
             if (hit.hitEntity()) {
                 const victim = hit.target();
                 const point = hit.position();
                 const landed = victim !== null && impact(action, hit, "strength", power,
                     { damage: damageSpec("strength", "slug"), contact: true, punch: true });
-                WorldFeedback.emit(world, strengthScene, 1, point,
-                    { moment: "impact", target: victim ? String(victim.ref()) : "", path: path, scale: scale,
-                        intensity: intensity, hits: Math.round(14 + power * 0.2) }, 26);
-                sound(action, "cobblemon:move.closecombat.target");
-                if (landed && victim !== null && world.valid(victim)) {
-                    world.hitDisplace(victim, direction.scale(shove));
-                    const pressed = world.observe(victim);
+                if (landed) {
+                    sound(action, "cobblemon:move.closecombat.target");
+                    // 只有真正造成伤害才走推出、撞墙与文案；免伤/拒绝不谎报命中。
+                    let moved = 0;
+                    if (victim !== null && world.valid(victim)) moved = world.hitDisplace(victim, direction.scale(shove));
+                    const pressed = victim === null ? null : world.observe(victim);
+                    WorldFeedback.emit(world, strengthScene, 1, point,
+                        { moment: "impact", target: victim ? String(victim.ref()) : "", path: path, scale: scale,
+                            intensity: intensity, hits: Math.round(14 + power * 0.2),
+                            direction: [direction.x(), direction.y(), direction.z()], pushDust: Math.round(moved * 22) }, 26);
                     if (pressed !== null) {
                         WorldFeedback.text(world, pressed.position().plus(WorldCombat.point(0, 1.2, 0)), strengthHitText, [], 26);
-                        // 撞墙附伤必须有真实身体贴墙证据：推不动的 Boss 若与墙有缝，只吃普通直拳；贴到墙面才算撞墙。
-                        if (strengthPinned(world, pressed, direction)) {
-                            const wallAt = strengthWallPoint(pressed, direction);
+                        // 撞墙附伤必须有真实身体贴墙证据：返回真实接触面；推不动的 Boss 若与墙有缝，只吃普通直拳。
+                        const wall = strengthWallContact(world, pressed, direction);
+                        if (wall !== null) {
+                            const wallAt = wall.position();
                             if (hurt(action, victim, "strength", slam, { damage: damageSpec("strength", "slam"), contact: false })) {
                                 WorldFeedback.emit(world, strengthScene, 1, wallAt,
                                     { moment: "slam", target: String(victim.ref()), scale: scale,

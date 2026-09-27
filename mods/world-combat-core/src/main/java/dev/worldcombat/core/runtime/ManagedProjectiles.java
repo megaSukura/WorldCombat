@@ -16,6 +16,7 @@ public final class ManagedProjectiles {
         BooleanSupplier live;
         BiConsumer<String, Impact> hit;
         Consumer<String> complete;
+        Point position;
         boolean completed;
     }
     private record Delivery(Flight flight, Impact impact) {}
@@ -35,7 +36,7 @@ public final class ManagedProjectiles {
             throw new IllegalArgumentException("Invalid projectile geometry or handlers");
         if (origin.minus(host.position(source)).length() > 64) throw new ActionRejectedException("out-of-range");
         var flight = new Flight(); flight.owner = owner; flight.source = source; flight.controller = controller;
-        flight.live = live; flight.hit = hit; flight.complete = complete;
+        flight.live = live; flight.hit = hit; flight.complete = complete; flight.position = origin;
         flight.id = host.projectile(owner, source, controller, origin, velocity, gravity, radius, range, lifetime,
             impact -> { if (!flight.completed) pending.add(new Delivery(flight, impact)); },
             () -> { if (!flight.completed) { flight.completed = true; pending.add(new Delivery(flight, null)); } },
@@ -57,6 +58,15 @@ public final class ManagedProjectiles {
         return host.projectileDamage(owner, flight.source, flight.controller, impact, amount, metadata, runtime.origin(owner));
     }
     public boolean active(long owner, String id) { host.checkThread(); var flight = flights.get(id); return flight != null && flight.owner == owner && live(flight) && !flight.completed; }
+    /** Native observations survive entity removal until the owning completion callback returns. */
+    public void observe(long owner, String id, Point position) {
+        host.checkThread(); var flight = flights.get(id);
+        if (flight != null && flight.owner == owner && !flight.completed) flight.position = position;
+    }
+    public Point position(long owner, String id) {
+        host.checkThread(); var flight = flights.get(id);
+        return flight != null && flight.owner == owner && live(flight) ? flight.position : null;
+    }
     public boolean cancel(long owner, String id) {
         host.checkThread(); var flight = flights.get(id);
         if (flight == null || flight.owner != owner) return false;

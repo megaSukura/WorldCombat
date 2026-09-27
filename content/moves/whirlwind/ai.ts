@@ -4,17 +4,26 @@
  * 什么局面下出手：一道向前推进、会被墙截断的竖向风墙，所以要看「站在哪条真实风道上最值」。`ready` 要求
  *   `ai.maxChase`（默认 12）格内至少站着 `ai.minFoes`（默认 1）个可见、敌对的敌人。
  * 对谁出手：`selectTarget` 在候选里挑「身后串着最多敌人的那一个」当瞄准点——以施法者为起点、目标方向为轴，
- *   只数落在这条 `ai.laneWidth`（默认 2 格）半宽走廊、且从自己这里通视的敌人（墙后的不计入收益）；串得越多越优先。
+ *   只数落在这条**本招真实带宽**（band 公式）以内、且在**真实风道长度**（reach 公式，并被 `ai.maxChase` 截）
+ *   以内、从自己这里通视的敌人（墙后的不计入收益）；串得越多越优先。
  *   玩家用「关注」点名的焦点目标直接 honored，不被这条启发式改掉。
  * 什么时候最想出手：走廊里串的人越多 priority 越高；自己血量偏低时再加一段（把扑上来的一排人一次吹走）。
+ *   完全抗位移、又没有任何可上场后备的目标，风推不动也换不下，收益明显更低。
  * 够不到怎么办：reach 就是风道长度，共享任务先把身位收进 `ai.maxChase` 再出手。
  * 放完之后：被扫到的敌人沿风向被推走并可能被强制换下，伙伴交回共享顺序。
  * `ai.leaveStation`：驻守中的伙伴是否愿意离位去吹（默认关闭）。
  */
 namespace CompanionBehavior {
     function whirlwindLane(context: WorldBehavior.Context, item: WorldBehavior.Capability, subject: Entity): number {
-        const self = source(context), limit = ai<number>(item, "maxChase", 12), lane = ai<number>(item, "laneWidth", 2);
+        const self = source(context), limit = ai<number>(item, "maxChase", 12);
         const access = world(context), selfPoint = point(self.point);
+        // 用本招真实的带宽与风道长度计数，而不是另存一份走廊常数。
+        let band = 2, reach = limit;
+        try {
+            const values = { world: access, actor: access.source(), detail: { values: item.data.config } };
+            band = Math.max(0.6, PokemonSkills.p("whirlwind", "band", values));
+            reach = Math.max(2, Math.min(limit, PokemonSkills.p("whirlwind", "reach", values)));
+        } catch (error) { }
         const dx = subject.point[0] - self.point[0], dz = subject.point[2] - self.point[2];
         const length = Math.sqrt(dx * dx + dz * dz) || 1;
         let count = 1;
@@ -22,13 +31,24 @@ namespace CompanionBehavior {
             if (other.ref === subject.ref || other.friendly || other.health <= 0 || !other.visible) return;
             const ox = other.point[0] - self.point[0], oz = other.point[2] - self.point[2];
             const along = (ox * dx + oz * dz) / length;
-            if (along <= 0 || along > limit) return;
-            if (Math.abs((ox * dz - oz * dx) / length) > lane) return;
+            if (along <= 0 || along > reach) return;
+            if (Math.abs((ox * dz - oz * dx) / length) > band) return;
             // 墙后的目标风到不了，不计入这条风道的收益。
             if (!access.clear(selfPoint, point(other.point))) return;
             count++;
         });
         return count;
+    }
+
+    /** 完全抗位移、且没有任何可上场后备：风推不动、也换不下，本招对它几乎没有收益。 */
+    function whirlwindUseless(context: WorldBehavior.Context, target: Entity): boolean {
+        try {
+            const access = world(context), actor = access.actor(target.ref);
+            if (actor === null) return false;
+            const resistance = access.attributeValue(actor, "minecraft:generic.knockback_resistance");
+            if (resistance === null || resistance.value() < 0.8) return false;
+            return PokemonSkills.partyReserve(PokemonSkills.partyRoster(access, actor), PokemonSkills.partyActiveId(access, actor)) === null;
+        } catch (error) { return false; }
     }
 
     function whirlwindCandidates(context: WorldBehavior.Context, item: WorldBehavior.Capability): Entity[] {
@@ -69,14 +89,15 @@ namespace CompanionBehavior {
             if (!target) return 0;
             let base = 38 + Math.min(18, whirlwindLane(context, item, target) * 6);
             if (ratio(source(context)) < 0.5) base += 6;
-            return Math.min(86, base);
+            // 完全抗推且无后备：推不动也换不下，收益明显更低。
+            if (whirlwindUseless(context, target)) base -= 14;
+            return Math.max(0, Math.min(86, base));
         }
     });
 
-    PokemonSkills.addPreferences("whirlwind", { ai: { maxChase: 12, minFoes: 1, laneWidth: 2, leaveStation: false } }, [
+    PokemonSkills.addPreferences("whirlwind", { ai: { maxChase: 12, minFoes: 1, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "吹飞距离", 3, 20, 1),
         PokemonSkills.number("ai.minFoes", "附近最少人数", 1, 6, 1),
-        PokemonSkills.number("ai.laneWidth", "走廊半宽", 1, 4, 0.5),
         PokemonSkills.flag("ai.leaveStation", "驻守时离位")
     ]);
 }

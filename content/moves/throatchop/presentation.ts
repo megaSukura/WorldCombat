@@ -5,7 +5,8 @@
  *   一圈暗红的封声印记，印记在目标缓过来之前一直沉着。
  * 色相家族：暗红 0x7A1E3A 作主体、深紫黑 0x2A0A18 作阴影，近白与浅粉 0xF0B8C8 只做印记与高光。
  * 拍子：起（windup 聚气）→ 刺（thrust 沿方向递出）→ 中（hit 只做伤害闪光；真封住才补 seal 喉环闭合；撞墙／撞友方为 block）→ 封（linger 咽喉印记）→ 收（recover 褪去／subside 被硬解／whiff 落空）。
- * 范围：thrust 的直线长度绑服务端 data.reach（真实突刺距离），玩家看得出这一刺够到哪。
+ * 范围：thrust 从服务端真实 from 点沿 data.direction 铺开 data.reach（受限后的突刺距离），判定与表现共用这组端点；
+ *   落空 (whiff) 也落在同一条刺线的端点，而不是施法者手边。
  * 运动：聚气朝手部收束，突刺沿 data.direction 直出；命中在目标身上向外炸开。
  * 数：命中冲击的量随 data.intensity（威力派生），突刺的密度随 data.scale（距离派生）。
  */
@@ -39,7 +40,7 @@ const ThroatchopDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "reach_line", bind: "source", offset: [0, 0.55, 0], height: 0, orient: "direction",
+                    name: "reach_line", bind: "point", fit: "none", offset: [0, 0, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/slash",
                     rate: 120, shape: { kind: "line", length: { data: "reach", fallback: 2.8 } },
                     direction: "shape", speed: [0.2, 0.6],
@@ -47,7 +48,7 @@ const ThroatchopDefinition: ParticleDefinition = {
                     color: 0x7A1E3A, alpha: [0.9, 0], light: "full", maxParticles: 160
                 },
                 {
-                    name: "reach_spark", bind: "source", offset: [0, 0.55, 0], height: 0, orient: "direction",
+                    name: "reach_spark", bind: "point", fit: "none", offset: [0, 0, 0], orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: 30, shape: { kind: "line", length: { data: "reach", fallback: 2.8 } },
                     direction: "shape", speed: [0.3, 0.8],
@@ -176,7 +177,7 @@ const ThroatchopDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 12 },
             emitters: [
                 {
-                    name: "whiff", bind: "source", offset: [0, 0.55, 0], height: 0,
+                    name: "whiff", bind: "point", fit: "none", offset: [0, 0, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     burst: { count: 10 }, shape: { kind: "sphere", radius: 0.3 },
                     direction: "outward", speed: [0.05, 0.2],

@@ -69,6 +69,15 @@ public final class NativeEquipmentPickupChecks {
                 && consumed == 1 && body.getMainHandItem().isEmpty(), "Real consumption did not publish exactly one receipt");
             world.equipmentConsumeResult(actor, "minecraft", "mainhand", 0, held, 1);
             require(consumed == 1, "Stale consumption published another receipt");
+            var tool = new ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+            tool.setDamageValue(tool.getMaxDamage() - 3); body.setItemSlot(EquipmentSlot.MAINHAND, tool);
+            var observed = NativeRegistryFacts.serializeStack(level.registryAccess(), tool);
+            var wear = JsonParser.parseString(world.equipmentDamageResult(actor, "minecraft", "mainhand", 0, observed, 1)).getAsJsonObject();
+            require(wear.get("ok").getAsBoolean() && wear.get("damage").getAsInt() == 1 && !wear.get("broken").getAsBoolean(), "Native durability receipt lost accepted wear");
+            require(!JsonParser.parseString(world.equipmentDamageResult(actor, "minecraft", "mainhand", 0, observed, 2)).getAsJsonObject().get("ok").getAsBoolean(), "Stale durability snapshot changed equipment");
+            observed = NativeRegistryFacts.serializeStack(level.registryAccess(), tool);
+            var broken = JsonParser.parseString(world.equipmentDamageResult(actor, "minecraft", "mainhand", 0, observed, 2)).getAsJsonObject();
+            require(broken.get("broken").getAsBoolean() && body.getMainHandItem().isEmpty(), "Native durability could not actually break the item");
             mark("Native equipment pickup verified: one item, exact components, refusal/delay/owner/stale preservation and explicit consumption");
         } finally { subject = null; body.discard(); item.discard(); }
     }

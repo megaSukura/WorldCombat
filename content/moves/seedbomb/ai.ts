@@ -2,11 +2,11 @@
  * 种子炸弹 / seedbomb 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、存活、在 `ai.maxChase`（默认 12）格以内，且伙伴没在骑乘/被骑。
- * 它是一记中距离高抛落种：`ai.preferGround`（默认开）让落地的目标多一档分——种雨从上方落下，站定的目标更吃得住；
+ * 它是一记中距离高抛落种：`ai.preferGround`（默认开）让落地的目标多一档分——硬种荚从上方砸落，站定的目标更吃得住；
  * 贴得太近时降低分，把位置交给普通近战。
- * 对谁出手：当前威胁；落在中段距离、站在地上的目标优先，焦点目标另加一档。
+ * 对谁出手：当前威胁；提前量按本招真实高抛飞行时间 + 真实 3/6 刻引信估算，落在提前后的真实脚点，不再固定只领先 6 刻。
  * 够不到怎么办：交给共享接近逻辑；伙伴走近到射程内再抛荚，不需要精确贴身。
- * 放完之后：落种砸在目标附近一小圈，伙伴交回共享顺序决定继续贴身还是走位等冷却。
+ * 放完之后：种荚砸在目标附近一小圈，伙伴交回共享顺序决定继续贴身还是走位等冷却。
  */
 namespace PokemonSkills {
     function seedbombWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
@@ -21,8 +21,17 @@ namespace PokemonSkills {
             if(target.grounded===false)return target;
             const world=CompanionBehavior.world(context),entity=world.actor(target.ref),body=entity?world.observe(entity):null;
             if(!body)return target;
-            const velocity=CompanionBehavior.velocity(context,target)||[0,0,0],lead=WorldCombat.point(velocity[0]*6,0,velocity[2]*6);
-            const base=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()).plus(lead.length()>2.5?lead.unit().scale(2.5):lead);
+            // The pod hangs in a real high arc and only then runs its fuse, so lead the foot point by the
+            // actual flight time plus the real 3/6-tick fuse instead of a short fixed 6-tick guess.
+            const distance=CompanionBehavior.distance(CompanionBehavior.source(context).point,target.point);
+            const values={world:world,actor:world.source(),skill:skills["seedbomb"],detail:{values:item.data.config||{}}};
+            const arcSpeed=Math.max(0.2,p("seedbomb","arcSpeed",values)),drop=Math.max(0.5,p("seedbomb","dropHeight",values)),gravity=.05;
+            const heavy=!!(item.data.config&&item.data.config.heavy===true);
+            const leadTicks=Math.min(60,Math.max(6,Math.ceil(Math.max(distance/arcSpeed,2*Math.sqrt(2*drop/gravity)))+(heavy?3:6)));
+            const velocity=CompanionBehavior.velocity(context,target)||[0,0,0],pace=Math.sqrt(velocity[0]*velocity[0]+velocity[2]*velocity[2]);
+            const leadDistance=Math.min(pace*leadTicks,Math.max(2.5,distance*0.6));
+            const offset=pace>1e-4?WorldCombat.point(velocity[0],0,velocity[2]).unit().scale(leadDistance):WorldCombat.point(0,0,0);
+            const base=WorldCombat.point(body.position().x(),body.boundsMin().y(),body.position().z()).plus(offset);
             const floor=SurfacePaths.support(world,base,1,2);if(!floor)return null;
             const result=JSON.parse(JSON.stringify(target));result.ref="";result.point=[floor.x(),floor.y()+.04,floor.z()];return result;
         },

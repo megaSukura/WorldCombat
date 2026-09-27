@@ -74,12 +74,12 @@ namespace IndicatorGeometry {
         // cone: two edges around the facing direction plus an arc of rays closing the wedge.
         const axis = direction || [0, 0, 1];
         const spread = data && typeof data.spread === "number" && isFinite(data.spread) ? Math.max(0, data.spread) : 60;
-        const steps = 8, left = offset(x, y, z, rotateY(axis, -spread / 2), radius), right = offset(x, y, z, rotateY(axis, spread / 2), radius);
+        const steps = 8, left = offset(x, y, z, rotateInPlane(axis, -spread / 2), radius), right = offset(x, y, z, rotateInPlane(axis, spread / 2), radius);
         frame.line(x, y, z, left[0], left[1], left[2], color);
         frame.line(x, y, z, right[0], right[1], right[2], color);
         for (let i = 0; i < steps; i++) {
-            const a = offset(x, y, z, rotateY(axis, -spread / 2 + spread * (i / steps)), radius);
-            const b = offset(x, y, z, rotateY(axis, -spread / 2 + spread * ((i + 1) / steps)), radius);
+            const a = offset(x, y, z, rotateInPlane(axis, -spread / 2 + spread * (i / steps)), radius);
+            const b = offset(x, y, z, rotateInPlane(axis, -spread / 2 + spread * ((i + 1) / steps)), radius);
             frame.line(a[0], a[1], a[2], b[0], b[1], b[2], color);
         }
     }
@@ -87,7 +87,7 @@ namespace IndicatorGeometry {
     function directionOf(data: any): number[] | null {
         const d = data && data.direction;
         if (!Array.isArray(d) || d.length !== 3) return null;
-        const x = Number(d[0]), y = Number(d[1]), z = Number(d[2]);
+        const x = Number(d[0]), y = data.orientation === "ground" ? 0 : Number(d[1]), z = Number(d[2]);
         const length = Math.sqrt(x * x + y * y + z * z);
         return isFinite(length) && length > 1e-6 ? [x / length, y / length, z / length] : null;
     }
@@ -96,8 +96,10 @@ namespace IndicatorGeometry {
         return [x + direction[0] * distance, y + direction[1] * distance, z + direction[2] * distance];
     }
 
-    function rotateY(direction: number[], degrees: number): number[] {
+    function rotateInPlane(direction: number[], degrees: number): number[] {
         const angle = degrees * Math.PI / 180, cos = Math.cos(angle), sin = Math.sin(angle);
-        return [direction[0] * cos + direction[2] * sin, direction[1], -direction[0] * sin + direction[2] * cos];
+        const horizontal=Math.sqrt(direction[0]*direction[0]+direction[2]*direction[2]);
+        const side=horizontal>1e-6?[direction[2]/horizontal,0,-direction[0]/horizontal]:[1,0,0];
+        return direction.map((value,index)=>value*cos+side[index]*sin);
     }
 }

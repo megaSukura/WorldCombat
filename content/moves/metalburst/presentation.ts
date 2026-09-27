@@ -6,8 +6,9 @@
  * 被墙挡/被免疫的对象只留一记钝响（blocked）；没有账时外壳只空响一声、冒几缕灰。
  * 色相家族：钢灰与金黄（impact_steel / scalingshaded / largering / glowingsparkle_yellow / spike），落空时降为灰。
  * 拍子：起 brace（聚应力）→ 击 burst（爆炸）→ 满 core／溢 splash（真实回执）／钝 blocked／空 whiff。
- * 范围：burst 的冲击环与碎片半径由 `data.scale`（爆炸半径派生）给出——玩家一眼看出站多近会被炸到；
+ * 范围：burst 的冲击环与碎片半径写死参考半径 1.8，实际大小只由 `data.scale`（真实 burstRadius / 1.8）缩放一次；
  *   splash/core 的碎片线由 `data.path`（爆心 → 该对象顶点）给出，与判定用的是同一条通视线。
+ * 记录：brace 的 `data.fade`（有效记录剩余窗口比例）让应力光随记录消退而变暗，`data.pulse` 决定火星量。
  * 运动：brace 的火星贴着体表乱窜；burst 的碎片由内向外炸；splash/core 的碎片沿路径线飞向对象。
  * 数：`data.gather`（账本伤害派生）决定聚应力粒子量，`data.count`（这次实际扣血派生）决定碎片数量。
  */
@@ -24,12 +25,12 @@ const MetalburstDefinition: ParticleDefinition = {
                     rate: { data: "gather", fallback: 16 }, shape: { kind: "sphere", radius: 0.45 },
                     direction: "inward", speed: [0.02, 0.1], spread: 30,
                     lifetime: [7, 13], size: [0.15, 0.03], sizeMode: "sin",
-                    color: 0xC9B15A, alpha: [0.8, 0], light: "full", maxParticles: 80
+                    color: 0xC9B15A, alpha: [{ data: "fade", fallback: 1 }, 0], light: "full", maxParticles: 80
                 },
                 {
                     name: "spark", bind: "source", offset: [0, 0.5, 0], height: 0.3,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_yellow",
-                    rate: 10, shape: { kind: "sphere", radius: 0.4 },
+                    rate: { data: "pulse", fallback: 10 }, shape: { kind: "sphere", radius: 0.4 },
                     direction: "outward", speed: [0.03, 0.12], spread: 60,
                     lifetime: [6, 12], size: [0.1, 0.02],
                     color: 0xFFE39A, alpha: [0.9, 0], light: "full", bloom: 0.25, maxParticles: 60
@@ -53,7 +54,7 @@ const MetalburstDefinition: ParticleDefinition = {
                     name: "shards", bind: "point", offset: [0, 0.25, 0],
                     particle: "world_combat_core:cobblemon/generic/spike",
                     burst: { count: { data: "count", fallback: 18 } },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: 1.8 },
                     direction: "outward", speed: [0.18, 0.5], spread: 20,
                     gravity: 0.05, drag: 0.94,
                     lifetime: [10, 18], size: [0.2, 0.05],
@@ -63,7 +64,7 @@ const MetalburstDefinition: ParticleDefinition = {
                     name: "ring", bind: "point", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/ring/largering",
                     burst: { count: 1 },
-                    shape: { kind: "ring", radius: { data: "scale", fallback: 1 } },
+                    shape: { kind: "ring", radius: 1.8 },
                     direction: "outward", speed: [0.1, 0.2],
                     lifetime: [10, 16], size: [0.5, 0.2],
                     color: 0xB8A24E, alpha: [0.7, 0], light: "full"

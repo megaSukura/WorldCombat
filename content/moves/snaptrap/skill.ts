@@ -6,9 +6,10 @@
  *
  * 三幕：
  *   起（windup，提交前）：把夹齿撑开、对准落点的预告。
- *   埋（toss → armed）：提交后夹子飞向落点，落地撑开待命 `waitTicks`；布设延迟 `armTicks` 之后才咬人。
- *   咬（snap → chew）：第一个踏进触发半径的非友方被合上（`bite` 伤害 + 缠住 `holdTicks`），随后夹齿
- *       每 `interval` 磨一次（`chew`）；被带离 `escape` 格、被墙隔开、目标倒下或时长走完就分开。
+ *   埋（toss → armed）：提交后夹子飞向落点，取真实落地（空射也读弹体最后位置）压到有支撑的地面撑开待命 `waitTicks`；
+ *       无支撑就地散掉，不传送；布设延迟 `armTicks` 之后才咬人，直击活物也走同一条布设路，不再绕过准备。
+ *   咬（snap → chew）：第一个脚底真正踏进触发半径、且与本层地面连通的非友方被合上（`bite` 伤害 + 缠住 `holdTicks`），
+ *       随后夹齿每 `interval` 磨一次（`chew`）；被带离 `escape` 格、被墙隔开、支撑被拆、目标倒下或时长走完就分开。
  *
  * 判定与后续磨伤都以真实回执为准：先结算 `bite`，`hurt` 失败（免伤）就不建立后续磨伤；只有共享身份
  * `partiallytrapped` 真正挂上（`CombatStatus.apply` 成功）才创建夹齿效果，原生拒束缚（守护、免控 Boss 等）
@@ -95,14 +96,22 @@ namespace PokemonSkills {
         const world = effect.world(), data = JSON.parse(effect.state());
         if (data.sprung) { effect.end(); return; }
         const at = snaptrapPoint(data.point);
+        // 支撑被拆就散：脚下不再是实心方块，这只夹子不再成立。
+        if (!snaptrapSupport(world, at)) { effect.end(); return; }
         WorldFeedback.keep(world, "snaptrap:armed:" + effect.id(), snaptrapScene, 1, at,
-            { moment: "armed_idle", trigger: data.trigger, jaws: data.jaws, scale: data.trigger / 1.1 }, 4);
+            { moment: "armed_idle", trigger: data.trigger, jaws: data.jaws }, 4);
         if (world.tick() < data.armAt) { effect.schedule("watch", "watch", 2, "{}"); return; }
-        // 夹子贴地：用来访者脚、身体中心与头采样同一个地面圈（判定与画面读同一半径与高度带），踩中第一人即合上。
+        // 夹子贴地：用原生身体箱覆盖触发圈，再按脚底是否真的踩进圈、是否在本层贴地判断，踩中第一人即合上。
         let caught = false;
-        WorldGeometry.selectEnemies(world, WorldGeometry.ring(at, 0, data.trigger, { below: 0.2, above: data.band }), function (actor, facts) {
-            if (caught || String(actor.ref()) === String(effect.source().ref())) return;
-            if (!world.clear(at, facts.position())) return;
+        WorldGeometry.selectBodies(world, WorldGeometry.bodySphere(at.plus(WorldCombat.point(0, 0.35, 0)), data.trigger + 0.25), function (actor, facts) {
+            if (caught || String(actor.ref()) === String(effect.source().ref()) || facts.friendly()) return;
+            const feet = facts.boundsMin(), head = facts.boundsMax();
+            const dx = feet.x() - at.x(), dz = feet.z() - at.z();
+            const reach = data.trigger + Math.min(facts.width(), 1.6) / 2;
+            if (Math.sqrt(dx * dx + dz * dz) > reach) return;
+            if (feet.y() < at.y() - 0.6 || feet.y() > at.y() + 0.4) return;
+            if (head.y() < at.y()) return;
+            if (!world.clear(at.plus(WorldCombat.point(0, 0.2, 0)), facts.position())) return;
             caught = true;
             snaptrapSpring(effect, actor, at, data);
         });
@@ -122,6 +131,10 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(snaptrapJaw, "start", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!MobEffects.matches(world, victim, data.carrier)) { effect.end(); return; }
+        // 咬住期间两只夹口一直夹着：表现绑在这条夹齿效果上，随它一起收掉。
+        const body = world.observe(victim);
+        if (body !== null) WorldFeedback.onEffect(world, effect.id(), "snaptrap:jaw:" + effect.id(), snaptrapScene, 1, body.position(),
+            { moment: "hold", target: String(victim.ref()), jaws: data.jaws });
         effect.schedule("chew", "chew", 1, "{}");
     });
     WorldCombat.effectHandler(snaptrapJaw, "operation:world_combat:dispel", effect => effect.end());
@@ -134,6 +147,8 @@ namespace PokemonSkills {
         if (!MobEffects.matches(world, victim, data.carrier)) { effect.end(); return; }
         const at = snaptrapPoint(data.point);
         const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
+        // 脚下的支撑被拆掉时夹子失去立足点，直接收夹，不再磨伤。
+        if (!snaptrapSupport(world, at)) { effect.end(); return; }
         if (feet.minus(at).length() > data.escape || !world.clear(at, body.position())) {
             data.slipped = true; effect.state(JSON.stringify(data)); effect.end(); return;
         }
@@ -189,6 +204,15 @@ namespace PokemonSkills {
         return point;
     }
 
+    /** 夹子必须有真实支撑：脚下那一格还是实心方块，拆掉或悬空就收夹。 */
+    function snaptrapSupport(world: CombatWorld, at: CombatPoint): boolean {
+        const block = world.block(WorldCombat.point(Math.floor(at.x()), Math.floor(at.y()) - 1, Math.floor(at.z())));
+        if (block === null) return false;
+        const id = String(block.id());
+        return id !== "minecraft:air" && id !== "minecraft:cave_air" && id !== "minecraft:void_air"
+            && id !== "minecraft:water" && id !== "minecraft:lava";
+    }
+
     define({
         id: "snaptrap",
         name: "Snap Trap",
@@ -236,7 +260,6 @@ namespace PokemonSkills {
             const bite = p("snaptrap", "bite", action);
             const chew = p("snaptrap", "chew", action);
             const jaws = Math.max(8, Math.round(p("snaptrap", "jaws", action)));
-            const scale = trigger / 1.1;
             let laid = false;
 
             function state(at: CombatPoint, armAt: number): any {
@@ -244,39 +267,39 @@ namespace PokemonSkills {
                     interval: interval, hold: hold, escape: escape, band: 1.6, jaws: jaws, sprung: false };
             }
 
-            /** 抛出的夹子直接砸在活物身上：当场合上，不必等它踩。 */
-            function strike(current: CombatAction, target: CombatActor, at: CombatPoint): void {
-                if (laid) return;
-                laid = true;
-                const scope = current.world();
-                snaptrapApply(scope, target, at, state(at, scope.tick()));
-                done(current);
-            }
-
-            /** 落到地面：撑开埋好，等人踩。 */
+            /** 真正落到地面、且脚下有支撑才撑开埋好；空落或没有支撑就地散掉，不传送、不制造假终点。 */
             function layAt(current: CombatAction, at: CombatPoint): void {
                 if (laid) return;
                 laid = true;
                 const scope = current.world();
+                if (!snaptrapSupport(scope, at)) {
+                    WorldFeedback.emit(scope, snaptrapScene, 1, at, { moment: "fade" }, 22);
+                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 0.6, 0)), snaptrapSlipText, [], 22);
+                    done(current); return;
+                }
                 scope.effect(snaptrapArmed, current.actor(), JSON.stringify(state(at, scope.tick() + arm)), wait);
                 WorldFeedback.emit(scope, snaptrapScene, 1, at,
-                    { moment: "armed", trigger: trigger, jaws: jaws, wait: wait, scale: scale }, 26);
+                    { moment: "armed", trigger: trigger, jaws: jaws, wait: wait }, 26);
                 sound(current, "minecraft:block.iron_trapdoor.open");
                 done(current);
             }
 
             sound(action, "minecraft:block.chain.place");
+            // 直击活物不再绕过布设：先落到它脚下的地面埋好，等夹子撑开后再由触发圈捕获。
             const flight = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.3, lifetime: 120,
                 appearance: { item: "minecraft:iron_trapdoor", scale: 0.8 },
                 impact: function (current: CombatAction, hit: CombatImpact) {
-                    const scope = current.world(), target = hit.target(), at = snaptrapGround(scope, hit.position());
-                    if (target !== null && scope.valid(target) && !scope.friendly(target)) { strike(current, target, at); return; }
-                    layAt(current, at);
+                    const scope = current.world();
+                    layAt(current, snaptrapGround(scope, hit.position()));
                 }
-            }, function (current: CombatAction) { layAt(current, snaptrapGround(current.world(), current.targetPosition())); });
+            }, function (current: CombatAction) {
+                // 空射的完成末点取真实弹体位置，而不是原始瞄准点。
+                const scope = current.world(), end = scope.projectilePosition(flight);
+                layAt(current, snaptrapGround(scope, end !== null ? end : current.targetPosition()));
+            });
             WorldFeedback.emit(world, snaptrapScene, 1, action.origin(),
-                { moment: "toss", projectile: flight, trigger: trigger, jaws: jaws, scale: scale }, 30);
+                { moment: "toss", projectile: flight, trigger: trigger, jaws: jaws }, 30);
         }
     });
 }

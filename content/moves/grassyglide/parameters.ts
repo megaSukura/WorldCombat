@@ -26,7 +26,7 @@
 namespace PokemonSkills {
     export const grassyglideId = "grassyglide";
     export const grassyglideScene = "world_combat:move_grassyglide";
-    export const grassyglidePlantText = "world_combat.move.grassyglide.text.plant";
+    export const grassyglideWakeText = "world_combat.move.grassyglide.text.wake";
     export const grassyglideMissText = "world_combat.move.grassyglide.text.miss";
 
     actionParameters.define(grassyglideId, {

@@ -5,7 +5,8 @@
  * 水环持续把周围的水往涡心收，圈里的人不断被水带走、偶尔整片灌满；水势到点后散成一地水花。
  * 色相家族：深水蓝（0x3A78C2）为主、白沫青（0xBFE8FF）做水面高光、砂褐只在被卷起的地面碎屑上出现。
  * 拍子：起（charge 聚水）→ 掷（cast 水箭）→ 驻（grip 立涡 / churn 回旋 / squeeze 灌水）→ 收（release / slip）；碰墙走 scatter。
- * 范围：grip 与 churn 都是 `bind: "point"`、`fit: "none"`，用 `data.radius` 画水环，画出来的圈就是回拉生效的那块水面。
+ * 范围：grip 与 churn 都是 `bind: "point"`、`fit: "none"`，形状半径按参考值 1.15 写、由 `data.scale`（实际半径 / 1.15）
+ *   缩一次，画出来的圈就是回拉生效的那块水面，不出现半径被平方放大的情况；收水沿用同一半径。
  * 运动：水箭沿目标追踪；水面粒子朝涡心收拢、白沫沿圈打转；`swirl` 用 `data.direction` 把旋纹转向真实切向；
  *   `tether` 用 `data.path` 在涡心与仍在圈内的受困者之间连一条水线，离开圈随绑定断开；灌水时向上炸开一束。
  * 数：`data.flow`（涡面半径派生）决定水面密度，`data.count`（灌水威力派生）决定灌水那下迸出的水花量，
@@ -67,7 +68,7 @@ const WhirlpoolDefinition: ParticleDefinition = {
                     name: "open_ring", bind: "point", offset: [0, 0.06, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 28, at: 1 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.15 } },
+                    shape: { kind: "ring", radius: 1.15 },
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [10, 16], size: [0.3, 0.7],
                     color: 0xBFE8FF, alpha: [0.6, 0], light: "world", maxParticles: 60
@@ -90,7 +91,7 @@ const WhirlpoolDefinition: ParticleDefinition = {
                 {
                     name: "pool", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/water/water_ripple",
-                    rate: { data: "flow", fallback: 40 }, shape: { kind: "ring", radius: { data: "radius", fallback: 1.15 } },
+                    rate: { data: "flow", fallback: 40 }, shape: { kind: "ring", radius: 1.15 },
                     direction: "inward", speed: [0.02, 0.1], spin: 10,
                     lifetime: [10, 18], size: [0.2, 0.04],
                     color: 0x3A78C2, alpha: [0.5, 0], light: "world", maxParticles: 150
@@ -98,7 +99,7 @@ const WhirlpoolDefinition: ParticleDefinition = {
                 {
                     name: "column", bind: "point", offset: [0, 0, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: { data: "flow", fallback: 40 }, shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.15 }, length: 1.4 },
+                    rate: { data: "flow", fallback: 40 }, shape: { kind: "cylinder", radius: 1.15, length: 1.4 },
                     direction: "up", speed: [0.02, 0.1], spread: 10, spin: 16,
                     gravity: -0.005, drag: 0.95,
                     lifetime: [10, 18], size: [0.16, 0.03],
@@ -107,7 +108,7 @@ const WhirlpoolDefinition: ParticleDefinition = {
                 {
                     name: "foam", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/bubble/smallbubble",
-                    rate: 18, shape: { kind: "circle", radius: { data: "radius", fallback: 1.15 } },
+                    rate: 18, shape: { kind: "circle", radius: 1.15 },
                     direction: "up", speed: [0.01, 0.05],
                     lifetime: [12, 20], size: [0.07, 0.02],
                     color: 0xBFE8FF, alpha: [0.5, 0], light: "full", maxParticles: 90
@@ -117,7 +118,7 @@ const WhirlpoolDefinition: ParticleDefinition = {
                     orient: "heading", direction: "shape",
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
                     rate: { data: "flow", fallback: 40 },
-                    shape: { kind: "arc", radius: { data: "radius", fallback: 1.15 }, arcDegrees: 120, thickness: 0.18 },
+                    shape: { kind: "arc", radius: 1.15, arcDegrees: 120, thickness: 0.18 },
                     speed: [0.05, 0.16], spin: 14,
                     lifetime: [8, 14], size: [0.13, 0.02],
                     color: 0x9FD8FF, alpha: [0.55, 0], light: "world", maxParticles: 140
@@ -164,7 +165,7 @@ const WhirlpoolDefinition: ParticleDefinition = {
                     name: "settle", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/ring/ripple",
                     burst: { count: 22 },
-                    shape: { kind: "ring", radius: { data: "radius", fallback: 1.15 } },
+                    shape: { kind: "ring", radius: 1.15 },
                     direction: "outward", speed: [0.04, 0.14],
                     lifetime: [10, 18], size: [0.24, 0.5],
                     color: 0x9FD8FF, alpha: [0.5, 0], light: "world", maxParticles: 50

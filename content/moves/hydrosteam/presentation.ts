@@ -44,40 +44,40 @@ const HydroSteamDefinition: ParticleDefinition = {
             ]
         },
         burst: {
-            duration: 30,
-            exit: { stop: 10, drain: 22 },
+            duration: 16,
+            exit: { stop: 8, drain: 14 },
             emitters: [
                 {
                     name: "fan", bind: "path", fit: "none", offset: [0, 0.12, 0],
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: { data: "vapor", fallback: 20 }, shape: { kind: "polygon" },
-                    direction: "outward", speed: [0.06, 0.26], spread: 20, drag: 0.9, spin: 6,
-                    lifetime: [12, 24], size: [0.42, 0.14],
-                    color: 0xF2F7FA, alpha: [0.4, 0], light: "world", maxParticles: 240
+                    burst: { count: { data: "vapor", fallback: 20 }, at: 0 }, shape: { kind: "polygon" },
+                    direction: "outward", speed: [0.08, 0.34], spread: 20, drag: 0.9, spin: 6,
+                    lifetime: [8, 16], size: [0.42, 0.18],
+                    color: 0xF2F7FA, alpha: [0.5, 0], light: "world", maxParticles: 200
                 },
                 {
                     name: "fan_edges", bind: "path", fit: "none", offset: [0, 0.08, 0],
                     particle: "world_combat_core:cobblemon/generic/water/waterjet",
-                    rate: { data: "vapor", fallback: 18 }, shape: { kind: "polyline" },
-                    direction: "shape", speed: [0.08, 0.3], spread: 14,
-                    lifetime: [6, 13], size: [0.16, 0.04],
-                    color: 0xD6ECF4, alpha: [0.7, 0], light: "full", maxParticles: 160
+                    burst: { count: { data: "vapor", fallback: 18 }, at: 0 }, shape: { kind: "polyline" },
+                    direction: "shape", speed: [0.1, 0.36], spread: 12,
+                    lifetime: [5, 10], size: [0.18, 0.05],
+                    color: 0xD6ECF4, alpha: [0.8, 0], light: "full", maxParticles: 140
                 },
                 {
                     name: "hot_core", bind: "path", fit: "none", offset: [0, 0.06, 0],
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
-                    rate: { data: "hot", fallback: 0 }, shape: { kind: "polygon" },
-                    direction: "up", speed: [0.02, 0.1],
-                    lifetime: [8, 16], size: [0.09, 0.01],
-                    color: 0xE0662A, alpha: [0.7, 0], light: "full", bloom: 0.4, maxParticles: 80
+                    burst: { count: { data: "hot", fallback: 0 }, at: 0 }, shape: { kind: "polygon" },
+                    direction: "up", speed: [0.03, 0.12],
+                    lifetime: [6, 12], size: [0.09, 0.01],
+                    color: 0xE0662A, alpha: [0.8, 0], light: "full", bloom: 0.4, maxParticles: 60
                 },
                 {
                     name: "droplets", bind: "path", fit: "none", offset: [0, 0.2, 0],
                     particle: "world_combat_core:cobblemon/generic/water/rainsplash",
-                    rate: 40, shape: { kind: "polygon" },
-                    direction: "outward", speed: [0.05, 0.2], gravity: 0.06, drag: 0.93,
-                    lifetime: [10, 20], size: [0.1, 0.02],
-                    color: 0xEAF4F8, alpha: [0.55, 0], light: "world", maxParticles: 140
+                    burst: { count: 40, at: 0 }, shape: { kind: "polygon" },
+                    direction: "outward", speed: [0.06, 0.24], gravity: 0.06, drag: 0.93,
+                    lifetime: [8, 14], size: [0.1, 0.02],
+                    color: 0xEAF4F8, alpha: [0.6, 0], light: "world", maxParticles: 120
                 }
             ]
         },

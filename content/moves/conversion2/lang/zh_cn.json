@@ -1,13 +1,14 @@
 {
-  "worldcombat.skill.conversion2.summary": "根据对手最近的攻击调整防护：对宝可梦改变自身属性，对普通生物抵御已观察到的原生伤害类型。",
+  "worldcombat.skill.conversion2.summary": "读取对手最近真正出手的那一手来调整防护：对宝可梦把自身属性重织成能抵抗该元素的一型，对普通生物针对已观察到的原生伤害类型减伤。太老的招不再作数。",
   "worldcombat.skill.conversion2.use.0": "接下一记已知属性的招",
   "worldcombat.skill.conversion2.use.1": "把受击面翻到对手打不痛的那一面",
   "worldcombat.skill.conversion2.use.2": "在被压制前临时改抗性",
-  "worldcombat.skill.conversion2.description.0": "作用距离 %1$s 格，起手 %2$s。对宝可梦读取最后一招的属性，改为能抵抗该属性的自身类型。",
+  "worldcombat.skill.conversion2.description.0": "作用距离 %1$s 格，起手 %2$s。读取对手最近 %3$s 内实际造成直接伤害的一击；面对宝可梦时，按该击最终使用的属性改变自身属性，以抵抗这种攻击。",
   "worldcombat.skill.conversion2.description.1": "对宝可梦的属性重织维持 %1$s；当前取向为 %2$s。",
   "worldcombat.skill.conversion2.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.conversion2.growth.0": "%1$s 级起纹理维持升至 %2$s 秒、读取距离 %3$s 格。",
   "worldcombat.skill.conversion2.value.reach": "读取距离",
+  "worldcombat.skill.conversion2.value.memory": "读取记忆",
   "worldcombat.skill.conversion2.value.hold": "纹理维持",
   "worldcombat.skill.conversion2.value.charge": "起手",
   "worldcombat.skill.conversion2.value.afterglow": "收势",
@@ -20,6 +21,9 @@
   "worldcombat.skill.conversion2.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.conversion2.preference.ai.leaveStation.help": "开启后，驻守命令下也会为读解离开站位；关闭则只在原地够得到时出手。",
   "world_combat.move.conversion2.text.type": "纹理２·%1$s",
-  "world_combat.move.conversion2.text.fail": "读不出可织的属性",
-  "worldcombat.skill.conversion2.world": "对普通生物，读取它最近60秒内成功原生攻击的伤害类型，获得 %1$s 防护：专治模式使同类型原生伤害降低50%；顾全模式降低25%，若读到物理攻击，则同时防护普通近战、箭矢、三叉戟、蜇刺、冲撞和重锤。重复施放刷新本招防护，到期恢复。"
+  "world_combat.move.conversion2.text.type2": "纹理２·%1$s（%2$s 秒）",
+  "world_combat.move.conversion2.text.native": "纹理２·减伤 %1$s%%（%2$s 秒）",
+  "world_combat.move.conversion2.text.fail": "读不出可织的防护",
+  "effect.world_combat.conversion2_type": "纹理２",
+  "worldcombat.skill.conversion2.world": "面对普通生物，读取它最近一次成功直接攻击的原生伤害类型，获得持续 %1$s 的防护。专治模式使这种伤害降低50%；顾全模式降低25%，读到物理攻击时也防护普通近战、箭矢、三叉戟、蜇刺、冲撞和重锤。过久、未命中或残留伤害不作为读数，重复施放刷新本招防护。"
 }

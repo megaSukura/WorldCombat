@@ -9,25 +9,25 @@
  * 放完之后：锥内敌人的物攻与特攻一起下降，伙伴交回共享顺序，让队友去打这段窗口。
  */
 namespace CompanionBehavior {
-    /** 与参数公式同源的锥长估算，用来判断这一吼能覆盖到哪里；实际判定仍走招式公式。 */
-    function nobleroarReach(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const self = source(context);
-        const height = self.height === undefined ? 1.4 : self.height;
-        const deep = !!(item.data.config && Number(item.data.config.form) === 1);
-        return Math.max(3.5, Math.min(9, (4 + height * 1.2) * (deep ? 1.15 : 1)));
+    /** 直接用本个体 resolve 出的实际锥长（含等级与低吼系数）；判定与 AI 读同一个数。 */
+    function nobleroarReach(_context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
+        const reach = item.data.range;
+        return typeof reach === "number" && isFinite(reach) ? reach : 6;
     }
 
-    /** 与参数公式同源的锥形张角估算（忽略体重这一小项）；怒吼铺得开、低吼收得窄。 */
+    /** 与参数公式同源的锥形张角：身高 + 体重/300，再乘怒吼/低吼系数；怒吼铺得开、低吼收得窄。 */
     function nobleroarArc(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const self = source(context);
-        const height = self.height === undefined ? 1.4 : self.height;
+        const height = typeof self.height === "number" ? self.height : 1.4;
+        const weight = mass(context, self);
+        const loaded = typeof weight === "number" && isFinite(weight) ? weight : 0;
         const deep = !!(item.data.config && Number(item.data.config.form) === 1);
-        return Math.max(35, Math.min(150, (65 + height * 10) * (deep ? 0.62 : 1.35)));
+        return Math.max(35, Math.min(150, (65 + height * 10 + loaded / 300) * (deep ? 0.62 : 1.35)));
     }
 
-    /** 罩在真实锥形里的非友方，用来给出手排序；方向和锥角都按公式算出的实际值。 */
+    /** 罩在真实锥形里、且声路可达的非友方；方向和锥角都按公式算出的实际值。 */
     function nobleroarCatch(context: WorldBehavior.Context, target: Entity, reach: number, arc: number): Entity[] {
-        const self = source(context);
+        const self = source(context), access = world(context);
         const heading = Math.atan2(target.point[2] - self.point[2], target.point[0] - self.point[0]);
         const half = (arc * Math.PI / 180) / 2;
         const nearby = context.facts.nearby as Entity[], caught: Entity[] = [];
@@ -37,7 +37,9 @@ namespace CompanionBehavior {
             if (distance(other.point, self.point) > reach) continue;
             let diff = Math.abs(Math.atan2(other.point[2] - self.point[2], other.point[0] - self.point[0]) - heading);
             if (diff > Math.PI) diff = Math.PI * 2 - diff;
-            if (diff <= half) caught.push(other);
+            if (diff > half) continue;
+            if (!access.clear(point(self.point), point(other.point))) continue;
+            caught.push(other);
         }
         return caught;
     }

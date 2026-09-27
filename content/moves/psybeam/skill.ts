@@ -36,7 +36,7 @@ namespace PokemonSkills {
         id: psybeamId,
         cooldownParameter: "recharge",
         name: "Psybeam",
-        description: "射出一道会追人的幻影射线：紫光带转向追向目标，命中造成特殊伤害，并可能把目标搅得恍惚；恍惚期间目标每次想出手都有几率被打散。回响状态下紫光会继续穿行，最多打到两个目标。",
+        description: "射出一道会追人的幻影射线：紫光带转向追向目标，命中造成特殊伤害，并可能把目标搅得恍惚；恍惚期间目标每次想出手都有几率被打散。回响状态下紫光会继续穿行，最多打到两个目标。紫光不绕墙，被方块挡住就停在墙上。",
         uses: ["中距离点名，绕开掩体追人", "压制喜欢横移躲弹的对手", "用回响一次穿到两个目标"],
         kind: "enemy",
         range: 12,
@@ -114,8 +114,12 @@ namespace PokemonSkills {
             }, function (current: CombatAction) {
                 const scope = current.world();
                 if (!impacted) {
-                    WorldFeedback.emit(scope, psybeamScene, 1, current.targetPosition(), { moment: "miss", scale: scale }, 20);
-                    WorldFeedback.text(scope, current.targetPosition().plus(WorldCombat.point(0, 1.1, 0)), psybeamMissText, [], 20);
+                    // 自然落空没有 impact 回调：用弹体真实结束点收束，不用满射程/旧瞄准点/发射原点假造终点。
+                    const end = scope.projectilePosition(flight);
+                    if (end !== null) {
+                        WorldFeedback.emit(scope, psybeamScene, 1, end, { moment: "miss", scale: scale }, 20);
+                        WorldFeedback.text(scope, end.plus(WorldCombat.point(0, 1.1, 0)), psybeamMissText, [], 20);
+                    }
                 }
                 finish(current);
             });

@@ -39,8 +39,8 @@ const ElectrowebDefinition: ParticleDefinition = {
             ]
         },
         toss: {
-            duration: 20,
-            exit: { stop: 8, drain: 14 },
+            duration: 0,
+            exit: { stop: 0, drain: 14 },
             emitters: [
                 {
                     name: "trail", bind: "projectile", offset: [0, 0, 0],
@@ -74,7 +74,7 @@ const ElectrowebDefinition: ParticleDefinition = {
                     color: 0xC7EEFF, alpha: [0.75, 0], light: "full", bloom: 0.25, maxParticles: 160
                 },
                 {
-                    name: "open_ring", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "open_ring", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/mediumring",
                     burst: { count: 40 }, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "outward", speed: [0.06, 0.18],
@@ -82,7 +82,7 @@ const ElectrowebDefinition: ParticleDefinition = {
                     color: 0xC7EEFF, alpha: [0.6, 0], light: "full", bloom: 0.3, maxParticles: 80
                 },
                 {
-                    name: "cage", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "none",
+                    name: "cage", bind: "point", offset: [0, 0.12, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/electricity/electricity_white",
                     burst: { count: { data: "flow", fallback: 60 }, interval: 3, repeats: 3 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 2.2 } },
@@ -96,7 +96,7 @@ const ElectrowebDefinition: ParticleDefinition = {
             exit: { drain: 30 },
             emitters: [
                 {
-                    name: "net_ring", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "none",
+                    name: "net_ring", bind: "point", offset: [0, 0.08, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     rate: 30, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.01, 0.05],
@@ -120,7 +120,7 @@ const ElectrowebDefinition: ParticleDefinition = {
                     color: 0xBFE9FF, alpha: [0.5, 0], light: "full", maxParticles: 140
                 },
                 {
-                    name: "net_spokes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "net_spokes", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
                     particle: "world_combat_core:cobblemon/generic/spinbeam",
                     rate: 12, shape: { kind: "ring", radius: { data: "radius", fallback: 2.2 } },
                     direction: "up", speed: [0.02, 0.08], spin: 20,

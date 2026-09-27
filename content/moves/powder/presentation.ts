@@ -76,6 +76,29 @@ const PowderDefinition: ParticleDefinition = {
                 }
             ]
         },
+        coat: {
+            exit: { drain: 16 },
+            emitters: [
+                {
+                    name: "coat_drift", bind: "target", height: 0.35,
+                    particle: "world_combat_core:cobblemon/generic/tinydust",
+                    rate: { data: "drift", fallback: 3 },
+                    shape: { kind: "sphere", radius: 0.3 }, direction: "down",
+                    speed: [0.005, 0.02], gravity: 0.012, drag: 0.94, spin: 10,
+                    lifetime: [12, 22], size: [0.05, 0.01], alphaMode: "sin",
+                    color: 0xC9B878, alpha: [0.4, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "coat_powder", bind: "target", height: 0.45,
+                    particle: "world_combat_core:cobblemon/generic/powder",
+                    rate: { data: "drift", fallback: 2 },
+                    shape: { kind: "sphere", radius: 0.26 }, direction: "outward",
+                    speed: [0.004, 0.016], spin: 12,
+                    lifetime: [10, 18], size: [0.07, 0.02],
+                    color: 0xE8D9A0, alpha: [0.35, 0], light: "world", maxParticles: 18
+                }
+            ]
+        },
         blast: {
             duration: 30,
             exit: { stop: 14, drain: 18 },

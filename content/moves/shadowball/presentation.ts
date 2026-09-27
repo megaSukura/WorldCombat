@@ -91,8 +91,8 @@ const ShadowBallDefinition: ParticleDefinition = {
             ]
         },
         cling: {
-            duration: 140,
-            exit: { stop: 18, drain: 24 },
+            // 降阶回执：持续贴住，直到持有的反馈效果在传入的 clingTicks 到期释放；不设 duration/stop 中途停发。
+            exit: { drain: 24 },
             emitters: [
                 {
                     name: "cling_veil", bind: "target", offset: [0, 0.1, 0], height: 0.5,

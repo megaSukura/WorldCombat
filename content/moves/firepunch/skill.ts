@@ -5,8 +5,9 @@
  * 只要它真的烧起来，火就顺着舐到旁边最近的另一个敌人身上。它是本族唯一的**持续伤害**招，追求"打完还在烧"。
  *
  * 拳是**自由 3D 短拳**：从身体中心沿瞄准方向伸出 `fistReach`，由 `action.trace` 判首碰（墙与其他身体会挡住，
- * 也可空挥），不为选中的目标自动伸长。传火只从**真实烧起来的那个目标**起：候选按真实距离排序，逐个跳过
- * 已灼伤、免疫与遮挡者，最多成功点着一名——中间夹一个火免疫怪不会吃掉整次传火。
+ * 也可空挥），不为选中的目标自动伸长。拳图沿当前朝向短伸到**真实接触点**；成功、被格挡/拒绝与空挥是三套
+ * 分开的反馈。传火只从**真实烧起来的那个目标**起：候选按真实距离排序，逐个跳过已灼伤、免疫与遮挡者，
+ * 最多成功点着一名——中间夹一个火免疫怪不会吃掉整次传火；这一蹿火是即时火舌连线，不冒充飞行的火苗。
  *
  * 配置 `blazeUp`（烈焰式）由 resolve 改时序、由公式改威力／点燃／灼伤／蔓延，提交后才触碰世界。
  */
@@ -15,6 +16,7 @@ namespace PokemonSkills {
     const firepunchHitText = "world_combat.move.firepunch.text.hit";
     const firepunchSpreadText = "world_combat.move.firepunch.text.spread";
     const firepunchMissText = "world_combat.move.firepunch.text.miss";
+    const firepunchBlockedText = "world_combat.move.firepunch.text.blocked";
 
     define({
         id: "firepunch",
@@ -111,30 +113,59 @@ namespace PokemonSkills {
                 }
             }
 
+            /** 拳图：从身体沿当前朝向短伸到真实接触点，接触点与判定共用同一个 trace 结果。 */
+            function punchReach(current: CombatAction, from: CombatPoint, point: CombatPoint, direction: CombatPoint): void {
+                const away = point.minus(from);
+                const heading = away.length() > 0.05 ? away.unit() : direction;
+                WorldFeedback.emit(current.world(), firepunchScene, 1, from,
+                    { moment: "punch", direction: [heading.x(), heading.y(), heading.z()],
+                        span: Math.max(0.25, Math.min(reach, away.length())), embers: embers, intensity: intensity }, 16);
+            }
+
             function strike(current: CombatAction): void {
                 const scope = current.world(), me = scope.observe(current.actor());
                 if (me === null) { whiff(current); return; }
                 const direction = aim(current);
                 const from = me.position(), to = from.plus(direction.scale(reach));
                 const contact = current.trace(from, to, radius, true);
-                if (!contact.hitEntity()) { whiff(current); return; }
-                const struck = contact.target();
-                if (struck === null || String(struck.ref()) === String(actor.ref()) || scope.friendly(struck)) { whiff(current); return; }
                 const point = contact.position();
+                punchReach(current, from, point, direction);
+                const struck = contact.target();
+                const hostile = contact.hitEntity() && struck !== null
+                    && String(struck.ref()) !== String(actor.ref()) && !scope.friendly(struck);
+                if (!hostile) {
+                    // 打到墙/身体或空处：被挡住给独立的格挡反馈，真正的空气空挥走 whiff（空拳）。
+                    if (contact.blocked() || contact.hitEntity()) {
+                        WorldFeedback.emit(scope, firepunchScene, 1, point,
+                            { moment: "blocked", face: contact.blockFace(), direction: [direction.x(), direction.y(), direction.z()],
+                                intensity: intensity }, 16);
+                        if (contact.hitEntity()) WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), firepunchBlockedText, [], 20);
+                    } else whiff(current);
+                    finish(current);
+                    return;
+                }
                 sound(current, "minecraft:entity.blaze.shoot");
-                WorldFeedback.emit(scope, firepunchScene, 1, point,
-                    { moment: "hit", target: String(struck.ref()), embers: embers, intensity: intensity }, 22);
                 const landed = impact(current, contact, "firepunch", power,
                     { damage: damageSpec("firepunch", "blaze"), contact: true, punch: true, status: "burn", chance: chance, statusTicks: scorch });
-                if (!landed || !scope.valid(struck)) { finish(current); return; }
+                if (!landed || !scope.valid(struck)) {
+                    // 原生拒绝（无敌/权限等）不冒充命中，给格挡反馈，不发成功提示。
+                    WorldFeedback.emit(scope, firepunchScene, 1, point,
+                        { moment: "blocked", face: contact.blockFace(), direction: [direction.x(), direction.y(), direction.z()],
+                            intensity: intensity }, 16);
+                    WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), firepunchBlockedText, [], 20);
+                    finish(current);
+                    return;
+                }
+                WorldFeedback.emit(scope, firepunchScene, 1, point,
+                    { moment: "hit", target: String(struck!.ref()), embers: embers, intensity: intensity }, 22);
                 WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.2, 0)), firepunchHitText, [], 22);
                 sound(current, "cobblemon:impact.fire");
-                if (CombatStatus.has(scope, struck, "burn")) {
-                    scope.ignite(struck, Math.max(20, Math.min(60, Math.round(scorch * 0.2))));
+                if (CombatStatus.has(scope, struck!, "burn")) {
+                    scope.ignite(struck!, Math.max(20, Math.min(60, Math.round(scorch * 0.2))));
                     WorldFeedback.emit(scope, firepunchScene, 1, point,
-                        { moment: "ignite", target: String(struck.ref()), embers: embers, intensity: intensity }, 22);
+                        { moment: "ignite", target: String(struck!.ref()), embers: embers, intensity: intensity }, 22);
                     sound(current, "minecraft:entity.blaze.burn");
-                    spreadFire(current, struck, String(struck.ref()));
+                    spreadFire(current, struck!, String(struck!.ref()));
                 }
                 finish(current);
             }

@@ -8,12 +8,13 @@ namespace PokemonSkills {
     export const imprisonAura = "world_combat:imprison_aura";
     /** 封印印记的登记 id（被锁住的对手身上）。 */
     export const imprisonSealed = "world_combat:imprison_sealed";
-    /** 印记的机读旁挂：记下被锁的招式 id 与画面要用的数（不是判定依据，判定只看共享身份+这份名单）。 */
+    /** 印记的机读旁挂：记下所属领域源实例与施法者；判定只看共享身份加这份链接。 */
     export const imprisonBrand = "world_combat:imprison_brand";
-    /** 领域源的机读旁挂：记下半径、招式名单与时限，供持续画面读取。 */
+    /** 领域源的机读旁挂：记下半径、纹数、时限与本次封锁的单一攻击类别，供判定、AI 与持续画面读取。 */
     export const imprisonMark = "world_combat:imprison_mark";
     export const imprisonSealText = "world_combat.move.imprison.text.seal";
     export const imprisonBlockText = "world_combat.move.imprison.text.block";
+    export const imprisonSelfText = "world_combat.move.imprison.text.self";
     export const imprisonFadeText = "world_combat.move.imprison.text.fade";
     export const imprisonSnapText = "world_combat.move.imprison.text.snap";
 
@@ -29,7 +30,7 @@ namespace PokemonSkills {
                 .clamp(4, 14).round(1),
             "封印半径", {
                 unit: "格",
-                description: "领域罩住多大一圈：特攻越高、身板越大铺得越开，固守收拢、广布铺开。它也是印记判定的实际半径。"
+                description: "领域罩住多大一圈：特攻越高、身板越大铺得越开，固守收拢、广布铺开。它也是敌我同受限制的判定半径。"
             }),
         sealCount: formula(
             F.base(6).plus(F.stat("specialDefence").div(40)).clamp(6, 20).round(0),
@@ -55,6 +56,8 @@ namespace PokemonSkills {
     describe(imprisonId, [
         { key: "description.0", values: ["imprisonTicks"] },
         { key: "description.1", values: ["imprisonRadius"] },
+        { key: "category.contact", values: [], when: function (context) { return read(context.detail.values, ["category"]) !== "ranged"; } },
+        { key: "category.ranged", values: [], when: function (context) { return read(context.detail.values, ["category"]) === "ranged"; } },
         { key: "description.2", values: ["tempo", "aftercast", "recharge"] },
         { key: "scope.0", values: [], when: function (context) { return read(context.detail.values, ["scope"]) === 1; } },
         { key: "scope.1", values: [], when: function (context) { return read(context.detail.values, ["scope"]) !== 1; } },

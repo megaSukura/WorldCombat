@@ -1,13 +1,14 @@
 {
-  "worldcombat.skill.conversion2.summary": "Adapt to an opponent’s recent attack: change your types against a Pokémon, or resist an observed native damage type against a non-Pokémon.",
+  "worldcombat.skill.conversion2.summary": "Read the opponent's latest real attack to adjust your protection: against a Pokémon, weave your own type into one that resists that element; against a non-Pokémon, reduce an observed native damage type. Attacks older than the read memory no longer count.",
   "worldcombat.skill.conversion2.use.0": "Take a hit whose type you already read",
   "worldcombat.skill.conversion2.use.1": "Flip your hit chart onto the side a foe cannot hurt",
   "worldcombat.skill.conversion2.use.2": "Change resistance before being pressed down",
-  "worldcombat.skill.conversion2.description.0": "Range %1$s blocks, preparation %2$s. Against a Pokémon, read its last move’s type and change your own type to resist it.",
+  "worldcombat.skill.conversion2.description.0": "Range %1$s blocks, preparation %2$s. Read the foe’s latest direct hit within %3$s. Against a Pokémon, change your own type to resist that hit’s final element, including changes made as it resolved.",
   "worldcombat.skill.conversion2.description.1": "Type adaptation against a Pokémon lasts %1$s; current preference: %2$s.",
   "worldcombat.skill.conversion2.timing": "Range %1$s blocks, windup %2$s s, recovery %3$s s, costs %4$s PP, cooldown %5$s s.",
   "worldcombat.skill.conversion2.growth.0": "From level %1$s the weave lasts %2$s s and the read range is %3$s blocks.",
   "worldcombat.skill.conversion2.value.reach": "Read range",
+  "worldcombat.skill.conversion2.value.memory": "Read memory",
   "worldcombat.skill.conversion2.value.hold": "Weave duration",
   "worldcombat.skill.conversion2.value.charge": "Windup",
   "worldcombat.skill.conversion2.value.afterglow": "Recovery",
@@ -20,6 +21,9 @@
   "worldcombat.skill.conversion2.preference.ai.leaveStation": "May leave station",
   "worldcombat.skill.conversion2.preference.ai.leaveStation.help": "When on, the user may leave its post to read a foe; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.conversion2.text.type": "Conversion 2: %1$s",
+  "world_combat.move.conversion2.text.type2": "Conversion 2: %1$s (%2$s s)",
+  "world_combat.move.conversion2.text.native": "Conversion 2: -%1$s%% damage (%2$s s)",
   "world_combat.move.conversion2.text.fail": "Nothing to weave from",
-  "worldcombat.skill.conversion2.world": "Against a non-Pokémon, read the damage type of its latest successful native attack in the last 60 seconds and gain protection for %1$s. Focused mode reduces that native damage type by 50%. Broad mode reduces it by 25%; a physical reading also covers ordinary melee, arrows, tridents, stings, rams and mace attacks. Recasting refreshes this protection; it expires naturally."
+  "effect.world_combat.conversion2_type": "Conversion 2",
+  "worldcombat.skill.conversion2.world": "Against another creature, read the native damage type of its latest successful direct hit and gain protection for %1$s. Focused mode reduces that type by 50%. Broad mode reduces it by 25% and, for a physical reading, also covers ordinary melee, arrows, tridents, stings, rams and mace attacks. Old attacks, missed hits and residual damage do not supply a reading. Recasting refreshes this protection."
 }

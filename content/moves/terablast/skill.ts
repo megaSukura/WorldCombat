@@ -15,21 +15,47 @@
 namespace PokemonSkills {
     const TERABLAST_SCENE = "world_combat:move_terablast";
 
+    function terablastLaunch(action: CombatAction): any {
+        var raw = action.data("world_combat:terablast/launch");
+        if (raw === null) return null;
+        try { return JSON.parse(raw); } catch (error) { return null; }
+    }
+
+    /** The release-time snapshot is authoritative for this cast; the edge formula only covers the windup telegraph. */
     function terablastForm(action: CombatAction): string {
+        var launch = terablastLaunch(action);
+        if (launch && (launch.category === "physical" || launch.category === "special")) return launch.category === "physical" ? "ram" : "beam";
         return p("terablast", "edge", action) > 0 ? "ram" : "beam";
     }
 
-    /** Native primary type, the lowercase id the client maps through the shared type colour table. */
+    /** Effective type (temporary layers included), the lowercase id the client maps through the shared type colour table. */
     function terablastType(action: CombatAction): string {
-        var pokemon = CobblemonCombat.pokemon(action.actor());
-        return pokemon ? String(pokemon.type(0)) : "";
+        var launch = terablastLaunch(action);
+        if (launch && typeof launch.type === "string" && launch.type) return launch.type;
+        var world = action.sense();
+        return world.valid(action.actor()) ? terablastEffectiveType(world, action.actor()) : "";
+    }
+
+    /** Release-time type, strong-side category, staged attack and STAB are frozen together so every hit settles the same. */
+    function terablastSnapshot(action: CombatAction): void {
+        var world = action.world(), actor = action.actor();
+        if (!world.valid(actor)) return;
+        var type = terablastEffectiveType(world, actor);
+        if (!type) return;
+        var facts = PokemonDamage.combatants.read(world, actor);
+        var atk = PokemonDamage.snapshotAttack(world, actor, "atk"), spa = PokemonDamage.snapshotAttack(world, actor, "spa");
+        var physical = atk.value * NativeEffects.multiplier(atk.stage) > spa.value * NativeEffects.multiplier(spa.stage);
+        action.data("world_combat:terablast/launch", JSON.stringify({
+            type: type, category: physical ? "physical" : "special",
+            attack: physical ? atk : spa, sameType: PokemonDamage.sameType(facts, type)
+        }));
     }
 
     function terablastPoint(point: CombatPoint): number[] {
         return [point.x(), point.y(), point.z()];
     }
 
-    function terablastRam(action: CombatAction, done: (current: CombatAction) => void): void {
+    function terablastRam(action: CombatAction, power: number, done: (current: CombatAction) => void): void {
         var world = action.world(),
             direction = aim(action),
             speed = p("terablast", "ramSpeed", action),
@@ -39,20 +65,20 @@ namespace PokemonSkills {
         var flight = LivingActions.projectile(action, {
             speed: speed, range: action.range(), radius: radius, direction: direction,
             appearance: { sprite: "cobblemon:generic/ice/iceshard", scale: 1.5 + scale * 0.3, glow: true },
-            impact: function (current: CombatAction, hit: CombatImpact) { terablastImpact(current, hit, direction, scale); }
+            impact: function (current: CombatAction, hit: CombatImpact) { terablastImpact(current, hit, power, direction, scale); }
         }, done);
         WorldFeedback.emit(world, TERABLAST_SCENE, 1, action.origin(),
-            { moment: "ram", projectile: flight, intensity: 1, scale: scale, form: "ram", type: terablastType(action) }, 80);
+            { moment: "ram", projectile: flight, intensity: 1, scale: scale, spear: 3.2, form: "ram", type: terablastType(action) }, 80);
     }
 
-    function terablastImpact(current: CombatAction, hit: CombatImpact, direction: CombatPoint, scale: number): void {
+    function terablastImpact(current: CombatAction, hit: CombatImpact, power: number, direction: CombatPoint, scale: number): void {
         var world = current.world(), target = hit.target(), point = hit.position();
         if (target === null) {
             WorldFeedback.emit(world, TERABLAST_SCENE, 1, point, { moment: "fizzle", intensity: 1, scale: scale }, 30);
             return;
         }
         var body = world.observe(target), before = body ? body.health() : 0, maximum = body ? Math.max(1, body.maxHealth()) : 1;
-        var landed = impact(current, hit, "terablast", p("terablast", "power", current), {});
+        var landed = impact(current, hit, "terablast", power, {});
         var after = world.valid(target) ? world.observe(target) : null, dealt = before - (after ? after.health() : 0);
         var intensity = Math.max(1, Math.min(3, 1 + dealt / maximum * 4));
         world.sound("minecraft:block.amethyst_cluster.break", point, 16, "{}");
@@ -64,27 +90,23 @@ namespace PokemonSkills {
             world.hitDisplace(target, direction.scale(p("terablast", "push", current)));
     }
 
-    /** Distance the beam can reach before a block stops it; the same end drives damage and the drawn line. */
-    function terablastBeamReach(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, limit: number, scan: number): number {
-        var end = 0;
-        while (end < limit) {
-            var probe = Math.min(limit, end + scan);
-            if (!world.clear(origin, origin.plus(direction.scale(probe)))) break;
-            end = probe;
-        }
-        return end;
+    /** Exact wall end from the native block-only clip; a clear line returns the full range. */
+    function terablastBeamEndDistance(world: CombatWorld, origin: CombatPoint, direction: CombatPoint, limit: number): { end: number; wall: CombatImpact | null } {
+        var wall = WorldGeometry.blockHit(world, origin, origin.plus(direction.scale(limit)));
+        if (wall === null) return { end: limit, wall: null };
+        var delta = wall.position().minus(origin);
+        var along = delta.x() * direction.x() + delta.y() * direction.y() + delta.z() * direction.z();
+        return { end: Math.max(0, Math.min(limit, along)), wall: wall };
     }
 
-    function terablastBeam(action: CombatAction, done: (current: CombatAction) => void): void {
+    function terablastBeam(action: CombatAction, power: number, done: (current: CombatAction) => void): void {
         var world = action.world(), origin = action.origin(), direction = aim(action),
             width = p("terablast", "beamWidth", action),
             speed = p("terablast", "beamSpeed", action),
-            scan = p("terablast", "beamScan", action),
             limit = action.range(),
-            power = p("terablast", "power", action),
             type = terablastType(action);
         sound(action, "minecraft:block.amethyst_block.chime");
-        var end = terablastBeamReach(world, origin, direction, limit, scan);
+        var reach = terablastBeamEndDistance(world, origin, direction, limit), end = reach.end;
         var scenes = WorldFeedback.actionScenes(TERABLAST_SCENE);
         var hitRefs: { [ref: string]: boolean } = {}, hits = 0, best = 0, tip = 0;
         var path: number[][] = [terablastPoint(origin)];
@@ -95,28 +117,34 @@ namespace PokemonSkills {
         }
         scenes.show(action, "beam", origin, beamData(0));
         function advance(current: CombatAction): void {
-            var world = current.world();
+            var scope = current.world();
             var from = tip, to = Math.min(end, tip + speed);
             if (to > from + 0.001) {
-                WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(origin.plus(direction.scale(from)), origin.plus(direction.scale(to)), width),
+                WorldGeometry.selectBodies(scope, WorldGeometry.bodySegment(origin.plus(direction.scale(from)), origin.plus(direction.scale(to)), width),
                     function (enemy: CombatActor, facts: CombatObservation) {
                         var ref = String(enemy.ref());
-                        if (world.friendly(enemy) || String(enemy.ref()) === String(current.actor().ref()) || hitRefs[ref] || !world.clear(origin, facts.position()))
+                        if (scope.friendly(enemy) || ref === String(current.actor().ref()) || hitRefs[ref] || !scope.clear(origin, facts.position()))
                             return;
                         hitRefs[ref] = true;
-                        var body = world.observe(enemy), before = body ? body.health() : 0, maximum = body ? Math.max(1, body.maxHealth()) : 1;
+                        var body = scope.observe(enemy), before = body ? body.health() : 0, maximum = body ? Math.max(1, body.maxHealth()) : 1;
                         if (!hurt(current, enemy, "terablast", power, {}))
                             return;
-                        var after = world.valid(enemy) ? world.observe(enemy) : null, ratio = (before - (after ? after.health() : 0)) / maximum;
+                        var after = scope.valid(enemy) ? scope.observe(enemy) : null, ratio = (before - (after ? after.health() : 0)) / maximum;
                         hits++;
                         best = Math.max(best, ratio);
+                        // 每个真实受击体在自己的位置短闪，不再把成功爆裂挪到射程末端。
+                        WorldFeedback.emit(scope, TERABLAST_SCENE, 1, facts.position(),
+                            { moment: "beam_hit", target: ref, intensity: Math.max(1, Math.min(3, 1 + ratio * 4)),
+                                scale: Math.max(0.7, Math.min(2.2, width / 0.16)), type: type }, 24);
                     });
             }
             tip = to;
             path.push(terablastPoint(origin.plus(direction.scale(tip))));
             scenes.show(current, "beam", origin, beamData(tip));
             if (tip >= end - 0.001) {
-                terablastBeamEnd(current, origin.plus(direction.scale(end)), hits, best, end < limit - 0.001, type);
+                // 末端只有真实墙接触才破裂；铺到满射程只是自然消散。
+                if (reach.wall !== null)
+                    terablastBeamWall(current, reach.wall.position(), hits, best, type);
                 scenes.finish(current, done);
                 return;
             }
@@ -125,29 +153,26 @@ namespace PokemonSkills {
         advance(action);
     }
 
-    function terablastBeamEnd(current: CombatAction, endpoint: CombatPoint, hits: number, best: number, truncated: boolean, type: string): void {
+    function terablastBeamWall(current: CombatAction, endpoint: CombatPoint, hits: number, best: number, type: string): void {
         var world = current.world();
-        if (hits > 0) {
-            var intensity = Math.max(1, Math.min(3, 1 + best * 4));
-            world.sound("minecraft:block.amethyst_cluster.break", endpoint, 16, "{}");
-            WorldFeedback.emit(world, TERABLAST_SCENE, 1, endpoint,
-                { moment: "beam_impact", point: terablastPoint(endpoint), intensity: intensity, scale: 1, type: type,
-                    bursts: Math.round(6 + intensity * 8), cover: 0.9 + intensity * 0.35, truncated: truncated ? 1 : 0 }, 40);
-            WorldFeedback.text(world, endpoint, "world_combat.move.terablast.text.beam", [], 40);
-        } else if (truncated) {
-            WorldFeedback.emit(world, TERABLAST_SCENE, 1, endpoint, { moment: "fizzle", point: terablastPoint(endpoint), intensity: 1, scale: 1 }, 30);
-        }
+        var intensity = Math.max(1, Math.min(3, 1 + best * 4));
+        world.sound("minecraft:block.amethyst_cluster.break", endpoint, 16, "{}");
+        WorldFeedback.emit(world, TERABLAST_SCENE, 1, endpoint,
+            { moment: "beam_impact", point: terablastPoint(endpoint), intensity: intensity, scale: 1, type: type,
+                bursts: Math.round(6 + intensity * 8), cover: 0.9 + intensity * 0.35, truncated: 1 }, 40);
+        if (hits > 0) WorldFeedback.text(world, endpoint, "world_combat.move.terablast.text.beam", [], 40);
     }
 
     function terablastStrike(action: CombatAction, done: (current: CombatAction) => void): void {
+        var power = p("terablast", "power", action);
         if (terablastForm(action) === "ram")
-            terablastRam(action, done);
+            terablastRam(action, power, done);
         else
-            terablastBeam(action, done);
+            terablastBeam(action, power, done);
     }
 
     define({ id: "terablast", name: "太晶爆发",
-        description: "凝出自身主属性的太晶：物攻更高就投出一支厚重晶矛，撞上第一个目标即碎、把它顶开；特攻更高就放出一条固定方向的窄晶束，逐段推进，线内每个敌人各只挨一次总威力，遇到方块停在墙面。",
+        description: "凝出自身主属性的太晶：物攻更高就投出一支厚重晶矛，撞上第一个目标即碎、把它顶开；特攻更高就放出一条固定方向的窄晶束，逐段推进，线内每个敌人各只挨一次总威力，遇到方块停在墙面。属性和强弱面在释放那一刻定下。",
         uses: ["远程爆发", "看家本领"], kind: "aim", range: 18, prepare: 8, active: 0, recover: 8, cooldown: 40, style: "tera",
         defaults: {}, fields: [],
         indicator: function () { return { radius: 18, geometry: "line", style: "tera", label: "太晶爆发" }; },
@@ -157,6 +182,7 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action: CombatAction, move: CombatPokemonMove, config: any, done: (current: CombatAction) => void) {
+            terablastSnapshot(action);
             terablastStrike(action, done);
         }
     });

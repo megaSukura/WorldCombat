@@ -39,6 +39,15 @@ namespace PokemonSkills {
                 if (CompanionBehavior.distance(self.point, other.point) <= range) close++;
             });
             if (close >= 2) score -= 30;
+            // 连用失误率：本招的公式给的是这一把铺网真正作废的概率，太高就不值得再赌一次。
+            const world = CompanionBehavior.world(context), actor = world.source(), values = capability.data.config;
+            const args: any = { world: world, actor: actor, skill: skills["silktrap"], detail: { values: values } };
+            const effective = GuardEffects.stall(state(world, actor, GuardEffects.stallKey), world.tick(), p("silktrap", "stallReset", args));
+            const variables: any = {}; variables["state." + GuardEffects.stallKey + "#stall"] = effective;
+            args.variables = variables;
+            const fizzle = Math.max(0, Math.min(1, p("silktrap", "fizzle", args)));
+            if (fizzle >= 0.6) return 0;
+            score -= Math.round(fizzle * 40);
             return Math.max(0, score);
         }
     });

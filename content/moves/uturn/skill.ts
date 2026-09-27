@@ -7,7 +7,7 @@
  * 三幕：
  *   起（coil，提交前）：压身蓄势、翅鞘震起细粉，弧线在地面上预描一段，只播预告。
  *   撞（sweep，提交后）：沿朝向向目标切进去，命中活体结算 strike 接触伤害；miss 就只是一记扑空。
- *   折（return，提交后）：贴着弧线滑回——交棒式退到 `rally` 内最近的等候伙伴身边，远遁式沿弧拉回更远；
+ *   折（return，提交后）：贴着弧线滑回——交棒式朝 `rally` 内最近的等候伙伴方向退，远遁式沿弧拉回更远；
  *      随后抖落一层虫粉收势。
  *
  * 与同族分开：快速折返是「越过目标再深潜」，伏特替换是「放电后瞬移」；只有急速折返是**来路与回路合成一条 U**
@@ -26,7 +26,6 @@ namespace PokemonSkills {
         if (reserve === null) return false;
         const body = world.observe(actor);
         const feet = body === null ? point : partyFeet(body);
-        WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), uturnSwitchText, [], 26);
         return partySwitchOut(world, actor, reserve.slot, feet).ok;
     }
 
@@ -66,7 +65,7 @@ namespace PokemonSkills {
         }
         const control = from.plus(lateral.scale(arc * 1.8));
         const steps = Math.max(2, Math.ceil((control.minus(from).length() + destination.minus(control).length()) / Math.max(0.15, speed)));
-        const path: number[][] = [[from.x(), from.y() - body.height() / 2, from.z()]];
+        let walked: number[] = [from.x(), from.y() - body.height() / 2, from.z()];
         function finish(next: CombatAction): void {
             const scope = next.world(), at = scope.observe(actor);
             if (at === null) { complete(next); return; }
@@ -82,9 +81,12 @@ namespace PokemonSkills {
             const delta = goal.minus(observed.position());
             const moved = LivingActions.step(scope, actor, delta);
             const after = scope.observe(actor);
-            if (after !== null) path.push([after.position().x(), after.position().y() - after.height() / 2, after.position().z()]);
-            WorldFeedback.keep(scope, "uturn:return:" + next.id(), uturnScene, 1, from,
-                { moment: "return", motes, arc, path: path.slice() }, 12);
+            if (after !== null) {
+                const now = [after.position().x(), after.position().y() - after.height() / 2, after.position().z()];
+                WorldFeedback.keep(scope, "uturn:return:" + next.id(), uturnScene, 1, from,
+                    { moment: "return", motes, arc, path: [walked, now] }, 12);
+                walked = now;
+            }
             if (step >= steps || delta.length() > 0.1 && moved < delta.length() * 0.8) { finish(next); return; }
             next.after(1, following => follow(following, step + 1));
         }
@@ -97,7 +99,7 @@ namespace PokemonSkills {
         id: "uturn",
         cooldownParameter: "recharge",
         name: "U-turn",
-        description: "沿一条 U 形弧线切进去撞一下，再顺着弧线滑回来；有后备时出手后直接与待命的一只换手，交棒式退到等候的伙伴身边，远遁式沿弧拉得更远。出手就是脱身，不站定换血。",
+        description: "沿一条 U 形弧线切进去撞一下，再顺着弧线滑回来；有后备时出手后直接与待命的一只换手：交棒式朝等候的伙伴方向退，远遁式沿弧拉得更远。出手就是脱身，不站定换血。",
         uses: ["贴脸打一下再脱身，把身位让出来", "被打崩前用一记折返拉开距离", "有人接应时把敌人引向自己的伙伴"],
         kind: "enemy",
         range: 2.8,
@@ -133,7 +135,10 @@ namespace PokemonSkills {
             const body = world.observe(actor);
             const target = action.target();
             if (body === null) { done(action); return; }
-            const heading = aim(action);
+            // A grounded caster flies the dash along the ground; an airborne one keeps the full three-dimensional aim.
+            const aimed = aim(action), fallback = WorldGeometry.facing(world, actor);
+            const heading = body.grounded()
+                ? WorldGeometry.flatUnit(aimed, fallback === null ? undefined : fallback) : aimed;
             const length = p("uturn", "dash", action);
             const step = p("uturn", "speed", action);
             const radius = p("uturn", "collisionRadius", action);
@@ -150,13 +155,14 @@ namespace PokemonSkills {
 
             function finish(current: CombatAction): void { if (!settled) { settled = true; done(current); } }
 
-            const outward: number[][] = [[body.position().x(), body.position().y() - body.height() / 2, body.position().z()]];
+            let lastOut: number[] = [body.position().x(), body.position().y() - body.height() / 2, body.position().z()];
             function trail(current: CombatAction): void {
                 const scope = current.world(), at = scope.observe(actor);
                 if (at === null) return;
-                outward.push([at.position().x(), at.position().y() - at.height() / 2, at.position().z()]);
+                const now = [at.position().x(), at.position().y() - at.height() / 2, at.position().z()];
                 WorldFeedback.keep(scope, "uturn:sweep:" + current.id(), uturnScene, 1, at.position(),
-                    { moment: "sweep", motes, scale, intensity, path: outward.slice() }, 8);
+                    { moment: "sweep", motes, scale, intensity, path: [lastOut, now] }, 8);
+                lastOut = now;
             }
 
             function advance(current: CombatAction): void {
@@ -171,11 +177,19 @@ namespace PokemonSkills {
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim))
                         landed = impact(current, traced, "uturn", power,
                             { damage: damageSpec("uturn", "strike"), contact: true });
-                    WorldFeedback.emit(scope, uturnScene, 1, traced.position(), {
-                        moment: "strike", target: victim !== null ? String(victim.ref()) : "",
-                        motes: motes, scale: scale, intensity: intensity, landed: landed ? 1 : 0
-                    }, 24);
-                    sound(current, "cobblemon:impact.bug");
+                    // Only a settled hit shows the strike; a refused or friendly contact is a neutral bump.
+                    if (landed) {
+                        WorldFeedback.emit(scope, uturnScene, 1, traced.position(), {
+                            moment: "strike", target: victim !== null ? String(victim.ref()) : "",
+                            motes: motes, scale: scale, intensity: intensity
+                        }, 24);
+                        sound(current, "cobblemon:impact.bug");
+                    } else {
+                        WorldFeedback.emit(scope, uturnScene, 1, traced.position(), {
+                            moment: "blocked", target: victim !== null ? String(victim.ref()) : "", scale: scale
+                        }, 20);
+                        sound(current, "minecraft:entity.player.attack.nodamage");
+                    }
                     uturnWithdraw(current, actor, heading, lateral, retreat, arc, rally, handoff, motes, step, finish);
                     return;
                 }

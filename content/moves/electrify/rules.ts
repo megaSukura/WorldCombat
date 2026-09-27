@@ -3,6 +3,7 @@ namespace PokemonSkills {
     WorldCombat.effect(electrifyPayload, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (value.all !== 0 && value.all !== 1) throw new Error("Invalid electrify payload");
+        if (!MobEffects.validAnchor(value.carrier)) throw new Error("Invalid electrify carrier");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(electrifyPayload, "start", effect => effect.schedule("aura", "aura", 1, "{}"));
@@ -14,15 +15,26 @@ namespace PokemonSkills {
     });
     WorldCombat.effectHandler(electrifyPayload, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
+    /** The latest payload bound to the exact native carrier still on the actor; stale payloads never count. */
+    function electrifyCarrierView(world: CombatWorld, actor: CombatActor): any | null {
+        if (!world.valid(actor)) return null;
+        const carrier = MobEffects.read(world, actor, electrified);
+        if (carrier === null) return null;
+        const anchor = MobEffects.anchor(carrier), views = world.effects(actor, electrifyPayload);
+        for (let i = 0; i < views.length; i++) {
+            const value = JSON.parse(String(views[i].data()));
+            if (value.carrier && value.carrier.id === anchor.id && value.carrier.key === anchor.key) return value;
+        }
+        return null;
+    }
     function electrifyAllows(world: CombatWorld, actor: CombatActor, type: string): boolean {
-        const views = world.effects(actor, electrifyPayload);
-        const all = views.length ? !!JSON.parse(String(views[0].data())).all : false;
+        const view = electrifyCarrierView(world, actor);
+        if (view === null) return false;
         type = String(type || "").toLowerCase();
-        return all ? type !== "electric" : type === "normal";
+        return view.all ? type !== "electric" : type === "normal";
     }
     function electrifyRelease(world: CombatWorld, actor: CombatActor): void {
-        const views = world.effects(actor, electrifyPayload);
-        if (views.length) world.operation(views[0].id(), "world_combat:dispel", "{}");
+        world.effects(actor, electrifyPayload).forEach(view => world.operation(view.id(), "world_combat:dispel", "{}"));
     }
 
     const electrifyExecution = "world_combat:electrify/execution";
@@ -40,7 +52,8 @@ namespace PokemonSkills {
 
     MoveExecutions.committed.define({ id: "world_combat:move_electrify/commit", apply: function (context) {
         const world = context.world, source = context.actor;
-        const eligible = context.metadata.some(data => context.native ? electrifyAllows(world, source, data.type) : data.electrifyApplied === true);
+        // 原生路径由 NativeAttackTypes.conversions 先判定并标记；脚本路径由 metadata 规则标记。
+        const eligible = context.metadata.some(data => data.electrifyConverted === true || data.electrifyApplied === true);
         const enabled = eligible && MobEffects.consume(world, source, electrified) !== null;
         MoveExecutions.write(world, electrifyExecution, { enabled: enabled, native: context.native });
         if (!enabled) return;
@@ -54,16 +67,19 @@ namespace PokemonSkills {
             { moment: "discharge", target: String(source.ref()), surge: surge, burst: Math.round(20 * surge) }, 26);
         WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1, 0)), electrifySpentText, [], 22);
     } });
-    // 原生攻击只有交付事实时才作决定，后续同一弹体/伤害源沿用决定；不把未知原生类型猜成一般。
-    NativeEffects.incomingRules.define({ id: "world_combat:move_electrify/native", after: ["world_combat:execution/native"], apply: function (hit) {
-        const held = MoveExecutions.read(hit.world, electrifyExecution);
-        if (!held || !held.enabled || !held.native || hit.data.calculation || !DamageSemantics.read(hit.data).attack) return;
-        hit.data.type = "electric";
-        const source = PokemonDamage.combatants.read(hit.world, hit.source), target = PokemonDamage.combatants.read(hit.world, hit.target);
-        let factor = source.types.indexOf("electric") >= 0 ? PokemonDamage.multipliers.sameType : 1;
-        target.types.forEach(type => factor *= CobblemonCombat.typeEffectiveness("electric", type));
-        hit.data.amount *= factor;
-        hit.data.electrifyConverted = true;
+
+    // 原生攻击：共享层已把已知近战/箭/三叉戟等分类为 normal；本招在分类给出的 baseType 上做一次属性改写，
+    // 之后由 NativeAttackTypes 统一套用本系、相性与原生结算，不再自行乘类型表。未分类的攻击保持未知。
+    // 一次执行锁存在 MoveExecutions；同一弹体的后续交付沿用已锁存的决定，不会重复改写或重复消耗。
+    NativeAttackTypes.conversions.define({ id: "world_combat:move_electrify/native", apply: function (context) {
+        const world = context.world, source = context.source;
+        if (!world || !source || !world.valid(source)) return;
+        const held = MoveExecutions.read(world, electrifyExecution);
+        if (held !== null && held.enabled === true && held.native === true) {
+            context.type = "electric"; context.data.electrifyConverted = true; return;
+        }
+        if (!electrifyAllows(world, source, context.type)) return;
+        context.type = "electric"; context.data.electrifyConverted = true;
     } });
 
     // 自散：没等到出招就用完时间，电荷安静褪去。

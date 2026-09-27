@@ -4,6 +4,9 @@ namespace CompanionBehavior {
         return PokemonSkills.roleplayAbility(access, actor);
     });
 
+    /** 披上就会拖累自己的特性不借：原生 failroleplay 之外，这些在即时战斗里只有害处。 */
+    const roleplayLiability = ["truant", "slowstart", "defeatist", "klutz", "cacophony", "normalize", "stall"];
+
     function roleplayWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.health <= 0 || !target.visible) return false;
@@ -21,6 +24,7 @@ namespace CompanionBehavior {
         }
         const theirs = fact<string>(context, "world_combat:roleplay-ability", target);
         if (theirs === null || !PokemonSkills.roleplayCopyable(theirs)) return false;
+        if (roleplayLiability.indexOf(theirs) >= 0) return false;
         const mine = fact<string>(context, "world_combat:roleplay-ability", self);
         if (mine === null) return false;
         if (typeof mine === "string" && mine === theirs) return false;
@@ -47,7 +51,12 @@ namespace CompanionBehavior {
     const roleplayStation = PokemonSkills.flag("ai.leaveStation", "驻守时允许离位");
     roleplayStation.help = "开启后，驻守中的伙伴也会离位去抄对手的特性；关闭则只在原地够得到时出手。";
 
-    PokemonSkills.addPreferences("roleplay", { ai: { maxChase: 15, leaveStation: false } }, [roleplayChase, roleplayStation]);
+    PokemonSkills.addPreferences("roleplay", { dwell: false, ai: { maxChase: 15, leaveStation: false } }, [
+        PokemonSkills.field(PokemonSkills.pathOf("dwell"), "深扮", "boolean", {
+            help: "开启＝深扮：扮演时长 ×1.7、冷却 +18 刻，把一份好特性用满一段战斗。关闭＝浅饰：扮演时长 ×0.6、冷却 -10 刻，适合频繁改扮。时长与出手频率互相取舍。"
+        }),
+        roleplayChase, roleplayStation
+    ]);
 
     function roleplayCapability(context: WorldBehavior.Context): WorldBehavior.Capability | null {
         const items = ready(context, "world_combat:control");

@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.headbutt.summary": "低头向前短促一顶：射程短、冷却短、随时能用；撞实的人有几率被顶懵，而趁对手还在畏缩时再顶一记会更凶狠——它的价值在连续压制里。",
+  "worldcombat.skill.headbutt.summary": "低头向前短促一顶：射程短、冷却短、随时能用；撞实的人有几率被顶懵，趁对手还在畏缩时再顶一记更狠。它靠队友的先手控制稳定接上这一口，单靠自己不易无限连懵；价值在连续压制里。",
   "worldcombat.skill.headbutt.description.0": "这一头造成约 %1$s 点接触伤害，头面判定半径 %2$s 格；对手防御、相性与暴击在命中时另算。",
   "worldcombat.skill.headbutt.description.1": "最远顶出 %1$s 格、前伸速度 %2$s 格每刻，撞实后把目标顶开 %3$s 格。",
   "worldcombat.skill.headbutt.description.2": "命中后有 %1$s 概率使目标畏缩 %2$s 秒，打断可被中断的动作；畏缩期间它无法发动新招或进行普通攻击。对手已处于畏缩时这一记威力更高。",
@@ -26,7 +26,7 @@
   "worldcombat.skill.headbutt.preference.ai.maxChase": "追击距离",
   "worldcombat.skill.headbutt.preference.ai.maxChase.help": "超过这个距离就不主动头锤，先走近。越大追得越执着，也越容易扑空后停在对手身后。",
   "worldcombat.skill.headbutt.preference.ai.opening": "起手目标",
-  "worldcombat.skill.headbutt.preference.ai.opening.help": "随时：把它当普通近身招，随时出手。只压畏缩目标：只在对手已经处于畏缩时补这一记（威力更高），适合和先手控制的伙伴配合；单独使用时它几乎不会出手。",
+  "worldcombat.skill.headbutt.preference.ai.opening.help": "随时：把它当普通近身招，随时出手。只压畏缩目标：只在对手已经处于畏缩、且剩余窗口盖得住这一记的起手与靠近时才补这一记（威力更高），适合和先手控制的伙伴配合；单独使用时它几乎不会出手。",
   "worldcombat.skill.headbutt.preference.ai.opening.always": "随时",
   "worldcombat.skill.headbutt.preference.ai.opening.reeling": "只压畏缩目标",
   "world_combat.move.headbutt.text.hit": "头锤",

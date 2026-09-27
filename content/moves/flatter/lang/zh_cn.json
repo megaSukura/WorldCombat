@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.flatter.summary": "吹捧对手，抬高它的特攻并让它陷入陶醉：每次出手可能走神作废；它始终能自由移动，但被捧起来的特攻会打疼所有人。",
-  "worldcombat.skill.flatter.use.0": "让强攻的对手频频走神",
-  "worldcombat.skill.flatter.use.1": "把一只法系威胁的攻击节奏打乱",
+  "worldcombat.skill.flatter.summary": "吹捧对手，抬高它的特攻并让它陷入陶醉：每次出手可能走神作废；它始终能自由移动。礼物是代价，所以更适合压制本来就不靠特攻的物理威胁；对混乱免疫的目标伙伴不会使用。",
+  "worldcombat.skill.flatter.use.0": "让不靠特攻的物理威胁频频走神",
+  "worldcombat.skill.flatter.use.1": "压住一只近战强攻的出手节奏",
   "worldcombat.skill.flatter.use.2": "给已经摇摇欲坠的敌人再添一把火",
-  "worldcombat.skill.flatter.description.0": "把对手捧得找不着北：送给它 %1$s 级特攻（它的法术更疼，被集火时也更危险），并让它陶醉约 %2$s 秒。它不会被钉住，脚步始终自由。",
+  "worldcombat.skill.flatter.description.0": "把对手捧得找不着北：送给它 %1$s 级特攻（它的法术更疼，被集火时也更危险），并让它陶醉约 %2$s 秒。它不会被钉住，脚步始终自由。这是隔空/当面的奉承，不要求视线；命中时浮字显示实际加到的等级差。",
   "worldcombat.skill.flatter.description.1": "陶醉期间，目标每次出手（含原生特攻）有 %1$s%% 的几率走神、本次出手作废；走神只作废这一次出手，不造成任何伤害。",
   "worldcombat.skill.flatter.description.2": "起手 %1$s 秒、收招 %2$s 秒、冷却 %3$s 秒；射程 %4$s 格。连珠吹捧礼物更重、走神更易，但陶醉更短；缓缓称颂陶醉更久，礼物更轻。",
   "worldcombat.skill.flatter.timing": "短起手、短收招；必中、单体，之后靠冷却限制节奏。",

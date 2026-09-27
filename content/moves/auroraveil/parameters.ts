@@ -8,7 +8,8 @@
  * 世界化：在选定的地面张开一片极光区（`WorldEffects.field`），幕下的**友方**每 5 刻被补上
  *   world_combat:auroraveil_screen（身份 auroraveil）与自己的 world_combat:auroraveil_mark；受击时按
  *   cutPhys／cutSpec 分别削减物理与特殊伤害。离开极光区或被墙隔断就失去幕，连回幕心的细丝同时断。
- * 场地高度：铺幕时从落点向上探一次原生方块，得到实际能挂多高（`ceiling`）；幕顶虹带贴到它，低顶棚改用幕内短垂带。
+ * 场地高度：铺幕前从落点向上用 WorldGeometry.blockHit 探一次真正的原生方块面，得到实际能挂多高（`ceiling`）；
+ *   横向虹带与区域轮廓都贴在它以下，低顶棚随之压短；空间不足 1.6 格时在 ready 阶段真实拒绝，不强撑穿顶。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   reach        基础 12 格 + 20 级起每级 +0.06，夹 10..18；能把极光铺到多远的天。
@@ -29,6 +30,7 @@ namespace PokemonSkills {
     export const auroraveilMark = "world_combat:auroraveil_mark";
     export const auroraveilField = "world_combat:field/auroraveil";
     export const auroraveilScene = "world_combat:move_auroraveil";
+    export const auroraveilFieldScene = "world_combat:move_auroraveil/field";
     export const auroraveilStatus = "auroraveil";
     export const auroraveilRaiseText = "world_combat.move.auroraveil.text.raise";
     export const auroraveilBlockText = "world_combat.move.auroraveil.text.block";

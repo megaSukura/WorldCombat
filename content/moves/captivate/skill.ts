@@ -1,54 +1,110 @@
 /**
  * 诱惑 / Captivate — 执行组织。
  *
- * 核心念头：当场抬眸，把目光当作钩子——被真正看见的异性对手心神一荡，特攻大幅下降；
- *   不看、同性、掩体后与拉开的距离都是它天然的空门。献舞则把这份注视摊成以自己为圆心的一圈。
+ * 核心念头：当场抬眸，用一条只靠视线维持的目光看住**一个对手**，让它心神一荡、特攻下降；
+ *   它不像电波那样绕身张开，也不像密语那样一句话就走——你必须一直看住它。
  *
- * 出手：`kind: "aim"`——回眸选一个看得见的敌人实体；献舞不需要目标，直接对着空地旋开。
- *   提交前不看世界；提交后回眸才做视线、性别与射程判定，空放与目标离场都安静收尾。
- * 命中：真正被削低特攻的目标才挂共享的 world_combat:captivate_gaze（身份 world_combat:status/captivated），
- *       并 NativeEffects.boost 大幅下降特攻；顶到 −6 级底线或特性挡下时不出现任何符号，只留一声灰白。
- * 视线：回眸要求 world.clear 通视，且宝可梦之间要求异性；其他生物没有性别，直接有效。
- * 献舞：以自身为圆心张开 ringRadius 的一圈，凡看得见、在圈内的非友方各迷住一次，最多 maxOnlookers 人。
- * 反制：同性宝可梦免疫、掩体后无效、距离超出 gazeRange 够不到；献舞要站进人堆里，起手与冷却都更长。
- *   它只降低能力等级，不抓、不拉、不定身。
+ * 出手：`kind: "enemy"`——选一个看得见的敌人，短起手后提交。提交后复核距离与视线：
+ *   超距、被掩体挡住、目标离场都安静收尾；真正看住才挂共享身份并压特攻。
+ * 维持：提交后建立随动作存亡的 `world_combat:captivate_lock`：
+ *   它给目标挂 `world_combat:captivate_gaze`（身份 world_combat:status/captivated），
+ *   并用 NativeEffects.boostWindow 把这份特攻下降绑在载体上；随后每 2 刻复查
+ *   「目标仍在本招射程内、视线仍通畅、载体仍在」，任一条不成立就结束。
+ *   术者改用其他动作、被 interrupt、松开持续输入、目标离场或被驱散，动作结束 → 锁结束 →
+ *   窗口关闭、载体被收回，特攻等级精确复原。这份贡献只在注视期间存在。
+ * 反制：躲到掩体后、拉开到射程之外、或逼术者换招／被打断。它不抓、不拉、不定身、不造成伤害，
+ *   也不会把敌意强加给目标。宝可梦之间的异性只作风味文字，不再硬性拦截；其他生物没有性别，直接有效。
+ *
+ * 配置 `focus`（专注注视）：由 resolve 改时序、由公式把下降从 2 级升到 3 级；更慢更深的同一道目光。
  */
 namespace PokemonSkills {
     function captivateAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
-    /** 宝可梦之间要求异性；没有性别概念的原版生物、其他模组生物与玩家直接有效。 */
-    function captivateAllows(world: CombatWorld, self: CombatActor, target: CombatActor): boolean {
-        if (String(self.domain()) !== "cobblemon" || String(target.domain()) !== "cobblemon") return true;
-        const a = String(CobblemonCombat.pokemon(self).gender()).toLowerCase();
-        const b = String(CobblemonCombat.pokemon(target).gender()).toLowerCase();
-        return a === "male" && b === "female" || a === "female" && b === "male" || a === "m" && b === "f" || a === "f" && b === "m";
+    /** 随动作存亡的注视锁：载体、窗口与持续表现都挂在它上面，断线/换招/打断即整体收回。 */
+    WorldCombat.effect(captivateLock, 1, 400, "action", function (json: string): string {
+        const value = JSON.parse(json);
+        ["drop", "hold", "range", "motes", "hearts"].forEach(function (key) {
+            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid captivate lock state");
+        });
+        if (typeof value.self !== "string") throw new Error("Invalid captivate lock state");
+        return JSON.stringify(value);
+    }, EffectProtocols.unchanged);
+
+    function captivateHeld(effect: CombatEffect, body: CombatObservation, state: any): void {
+        WorldFeedback.onEffect(effect.world(), effect.id(), "captivate:hold:" + String(effect.target().ref()), captivateScene, 1,
+            body.position(), { moment: "hold", target: String(effect.target().ref()), path: [state.self, String(effect.target().ref())],
+                drop: state.drop, motes: state.motes });
     }
 
-    /** 迷住一个目标：真正削低特攻才挂身份、播符号与浮字；顶到负阶底线或特性挡下时只留灰白。返回实际下降级数。 */
-    function captivateCharm(world: CombatWorld, target: CombatActor, drop: number, duration: number): number {
-        const body = world.observe(target);
-        if (body === null) return 0;
-        const changed = NativeEffects.boost(world, target, "spa", -drop);
-        if (changed === 0) {
-            WorldFeedback.emit(world, captivateScene, 1, body.position(), { moment: "ward", target: String(target.ref()) }, 18);
-            WorldFeedback.text(world, captivateAbove(body.position()), "world_combat.move.captivate.text.resist", [], 30);
-            return 0;
+    WorldCombat.effectHandler(captivateLock, "start", function (effect) {
+        const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
+        const body = world.valid(victim) ? world.observe(victim) : null;
+        if (body === null) { effect.end(); return; }
+        // 同源重施按旧载体刷新，而不是叠出第二份；不同来源的下降仍各自持有。
+        const previous = MobEffects.read(world, victim, captivateEffect);
+        const carrier = MobEffects.apply(world, victim, captivateEffect, state.hold, 0);
+        function ward(): void {
+            state.refused = true; effect.state(JSON.stringify(state));
+            WorldFeedback.emit(world, captivateScene, 1, body!.position(), { moment: "ward", target: String(victim.ref()) }, 18);
+            effect.end();
         }
-        const applied = Math.abs(changed);
-        MobEffects.apply(world, target, captivateEffect, duration, 0);
+        if (carrier === null) { ward(); return; }
+        const before = NativeEffects.effectiveStage(world, victim, "spa");
+        const window = NativeEffects.boostWindow(world, victim, { spa: -state.drop }, state.hold,
+            captivateContribution, carrier, previous);
+        const lost = Math.max(0, before - NativeEffects.effectiveStage(world, victim, "spa"));
+        // 真正掉下去才留载体与窗口；免疫降级或已封底时收回载体，只留一点灰白，不报假成功。
+        if (!window || lost <= 0) {
+            if (window) NativeEffects.windowClose(world, window);
+            world.removeMobEffect(victim, captivateEffect, carrier.key());
+            ward(); return;
+        }
+        state.window = window; state.age = 0;
+        effect.state(JSON.stringify(state));
+        const held = world.observe(victim) || body;
+        const selfRef = state.self, victimRef = String(victim.ref());
+        WorldFeedback.emit(world, captivateScene, 1, held.position(),
+            { moment: "lock", target: victimRef, path: [selfRef, victimRef], drop: lost, motes: state.motes }, 24);
+        WorldFeedback.emit(world, captivateScene, 1, held.position(),
+            { moment: "charm", target: victimRef, drop: lost, hearts: state.hearts }, 30);
+        WorldFeedback.text(world, captivateAbove(held.position()), "world_combat.move.captivate.text.charm", [lost], 40);
+        // 持续表现绑在这次真实窗口上：窗口关闭或被驱散时表现一起收，不留残影。
+        WorldFeedback.onEffect(world, window, "captivate:linger:" + victimRef, captivateScene, 1, held.position(),
+            { moment: "linger", target: victimRef });
+        captivateHeld(effect, held, state);
+        effect.schedule("watch", "watch", 2, "{}");
+    });
+    WorldCombat.effectHandler(captivateLock, "watch", function (effect) {
+        const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
+        const body = world.valid(victim) ? world.observe(victim) : null, source = world.observe(effect.source());
+        // 目标离场、术者离场、载体被驱散（窗口随之结束）都在这里结束注视。
+        if (body === null || source === null || world.mobEffect(victim, captivateEffect) === null) { effect.end(); return; }
+        if (body.position().minus(source.position()).length() > state.range || !world.clear(source.position(), body.position())) {
+            state.reason = "break"; effect.state(JSON.stringify(state)); effect.end(); return;
+        }
+        state.age = (state.age || 0) + 1;
+        if (state.age % 4 === 0) { effect.state(JSON.stringify(state)); captivateHeld(effect, body, state); }
+        effect.schedule("watch", "watch", 2, "{}");
+    });
+    WorldCombat.effectHandler(captivateLock, "end", function (effect) {
+        const world = effect.world(), victim = effect.target(), state = JSON.parse(effect.state());
+        // 先收回窗口；窗口释放自己对该载体的持有，特攻等级精确复原。
+        if (typeof state.window === "number" && state.window > 0) NativeEffects.windowClose(world, state.window);
+        if (state.refused) return;
+        const body = world.valid(victim) ? world.observe(victim) : null;
+        if (body === null) return;
         WorldFeedback.emit(world, captivateScene, 1, body.position(),
-            { moment: "charm", target: String(target.ref()), drop: applied, hearts: 6 + applied * 8 }, 32);
-        WorldFeedback.text(world, captivateAbove(body.position()), "world_combat.move.captivate.text.charm", [applied], 40);
-        return applied;
-    }
+            { moment: state.reason === "break" ? "break" : "release", target: String(victim.ref()),
+                path: [state.self, String(victim.ref())] }, 22);
+    });
 
     define({
         id: captivateId,
         cooldownParameter: "recharge",
         name: "诱惑",
-        description: "当场抬眸或原地起舞，让看得见的对手特攻大幅下降。回眸只对一个看得见的敌人生效；献舞以自己为中心旋开一圈，把看得见这份舞姿的非友方一起迷住。它不抓、不拉，只降低特攻能力等级；宝可梦之间要求异性，非宝可梦没有性别。",
-        uses: ["削弱法系威胁的特攻输出", "趁敌人聚拢时一次迷住几个", "在掩体多、弹道不好用的狭窄空间里施压"],
-        kind: "aim",
+        description: "当场抬眸看住一个看得见的对手，让它的特攻大幅下降；这份下降只在你的目光维持期间存在，一断线、换招或被打断就立刻收回。目标跑出射程或被掩体挡住即断线。专注注视降得更深，但起手与冷却都更长；它不抓、不拉、不定身，也不造成伤害。",
+        uses: ["持续削弱一个法系威胁的特攻输出", "在掩体后的狭窄空间用视线远程压住对手", "给队友的进攻拖住一个高特攻目标"],
+        kind: "enemy",
         range: 6,
         maxRange: 9,
         prepare: 8,
@@ -56,96 +112,81 @@ namespace PokemonSkills {
         recover: 6,
         cooldown: 180,
         style: "charm",
-        defaults: { pose: "glance" },
+        defaults: { focus: false },
         fields: [
-            choice("pose", "姿态", ["glance", "dance"], ["回眸", "献舞"])
+            flag("focus", "专注注视")
         ],
         resolve: function (pokemon, config, world, actor, attributes) {
             const context: NumberContext = { pokemon, skill: skills[captivateId], detail: { values: config }, world, actor, attributes };
-            const dance = !!(config && config.pose === "dance");
+            const focus = !!(config && config.focus);
             return {
-                prepare: Math.round(p(captivateId, "tempo", context)) + (dance ? 5 : 0),
+                prepare: Math.round(p(captivateId, "tempo", context)) + (focus ? 5 : 0),
                 recover: p(captivateId, "recover", context),
-                cooldown: Math.round(p(captivateId, "recharge", context) * (dance ? 1.3 : 1)),
+                cooldown: Math.round(p(captivateId, "recharge", context) * (focus ? 1.3 : 1)),
                 active: 1,
-                range: dance ? Math.max(1.5, p(captivateId, "ringRadius", context)) : p(captivateId, "gazeRange", context)
+                range: p(captivateId, "gazeRange", context)
             };
         },
         windup: function (action, config, prepare) {
             action.present("captivate-windup", captivateScene, 1, action.origin(),
-                JSON.stringify({ moment: "windup", dance: config && config.pose === "dance" ? 1 : 0,
+                JSON.stringify({ moment: "windup", focus: config && config.focus ? 1 : 0,
                     target: action.target() === null ? "" : String(action.target()!.ref()) }));
             return prepare;
         },
         indicator: function (config, pokemon) {
-            const dance = !!(config && config.pose === "dance");
+            const focus = !!(config && config.focus);
             const context: NumberContext | undefined = pokemon ? { pokemon, skill: skills[captivateId], detail: { values: config } } : undefined;
-            return { radius: dance ? (context ? p(captivateId, "ringRadius", context) : 2.6) : (context ? p(captivateId, "gazeRange", context) : 6),
-                geometry: dance ? "circle" : "line", style: "charm", label: dance ? "诱惑·献舞" : "诱惑" };
+            return { radius: context ? p(captivateId, "gazeRange", context) : 6, geometry: "line", style: "charm",
+                label: focus ? "诱惑·专注注视" : "诱惑" };
         },
         execute: function (action, move, config, done) {
             const world = action.world(), self = action.actor();
             const selfBody = world.observe(self);
             const origin = selfBody === null ? action.origin() : selfBody.position();
-            const drop = Math.max(1, Math.min(3, Math.round(p(captivateId, "drop", action))));
-            const duration = Math.max(80, Math.round(p(captivateId, "duration", action)));
-            const dance = !!(config && config.pose === "dance");
+            const drop = Math.max(2, Math.min(3, Math.round(p(captivateId, "drop", action))));
+            const hold = Math.max(40, Math.round(p(captivateId, "hold", action)));
+            const range = Math.max(2, p(captivateId, "gazeRange", action));
+            const motes = 14 + drop * 8;
+            const hearts = 10 + drop * 8;
             sound(action, "minecraft:block.amethyst_block.chime");
-            if (dance) {
-                // 献舞：self 入口，以自己为圆心在提交后动态选择看见舞姿的非友方。
-                const radius = Math.max(1.5, p(captivateId, "ringRadius", action));
-                const cap = Math.max(1, Math.round(p(captivateId, "maxOnlookers", action)));
-                let caught = 0;
-                WorldGeometry.select(world, WorldGeometry.ring(origin, 0, radius), function (actor, facts) {
-                    if (caught >= cap || facts.friendly() || !facts.visible()) return;
-                    if (!world.clear(origin, facts.position())) return;
-                    if (!captivateAllows(world, self, actor)) return;
-                    if (captivateCharm(world, actor, drop, duration) > 0) caught++;
-                });
-                WorldFeedback.emit(world, captivateScene, 1, origin,
-                    { moment: "dance", radius: radius, caught: caught, drop: drop, hearts: 10 + caught * 14, scale: radius / 2.2 }, 36);
-                if (caught > 0)
-                    WorldFeedback.text(world, captivateAbove(origin), "world_combat.move.captivate.text.dance", [caught, drop], 40);
-                done(action);
-                return;
-            }
-            // 回眸：只认一个看得见的合法敌实体；空放、目标离场与挡在掩体后都安静收尾。
             const target = action.target();
-            const targetPoint = action.targetPosition();
             if (target === null || !world.valid(target) || world.friendly(target) || String(target.ref()) === String(self.ref())) {
-                WorldFeedback.emit(world, captivateScene, 1, targetPoint, { moment: "fizzle" }, 16);
-                done(action);
-                return;
+                WorldFeedback.emit(world, captivateScene, 1, action.targetPosition(), { moment: "fizzle" }, 16);
+                done(action); return;
             }
             const at = world.observe(target);
-            const point = at === null ? targetPoint : at.position();
-            if (!world.clear(origin, point)) {
+            const point = at === null ? action.targetPosition() : at.position();
+            if (point.minus(origin).length() > range) {
                 WorldFeedback.emit(world, captivateScene, 1, point, { moment: "fizzle", target: String(target.ref()) }, 16);
-                done(action);
-                return;
+                done(action); return;
             }
-            WorldFeedback.emit(world, captivateScene, 1, origin,
-                { moment: "gaze", path: [String(self.ref()), String(target.ref())], target: String(target.ref()), motes: 16 + drop * 10 }, 22);
-            if (!captivateAllows(world, self, target)) {
-                WorldFeedback.emit(world, captivateScene, 1, point, { moment: "immune", target: String(target.ref()) }, 20);
-                WorldFeedback.text(world, captivateAbove(point), "world_combat.move.captivate.text.immune", [], 32);
-                done(action);
-                return;
+            if (!world.clear(origin, point)) {
+                WorldFeedback.emit(world, captivateScene, 1, point, { moment: "blocked", target: String(target.ref()) }, 20);
+                WorldFeedback.text(world, captivateAbove(point), "world_combat.move.captivate.text.blocked", [], 28);
+                done(action); return;
             }
-            captivateCharm(world, target, drop, duration);
-            done(action);
+            const victim = target;
+            const lock = action.effect(captivateLock, victim,
+                JSON.stringify({ drop: drop, hold: hold, range: range, motes: motes, hearts: hearts, self: String(self.ref()) }), hold + 40);
+            let settled = false;
+            function finish(current: CombatAction): void { if (settled) return; settled = true; done(current); }
+            // 实际过程结束（锁被收回、窗口走完、断线）即停；动作被外部取消时锁随动作结束，无需自行收尾。
+            function watch(current: CombatAction): void {
+                if (settled) return;
+                const scope = current.world();
+                const active = scope.effects(victim, captivateLock).some(view => view.id() === lock);
+                const carrier = MobEffects.read(scope, victim, captivateEffect);
+                if (!active || carrier === null) { finish(current); return; }
+                if (scope.valid(victim)) {
+                    const held = scope.observe(victim);
+                    if (held !== null) current.face(held.position(), 20, 20);
+                }
+                current.after(2, watch);
+            }
+            watch(action);
         }
     });
 
-    // 迷醉存续期间，目标头顶持续浮起沉迷的心。
-    WorldCombat.on("world_combat:move_captivate/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== captivateEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 6 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "captivate:" + String(actor.ref()), captivateScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 20);
-    });
+    // 玩家选中一个活物、按住技能键持续注视；松开即 world_combat:input-stop 取消。AI 直接提交目标走满时长。
+    WorldCombat.preview("world_combat:" + captivateId, JSON.stringify({ radius: 0.6, lineOfSight: true, input: { version: 1, steps: ["entity"], sustained: true } }));
 }

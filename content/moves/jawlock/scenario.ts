@@ -10,7 +10,8 @@
  *
  * 断言只取必然事实：本招被提交过（`stage.casts`）、目标挨到咬合伤害（`stage.damageTo`）、
  *   目标出现过共享身份 world_combat:status/trapped 且当前仍带着被咬住的抖动状态、
- *   目标的移动速度属性被压下去、施法者当前带着紧咬状态。暴击与对峙能维持多久写进 note 供读轨迹判断。
+ *   目标的移动速度属性被压下去、施法者当前带着紧咬状态；最后用 /effect clear 清掉术者的紧咬载体，
+ *   验证双载体同步结束（目标也被放开）。暴击与对峙能维持多久写进 note 供读轨迹判断。
  */
 Smoke.scenario("jawlock", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
@@ -32,13 +33,21 @@ Smoke.scenario("jawlock", function (stage) {
             stage.expect(stage.hasMobEffect(foe, "world_combat:jaw_locked"), "the target is still held in the jaws");
             stage.expect(stage.attribute(foe, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the lock pinned the target's movement speed");
             stage.expect(stage.hasMobEffect(caster, "world_combat:jaw_holding"), "the caster is holding the bite");
-            stage.note("crit and how long the lock actually lasts before either falls or is torn apart are variable", {
-                casts: stage.casts("jawlock", caster),
-                foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,
-                speed: [baseSpeed, stage.attribute(foe, "minecraft:generic.movement_speed")],
-                lockedAlive: foe.alive(), casterAlive: caster.alive()
-            });
-            stage.done();
+            // 清掉术者的紧咬载体：本次对峙的双载体同步结束，目标也被放开（任一载体失效即解除另一方）。
+            stage.command("effect clear " + String(caster.ref).split("/")[0] + " world_combat:jaw_holding");
+            stage.until(80, function () {
+                return !stage.hasMobEffect(caster, "world_combat:jaw_holding") && !stage.hasMobEffect(foe, "world_combat:jaw_locked");
+            }, function () {
+                stage.expect(!stage.hasMobEffect(caster, "world_combat:jaw_holding"), "clearing one carrier ends the holder's own lock");
+                stage.expect(!stage.hasMobEffect(foe, "world_combat:jaw_locked"), "the other carrier's lock is released in step");
+                stage.note("crit and how long the lock actually lasts before either falls or is torn apart are variable; one carrier removed ends the pair together", {
+                    casts: stage.casts("jawlock", caster),
+                    foeDamage: Math.round(stage.damageTo(foe) * 10) / 10,
+                    speed: [baseSpeed, stage.attribute(foe, "minecraft:generic.movement_speed")],
+                    lockedAlive: foe.alive(), casterAlive: caster.alive()
+                });
+                stage.done();
+            }, "both locks released together");
         });
     }, "jaw lock pins a target within 45 s");
 });

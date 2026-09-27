@@ -109,20 +109,15 @@ namespace PokemonSkills {
                 const body = scope.observe(action.actor());
                 const nozzle = body !== null ? body.position().plus(WorldCombat.point(0, 0.25, 0)) : current.origin();
                 const hit = current.trace(nozzle, nozzle.plus(direction.scale(reach)), radius, true);
-                let endpoint = hit.position();
+                // 端点始终是这一条 trace 的真实受阻点：不再命中后强行跟人，敌离轴或被墙挡住就断在这。
+                const endpoint = hit.position();
                 const victim = hit.target();
-                if (damaged) {
-                    const tracked = scope.actor(mainRef);
-                    if (tracked !== null && scope.valid(tracked)) {
-                        const state = scope.observe(tracked);
-                        if (state !== null) endpoint = state.position();
-                    }
-                }
+                const span = nozzle.minus(endpoint).length();
                 current.face(nozzle.plus(direction.scale(2.0)), 18, 18);
                 scenes.show(current, "column", nozzle,
                     { moment: "column", path: [[nozzle.x(), nozzle.y(), nozzle.z()], [endpoint.x(), endpoint.y(), endpoint.z()]],
                         direction: [direction.x(), direction.y(), direction.z()], flow: flow, volume: volume,
-                        scale: scale, intensity: intensity, deluge: deluge ? 1 : 0 });
+                        radius: radius, span: span, scale: scale, intensity: intensity, deluge: deluge ? 1 : 0 });
 
                 // 首个有效敌人只吃一次原 torrent；免伤者不推动、不湿身。
                 if (!damaged && victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
@@ -138,20 +133,21 @@ namespace PokemonSkills {
                     }
                 }
 
-                // 沿原 blow 总预算分步持续推动：每刻把剩余预算摊到剩余刻数上，实际位移由原生碰撞决定。
-                if (damaged && pushed < blow) {
-                    const tracked = scope.actor(mainRef);
-                    if (tracked !== null && scope.valid(tracked)) {
-                        const remainingTicks = Math.max(1, active - tick);
-                        const step = Math.min((blow - pushed) / remainingTicks, blow - pushed);
-                        const applied = scope.displace(tracked, push.scale(step));
-                        if (applied > 0) pushed += applied;
-                    }
+                // 沿原 blow 总预算分步持续推动：只有仍为本条 trace 首个受阻目标的当刻输家才推；
+                // 改 hitDisplace 保留原生抗击退，离轴或被墙挡住即停，不追身。
+                if (damaged && pushed < blow && victim !== null && scope.valid(victim) && String(victim.ref()) === mainRef) {
+                    const remainingTicks = Math.max(1, active - tick);
+                    const step = Math.min((blow - pushed) / remainingTicks, blow - pushed);
+                    const applied = scope.hitDisplace(victim, push.scale(step));
+                    if (applied > 0) pushed += applied;
                 }
 
                 // 漫灌式：在水柱真实受阻端点小范围溅射一次；圈内目标必须通视、且伤害成功才被推/湿。
                 if (deluge && !splashed && (hit.blocked() || hit.hitEntity())) {
                     splashed = true;
+                    // 回溅圈画的就是判定用的真实 backwash 半径，不再是固定的小环。
+                    WorldFeedback.emit(scope, hydropumpScene, 1, endpoint,
+                        { moment: "backwash", backwash: backwash, volume: volume, scale: scale, intensity: intensity }, 22);
                     WorldGeometry.selectEnemies(scope, WorldGeometry.ring(endpoint, 0, backwash, { below: 2.0, above: 2.5 }),
                         function (other, facts) {
                             if (mainRef !== "" && String(other.ref()) === mainRef) return;

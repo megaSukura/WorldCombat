@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.dualwingbeat.summary": "Spread both wings and dive: one wing slams down and bats the target open, then the other catches the opening on the upswing and strikes back harder if the first landed. Dive form closes in for heavier contact at the cost of position; hover form sends wind from a distance with longer reach.",
+  "worldcombat.skill.dualwingbeat.summary": "Spread both wings and dive: one wing slams down and forward to bat the target open, then the other strikes back and up from the new position on the upswing; the two beats sweep opposite ways and roll separately, and the second gains no bonus from the first. Dive form closes in for heavier contact at the cost of position; hover form beats wind from a distance (non-contact) with longer reach.",
   "worldcombat.skill.dualwingbeat.use.0": "One dive, one strike from each wing",
-  "worldcombat.skill.dualwingbeat.use.1": "Bat open then upswing, landing two beats on one target",
+  "worldcombat.skill.dualwingbeat.use.1": "Bat down and forward, then pull back and up from the new position",
   "worldcombat.skill.dualwingbeat.use.2": "Sweep a small forward fan of foes aside",
-  "worldcombat.skill.dualwingbeat.description.0": "Each beat deals about %1$s contact damage (physical); engage range %2$s blocks, wing-fan angle %3$s degrees.",
+  "worldcombat.skill.dualwingbeat.description.0": "Each beat deals about %1$s damage (physical; contact in dive form, non-contact wind in hover form); engage range %2$s blocks, wing-fan angle %3$s degrees.",
   "worldcombat.skill.dualwingbeat.description.1": "The beats are %1$s apart; each beat shoves the targets it hits up to %2$s blocks along that beat's wing swing. In dive form the first beat closes up to %3$s blocks toward the target.",
   "worldcombat.skill.dualwingbeat.description.2": "In dive form the caster pulls back %1$s blocks on the second upswing; each beat reaches up to %2$s targets.",
   "worldcombat.skill.dualwingbeat.dive.on": "Dive form now: close in first; both beats are contact, heavier and quicker, but reach is shorter and you give up position.",

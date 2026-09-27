@@ -41,10 +41,11 @@ const FlamethrowerDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "nozzle", bind: "source", offset: [0, 0.45, 0], height: 0.45,
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    rate: 18, shape: { kind: "sphere", radius: 0.26 },
-                    direction: "away", speed: [0.03, 0.12], spread: 10,
-                    lifetime: [5, 9], size: [0.22, 0.04],
+                    rate: 18, shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.14, 0.42], spread: 8,
+                    lifetime: [4, 8], size: [0.24, 0.05],
                     color: 0xFFE2A0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 },
                 {
@@ -81,6 +82,14 @@ const FlamethrowerDefinition: ParticleDefinition = {
                     color: 0xFFE2A0, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 90
                 },
                 {
+                    name: "wall", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: { data: "splash", fallback: 0 }, shape: { kind: "sphere_surface", radius: 0.36 },
+                    direction: "inward", speed: [0.03, 0.14], spread: 26,
+                    lifetime: [4, 9], size: [0.26, 0.05],
+                    color: 0xFFD06A, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 70
+                },
+                {
                     name: "smoke", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: 14, shape: { kind: "polygon" },
@@ -95,10 +104,11 @@ const FlamethrowerDefinition: ParticleDefinition = {
             emitters: [
                 {
                     name: "nozzle", bind: "source", offset: [0, 0.45, 0], height: 0.45,
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/fire/cloudyfire_white",
-                    rate: 18, shape: { kind: "sphere", radius: 0.26 },
-                    direction: "away", speed: [0.03, 0.12], spread: 10,
-                    lifetime: [5, 9], size: [0.22, 0.04],
+                    rate: 18, shape: { kind: "line", length: 0.5 },
+                    direction: "shape", speed: [0.14, 0.42], spread: 8,
+                    lifetime: [4, 8], size: [0.24, 0.05],
                     color: 0xFFE2A0, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 40
                 },
                 {
@@ -135,6 +145,14 @@ const FlamethrowerDefinition: ParticleDefinition = {
                     color: 0xFFE2A0, alpha: [0.9, 0], light: "full", bloom: 0.45, maxParticles: 90
                 },
                 {
+                    name: "wall", bind: "point", fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/fire/flame",
+                    rate: { data: "splash", fallback: 0 }, shape: { kind: "sphere_surface", radius: 0.42 },
+                    direction: "inward", speed: [0.03, 0.14], spread: 26,
+                    lifetime: [4, 9], size: [0.28, 0.05],
+                    color: 0xFFD06A, alpha: [0.85, 0], light: "full", bloom: 0.35, maxParticles: 80
+                },
+                {
                     name: "smoke", bind: "path", fit: "none",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
                     rate: 18, shape: { kind: "polygon" },
@@ -165,6 +183,16 @@ const FlamethrowerDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.18], spread: 16,
                     lifetime: [10, 20], size: [0.2, 0.04],
                     color: 0xFF7A2E, alpha: [0.9, 0], light: "full", bloom: 0.35, maxParticles: 44
+                },
+                {
+                    // 末脉冲反馈独立：只有整段喷窗的最后一份接触才填这个数。
+                    name: "finale", bind: "target", height: 0.55,
+                    particle: "world_combat_core:cobblemon/generic/impact/impact_fire",
+                    burst: { count: { data: "finalCount", fallback: 0 }, at: 1 },
+                    shape: { kind: "ring", radius: 0.44, thickness: 0.5 },
+                    direction: "outward", speed: [0.06, 0.24], spread: 20,
+                    lifetime: [8, 15], size: [0.4, 0.06], sizeMode: "index",
+                    color: 0xFFE2A0, alpha: [1, 0], light: "full", bloom: 0.5, maxParticles: 40
                 }
             ]
         },

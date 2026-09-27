@@ -5,7 +5,8 @@
  * 砸空时同样溅起碎屑，只是没有那声闷响。地裂只是画面，不改变任何方块。
  * 色相家族：木绿与树皮褐（0x7A8B4A / 0x8C6A3F）为底，草绿的冲击与浅木色碎屑点缀，饱和黄绿只给砸击核心一点。
  * 拍子：起 harden（绷硬）→ 举 raise（抬起）→ 砸 fall（砸下）→ 击 impact（碎木与裂纹）／ whiff（砸空）。
- * 范围：impact 与 whiff 绑落点、画的就是砸到哪；crack 绑原生接触格，按 crackTicks 存续；raise/fall 贴真实身体升降。
+ * 范围：impact 与 whiff 绑落点、画的就是砸到哪；crack 只在真实方块接触面发射，落点用原生接触点、环面按接触面法线转向，按 crackTicks 存续；
+ *   空中砸中活体没有接触面，服务端不发 crack；raise/fall 贴真实身体升降，`data.height` 是保存的起落真实高度。
  * 运动：绷硬向内收；砸下时速度线沿真实运动向下压；命中碎木沿 `data.face` 外法线喷、裂纹贴地向外扩。
  * 数：`data.splinters`（物攻与体重派生）决定碎木总量，`data.cracks`（地裂碎屑数）决定裂纹圈上的碎块数，
  * `data.crackTicks` 决定裂纹存续，`data.height`（真实升降高度）拉长竖向槌影，
@@ -150,6 +151,8 @@ const WoodhammerDefinition: ParticleDefinition = {
                 {
                     name: "scar", bind: "point", offset: [0, 0.04, 0], height: 0,
                     particle: "world_combat_core:cobblemon/generic/earth",
+                    // 环面按真实接触面法线转向：地面命中为水平环，墙面命中则贴在墙面上。
+                    orient: "direction",
                     burst: { count: { data: "cracks", fallback: 10 } },
                     shape: { kind: "ring", radius: { data: "scale", fallback: 1.0 } },
                     direction: "outward", speed: [0.02, 0.08],

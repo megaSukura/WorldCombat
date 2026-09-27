@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.bite.summary": "A quick pounce and a hooked bite: the cheapest melee move in the family, with a chance to flinch and to reel the target back toward the user - its value is in tempo and holding a target close.",
   "worldcombat.skill.bite.description.0": "The bite deals about %1$s contact damage with a %2$s block fang radius; the target's defence, type and crits are applied on the hit.",
-  "worldcombat.skill.bite.description.1": "It pounces up to %1$s blocks at %2$s blocks per tick; the first enemy it meets is bitten and dragged %3$s blocks back toward the user.",
+  "worldcombat.skill.bite.description.1": "It pounces up to %1$s blocks at %2$s blocks per tick; the first enemy it meets is bitten and pulled up to %3$s blocks back toward the user as a native hit displacement, limited by knockback resistance and collision.",
   "worldcombat.skill.bite.description.2": "A solid bite has a %1$s chance to make the target flinch for %2$s: it first tries to interrupt its current interruptible action, and while flinching the target cannot start new moves or make ordinary attacks.",
   "worldcombat.skill.bite.deep.on": "Deep bite: bites harder, drags the target closer and flinches longer and more often, but winds up slower, hits slightly lighter and has a longer cooldown.",
   "worldcombat.skill.bite.deep.off": "Quick bite: faster to cast and hits a little harder, but barely pulls the target.",
@@ -26,7 +26,7 @@
   "worldcombat.skill.bite.preference.ai.maxChase": "Chase distance",
   "worldcombat.skill.bite.preference.ai.maxChase.help": "Beyond this distance the user closes in first. Larger chases harder and more easily ends up beside the target after a whiff.",
   "worldcombat.skill.bite.preference.ai.reelIn": "Reel-in priority",
-  "worldcombat.skill.bite.preference.ai.reelIn.help": "On: prefer to bite targets that are opening the distance or that are not yet flinched, pulling them back. Off: sort bite as an ordinary melee move with no reel-in bonus.",
+  "worldcombat.skill.bite.preference.ai.reelIn.help": "On: prefer to bite targets that are opening the distance or that are not yet flinched, pulling them back. Off: sort bite as an ordinary melee move with no reel-in bonus. A fully knockback-resistant target cannot be pulled either way, so it never earns the reel-in bonus.",
   "world_combat.move.bite.text.hit": "Bitten",
   "world_combat.move.bite.text.drag": "Reeled in %1$s blocks",
   "world_combat.move.bite.text.flinch": "Flustered",

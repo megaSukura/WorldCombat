@@ -4,10 +4,10 @@
  * 原生事实（Cobblemon 1.8 / Showdown）：Electric／特殊／威力 70／命中 100／PP 20／单体；
  *   「用从地面升腾而起的电击进行攻击。当对手处于电气场地上时，招式威力会变成 2 倍」（且要求目标接地）。
  *
- * 翻译：把「从地面升腾」落成**脚下的地脉被点着**——施法者先顿足把电按进地皮（起手），电流沿地面窜到对手
- *   脚下的落点（爬行），随后从那里竖起一根电柱、从下往上把站在上面的人击穿。目标脚下的地若能导电（贴着
- *   共享身份 `world_combat:status/electricterrain` 的电荷，由电气场地铺下、或别的来源赋予），这一柱翻倍、
- *   也更粗更高。读完的是**目标脚下有没有电**，所以站在电荷上的人最危险，离开那块地就只是普通一柱。
+ * 翻译：把「从地面升腾」落成**脚下的地脉被点着**——施法者先顿足把电按进地皮（起手），电流沿真实地表窜到
+ *   对手脚下的落点（爬行），随后从那里竖起一根电柱、从下往上把站在上面的人击穿。目标此刻真的站在一片
+ *   有效电气场地上（`WorldEffects.covers` 的 groundedContact：贴地、同层、无遮挡）时，这一柱翻倍、也更粗更高。
+ *   读完的是**目标脚下当下有没有电**，所以站在电荷上的人最危险，离开那块地就只是普通一柱，不再凭余电身份翻倍。
  *   与同族分开：精神剑是贴身的一记电光斩、加成来自施法者自己脚下的电荷；电力上升是隔空从目标脚下升起的
  *   电柱、加成来自**目标**脚下的电荷，而且它是一圈地面区域，站得近的人一起被贯穿。
  *
@@ -34,17 +34,30 @@ namespace PokemonSkills {
     /** 电柱粗细的参考值（格）：服务端传 scale = 实际粗细 / 这个值。 */
     export const risingvoltageReference = 1.1;
 
-    /** 目标脚下是否带电：共享身份 world_combat:status/electricterrain（电气场地等来源铺下的电荷）。 */
+    /**
+     * 目标此刻是否站在一片**真实有效**的电气场地上：按共享身份读在场区域，再用 covers（含 groundedContact）
+     * 确认它此刻贴地、同层、无遮挡。离开场地后不再凭余电身份继续翻倍。
+     */
     export function risingvoltageCharged(world: CombatWorld, actor: CombatActor): boolean {
-        return CombatStatus.has(world, actor, "electricterrain");
+        var areas = WorldEffects.areas(world, WorldEffects.terrain("electricterrain"));
+        for (var i = 0; i < areas.length; i++) if (WorldEffects.covers(world, areas[i], actor)) return true;
+        return false;
     }
+
+    // 逐个命中对象的「脚下带电」按实际电场读取；公式的 F.target("charged") 与命中结算同源。
+    defineFacts(risingvoltageId, function (context: FactContext): Formula.Facts {
+        return { read: function (id: string) {
+            if (id !== "charged") return undefined;
+            return context.world && context.actor && risingvoltageCharged(context.world, context.actor) ? 1 : 0;
+        } };
+    });
 
     actionParameters.define(risingvoltageId, {
         /** 电柱威力：70 + 特攻偏移[−15,32]；目标带电 ×2；过载 ×1.2；夹 48..210。 */
         bolt: formula(
             F.base(70)
                 .plus(F.stat("specialAttack").minus(60).times(0.22).clamp(-15, 32))
-                .times(F.when(F.target("status.electricterrain", text("worldcombat.skill.risingvoltage.value.grounded")).gt(0),
+                .times(F.when(F.target("charged", text("worldcombat.skill.risingvoltage.value.grounded")).gt(0),
                     F.const(2), F.const(1)).as(text("worldcombat.skill.risingvoltage.value.charged")))
                 .times(F.when(F.pref("overcharge", text("worldcombat.skill.risingvoltage.preference.overcharge")), F.const(1.2), F.const(1)))
                 .clamp(48, 210).round(1),

@@ -5,7 +5,7 @@
  * 该次动作被拒绝，它转过身来看向施放者。tether 是一条记录施放者、心软几率与羁绊范围的世界效果
  * （施放者即其 source）；着迷只在双方视线畅通且目标仍在羁绊范围内时维持——躲到墙后或走远，关系就解除
  * （snap）。没有任何强制位移：它只是不肯出手，不会被拽走。这也是对飞吻最直接的反制。
- * 宝可梦的异性门槛在 skill.ts 的命中层检查；原版生物与玩家没有性别概念，走同一条判定。
+ * 门槛在 skill.ts 的命中层检查：先确认牵得住才着迷，任何能受心智干扰的活体一视同仁，原生抗控由状态门照常拦截。
  * 状态按自己的时间走完是「自散」，被外力（牛奶／`/effect` clear）打断则只有动作停止、画面安静收场。
  */
 namespace PokemonSkills {
@@ -21,18 +21,32 @@ namespace PokemonSkills {
         });
     }
 
+    /** 断链的统一退场：无论来自距离、视线还是出手重验，都只播一次清醒并解除着迷。 */
+    function attractSnap(world: CombatWorld, actor: CombatActor): void {
+        const body = world.observe(actor);
+        if (body === null) return;
+        WorldFeedback.emit(world, attractScene, 1, body.position(), { moment: "snap", target: String(actor.ref()) }, 18);
+        WorldFeedback.text(world, attractAbove(body.position()), attractSnapText, [], 24);
+    }
+
     WorldCombat.effect(attractTether, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (typeof value.chance !== "number" || !isFinite(value.chance) || value.chance < 0 || value.chance > 1)
             throw new Error("Invalid attract chance");
         if (typeof value.leash !== "number" || !isFinite(value.leash) || value.leash < 0 || value.leash > 32)
             throw new Error("Invalid attract leash");
+        if (value.carrier !== undefined && value.carrier !== null && !MobEffects.validAnchor(value.carrier)) value.carrier = null;
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(attractTether, "start", function (effect) {
         const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
-        const status = MobEffects.apply(world, target, attractStatus, effect.remaining(), 0);
-        data.carrierLease = MobEffects.bind(world, target, attractStatus, status);
+        if (!world.valid(target)) { effect.end(); return; }
+        // 命中层已落上这一次 carrier，就绑定它的精确修订；没有（例如被替换）才补一次应用。
+        const carrier = data.carrier && MobEffects.validAnchor(data.carrier) ? data.carrier : null;
+        if (!carrier || !MobEffects.matches(world, target, carrier)) {
+            if (!CombatStatus.apply(world, target, "attract", attractStatus, effect.remaining(), 0)) { effect.end(); return; }
+        }
+        data.carrierLease = MobEffects.bind(world, target, attractStatus);
         if (!data.carrierLease) { effect.end(); return; }
         effect.state(JSON.stringify(data));
         effect.schedule("watch", "watch", 1, "{}");
@@ -47,6 +61,7 @@ namespace PokemonSkills {
         if (body === null || from === null) { effect.end(); return; }
         const delta = from.position().minus(body.position());
         if (delta.length() > data.leash || !world.clear(body.position(), from.position())) {
+            attractSnap(world, target);
             world.operation(effect.id(), "world_combat:dispel", "{}");
             return;
         }
@@ -74,9 +89,8 @@ namespace PokemonSkills {
         if (body === null || from === null) return;
         const delta = from.position().minus(body.position());
         if (delta.length() > value.leash || !world.clear(body.position(), from.position())) {
+            attractSnap(world, actor);
             views.forEach(entry => world.operation(entry.id(), "world_combat:dispel", "{}"));
-            WorldFeedback.emit(world, attractScene, 1, body.position(), { moment: "snap", target: String(actor.ref()) }, 18);
-            WorldFeedback.text(world, attractAbove(body.position()), attractSnapText, [], 24);
             return;
         }
         if (world.random() >= value.chance) return;

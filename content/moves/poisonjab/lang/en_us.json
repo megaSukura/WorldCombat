@@ -31,6 +31,6 @@
   "worldcombat.skill.poisonjab.preference.ai.leaveStation.help": "When on, the companion may leave its post to land a thrust; when off, it only casts at what it can reach from where it stands.",
   "world_combat.move.poisonjab.text.hit": "Stabbed",
   "world_combat.move.poisonjab.text.venom": "Stabbed and poisoned",
-  "world_combat.move.poisonjab.text.immune": "The foe shrugged off the poison",
+  "world_combat.move.poisonjab.text.blocked": "The thrust failed to bite",
   "world_combat.move.poisonjab.text.whiff": "The thrust met empty air"
 }

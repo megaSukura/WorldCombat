@@ -109,11 +109,12 @@ const MeteormashDefinition: ParticleDefinition = {
             exit: { stop: 11, drain: 22 },
             emitters: [
                 {
-                    name: "crash_debris", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "crash_debris", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/large_rock",
                     burst: { count: { data: "flare", fallback: 22 }, at: 1 },
-                    shape: { kind: "circle", radius: { data: "scorch", fallback: 1.4 } },
-                    direction: "up", speed: [0.3, 0.85], spread: 28,
+                    shape: { kind: "hemisphere", radius: { data: "scorch", fallback: 1.4 } },
+                    direction: "outward", speed: [0.3, 0.85], spread: 28,
                     gravity: 0.09, drag: 0.95,
                     lifetime: [16, 30], size: [0.26, 0.05],
                     color: { attribute: "block", colors: {
@@ -127,28 +128,31 @@ const MeteormashDefinition: ParticleDefinition = {
                     alpha: [0.9, 0], light: "world", maxParticles: 120
                 },
                 {
-                    name: "crash_scorch", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "none",
+                    name: "crash_scorch", bind: "point", offset: [0, 0.04, 0], height: 0, fit: "world",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/impact/impact_rock",
                     burst: { count: { data: "flare", fallback: 16 }, at: 1 },
                     shape: { kind: "circle", radius: { data: "scorch", fallback: 1.4 } },
-                    direction: "up", speed: [0.01, 0.04], spread: 12,
+                    direction: "outward", speed: [0.01, 0.04], spread: 12,
                     gravity: 0.01, drag: 0.9,
                     lifetime: { data: "scorchTicks", fallback: 120 }, size: [0.5, 0.1], sizeMode: "sin",
                     color: 0x4A4038, alpha: [0.5, 0], alphaMode: "sin", light: "world", maxParticles: 60
                 },
                 {
-                    name: "crash_shock", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "none",
+                    name: "crash_shock", bind: "point", offset: [0, 0.05, 0], height: 0, fit: "world",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/ring/groundquake",
-                    rate: 40, shape: { kind: "ring", radius: { data: "scorch", fallback: 1.4 } },
+                    rate: 40, shape: { kind: "ring", radius: { data: "crash", fallback: 1.6 } },
                     direction: "outward", speed: [0.03, 0.14], spread: 8,
                     lifetime: [10, 18], size: [0.36, 0.8],
                     color: 0xC9A24A, alpha: [0.7, 0], light: "world", maxParticles: 100
                 },
                 {
-                    name: "crash_smoke", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "none",
+                    name: "crash_smoke", bind: "point", offset: [0, 0.1, 0], height: 0, fit: "world",
+                    orient: "direction",
                     particle: "world_combat_core:cobblemon/generic/smoke/smoke",
-                    rate: 26, shape: { kind: "circle", radius: { data: "scorch", fallback: 1.4 } },
-                    direction: "up", speed: [0.02, 0.1], spread: 12,
+                    rate: 26, shape: { kind: "hemisphere", radius: { data: "scorch", fallback: 1.4 } },
+                    direction: "outward", speed: [0.02, 0.1], spread: 12,
                     gravity: 0.01, drag: 0.9,
                     lifetime: [14, 26], size: [0.24, 0.03],
                     color: 0x6E6A62, alpha: [0.45, 0], light: "world", maxParticles: 90

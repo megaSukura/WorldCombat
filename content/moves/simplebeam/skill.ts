@@ -26,6 +26,7 @@ namespace PokemonSkills {
     export const simplebeamClearText = "world_combat.move.simplebeam.text.clear";
     export const simplebeamFizzleText = "world_combat.move.simplebeam.text.fizzle";
     export const simplebeamEmptyText = "world_combat.move.simplebeam.text.empty";
+    export const simplebeamLineText = "world_combat.move.simplebeam.text.line";
 
     // 普通生物没有原生 simple 特性：靠共享拦截点把实际等级变化翻倍。
     CombatStages.change.define({ id: "world_combat:move_simplebeam/native_stages", apply: function (context) {
@@ -60,20 +61,26 @@ namespace PokemonSkills {
         return !!ability && ability !== "simple" && ability !== "truant" && !NativeAbilities.flag(ability, "cantsuppress");
     }
 
-    // 单纯光环：与属性层同寿命的独立托管效果，自己持有贴身的双环标记；改写提前结束时一并收掉。
+    // 单纯光环：锚到真实的 simple_beam 载体上，自己持有贴身的双环标记；载体被替换/清除或改写提前结束时一并收掉。
     WorldCombat.effect(simplebeamAuraEffect, 1, 1200, "actor", function (json) {
         const value = JSON.parse(json || "{}");
         if (typeof value.target !== "string") throw new Error("Invalid simple beam aura: target");
+        if (typeof value.carrier !== "string" || !value.carrier) throw new Error("Invalid simple beam aura: carrier");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(simplebeamAuraEffect, "start", function (effect) {
+    function simplebeamAuraHold(effect: CombatEffect): void {
         const world = effect.world(), target = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(target)) { effect.end(); return; }
+        const carrier = MobEffects.read(world, target, simplebeamEffect);
+        if (carrier === null || String(carrier.key()) !== String(data.carrier)) { effect.end(); return; }
         const body = world.observe(target);
         if (body === null) { effect.end(); return; }
         WorldFeedback.onEffect(world, effect.id(), "aura", simplebeamScene, 1, body.position(),
             { moment: "aura", target: String(target.ref()), rings: Math.max(4, Math.round(Number(data.rings) || 6)) });
-    });
+        effect.schedule("aura", "aura", 20, "{}");
+    }
+    WorldCombat.effectHandler(simplebeamAuraEffect, "start", function (effect) { simplebeamAuraHold(effect); });
+    WorldCombat.effectHandler(simplebeamAuraEffect, "aura", function (effect) { simplebeamAuraHold(effect); });
     WorldCombat.effectHandler(simplebeamAuraEffect, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
     function simplebeamReleaseAura(world: CombatWorld, target: CombatActor): void {
@@ -169,16 +176,19 @@ namespace PokemonSkills {
 
             function rewrite(other: CombatActor, primaryHit: boolean): boolean {
                 if (!world.valid(other)) return false;
-                const ability = simplebeamAbility(world, other);
-                if (String(other.domain()) === "cobblemon") {
-                    if (!simplebeamReceivable(ability) || !NativeModifiers.abilitySuppressible(world, other)) return false;
-                    NativeModifiers.apply(world, other, { ability: "simple" }, hold);
-                }
-                MobEffects.apply(world, other, simplebeamEffect, hold, wave ? 1 : 0);
-                simplebeamReleaseAura(world, other);
-                world.effect(simplebeamAuraEffect, other, JSON.stringify({ target: String(other.ref()), rings: rings }), hold);
                 const body = world.observe(other);
                 if (body === null) return false;
+                // 扩散逐体查视线；墙后不改写，避免隔墙重写。
+                if (!primaryHit && !world.clear(origin, body.position())) return false;
+                const ability = simplebeamAbility(world, other);
+                const isCobblemon = String(other.domain()) === "cobblemon";
+                if (isCobblemon && (!simplebeamReceivable(ability) || !NativeModifiers.abilitySuppressible(world, other))) return false;
+                // 先落真实载体：特性层与光环都锚到它，状态被清除/替换时一起还原，不留失效锚。
+                const carrier = MobEffects.apply(world, other, simplebeamEffect, hold, wave ? 1 : 0);
+                if (carrier === null) return false;
+                if (isCobblemon) NativeModifiers.apply(world, other, { ability: "simple", carrier: MobEffects.anchor(carrier) }, hold);
+                simplebeamReleaseAura(world, other);
+                world.effect(simplebeamAuraEffect, other, JSON.stringify({ target: String(other.ref()), rings: rings, carrier: String(MobEffects.anchor(carrier).key) }), hold);
                 scenes.show(action, "settle:" + String(other.ref()), body.position(),
                     { moment: primaryHit ? "settle" : "spread", target: String(other.ref()), rings: rings,
                         beam: beam, fan: fan, scale: scale,
@@ -193,6 +203,23 @@ namespace PokemonSkills {
                     direction: [direction.x(), direction.y(), direction.z()], rings: rings, beam: beam, scale: scale });
                 WorldFeedback.text(world, simplebeamAbove(point), simplebeamEmptyText, [], 26);
                 sound(action, "cobblemon:move.psychic.actor");
+                scenes.finish(action, done);
+                return;
+            }
+
+            // 执行时复核真实距离与通视：起手后目标跑远或躲到墙后就不再改写。
+            if (at.position().minus(origin).length() > p(simplebeamId, "reach", action)) {
+                scenes.show(action, "scatter", point, { moment: "scatter", path: [String(actor.ref()), simplebeamVertex(point)],
+                    direction: [direction.x(), direction.y(), direction.z()], rings: rings, beam: beam, scale: scale });
+                WorldFeedback.text(world, simplebeamAbove(point), simplebeamEmptyText, [], 26);
+                sound(action, "cobblemon:move.psychic.actor");
+                scenes.finish(action, done);
+                return;
+            }
+            if (!world.clear(origin, at.position())) {
+                scenes.show(action, "fizzle", point, { moment: "fizzle", target: String(target.ref()) });
+                WorldFeedback.text(world, simplebeamAbove(point), simplebeamLineText, [], 28);
+                sound(action, "minecraft:block.amethyst_block.break");
                 scenes.finish(action, done);
                 return;
             }

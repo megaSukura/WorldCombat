@@ -5,7 +5,7 @@
   "worldcombat.skill.flashcannon.use.2": "A precise mid-to-long range single-target shot",
   "worldcombat.skill.flashcannon.use.3": "Fire at open air or a wall and scatter the lance into light",
   "worldcombat.skill.flashcannon.description.0": "The lance deals %1$s special damage.",
-  "worldcombat.skill.flashcannon.description.1": "It can pierce %1$s further targets, keeping %2$s of its power after each one.",
+  "worldcombat.skill.flashcannon.description.1": "It can pierce %1$s further targets, keeping %2$s of its power after each contact (a contact that deals no damage still spends a share).",
   "worldcombat.skill.flashcannon.description.2": "Each target it hits has a %1$s chance to lose %2$s stage(s) of Sp. Def, taking heavier special attacks afterwards.",
   "worldcombat.skill.flashcannon.description.3": "It gathers for %1$s, then the lance flies at %2$s blocks per tick up to %3$s blocks with a %4$s block trace radius; walls stop it, and it dissipates when it hits a wall or nothing.",
   "worldcombat.skill.flashcannon.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -25,6 +25,6 @@
   "worldcombat.skill.flashcannon.preference.ai.maxChase": "Considered distance",
   "worldcombat.skill.flashcannon.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it gather light from further away.",
   "worldcombat.skill.flashcannon.preference.ai.lineUp": "Aim at lined-up foes",
-  "worldcombat.skill.flashcannon.preference.ai.lineUp.help": "On: in pierce form, when another foe stands behind the target on the same line, this move ranks higher. Focus form or when off, it ranks like an ordinary ranged attack.",
+  "worldcombat.skill.flashcannon.preference.ai.lineUp.help": "On: in pierce form, when another foe blocks the same 3D firing line behind the target (swept at this move's real trace radius against each body's real box), this move ranks higher (counted up to the 2 follow-throughs it can pierce). Focus form or when off, it ranks like an ordinary ranged attack.",
   "world_combat.move.flashcannon.text.sunder": "Sp. Def -%1$s"
 }

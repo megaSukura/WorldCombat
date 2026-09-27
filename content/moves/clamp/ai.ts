@@ -2,9 +2,10 @@
  * 贝壳夹击 / clamp 的伙伴 AI 用途。
  *
  * 什么局面下出手：一记贴身擒抱。`available` 要求目标可见、敌对、存活、在 `ai.maxChase`（默认 6）以内，
- * 且还没有被夹住（`partiallytrapped`）；自己也必须还有 `ai.minSelf`（默认 0.35）以上的生命——壳合上后
- * 双方都动不了，血太少时把自己钉在别人刀下不划算。
- * 对谁出手：越满血、越难缠的目标越值得先夹住；焦点目标另加一档。
+ *   且还没有被夹住（`partiallytrapped`）；控制能成立时自己也必须还有 `ai.minSelf`（默认 0.35）以上的生命——
+ *   壳合上后双方都动不了，血太少时把自己钉在别人刀下不划算。控制被目标拒绝（守护、免控 Boss 等）时走
+ *   短碾压分支：不钉自己，只贴身碾三下，残血也能用，但收益小一档。
+ * 对谁出手：越满血、越难缠的目标越值得先夹住；焦点目标另加一档；免控目标只给短碾压的底分。
  * 够不到怎么办：交给共享接近逻辑走到 `holdRange` 以内；走到射程内就合壳。
  * 放完之后：目标被钉住，施法者也按同一时长被钉住，随后交回共享顺序。
  */
@@ -15,12 +16,18 @@ namespace PokemonSkills {
         return CombatStatus.allowed(access, actor, "partiallytrapped", 40, 0, { effect: "world_combat:clamped_shell" }).allowed;
     });
 
+    /** 目标是否接受本招控制。拒绝时本招仍可走短碾压分支：不把自己钉死，只贴身碾几下。 */
+    function clampControlOk(context: WorldBehavior.Context, target: CompanionBehavior.Entity): boolean {
+        return CompanionBehavior.fact<boolean>(context, "world_combat:move_clamp/control", target) !== false;
+    }
+
     function clampWants(context: WorldBehavior.Context, item: WorldBehavior.Capability, target: CompanionBehavior.Entity): boolean {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "partiallytrapped")) return false;
-        if (CompanionBehavior.fact<boolean>(context, "world_combat:move_clamp/control", target) === false) return false;
-        if (CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(item, "minSelf", 0.35)) return false;
+        // 只有把自己钉住的长分支才在意自身血量；免控目标只走短碾压，残血也能贴上去碾。
+        if (clampControlOk(context, target)
+            && CompanionBehavior.ratio(CompanionBehavior.source(context)) < CompanionBehavior.ai<number>(item, "minSelf", 0.35)) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(item, "maxChase", 6);
     }
@@ -35,14 +42,16 @@ namespace PokemonSkills {
         },
         accepts: function (context, capability, target) {
             return !target.friendly && target.health > 0 && target.visible
-                && !CompanionBehavior.status(context, target, "partiallytrapped")
-                && CompanionBehavior.fact<boolean>(context, "world_combat:move_clamp/control", target) !== false;
+                && !CompanionBehavior.status(context, target, "partiallytrapped");
         },
         approachTarget: function (context, capability, target) { return target; },
         priority: function (context, capability, target) {
             if (!target || !clampWants(context, capability, target)) return 0;
-            let base = 16 + Math.round(CompanionBehavior.ratio(target) * 40);
-            if (context.facts.focus === target.ref) base += 20;
+            const control = clampControlOk(context, target);
+            // 免控目标只会被短碾压三下，收益小一档，但仍有贴身磨血的价值。
+            let base = control ? 16 + Math.round(CompanionBehavior.ratio(target) * 40)
+                : 12 + Math.round(CompanionBehavior.ratio(target) * 14);
+            if (context.facts.focus === target.ref) base += control ? 20 : 10;
             base += Math.round((1 - CompanionBehavior.ratio(CompanionBehavior.source(context))) * 20);
             return base;
         }

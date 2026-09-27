@@ -129,3 +129,26 @@ const LightScreenDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_lightscreen", 1, LightScreenDefinition);
+
+// 光墙的落点预览：内置几何没有带朝向的竖矩形，这里按幕的真实半宽与高度画一块竖面，
+// 平面法线朝施放方向，让玩家在落点前就看出朝向、宽度和高度。
+IndicatorGeometry.register("lightscreen_wall", function (frame: CombatClientFrame, point: number[], data: any) {
+    const width = Math.max(0.2, Number(data && data.width) || 3);
+    const height = Math.max(0.2, Number(data && data.height) || 2.2);
+    const direction = data && data.direction;
+    let ux = 1, uz = 0;
+    if (Array.isArray(direction) && direction.length === 3) {
+        const dx = Number(direction[0]), dz = Number(direction[2]);
+        const length = Math.sqrt(dx * dx + dz * dz);
+        if (length > 1e-6) { ux = dx / length; uz = dz / length; }
+    }
+    const sideX = -uz, sideZ = ux;
+    const x = point[0], y = point[1], z = point[2];
+    const color = typeof data.color === "number" ? data.color : 0xFFE9A8;
+    const leftX = x - sideX * width, leftZ = z - sideZ * width;
+    const rightX = x + sideX * width, rightZ = z + sideZ * width;
+    frame.line(leftX, y, leftZ, rightX, y, rightZ, color);
+    frame.line(leftX, y + height, leftZ, rightX, y + height, rightZ, color);
+    frame.line(leftX, y, leftZ, leftX, y + height, leftZ, color);
+    frame.line(rightX, y, rightZ, rightX, y + height, rightZ, color);
+});

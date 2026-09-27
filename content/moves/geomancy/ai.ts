@@ -3,8 +3,9 @@
  *
  * 什么局面有意义：蓄力期间立定不动、还要撑满 absorb 刻才拿增益，所以伙伴只在**对手还隔着一段距离**、
  *   自己没被睡冻时先扎地；移动中（骑乘）不扎。被睡冻时根本无法完成第二拍，直接放弃。
- * 什么时候最想出手：威胁在 ai.safeGap（默认 8）到 ai.maxChase（默认 22）之间时 priority 100 越过共享交战次序，
- *   赶在对手贴上来之前把两拍走完；已经进入蓄力时不再重复。被睡冻或威胁已贴近 safeGap 之内时及时放弃。
+ * 什么时候最想出手：威胁在 ai.safeGap（默认 8）到 ai.maxChase（默认 22）之间时越过共享交战次序，
+ *   赶在对手贴上来之前把两拍走完。priority 同时衡量「预计来袭」（威胁离安全线越远越有把握）与「剩余生命」
+ *   （残血时只有威胁还远才敢赌）；已经进入蓄力时不再重复，被睡冻、离地或威胁已贴近 safeGap 时放弃。
  * 对谁出手：自己；不需要接近，由共用任务直接施放。
  * 放完之后：特攻、特防、速度各 +2；交回共享交战计划，趁对手还没靠近把这些优势用出去。
  */
@@ -14,6 +15,8 @@ namespace PokemonSkills {
         reach: function (context, capability) { return capability.data.range; },
         available: function (context, capability, purpose, target) {
             if (context.facts.mounted) return false;
+            // 站不住地面就扎不下去，别浪费一次长准备。
+            if (context.facts.self && context.facts.self.grounded === false) return false;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "sleep") || CompanionBehavior.status(context, self, "frozen")) return false;
             if (["spa", "spd", "spe"].every(function (stat) { return CompanionBehavior.stage(context, self, stat) >= 6; })) return false;
@@ -32,8 +35,17 @@ namespace PokemonSkills {
             if (!threat) return 0;
             const self = CompanionBehavior.source(context);
             if (CompanionBehavior.status(context, self, "sleep") || CompanionBehavior.status(context, self, "frozen")) return 0;
-            if (CompanionBehavior.distance(self.point, threat.point) < CompanionBehavior.ai<number>(capability, "safeGap", 8)) return 0;
-            return CompanionBehavior.ratio(self) < 0.5 ? 110 : 100;
+            const safeGap = CompanionBehavior.ai<number>(capability, "safeGap", 8);
+            const maxChase = CompanionBehavior.ai<number>(capability, "maxChase", 22);
+            const gap = CompanionBehavior.distance(self.point, threat.point);
+            if (gap < safeGap) return 0;
+            // 预计来袭：威胁离安全线越远，越有把握走完两拍；已经逼近安全线的价值低。
+            const lead = maxChase > safeGap ? Math.max(0, Math.min(1, (gap - safeGap) / (maxChase - safeGap))) : 1;
+            // 剩余生命：血够时更愿意投这段长准备；残血时只有威胁还远才敢赌。
+            const life = CompanionBehavior.ratio(self);
+            let base = 96 + Math.round(lead * 18);
+            if (life < 0.5) base += 12; else if (life > 0.8) base += 4;
+            return Math.max(1, Math.min(120, base));
         }
     });
 

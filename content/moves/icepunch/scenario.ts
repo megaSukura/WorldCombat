@@ -18,7 +18,7 @@ Smoke.scenario("icepunch", function (stage) {
         stage.after(60, function () {
             stage.expect(stage.casts("icepunch", caster) > 0, "icepunch was committed");
             stage.expect(stage.damageTo(foe) > 0, "the frost punch dealt damage");
-            stage.note("命中先尝试冻结（已有寒霜或浸水时），成功才收走寒霜；否则留一层新寒霜；免冻目标保留原霜", {
+            stage.note("命中先尝试冻结（已有寒霜或湿身时），成功才收走寒霜；否则留一层新寒霜；免冻目标保留原霜", {
                 casts: stage.casts("icepunch", caster),
                 onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
                 chilled: stage.hadMobEffect(foe, "world_combat:status/chill"),

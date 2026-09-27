@@ -4,7 +4,7 @@
  * 念头的形状：两幕。
  *   起（windup，提交前）：低伏压身，脚下与身后拉出一片暗色速度线——几乎没有起手，只是把身体交给地面。
  *   掠（execute，提交后）：贴着地面朝瞄准方向掠过去，途中拖一条暗影；撞上活体的一瞬，只有真的擦到的那具身体
- *       才与它交换持有物（用接触时的真实快照走原子事务），两件物品各沿一条短弧飞向对方；随后或触到即停，
+ *       才与它交换持有物（用接触时的真实快照走原子事务），两件物品各从身体外侧沿直线飞向对方（只是画面，穿身而过不与实体碰撞）；随后或触到即停，
  *       或按 through 用有限逐刻的真实身体推进继续冲，墙体与身体都按原生碰撞停在原处。
  *
  * 输入是中性 `aim`：可以空放（只当一次位移），也可以明确点选目标。交换与拒换只在实际首碰的那具身体上核实，
@@ -12,8 +12,9 @@
  * 与同为「交换持有物」的戏法分开：戏法是超能远程、从容拉线、自己不动；掉包是恶属性贴身位移、起手极短、更冒险。
  *
  * 交换走统一的原子原生装备事务（equipmentExchange），宝可梦携带物与原版生物/玩家的主手/副手同一契约；
- * 不复制、不凭空生成；两边都空、目标黏着或被查封（embargo）时只当一次擦身而过。
- * 交易成功的物品飞行由独立的 actor 生命周期效果托管，动作结束后仍把这一段飞完，不被 done 立即清掉。
+ * 不复制、不凭空生成；两边都空、目标黏着或被查封（embargo）时只当一次擦身而过，分别用 empty / reject 两幕区分。
+ * 交易成功的物品飞行由独立的 actor 生命周期效果托管，动作结束后仍把这一段飞完，不被 done 立即清掉；飞行不结算、
+ * 不参与实体碰撞，终点按当刻真实位置取定，与租约各自独立。
  */
 namespace PokemonSkills {
     const switcherooScene = "world_combat:move_switcheroo";
@@ -21,6 +22,7 @@ namespace PokemonSkills {
     const switcherooSwapText = "world_combat.move.switcheroo.text.swap";
     const switcherooEmptyText = "world_combat.move.switcheroo.text.empty";
     const switcherooGuardText = "world_combat.move.switcheroo.text.guard";
+    const switcherooFailText = "world_combat.move.switcheroo.text.fail";
     const switcherooMissText = "world_combat.move.switcheroo.text.miss";
 
     /** 交易效果的载荷：两件真实物品 id（可为空字符串）、火花与体型缩放，以及接触点。 */
@@ -35,7 +37,7 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }
 
-    /** 一件真实持有物沿一条短弧飞向对方：用托管效果作用域里的原生投射物，外观就是这件物品本身。 */
+    /** 一件真实持有物从身体外侧飞向对方：用托管效果作用域里的原生投射物，外观就是这件物品本身，穿身而过不参与实体碰撞。 */
     function switcherooArcFlight(world: CombatWorld, state: any, from: CombatObservation, to: CombatActor, itemId: string, ticks: number): void {
         var target = world.observe(to);
         if (target === null) return;
@@ -44,11 +46,12 @@ namespace PokemonSkills {
         var distance = delta.length();
         var heading = distance < 0.05 ? WorldCombat.point(0, 1, 0) : delta.unit();
         var speed = Math.max(0.4, Math.min(1.6, distance / Math.max(3, ticks * 0.6)));
-        var appearance = JSON.stringify({ item: itemId, scale: 1, glow: true, pierce: 1,
-            homing: { target: String(to.ref()), turn: 160 } });
-        var flight = world.projectile(origin, heading.scale(speed), 0, 0.18, Math.max(1.2, distance + 0.8), ticks,
+        // 起点挪到身体外，避免从命中箱内部起飞就撞上自己；pierce 让这只是画面，不再和身体碰撞。
+        var launch = origin.plus(heading.scale(Math.max(from.width(), from.height()) * 0.5 + 0.2));
+        var appearance = JSON.stringify({ item: itemId, scale: 1, glow: true, pierce: true });
+        var flight = world.projectile(launch, heading.scale(speed), 0, 0.18, Math.max(1.0, distance + 0.3), ticks,
             "hit", "complete", JSON.stringify({ item: itemId }), appearance);
-        if (flight) WorldFeedback.emit(world, switcherooScene, 1, origin,
+        if (flight) WorldFeedback.emit(world, switcherooScene, 1, launch,
             { moment: "trade", projectile: flight, item: itemId, target: String(to.ref()),
                 motes: Math.round(state.motes), scale: state.scale }, 26);
     }
@@ -122,12 +125,17 @@ namespace PokemonSkills {
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)), switcherooSwapText, [], 26);
                     sound(current, "minecraft:entity.allay.item_taken");
                 } else {
-                    WorldFeedback.emit(scope, switcherooScene, 1, point, { moment: "trade", target: String(target.ref()),
-                        scale: scale, motes: Math.round(motes * 0.5), empty: 1 }, 22);
+                    // 双空与拒绝分开：双空只是两手空空地擦过，拒绝（黏着/查封/写入失败）要读成没换成。
+                    var bothEmpty = mineNow === null && theirsNow === null;
+                    var blocked = switcherooBlocked(scope, target) || NativeItems.sealed(scope, actor);
+                    WorldFeedback.emit(scope, switcherooScene, 1, point,
+                        { moment: bothEmpty ? "empty" : "reject", target: String(target.ref()),
+                            scale: scale, motes: Math.round(motes * 0.5) }, 22);
                     WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.9, 0)),
-                        switcherooBlocked(scope, target) ? switcherooGuardText : switcherooEmptyText, [], 24);
+                        bothEmpty ? switcherooEmptyText : blocked ? switcherooGuardText : switcherooFailText, [], 24);
                 }
-                if (scope.valid(target)) scope.displace(target, direction.scale(push));
+                // 敌方被推走也走受击位移：原生抗击退/免推 Boss 不会被硬挪。
+                if (scope.valid(target)) scope.hitDisplace(target, direction.scale(push));
                 if (through) { residue(current); return; }
                 movementScenes.finish(current, done);
                 return;

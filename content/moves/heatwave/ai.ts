@@ -2,8 +2,10 @@
  * 热风 / heatwave 的伙伴 AI 用途。
  *
  * 什么局面下出手：对手可见、敌对、还活着且在 `ai.maxChase`（默认 12）格内；更远交给共享接近逻辑。
- * 对谁出手：`ai.preferClusters`（默认开）打开时优先周围挤着同伴的目标——一道扇面能连带扫到他们；
- *   已经带着共享灼伤身份的目标排后。它是一招覆盖面广、冷却不长的压制，值得在对手聚拢时先放。
+ * 对谁出手：`ai.preferClusters`（默认开）打开时优先周围挤着同伴的目标——一道扇面能连带扫到他们。
+ *   `heatwaveCoverage` 按本个体**实际配置**的吹程与张角铺出扇面，逐个用 `WorldGeometry.blockHit` 排掉
+ *   被实心墙挡住的敌人，数与命中同源；已经带着共享灼伤身份的目标排后。它是一招覆盖面广、冷却不长的压制，
+ *   值得在对手聚拢时先放。
  * 够不到怎么办：reach 就是本招吹程，不够就靠近。
  * 放完之后：把命中与击退交回共享交战计划。
  */
@@ -15,19 +17,26 @@ namespace PokemonSkills {
             <= CompanionBehavior.ai<number>(capability, "maxChase", 12);
     }
 
-    /** 按本个体真实吹程与张角，从自己朝目标方向铺出扇面，数一数实际前扇里挤着几个非友方（含目标）。 */
+    /** 按本个体真实吹程与张角，从自己朝目标方向铺出扇面，数一数实际前扇里挤着几个、且没被墙挡住的非友方（含目标）。 */
     function heatwaveCoverage(context: WorldBehavior.Context, capability: WorldBehavior.Capability, target: CompanionBehavior.Entity): number {
         const world = CompanionBehavior.world(context), self = CompanionBehavior.source(context);
         const from = CompanionBehavior.point(self.point), delta = CompanionBehavior.point(target.point).minus(from);
         if (delta.length() < 0.05) return 1;
-        const reach = typeof capability.data.range === "number" ? capability.data.range : p("heatwave", "reach", world);
-        const region = WorldGeometry.sector(from, delta, reach, p("heatwave", "angle", world));
+        const source = { world: world, actor: world.source(), detail: { values: capability.data.config } };
+        const reach = typeof capability.data.range === "number" ? capability.data.range : p("heatwave", "reach", source);
+        const angle = p("heatwave", "angle", source);
+        const region = WorldGeometry.sector(from, delta, reach, angle);
+        let count = 0;
+        const targetPoint = CompanionBehavior.point(target.point);
+        if (region.contains(targetPoint) && WorldGeometry.blockHit(world, from, targetPoint) === null) count = 1;
         const nearby = (context.facts.nearby as CompanionBehavior.Entity[]) || [];
-        let count = 1;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
             if (other.ref === target.ref || other.friendly || other.health <= 0 || !other.visible) continue;
-            if (region.contains(CompanionBehavior.point(other.point))) count++;
+            const point = CompanionBehavior.point(other.point);
+            if (!region.contains(point)) continue;
+            if (WorldGeometry.blockHit(world, from, point) !== null) continue;
+            count++;
         }
         return count;
     }

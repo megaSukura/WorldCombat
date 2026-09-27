@@ -32,10 +32,11 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "facade",
         name: "Facade",
-        description: "带着身上的异常硬顶过去：处于中毒／剧毒、灼伤、麻痹或冰冻时威力翻倍，越剩不下命也越狠。撞实后把目标顶开；开启“变本加厉”还能打得更重，但会反噬自己。",
+        description: "带着身上的异常硬顶过去：处于中毒／剧毒、灼伤、麻痹时威力翻倍，越剩不下命也越狠，这一记还不吃灼伤的物理减攻。撞实后把目标顶开；开启“变本加厉”还能打得更重，但会反噬自己。",
         uses: ["带伤硬顶", "残血时反打", "把贴身之敌顶开"],
         kind: "aim",
         range: 4,
+        maxRange: 5.5,
         prepare: 7,
         active: 26,
         recover: 8,
@@ -49,7 +50,8 @@ namespace PokemonSkills {
             return {
                 prepare: p("facade", "prepare", context),
                 recover: p("facade", "recover", context) + (brutal ? 2 : 0),
-                cooldown: p("facade", "cooldown", context) + (brutal ? 4 : 0)
+                cooldown: p("facade", "cooldown", context) + (brutal ? 4 : 0),
+                range: p("facade", "slam", context)
             };
         },
         windup: function (action, config, prepare) {
@@ -59,18 +61,19 @@ namespace PokemonSkills {
             return prepare;
         },
         execute: function (action, move, config, done) {
-            const world = action.world();
             const driveScenes = WorldFeedback.actionScenes(facadeScene);
             const direction = aim(action);
             const length = p("facade", "slam", action);
-            const traceAhead = p("facade", "traceAhead", action);
             const radius = p("facade", "collisionRadius", action);
-            const code = facadeAffliction(world, action.actor());
-            const tint = facadeTint(code);
-            const intensity = Math.max(0.5, Math.min(2.2, p("facade", "power", action) / 70));
             let travelled = 0;
-            driveScenes.show(action, "drive", action.origin(),
-                { moment: "drive", affliction: code, tint: tint, essenceRate: code > 0 ? Math.round(10 * intensity) : 0, scale: radius / 0.55 });
+            /** 每一刻按“现在身上的异常”重画冲撞色与尾迹量，色相始终跟当前事实一致。 */
+            function showDrive(current: CombatAction): void {
+                const code = facadeAffliction(current.world(), current.actor());
+                const intensity = Math.max(0.5, Math.min(2.2, p("facade", "power", current) / 70));
+                driveScenes.show(current, "drive", current.origin(),
+                    { moment: "drive", affliction: code, tint: facadeTint(code),
+                      essenceRate: code > 0 ? Math.round(10 * intensity) : 0, scale: radius / 0.55 });
+            }
             function advance(current: CombatAction): void {
                 const body = current.world();
                 const origin = current.origin();
@@ -82,23 +85,31 @@ namespace PokemonSkills {
                     const power = p("facade", "power", current);
                     const landed = impact(current, hit, "facade", power, { contact: true });
                     if (landed) {
+                        // 命中当刻重新读异常：伤害用的就是这份状态，颜色与它一致；目标已被击杀也照样反馈。
+                        const code = facadeAffliction(body, current.actor());
+                        const tint = facadeTint(code);
                         const target = hit.target();
+                        const point = hit.position(), ref = target === null ? "" : String(target.ref());
+                        let targetScale = 1;
                         if (target !== null && body.valid(target)) {
                             body.hitDisplace(target, direction.scale(p("facade", "push", current)));
-                            const point = hit.position(), ref = String(target.ref());
-                            const force = Math.max(0.5, Math.min(2.2, power / 70));
-                            WorldFeedback.emit(body, facadeScene, 1, point,
-                                { moment: "impact", target: ref, intensity: force, affliction: code, tint: tint,
-                                  flash: Math.round(14 * force), dust: Math.round(30 * force), grit: Math.round(46 * force),
-                                  essence: code > 0 ? Math.round(30 * force) : 0 }, 30);
-                            WorldFeedback.emit(body, facadeScene, 1, point, { moment: "shove", target: ref }, 22);
-                            WorldFeedback.text(body, point, facadeGritText, [], 28);
-                            sound(current, "minecraft:entity.player.attack.strong");
+                            const facts = body.observe(target);
+                            if (facts !== null) targetScale = (facts.width() + facts.height()) / 2.3;
                         }
-                        if (p("facade", "strain", current) > 0) {
-                            const self = body.observe(current.actor());
-                            if (self !== null) body.health(current.actor(), -self.maxHealth() * p("facade", "strain", current), "world_combat:facade_strain");
-                        }
+                        const force = Math.max(0.5, Math.min(2.2, power / 70));
+                        const at = [point.x(), point.y(), point.z()];
+                        WorldFeedback.emit(body, facadeScene, 1, point,
+                            { moment: "impact", target: ref, point: at, scale: targetScale,
+                              intensity: force, affliction: code, tint: tint,
+                              flash: Math.round(14 * force), dust: Math.round(30 * force), grit: Math.round(46 * force),
+                              essence: code > 0 ? Math.round(30 * force) : 0 }, 30);
+                        WorldFeedback.emit(body, facadeScene, 1, point, { moment: "shove", target: ref, point: at, scale: targetScale }, 22);
+                        WorldFeedback.text(body, point, facadeGritText, [], 28);
+                        sound(current, "minecraft:entity.player.attack.strong");
+                    }
+                    if (p("facade", "strain", current) > 0) {
+                        const self = body.observe(current.actor());
+                        if (self !== null) body.health(current.actor(), -self.maxHealth() * p("facade", "strain", current), "world_combat:facade_strain");
                     }
                     driveScenes.finish(current, done);
                     return;
@@ -106,14 +117,17 @@ namespace PokemonSkills {
                 const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? body.displace(current.actor(), swept.remaining) : 0);
                 travelled += moved;
                 if (hit.blocked() || moved < p("facade", "minimumMove", current) || travelled >= length) {
-                    WorldFeedback.emit(body, facadeScene, 1, body.observe(current.actor()) ? body.observe(current.actor())!.position() : origin, { moment: "whiff" }, 18);
+                    const self = body.observe(current.actor());
+                    WorldFeedback.emit(body, facadeScene, 1, self !== null ? self.position() : origin, { moment: "whiff" }, 18);
                     WorldFeedback.text(body, origin, facadeWhiffText, [], 22);
                     sound(current, "minecraft:entity.player.attack.sweep");
                     driveScenes.finish(current, done);
                     return;
                 }
+                showDrive(current);
                 current.after(1, advance);
             }
+            showDrive(action);
             advance(action);
         }
     });

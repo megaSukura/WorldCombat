@@ -18,6 +18,6 @@
   "effect.world_combat.quash": "Quashed",
   "world_combat.move.quash.text.pin": "Quashed",
   "world_combat.move.quash.text.fizzle": "Quash missed",
-  "worldcombat.skill.quash.description.additional": "While quashed, the target's movement speed drops by 30% x (deflections + 1), so the more it is pressed the closer it comes to a standstill; hitting it again refreshes Quash and resets its deflection count.",
+  "worldcombat.skill.quash.description.additional": "While quashed, the target's movement speed drops by a fixed 30%, independent of the deflections left; the count only decides how many more attempts are pressed back, and hitting it again refreshes Quash and resets that count.",
   "worldcombat.skill.quash.timing": "%1$s s wind-up, %2$s s recovery, %3$s s cooldown, costing %4$s PP."
 }

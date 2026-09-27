@@ -5,7 +5,7 @@
  * 舔中处炸开一小片幽灵紫撞击与唾液，缠绕式再拖出一条卷住目标、朝施法者收回的舌头，最后舌头原路收回。
  * 色相家族：幽灵紫（0xB79AF0）与黏滑粉（0xE8A6D0）为主，中性 tinydust 作唾液点。
  * 拍子：起（windup 聚唾液）→ 击（lash，path 由服务端每刻更新到真实前端）→ 收（impact 舔中 / drag 收回 / miss 落空/撞墙）。
- * 范围：lash 的 polyline 直接消费服务端 `data.path`（嘴 ↔ 真实前端）；撞墙或被前排挡住时，前端就停在那个接触点。
+ * 范围：lash 的 polyline 直接消费服务端 `data.path`（嘴 ↔ 真实前端，顶点已含嘴部高度）；撞墙或被前排挡住时，前端就停在那个接触点。
  * 运动：舌头顺直线逐刻伸长、唾液向外甩、缠绕式沿反方向把目标那段拽回；落空只留一小片唾液。
  * 数：`data.intensity`（本击威力 / 30）抬高中点亮度，path 顶点随服务端阶段每刻更新。
  * 参照节：视觉语言第二、三、四、七、九节。
@@ -40,7 +40,7 @@ const LickDefinition: ParticleDefinition = {
             exit: { stop: 6, drain: 10 },
             emitters: [
                 {
-                    name: "tongue", bind: "path", offset: [0, 0.55, 0],
+                    name: "tongue", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/softswipe",
                     shape: { kind: "polyline" },
                     rate: 90, direction: "shape", speed: [0.02, 0.06],
@@ -48,7 +48,7 @@ const LickDefinition: ParticleDefinition = {
                     color: 0xE8A6D0, alpha: [0.85, 0], light: "world", maxParticles: 160
                 },
                 {
-                    name: "tip", bind: "path", offset: [0, 0.55, 0],
+                    name: "tip", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle_pink",
                     shape: { kind: "polyline" },
                     rate: 40, direction: "shape", speed: [0.04, 0.14],
@@ -56,7 +56,7 @@ const LickDefinition: ParticleDefinition = {
                     color: 0xF2C6E0, alpha: [0.7, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "spit", bind: "path", offset: [0, 0.5, 0],
+                    name: "spit", bind: "path",
                     particle: "world_combat_core:cobblemon/generic/tinydust",
                     shape: { kind: "polyline" },
                     rate: 26, direction: "outward", speed: [0.04, 0.16],

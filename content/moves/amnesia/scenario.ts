@@ -19,15 +19,18 @@ Smoke.scenario("amnesia", function (stage) {
         // 外部来源的一档持久特防：本招空明窗口结束时它必须还在。
         stage.boost(caster, { spd: 2 });
         stage.expect(stage.stages(caster).spd === 2, "the external +2 ladder is installed after actor binding");
+        stage.command("effect give "+caster.ref.split("/")[0]+" world_combat:taunt_rage 30 0 true");
+        stage.expect(stage.hasMobEffect(caster,"world_combat:taunt_rage"),"the action starts while genuinely taunted");
         stage.until(1200, function () {
             return stage.casts("amnesia", caster) > 0
                 && stage.hadMobEffect(caster, "world_combat:status/amnesia");
         }, function () {
             stage.expect(stage.casts("amnesia", caster) > 0, "amnesia was committed");
             stage.expect(stage.hadMobEffect(caster, "world_combat:status/amnesia"), "the blank window carried the shared identity");
+            stage.expect(!stage.hasMobEffect(caster,"world_combat:taunt_rage"),"a self-cleansing action can remove its own status restriction");
             const raised = stage.stages(caster);
             stage.expect(raised.spd === 4, "the owned blank window adds its stages on top of the external +2");
-            stage.note("The blank window owns this move's Sp. Def stages; an external source already held +2. Forgetting targets shared mental-status identities, and this assembly has no producer of those conditions.", { stages: raised });
+            stage.note("The self-cure removed the real taunt carrier and retained the external +2 Sp. Def contribution.", { stages: raised });
             stage.setPp(caster, "amnesia", 0);
             stage.until(900, function () {
                 return !stage.hasMobEffect(caster, "world_combat:status/amnesia");

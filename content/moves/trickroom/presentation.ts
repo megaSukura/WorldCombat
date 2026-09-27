@@ -1,8 +1,9 @@
 /**
  * 戏法空间 的粒子语言（P5 视觉语言 v2）。
  *
- * 一句话：施法者脚下荡开一圈靛紫的波纹，撑起一片边界在反向旋转的歪斜空间；谁走进去，
- * 身上就被一缕反向的螺旋拉一下，表示速度被倒转；空间走到尽头，边界向内倒卷收拢。
+ * 一句话：施法者脚下荡开一圈靛紫的波纹，撑起一片贴地边界、里面沿相反方向流动的速度线；谁走进去，
+ * 身上就被拉一下，表示速度被倒转；空间走到尽头，边界向内倒卷收拢。
+ * 速度用双向流动线表达——向内收表示慢的被推快，向外推表示快的被拖慢；不靠旋转的螺旋宣称空间本身被扭曲。
  *
  * 色相家族：靛紫（0x8A6CFF）为主体，近白紫（0xC3A8FF）做高光，深靛（0x5A3FA8）做地面影与余韵。
  * 一个效果一个色相家族。持续层是贴地的边界环，低密度、低高度，让出目标本体视线。
@@ -43,12 +44,20 @@ const TrickroomDefinition: ParticleDefinition = {
                     color: 0xC3A8FF, alpha: [0.5, 0], light: "full", maxParticles: 80
                 },
                 {
-                    name: "open_spiral", bind: "point", height: 0.35,
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyspiral",
-                    burst: { count: { data: "density", fallback: 24 } }, shape: { kind: "sphere", radius: 0.6 },
-                    direction: "outward", speed: [0.04, 0.16], drag: 0.9,
-                    lifetime: [18, 30], size: [0.28, 0.06], sizeMode: "index",
-                    color: 0x8A6CFF, alpha: [0.85, 0], light: "full", bloom: 0.25, maxParticles: 90
+                    name: "open_flow_out", bind: "point", height: 0.05, offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: { data: "density", fallback: 24 } }, shape: { kind: "ring", radius: 3.6 },
+                    direction: "outward", speed: [0.06, 0.2], drag: 0.93, spin: 0,
+                    lifetime: [14, 24], size: [0.26, 0.06], sizeMode: "index",
+                    color: 0x5A3FA8, alpha: [0.5, 0], light: "world", maxParticles: 60
+                },
+                {
+                    name: "open_flow_in", bind: "point", height: 0.05, offset: [0, 0.03, 0],
+                    particle: "world_combat_core:cobblemon/generic/speedlines",
+                    burst: { count: { data: "density", fallback: 24 } }, shape: { kind: "ring", radius: 3.6 },
+                    direction: "inward", speed: [0.06, 0.2], drag: 0.93, spin: 0,
+                    lifetime: [14, 24], size: [0.26, 0.06], sizeMode: "index",
+                    color: 0xC3A8FF, alpha: [0.55, 0], light: "full", maxParticles: 60
                 },
                 {
                     name: "open_dust", bind: "point", height: 0.02,

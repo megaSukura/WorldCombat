@@ -1,4 +1,4 @@
-/** Rescue a weaker ally in greater danger, or retreat into a healthier ally's safer position. */
+/** Rescue a weaker ally in greater danger, or retreat into a healthier ally's safer position; a held post blocks the swap unless leaveStation is on. */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("allyswitch", { ai: { maxChase: 14, retreatBelow: 0.4, leaveStation: false } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 26, 1),
@@ -37,7 +37,11 @@ namespace CompanionBehavior {
     registerUse("allyswitch", {
         protocols: ["world_combat:cover"],
         reach: function (_context, capability) { return capability.data.range; },
-        available: function (context, item, _purpose, _target) { return allyswitchThreat(context, item); },
+        available: function (context, item, _purpose, _target) {
+            if ((context.facts.intent === "hold" || context.facts.intent === "stay")
+                && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
+            return allyswitchThreat(context, item);
+        },
         selectTarget: function (context, item, _proposed) { return allyswitchThreat(context, item) ? allyswitchPartner(context, item) : null; },
         accepts: function (context, _item, target) {
             const self = source(context);

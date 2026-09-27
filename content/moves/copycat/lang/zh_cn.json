@@ -4,7 +4,7 @@
   "worldcombat.skill.copycat.use.1": "复制队友的增益与布置",
   "worldcombat.skill.copycat.use.2": "在别人刚酝酿过后接上同一手",
   "worldcombat.skill.copycat.description.0": "借来的招式最多送到 %1$s 格内，且只借得起这个距离内、%2$s 以内响过的那一手。",
-  "worldcombat.skill.copycat.description.2": "起手 %1$s 秒，收势 %2$s 秒，冷却 %3$s 秒。",
+  "worldcombat.skill.copycat.description.2": "起手 %1$s 秒，冷却 %2$s 秒。",
   "worldcombat.skill.copycat.deep.on": "深回声：记忆窗口更长，能捡起更早的出手，但起手更慢、冷却更长。",
   "worldcombat.skill.copycat.deep.off": "浅回声：出手快、冷却短，但只捡得起刚响过的那一声。",
   "worldcombat.skill.copycat.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
@@ -12,7 +12,6 @@
   "worldcombat.skill.copycat.value.window": "回声窗口",
   "worldcombat.skill.copycat.value.echoes": "回荡圈数",
   "worldcombat.skill.copycat.value.tempo": "起手",
-  "worldcombat.skill.copycat.value.aftercast": "收势",
   "worldcombat.skill.copycat.value.recharge": "冷却",
   "worldcombat.skill.copycat.preference.deep": "深回声",
   "worldcombat.skill.copycat.preference.deep.help": "开启：记忆窗口 ×1.6，能捡更早的出手，但起手慢 3 刻、冷却 ×1.35；关闭：短促的抢回声。",
@@ -23,5 +22,5 @@
   "world_combat.move.copycat.text.copy": "仿效 %1$s",
   "world_combat.move.copycat.text.empty": "附近还没有声音",
   "world_combat.move.copycat.text.target": "%1$s 需要目标",
-  "worldcombat.skill.copycat.description.1": "仿效取用的是回荡距离内、最近一次真正提交的出手，敌我双方都能被拾取；没人出过手、超出记忆窗口、出手者已离场或那一手无法被仿效时落空。自用与指向友方的招式会落到自己身上，指向敌人的招式需要你这次瞄准一个合法敌人，点和方向类的招式可以空放；仿效只支付自身 PP 与冷却，不再消耗被借招式自己的 PP。"
+  "worldcombat.skill.copycat.description.1": "仿效取用的是回荡距离内、最近一次真正提交的出手，只借别人的招（不会借自己），且出手当刻来源在距离内、此刻仍看得见。没人出过手、超出记忆窗口、出手者已离场、被墙挡住或那一手无法被仿效时落空。自用与指向友方的招式会落到自己身上，指向敌人的招式需要你这次瞄准一个合法敌人，点和方向类的招式可以空放；仿效只支付自身 PP 与冷却，不再消耗被借招式自己的 PP。"
 }

@@ -92,9 +92,17 @@ const BloodmoonDefinition: ParticleDefinition = {
             ]
         },
         beam: {
-            duration: 34,
-            exit: { drain: 14 },
+            duration: 12,
+            exit: { drain: 10 },
             emitters: [
+                {
+                    name: "volume", bind: "point", fit: "world", orient: "direction",
+                    particle: "world_combat_core:cobblemon/generic/orb/xsfadeorb",
+                    rate: 36, shape: { kind: "cylinder", radius: { data: "radius", fallback: 0.6 }, length: { data: "length", fallback: 8 } },
+                    direction: "shape", speed: [0.05, 0.2], drag: 0.96,
+                    lifetime: [5, 9], size: [0.18, 0.05],
+                    color: 0xC23A4A, alpha: [0.35, 0], light: "full", bloom: 0.4, maxParticles: 150
+                },
                 {
                     name: "column", bind: "path", shape: { kind: "polyline" }, fit: "none",
                     particle: "world_combat_core:cobblemon/generic/orb/xsfadeorblite",

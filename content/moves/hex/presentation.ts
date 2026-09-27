@@ -6,8 +6,9 @@
  * 色相家族：幽紫一族（0x4A2E8A 主体 / 0x8A6BE0 棘与环 / 0xC9B6FF 只做细碎高光，烟尘近黑 0x241E38）。
  * 拍子：起 coil（凝咒）／mark（锁定落点记号）→ 咒 cast（鬼火头飞行）→ 落 sigil（结界成形）→ 驻 hum（持续符文）
  *   → 击 burst × waves（一波波涌刺）／spike（命中者身上）→ 收 miss（无承载面或传送被截则散去）。
- * 范围：mark/sigil/hum/burst 都按服务端 `data.radius` 画在同一落点——圈画多大、判定就是多大；cast 绑真实 projectile。
- * 运动：鬼火头沿实际投射路径飞；尖刺从地下朝上涌起，一波接一波按时序脉冲。
+ * 范围：mark/sigil/hum/burst 的地面环用 `fit: "world"` 直接按服务端 `data.radius` 以世界格画出——圈画多大、
+ *   判定就是多大，`data.scale` 只影响粒子大小、不再二次放大圈径；cast 绑真实 projectile。
+ * 运动：鬼火头沿实际投射路径飞；每波沿圈壁涌出竖向鬼刺，刺高即机制 `data.spike`，随本波生效窗消退。
  * 数：每波涌出的棘数绑定 `data.spikes`（由结界半径派生）、波数绑定 `data.waves`（机制波数），
  *   命中强度绑定 `data.intensity`（该目标**解析后**的咒力，含状态翻倍），带异常者的 `data.blighted` 让那一波更亮。
  * 参照节：视觉语言第二、三、四、六、九节。
@@ -42,7 +43,7 @@ const HexDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "mark_ring", bind: "point", offset: [0, 0.05, 0], fit: "none",
+                    name: "mark_ring", bind: "point", offset: [0, 0.05, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/smallring",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.7 },
@@ -51,7 +52,7 @@ const HexDefinition: ParticleDefinition = {
                     color: 0x8A6BE0, alpha: [0.55, 0], light: "full", maxParticles: 6
                 },
                 {
-                    name: "mark_script", bind: "point", offset: [0, 0.06, 0], fit: "none",
+                    name: "mark_script", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: 22, shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.85 },
                     direction: "up", speed: [0.01, 0.05],
@@ -95,7 +96,7 @@ const HexDefinition: ParticleDefinition = {
             exit: { stop: 10, drain: 16 },
             emitters: [
                 {
-                    name: "sigil_ring", bind: "point", offset: [0, 0.05, 0], fit: "none",
+                    name: "sigil_ring", bind: "point", offset: [0, 0.05, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/ring/warblingring",
                     burst: { count: 1, at: 0 },
                     shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.95 },
@@ -104,7 +105,7 @@ const HexDefinition: ParticleDefinition = {
                     color: 0x8A6BE0, alpha: [0.65, 0], light: "full", maxParticles: 8
                 },
                 {
-                    name: "sigil_script", bind: "point", offset: [0, 0.06, 0], fit: "none",
+                    name: "sigil_script", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: 40, shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.85 },
                     direction: "up", speed: [0.01, 0.06],
@@ -117,7 +118,7 @@ const HexDefinition: ParticleDefinition = {
             exit: { drain: 24 },
             emitters: [
                 {
-                    name: "hum_ring", bind: "point", offset: [0, 0.05, 0], fit: "none",
+                    name: "hum_ring", bind: "point", offset: [0, 0.05, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/orb/flat",
                     rate: 30, shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.9 },
                     direction: "up", speed: [0.01, 0.05],
@@ -125,7 +126,7 @@ const HexDefinition: ParticleDefinition = {
                     color: 0x4A2E8A, alpha: [0.5, 0], light: "full", maxParticles: 90
                 },
                 {
-                    name: "hum_script", bind: "point", offset: [0, 0.06, 0], fit: "none",
+                    name: "hum_script", bind: "point", offset: [0, 0.06, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/sparkle/smallsparkle",
                     rate: 18, shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.8 },
                     direction: "up", speed: [0.01, 0.04],
@@ -139,16 +140,18 @@ const HexDefinition: ParticleDefinition = {
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
-                    name: "spikes", bind: "point", offset: [0, 0.0, 0], fit: "none",
-                    particle: "world_combat_core:cobblemon/generic/impact/impact_ghost",
+                    // 一圈明确竖向的鬼刺：柱壁沿圈径采样，长度取机制 `spike`（涌刺高度），一波一次。
+                    name: "spikes", bind: "point", offset: [0, 0.0, 0], fit: "world",
+                    particle: "world_combat_core:cobblemon/generic/spike",
                     burst: { count: { data: "spikes", fallback: 10 }, at: 0 },
-                    shape: { kind: "circle", radius: { data: "radius", fallback: 1.4 }, thickness: 0.8 },
-                    direction: "up", speed: [0.12, 0.4],
-                    lifetime: [8, 15], size: [0.24, 0.05], sizeMode: "index",
+                    shape: { kind: "cylinder", radius: { data: "radius", fallback: 1.4 },
+                        length: { data: "spike", fallback: 0.9 }, thickness: 0.92 },
+                    direction: "up", speed: [0.06, 0.2],
+                    lifetime: [8, 15], size: [0.24, 0.05], sizeMode: "sin",
                     color: 0x8A6BE0, alpha: [0.95, 0], light: "full", bloom: 0.35, maxParticles: 200
                 },
                 {
-                    name: "ground_glow", bind: "point", offset: [0, 0.04, 0], fit: "none",
+                    name: "ground_glow", bind: "point", offset: [0, 0.04, 0], fit: "world",
                     particle: "world_combat_core:cobblemon/generic/orb/largefadeorb",
                     rate: 30, shape: { kind: "circle", radius: { data: "radius", fallback: 1.5 }, thickness: 0.75 },
                     direction: "up", speed: [0.02, 0.1],

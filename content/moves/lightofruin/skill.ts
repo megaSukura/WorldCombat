@@ -6,22 +6,23 @@
  *
  * 三幕（提交前只播预告）：
  *   起（windup）：胸／身前绽开一朵苍白的花，花瓣一层层向内合拢蓄光，只播预告。
- *   放（ray → impact / fizzle）：提交后光柱从花心迸出，用与表现同一组顶点围出的走廊判定，贯穿走廊里
- *       最多 `pierce` 个非友方，每个各挨一次 `ray`；每次命中按实际伤害挂一次反噬（共享结算）。
+ *   放（ray → impact / fizzle）：提交后光柱从花心沿**真实 3D 瞄准**迸出，用 `WorldGeometry.bodySegment` 沿光轴
+ *       框住真实身体箱、按离花心的距离贯穿最多 `pierce` 个非友方，每个各挨一次 `ray`；每次命中按实际伤害挂一次反噬。
+ *       方块遮挡从**花心起点**裁剪（`blockHit` 的真实接触点），近墙不会从墙里起步；判定与画面读同一条轴线。
  *   噬（recoil）：光柱散去后，反噬的火沿着来路烧回施法者身上，浮字报出这一次自己掉了多少。
  *
  * 与同族分开：铁蹄光线固定自损、只打第一个；叶绿爆震是扇形、自损随放出的力量；随机光没有自损。
  * 破灭之光贯穿整列、只按**真正造成的伤害**反噬——穿得越多，自己越危险，玩家凭这条反向烧回的火认它。
  *
- * 选取 `kind: "aim"`：可朝任意方向或世界点迸出光柱，也能空放；方块在真实格处截束，命中权限仍由命中层结算。
+ * 选取 `kind: "aim"`：可朝任意方向或世界点迸出光柱，也能空放；命中权限仍由命中层结算。
  */
 namespace PokemonSkills {
-    /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的走廊四角；判定与表现共用这组顶点。 */
+    /** 以 origin 为起点、朝 direction 长 reach、半宽 half 的走廊四角；判定与表现共用这组顶点，端点沿真实 3D 方向。 */
     function lightofruinLane(origin: CombatPoint, direction: CombatPoint, reach: number, half: number): CombatPoint[] {
         const flat = WorldCombat.point(direction.x(), 0, direction.z());
         const heading = flat.length() < 1e-6 ? WorldCombat.point(0, 0, 1) : flat.unit();
         const side = WorldCombat.point(-heading.z(), 0, heading.x());
-        const end = origin.plus(heading.scale(reach));
+        const end = origin.plus(direction.scale(reach));
         return [origin.plus(side.scale(half)), origin.minus(side.scale(half)), end.minus(side.scale(half)), end.plus(side.scale(half))];
     }
     function lightofruinPath(vertices: CombatPoint[]): number[][] {
@@ -50,7 +51,7 @@ namespace PokemonSkills {
                 color: 0xFFD9F0, label: config && config.overdraw === true ? "透支式破灭之光" : "节制式破灭之光" };
         },
         resolve: function (pokemon, config, world, actor, attributes) {
-            const context: NumberContext = { pokemon, skill: skills[lightofruinId], detail: { values: config },
+            const context: NumberContext = { pokemon: pokemon, skill: skills[lightofruinId], detail: { values: config },
                 world: world || null, actor: actor || null, attributes };
             return {
                 prepare: Math.round(p(lightofruinId, "tempo", context)),
@@ -70,7 +71,8 @@ namespace PokemonSkills {
             const world = action.world();
             const actor = action.actor();
             const origin = action.origin();
-            const direction = aim(action);
+            const aimed = aim(action);
+            const direction = aimed.length() < 1e-6 ? action.direction() : aimed;
             const reach = Math.max(1, p(lightofruinId, "reach", action));
             const half = Math.max(0.1, p(lightofruinId, "width", action));
             const power = p(lightofruinId, "ray", action);
@@ -79,10 +81,9 @@ namespace PokemonSkills {
             const petals = Math.max(1, Math.round(p(lightofruinId, "petals", action)));
             const scale = half / 0.95;
             const intensity = Math.max(0.6, Math.min(2.8, power / 140));
-            // 方块截束：clipBlocks 给出射线上第一个方块格，光柱在墙面收束；判定与画面读到同一条截断线。
-            const muzzle = Math.min(1.6, half + 0.4);
-            const clip = world.clipBlocks(origin.plus(direction.scale(muzzle)), origin.plus(direction.scale(reach)));
-            const wall = clip !== null && clip.blocked() ? clip : null;
+            const actorRef = String(actor.ref());
+            // 从花心起点裁剪：整根光柱从起点射出，近墙在真实接触点收束，墙后的人不再被算入。
+            const wall = WorldGeometry.blockHit(world, origin, origin.plus(direction.scale(reach)));
             const laneReach = wall !== null ? Math.max(0.5, wall.position().minus(origin).length()) : reach;
             const vertices = lightofruinLane(origin, direction, laneReach, half);
             const tip = origin.plus(direction.scale(laneReach));
@@ -97,9 +98,10 @@ namespace PokemonSkills {
                     petals: petals, pierce: pierce, scale: scale, intensity: intensity, blocked: wall !== null ? 1 : 0,
                     notes: Math.round(40 + power * 0.6) }, 28);
 
-            const region = WorldGeometry.polygon(vertices, { below: 2, above: 3 });
+            // 真实 3D 粗束：沿光轴用真实身体箱框住，按离花心的接触距离由近到远贯穿。
             const candidates: { actor: CombatActor; at: CombatPoint }[] = [];
-            WorldGeometry.selectEnemies(world, region, function (enemy, facts) {
+            WorldGeometry.selectBodies(world, WorldGeometry.bodySegment(origin, tip, half), function (enemy, facts) {
+                if (String(enemy.ref()) === actorRef || world.friendly(enemy)) return;
                 if (!world.clear(origin, facts.position())) return;
                 candidates.push({ actor: enemy, at: facts.position() });
             });

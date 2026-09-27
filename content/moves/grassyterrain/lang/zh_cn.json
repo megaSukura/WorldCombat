@@ -1,11 +1,11 @@
 {
-  "worldcombat.skill.grassyterrain.summary": "把青草种进选定的地面：站在草地上的活体缓慢回复生命，草属性招式威力提高，地震与重踏被草根卸掉一半。开启密植还会照料草地里的植物。对双方一视同仁。",
+  "worldcombat.skill.grassyterrain.summary": "把青草种进选定的地面：站在同层青草上、贴地的活体缓慢回复生命，草属性招式威力提高，地震与重踏被草根卸掉一半。开启密植还会照料草地里的植物。对双方一视同仁。",
   "worldcombat.skill.grassyterrain.use.0": "持续回复",
   "worldcombat.skill.grassyterrain.use.1": "给草属性招式加成",
   "worldcombat.skill.grassyterrain.use.2": "压制地面震招",
   "worldcombat.skill.grassyterrain.use.3": "照料植物",
   "worldcombat.skill.grassyterrain.description.0": "在选定地面种下半径 %1$s 格的青草地，持续 %2$s。",
-  "worldcombat.skill.grassyterrain.description.1": "站在草地上的贴地活体每 %2$s 回复各自最大生命的 %1$s，只在未满血时回复；草地对双方一视同仁。",
+  "worldcombat.skill.grassyterrain.description.1": "站在同层青草上、贴地的活体每 %2$s 回复各自最大生命的 %1$s，只在未满血时回复；草地对双方一视同仁。",
   "worldcombat.skill.grassyterrain.description.2": "开启密植时，这片草地每隔 20 刻照料周围一株可生长的植物，最多照料 %1$s 次。",
   "worldcombat.skill.grassyterrain.description.3": "起手 %1$s、收招 %2$s，随速度变化。",
   "worldcombat.skill.grassyterrain.timing": "可向 %1$s 格内的地面施放；准备 %2$s 后消耗 %4$s PP 种下青草，收招 %3$s，冷却 %5$s。",
@@ -31,5 +31,5 @@
   "world_combat.move.grassyterrain.text.heal": "草根滋养 %1$s",
   "world_combat.move.grassyterrain.text.growth": "幼苗生长",
   "effect.world_combat.grassyterrain_ground": "青草托举",
-  "worldcombat.skill.grassyterrain.description.field": "站在草地上的贴地活体会被草根护住：它自己的草属性招式威力 ×1.3；而它受到的地震或重踏威力减半（减伤看受击者是否站在草上，施法者站在草里朝场外目标放震招不受影响）。离地的不算，走上草地才有、离开即失去。"
+  "worldcombat.skill.grassyterrain.description.field": "站在同层青草上、贴地的活体会被草根护住：它自己的草属性招式威力 ×1.3；而它受到的地震或重踏威力减半（减伤看受击者是否站在草上，施法者站在草里朝场外目标放震招不受影响）。离地、站在上方平台或墙后的都不算；走上草地才有、离开即失去。"
 }

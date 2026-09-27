@@ -18,54 +18,20 @@
  */
 namespace PokemonSkills {
     const trickScene = "world_combat:move_trick";
-    const trickArcEffect = "world_combat:move_trick_arc";
+    const trickArcScene = "world_combat:move_trick_arc";
     const trickSwapText = "world_combat.move.trick.text.swap";
     const trickEmptyText = "world_combat.move.trick.text.empty";
     const trickGuardText = "world_combat.move.trick.text.guard";
     const trickMissText = "world_combat.move.trick.text.miss";
+    const trickFullText = "world_combat.move.trick.text.full";
 
-    /** 交易效果的载荷：两件真实物品 id（可为空字符串）、心尘与体型缩放，以及接触点。 */
-    function trickArcData(json: string): string {
-        var value = JSON.parse(json);
-        if (!Array.isArray(value.point) || value.point.length !== 3 ||
-            !value.point.every(function (n: any) { return typeof n === "number" && isFinite(n); }))
-            throw new Error("Invalid trick arc point");
-        ["motes", "scale"].forEach(function (key) {
-            if (typeof value[key] !== "number" || !isFinite(value[key])) throw new Error("Invalid trick arc state");
-        });
-        return JSON.stringify(value);
+    /** 失败原因映射到实际文案：按 receipt 的真实 reason 反馈，不再一律空物。 */
+    function trickFailureText(reason: string): string {
+        if (reason === "empty" || reason === "empty-incoming") return trickEmptyText;
+        if (reason === "capacity") return trickFullText;
+        if (reason === "stale" || reason === "stale-first" || reason === "stale-second" || reason === "item-left") return trickMissText;
+        return trickGuardText;
     }
-
-    /** 一件真实持有物沿心线飞向对方：用托管效果作用域里的原生投射物，外观就是这件物品本身。 */
-    function trickArcFlight(world: CombatWorld, state: any, from: CombatObservation, to: CombatActor, itemId: string, ticks: number): void {
-        var target = world.observe(to);
-        if (target === null) return;
-        var origin = from.position().plus(WorldCombat.point(0, from.height() * 0.6, 0));
-        var delta = target.position().plus(WorldCombat.point(0, target.height() * 0.6, 0)).minus(origin);
-        var distance = delta.length();
-        var heading = distance < 0.05 ? WorldCombat.point(0, 1, 0) : delta.unit();
-        var speed = Math.max(0.35, Math.min(1.6, distance / Math.max(4, ticks * 0.6)));
-        var appearance = JSON.stringify({ item: itemId, scale: 1, glow: true, pierce: 1,
-            homing: { target: String(to.ref()), turn: 140 } });
-        var flight = world.projectile(origin, heading.scale(speed), 0, 0.18, Math.max(1.5, distance + 1.0), ticks,
-            "hit", "complete", JSON.stringify({ item: itemId }), appearance);
-        if (flight) WorldFeedback.emit(world, trickScene, 1, origin,
-            { moment: "trade", projectile: flight, item: itemId, target: String(to.ref()),
-                motes: Math.round(state.motes), scale: state.scale }, 34);
-    }
-
-    WorldCombat.effect(trickArcEffect, 1, 60, "actor", trickArcData, EffectProtocols.unchanged);
-    WorldCombat.effectHandler(trickArcEffect, "start", function (effect) {
-        var world = effect.world(), self = effect.source(), foe = effect.target();
-        var mine = world.observe(self), theirs = world.observe(foe);
-        if (mine === null || theirs === null) { effect.end(); return; }
-        var state = JSON.parse(effect.state());
-        var ticks = Math.max(6, effect.remaining() - 2);
-        if (state.mine) trickArcFlight(world, state, mine, foe, String(state.mine), ticks);
-        if (state.theirs) trickArcFlight(world, state, theirs, self, String(state.theirs), ticks);
-    });
-    WorldCombat.effectHandler(trickArcEffect, "hit", function () { });
-    WorldCombat.effectHandler(trickArcEffect, "complete", function () { });
 
     define({
         id: "trick",
@@ -86,8 +52,8 @@ namespace PokemonSkills {
         resolve: function (pokemon, config, world, actor, attributes) {
             var context: NumberContext = { pokemon: pokemon, skill: skills["trick"], detail: { values: config },
                 world: world || null, actor: actor || null, attributes: attributes };
-            return { prepare: Math.round(p("trick", "feint", context)), recover: Math.round(p("trick", "recover", context)),
-                cooldown: Math.round(p("trick", "cooldown", context)), active: 0, range: p("trick", "reach", context) };
+            return { prepare: Math.round(p("trick", "feint", context)), recover: Math.round(p("trick", "aftercast", context)),
+                cooldown: Math.round(p("trick", "recharge", context)), active: 0, range: p("trick", "reach", context) };
         },
         ready: function (action: CombatAction, config: any): string {
             var world = action.sense(), actor = action.actor(), target = action.target();
@@ -108,8 +74,10 @@ namespace PokemonSkills {
             var body = action.sense().observe(action.actor());
             var scale = body ? (body.width() + body.height()) / 2.3 : 1;
             var target = action.target();
+            // 预备就沿真实的施法者—目标顶点画一条心线提示，玩家看得出这一手要往哪个方向换。
+            var path = target === null || target === undefined ? [] : ["source", String(target.ref())];
             action.present("world_combat:trick:" + action.id(), trickScene, 1, action.targetPosition(), JSON.stringify({
-                moment: "feint", target: target === null ? "" : String(target.ref()), scale: scale,
+                moment: "feint", target: target === null || target === undefined ? "" : String(target.ref()), scale: scale, path: path,
                 decoys: Math.round(p("trick", "decoys", action)), motes: Math.round(p("trick", "motes", action)) }));
             return prepare;
         },
@@ -154,19 +122,20 @@ namespace PokemonSkills {
             var mine = trickHeldOf(world, actor), theirs = trickHeldOf(world, target);
             if (mine === null && theirs === null) { fizzle(foe.position(), trickEmptyText); return; }
 
-            if (trickExchange(world, actor, target)) {
-                var ticks = Math.max(12, Math.round(span / 0.9) + 8);
-                world.effect(trickArcEffect, target, JSON.stringify({ mine: mine === null ? "" : mine.id,
-                    theirs: theirs === null ? "" : theirs.id, motes: motes, scale: scale,
-                    point: [foe.position().x(), foe.position().y(), foe.position().z()] }), ticks);
-                WorldFeedback.emit(world, trickScene, 1, foe.position(), { moment: "settle", target: String(target.ref()),
-                    scale: scale, motes: Math.round(motes * 0.7) }, 26);
-                WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.0, 0)), trickSwapText, [], 28);
-                sound(action, "minecraft:entity.allay.item_taken");
-            } else {
-                fizzle(foe.position(), trickBlocked(world, target) ? trickGuardText : trickEmptyText);
-                return;
-            }
+            var receipt = trickExchange(world, actor, target);
+            if (!receipt.ok) { fizzle(foe.position(), trickFailureText(String(receipt.reason || ""))); return; }
+            // 交换已在原子事务里真实生效：两件真实物品沿实际短路径做纯视觉对飞，源外发射、无实体碰撞；两端同步小闪。
+            var ticks = Math.max(10, Math.round(span / 0.9) + 6);
+            WorldFeedback.emit(world, trickArcScene, 1, self.position(),
+                { moment: "trade", source: String(actor.ref()), target: String(target.ref()),
+                    mine: mine === null ? "" : mine.id, theirs: theirs === null ? "" : theirs.id,
+                    span: span, scale: scale, motes: Math.round(motes), start: world.tick(), dur: ticks }, ticks + 8);
+            WorldFeedback.emit(world, trickScene, 1, self.position(),
+                { moment: "settle", target: String(actor.ref()), scale: scale, motes: Math.round(motes * 0.6) }, 26);
+            WorldFeedback.emit(world, trickScene, 1, foe.position(),
+                { moment: "settle", target: String(target.ref()), scale: scale, motes: Math.round(motes * 0.7) }, 26);
+            WorldFeedback.text(world, foe.position().plus(WorldCombat.point(0, 1.0, 0)), trickSwapText, [], 28);
+            sound(action, "minecraft:entity.allay.item_taken");
             done(action);
         },
         indicator: function (config: any, pokemon?: CombatPokemon) {

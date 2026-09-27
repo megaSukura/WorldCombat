@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.taunt.summary": "Provokes the target face to face until its rage takes over; until the rage fades it can only use moves that deal damage, and a redirectable foe turns its attention to you. The taunt needs a clear line to land — a wall or extra distance makes it miss.",
+  "worldcombat.skill.taunt.summary": "Provokes the target face to face until its rage takes over; until the rage fades its status moves are sealed so it can only swing for damage, and a redirectable foe turns its attention to you. The taunt needs a clear line to land — a wall or extra distance makes it miss.",
   "worldcombat.skill.taunt.use.0": "Force healing, boosting or repositioning foes to swing at you instead",
   "worldcombat.skill.taunt.use.1": "Force setup-reliant foes to trade blows instead",
   "worldcombat.skill.taunt.use.2": "Open a window for allies to trade blows",

@@ -8,14 +8,20 @@
  * 放完接什么：交回共享交战计划；光柱坠落时会更新锚点，冻结前跑掉的目标会砸空。
  */
 namespace PokemonSkills {
-    function luminacrashCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability): number {
-        const self = CompanionBehavior.source(context).point, nearby = context.facts.nearby as CompanionBehavior.Entity[];
-        const radius = typeof capability.data.range === "number" ? capability.data.range : 10;
+    /** 聚堆按落点附近计：用本招真实的炸落半径，而不是施术者到目标的整个射程。 */
+    function luminacrashCluster(context: WorldBehavior.Context, capability: WorldBehavior.Capability, landing: CompanionBehavior.Entity): number {
+        const nearby = context.facts.nearby as CompanionBehavior.Entity[];
+        const world = CompanionBehavior.world(context);
+        let radius = capability.data.range;
+        try {
+            radius = PokemonSkills.p("luminacrash", "burstRadius", { world: world, actor: world.source(),
+                skill: PokemonSkills.skills["luminacrash"], detail: { values: capability.data.config } });
+        } catch (error) { /* 参数求值不可用时退回射程，但优先用真实炸落半径。 */ }
         let count = 0;
         for (let i = 0; i < nearby.length; i++) {
             const other = nearby[i];
-            if (other.friendly || other.health <= 0 || other.ref === String(context.actor)) continue;
-            if (CompanionBehavior.distance(other.point, self) <= radius) count++;
+            if (other.friendly || other.health <= 0 || other.ref === String(context.actor) || other.ref === String(landing.ref)) continue;
+            if (CompanionBehavior.distance(other.point, landing.point) <= radius) count++;
         }
         return count;
     }
@@ -41,7 +47,7 @@ namespace PokemonSkills {
             if (speed > 0.12) base -= Math.min(16, speed * 100);
             else if (speed > 0.02) base += 6;
             if (!CompanionBehavior.ai<boolean>(capability, "cluster", true)) return base;
-            return luminacrashCluster(context, capability) >= 2 ? base + 12 : base;
+            return luminacrashCluster(context, capability, target) >= 2 ? base + 12 : base;
         }
     });
 

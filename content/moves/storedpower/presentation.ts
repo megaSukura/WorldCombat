@@ -5,7 +5,8 @@
  *   画出的正是判定半径 → 圈里每个人身上炸开灵能冲击、被向外推 → 倾囊时等级化作一圈更亮的光散去。
  * 色相家族：灵能紫（0x8A5BD0 主体 / 0xB87CE8 环与冲击 / 0xE8D0FF 只做细碎高光），尘点近白。
  * 拍子：起 charge（0–10t 收拢）→ 放 nova（炸开）→ 击 hit（命中者）→ 果 spent（倾囊）／收 fade（空放）。
- * 范围：nova 的环绑施法者、按 `data.scale`（释放半径 / 3.2）铺开——环画多大，判定就是多大。
+ * 范围：nova／spent 的外缘由自定义场景 `world_combat:move_storedpower/rings` 以服务端传入的确定中心与真实释放半径
+ *   画满整圈（再叠几道纬线圈成球壳），环画多大判定就是多大；粒子的 swirl／spray 只作密度与流动。
  * 运动：charge 的光点向内收拢；nova 的环与灵光向外扩；hit 绑命中者向外炸；spent 再推一圈更远。
  * 数：charge／nova 的灵光量绑 `data.motes`（提升项数与蓄积等级派生），环数绑 `data.raised`，
  *   hit 的强度绑 `data.intensity`（本爆威力 / 60）。
@@ -50,15 +51,6 @@ const StoredPowerDefinition: ParticleDefinition = {
             duration: 26,
             exit: { stop: 12, drain: 16 },
             emitters: [
-                {
-                    name: "wave", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/ring/xlring",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "torus", radius: 3.2, thickness: 0.22, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.0, 0.04],
-                    lifetime: [14, 22], size: [0.55, 1.15], sizeMode: "linear",
-                    color: 0xB87CE8, alpha: [0.7, 0], light: "full", maxParticles: 8
-                },
                 {
                     name: "swirl", bind: "point", fit: "none", offset: [0, 0.1, 0],
                     particle: "world_combat_core:cobblemon/generic/psychic/psyswirl",
@@ -108,15 +100,6 @@ const StoredPowerDefinition: ParticleDefinition = {
             exit: { stop: 12, drain: 16 },
             emitters: [
                 {
-                    name: "outpulse", bind: "point", fit: "none", offset: [0, 0.06, 0],
-                    particle: "world_combat_core:cobblemon/generic/psychic/psyring2",
-                    burst: { count: 1, at: 0 },
-                    shape: { kind: "torus", radius: 3.2, thickness: 0.18, rotation: [90, 0, 0] },
-                    direction: "outward", speed: [0.0, 0.05],
-                    lifetime: [14, 24], size: [0.45, 1.0], sizeMode: "linear",
-                    color: 0xE8D0FF, alpha: [0.85, 0], light: "full", maxParticles: 8
-                },
-                {
                     name: "release", bind: "source", offset: [0, 0.1, 0], height: 0.55,
                     particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
                     burst: { count: { data: "spent", fallback: 4 }, at: 0 },
@@ -146,3 +129,49 @@ const StoredPowerDefinition: ParticleDefinition = {
 };
 
 WorldCombatParticles.scene("world_combat:move_storedpower", 1, StoredPowerDefinition);
+
+function storedpowerTriple(value: any): number[] | null {
+    if (Array.isArray(value) && value.length >= 3) {
+        const x = Number(value[0]), y = Number(value[1]), z = Number(value[2]);
+        if (isFinite(x) && isFinite(y) && isFinite(z)) return [x, y, z];
+    }
+    return null;
+}
+function storedpowerNumber(value: any, fallback: number): number {
+    return typeof value === "number" && isFinite(value) ? value : fallback;
+}
+
+// 辅助力量的一圈边界与球壳：以服务端传入的确定中心、按本次真实释放半径画满整圈，再叠几道纬线圈；
+// 环上每一处都真实落点，不再把一颗环纹随机摆到环的某一点。倾囊用更亮的一圈，只有真的清空增益后才播。
+WorldCombatClient.scene("world_combat:move_storedpower/rings", 1, function (frame: CombatClientFrame) {
+    const entry: CombatSceneEntry = JSON.parse(frame.data());
+    if (entry.lifecycle) return;
+    const data: any = entry.data || {};
+    if (data.lifecycle) return;
+    const centre = storedpowerTriple(data.point) || storedpowerTriple(entry.position);
+    if (centre === null) return;
+    const radius = Math.max(0.6, Math.min(8, storedpowerNumber(data.radius, 3.2)));
+    const start = storedpowerNumber(data.start, frame.serverTick());
+    const kind = String(data.kind || "nova");
+    const age = Math.max(0, frame.serverTick() - start);
+    const life = kind === "spent" ? 26 : 30;
+    const progress = Math.max(0, Math.min(1, age / life));
+    const alpha = Math.round((kind === "spent" ? 220 : 190) * (1 - progress) * (1 - progress));
+    if (alpha <= 6) return;
+    const y = centre[1] + 0.06;
+    const main = (alpha << 24 | (kind === "spent" ? 0xE8D0FF : 0xB87CE8)) | 0;
+    const faint = (Math.round(alpha * 0.5) << 24 | 0x8A5BD0) | 0;
+    const bright = (Math.round(alpha * 0.85) << 24 | 0xE8D0FF) | 0;
+    frame.ring(centre[0], y, centre[2], radius, main);
+    const latitudes = [0.5, -0.5, 0.82, -0.82, 0.98, -0.98];
+    for (let i = 0; i < latitudes.length; i++) {
+        const s = latitudes[i], r = radius * Math.sqrt(Math.max(0, 1 - s * s));
+        if (r > 0.05) frame.ring(centre[0], y + radius * s, centre[2], r, faint);
+    }
+    const spokes = kind === "spent" ? 8 : 6;
+    for (let i = 0; i < spokes; i++) {
+        const a = i * Math.PI * 2 / spokes;
+        frame.line(centre[0] + Math.cos(a) * radius * 0.55, y, centre[2] + Math.sin(a) * radius * 0.55,
+            centre[0] + Math.cos(a) * radius, y, centre[2] + Math.sin(a) * radius, bright);
+    }
+});

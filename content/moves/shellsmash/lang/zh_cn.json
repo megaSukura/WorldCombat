@@ -25,5 +25,5 @@
   "worldcombat.skill.shellsmash.preference.ai.minGap.help": "威胁近于这个距离时不再破壳、直接交战；调大更保守。",
   "worldcombat.skill.shellsmash.preference.ai.minHealth": "最低生命",
   "worldcombat.skill.shellsmash.preference.ai.minHealth.help": "生命低于这个比例时不再破壳；防御本就吃紧，调高更不愿意冒险。",
-  "world_combat.move.shellsmash.text.broken": "破壳 · 攻特攻速 +%1$s，防特防 −%2$s"
+  "world_combat.move.shellsmash.text.broken": "破壳 · 攻+%1$s 特攻+%2$s 速+%3$s，防−%4$s 特防−%5$s"
 }

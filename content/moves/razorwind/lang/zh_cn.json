@@ -1,7 +1,7 @@
 {
-  "worldcombat.skill.razorwind.summary": "站定把四周气流拧成一把把风之刃，蓄够后朝瞄准方向甩出一整片扇面：扇面按距离由近及远分三段依次推进，扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
+  "worldcombat.skill.razorwind.summary": "站定把四周气流拧成一把把风之刃，蓄够后朝瞄准方向甩出一整片扇面：风刃面从身体边缘起、按距离由近及远分三段依次推进，前缘沿真实墙面按段截断；扇面里最多数名敌人各挨一记风刃，且更容易击中要害；蓄风期间站定、可被打断，打断不消耗 PP。",
   "worldcombat.skill.razorwind.description.0": "每一记风刃对扇面里的一个目标造成约 %1$s 点特殊伤害，且更容易击中要害。",
-  "worldcombat.skill.razorwind.description.1": "扇面向前铺 %1$s 格、向两侧各张 %2$s 度，分三段由近及远推进，最多切到 %3$s 个目标；每个目标只在它所在的那段结算一次，被方块挡住的目标切不到。",
+  "worldcombat.skill.razorwind.description.1": "扇面向前铺 %1$s 格、向两侧各张 %2$s 度，风刃面从身体边缘起，分三段由近及远推进，最多切到 %3$s 个目标；每个目标只在它所在的那段结算一次，前缘沿真实墙面按段截断，墙后的目标切不到。",
   "worldcombat.skill.razorwind.description.2": "需要站定蓄风 %1$s；蓄风期间可被打断，打断不消耗 PP。",
   "worldcombat.skill.razorwind.stance.spread": "当前为散流式：扇面更宽、风刃更多，但单发威力与射程略收。",
   "worldcombat.skill.razorwind.stance.focus": "当前为集刃式：威力更高、射程更远，但扇面收窄。",

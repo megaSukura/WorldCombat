@@ -6,8 +6,10 @@
  *
  * 两幕：
  *   起（crouch，提交前）：屈膝压进脚边的草丛，草屑向脚下收拢；有草木时预告更亮。
- *   窜（leap → hit → boost）：提交后沿瞄准方向逐刻窜出，身体按分段高度差抬起一记短低弧、水平仍逐刻扫掠，
- *       头顶压住时弧线降低；窜中目标结算伤害与击退（真的造成伤害才推人、才提速），落空则落地扬尘。
+ *   窜（leap → hit → boost）：提交后沿瞄准方向逐刻窜出，身体按「当前实际高度与起跳点之差」走一记短低弧，
+ *       水平仍逐刻扫掠并每刻发出这一 tick 真实走过的子段；头顶压住时弧线降低；窜中目标结算伤害与击退
+ *       （真的造成伤害才推人、才提速），穿草模式借 moveSweep 忽略已触及者继续合法余程（无新伤害）；
+ *       落空且真正着地时才扬尘。
  *
  * 选取：kind 为 aim，可点选方向或实体、也可向空处空放；草木借势只读起跳点脚下的真实方块。
  *
@@ -22,11 +24,13 @@ namespace PokemonSkills {
 
     function trailblazeHasteNow(current: CombatAction, stages: number): void {
         const world = current.world(), self = current.actor();
-        NativeEffects.boost(world, self, "spe", stages);
+        // 读原生接受的实际增量：到顶／被拒绝时为 0，不假报提速、也不留视觉。
+        const gained = NativeEffects.boost(world, self, "spe", stages);
+        if (!(gained > 0)) return;
         const body = world.observe(self);
         if (body === null) return;
-        WorldFeedback.emit(world, trailblazeScene, 1, body.position(), { moment: "boost", stages: stages }, 30);
-        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), trailblazeHasteText, [stages], 34);
+        WorldFeedback.emit(world, trailblazeScene, 1, body.position(), { moment: "boost", stages: gained }, 30);
+        WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.3, 0)), trailblazeHasteText, [gained], 34);
         world.sound("minecraft:block.grass.step", body.position(), 14, "{}");
     }
 
@@ -81,26 +85,22 @@ namespace PokemonSkills {
             const veil = Math.round(p("trailblaze", "veil", action));
             const cover = trailblazeCoverOf(world, actor);
             const overshoot = !!(config && config.overshoot);
-            // 只取水平朝向做窜跃；竖直那一份由身体按弧线逐刻抬起。
+            // 只取水平朝向做窜跃；竖直那一份由身体按当前实际高度与起跳点之差逐刻补上。
             const direction = WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()), action.direction());
             const intensity = Math.max(0.6, Math.min(2.2, power / 60));
             const scale = stride / 3.4;
             const origin = action.origin();
             const startBody = action.sense().observe(actor);
-            const halfHeight = startBody !== null ? startBody.height() / 2 : 0.7;
-            const landing = origin.plus(direction.scale(stride));
-            const middle = origin.plus(direction.scale(stride / 2));
+            const startY = startBody !== null ? startBody.position().y() : origin.y();
             let apex = p("trailblaze", "arc", action);
-            const peak = WorldCombat.point(middle.x(), origin.y() + apex, middle.z());
-            // 起跳的整体预告：一条到落点的短低弧，顶点就是身体真正会抬到的高度；有草木时才多卷一片草叶。
+            // 起跳：脚下草叶与速度线，不再预画整条弧线（弧线由每刻真实子段画出）。
             movementScenes.show(action, "launch", origin, {
-                moment: "launch", cover: cover, veil: veil, scale: scale, intensity: intensity, arc: apex,
-                bloom: cover ? veil : 0,
-                path: [[origin.x(), origin.y(), origin.z()], [peak.x(), peak.y(), peak.z()], [landing.x(), landing.y(), landing.z()]]
+                moment: "launch", cover: cover, veil: veil, scale: scale, intensity: intensity, arc: apex, bloom: cover ? veil : 0
             });
             sound(action, "minecraft:block.grass.break");
             if (cover) WorldFeedback.text(world, origin.plus(WorldCombat.point(0, 1.2, 0)), trailblazeGrassText, [], 24);
-            let travelled = 0, struck = false, settled = false, height = 0, airborne = false;
+            let travelled = 0, struck = false, spent = false, settled = false, height = 0, airborne = false;
+            const ignored: string[] = [];
             function finish(current: CombatAction): void { if (!settled) { settled = true; movementScenes.finish(current, done); } }
 
             function strikeNow(current: CombatAction, hit: CombatImpact): boolean {
@@ -116,11 +116,20 @@ namespace PokemonSkills {
 
             function land(current: CombatAction, at: CombatPoint): void {
                 const scope = current.world();
-                if (!struck) {
+                const body = scope.observe(actor);
+                // 停止时没有真正着地就不画落地尘；没命中才报窜空。
+                if (body !== null && body.grounded())
                     WorldFeedback.emit(scope, trailblazeScene, 1, at, { moment: "land", cover: cover, scale: scale, veil: veil, arc: apex }, 20);
-                    WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), trailblazeMissText, [], 22);
-                }
+                if (!struck) WorldFeedback.text(scope, at.plus(WorldCombat.point(0, 1.1, 0)), trailblazeMissText, [], 22);
                 finish(current);
+            }
+
+            /** 身体逐接触：忽略已触及者，其余实体仍由原生碰撞拦下。返回 actual 与实际剩余。 */
+            function sweepBody(current: CombatAction, delta: CombatPoint): { hit: CombatImpact; moved: number; remaining: CombatPoint } {
+                const before = current.origin(), distance = delta.length();
+                const hit = current.moveSweep(delta, radius, JSON.stringify(ignored));
+                const moved = current.origin().minus(before).length();
+                return { hit: hit, moved: moved, remaining: distance > 0 ? delta.unit().scale(Math.max(0, distance - moved)) : delta };
             }
 
             function advance(current: CombatAction): void {
@@ -130,7 +139,7 @@ namespace PokemonSkills {
                 const step = Math.min(pace, Math.max(0, stride - travelled));
                 if (step <= 0.001) { land(current, from); return; }
                 const ratio = Math.min(1, (travelled + step) / stride);
-                // 身体真的沿低弧抬起：水平逐刻扫掠，竖直按分段高度差走；头顶被压住就把弧降下来。
+                // 身体真的沿低弧抬起：水平逐刻扫掠，竖直按「目标弧高 − 当前实际高度」补差；头顶被压住就把弧降下来。
                 let dy = apex * Math.sin(Math.PI * ratio) - height;
                 dy = Math.max(-0.7, Math.min(0.7, dy));
                 if (dy > 0.001) {
@@ -140,23 +149,32 @@ namespace PokemonSkills {
                         apex = height; dy = 0;
                     }
                 }
-                if (Math.abs(dy) > 0.001) height += scope.displace(actor, WorldCombat.point(0, dy, 0));
+                if (Math.abs(dy) > 0.001) scope.displace(actor, WorldCombat.point(0, dy, 0));
+                const climbed = scope.observe(actor);
+                height = climbed !== null ? climbed.position().y() - startY : height;
                 if (height > 0.05) airborne = true;
                 if (ratio >= 0.5) movementScenes.stop(current, "launch");
-                const swept = sweepStep(current, direction.scale(step), radius), hit = swept.hit;
-                if (hit.hitEntity() && !struck) {
-                    struck = strikeNow(current, hit);
-                    if (!overshoot) { finish(current); return; }
-                }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
-                travelled += moved;
+                const swept = sweepBody(current, direction.scale(step)), hit = swept.hit;
                 const after = scope.observe(actor);
-                const grounded = after !== null ? after.grounded() : false;
-                if (hit.blocked() || moved < minimumMove || travelled >= stride || (airborne && grounded && ratio >= 0.4)) {
-                    land(current, after !== null ? after.position() : from);
+                const to = after !== null ? after.position() : from;
+                // 逐刻发当前真实子段：判定与表现共用身体这一 tick 的先后端点。
+                if (to.minus(from).length() > 0.02)
+                    movementScenes.show(current, "wake", from, { moment: "wake", cover: cover, veil: veil, scale: scale, arc: apex,
+                        path: [[from.x(), from.y(), from.z()], [to.x(), to.y(), to.z()]] });
+                if (hit.hitEntity()) {
+                    if (spent) { land(current, to); return; }
+                    spent = true;
+                    const target = hit.target();
+                    const landed = strikeNow(current, hit);
+                    if (target !== null) ignored.push(String(target.ref()));
+                    // 只有真正造成伤害才继续穿草余程；否则止步。后续余程靠忽略已触及者逐接触推进，不裸走剩余。
+                    if (!landed || !overshoot) { land(current, hit.position()); return; }
+                }
+                travelled += swept.moved;
+                if (hit.blocked() || swept.moved < minimumMove || travelled >= stride || (airborne && after !== null && after.grounded() && ratio >= 0.4)) {
+                    land(current, to);
                     return;
                 }
-                movementScenes.show(current, "wake", from, { moment: "wake", cover: cover, veil: veil, scale: scale, arc: apex, height: height });
                 current.after(1, advance);
             }
             advance(action);

@@ -34,7 +34,7 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "smartstrike",
         name: "Smart Strike",
-        description: "角尖自己锁定对手，一路修正方向追着刺过去；角每刻最多只拐那么多，横移够快就能从侧面甩开。刺的是甲缝，对手防御越高，这一角咬得越深；墙或同伴挡在中间时角尖停在接触面，不隔墙刺到。",
+        description: "角尖自己锁定对手，一路修正方向追着刺过去；角每刻最多只拐那么多，横移够快就能从侧面甩开。专咬甲缝，对手防御越高，计入这一刺的威力加成越大；墙或同伴挡在中间时角尖停在接触面，不隔墙刺到。",
         uses: ["锁定后一记追人的角刺", "专挑高防目标的甲缝", "从较远处拐着角扎上去"],
         kind: "enemy",
         range: 8,
@@ -79,7 +79,7 @@ namespace PokemonSkills {
             const push = p("smartstrike", "push", action);
             const selected = action.target();
             const scale = radius / 0.5;
-            let heading = aim(action);
+            let heading = WorldGeometry.flatUnit(aim(action), action.direction());
             let travelled = 0;
             let settled = false;
 
@@ -102,13 +102,12 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
-            /** 角尖撞上真实方块面：在接触格迸出钢花，而不是隔墙播刺。 */
+            /** 角尖撞上真实方块面：在接触点迸出钢花，而不是隔着格子播刺。 */
             function wall(current: CombatAction, contact: CombatImpact): void {
                 if (settled) return;
                 settled = true;
                 const scope = current.world();
-                const cell = contact.blockPosition();
-                const at = cell === null ? contact.position() : cell;
+                const at = contact.position();
                 WorldFeedback.emit(scope, smartstrikeScene, 1, at,
                     { moment: "wall", face: contact.blockFace(), scale: scale, intensity: Math.max(0.6, Math.min(2.0, scale)) }, 20);
                 scope.sound("cobblemon:impact.steel", at, 12, "{}");
@@ -146,11 +145,11 @@ namespace PokemonSkills {
                 movementScenes.finish(current, done);
             }
 
-            /** 贴身到位：也走一次真实短 trace，只有角尖真的碰到身体才扎。 */
-            function closeStab(current: CombatAction, here: CombatPoint, point: CombatPoint): void {
+            /** 贴身到位：沿当前有限转向后的角轴走一次真实短 trace，由实际首碰决定对象。 */
+            function closeStab(current: CombatAction, here: CombatPoint, reach: number): void {
                 if (settled) return;
                 const scope = current.world();
-                const contact = current.trace(here, point, radius, true);
+                const contact = current.trace(here, here.plus(heading.scale(reach)), radius, true);
                 const other = contact.hitEntity() ? contact.target() : null;
                 if (other !== null && !scope.friendly(other) && scope.valid(other)) { stab(current, other, contact.position()); return; }
                 if (contact.blocked()) { wall(current, contact); return; }
@@ -179,11 +178,10 @@ namespace PokemonSkills {
                 if (body === null) { recover(current, here); return; }
                 const desired = body.position().minus(here);
                 const distance = desired.length();
-                if (distance <= radius + 0.9) { closeStab(current, here, body.position()); return; }
-                heading = smartstrikeSteer(heading, desired, steering);
-                // 冲锋贴着地面走：横向转向仍按转向修正，垂直分量不驱动身体，避免角尖在坡地上被地形挡住。
-                const horizontal = WorldCombat.point(heading.x(), 0, heading.z());
-                const sweepDir = horizontal.length() < 0.05 ? heading : horizontal.unit();
+                // 转向与实际移动同在一个水平面：每刻最多拐 steering 度，横移够快就能从侧面甩开。
+                heading = smartstrikeSteer(heading, WorldGeometry.flatUnit(desired, heading), steering);
+                if (distance <= radius + 0.9) { closeStab(current, here, distance + radius); return; }
+                const sweepDir = heading;
                 const step = Math.min(speed, Math.max(0.05, distance - radius));
                 const delta = sweepDir.scale(step);
                 // 冲锋朝向用当前真实转向，画面里的角尖轴与判定一致。
@@ -194,9 +192,10 @@ namespace PokemonSkills {
                 if (hit.hitEntity()) {
                     const other = hit.target();
                     if (other !== null && !scope.friendly(other) && scope.valid(other)) { stab(current, other, hit.position()); return; }
+                    miss(current); return;
                 }
                 if (hit.blocked()) { wall(current, hit); return; }
-                const moved = swept.moved + (hit.hitEntity() && swept.remaining.length() > 0.001 ? scope.displace(actor, swept.remaining) : 0);
+                const moved = swept.moved;
                 travelled += moved;
                 if (moved < 0.05 || travelled >= lockRange + 3) { miss(current); return; }
                 current.after(1, advance);

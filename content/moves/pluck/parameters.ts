@@ -118,6 +118,7 @@ namespace PokemonSkills {
         { key: "description.0", values: ["peck", "radius"] },
         { key: "description.1", values: ["reach", "lift", "push"] },
         { key: "description.2", values: ["absorb"] },
+        { key: "description.kill", values: [] },
         { key: "outreach.on", values: [], when: function (context) { return read(context.detail.values, ["outreach"]) === true; } },
         { key: "outreach.off", values: [], when: function (context) { return read(context.detail.values, ["outreach"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

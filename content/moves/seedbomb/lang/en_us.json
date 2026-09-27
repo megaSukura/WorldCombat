@@ -27,6 +27,6 @@
   "worldcombat.skill.seedbomb.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.seedbomb.preference.ai.maxChase.help": "The companion only lobs a pod at a threat within this distance; lower keeps it close, higher opens with a volley from afar.",
   "worldcombat.skill.seedbomb.preference.ai.preferGround": "Prefer grounded targets",
-  "worldcombat.skill.seedbomb.preference.ai.preferGround.help": "On: a grounded target scores one tier higher, since the rain falls from above and a standing target takes it fully; off: airborne targets are ranked the same.",
+  "worldcombat.skill.seedbomb.preference.ai.preferGround.help": "On: a grounded target scores one tier higher, since the pod drops from above and a standing target takes it fully; off: airborne targets are ranked the same.",
   "world_combat.move.seedbomb.text.miss": "The seeds fall wide"
 }

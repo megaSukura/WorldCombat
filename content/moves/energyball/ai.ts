@@ -2,13 +2,15 @@
  * 能量球 / energyball —— AI 用途。
  *
  * 出手局面：目标可见、敌对、存活，且在 `ai.maxChase`（默认 14）格内时列入候选；焦点目标不受距离限制。
- * 对谁出手：`ai.verdantFirst`（默认开）打开时，按自己周围真实植被份数抬高优先级——草木越多越值，
- *   但不为远处一点增伤长途寻草：只有已经进了射程才吃这份加成，站在石头地上按普通远程攻击排序。
+ * 对谁出手：`ai.verdantFirst`（默认开）打开时，按自己近旁真实植被份数的低预算估计抬高优先级——草木越多越值，
+ *   但不为远处一点增伤长途寻草：只有已经进了射程才吃这份加成，站在石头地上按普通远程攻击排序。估计口径写在
+ *   `world_combat:move_energyball/verdant` 的事实注释里，不声称 AI 会主动去找森林。
  * 够不到怎么办：射程交给 `reach`，共享任务把身位收进射程后再掷；对 Boss 也是普通草伤。
  * 放完接什么：交回共享交战计划；落点的花草是留给战场的标记，不改变后续决策。
  */
 namespace PokemonSkills {
-    /** 只读、回调内缓存：数自己周围（少量样本）有几处自然可吸；`access` 是本次决策的只读世界。 */
+    /** 只读、回调内缓存：用与出手相同的采样定义、低预算（半径 2.5、12 次）数自己近旁有几处自然可吸。
+     *  这是决策用的估计，不等于出手时 6.5 格 / 90 次的实际取样；`access` 是本次决策的只读世界。 */
     CompanionBehavior.registerFact("world_combat:move_energyball/verdant", function (access, actor, _argument) {
         const body = access.observe(actor);
         if (body === null) return 0;

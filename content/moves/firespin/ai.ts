@@ -3,7 +3,7 @@
  *
  * 什么局面下出手：目标可见、敌对、还活着，且在 `ai.maxChase` 以内；自己不在坐骑上；身上还没有
  * `partiallytrapped`（已经卷着再放是浪费，重复施放只会替换旧火柱）。`ai.avoidWet` 开启时跳过当前湿透的
- * 目标——火柱一上身就会被浇灭，等于白放。
+ * 目标——原生入水／淋雨，或带着共享湿身身份 `soaked`（水招式留下的湿）都算；火柱一上身就会被浇灭，等于白放。
  * 对谁出手：正在移动或逃跑的目标优先（火柱跟着走，最能吃掉它们的机动性），焦点目标另加一档。
  * 够不到怎么办：交给共享接近逻辑把身位收到射程内。
  * 放完之后：交回共享交战计划；目标仍带着火柱时不再重复。
@@ -18,7 +18,8 @@ namespace PokemonSkills {
         if (context.facts.mounted) return false;
         if (target.friendly || target.health <= 0 || !target.visible) return false;
         if (CompanionBehavior.status(context, target, "partiallytrapped")) return false;
-        if (CompanionBehavior.ai<boolean>(item, "avoidWet", true) && target.wet) return false;
+        if (CompanionBehavior.ai<boolean>(item, "avoidWet", true)
+            && (target.wet || CompanionBehavior.status(context, target, "soaked"))) return false;
         return CompanionBehavior.distance(CompanionBehavior.source(context).point, target.point)
             <= CompanionBehavior.ai<number>(item, "maxChase", 11);
     }
@@ -55,7 +56,7 @@ namespace PokemonSkills {
             help: "威胁离自己这么远以内才考虑点火；调小只在近处烧，调大愿意从更远处先手缠上。"
         }),
         field(pathOf("ai.avoidWet"), "避开湿透目标", "boolean", {
-            help: "开启：目标当前湿透时不点火（火柱会被浇灭，等于白放）；关闭：照点不误，也可以用来逼对手离开水里。"
+            help: "开启：目标当前湿透（入水、淋雨或被水招式打湿）时不点火（火柱会立刻被浇灭，等于白放）；关闭：照点不误，火仍会立刻熄灭，只是不再替你先筛掉这类目标。"
         })
     ]);
 }

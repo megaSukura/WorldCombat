@@ -38,6 +38,9 @@ namespace PokemonSkills {
                 if (gap > range || gap < 0.8) continue;
                 if (waterspoutImmovable(world, other)) continue;
             } else if (gap > 2.6) continue;
+            // 可覆盖环内、在潮头竖直带里、且与波源之间没有墙挡住的敌人才算收益。
+            if (other.point[1] < self.point[1] - 2 || other.point[1] > self.point[1] + 2.6) continue;
+            if (!world.clear(CompanionBehavior.point(self.point), CompanionBehavior.point(other.point))) continue;
             count++;
         }
         if (count === 0 && CompanionBehavior.distance(self.point, target.point) <= range) count = 1;

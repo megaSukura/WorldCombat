@@ -1,11 +1,12 @@
 /**
  * 假跪真撞 / falsesurrender 的客户端表现。
  *
- * 一句话：施法者伏地低头，身上坠下一层暗影、乱发竖起；随后一束凌乱的黑发从最低处逐刻伸刺出去，
+ * 一句话：施法者伏地低头、压低身形聚发，身上坠下一层暗影、乱发竖起；随后一束凌乱的黑发从最低处逐刻伸刺出去，
  * 尖端先真正推进、碰到身体或墙就停；命中处炸开一道暗色裂口把它撞得一顿，随后发束按原路缩回身边。
  * 色相家族：近黑与暗紫（obscuringsmoke／scalingshaded／impact_dark），发梢用一点苍白的紫灰挑亮。
  * 拍子：起（feign 伏低）→ 击（lash 发刺逐刻延伸、hit 命中、stagger 撞顿、wall 撞墙）→ 收（miss 落空 / 缩回）。
- * 范围：lash 用 `data.path` 画出服务端当前真实的发刺线段（基端随施法者、尖端逐刻推进），发梢到哪就是判定到哪。
+ * 范围：lash 用 `data.path` 画出服务端当前真实的发刺线段（基端随施法者、尖端逐刻推进），`data.point` 标出
+ *   当前真实发尖；发梢到哪就是判定到哪。wall 回执用服务端传来的真实接触面位置。
  * 运动：暗影从身上沉下，发束沿低处的线段由内向外推进，命中处暗色向外裂开，停下后沿原路收回。
  * 数：`data.intensity`（突刺威力派生）抬高发束与命中的亮度，`data.notes`（威力派生）决定裂口碎屑量，
  * `data.ambush`（是否骗到注意）选择强调色（骗到时更亮的一圈苍白紫），`data.scale`（发梢半径派生）缩放发束宽度。
@@ -18,6 +19,14 @@ const FalsesurrenderDefinition: ParticleDefinition = {
             duration: { data: "windup", fallback: 12 },
             exit: { stop: 8, drain: 14 },
             emitters: [
+                {
+                    name: "crouch", bind: "source", offset: [0, 0.12, 0], height: 0,
+                    particle: "world_combat_core:cobblemon/generic/orb/smallfadeorb",
+                    rate: 14, shape: { kind: "ring", radius: 0.44, thickness: 0.5 },
+                    direction: "inward", speed: [0.03, 0.12],
+                    lifetime: [8, 15], size: [0.18, 0.04], sizeMode: "sin",
+                    color: 0x4A3E5E, alpha: [0.6, 0], light: "full", maxParticles: 40
+                },
                 {
                     name: "sink", bind: "source", offset: [0, 0.3, 0], height: 0.2,
                     particle: "world_combat_core:cobblemon/generic/smoke/obscuringsmoke",
@@ -55,6 +64,14 @@ const FalsesurrenderDefinition: ParticleDefinition = {
                     rate: 40, direction: "shape", speed: [0.08, 0.28], spread: 18,
                     lifetime: [5, 10], size: [0.16, 0.03],
                     color: 0xD8D0E8, alpha: [0.85, 0], light: "full", bloom: 0.45, maxParticles: 110
+                },
+                {
+                    name: "tip", bind: "point", offset: [0, 0, 0], fit: "none",
+                    particle: "world_combat_core:cobblemon/generic/sparkle/glowingsparkle",
+                    rate: 24, shape: { kind: "sphere", radius: 0.12 },
+                    direction: "outward", speed: [0.02, 0.1],
+                    lifetime: [4, 8], size: [0.12, 0.03],
+                    color: 0xD8D0E8, alpha: [0.9, 0], light: "full", bloom: 0.4, maxParticles: 24
                 }
             ]
         },

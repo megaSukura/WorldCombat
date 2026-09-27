@@ -4,11 +4,11 @@
  * 原生事实：一般／物理／威力 140／命中 100／PP 5／优先度 0／接触；
  *   「当战斗中已学会的招式全部使用过后，才能开始使出珍藏的招式」——onTry 要求招式表 ≥ 2 招、且除本招外全部 used（Cobblemon 1.8，125 位学习者）。
  *
- * 翻译：即时战斗里没有回合，本招把「其他招都用过」翻成一本**出手账**：任何战斗者提交一次招式就记进它名下的账里；
- *   当施法者招式表里其他**已实装**的招都至少出过一次，珍藏才解锁。出手时把整副身板压上去打出全组最慢、最重的一记直撞，
+ * 翻译：即时战斗里没有回合，本招把「其他招都用过」翻成一本**出手账**：只把施法者**当前装备表里其他已实装**的招记进它名下的账；
+ *   这些招这一轮都至少提交过一次，珍藏才解锁。出手时把整副身板压上去打出全组最慢、最重的一记直撞，
  *   并随自己已损失的生命继续加重（真正的「珍藏」留到最后关头才掏）。打出之后账本清空，要再攒一轮才能再掏，
- *   并随缺少的招名给出可用反馈。一条设计取舍：只把**已实装**的招计入条件——否则招式表里只要有一招还没实现，
- *   这枚珍藏就永远开不了；孤招个体（没有其他可用招）视为条件满足，免得它无招可使。脱战 encounterIdle 后账本作废。
+ *   并随缺少的招名给出可用反馈。一条设计取舍：只把**已实装且在当前表里**的招计入条件——孤招个体（只有珍藏）不再免费解锁；
+ *   与当前招表无关的提交既不计账也不延长旧账寿命。脱战 encounterIdle 后账本作废。
  *
  * 就绪可视化：其他有效招槽各对应一枚就绪珠（最多呈现 3 枚）；每用掉一招、账本多一笔就点亮一枚，
  *   全部齐了就浮起珍藏光环；提交珍藏时整体熄灭。就绪珠随账本一起在脱战 encounterIdle 后自然失效。
@@ -30,6 +30,8 @@
 namespace PokemonSkills {
     export const lastresortId = "lastresort";
     export const lastresortScene = "world_combat:move_lastresort";
+    /** 持续显示每个真实招槽已用/未用的客户端场景（ClientFrame.sprite，固定位置）。 */
+    export const lastresortMarksScene = "world_combat:move_lastresort_marks";
 
     interface LastresortUsage { tick: number; moves: { [id: string]: boolean }; }
     var lastresortUsage: { [ref: string]: LastresortUsage } = Object.create(null);
@@ -43,25 +45,37 @@ namespace PokemonSkills {
         return record && world.tick() - record.tick <= NativeSemantics.encounterIdle ? record : undefined;
     }
 
-    /** 一次就绪读数：其他有效招槽中已提交几枚、共几枚、还差哪些（保持招槽顺序）。 */
-    export interface LastresortLedger { ready: number; total: number; missing: string[]; unlocked: boolean; }
+    /** 一次就绪读数：其他有效招槽中已提交几枚、共几枚、还差哪些（保持招槽顺序），以及逐槽的已用标记。 */
+    export interface LastresortLedger { ready: number; total: number; missing: string[]; marks: number[]; unlocked: boolean; }
     export function lastresortLedger(world: CombatWorld, actor: CombatActor): LastresortLedger {
-        const result: LastresortLedger = { ready: 0, total: 0, missing: [], unlocked: false };
+        const result: LastresortLedger = { ready: 0, total: 0, missing: [], marks: [], unlocked: false };
         if (!world || !world.valid(actor) || String(actor.domain()) !== "cobblemon") return result;
         const pokemon = CobblemonCombat.pokemon(actor);
         if (pokemon === null) return result;
         const record = lastresortRecord(world, actor);
-        result.unlocked = true;
         for (let i = 0; i < pokemon.moveSlots(); i++) {
             const move = pokemon.move(i);
             if (!move) continue;
             const id = String(move.id());
             if (!lastresortCreditable(id)) continue;
+            const used = !!(record && record.moves[id]);
             result.total++;
-            if (record && record.moves[id]) result.ready++;
-            else { result.unlocked = false; result.missing.push(id); }
+            result.marks.push(used ? 1 : 0);
+            if (used) result.ready++;
+            else result.missing.push(id);
         }
+        // 至少要有另一招在当前装备表里，且这一轮里都真的提交过，珍藏才解锁；孤招个体不再免费解锁。
+        result.unlocked = result.total > 0 && result.ready === result.total;
         return result;
+    }
+
+    /** 该招是否在这只个体当前的装备招式表里。 */
+    export function lastresortInTable(pokemon: CombatPokemon, id: string): boolean {
+        for (let i = 0; i < pokemon.moveSlots(); i++) {
+            const move = pokemon.move(i);
+            if (move && String(move.id()) === id) return true;
+        }
+        return false;
     }
 
     /**
@@ -167,21 +181,26 @@ namespace PokemonSkills {
         { key: "growth.1", values: ["tier.1.level", "tier.1.trump", "tier.1.dash"] }
     ]);
 
-    // 记账：任何战斗者提交一次招式都记进它名下的出手账；珍藏出手时把账本清空，要再攒一轮。
+    // 记账：只把这只个体当前装备表里的招记进它名下的出手账；承诺过出手就重新计一轮，脱战 encounterIdle 后作废。
     WorldCombat.on("world_combat:lastresort/ledger", "world_combat:committed", "", function (event) {
         const actor = event.actor();
         if (actor === null) return;
         const world = event.world();
-        if (!world.valid(actor)) return;
+        if (!world.valid(actor) || String(actor.domain()) !== "cobblemon") return;
         const action = event.action();
         let id = action === null ? "" : String(action.content());
         if (id.indexOf("world_combat:") === 0) id = id.substring("world_combat:".length);
+        if (id === "") return;
+        const pokemon = CobblemonCombat.pokemon(actor);
+        if (pokemon === null) return;
         const ref = String(actor.ref()), now = world.tick();
+        // 与当前招表无关的提交既不计账也不延长旧账寿命。
+        if (id === lastresortId) { delete lastresortUsage[ref]; return; }
+        if (!lastresortInTable(pokemon, id)) return;
         let record = lastresortUsage[ref];
         if (!record || now - record.tick > NativeSemantics.encounterIdle) record = lastresortUsage[ref] = { tick: now, moves: {} };
         record.tick = now;
-        if (id === lastresortId) { record.moves = {}; return; }
-        if (id !== "") record.moves[id] = true;
+        record.moves[id] = true;
         const refs = Object.keys(lastresortUsage);
         if (refs.length > 256) for (let i = 0; i < refs.length; i++) if (now - lastresortUsage[refs[i]].tick > NativeSemantics.encounterIdle * 2) delete lastresortUsage[refs[i]];
     });

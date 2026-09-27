@@ -1,12 +1,12 @@
 /**
  * 虫鸣 / bugbuzz —— 客户端表现。
  *
- * 一句话：施法者鼓动身体、在口边压出一串振动 → 一道锥形声波朝目标方向贴地推出去、越远越淡 → 锥内每个被扫到的
- * 敌人身上炸开一圈土黄色的振波。
+ * 一句话：施法者鼓动身体、在口边压出一圈振动 → 一次从身体发出的压缩环、同时整片锥形范围短促共振一下（瞬时声压，不跨多刻远传） →
+ *   锥内每个被扫到的敌人身上炸开一圈土黄色的振波。
  * 色相家族：虫系的黄绿（0x9FB13A / 0xD8E36A）为主，近白（0xF2F7D0）只给击点；烟尘收在灰绿。
- * 拍子：起 windup（鼓振）→ 鸣 wave（锥形扩散）→ 击 hit（每人身上一震）。
- * 范围：wave 用与判定同一组 `data.angle`／`data.length` 画水平扇面，玩家一眼看出站在哪块扇形里会被震到。
- * 运动：声环沿锥体轴向 `data.direction` 冲出，贴地扩散。
+ * 拍子：起 windup（鼓振）→ 鸣 wave（身体压缩环 + 全范围短共振，单次）→ 击 hit（每人身上一震）。
+ * 范围：wave 的短共振用与判定同一组 `data.angle`／`data.length` 画水平扇面，玩家一眼看出站在哪块扇形里会被震到。
+ * 运动：压缩环从身体向外一圈；锥形共振在锥面内一次性铺开就收，不再一重重远传。
  * 数：每人的 hit 与 wave 的密度绑定 `data.rings`（特攻与等级换算），强度绑定 `data.intensity`（近端威力 / 84）。
  */
 const BugBuzzDefinition: ParticleDefinition = {
@@ -36,38 +36,33 @@ const BugBuzzDefinition: ParticleDefinition = {
             ]
         },
         wave: {
-            duration: 26,
-            exit: { stop: 18, drain: 14 },
+            duration: 20,
+            exit: { stop: 14, drain: 14 },
             emitters: [
                 {
-                    name: "wave_volume", bind: "point", fit: "world", offset: [0, 0.5, 0],
-                    orient: "heading",
+                    name: "burst_ring", bind: "source", offset: [0, 0.35, 0], height: 0.5,
+                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
+                    burst: { count: 2 },
+                    shape: { kind: "ring", radius: 0.35 },
+                    direction: "outward", speed: [0.0, 0.05],
+                    lifetime: [8, 14], size: [0.25, 0.75],
+                    color: 0xA8C63A, alpha: [0.7, 0], light: "world", maxParticles: 8
+                },
+                {
+                    name: "resonance", bind: "point", fit: "world", orient: "heading", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/swirlingwind",
-                    rate: 90,
-                    burst: { count: { data: "rings", fallback: 4 }, repeats: 3, interval: 3 },
+                    burst: { count: { data: "rings", fallback: 4 } },
                     shape: { kind: "sector", radius: { data: "length", fallback: 9 }, angleDegrees: { data: "angle", fallback: 62 } },
-                    direction: "outward", speed: [0.2, 0.55], spread: 14,
-                    lifetime: [6, 14], size: [0.14, 0.03],
+                    direction: "outward", speed: [0.18, 0.5], spread: 14,
+                    lifetime: [6, 13], size: [0.14, 0.03],
                     color: 0xC7D855, alpha: [0.55, 0], light: "world", maxParticles: 200
                 },
                 {
-                    name: "wave_rings", bind: "point", fit: "none", offset: [0, 0.35, 0],
-                    orient: "direction",
-                    particle: "world_combat_core:cobblemon/generic/ring/ripple",
-                    burst: { count: 1, repeats: { data: "rings", fallback: 4 }, interval: 3 },
-                    shape: { kind: "ring", radius: 0.35 },
-                    direction: "outward", speed: [0.0, 0.04],
-                    lifetime: [10, 18], size: [0.25, 0.75],
-                    color: 0xA8C63A, alpha: [0.7, 0], light: "world", maxParticles: 12
-                },
-                {
-                    name: "wave_motes", bind: "point", fit: "world", offset: [0, 0.4, 0],
-                    orient: "heading",
+                    name: "resonance_motes", bind: "point", fit: "world", orient: "heading", offset: [0, 0.4, 0],
                     particle: "world_combat_core:cobblemon/generic/tinydust",
-                    rate: { data: "rings", fallback: 4 },
-                    burst: { count: { data: "rings", fallback: 4 }, repeats: 2, interval: 4 },
+                    burst: { count: { data: "rings", fallback: 4 } },
                     shape: { kind: "sector", radius: { data: "length", fallback: 9 }, angleDegrees: { data: "angle", fallback: 62 } },
-                    direction: "outward", speed: [0.15, 0.45],
+                    direction: "outward", speed: [0.12, 0.4],
                     lifetime: [8, 16], size: [0.06, 0.01],
                     color: 0xF2F7D0, alpha: [0.6, 0], light: "full", maxParticles: 150
                 }

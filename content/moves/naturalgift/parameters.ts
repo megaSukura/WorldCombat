@@ -145,10 +145,10 @@ namespace PokemonSkills {
         bursts: formula(
             F.var("gift.power", { key: "worldcombat.skill.naturalgift.value.gift" }).div(6).plus(6).clamp(8, 34).round(0),
             "果屑数量", { unit: " 个", description: "命中时迸出的果屑数量，随树果威力增长；粒子按它发射。" }),
-        // 元素光晕直径：随树果威力轻微变大，给命中一个可读的尺度。
+        // 元素光晕半径：随树果威力轻微变大，给命中一个可读的尺度；表现里就是光环半径与粒子尺寸的倍数。
         halo: formula(
             F.var("gift.power", { key: "worldcombat.skill.naturalgift.value.gift" }).div(160).plus(0.7).clamp(0.7, 1.4).round(2),
-            "元素光晕", { unit: " 格", description: "命中处那口元素的扩散直径，随树果威力增长。" }),
+            "元素光晕半径", { unit: " 格", description: "命中处那口元素扩散的半径，随树果威力增长；粒子与光环按它放大。" }),
         traceAhead: hidden(1.6),
         minimumMove: hidden(0.05)
     });

@@ -6,7 +6,15 @@ namespace PokemonSkills {
     function imprisonWords(value: string | null): string[] {
         return value === null || value === "" ? [] : String(value).split(",");
     }
-    /** 本次决策读出的真实领域半径：特攻、体型与封锁取向都会改变它；AI 只在真正罩得住的范围内数重合对手。 */
+    /** 本次配置选定的单一封锁类别。 */
+    function imprisonAiCategory(item: WorldBehavior.Capability): string {
+        const config = item.data.config;
+        return config && config.category === "ranged" ? "ranged" : "contact";
+    }
+    function imprisonAiKind(category: string): string {
+        return category === "ranged" ? "native:ranged" : "native:contact";
+    }
+    /** 本次决策读出的真实领域半径：特攻、体型与封锁取向都会改变它；AI 只在真正罩得住的范围内数目标。 */
     function imprisonRadius(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
         const cached = context.scratch.imprisonRadius;
         if (typeof cached === "number") return cached;
@@ -18,10 +26,18 @@ namespace PokemonSkills {
         context.scratch.imprisonRadius = radius;
         return radius;
     }
-    /** 与自己招式表重合、且落在真实领域半径内（并在 ai.maxChase 考虑范围内）的可见敌对个体数量。 */
+    /** 这名敌人是否真的带着所选类别的直接进攻方式：宝可梦按当前招式表，普通生物按最近一次真实攻击。 */
+    function imprisonEnemyMatches(context: WorldBehavior.Context, item: WorldBehavior.Capability, other: CompanionBehavior.Entity): boolean {
+        const kind = imprisonAiKind(imprisonAiCategory(item));
+        return imprisonWords(CompanionBehavior.fact<string>(context, "world_combat:move_imprison/moves", other)).indexOf(kind) >= 0;
+    }
+    /** 施法者是否还有另一类别的直接进攻可用：自方代价才不会把自己的输出全锁死，AI 才愿意开圈。 */
+    function imprisonSelfSwitch(context: WorldBehavior.Context, item: WorldBehavior.Capability): boolean {
+        const other = imprisonAiKind(imprisonAiCategory(item) === "ranged" ? "contact" : "ranged");
+        return imprisonWords(CompanionBehavior.fact<string>(context, "world_combat:move_imprison/moves", CompanionBehavior.source(context))).indexOf(other) >= 0;
+    }
+    /** 落在真实领域半径内、可见、且带着所选类别攻击方式的敌对个体数量。没有近期记录不算收益，也不当作永久免疫。 */
     function imprisonOverlaps(context: WorldBehavior.Context, item: WorldBehavior.Capability): number {
-        const mine = imprisonWords(CompanionBehavior.fact<string>(context, "world_combat:move_imprison/moves", CompanionBehavior.source(context)));
-        if (mine.length === 0) return 0;
         const self = CompanionBehavior.source(context);
         const nearby = context.facts.nearby as CompanionBehavior.Entity[];
         const radius = imprisonRadius(context, item);
@@ -32,8 +48,7 @@ namespace PokemonSkills {
             if (!other.visible || other.friendly || other.health <= 0) continue;
             const gap = CompanionBehavior.distance(self.point, other.point);
             if (gap > radius || gap > limit) continue;
-            const theirs = imprisonWords(CompanionBehavior.fact<string>(context, "world_combat:move_imprison/moves", other));
-            for (let j = 0; j < mine.length; j++) if ((other.domain !== "cobblemon" || mine[j].indexOf("native:") !== 0) && theirs.indexOf(mine[j]) >= 0) { count++; break; }
+            if (imprisonEnemyMatches(context, item, other)) count++;
         }
         return count;
     }
@@ -46,6 +61,7 @@ namespace PokemonSkills {
             if (!context.senses["world_combat:threat"]) return false;
             if ((context.facts.intent === "hold" || context.facts.intent === "stay") && !CompanionBehavior.ai<boolean>(item, "leaveStation", false)) return false;
             if (CompanionBehavior.status(context, CompanionBehavior.source(context), imprisonStatus)) return false;
+            if (!imprisonSelfSwitch(context, item)) return false;
             return imprisonOverlaps(context, item) > 0;
         },
         accepts: function (context, _item, target) { return String(target.ref) === String(CompanionBehavior.source(context).ref); },
@@ -55,7 +71,7 @@ namespace PokemonSkills {
         }
     });
 
-    addPreferences(imprisonId, { scope: 1, ai: { maxChase: 14, leaveStation: false } }, [
+    addPreferences(imprisonId, { scope: 1, category: "contact", ai: { maxChase: 14, leaveStation: false } }, [
         number("ai.maxChase", "考虑距离", 4, 26, 1),
         flag("ai.leaveStation", "驻守时允许离位")
     ]);

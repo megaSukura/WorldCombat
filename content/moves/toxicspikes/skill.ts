@@ -55,20 +55,25 @@ namespace PokemonSkills {
 
     function toxicspikesTone(layers: number): string { return layers >= 2 ? "toxic" : "poison"; }
 
-    /** 同一片同层地上自己布下的毒菱并入新层（最多 maxLayers），旧阵收回。 */
-    function toxicspikesLayers(world: CombatWorld, point: CombatPoint, radius: number, max: number): number {
+    /**
+     * 同一片同层地上自己布下的毒菱并入新层（最多 maxLayers），旧阵收回。
+     * 正在破（pending）的旧阵不再计数；旧阵的逐敌冷却（next）随新阵保留，重建不会让踩在上面的人立刻重吃一次。
+     */
+    function toxicspikesMerge(world: CombatWorld, point: CombatPoint, radius: number, max: number): { layers: number; next: any } {
         const own = String(world.source().ref()), found = WorldEffects.areas(world, toxicspikesRule);
-        let layers = 1;
+        let layers = 1, next: any = {};
         for (let i = 0; i < found.length; i++) {
             const entry = found[i];
+            if (entry.pending) continue;
             if (entry.source !== own) continue;
             if (Math.abs(entry.position[1] - point.y()) > 0.8) continue;
             const centre = WorldCombat.point(entry.position[0], entry.position[1], entry.position[2]);
             if (centre.minus(point).length() > radius + entry.radius) continue;
             layers = Math.min(max, Math.max(layers, (Number(entry.data.layers) || 1) + 1));
+            if (entry.data && entry.data.next) next = entry.data.next;
             world.operation(entry.id, "world_combat:dispel", "{}");
         }
-        return layers;
+        return { layers: layers, next: next };
     }
 
     /** 毒属性把整片毒菱吸掉：尖从地表收向它的脚边，标记整阵失效，交给下一次扫描让它自然到期、表现一起收。 */
@@ -87,13 +92,23 @@ namespace PokemonSkills {
         world.sound("cobblemon:impact.poison", body.position(), 16, "{}");
     }
 
+    /** 贴地、与毒菱同层、且视线可达才算真踩到；进入与停留共用这一份真实接触判据。 */
+    function toxicspikesTouch(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): CombatObservation | null {
+        const body = world.observe(actor);
+        if (body === null || !body.grounded() || !toxicspikesOnLayer(field, body) || !toxicspikesReaches(world, field, body)) return null;
+        return body;
+    }
+
+    /** 当前有效毒属性（含临时类型变更）；普通 MC 生物与模组生物同样走这份事实。 */
+    function toxicspikesPoisonType(world: CombatWorld, actor: CombatActor): boolean {
+        return PokemonDamage.combatants.read(world, actor).types.indexOf("poison") >= 0;
+    }
+
     /**
      * 踩在毒菱上：按层数上中毒/剧毒；已有的同等或更强毒只保留它自己的合法剩余时长，不重施、不重置剧毒进度。
-     * 进出遵守同一 `next` 冷却，短暂出入不能靠蹭边反复上毒。
+     * 进出遵守同一 `next` 冷却，短暂出入不能靠蹭边反复上毒。提示按实际落成的毒型发，升级没生效就不冒称剧毒。
      */
-    function toxicspikesStatus(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, entering: boolean): void {
-        const body = world.observe(actor);
-        if (body === null || !body.grounded() || !toxicspikesOnLayer(field, body) || !toxicspikesReaches(world, field, body)) return;
+    function toxicspikesStatus(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, entering: boolean, body: CombatObservation): void {
         const ref = String(actor.ref()), next = field.data.next || (field.data.next = {}), now = world.tick();
         if (now < (next[ref] || 0)) return;
         const layers = Math.max(1, Math.round(Number(field.data.layers) || 1));
@@ -105,6 +120,8 @@ namespace PokemonSkills {
         next[ref] = now + Math.max(10, Math.round(Number(field.data.interval) || 30));
         const ticks = Math.max(20, Math.round(Number(field.data.status) || 200));
         if (!CombatStatus.inflict(world, actor, wantToxic ? "toxic" : "poison", ticks)) return;
+        // 状态收据：只有目标此刻确实带着想要的毒型（剧毒为更高增幅）才播提示。
+        if (!CombatStatus.has(world, actor, wantToxic ? "toxic" : "poison")) return;
         const fumes = Math.max(8, Math.round(Number(field.data.fumes) || 16));
         WorldFeedback.emit(world, toxicspikesScene, 1, body.position(),
             { moment: "poison", target: ref, layers: layers, toxic: wantToxic ? 1 : 0, tone: toxicspikesTone(layers),
@@ -113,19 +130,19 @@ namespace PokemonSkills {
         if (entering) WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.1, 0)), wantToxic ? toxicspikesToxicText : toxicspikesPoisonText, [], 26);
     }
 
+    /** 踩到毒菱的统一步骤：先判真实贴地接触，再按当前毒类型吸场或上异常；进入与停留都走这里。 */
+    function toxicspikesStep(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, entering: boolean): void {
+        if (field.data.absorbed || world.friendly(actor)) return;
+        const body = toxicspikesTouch(world, actor, field);
+        if (body === null) return;
+        if (toxicspikesPoisonType(world, actor)) { toxicspikesAbsorb(world, actor, field); return; }
+        toxicspikesStatus(world, actor, field, entering, body);
+    }
+
     // 毒菱阵：踏进来中毒（毒属性吸掉整阵），留在阵里维护同一状态；阵自己低频提示还在，表现随这个 field 效果一起收。
     WorldEffects.fieldRule(toxicspikesRule, {
-        enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (field.data.absorbed || world.friendly(actor)) return;
-            const body = world.observe(actor);
-            if (body === null || !body.grounded() || !toxicspikesOnLayer(field, body) || !toxicspikesReaches(world, field, body)) return;
-            if (PokemonDamage.combatants.read(world, actor).types.indexOf("poison") >= 0) { toxicspikesAbsorb(world, actor, field); return; }
-            toxicspikesStatus(world, actor, field, true);
-        },
-        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
-            if (field.data.absorbed || world.friendly(actor)) return;
-            toxicspikesStatus(world, actor, field, false);
-        },
+        enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void { toxicspikesStep(world, actor, field, true); },
+        stay: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void { toxicspikesStep(world, actor, field, false); },
         scan: function (effect: CombatEffect, world: CombatWorld, field: WorldEffects.Field): void {
             if (field.data.absorbed) { effect.remaining(1); return; }
             const layers = Math.max(1, Math.round(Number(field.data.layers) || 1));
@@ -193,26 +210,33 @@ namespace PokemonSkills {
                     done(current);
                     return;
                 }
-                const layers = toxicspikesLayers(scope, point, radius, maxLayers);
+                const merged = toxicspikesMerge(scope, point, radius, maxLayers);
                 const field = WorldEffects.field(scope, toxicspikesRule, point, radius,
-                    { layers: layers, status: status, interval: 30, fumes: fumes, absorbed: false, next: {} }, ticks);
+                    { layers: merged.layers, status: status, interval: 30, fumes: fumes, absorbed: false, next: merged.next }, ticks);
                 WorldFeedback.emit(scope, toxicspikesScene, 1, point,
-                    { moment: "lay", radius: radius, layers: layers, tone: toxicspikesTone(layers), fumes: fumes, scale: scale }, 30);
+                    { moment: "lay", radius: radius, layers: merged.layers, tone: toxicspikesTone(merged.layers), fumes: fumes, scale: scale }, 30);
                 WorldFeedback.onEffect(scope, field, "toxicspikes:hum", toxicspikesScene, 1, point,
-                    { moment: "hum", radius: radius, layers: layers, tone: toxicspikesTone(layers), fumes: fumes, scale: scale });
-                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.6, 0)), toxicspikesLayText, [layers], 30);
+                    { moment: "hum", radius: radius, layers: merged.layers, tone: toxicspikesTone(merged.layers), fumes: fumes, scale: scale });
+                WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 0.6, 0)), toxicspikesLayText, [merged.layers], 30);
                 sound(current, "cobblemon:impact.poison");
                 done(current);
             }
 
             sound(action, "cobblemon:move.poisonpowder.actor");
-            const flight = LivingActions.projectile(action, {
+            let flightId = "";
+            flightId = LivingActions.projectile(action, {
                 speed: speed, range: action.range(), radius: 0.24, gravity: 0.03, lifetime: 100,
                 appearance: { sprite: "cobblemon:generic/goo/ooze", scale: 0.8, tint: 0x9B4FBE },
                 impact: function (current, hit) { lay(current, hit.position()); }
-            }, function (current) { lay(current, current.targetPosition()); });
+            }, function (current) {
+                // 到程结束：只用弹体真实停留点落地；没有可读终点（被取消）就不在旧瞄准点补铺。
+                if (laid) return;
+                const at = current.world().projectilePosition(flightId);
+                if (at === null) { laid = true; done(current); return; }
+                lay(current, at);
+            });
             WorldFeedback.emit(world, toxicspikesScene, 1, action.origin(),
-                { moment: "throw", projectile: flight, fumes: fumes, scale: scale }, 26);
+                { moment: "throw", projectile: flightId, fumes: fumes, scale: scale }, 26);
         }
     });
 }

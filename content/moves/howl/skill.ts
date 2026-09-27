@@ -8,64 +8,61 @@
  *   蓄（windup 播「仰头蓄势」，提交前只观察与预告，打断不花代价）。
  *   嗥（提交后）：施法者先抬攻击并挂上共享身份 world_combat:status/howl 的「斗志」窗口；再以声浪半径把同一份
  *     斗志补给范围内的友方（每 20 刻由标记向外回荡一次，后来走进范围的伙伴也会被吼起来）。
- * 结束：斗志走完或被清除时，这段嗥声抬起的攻击等级原样收回——对手有一次拖过窗口的反制。
+ *   - 独啸只作用自己，绝不把 +2 甩给近旁友军（旧实现漏了这一步）。
+ *   - 每个被吼到的人各拥有一段属于自己的 boostWindow，挂在本人这次真实的 howl 载体上：到期、被驱散或重施替换时
+ *     只收回本招自己那一份贡献，不按 amplifier 猜数字、不误扣他人提升。
+ *   - 全场只维护一个召集源（施法者身上的 howl 标记）；回声只补给还没被吼到的后来者，且只取标记的剩余时长。
+ * 结束：斗志走完或被清除时，这段嗥声抬起的攻击等级随各自窗口原样收回——对手有一次拖过窗口的反制。
  */
 namespace PokemonSkills {
     const howlScene = "world_combat:move_howl";
     const howlEffect = "world_combat:howl_rally";
     const howlMark = "world_combat:howl_mark";
+    const howlContribution = "world_combat:move/howl";
     const howlStatus = "howl";
     const howlText = "world_combat.move.howl.text.rally";
     const howlFadeText = "world_combat.move.howl.text.fade";
     /** 表现里的参考半径：`data.scale = 实际声浪半径 / 这个数`。 */
     const howlReferenceRadius = 4.0;
 
-    /** 公共能力阶梯：宝可梦读原生等级，其他战斗者读同一套等级落在属性上的载体。 */
-    function howlStage(world: CombatWorld, actor: CombatActor, stat: string): number {
-        return String(actor.domain()) === "cobblemon"
-            ? NativeEffects.stage(NativeEffects.read(world, actor), stat)
-            : CombatStages.stage(world, actor, stat);
-    }
-    /** 抬高并返回这一次真正抬到的级数（顶到上限时可能少于请求值）。 */
-    function howlRaise(world: CombatWorld, actor: CombatActor, stat: string, amount: number): number {
-        const before = howlStage(world, actor, stat);
-        NativeEffects.boost(world, actor, stat, amount);
-        return Math.max(0, howlStage(world, actor, stat) - before);
-    }
     function howlScale(radius: number): number {
         return Math.max(0.5, Math.min(2, (radius || howlReferenceRadius) / howlReferenceRadius));
     }
 
-    // 「斗志」持续画面：低密度、贴着身体向上走，让出目标本体视线。
-    function howlKeep(world: CombatWorld, actor: CombatActor, scale: number, motes: number, levels: number, ticks: number): void {
+    /** 吼起一个战斗者：载体成功才挂 owned 攻击窗口；已经带斗志的人只吼一次，不重复加攻。返回是否新吼到。 */
+    function howlRouse(world: CombatWorld, actor: CombatActor, levels: number, ticks: number, motes: number, scale: number): boolean {
+        if (MobEffects.read(world, actor, howlEffect) !== null) return false;
+        const carrier = MobEffects.apply(world, actor, howlEffect, Math.max(1, ticks), 0);
+        if (carrier === null) return false;
+        const windowId = NativeEffects.boostWindow(world, actor, { atk: levels }, Math.max(1, carrier.duration()),
+            howlContribution, carrier, null);
         const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "world_combat:move_howl/rally/" + String(actor.ref()), howlScene, 1, body.position(),
-            { moment: "rally", target: String(actor.ref()), motes: motes, levels: levels, scale: scale,
-                intensity: Math.max(0.6, Math.min(2, levels + motes / 30)) }, Math.max(40, Math.min(200, ticks)));
+        // 持续斗志光只在真的建起窗口时出现，随窗口到期/驱散一起收。
+        if (windowId > 0 && body !== null)
+            WorldFeedback.onEffect(world, windowId, "world_combat:move_howl/rally/" + String(actor.ref()), howlScene, 1, body.position(),
+                { moment: "rally", target: String(actor.ref()), motes: motes, levels: levels, scale: scale,
+                    intensity: Math.max(0.6, Math.min(2, levels + motes / 30)) });
+        return true;
     }
 
-    // 以施法者为锚的声浪：范围内的友方还没被吼起来就各抬一次攻击并挂上斗志窗口；返回被吼到的人数。
+    /** 以施法者为锚的声浪：范围内的友方还没被吼起来就各抬一次攻击并挂上斗志窗口；独啸只及自己。返回被吼到的人数。 */
     function howlRallyAround(world: CombatWorld, caster: CombatActor, radius: number, levels: number,
-        ticks: number, motes: number, scale: number): number {
+        ticks: number, motes: number, scale: number, solo: boolean): number {
         const body = world.observe(caster);
         if (body === null) return 0;
         let reached = 0;
-        function rouse(actor: CombatActor): void {
-            if (MobEffects.read(world, actor, howlEffect) === null) {
-                MobEffects.apply(world, actor, howlEffect, ticks, levels);
-                NativeEffects.boost(world, actor, "atk", levels);
-            }
-            howlKeep(world, actor, scale, motes, levels, ticks);
-            reached++;
-        }
-        rouse(caster);
+        if (howlRouse(world, caster, levels, ticks, motes, scale)) reached++;
+        if (solo) return reached;
         const actors = world.query(body.position(), radius, false);
+        const seen: { [ref: string]: boolean } = {};
+        seen[String(caster.ref())] = true;
         for (let i = 0; i < actors.length; i++) {
             const other = actors[i];
-            if (String(other.key()) === String(caster.key())) continue;
+            const key = String(other.ref());
+            if (seen[key]) continue;
+            seen[key] = true;
             if (!world.friendly(other) || world.observe(other) === null) continue;
-            rouse(other);
+            if (howlRouse(world, other, levels, ticks, motes, scale)) reached++;
         }
         return reached;
     }
@@ -76,30 +73,33 @@ namespace PokemonSkills {
             if (typeof value[key] !== "number" || !isFinite(value[key]) || value[key] < 0) throw new Error("Invalid howl mark: " + key);
         });
         if (typeof value.caster !== "string") throw new Error("Invalid howl source");
+        if (typeof value.solo !== "number" || !isFinite(value.solo)) throw new Error("Invalid howl mode");
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
     WorldCombat.effectHandler(howlMark, "start", function (effect) { effect.schedule("echo", "echo", 4, "{}"); });
     WorldCombat.effectHandler(howlMark, "echo", function (effect) {
         const world = effect.world(), caster = effect.target(), state = JSON.parse(effect.state());
         if (world.observe(caster) === null || MobEffects.read(world, caster, howlEffect) === null) { effect.end(); return; }
+        const remaining = effect.remaining();
+        // 后来者只取本次召集剩余的时长；窗口走到尽头就不再补给，避免无限续满窗。
+        if (remaining <= 0) { effect.end(); return; }
         const radius = Math.max(1, Number(state.radius) || 3.2);
         const levels = Math.max(1, Math.round(Number(state.levels) || 1));
         const motes = Math.max(1, Math.round(Number(state.motes) || 20));
         const scale = Number(state.scale) || 1;
-        howlRallyAround(world, caster, radius, levels, Math.max(60, effect.remaining()), motes, scale);
+        howlRallyAround(world, caster, radius, levels, remaining, motes, scale, Number(state.solo) >= 1);
         effect.schedule("echo", "echo", 20, "{}");
     });
     WorldCombat.effectHandler(howlMark, "operation:world_combat:dispel", function (effect) { effect.end(); });
 
-    // 斗志走完或被清除：把这段嗥声抬起的攻击等级原样收回（只收到当前实际持有的正等级，避免抹掉别处的增益）。
+    // 斗志走完或被清除：本招贡献由各自的 boostWindow 随载体自行收回，这里只做退场反馈。
     WorldCombat.on("world_combat:move_howl/fade", "world_combat:mob_effect_removed", "", function (event: CombatWorldEvent) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== howlEffect) return;
         const world = event.world(), actor = event.actor();
         if (!world.valid(actor)) return;
-        const levels = Math.max(1, Math.round(Number(data.amplifier) || 1));
-        const loss = Math.min(levels, Math.max(0, howlStage(world, actor, "atk")));
-        if (loss > 0) NativeEffects.boost(world, actor, "atk", -loss);
+        // 刷新/替换时旧应用被移除而新应用仍在：不是真的结束。
+        if (MobEffects.read(world, actor, howlEffect) !== null) return;
         const body = world.observe(actor);
         if (body === null) return;
         WorldFeedback.emit(world, howlScene, 1, body.position(), { moment: "fade", target: String(actor.ref()) }, 22);
@@ -150,21 +150,24 @@ namespace PokemonSkills {
                 JSON.stringify({ moment: "draw", cry: config && Number(config.cry) === 1 ? 1 : 0 }));
             return prepare;
         },
-        execute: function (action, _move, _config, done) {
+        execute: function (action, _move, config, done) {
             const world = action.world(), actor = action.actor(), body = world.observe(actor);
             if (body === null) { done(action); return; }
+            const solo = !(config && Number(config.cry) === 1);
             const levels = Math.max(1, Math.min(2, Math.round(p("howl", "raise", action))));
             const radius = Math.max(1, p("howl", "radius", action));
             const ticks = Math.max(80, Math.round(p("howl", "rallyTicks", action)));
             const motes = Math.max(8, Math.round(p("howl", "motes", action)));
-            const scale = howlScale(radius);
-            MobEffects.apply(world, actor, howlEffect, ticks, levels);
-            NativeEffects.boost(world, actor, "atk", levels);
-            world.effect(howlMark, actor, JSON.stringify({ radius: radius, levels: levels, motes: motes, scale: scale, ticks: ticks, caster: String(actor.ref()) }), ticks);
-            const reached = howlRallyAround(world, actor, radius, levels, Math.max(80, Math.round(ticks * 0.85)), motes, scale);
+            const scale = howlScale(solo ? 1 : radius);
+            // 全场只维护一个召集源：重施先把旧的标记换掉，避免叠加多个回声。
+            const existing = world.effects(actor, howlMark);
+            for (let i = 0; i < existing.length; i++) world.operation(existing[i].id(), "world_combat:dispel", "{}");
+            const reached = howlRallyAround(world, actor, radius, levels, ticks, motes, scale, solo);
+            world.effect(howlMark, actor, JSON.stringify({ radius: radius, levels: levels, motes: motes, scale: scale,
+                ticks: ticks, solo: solo ? 1 : 0, caster: String(actor.ref()) }), ticks);
             WorldFeedback.emit(world, howlScene, 1, body.position(),
                 { moment: "howl", target: String(actor.ref()), motes: motes, levels: levels, radius: radius, scale: scale,
-                    reached: reached, intensity: Math.max(0.8, Math.min(2, levels + motes / 40)) }, 40);
+                    reached: reached, solo: solo ? 1 : 0, intensity: Math.max(0.8, Math.min(2, levels + motes / 40)) }, 40);
             WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.35, 0)), howlText,
                 [levels, reached, Math.round(ticks / 20)], 40);
             world.sound("minecraft:entity.wolf.howl", body.position(), 18, "{}");

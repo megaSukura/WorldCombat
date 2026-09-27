@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.camouflage.summary": "Reads the ground underfoot and temporarily dyes the body into its type: water in water, grass in grass, rock in a cave. With Drift on, it keeps re-reading the ground while the coat holds.",
+  "worldcombat.skill.camouflage.summary": "Reads the first real material underfoot, coats the body in its dust and temporarily takes its type: water in water, grass in grass, rock in a cave. With Drift on, it keeps re-reading the ground while the coat holds.",
   "worldcombat.skill.camouflage.use.0": "Become a type that fits the terrain underfoot",
   "worldcombat.skill.camouflage.use.1": "Flip your incoming matchups and type immunities",
   "worldcombat.skill.camouflage.use.2": "Set a type from the terrain before a fight",
@@ -21,6 +21,6 @@
   "effect.world_combat.camouflage": "Camouflage",
   "world_combat.move.camouflage.text.coat": "Dyes into %1$s",
   "world_combat.move.camouflage.text.shift": "Terrain shifts it to %1$s",
-  "worldcombat.skill.camouflage.description.materials": "It reads the fluid and block underfoot: water, ice, grass, sandy soil, stone and ores (end stone included), and fire or lava (netherrack included) read as Water / Ice / Grass / Ground / Rock / Fire; with no matching material it falls back by dimension (the Nether to Fire, the End to Rock), otherwise Normal.",
+  "worldcombat.skill.camouflage.description.materials": "It reads from the first non-air cell underfoot: water and lava, ice and snow, grass, sandy soil, stone and ores (end stone included) read as Water / Ice / Grass / Ground / Rock / Fire. If that first material is unrecognized it falls back by dimension (the Nether to Fire, the End to Rock), otherwise Normal; a wooden floor stops at the wood and does not reveal the stone beneath it.",
   "worldcombat.skill.camouflage.description.nature": "The coat is a single type that replaces your whole typing (even a dual type collapses into it); the original type returns the moment the coat expires, is cleansed, or the caster leaves. It cannot be used when you are already exactly that single type."
 }

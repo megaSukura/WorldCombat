@@ -1,12 +1,13 @@
 /**
  * 狙击 / snipeshot 的客户端表现。
  *
- * 一句话：施法者举枪屏息、枪口聚起一点冷光 → 选定对手身上亮起一圈准星 → 一发拉长水线的高速水弹穿过前排、
- *   只在那只身上炸开一蓬冷水；擦过的挡路者身上只掠过一道水痕。
+ * 一句话：施法者举枪屏息、枪口聚起一点冷光 → 选定对手身上亮起一圈准星（覆盖整段准备期）→ 一发拉长水线的高速
+ *   水弹穿过前排、只在那只身上炸开一蓬冷水；擦过的挡路者身上只掠过一道水痕，没打中就在真实末点散开。
  * 色相家族：冷水青（0x6FD3F2 / 0x2C86C8）为主体，近白（0xEAF9FF）只给准星与击点高光。
- * 拍子：起 aim（聚光）→ 锁 mark（准星）→ 射 shot（水弹）→ 击 strike（命中）/ pierce（穿透）/ graze（掠过）→ 收。
+ * 拍子：起 aim（聚光）→ 锁 mark（准星，duration 绑 `data.windup`）→ 射 shot（水弹）→ 击 strike（命中）/ pierce（穿透）/
+ *   graze（掠过）/ spent（飞尽落空，绑真实末点）→ 收。
  * 范围：mark 与 strike 都绑在锁定目标身上；准星落在谁头上，玩家就知道这一枪只打谁，`data.scale` 随判定半径变化。
- * 运动：水弹沿命中方向直线高速飞行（服务端投射物 + 追踪），命中向外炸水花。
+ * 运动：水弹沿命中方向直线高速飞行（服务端投射物 + 追踪），尾迹发射器绑 `data.projectile` 与弹体同行，命中向外炸水花。
  * 数：`data.motes`（特攻派生）绑定命中水花量，`data.intensity`（单发威力）缩放整体强弱；画面里的数量和机制一致。
  * 参照节：视觉语言第二、三、四、六、七、九节。
  */
@@ -14,7 +15,7 @@ const SnipeshotMoveDefinition: ParticleDefinition = {
     interrupt: "drain",
     moments: {
         aim: {
-            duration: 12,
+            duration: { data: "windup", fallback: 12 },
             exit: { stop: 5, drain: 12 },
             emitters: [
                 {
@@ -36,7 +37,7 @@ const SnipeshotMoveDefinition: ParticleDefinition = {
             ]
         },
         mark: {
-            duration: 22,
+            duration: { data: "windup", fallback: 22 },
             exit: { stop: 8, drain: 14 },
             emitters: [
                 {
@@ -141,6 +142,29 @@ const SnipeshotMoveDefinition: ParticleDefinition = {
                     direction: "outward", speed: [0.05, 0.16],
                     lifetime: [7, 13], size: [0.16, 0.04],
                     color: 0x6FD3F2, alpha: [0.55, 0], light: "world", maxParticles: 22
+                }
+            ]
+        },
+        spent: {
+            duration: 18,
+            exit: { stop: 6, drain: 14 },
+            emitters: [
+                {
+                    name: "fizzle", bind: "point", offset: [0, 0.1, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/splash",
+                    burst: { count: { data: "motes", fallback: 8 }, at: 0 },
+                    shape: { kind: "sphere", radius: 0.22 },
+                    direction: "outward", speed: [0.03, 0.12], gravity: 0.04, drag: 0.93,
+                    lifetime: [7, 14], size: [0.1, 0.02],
+                    color: 0x6FD3F2, alpha: [0.55, 0], light: "world", maxParticles: 24
+                },
+                {
+                    name: "drop", bind: "point", offset: [0, 0.05, 0],
+                    particle: "world_combat_core:cobblemon/generic/water/rainsplash",
+                    rate: 10, shape: { kind: "circle", radius: 0.24 },
+                    direction: "down", speed: [0.0, 0.03], gravity: 0.05,
+                    lifetime: [8, 14], size: [0.07, 0.01],
+                    color: 0x2C86C8, alpha: [0.5, 0], light: "world", maxParticles: 18
                 }
             ]
         },

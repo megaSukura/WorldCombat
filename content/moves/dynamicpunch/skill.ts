@@ -17,6 +17,7 @@
 namespace PokemonSkills {
     const dynamicpunchEffect = "world_combat:dynamicpunch_daze";
     const dynamicpunchScene = "world_combat:move_dynamicpunch";
+    const dynamicpunchFistScene = "world_combat:move_dynamicpunch_fist";
     const dynamicpunchDazeText = "world_combat.move.dynamicpunch.text.daze";
     const dynamicpunchMissText = "world_combat.move.dynamicpunch.text.miss";
     const dynamicpunchRecoilText = "world_combat.move.dynamicpunch.text.recoil";
@@ -38,7 +39,7 @@ namespace PokemonSkills {
 
     /** 扇形地面的有序顶点：原点 + 从瞄准方向左右各半个张角间采样的弧点。判定与画面用同一组顶点。 */
     function dynamicpunchFan(origin: CombatPoint, direction: CombatPoint, reach: number, arcDegrees: number, samples: number): number[][] {
-        const half = Math.min(180, Math.max(5, arcDegrees)) * Math.PI / 360;
+        const half = Math.min(360, Math.max(5, arcDegrees)) * Math.PI / 360;
         const base = Math.atan2(direction.x(), direction.z());
         const points: number[][] = [[origin.x(), origin.y() + 0.06, origin.z()]];
         for (let i = 0; i <= samples; i++) {
@@ -105,19 +106,28 @@ namespace PokemonSkills {
                 WorldFeedback.emit(scope, dynamicpunchScene, 1, origin,
                     { moment: "sweep", path: path, reach: reach, arc: arc, scale: scale, intensity: intensity,
                         flow: Math.round(160 + arc * 0.9), direction: [direction.x(), direction.y(), direction.z()] }, 24);
+                // 同一记横扫的拳影：客户端沿这组真实端点从一侧扫向另一侧，命中判定仍是当刻整扇切。
+                WorldFeedback.emit(scope, dynamicpunchFistScene, 1, origin,
+                    { moment: "sweep", reach: reach, arc: arc, scale: scale, intensity: intensity,
+                        start: scope.tick(), dur: 8, direction: [direction.x(), direction.y(), direction.z()] }, 40);
                 let hits = 0;
                 const region = WorldGeometry.sector(origin, direction, reach, arc, { below: 1.5, above: 2.6 });
                 WorldGeometry.selectEnemies(scope, region, function (victim, facts) {
+                    // 逐敌可达：拳臂从身体到目标的直线上有墙就够不到，不结算也不挂状态。
+                    if (WorldGeometry.blockHit(scope, origin, facts.position()) !== null) return;
                     if (!hurt(current, victim, "dynamicpunch", power,
                         { damage: damageSpec("dynamicpunch", "haymaker"), contact: true, punch: true })) return;
                     hits++;
-                    // 状态真落上才挂托管表现；同一目标已有载体时不重复挂。
-                    if (CombatStatus.apply(scope, victim, "confusion", dynamicpunchEffect, daze, Math.round(chance * 100), { unique: true })
-                        && scope.effects(victim, dynamicpunchDazeMark).length === 0)
-                        scope.effect(dynamicpunchDazeMark, victim, "{}", Math.max(1, Math.min(2400, daze)));
                     WorldFeedback.emit(scope, dynamicpunchScene, 1, facts.position(),
-                        { moment: "impact", target: String(victim.ref()), intensity: intensity, daze: daze }, 30);
-                    WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.3, 0)), dynamicpunchDazeText, [], 34);
+                        { moment: "impact", target: String(victim.ref()), intensity: intensity }, 30);
+                    // 只有混乱真的落上才画飞鸟与震懵浮字；被免疫挡下时只留打击拳印。
+                    if (CombatStatus.apply(scope, victim, "confusion", dynamicpunchEffect, daze, Math.round(chance * 100), { unique: true })) {
+                        if (scope.effects(victim, dynamicpunchDazeMark).length === 0)
+                            scope.effect(dynamicpunchDazeMark, victim, "{}", Math.max(1, Math.min(2400, daze)));
+                        WorldFeedback.emit(scope, dynamicpunchScene, 1, facts.position(),
+                            { moment: "daze_start", target: String(victim.ref()), intensity: intensity, daze: daze }, 30);
+                        WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.3, 0)), dynamicpunchDazeText, [], 34);
+                    }
                 });
                 if (hits > 0) {
                     sound(current, "cobblemon:move.closecombat.target");
