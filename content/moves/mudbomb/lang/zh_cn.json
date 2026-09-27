@@ -3,7 +3,7 @@
   "worldcombat.skill.mudbomb.use.0": "中远距离的直线重击",
   "worldcombat.skill.mudbomb.use.1": "用爆开泼溅打到目标身边的敌人",
   "worldcombat.skill.mudbomb.use.2": "偶尔糊眼，削掉对手的命中",
-  "worldcombat.skill.mudbomb.description.0": "泥弹命中并造成伤害后，造成约 %1$s 点特殊伤害；此时有 %2$s 概率降低目标 %3$s 级命中，使其后续攻击更难命中。伤害被防御、免疫或护盾挡下时不会降命中。",
+  "worldcombat.skill.mudbomb.description.0": "泥弹命中造成约 %1$s 点特殊伤害，并有 %2$s 概率糊住目标双眼，使其命中降低 %3$s 级，持续 3.5 秒；擦除泥浆可提前恢复，重复命中不会叠加。未造成伤害时不会糊眼。",
   "worldcombat.skill.mudbomb.description.1": "炸开并从真实接触面外侧向外泼溅，半径 %2$s 格内、身体可达的其他敌人每个承受约 %1$s 点特殊伤害（比主目标轻）；被墙挡住的敌人不会受到溅射。",
   "worldcombat.skill.mudbomb.description.2": "泥弹以 %1$s 的速度近乎直线飞出，射程 %2$s 格，撞上地形或敌人就炸开，只在真实碰撞面溅开一圈短泥滴；战场地板不会被换成泥。当前碎壳：%3$s。",
   "worldcombat.skill.mudbomb.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -26,5 +26,6 @@
   "worldcombat.skill.mudbomb.preference.ai.crowd.help": "开启后，目标身边还有别的敌人时优先发弹，爆开能多打一份；关闭则只按普通远程攻击排序。",
   "worldcombat.skill.mudbomb.preference.ai.leaveStation": "驻守时允许离位",
   "worldcombat.skill.mudbomb.preference.ai.leaveStation.help": "开启后，驻守命令下也会为找射界离开站位；关闭则只在原地够得到时投弹。",
-  "world_combat.move.mudbomb.text.blind": "泥雾糊眼（命中 -%1$s）"
+  "world_combat.move.mudbomb.text.blind": "泥雾糊眼（命中 -%1$s）",
+  "effect.world_combat.mudbomb_blinded": "泥浆蒙眼"
 }

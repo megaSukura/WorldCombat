@@ -12,10 +12,12 @@ Smoke.scenario("rocksmash", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "machamp", level: 55, moves: ["rocksmash"], at: [-2, 0, 0] });
-    var foe = stage.pokemon({ species: "hariyama", level: 60, moves: ["splash"], at: [4, 0, 0] });
+    var foe = stage.pokemon({ species: "hariyama", level: 60, moves: ["splash"], at: [0, 0, 0] });
     stage.hostile(caster, foe);
+    stage.command("execute as @e[distance=..15] run attribute @s minecraft:generic.max_health base set 1000");
+    stage.command("execute as @e[distance=..15] run data merge entity @s {Health:1000.0f}");
     stage.until(1600, function () {
-        return stage.casts("rocksmash", caster) >= 4 && stage.damageTo(foe) > 0;
+        return stage.casts("rocksmash", caster) >= 1 && stage.damageTo(foe) > 0 && stage.hasMobEffect(foe, "world_combat:rocksmash_cracked");
     }, function () {
         stage.expect(stage.casts("rocksmash", caster) >= 1, "caster committed rock smash");
         stage.expect(stage.damageTo(foe) > 0, "rock smash dealt damage to the foe");
@@ -25,6 +27,17 @@ Smoke.scenario("rocksmash", function (stage) {
             cracked: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),
             foeAlive: foe.alive()
         });
-        stage.done();
+        const timedTarget = foe;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:rocksmash_cracked"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).def || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "rocksmash", 0);
+        stage.team("timed-b-rocksmash", [caster, timedTarget]);
+        stage.boost(timedTarget, { def: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:rocksmash_cracked");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:rocksmash_cracked"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).def || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "rock smash lands within 80 s");
 });

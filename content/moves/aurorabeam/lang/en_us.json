@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.aurorabeam.summary": "Fire a rainbow beam that runs along the line: it deals special damage to the first enemy, lowers its Attack by 1 stage by the native accepted amount (nothing once at the floor or immune), and leaves a small patch of frost where it lands. The first time it strikes an existing snow or ice surface it mirrors off that real face once and keeps going with the remaining range; stone does not reflect. The wide spectrum reaches further and chills more easily; the tight one is faster and stronger.",
+  "worldcombat.skill.aurorabeam.summary": "Fires a rainbow beam that damages the first enemy hit, may lower its Attack, and leaves a small frost patch at the final impact. The beam reflects once from snow or ice; stone walls stop it. Broad Spectrum travels farther and wider with a higher Attack-drop chance; Focused Spectrum is faster and stronger.",
   "worldcombat.skill.aurorabeam.use.0": "A straight-line pick at mid-to-long range",
   "worldcombat.skill.aurorabeam.use.1": "Suppress physical attackers",
   "worldcombat.skill.aurorabeam.use.2": "Clipping an ice wall to reflect onto a target behind cover",

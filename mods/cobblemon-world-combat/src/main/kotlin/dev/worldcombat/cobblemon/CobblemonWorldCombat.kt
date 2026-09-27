@@ -17,6 +17,7 @@ class CobblemonWorldCombat(modBus: IEventBus, container: net.neoforged.fml.ModCo
             dev.worldcombat.cobblemon.network.ControlNetwork.register(it)
         }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.tick.ServerTickEvent.Post> {
+            NativeNpcChallenges.tick(it.server)
             dev.worldcombat.cobblemon.review.ReviewTool.tick(it.server)
             dev.worldcombat.cobblemon.control.CompanionControl.tick(it.server)
             dev.worldcombat.cobblemon.review.ReviewTool.tickHeld()
@@ -35,6 +36,9 @@ class CobblemonWorldCombat(modBus: IEventBus, container: net.neoforged.fml.ModCo
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific> {
             dev.worldcombat.cobblemon.review.ReviewTool.interact(it)
         }
+        NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.server.ServerStoppingEvent> {
+            NativeNpcChallenges.stop(it.server, "server-stopping")
+        }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.server.ServerStoppedEvent> {
             dev.worldcombat.cobblemon.control.CompanionControl.stop(it.server)
             dev.worldcombat.cobblemon.script.NativePasture.reset()
@@ -43,6 +47,7 @@ class CobblemonWorldCombat(modBus: IEventBus, container: net.neoforged.fml.ModCo
             dev.worldcombat.cobblemon.review.ReviewTool.reset()
         }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent> {
+            (it.entity as? net.minecraft.server.level.ServerPlayer)?.let { player -> NativeNpcChallenges.cancelPlayer(player, "player-disconnected") }
             (it.entity as? net.minecraft.server.level.ServerPlayer)?.let(dev.worldcombat.cobblemon.script.NativeContentSubscriptions::remove)
         }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.entity.player.PlayerEvent.Clone> {
@@ -70,6 +75,7 @@ class CobblemonWorldCombat(modBus: IEventBus, container: net.neoforged.fml.ModCo
             }
         }
         NeoForge.EVENT_BUS.addListener<net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent> {
+            if (!it.level.isClientSide) NativeNpcChallenges.left(it.entity)
             if (!it.level.isClientSide) (it.entity as? com.cobblemon.mod.common.entity.pokemon.PokemonEntity)?.let { entity ->
                 dev.worldcombat.cobblemon.script.NativePublicAttributes.save(entity)
                 dev.worldcombat.cobblemon.script.NativePasture.remove(entity)

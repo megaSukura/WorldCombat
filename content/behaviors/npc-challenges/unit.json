@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "id": "world_combat:npc_challenges",
+  "version": "0.1",
+  "requires": { "world_combat:default_companion": "0.1" },
+  "sources": ["rules.ts"]
+}

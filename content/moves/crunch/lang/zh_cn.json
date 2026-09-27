@@ -3,7 +3,7 @@
   "worldcombat.skill.crunch.description.0": "咬实那一下造成 %1$s 的接触伤害，獠牙的防御系数低于惯例，对高防目标更有效。",
   "worldcombat.skill.crunch.description.1": "朝目标扑出 %1$s 格、每刻 %2$s 格，咬合判定半径 %3$s 格。",
   "worldcombat.skill.crunch.description.2": "咬住后研磨 %1$s，全程保持咬合到结束才再结算一记 %2$s 的研磨伤害；期间目标拉开、被墙隔开或失效会立即松口，不隔空磨伤。",
-  "worldcombat.skill.crunch.description.3": "第二段研磨伤害真实造成后，才有 %1$s 的概率让目标防御下降 %2$s 级，并挂上持续 %3$s 的破防身份——这道身份本身不改变属性，带着它的目标会被能撕旧缺口的招多降一级防御。",
+  "worldcombat.skill.crunch.description.3": "完成研磨并造成伤害后，有 %1$s 概率使目标防御降低 %2$s 级，持续 %3$s。伤口愈合或被清除后恢复；期间能被撕裂旧伤口的招式进一步利用。同一伤口不会被本招反复加深。",
   "worldcombat.skill.crunch.crush.on": "碾压式：磨得更久、咬塌几率更高、破防缺口留得更久，但咬合略轻、起手与冷却更长。",
   "worldcombat.skill.crunch.crush.off": "疾咬式：出手更快、单口更重，但研磨更短、更难咬塌护甲。",
   "worldcombat.skill.crunch.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

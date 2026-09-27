@@ -101,7 +101,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(30).times(0.8).clamp(0, 26))
                 .times(F.when(F.pref("suffuse"), F.const(1.25), F.const(1)))
                 .clamp(50, 160).round(0),
-            "缠身时长", "被羽绒雾糊住、带着 world_combat:status/downcast 移动变慢的时间；特攻越高、等级越高糊得越久。"),
+            "缠身时长", "特攻下降与移动减速的持续时间；特攻和等级越高，羽绒雾缠得越久。"),
         /** 特攻下降：固定 1 级。 */
         dropStages: formula(
             F.base(1),

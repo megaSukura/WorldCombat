@@ -9,5 +9,8 @@
   "worldcombat.attributes.risk": "冒险倾向修正",
   "worldcombat.attributes.persistence": "坚持倾向修正",
   "worldcombat.attributes.ground_slipperiness": "身体滑行系数",
-  "worldcombat.attributes.ground_support": "地表支撑"
+  "worldcombat.attributes.ground_support": "地表支撑",
+  "worldcombat.attributes.ground_lift_height": "地表托举高度",
+  "worldcombat.attributes.ground_lift_speed": "地表托举速度",
+  "worldcombat.attributes.ground_lift_probe": "地表托举探测距离"
 }

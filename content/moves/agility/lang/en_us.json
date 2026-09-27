@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.agility.summary": "Sharply raise Speed and leave a brief Light Rush window.",
+  "worldcombat.skill.agility.summary": "Become light-footed to greatly raise Speed until the effect ends or is cleansed.",
   "worldcombat.skill.agility.use.0": "Relax first at the start of a fight to lay down Speed",
   "worldcombat.skill.agility.use.1": "Pull away before being caught",
-  "worldcombat.skill.agility.use.2": "Top up a Speed stage between trades",
+  "worldcombat.skill.agility.use.2": "Regain a burst of speed between attacks once light-footed ends",
   "worldcombat.skill.agility.description.0": "Speed +%1$s level(s).",
-  "worldcombat.skill.agility.description.1": "The Light Rush lingers for about %1$s: during this window the companion will not relax again, and leaves an afterimage only while it actually moves; being cleansed ends the trail without touching the Speed already gained.",
+  "worldcombat.skill.agility.description.1": "Light-footed lasts %1$s, raising Speed and leaving afterimages while moving. Speed returns when it ends or is cleansed; recasting during it adds no further boost.",
   "worldcombat.skill.agility.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s.",
   "worldcombat.skill.agility.timing": "Self move, range %1$s blocks; after %2$s s of wind-up it spends %4$s PP, recovers for %3$s s and starts a %5$s s cooldown.",
   "worldcombat.skill.agility.growth.0": "At level %1$s the cooldown shortens to %2$s s.",

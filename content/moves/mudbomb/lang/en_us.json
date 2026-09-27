@@ -3,7 +3,7 @@
   "worldcombat.skill.mudbomb.use.0": "A straight heavy hit at mid-to-long range",
   "worldcombat.skill.mudbomb.use.1": "Catch enemies standing near the target with the burst",
   "worldcombat.skill.mudbomb.use.2": "Sometimes blind the target and cut its accuracy",
-  "worldcombat.skill.mudbomb.description.0": "Once the ball hits and deals damage, it deals about %1$s special damage and has a %2$s chance to drop the target's accuracy by %3$s stages, making its later attacks harder to land. A hit stopped by defence, immunity or a shield never drops accuracy.",
+  "worldcombat.skill.mudbomb.description.0": "Mud Bomb deals about %1$s special damage and has a %2$s chance to obscure the target’s eyes, lowering accuracy by %3$s stages for 3.5 seconds. Cleansing the mud restores accuracy early, and repeated hits do not stack. No blindness is applied when the hit deals no damage.",
   "worldcombat.skill.mudbomb.description.1": "The burst splashes outward from the real contact surface; every other reachable enemy within a radius of %2$s blocks takes about %1$s special damage (lighter than the main hit), while enemies behind a wall take none.",
   "worldcombat.skill.mudbomb.description.2": "The ball flies nearly straight at %1$s up to %2$s blocks and bursts on terrain or an enemy, spraying a short ring of mud only on the real contact surface; the floor is never changed into mud. Fragmentation shell: %3$s.",
   "worldcombat.skill.mudbomb.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -26,5 +26,6 @@
   "worldcombat.skill.mudbomb.preference.ai.crowd.help": "On: it prefers a target with other enemies nearby so the burst catches more. Off: it sorts like an ordinary ranged attack.",
   "worldcombat.skill.mudbomb.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.mudbomb.preference.ai.leaveStation.help": "On: it may leave a hold position to find a firing line. Off: it only fires when already in range.",
-  "world_combat.move.mudbomb.text.blind": "Mud mist in the eyes (accuracy -%1$s)"
+  "world_combat.move.mudbomb.text.blind": "Mud mist in the eyes (accuracy -%1$s)",
+  "effect.world_combat.mudbomb_blinded": "Mud in the Eyes"
 }

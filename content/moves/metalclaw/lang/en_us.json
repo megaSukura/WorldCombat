@@ -5,7 +5,7 @@
   "worldcombat.skill.metalclaw.use.2": "Feed itself into a heavy striker within the first beats",
   "worldcombat.skill.metalclaw.description.0": "Each rake deals about %1$s contact damage with a %2$s-block claw radius; the foe's Defence, type matchup and crits are settled on hit.",
   "worldcombat.skill.metalclaw.description.1": "The claws truly reach %1$s blocks along free aim and the first body or wall stops them; target selection adds about a 0.4-block body margin on top. The twin form lands its second rake %2$s ticks later, knocks the target %3$s blocks along the actual claw line, and the second rake only reads the current aim for a small correction.",
-  "worldcombat.skill.metalclaw.description.2": "On a landed rake, %1$s chance to hone an edge: the hone form raises Attack by up to %2$s stage(s) in its single rake, while the twin form raises 1 per rake with that cap shared across both (shown as the stages actually gained); the honed Attack stays and makes later physical moves heavier.",
+  "worldcombat.skill.metalclaw.description.2": "Each hit has a %1$s chance to sharpen the claws. Heavy Claw grants up to %2$s Attack stages; each successful roll in Twin Claw grants 1 stage, sharing that cap across both hits. Later physical attacks also benefit.",
   "worldcombat.skill.metalclaw.hone.on": "Hone form: one single heavier rake with a higher hone chance, more knockback and a little more reach, but a longer windup and cooldown.",
   "worldcombat.skill.metalclaw.hone.off": "Twin form: two rakes that each roll to hone; faster and cheaper, each lighter, and the second rake may correct its aim a little.",
   "worldcombat.skill.metalclaw.timing": "Range %1$s blocks, windup %2$s s, recover %3$s s, %4$s PP, cooldown %5$s s.",

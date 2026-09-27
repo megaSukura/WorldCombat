@@ -7,7 +7,7 @@
  * 出手：短起手在指尖跳起碎点，准备末尾就朝双方真实的最近接触方向亮出两三道短弯痕，把「手已经伸过去」画出来。
  * 命中：提交后沿施法者到目标的直线做一次真实接触判定（action.trace），重查距离与视线；目标退开或被墙隔断就挠空，
  *       不隔空落减益。真正贴上才挂共享的 world_combat:ticklish_fit（身份 world_combat:status/ticklish）、抖出碎点，
- *       再 NativeEffects.boost 分别下降攻击与防御；宝可梦损失原生等级，其他生物落到攻击与护甲属性。
+ *       痒意载体拥有有限的攻击与防御降级，到期或驱散时只撤回本次贡献。
  * 轻／猛：猛挠把两项各再多降一级、痕数更多、笑得更久，但起手与冷却明显更长。
  * 反制：拉开到 reach 之外就挠不到；它不造成伤害，也不阻止对方脱身。
  */
@@ -155,15 +155,20 @@ namespace PokemonSkills {
             }
             // 真的贴上了：两项降级各自读实际回执；免疫或已满负级时这一挠不出成绩，不播成功。
             const hitPoint = contact.position();
-            const droppedAtk = Math.max(0, -NativeEffects.boost(world, target, "atk", -atkDrop));
-            const droppedDef = Math.max(0, -NativeEffects.boost(world, target, "def", -defDrop));
+            const prior = MobEffects.read(world, target, tickleEffect);
+            const beforeAtk = NativeEffects.effectiveStage(world, target, "atk"), beforeDef = NativeEffects.effectiveStage(world, target, "def");
+            const carrier = prior || MobEffects.apply(world, target, tickleEffect, giggle, 0);
+            const windowId = !prior && carrier ? NativeEffects.boostWindow(world, target, { atk: -atkDrop, def: -defDrop }, giggle,
+                "world_combat:move/tickle", carrier, null) : 0;
+            if (!prior && carrier && !windowId) world.removeMobEffect(target, tickleEffect, carrier.key());
+            const droppedAtk = Math.max(0, beforeAtk - NativeEffects.effectiveStage(world, target, "atk"));
+            const droppedDef = Math.max(0, beforeDef - NativeEffects.effectiveStage(world, target, "def"));
             if (droppedAtk === 0 && droppedDef === 0) {
                 WorldFeedback.emit(world, tickleScene, 1, hitPoint,
                     { moment: "fizzle", direction: [strike.x(), 0, strike.z()] }, 16);
                 done(action);
                 return;
             }
-            MobEffects.apply(world, target, tickleEffect, giggle, 0);
             const landedMarks = Math.max(1, Math.min(3, droppedAtk > 0 ? droppedAtk : 1));
             for (let index = 0; index < landedMarks; index++)
                 WorldFeedback.emit(world, tickleScene, 1, hitPoint,

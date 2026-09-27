@@ -57,7 +57,7 @@ namespace PokemonSkills {
         /** 气短窗口：吼到多久。 */
         falter: seconds(
             F.base(120).plus(F.level().times(3)).clamp(120, 320).round(0),
-            "气短窗口", "「气短」标记在敌人身上挂多久；等级越高吼得越久。等级下降由公共能力阶梯独立保留。"),
+            "气短窗口", "双攻受到压制的时间；等级越高，气短越久。"),
         /** 起手：速度决定把气吸满多快。 */
         tempo: seconds(
             F.base(11).minus(F.stat("speed").minus(60).times(0.03))

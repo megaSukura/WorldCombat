@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "MobControlMixin",
+    "MountedMotionAuthorityMixin",
+    "MountedMotionPacketMixin",
     "NativeTargetRequestMixin",
     "NativeMobAttackStartMixin",
     "NativeProjectileStartMixin",
@@ -33,7 +35,7 @@
     "NativeSelfHarmSensorMixin",
     "T88NetworkWatcherMixin"
   ],
-  "client": ["NativeEntityEchoMixin"],
+  "client": ["NativeEntityEchoMixin", "MountedMotionClientPacketMixin"],
   "injectors": {
     "defaultRequire": 1
   }

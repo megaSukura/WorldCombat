@@ -1,24 +1,39 @@
-// 叫声的可执行设计说明：一只宝可梦对身边一个原版生物叫一声，只说这一招。
-// 必然事实：叫声被放出来过；目标带上共享的「被叫软」身份；目标的攻击属性随下降的攻击一起走低。
-// 掩体能否挡住、拖长音还是短叫都不是本场景的必然事实（声音本就不看视线），写进 note。
+// Verify the actual native attack contribution, its expiry, cleansing and independent changes.
 Smoke.scenario("growl", function (stage) {
+    stage.time("night");
     var caster = stage.pokemon({ species: "eevee", level: 35, moves: ["growl"], at: [0, 0, 0] });
     var target = stage.mob({ type: "minecraft:zombie", at: [2, 0, 0] });
+    stage.noai(target);
     var baseAttack = stage.attribute(target, "minecraft:generic.attack_damage");
-    stage.hostile(caster, target);
-    stage.until(600, function () {
-        return stage.casts("growl") > 0
-            && stage.hadMobEffect(target, "world_combat:status/charmed")
-            && stage.attribute(target, "minecraft:generic.attack_damage") < baseAttack - 0.001;
-    }, function () {
-        stage.expect(stage.casts("growl") > 0, "growl was committed");
-        stage.expect(stage.hadMobEffect(target, "world_combat:status/charmed"), "the target carried the shared charmed identity");
-        stage.expect(stage.attribute(target, "minecraft:generic.attack_damage") < baseAttack - 0.001, "the target's attack fell with the Attack drop");
-        stage.note("growl landed; sound needs no line of sight, so cover and the long howl are not part of this run", {
-            casts: stage.casts("growl"), baseAttack: baseAttack,
-            attack: stage.attribute(target, "minecraft:generic.attack_damage"),
-            casterHp: caster.health(), targetHp: target.health()
+    stage.provoke(caster, target);
+    stage.until(500, function () { return stage.hasMobEffect(target, "world_combat:growl_hush"); }, function () {
+        stage.expect(stage.stages(target).atk === -1, "one growl lowers Attack by one stage");
+        stage.expect(stage.attribute(target, "minecraft:generic.attack_damage") < baseAttack, "the ordinary mob's real Attack falls");
+        var casts = stage.casts("growl", caster);
+        stage.after(110, function () {
+            stage.expect(stage.hasMobEffect(target, "world_combat:growl_hush"), "the original distraction is still active");
+            stage.expect(stage.casts("growl", caster) === casts, "AI does not spend another cry on the same active distraction");
+            stage.expect(stage.stages(target).atk === -1, "the distraction has not stacked deeper");
+            stage.setPp(caster, "growl", 0);
+            stage.boost(target, { atk: 1 });
+            stage.until(280, function () { return !stage.hasMobEffect(target, "world_combat:growl_hush"); }, function () {
+                stage.after(2, function () {
+                    stage.expect(stage.stages(target).atk === 1, "expiry removes only Growl and retains an independent Attack increase");
+                    stage.expect(stage.attribute(target, "minecraft:generic.attack_damage") > baseAttack, "native attack restores with the separate increase intact");
+                    stage.setPp(caster, "growl", 1);
+                    stage.until(400, function () { return stage.hasMobEffect(target, "world_combat:growl_hush"); }, function () {
+                        stage.expect(stage.stages(target).atk === 0, "a later distraction acts on the current independent baseline");
+                        stage.setPp(caster, "growl", 0);
+                        stage.command("effect clear " + String(target.ref).split("/")[0] + " world_combat:growl_hush");
+                        stage.after(2, function () {
+                            stage.expect(stage.stages(target).atk === 1, "cleansing removes the exact distraction contribution");
+                            stage.expect(!stage.hasMobEffect(target, "world_combat:growl_hush"), "no display-only status remains");
+                            stage.note("Timed attack loss, no repeated stacking, native expiry and cleansing preserve a separately granted stage.");
+                            stage.done();
+                        });
+                    }, "growl can affect the opponent after the first distraction ends");
+                });
+            }, "the distraction expires during the ongoing encounter");
         });
-        stage.done();
-    }, "growl lands on the target");
+    }, "growl applies a timed attack loss to an ordinary mob");
 });

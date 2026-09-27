@@ -74,9 +74,12 @@ namespace PokemonSkills {
                 if (!world.clear(origin, facts.position())) return;
                 const gap = facts.position().minus(origin).length();
                 const wanted = Math.max(1, stage - (gap > near ? 1 : 0));
-                // 两份效果分别结算：短攻击压制落在真实状态上，永久命中等级走能力阶梯。各自按实际结果回执。
-                const effect = MobEffects.apply(world, actor, flashEffect, duration, 0);
-                const dropped = Math.abs(NativeEffects.boost(world, actor, "accuracy", -wanted));
+                const previous = MobEffects.read(world, actor, flashEffect);
+                const before = NativeEffects.effectiveStage(world, actor, "accuracy");
+                const effect = previous || MobEffects.apply(world, actor, flashEffect, duration, 0);
+                if (!previous && effect) NativeEffects.boostWindow(world, actor, { accuracy: -wanted }, duration,
+                    "world_combat:move/flash", effect, null);
+                const dropped = Math.max(0, before - NativeEffects.effectiveStage(world, actor, "accuracy"));
                 if (dropped === 0 && effect === null) return;
                 caught++;
                 const at = world.observe(actor);

@@ -131,13 +131,17 @@ namespace PokemonSkills {
                         { damage: damageSpec("gravapple", "impact"), contact: false });
                     if (!landed) { finish(current); return; }
                     // 降防回执：真正被压了几级就报几级；被免疫则不留破防缺口。
-                    const crushed = NativeEffects.boost(scope, victim, "def", -stages);
+                    const carrier = MobEffects.read(scope, victim, gravappleCrush) === null
+                        ? MobEffects.apply(scope, victim, gravappleCrush, crushTicks, 0) : null;
+                    const before = NativeEffects.effectiveStage(scope, victim, "def");
+                    const owned = carrier === null ? 0 : NativeEffects.boostWindow(scope, victim, { def: -stages }, crushTicks, "world_combat:move/gravapple", carrier, null);
+                    if (carrier !== null && owned === 0) scope.removeMobEffect(victim, gravappleCrush, carrier.key());
+                    const crushed = NativeEffects.effectiveStage(scope, victim, "def") - before;
                     WorldFeedback.emit(scope, gravappleScene, 1, point,
                         { moment: "impact", target: String(victim.ref()), power: power, intensity: intensity,
                             crush: Math.abs(crushed), airborne: airborne ? 1 : 0 }, 30);
                     sound(current, "cobblemon:impact.grass");
                     if (crushed !== 0) {
-                        MobEffects.apply(scope, victim, gravappleCrush, crushTicks, 0);
                         WorldFeedback.text(scope, point.plus(WorldCombat.point(0, 1.3, 0)), gravappleCrushText, [Math.abs(crushed)], 28);
                     }
                     if (airborne) {

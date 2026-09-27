@@ -107,8 +107,14 @@ namespace PokemonSkills {
                         const landed = impact(current, hit, "shadowbone", power, { damage: damageSpec("shadowbone", "bone"), contact: false });
                         if (landed && scope.valid(victim) && scope.random() < chance) {
                             // 实际被慑住（未被免疫、且真的还能再降一级）才留慑纹与标记；浮字读 boost 实际降了几级。
-                            const applied = NativeEffects.boost(scope, victim, "def", -stages);
-                            if (applied !== 0 && MobEffects.apply(scope, victim, shadowboneMark, markTicks, 0) !== null) {
+                            const previous = MobEffects.read(scope, victim, shadowboneMark);
+                            const before = NativeEffects.effectiveStage(scope, victim, "def");
+                            const carrier = previous || MobEffects.apply(scope, victim, shadowboneMark, markTicks, 0);
+                            const windowId = !previous && carrier ? NativeEffects.boostWindow(scope, victim, { def: -stages }, markTicks,
+                                "world_combat:move/shadowbone", carrier, null) : 0;
+                            if (!previous && carrier && !windowId) scope.removeMobEffect(victim, shadowboneMark, carrier.key());
+                            const applied = NativeEffects.effectiveStage(scope, victim, "def") - before;
+                            if (applied !== 0) {
                                 const body = scope.observe(victim);
                                 if (body !== null) {
                                     WorldFeedback.emit(scope, shadowboneScene, 1, body.position(),

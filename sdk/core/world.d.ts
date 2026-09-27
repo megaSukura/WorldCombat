@@ -419,6 +419,8 @@ interface CombatWorld {
     dismiss(actor: CombatActor): boolean;
     /** Sets or adds velocity (blocks per tick, length <= 4): launches, hovering bodies, scripted projectiles. */
     motion(actor: CombatActor, velocity: CombatPoint, add: boolean): boolean;
+    /** Writable scoped movement ownership; release follows the action/effect lifetime. Committed motion/displace also acquire it lazily for supported player mounts. */
+    movementLease(): void;
     /** Received hostile knockback; direction points away from the hit. Vanilla owns horizontal damping and grounded lift,
      * LivingKnockBackEvent and knockback resistance. Strength 0..4; zero horizontal direction does nothing.
      * Returns whether native velocity changed, not a travelled distance. Dead/departed or mounted recipients and refused harm return false.

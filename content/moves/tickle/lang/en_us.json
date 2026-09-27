@@ -3,7 +3,7 @@
   "worldcombat.skill.tickle.use.0": "Undo a point-blank physical attacker",
   "worldcombat.skill.tickle.use.1": "Cut both Attack and Defence in a grapple",
   "worldcombat.skill.tickle.use.2": "Let an ally win the first exchange",
-  "worldcombat.skill.tickle.description.0": "On a hit the target immediately loses %1$s Attack and %2$s Defence stages, written straight onto its stat stages; it is also marked with Tickle for %3$s, during which companions will not tickle it again. Tickle itself deals no damage.",
+  "worldcombat.skill.tickle.description.0": "Tickling lowers Attack by %1$s stages and Defense by %2$s stages for %3$s. Both recover when the ticklish fit ends or is dispelled. Repeated tickling during the fit does not stack. Deals no damage.",
   "worldcombat.skill.tickle.description.1": "The reach is about %1$s blocks; from too far away the tickle whiffs and nothing happens.",
   "worldcombat.skill.tickle.description.2": "Reaching in takes %1$s with a %2$s cooldown.",
   "worldcombat.skill.tickle.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

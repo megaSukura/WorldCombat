@@ -8,7 +8,7 @@
  *   起（windup，提交前）：气场上翅，背后聚起一圈粉色光环；只播预告，可被打断（打断不花 PP）。
  *   扫（wing，提交后）：`kind: "aim"`——朝瞄准方向，左翼先铺左半扇（`esperwingArc` 的 −half..0）并结算其中的
  *       非友方；短间隔后右翼铺右半扇（0..half）再结算一次，同一敌人最多只吃一记；空振照常推进，不要求存在敌人。
- *   托（aura）：第二翼落定后才 `NativeEffects.boost(spe, gift)` 写入公共能力阶梯，并挂上共享身份
+ *   托（aura）：第二翼落定后才 `NativeEffects.boostWindow` 建立速度窗口，并挂上共享身份
  *       `world_combat:status/esperwing` 的气翼余韵窗口（MobEffect）；本次伤害不吃自己这一击的速度加成。
  *   余韵（linger，可选）：余韵窗口内留着拖尾；表现绑在窗口的托管效果上，随它自然到期或提前驱散一起收。
  *   要害（crit，可选）：共享结算判定为暴击时，由本单元的监听器在命中点补一发亮粉强调与浮字。
@@ -155,8 +155,13 @@ namespace PokemonSkills {
                 const scope = current.world();
                 const root = currentRoot(current);
                 // 第二翼落定后才提速：本次伤害不吃自己这一击的速度加成。只认实际写入的能力等级 delta。
-                const applied = NativeEffects.boost(scope, actor, "spe", gift);
-                const carrier = MobEffects.apply(scope, actor, esperwingAura, aura, 0);
+                const previous = MobEffects.read(scope, actor, esperwingAura);
+                const before = NativeEffects.effectiveStage(scope, actor, "spe");
+                const carrier = previous || MobEffects.apply(scope, actor, esperwingAura, aura, 0);
+                const windowId = !previous && carrier ? NativeEffects.boostWindow(scope, actor, { spe: gift }, aura,
+                    "world_combat:move/esperwing", carrier, null) : 0;
+                if (!previous && carrier && !windowId) scope.removeMobEffect(actor, esperwingAura, carrier.key());
+                const applied = NativeEffects.effectiveStage(scope, actor, "spe") - before;
                 if (carrier !== null && scope.effects(actor, esperwingAuraMark).length === 0)
                     scope.effect(esperwingAuraMark, actor, "{}", Math.max(1, Math.min(2400, aura)));
                 if (hitCount === 0) {

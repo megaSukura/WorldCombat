@@ -64,7 +64,7 @@ namespace PokemonSkills {
         hobbleTicks: seconds(
             F.base(45).plus(F.level().minus(25).times(0.9).clamp(0, 30))
                 .plus(F.stat("speed").minus(55).times(0.6).clamp(-15, 20)).clamp(35, 140).round(0),
-            "腿伤时长", "hobbled 身份挂多久；等级与施法者速度越高削得越久。"),
+            "腿伤时长", "腿伤造成减速的时间；等级与施法者速度越高，腿伤越久。"),
         /** 别腿时长：0 + （目标水平速度 ≥ 0.16 时 6）+ 旋身 4；夹 0..14。 */
         rootTicks: seconds(
             F.base(0).plus(F.target("actor.pace").gte(0.16).times(F.const(6)))

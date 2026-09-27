@@ -6,7 +6,7 @@
  * 世界化：不是隔空扣等级，而是**必须贴到身上挠**——本组唯一近身的一招。手指要找得到人，所以射程最短；
  *   换来的是同时打垮物攻与物防，让贴身对拼的人瞬间软下来。准备末尾按双方真实的最近接触方向亮出短弯痕，
  *   结算时沿直线做一次真实接触判定，重查距离与视线：目标退开或被墙隔断就挠空。真正贴上才挂共享身份
- *   world_combat:status/ticklish 的真实 MobEffect，再调用 NativeEffects.boost 分别下降攻击与防御：宝可梦损失原生
+ *   world_combat:status/ticklish 的真实 MobEffect，以可撤回窗口降低攻击与防御：宝可梦使用公共
  *   等级，其他生物落到攻击与护甲属性。「轻挠」出手快、掉得浅；「猛挠」要把人按住挠到底，起手与冷却都长，
  *   但两项各再多一级、笑得更久——想快还是想狠，由玩家取舍。
  *
@@ -48,7 +48,7 @@ namespace PokemonSkills {
             F.base(100).plus(F.individual("friendship").times(0.6))
                 .times(F.when(F.pref("firm", text("worldcombat.skill.tickle.preference.firm")), F.const(1.35), F.const(0.9)))
                 .clamp(70, 260).round(0),
-            "笑不停时长", "痒意标记持续多久；它只是身份，用来提醒伙伴别再重复挠，既不延长也不撑住已经下降的攻击与防御。施法者越亲近越放得开，猛挠标记更久。"),
+            "笑不停时长", "攻击与防御降低的持续时间；痒意结束或被驱散时恢复。施法者越亲近越放得开，猛挠持续更久。"),
         sparks: formula(F.base(16).plus(F.stat("speed").minus(60).times(0.3)).clamp(12, 44).round(0), "碎点数", {
             unit: " 个",
             description: "一次挠出的碎点数量；速度越快越多，画面里的碎点也按它画出。"

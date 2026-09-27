@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.eerieimpulse.summary": "Radiate an invisible eerie impulse from your body, spreading a ring out from yourself: every enemy caught in it immediately loses Sp. Atk stages, and that drop does not wear off on its own. It aims at no one and needs no line of sight, only proximity; overloading widens the ring and thickens the arcs, but slows the cast and raises the cooldown.",
+  "worldcombat.skill.eerieimpulse.summary": "Radiate a ring of eerie energy that temporarily lowers nearby enemies’ Sp. Atk. It needs no aim and interference passes through cover. Overloading widens its reach but lengthens the cast and cooldown.",
   "worldcombat.skill.eerieimpulse.use.0": "Scramble every special attacker around you when they close in",
   "worldcombat.skill.eerieimpulse.use.1": "Cut a whole ring of Sp. Atk without aiming in a melee",
   "worldcombat.skill.eerieimpulse.use.2": "Win the first exchange so anyone who closes cannot hit special",
-  "worldcombat.skill.eerieimpulse.description.0": "Every enemy in the ring around the caster loses %1$s stages of Sp. Atk, lowering the special damage it deals; this is a stat-stage change that does not wear off on its own until stages are reset.",
+  "worldcombat.skill.eerieimpulse.description.0": "Lower nearby enemies’ Sp. Atk by %1$s stages for %2$s. It returns when the interference ends or is cleansed. The interference does not stack.",
   "worldcombat.skill.eerieimpulse.description.1": "The field spreads %1$s blocks from the caster (counting air and ground alike) and only affects enemies inside it; no aiming and no line of sight are needed.",
   "worldcombat.skill.eerieimpulse.description.2": "Discharge telegraph %1$s, cooldown %2$s.",
   "worldcombat.skill.eerieimpulse.timing": "Range %1$s blocks, telegraph %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

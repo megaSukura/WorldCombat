@@ -25,7 +25,8 @@ Smoke.scenario("octolock", function (stage) {
         stage.expect(stage.casts("octolock", caster) > 0, "octolock was committed");
         stage.expect(stage.hadMobEffect(foe, "world_combat:status/octolock"), "the target carried the shared octolock identity");
         stage.expect(stage.attribute(foe, "minecraft:generic.movement_speed") < baseFoe * 0.75, "the tentacle slowed the target rather than pinning it");
-        stage.note("the per-round Defence/Sp. Def drop is written to the native stage ladder (armour on a non-Pokemon, clamped to 0..30 so a negative read is not available), so it is not asserted; the bind effect re-checks distance and line of sight every 4 ticks and the continuous hold scene carries no stop, so the tentacle stays on the target instead of flashing per squeeze", {
+        stage.boost(foe, { def: 1, spd: 1 });
+        stage.note("the hold owns each temporary Defence/Sp. Def loss; native armour clamps to zero, so effective stages are checked after release. The bind rechecks distance and sight every four ticks", {
             casts: stage.casts("octolock", caster),
             baseFoe: baseFoe,
             foeSpeed: stage.attribute(foe, "minecraft:generic.movement_speed"),
@@ -45,7 +46,11 @@ Smoke.scenario("octolock", function (stage) {
                 speed: [baseFoe, stage.attribute(foe, "minecraft:generic.movement_speed")],
                 casterAlive: caster.alive(), foeAlive: foe.alive()
             });
-            stage.done();
+            stage.after(3, function () {
+                stage.expect((stage.stages(foe).def || 0) === 1 && (stage.stages(foe).spd || 0) === 1,
+                    "released octolock restores all of its accumulated losses and preserves independent gains");
+                stage.done();
+            });
         }, "the tentacle lets go");
     }, "the tentacle locks the target");
 });

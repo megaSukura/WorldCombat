@@ -4,7 +4,7 @@
   "worldcombat.skill.octolock.use.1": "Keep lowering a foe's Defence and Sp. Def through a long standoff",
   "worldcombat.skill.octolock.use.2": "Slow a foe heading for the exit right beside you",
   "worldcombat.skill.octolock.description.0": "The tentacle reaches %1$s blocks to seize the target and holds for up to %2$s; if the user drifts more than %3$s blocks away, loses line of sight or falls, the tentacle lets go. Name an enemy to use it, or give only a direction to seize the nearest enemy ahead; an empty grab or a friendly target builds no hold.",
-  "worldcombat.skill.octolock.description.1": "It squeezes every %1$s, lowering Defence and Sp. Def by 1 stage each time (a limited number this cast); the squeeze count floats above the target.",
+  "worldcombat.skill.octolock.description.1": "Tighten the hold every %1$s, lowering Defense and Sp. Def by one stage each time. The pressure builds while the hold lasts. Releasing or cleansing the hold removes all of its Defense and Sp. Def losses.",
   "worldcombat.skill.octolock.description.2": "Wind-up %1$s, recovery %2$s, cooldown %3$s; while held the target's movement and flying speed are halved, but it can still attack.",
   "worldcombat.skill.octolock.option.on": "Tight coil: squeezes more often (interval x0.75) and holds +1 block further; the cost is reach -1 block and +15 ticks of cooldown — a tighter, meaner hold, but closer and pricier.",
   "worldcombat.skill.octolock.option.off": "Loose coil: reaches further, throws faster and recharges sooner; the cost is a slower squeeze and an easier escape.",

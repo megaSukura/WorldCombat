@@ -24,8 +24,17 @@ namespace PokemonSkills {
 
     /** 糊住一名战斗者的腿脚：共享速度等级下降，并挂上 mired 身份（宝可梦、原版生物、玩家同一条路）。返回实际掉速级数。 */
     function mudshotCoat(world: CombatWorld, target: CombatActor, stages: number, ticks: number): number {
-        const fallen = NativeEffects.boost(world, target, "spe", -stages);
-        MobEffects.apply(world, target, mudshotMire, Math.max(20, Math.round(ticks)), 0);
+        const previous = MobEffects.read(world, target, mudshotMire);
+        const renew = NativeEffects.ownsBoostWindow(world, target, "world_combat:move/mudshot", previous);
+        const carrier = MobEffects.apply(world, target, mudshotMire, Math.max(20, Math.round(ticks)), 0);
+        if (!carrier || (!renew && previous && String(carrier.key()) === String(previous.key()))) return 0;
+        const before = NativeEffects.effectiveStage(world, target, "spe");
+        const window = NativeEffects.boostWindow(world, target, renew ? {} : { spe: -stages }, carrier.duration(), "world_combat:move/mudshot", carrier, previous);
+        const fallen = NativeEffects.effectiveStage(world, target, "spe") - before;
+        if ((!window || (!previous && fallen === 0))) {
+            if (window) NativeEffects.windowClose(world, window);
+            world.removeMobEffect(target, mudshotMire, carrier.key());
+        }
         return fallen;
     }
 

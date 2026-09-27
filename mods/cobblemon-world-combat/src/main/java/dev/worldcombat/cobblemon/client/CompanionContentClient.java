@@ -215,6 +215,12 @@ public final class CompanionContentClient {
         return JSON.toJson(new CompanionInput.Aim(entity.getUUID(), new Point(at.x, at.y, at.z),
             new Point(direction.x, direction.y, direction.z), mc.player.getEyePosition(), at, ""));
     }
+    /** Menu selection shares the move's keyboard targeting, including airborne aim and input steps. */
+    public static String skillAim(int slot) {
+        var state = CompanionInput.state();
+        if (state == null || slot < 0 || slot >= state.skills().size()) return "null";
+        return JSON.toJson(CompanionInput.aim(slot));
+    }
     public static long cast(int slot, String aimJson) {
         var state = CompanionInput.state();
         if (state == null || CompanionInput.actor() == null || slot < 0 || slot >= state.skills().size()) {

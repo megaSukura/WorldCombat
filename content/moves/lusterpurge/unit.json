@@ -15,5 +15,11 @@
   ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:lusterpurge_exposed": "minecraft:mob_effect/weakness"
+  }
 }

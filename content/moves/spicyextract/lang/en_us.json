@@ -28,5 +28,5 @@
   "worldcombat.skill.spicyextract.preference.ai.leaveStation": "Leave post to throw",
   "worldcombat.skill.spicyextract.preference.ai.leaveStation.help": "When on, the companion leaves its post to throw.",
   "world_combat.move.spicyextract.text.burn": "Scorched (Attack +%1$s / Defence -%2$s)",
-  "worldcombat.skill.spicyextract.description.additional": "The Attack and Defence stage changes stay until stages are cleared or the target leaves combat; the whole move deals no damage, only changing Attack and Defence."
+  "worldcombat.skill.spicyextract.description.additional": "Gain Attack at the cost of Defence. These changes last until combat ends or stat changes are reset."
 }

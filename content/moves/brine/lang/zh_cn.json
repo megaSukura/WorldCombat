@@ -31,5 +31,5 @@
   "effect.world_combat.brine_soaked": "盐渍湿透",
   "world_combat.move.brine.text.wounded": "伤口见盐",
   "world_combat.move.brine.text.miss": "盐水落空",
-  "worldcombat.skill.brine.description.wet": "湿透本身只是共享标记，方便别的招式识别；盐水不再额外降低目标速度。"
+  "worldcombat.skill.brine.description.wet": "使目标湿透，能与利用湿透效果的招式配合；盐水本身不造成减速。"
 }

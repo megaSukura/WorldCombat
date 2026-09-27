@@ -19,6 +19,12 @@ public final class CoreClient {
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         dev.worldcombat.core.network.SceneState.receiver = ClientPresentation::receive;
+        dev.worldcombat.core.network.MountedMotionState.receiver = packet -> {
+            var client=net.minecraft.client.Minecraft.getInstance();
+            if (client.level!=null && client.level.getEntity(packet.entity()) instanceof net.minecraft.world.entity.LivingEntity entity)
+                dev.worldcombat.core.world.NativeMountedMotion.clientState(entity,packet.serial(),packet.active());
+            if (!packet.active()) net.neoforged.neoforge.network.PacketDistributor.sendToServer(packet);
+        };
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(ClientPresentation::tick);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(ClientPresentation::render);
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(dev.worldcombat.core.client.particles.ParticleDirector::onClientTick);

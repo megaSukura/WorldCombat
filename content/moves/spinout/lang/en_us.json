@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.spinout.summary": "Drops its weight low, grinds sparks off the ground and slides out along the aim, then swings its tail to a chosen left or right side for the second half, dragging a genuinely curved short wheel track: the first entity it meets takes a heavy single blow and is knocked along the charge, scuffing a ring into the ground at the impact point, while the spin cannot be stopped and harshly lowers the user's Speed by the real amount. The charge never chases after release; hitting a wall or spinning out costs nothing. The wind-up form gathers itself first, charging farther and harder at the cost of a longer wind-up and cooldown.",
+  "worldcombat.skill.spinout.summary": "Slide along your aim, then swing sideways to slam the first foe and knock it back. The uncontrolled turn sharply lowers your Speed after a hit. You cannot steer after departure; a miss or wall collision causes no Speed loss. Charging first increases reach and impact but takes longer to prepare and recover.",
   "worldcombat.skill.spinout.use.0": "Slide flat and swing in to one target for a heavy single blow",
   "worldcombat.skill.spinout.use.1": "Knock a target off position with the curved charge and spin on to the next",
   "worldcombat.skill.spinout.use.2": "Trade the heaviest self-slowing for a key target, or spin out as limited lateral movement",

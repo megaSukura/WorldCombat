@@ -109,14 +109,18 @@ namespace PokemonSkills {
                     struck[ref] = true; hits++;
                     const rolled = lowsweepCut(current, scope, target, config);
                     if (!hurt(current, target, "lowsweep", rolled.power, { damage: damageSpec("lowsweep", "cut"), contact: true })) return;
-                    NativeEffects.boost(scope, target, "spe", -rolled.stages);
-                    MobEffects.apply(scope, target, lowsweepHobble, hobble, 0);
-                    if (scope.valid(target) && rolled.stages >= 2 && rolled.rootTicks > 0) WorldEffects.apply(scope, target, "rooted", {}, rolled.rootTicks);
+                    const previous = MobEffects.read(scope, target, lowsweepHobble);
+                    const carrier = previous === null ? MobEffects.apply(scope, target, lowsweepHobble, hobble, 0) : null;
+                    const before = NativeEffects.effectiveStage(scope, target, "spe");
+                    const owned = carrier === null ? 0 : NativeEffects.boostWindow(scope, target, { spe: -rolled.stages }, hobble, "world_combat:move/lowsweep", carrier, null);
+                    if (carrier !== null && owned === 0) scope.removeMobEffect(target, lowsweepHobble, carrier.key());
+                    const actual = Math.max(0, before - NativeEffects.effectiveStage(scope, target, "spe"));
+                    if (scope.valid(target) && actual >= 2 && rolled.rootTicks > 0) WorldEffects.apply(scope, target, "rooted", {}, rolled.rootTicks);
                     WorldFeedback.emit(scope, lowsweepScene, 1, contact,
-                        { moment: "hit", target: ref, stages: rolled.stages, spark: spark,
+                        { moment: "hit", target: ref, stages: actual, spark: spark,
                             intensity: Math.max(0.6, Math.min(2.2, rolled.power / 55)), scale: scale }, 24);
-                    WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.2, 0)),
-                        rolled.stages >= 2 ? lowsweepFastText : lowsweepHitText, [rolled.stages], 24);
+                    if (actual > 0) WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.2, 0)),
+                        actual >= 2 ? lowsweepFastText : lowsweepHitText, [actual], 24);
                 });
                 if (index + 1 >= 6) { finish(current, hits); return; }
                 current.after(1, function (next: CombatAction) { step(next, index + 1); });

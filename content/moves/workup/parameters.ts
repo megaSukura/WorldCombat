@@ -52,7 +52,7 @@ namespace PokemonSkills {
         /** 斗志窗口：这口气在身上的时长。 */
         rousedTicks: seconds(
             F.base(400).plus(F.level().times(4)).clamp(400, 700).round(0),
-            "斗志窗口", "「斗志」标记能挂多久；等级越高撑得越久。等级本身由公共能力阶梯独立保留。"),
+            "斗志窗口", "攻击与特攻提升的持续时间；等级越高维持得越久，斗志消退或被驱散时恢复。"),
         /** 起手：速度决定把火气攒起来需要多久。 */
         tempo: seconds(
             F.base(7).minus(F.stat("speed").minus(60).times(0.02))

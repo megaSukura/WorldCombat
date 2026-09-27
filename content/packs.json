@@ -102,6 +102,7 @@
         "world_combat:native_rules": "0.1",
         "world_combat:default_companion": "0.1",
         "world_combat:default_wild": "0.1",
+        "world_combat:npc_challenges": "0.1",
         "world_combat:companion_presentation": "0.1",
         "world_combat:world_attributes": "0.1",
         "world_combat:combat_status": "0.1"
@@ -190,7 +191,8 @@
       },
       "sources": [
         "content/library/companions/runtime.ts",
-        "content/library/companions/wild.ts"
+        "content/library/companions/wild.ts",
+        "content/library/companions/trainers.ts"
       ]
     },
     "world_combat:companion_presentation": {

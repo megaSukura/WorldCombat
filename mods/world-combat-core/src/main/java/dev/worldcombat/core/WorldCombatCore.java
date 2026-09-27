@@ -22,6 +22,7 @@ public final class WorldCombatCore {
 
     public WorldCombatCore(IEventBus modBus) {
         modBus.addListener(dev.worldcombat.core.network.SceneState::register);
+        modBus.addListener(dev.worldcombat.core.network.MountedMotionState::register);
         dev.worldcombat.core.world.CombatWorldContent.register(modBus);
         PublicAttributes.register(modBus);
         NativeItemUse.install(NeoForge.EVENT_BUS);

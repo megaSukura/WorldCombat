@@ -5,7 +5,7 @@
   "worldcombat.skill.mirrorshot.use.2": "按配置把光反射开，顺手晃到目标身后的一排人",
   "worldcombat.skill.mirrorshot.description.0": "光矛打在主目标身上造成约 %1$s 点钢属性特殊伤害，有 %2$s 概率让它掉 %3$s 级命中。",
   "worldcombat.skill.mirrorshot.description.1": "光矛能打到 %1$s 格内，以 %2$s 格/刻飞行，光柱判定 %3$s 格。",
-  "worldcombat.skill.mirrorshot.description.2": "耀光缠身 %1$s：期间目标带着 glared／aim_impaired 身份、命中等级下降；这份下降绑在这次耀光上，耀光结束或被清除时一并收回，不留永久命中损失。",
+  "worldcombat.skill.mirrorshot.description.2": "耀光缠身 %1$s，期间降低目标的命中等级。耀光结束或被解除时，命中恢复。",
   "worldcombat.skill.mirrorshot.description.3": "散射式下，光沿射击方向在目标身后铺开 %2$s 度的扇形、延伸 4.5 格；圈内旁人各吃约 %1$s 点反射伤害，并以耀光概率的一半被晃到（晃眼时长约七成）。",
   "worldcombat.skill.mirrorshot.scatter.on": "散射式：光在目标身上反射开、溅到身后旁人，晃眼时长 ×1.2、起手少 2 刻；代价是威力 ×0.85、射程 −1.5 格、晃眼概率 −6%、冷却 +4 刻。",
   "worldcombat.skill.mirrorshot.scatter.off": "聚光式：威力 ×1.12、射程 +1.5 格、晃眼概率 +8%，但起手多 1 刻、没有反射溅射。",

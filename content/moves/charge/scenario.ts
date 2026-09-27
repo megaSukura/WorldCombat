@@ -10,6 +10,13 @@ Smoke.scenario("charge", function (stage) {
         stage.expect((stage.stages(caster)["spd"] || 0) >= 1, "the caster's Sp. Def ladder actually rose");
         stage.note("charge uses its Special Defence benefit against a stronger special-attacking species; commit-consumes-even-on-miss doubling is covered by the neutral execution contract checks",
             { casts: stage.casts("charge", caster), spd: stage.stages(caster)["spd"] || 0 });
-        stage.done();
+        stage.setPp(caster, "charge", 0);
+        stage.boost(caster, { spd: 1 });
+        stage.command("effect clear @e[type=cobblemon:pokemon,distance=..40] world_combat:charge_up");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(caster, "world_combat:charge_up"), "cleansing removes stored charge");
+            stage.expect((stage.stages(caster).spd || 0) === 1, "cleansing charge removes only its Sp. Def contribution");
+            stage.done();
+        });
     }, "charge applied");
 });

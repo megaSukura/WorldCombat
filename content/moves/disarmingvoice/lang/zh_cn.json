@@ -1,8 +1,8 @@
 {
   "worldcombat.skill.disarmingvoice.summary": "一声魅惑的鸣叫充满以身周为心的整块空间，站在声场里的对手避无可避，因此不做随机命中检定；只有真的受伤的对手才会被震到错拍，安抚形态还额外卸掉它们出手的劲并留下魅惑。没有敌人时也能清唱。",
   "worldcombat.skill.disarmingvoice.description.0": "以自身为圆心罩住 %2$s 格内的所有敌人，每个目标承受约 %1$s 点伤害且只结算一次；声场不选方向、不要求视线，能穿过墙壁与掩体，因此不做随机命中检定。",
-  "worldcombat.skill.disarmingvoice.description.1": "真的受伤的对手降速 %1$s 级；这是不会自行恢复的能力等级，只有能力等级被重置或脱离战斗后才归零。没受伤的目标不吃附加效果。",
-  "worldcombat.skill.disarmingvoice.description.2": "安抚形态下，受伤的对手额外降低攻击 %1$s 级（同为能力等级，脱离战斗后归零），并留下持续 %2$s 的魅惑标记。硬控免疫的目标照样受到声伤，只是挂不上魅惑。",
+  "worldcombat.skill.disarmingvoice.description.1": "受到伤害的对手速度降低 %1$s 级，持续 %2$s；步调恢复或效果被清除后，速度恢复。相同的歌声不会叠加减速。",
+  "worldcombat.skill.disarmingvoice.description.2": "安抚形态还会使对手攻击降低 %1$s 级，持续 %2$s；魅惑消退或被清除后恢复。同一魅惑不会叠加。无法被魅惑的目标仍会受到声波伤害。",
   "worldcombat.skill.disarmingvoice.timing": "射程 %1$s 格，起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",
   "worldcombat.skill.disarmingvoice.growth.0": "达到 %1$s 级，声波威力提升至 %2$s。",
   "worldcombat.skill.disarmingvoice.growth.1": "达到 %1$s 级，声场半径扩大到 %2$s 格。",
@@ -20,5 +20,7 @@
   "worldcombat.skill.disarmingvoice.preference.ai.group.help": "开启后，自身声场圈住的敌人越多越优先开口；关闭则只按普通攻击排序。",
   "world_combat.move.disarmingvoice.text.hit": "罩住了 %1$s 个目标",
   "world_combat.move.disarmingvoice.text.empty": "声场里没有人",
-  "effect.world_combat.disarming_charm": "魅惑"
+  "effect.world_combat.disarming_charm": "魅惑",
+  "effect.world_combat.disarming_echo": "步调紊乱",
+  "worldcombat.skill.disarmingvoice.value.staggerTicks": "错拍时长"
 }

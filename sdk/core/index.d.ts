@@ -85,6 +85,8 @@ interface CombatAction {
     /** Committed movement owner only. Move the native body on one straight segment (finite delta, at most 4 blocks), stopping at the first reached enemy or obstruction. Native half-width/height and radius (capped at 1) combine by maximum, not addition. Nonzero sweeps include endpoint and initial body contacts; zero delta is a no-op. Walls do not cause a lateral slide. Returned hits have the same action-owned, once-only settlement contract as trace. */
     /** Optional JSON actor-ref array skips their attack-margin contacts; native solid bodies/blocks still collide. */
     moveSweep(delta: CombatPoint, radius: number, ignoredContacts?: string): CombatImpact;
+    /** Movement-claim owner: suspend native player driving for this action's lifetime, including preparation. Collision and passengers remain native; finish/cancel returns driving. Ordinary ranged actions need no lease. */
+    movementLease(): void;
     /** Vanilla throwable entity with NeoForge impacts, native tracking and action-owned cleanup. Returns its entity UUID. Impact receipts are scoped to the hit callback. Options may include item/sprite, scale, tint and glow. */
     /** `appearance` JSON also carries `spin` (degrees/game tick; sprite rolls in its billboard plane, item/block yaws; true=4),
      * and flight options: `homing` {target, turn (deg/tick), delay, range}, `pierce` (nonnegative integer entities passed through,

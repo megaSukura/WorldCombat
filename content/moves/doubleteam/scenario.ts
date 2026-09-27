@@ -5,13 +5,16 @@ Smoke.scenario("doubleteam",function(stage){
   stage.setPp(caster,"doubleteam",0);stage.expect(stage.travelled(caster)>1,"real body left the old position");
   stage.expect(stage.stages(caster).evasion>0,"original evasion gain remains");
   // Let the motion action settle, then land one native hit on the real body through the same command path
-  // the other scenarios use. Health is read directly: a decoy never absorbs damage aimed at the real body.
+  // the other scenarios use. Exempt this fixture hit from evasion; a missed hit says nothing about decoy absorption.
   stage.after(90,function(){
    const before=caster.health();
-   stage.command("damage "+String(caster.ref).split("/")[0]+" 4 minecraft:mob_attack by "+String(foe.ref).split("/")[0]);
+   stage.hurt(caster, 4, "minecraft:mob_attack", { source: foe, metadata: { sureHit: true } });
    stage.after(3,function(){stage.expect(caster.health()<before,"a direct hit on the real body is not absorbed by a mirror pool");
     stage.note("Native displacement, evasion and real-body damage verified; one-hit decoy targeting, spacing and appearance are manual interaction checks.",
-     { before: before, after: caster.health() });stage.done();});
+     { before: before, after: caster.health() });
+    stage.until(500,()=>!stage.hasMobEffect(caster,"world_combat:status/doubleteam") && (stage.stages(caster).evasion || 0)===0,function(){
+      stage.expect((stage.stages(caster).evasion || 0)===0,"evasion expires together with the afterimages");stage.done();
+    },"afterimages and evasion expire");});
   });
  },"side step and afterimages");
 });

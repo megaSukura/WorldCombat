@@ -23,7 +23,7 @@
  * 关闭＝更快更远但更轻。两向各有适用局面（近身硬砸 vs 远距点射）。判定半径不随配置变化。
  *
  * 伤害段 `core`：影球命中那一下，走共享换算（原生类别 Special）。
- * 特防下降走共享的能力等级阶梯 NativeEffects.boost(..., "spd", -1)：宝可梦回落原生等级，其他生物落到
+ * 特防下降走共享的能力等级阶梯 NativeEffects.boostWindow(..., "spd", -1)：宝可梦回落原生等级，其他生物落到
  * CombatStages 的属性阶梯，一个机制覆盖所有对手。
  */
 namespace PokemonSkills {
@@ -78,7 +78,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(25).times(1.0).clamp(0, 30))
                 .plus(F.stat("hp").minus(60).times(0.08).clamp(-6, 16))
                 .clamp(50, 130).round(0),
-            "缠影时长", "碾防真的生效后，那层影子作为降阶回执贴在目标身上的时长；只影响这层影子，特防等级本身不会随它恢复。等级与生命越高贴得越久。"),
+            "缠影时长", "暗影降低目标特防的时间；等级与生命越高，暗影缠得越久。"),
         shards: formula(
             F.base(14)
                 .plus(F.stat("specialAttack").minus(60).times(0.14))
@@ -104,7 +104,7 @@ namespace PokemonSkills {
 
     describe("shadowball", [
         { key: "description.0", values: ["core"] },
-        { key: "description.1", values: ["sunderChance","sunderStage"] },
+        { key: "description.1", values: ["sunderChance","sunderStage","clingTicks"] },
         { key: "description.2", values: ["velocity", "reach", "radius"] },
         { key: "description.3", values: ["pref.dense"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

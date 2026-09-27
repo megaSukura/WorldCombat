@@ -1,7 +1,9 @@
 package dev.worldcombat.cobblemon.script
 
 import com.cobblemon.mod.common.Cobblemon
+import com.cobblemon.mod.common.api.storage.party.NPCPartyStore
 import com.cobblemon.mod.common.api.storage.party.PartyStore
+import com.cobblemon.mod.common.api.storage.party.PlayerPartyStore
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
 import com.cobblemon.mod.common.pokemon.activestate.ActivePokemonState
@@ -15,6 +17,7 @@ import dev.worldcombat.core.world.CombatServices
 import dev.worldcombat.core.world.MinecraftCombat
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.phys.Vec3
 import net.neoforged.neoforge.server.ServerLifecycleHooks
 import kotlin.math.ceil
@@ -24,18 +27,15 @@ import kotlin.math.ceil
  * individual's live state, then uses Cobblemon's own recall/sendOut so the party UI, control lifecycle and storage
  * stay authoritative. The chosen slot object is captured before any recall, and a send-out point must be a loaded,
  * in-world, unblocked spot inside the action's scope. Revive and send-out are deliberately separate: content decides
- * when a restored member steps out. Wild individuals have no owner party, so these operations refuse instead of
- * pretending.
+ * when a restored member steps out. Owner parties support online players and native NPC stores.
  */
 object NativeParty {
     /** Ordered read-only party of the actor's owner, or `[]` for a wild actor, an absent entity or a stale owner. */
     fun party(world: WorldAccess, actor: ActorHandle): String {
         world.check()
         val server = ServerLifecycleHooks.getCurrentServer() ?: return "[]"
-        val pokemon = (CombatServices.get(server).resolve(actor) as? PokemonEntity)?.pokemon ?: return "[]"
-        val owner = pokemon.getOwnerPlayer() ?: return "[]"
-        if (!member(owner, pokemon)) return "[]"
-        return list(Cobblemon.storage.getParty(owner))
+        val entity = CombatServices.get(server).resolve(actor) as? PokemonEntity ?: return "[]"
+        return ownerParty(entity.pokemon, entity.level() as ServerLevel)?.let(::list) ?: "[]"
     }
 
     /** Recalls the sent-out individual behind `actor` through the native path; false keeps it unchanged. */
@@ -52,13 +52,13 @@ object NativeParty {
     /** Sends the owner's party `slot` out at `point` (or the actor's position) through Cobblemon's native send-out. */
     fun sendOut(world: WorldAccess, actor: ActorHandle, slot: Int, point: Point?): String {
         val context = context(world, actor)
-        val owner = context.pokemon.getOwnerPlayer() ?: return failure("no-owner")
-        val captured = capture(context.pokemon, slot)
+        val party = context.party ?: return failure("no-owner")
+        val captured = capture(party, slot)
         val target = captured.first ?: return failure(captured.second)
         if (!placeable(world, context, target, point, false)) return failure("blocked")
         val at = point?.let { Vec3(it.x(), it.y(), it.z()) } ?: context.entity.position()
         val entity = target.sendOut(context.level, at, null) ?: return failure("send-refused")
-        handoff(owner, slot)
+        handoff(party.owner, slot)
         return success(context.combat.bind(entity))
     }
 
@@ -72,19 +72,20 @@ object NativeParty {
         val pokemon = context.pokemon
         if (pokemon.state !is SentOutState) return failure("not-sent-out")
         if (context.entity.isBusy || context.entity.isEvolving) return failure("busy")
-        val owner = pokemon.getOwnerPlayer() ?: return failure("no-owner")
-        val captured = capture(pokemon, slot)
+        val party = context.party ?: return failure("no-owner")
+        val captured = capture(party, slot)
         val target = captured.first ?: return failure(captured.second)
         if (!placeable(world, context, target, point, true)) return failure("blocked")
         val origin = context.entity.position()
         val at = point?.let { Vec3(it.x(), it.y(), it.z()) } ?: origin
         pokemon.recall()
-        if (Cobblemon.storage.getParty(owner).get(slot) !== target || target.getOwnerUUID() != pokemon.getOwnerUUID() || target.isFainted() || target.state !is InactivePokemonState) {
-            return result(false, "target-changed", "", restore(context.level, pokemon, origin))
+        if (pokemon.state !is InactivePokemonState) return failure("recall-refused")
+        if (!party.member(pokemon) || party.store.get(slot) !== target || !party.member(target) || target.isFainted() || target.state !is InactivePokemonState) {
+            return result(false, "target-changed", "", restore(context, origin))
         }
         val entity = target.sendOut(context.level, at, null)
-        if (entity == null) return result(false, "send-refused", "", restore(context.level, pokemon, origin))
-        handoff(owner, slot)
+        if (entity == null) return result(false, "send-refused", "", restore(context, origin))
+        handoff(party.owner, slot)
         return success(context.combat.bind(entity))
     }
 
@@ -108,7 +109,7 @@ object NativeParty {
         return if (!target.isFainted()) result(true, "", "", true) else failure("still-fainted")
     }
 
-    private class Context(val combat: MinecraftCombat, val entity: PokemonEntity) {
+    private class Context(val combat: MinecraftCombat, val entity: PokemonEntity, val party: OwnerParty?) {
         val level: ServerLevel get() = entity.level() as ServerLevel
         val pokemon: Pokemon get() = entity.pokemon
     }
@@ -117,25 +118,33 @@ object NativeParty {
         val server = ServerLifecycleHooks.getCurrentServer() ?: throw ActionInactiveException("Server stopped")
         val combat = CombatServices.get(server)
         val entity = combat.resolve(actor) as? PokemonEntity ?: throw ActionRejectedException("actor-left")
-        val owner = entity.pokemon.getOwnerPlayer()
-        if (owner != null && !member(owner, entity.pokemon)) throw ActionRejectedException("not-owned")
-        return Context(combat, entity)
+        val party = ownerParty(entity.pokemon, entity.level() as ServerLevel)
+        if (entity.pokemon.storeCoordinates.get() != null && party == null) throw ActionRejectedException("not-owned")
+        return Context(combat, entity, party)
     }
-    /** The actor must still be an individual in its owner's party, not merely carry a stale owner reference. */
-    private fun member(owner: ServerPlayer, pokemon: Pokemon): Boolean {
-        val store = Cobblemon.storage.getParty(owner)
-        for (slot in 0 until store.size()) {
-            val candidate = store.get(slot) ?: continue
-            if (candidate === pokemon || candidate.uuid == pokemon.uuid) return true
+    private class OwnerParty(val store: PartyStore, val owner: LivingEntity, val level: ServerLevel) {
+        fun member(pokemon: Pokemon): Boolean {
+            if (!owner.isAlive || owner.isRemoved || owner.level() !== level) return false
+            val coordinates = pokemon.storeCoordinates.get() ?: return false
+            if (coordinates.store !== store || coordinates.get() !== pokemon || pokemon.getOwnerEntity() !== owner || pokemon.getOwnerUUID() != owner.uuid) return false
+            return when (store) {
+                is PlayerPartyStore -> owner is ServerPlayer && level.server.playerList.getPlayer(owner.uuid) === owner && Cobblemon.storage.getParty(owner) === store
+                is NPCPartyStore -> store.npc === owner && level.getEntity(owner.uuid) === owner && (store.npc.party == null || store.npc.party === store)
+                else -> false
+            }
         }
-        return false
+    }
+    /** Dynamic NPC parties live in their members' native coordinates, even when NPCEntity.party is empty. */
+    private fun ownerParty(pokemon: Pokemon, level: ServerLevel): OwnerParty? {
+        val store = pokemon.storeCoordinates.get()?.store as? PartyStore ?: return null
+        val owner = pokemon.getOwnerEntity() ?: return null
+        return OwnerParty(store, owner, level).takeIf { it.member(pokemon) }
     }
     /** Captures the chosen party individual or the reason it cannot step out. */
-    private fun capture(owner: Pokemon, slot: Int): Pair<Pokemon?, String> {
+    private fun capture(party: OwnerParty, slot: Int): Pair<Pokemon?, String> {
         if (slot !in 0..5) return null to "invalid-slot"
-        val player = owner.getOwnerPlayer() ?: return null to "no-owner"
-        val target = Cobblemon.storage.getParty(player).get(slot) ?: return null to "empty-slot"
-        if (target.getOwnerUUID() != owner.getOwnerUUID()) return null to "not-owned"
+        val target = party.store.get(slot) ?: return null to "empty-slot"
+        if (!party.member(target)) return null to "not-owned"
         if (target.isFainted()) return null to "fainted"
         if (target.state !is InactivePokemonState) return null to "already-out"
         target.entity?.let { if (it.isBusy || it.isEvolving) return null to "busy" }
@@ -161,12 +170,15 @@ object NativeParty {
         } catch (_: ActionRejectedException) { false } catch (_: IllegalArgumentException) { false }
     }
     /** Puts the recalled caster back where it stood; false means the caster could not be restored. */
-    private fun restore(level: ServerLevel, pokemon: Pokemon, origin: Vec3): Boolean {
+    private fun restore(context: Context, origin: Vec3): Boolean {
+        val pokemon = context.pokemon
+        if (context.party?.member(pokemon) != true || pokemon.isFainted()) return false
         if (pokemon.state is SentOutState) return true
-        return pokemon.sendOut(level, origin, null) != null
+        return pokemon.state is InactivePokemonState && pokemon.sendOut(context.level, origin, null) != null
     }
     /** Moves the owner's companion selection to the new slot and clears the old pending/approach state. */
-    private fun handoff(owner: ServerPlayer, slot: Int) {
+    private fun handoff(owner: LivingEntity, slot: Int) {
+        if (owner !is ServerPlayer) return
         try {
             val session = CompanionControl.session(owner)
             session.partySlot = slot
@@ -179,9 +191,9 @@ object NativeParty {
         if (!ratio.isFinite() || ratio <= 0.0 || ratio > 1.0) throw IllegalArgumentException("Revive ratio outside (0,1]")
         val context = context(world, actor)
         if (slot !in 0..5) return null to "invalid-slot"
-        val owner = context.pokemon.getOwnerPlayer() ?: return null to "no-owner"
-        val target = Cobblemon.storage.getParty(owner).get(slot) ?: return null to "empty-slot"
-        if (target.getOwnerUUID() != context.pokemon.getOwnerUUID()) return null to "not-owned"
+        val party = context.party ?: return null to "no-owner"
+        val target = party.store.get(slot) ?: return null to "empty-slot"
+        if (!party.member(target)) return null to "not-owned"
         if (!target.isFainted()) return null to "not-fainted"
         return target to ""
     }
@@ -190,10 +202,12 @@ object NativeParty {
         target.currentHealth = health
         target.faintedTimer = -1
     }
-    private fun list(store: PartyStore): String {
+    private fun list(party: OwnerParty): String {
         val array = JsonArray()
+        val store = party.store
         for (slot in 0 until store.size()) {
             val member = store.get(slot) ?: continue
+            if (!party.member(member)) continue
             val entry = JsonObject()
             entry.addProperty("slot", slot)
             entry.addProperty("id", member.uuid.toString())

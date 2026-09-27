@@ -26,6 +26,7 @@ vm.runInContext(ts.transpileModule(sources.join('\n'), {
 context.NativeAbilities.define('chlorophyll', {}, {
   mobility: (ability, data) => { if (ability.world.sunlight > .2) data.factor *= 1.5; },
 });
+context.NativeItems.define('checks:mobility_item', { navigation: (_item, data) => { data.speed *= .7; } });
 assert(listeners.has('world_combat:movement'));
 assert.equal(listeners.get('world_combat:movement').after, 'cobblemon_world_combat:navigate');
 
@@ -35,7 +36,7 @@ function navigate(options = {}) {
   const nativeString = string => value.boxed ? new String(string) : string;
   const actor = { adapterReads: 0, domain: () => nativeString(value.domain) };
   actor.pokemon = { species: () => 'cobblemon:bulbasaur', heldTag: () => false, level: () => value.level, stat: id => id === 'spe' ? value.spe : value.otherStats || 80,
-    ability: () => nativeString(value.ability), status: () => nativeString(value.status), heldItem: () => nativeString('') };
+    ability: () => nativeString(value.ability), status: () => nativeString(value.status), heldItem: () => nativeString(value.held || '') };
   const state = { ...context.NativeEffects.empty(), stages: { spe: value.stage || 0 }, flags: value.flags || {} };
   const nativeAttributes = Object.freeze({ movementSpeed: value.nativeMovement });
   const world = {
@@ -84,6 +85,27 @@ check('existing status and stage slowdowns survive cultivation while roots and z
   assert(navigate({ stage: -2 }).speed < ordinary.speed);
   for (const locked of [{ speed: 0 }, { rooted: true }, { status: 'cobblemon:sleep' }, { flags: { rootedUntil: 120 } }])
     assert.equal(navigate({ ...locked, ability: 'chlorophyll', sunlight: 1, spe: 200 }).speed, 0);
+});
+check('riding propulsion uses the same complete speed, root, ability and held-item policy', () => {
+  for (const options of [{}, { stage: -2 }, { stage: 1 }, { rooted: true },
+    { ability: 'chlorophyll', sunlight: 1 }, { held: 'checks:mobility_item' }, { status: 'cobblemon:sleep' }, { layers: { stats: { spe: 110 } } }]) {
+    // Native riding asks the navigation chain for a unit relative factor, then applies it to its own species speed.
+    near(navigate({ ...options, speed: 1 }).speed, navigate({ ...options, speed: .3 }).speed / .3);
+  }
+  near(navigate({ speed: 1, held: 'checks:mobility_item' }).speed, navigate({ speed: 1 }).speed * .7);
+  near(navigate({ speed: 1, held: 'checks:mobility_item', layers: { suppressItems: true } }).speed, navigate({ speed: 1 }).speed);
+});
+check('temporary speed overrides affect both ground travel and riding without rewriting the native stat', () => {
+  near(navigate({ spe: 45, layers: { stats: { spe: 90 } } }).speed, navigate({ spe: 90 }).speed);
+  assert(navigate({ spe: 45, layers: { stats: { spe: 90 } } }).speed > navigate({ spe: 45 }).speed);
+});
+check('pack mobility mapping remains shared by navigation and the riding factor request', () => {
+  context.CobblemonCombat.packConfig = key => ({ mobilityBase: 1.1, mobilityGrowth: 0, mobilityMinimum: 0, mobilityMaximum: 0 }[key]);
+  try {
+    near(navigate({ speed: 1, spe: 160 }).speed, 1.1);
+    near(navigate({ speed: .3, spe: 30 }).speed, .33);
+    near(navigate({ speed: 1, stage: 1 }).speed, 1.65);
+  } finally { delete context.CobblemonCombat.packConfig; }
 });
 check('non-Cobblemon navigation passes through without requesting Pokemon facts', () => {
   const result = navigate({ domain: 'minecraft', boxed: true });

@@ -38,7 +38,18 @@ Smoke.scenario("snarl", function (stage) {
                 snarledFar: stage.hadMobEffect(far, "world_combat:status/snarled"),
                 nearAlive: near.alive(), farAlive: far.alive(), casterAlive: caster.alive()
             });
+            const timedTarget = stage.hasMobEffect(near, "world_combat:snarl_scolded") ? near : far;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:snarl_scolded"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).spa || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "snarl", 0);
+        stage.team("timed-b-snarl", [caster, timedTarget]);
+        stage.boost(timedTarget, { spa: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:snarl_scolded");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:snarl_scolded"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).spa || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
             stage.done();
+        });
         });
     }, "snarl scolds a target within 45 s");
 });

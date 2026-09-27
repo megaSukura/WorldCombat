@@ -1,0 +1,9 @@
+{
+  "worldcombat.npc_challenge.started": "Challenge started! Your opponent may field %s Pokémon at once. Command your companions or join the fight yourself.",
+  "worldcombat.npc_challenge.sent_out": "Your opponent sent out %s!",
+  "worldcombat.npc_challenge.player-win": "Challenge won!",
+  "worldcombat.npc_challenge.npc-win": "You were defeated in this challenge.",
+  "worldcombat.npc_challenge.cancelled": "The challenge has been called off.",
+  "worldcombat.npc_challenge.leaving": "You are leaving the challenge area. Return to continue.",
+  "worldcombat.npc_challenge.deployment_blocked": "Your opponent needs room to send out a Pokémon. Clear some space nearby."
+}

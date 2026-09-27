@@ -3,7 +3,7 @@
   "worldcombat.skill.screech.use.0": "Strip the Defence of enemies charging at you in a line, one after another",
   "worldcombat.skill.screech.use.1": "Press physical threats through a low wall",
   "worldcombat.skill.screech.use.2": "Soften a whole rank coming through a doorway",
-  "worldcombat.skill.screech.description.0": "Each enemy the thin front truly passes actually loses %1$s stages of Defence (at the floor or immune it drops no further and reports none), once per target, and is left with about %2$s of ringing ears. The ringing only means the ears ring - it changes neither stats nor actions; the Defence drop is an ordinary stat-stage change and does not come back when the ringing ends.",
+  "worldcombat.skill.screech.description.0": "Enemies swept by the wave suffer ringing ears, lowering Defence by %1$s stages for %2$s. Defence recovers when the ringing expires or is cleansed; the reduction does not stack while active.",
   "worldcombat.skill.screech.description.1": "The wave reaches %1$s blocks straight ahead and %2$s blocks to each side, and the front takes about %3$s to sweep the whole way; cover does not block it, so nearby enemies are caught first and distant ones a moment later.",
   "worldcombat.skill.screech.description.2": "Telegraph %1$s, cooldown %2$s.",
   "worldcombat.skill.screech.timing": "Range %1$s blocks, telegraph %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

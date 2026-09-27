@@ -1,5 +1,5 @@
 // 轻身：一段可见的窗口状态，只承载共享身份 world_combat:status/agility。
-// 速度等级本身由 NativeEffects.boost 写入公共能力阶梯，窗口只是「刚松过劲」的读法与 AI 的重复施放判据。
+// 速度等级本身由 NativeEffects.boostWindow 写入公共能力阶梯，窗口只是「刚松过劲」的读法与 AI 的重复施放判据。
 // 启动脚本不引用服务端共享库，标签用字符串字面量。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:agility_rush")
     .beneficial()

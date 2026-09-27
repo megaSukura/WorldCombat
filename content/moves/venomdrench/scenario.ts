@@ -19,7 +19,7 @@ Smoke.scenario("venomdrench", function (stage) {
     var behind = stage.pokemon({ species: "eevee", level: 20, moves: ["tackle"], at: [0, 0, 3], status: "poison" });
     stage.noai(behind);
     stage.hostile(caster, foe);
-    stage.hostile(caster, behind);
+    stage.provoke(behind, caster);
     stage.until(1200, function () {
         return stage.casts("venomdrench", caster) > 0 && stage.hadMobEffect(foe, "world_combat:status/drenched");
     }, function () {
@@ -32,6 +32,17 @@ Smoke.scenario("venomdrench", function (stage) {
             foeHp: foe.health(), casterAlive: caster.alive(), casterHp: caster.health(),
             behindHp: behind.health()
         });
-        stage.done();
+        const timedTarget = foe;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:venomdrench_drench"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).atk || 0) < 0 && (stage.stages(timedTarget).spa || 0) < 0 && (stage.stages(timedTarget).spe || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "venomdrench", 0);
+        stage.team("timed-b-venomdrench", [caster, timedTarget]);
+        stage.boost(timedTarget, { atk: 1, spa: 1, spe: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:venomdrench_drench");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:venomdrench_drench"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).atk || 0) === 1 && (stage.stages(timedTarget).spa || 0) === 1 && (stage.stages(timedTarget).spe || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "venom drench lands on the poisoned target within 60 s");
 });

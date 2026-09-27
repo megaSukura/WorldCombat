@@ -3,7 +3,7 @@
   "worldcombat.skill.stringshot.use.0": "Stop a charging or fleeing enemy",
   "worldcombat.skill.stringshot.use.1": "Seal a corridor or doorway",
   "worldcombat.skill.stringshot.use.2": "Slow a fast target",
-  "worldcombat.skill.stringshot.description.0": "A truly bound target loses %1$s Speed stage(s) and carries the Silked mark for %2$s; no symbol appears when Speed is already at its floor or an ability blocks it. While silked a companion will not re-strand it. The Speed drop is a stat stage that lasts until the target leaves combat or its stat stages are reset. A Bind hit also pins it in place for %3$s, unable to move.",
+  "worldcombat.skill.stringshot.description.0": "Threads bind the target, lowering Speed by %1$s stages for %2$s. Speed recovers when the threads expire or are cleansed, and the reduction does not stack while active. The foot-binding form also prevents movement for %3$s.",
   "worldcombat.skill.stringshot.description.1": "The Net posture spins the same strand into a slightly larger web: it sticks on the outside of the first block struck, spreading at most %1$s blocks of radius for %2$s; when it cannot be placed only decorative silk remains, and no web appears at a far target point out of thin air.",
   "worldcombat.skill.stringshot.description.2": "The strand is a flying projectile: speed %1$s with a %2$s hit radius, blocked by cover and dodgeable by movement; it reaches %3$s blocks over a %4$s range and winds up for %5$s. Hitting a block leaves a small web taut on that surface; spending itself in open air leaves nothing.",
   "worldcombat.skill.stringshot.timing": "Range %1$s blocks, windup %2$s, recovery %3$s, costs %4$s PP, cooldown %5$s.",

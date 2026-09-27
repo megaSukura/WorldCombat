@@ -151,12 +151,15 @@ namespace PokemonSkills {
                 if (!landed || !scope.valid(victim)) { finish(current); return; }
                 sound(current, "minecraft:block.anvil.land");
                 if (scope.random() < chance) {
-                    // 直接降级与身份期限分开收据：boost 返回本次真正落下的级数。
-                    const delta = NativeEffects.boost(scope, victim, "def", -stages);
+                    const previous = MobEffects.read(scope, victim, crunchMark);
+                    const mark = previous === null ? MobEffects.apply(scope, victim, crunchMark, crack, 0) : null;
+                    const before = NativeEffects.effectiveStage(scope, victim, "def");
+                    const owned = mark === null ? 0 : NativeEffects.boostWindow(scope, victim, { def: -stages }, crack, "world_combat:move/crunch", mark, null);
+                    if (mark !== null && owned === 0) scope.removeMobEffect(victim, crunchMark, mark.key());
+                    const delta = NativeEffects.effectiveStage(scope, victim, "def") - before;
                     if (delta !== 0 && scope.valid(victim)) {
                         WorldFeedback.text(scope, here.plus(WorldCombat.point(0, 1.35, 0)), crunchCrushText, [Math.abs(delta)], 30);
                         // 缺口身份真的挂上才画成功标记，并让缺口画面与这份真实载体同存。
-                        const mark = MobEffects.apply(scope, victim, crunchMark, crack, 0);
                         if (mark !== null && scope.valid(victim)) {
                             if (scope.effects(victim, crunchGapWatch).length === 0)
                                 scope.effect(crunchGapWatch, victim, "{}", Math.max(1, Math.min(2400, crack)));

@@ -5,7 +5,7 @@
   "worldcombat.skill.mudslap.use.2": "Cheap, reliable chip damage",
   "worldcombat.skill.mudslap.description.0": "A living hit takes about %1$s special damage and always drops %2$s accuracy stage(s).",
   "worldcombat.skill.mudslap.description.1": "The clod flies a low arc at %1$s, up to %2$s blocks, with a %3$s block hit radius, steering up to %4$s degrees per tick.",
-  "worldcombat.skill.mudslap.description.2": "The accuracy lost stays through the encounter until the stat change is cleared or the encounter ends.",
+  "worldcombat.skill.mudslap.description.2": "Mud obscures the target’s eyes for %1$s. Accuracy returns when it fades or is cleansed. Repeated hits do not stack.",
   "worldcombat.skill.mudslap.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.mudslap.value.splat": "Clod power",
   "worldcombat.skill.mudslap.value.blind": "Accuracy drop",
@@ -23,5 +23,6 @@
   "worldcombat.skill.mudslap.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values open at longer range.",
   "worldcombat.skill.mudslap.preference.ai.leaveStation": "Leave station",
   "worldcombat.skill.mudslap.preference.ai.leaveStation.help": "On: it may leave a hold position to throw. Off: it only throws when already in range.",
-  "world_combat.move.mudslap.text.blind": "Mud in the eyes (accuracy -%1$s)"
+  "world_combat.move.mudslap.text.blind": "Mud in the eyes (accuracy -%1$s)",
+  "effect.world_combat.mudslap_blinded": "Muddy Eyes"
 }

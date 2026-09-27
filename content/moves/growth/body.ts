@@ -45,12 +45,13 @@ namespace PokemonSkills {
         state.start = effect.world().tick();
         effect.state(JSON.stringify(state)); effect.remaining(request.ticks); growthBodyStep(effect);
     });
-    export function growBody(world: CombatWorld, actor: CombatActor, amount: number, ticks: number): void {
-        const carrier = MobEffects.apply(world, actor, growthCarrier, ticks, 0); if (!carrier) return;
+    export function growBody(world: CombatWorld, actor: CombatActor, amount: number, ticks: number): CombatMobEffect | null {
+        const carrier = MobEffects.apply(world, actor, growthCarrier, ticks, 0); if (!carrier) return null;
         const windows = world.effects(actor, growthWindow);
         if (windows.length) {
             world.operation(windows[0].id(), "world_combat:refresh", JSON.stringify({ carrier: MobEffects.anchor(carrier), maximum: amount, ticks: carrier.duration() }));
         } else world.effect(growthWindow, actor, JSON.stringify({ carrier: MobEffects.anchor(carrier), maximum: amount,
             initial: 0, applied: 0, start: world.tick() }), carrier.duration());
+        return carrier;
     }
 }

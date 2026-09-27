@@ -100,9 +100,14 @@ namespace PokemonSkills {
                         // 只有实际降了命中或载体真的挂上才报「罩住」，被免疫/封顶时不假装成功。
                         let carried = false, lost = 0;
                         if (scope.valid(enemy) && scope.random() < chance) {
-                            const dropped = NativeEffects.boost(scope, enemy, "accuracy", -stages);
-                            if (dropped < 0) lost = -dropped;
-                            carried = MobEffects.apply(scope, enemy, nightdazeEffect, shroud, 0) !== null;
+                            const previous = MobEffects.read(scope, enemy, nightdazeEffect);
+        const renew = NativeEffects.ownsBoostWindow(scope, enemy, "world_combat:move/nightdaze", previous);
+                            const carrier = MobEffects.apply(scope, enemy, nightdazeEffect, shroud, 0);
+                            const before = NativeEffects.effectiveStage(scope, enemy, "accuracy");
+                            if (carrier && (renew || !previous || String(carrier.key()) !== String(previous.key()))) NativeEffects.boostWindow(scope, enemy, renew ? {} : { accuracy: -stages },
+                                carrier.duration(), "world_combat:move/nightdaze", carrier, previous);
+                            lost = Math.max(0, before - NativeEffects.effectiveStage(scope, enemy, "accuracy"));
+                            carried = carrier !== null;
                             if (carried && scope.effects(enemy, nightdazeLinger).length === 0)
                                 scope.effect(nightdazeLinger, enemy, "{}", Math.max(1, Math.min(2400, shroud)));
                         }

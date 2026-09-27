@@ -44,8 +44,12 @@ namespace PokemonSkills {
     WorldCombat.effectHandler(chillingwaterSoakEffect, "start", function (effect) {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim)) { effect.end(); return; }
+        const previous = MobEffects.read(world, victim, chillingwaterSoaked);
+        const renew = NativeEffects.ownsBoostWindow(world, victim, "world_combat:move/chillingwater", previous);
         const carrier = MobEffects.apply(world, victim, chillingwaterSoaked, data.ticks, 0);
         if (carrier === null) { effect.end(); return; }
+        if (renew || !previous || String(carrier.key()) !== String(previous.key())) NativeEffects.boostWindow(world, victim, renew ? {} : { atk: -data.stages }, carrier.duration(),
+            "world_combat:move/chillingwater", carrier, previous);
         data.anchor = MobEffects.anchor(carrier);
         effect.state(JSON.stringify(data));
         chillingwaterSoakVisual(effect, data.drops, data.stages, data.bonus, data.scale, data.intensity);
@@ -135,10 +139,10 @@ namespace PokemonSkills {
                         const intensity = Math.max(0.5, Math.min(2, power / 50));
                         if (landed) {
                             // 降攻反馈取真实变化：免疫或已到底时 boost 返回 0，就不再谎报掉攻。
-                            const drop = NativeEffects.boost(scope, victim, "atk", -stages);
-                            const actual = Math.abs(drop);
+                            const before = NativeEffects.effectiveStage(scope, victim, "atk");
                             scope.effect(chillingwaterSoakEffect, victim,
-                                JSON.stringify({ ticks: chill, drops: drops, stages: Math.max(1, actual), bonus: soaked, scale: scale, intensity: intensity }), chill);
+                                JSON.stringify({ ticks: chill, drops: drops, stages: stages, bonus: soaked, scale: scale, intensity: intensity }), chill);
+                            const actual = Math.max(0, before - NativeEffects.effectiveStage(scope, victim, "atk"));
                             WorldFeedback.emit(scope, chillingwaterScene, 1, point,
                                 { moment: "drench", target: String(victim.ref()), drops: drops, stages: stages, bonus: soaked,
                                     scale: scale, intensity: intensity }, 24);

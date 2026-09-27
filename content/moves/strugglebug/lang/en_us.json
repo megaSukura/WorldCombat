@@ -4,7 +4,7 @@
   "worldcombat.skill.strugglebug.use.1": "Slow a whole ring of attackers at once",
   "worldcombat.skill.strugglebug.use.2": "Sap several special threats together",
   "worldcombat.skill.strugglebug.description.0": "Every enemy the swarm front sweeps takes about %1$s special damage once; the same enemy is never swept twice.",
-  "worldcombat.skill.strugglebug.description.1": "A target the swarm hits and damages loses %1$s stage(s) of Sp. Atk - a stat stage that does not recover when the cling ends, but lasts until the target leaves combat or its stages are reset - and is left clinging for %2$s only when the swarm actually takes hold, during which its movement speed is cut by about 30%. A target immune to being slowed still takes the damage and the Sp. Atk drop.",
+  "worldcombat.skill.strugglebug.description.1": "The swarm clings for %2$s, lowering Sp. Atk by %1$s stages and movement speed by about 30%. Dispersing the swarm restores both early. It does not stack; targets that cannot be infested still take the hit damage.",
   "worldcombat.skill.strugglebug.description.2": "You stay put while casting: the swarm spreads from your feet out to a %1$s-block radius, its front advancing %2$s blocks per tick.",
   "worldcombat.skill.strugglebug.option.on": "Thick form: the swarm spreads wider and clings longer, at the cost of lower damage and a slower cast.",
   "worldcombat.skill.strugglebug.option.off": "Rushing form: more damage and a faster spread, but a smaller radius and shorter cling.",

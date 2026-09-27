@@ -9,7 +9,7 @@
  *   起（windup，提交前）：口边拢起丝光的预告。
  *   抛（toss→spread）：提交后黏丝团沿低弧线飞出、落地摊成半径 webRadius 的网（WorldEffects.field，
  *       规则 `world_combat:hazard/stickyweb` 由本单元注册）；同一片地上再织会先收回旧网、重新计数。
- *   黏（snare→hold）：贴地、且脚部落到线带 band 距离内的非友方被黏——每名实体对这张网只降一次速度等级，
+ *   黏（snare→hold）：贴地、且脚部落到线带 band 距离内的非友方被黏——黏身窗口期间不叠加降速等级，
  *       并刷新 `stickywebbed` 拖慢；接在目标身上的拖丝挂在独立托管效果上，随状态或自身时长结束。
  *
  * 线按真实地表裁断：用原生碰撞面采样脚下顶面，只保留与落点同层且未被实墙截断的线段，不穿楼板、不隔墙、不楼上楼下串判。
@@ -125,7 +125,7 @@ namespace PokemonSkills {
         world.effect(stickywebStrands, actor, JSON.stringify({ stages: stages, strands: strands }), Math.max(20, Math.round(ticks)));
     }
 
-    /** 踩到线带：每名实体对本张网只降一次速度等级，并刷新拖慢；首次踩中才放一次踩中表现。 */
+    /** 踩到线带：黏身存在时不重复叠加；结束后再次碰线可重新黏住；首次踩中才放一次踩中表现。 */
     function stickywebVisit(world: CombatWorld, actor: CombatActor, field: WorldEffects.Field, entering: boolean): void {
         if (world.friendly(actor)) return;
         const body = world.observe(actor);
@@ -139,16 +139,13 @@ namespace PokemonSkills {
         const stages = Math.max(1, Math.round(Number(field.data.stages) || 1));
         const ticks = Math.max(40, Math.round(Number(field.data.strand) || 100));
         const strands = Math.max(6, Math.round(Number(field.data.strands) || 12));
-        const dropped = field.data.dropped || (field.data.dropped = {});
-        const applied = field.data.applied || (field.data.applied = {});
-        let shown = Math.max(0, Math.round(Number(applied[ref]) || 0));
-        if (!dropped[ref]) {
-            dropped[ref] = true;
-            // 真实降阶：能力免疫或已在低档时收益为 0，反馈不谎报级数。
-            shown = Math.abs(NativeEffects.boost(world, actor, "spe", -stages));
-            applied[ref] = shown;
-        }
-        if (MobEffects.apply(world, actor, stickywebEffect, ticks, 0) === null) return;
+        const previous = MobEffects.read(world, actor, stickywebEffect);
+        const before = NativeEffects.effectiveStage(world, actor, "spe");
+        const carrier = previous || MobEffects.apply(world, actor, stickywebEffect, ticks, 0);
+        if (!carrier) return;
+        if (!previous) NativeEffects.boostWindow(world, actor, { spe: -stages }, ticks,
+            "world_combat:move/stickyweb", carrier, null);
+        const shown = Math.max(0, before - NativeEffects.effectiveStage(world, actor, "spe"));
         stickywebCarry(world, actor, ticks, stages, strands);
         if (first) {
             WorldFeedback.emit(world, stickywebScene, 1, foot,
@@ -182,7 +179,7 @@ namespace PokemonSkills {
         world.effects(actor, stickywebStrands).forEach(function (view) { world.operation(view.id(), "world_combat:dispel", "{}"); });
     });
 
-    // 黏网：只有脚部踩到线带才黏；每名实体对这张网只降一次速度；线按真实地表裁断，随 field 效果存续。
+    // 黏网：只有脚部踩到线带才黏；黏身窗口期间不叠加降速；线按真实地表裁断，随 field 效果存续。
     WorldEffects.fieldRule(stickywebRule, {
         enter: function (world: CombatWorld, actor: CombatActor, field: WorldEffects.Field): void {
             stickywebVisit(world, actor, field, true);
@@ -196,7 +193,7 @@ namespace PokemonSkills {
         id: stickywebId,
         cooldownParameter: "recharge",
         name: "黏黏网",
-        description: "把一团黏丝抛到选定的地面，摊成几张交叉黏线加一圈外环：只有脚部真实踩到丝线的贴地敌人才会被黏住，速度等级对每名目标只降一次，并在一段时间里被网缠住、脚步发沉；离开丝线后拖劲按剩余时间自然脱开。网孔可以小步穿行或跳过，飞在半空的从上方过去；线按真实地表裁断，不穿墙、不跨层。",
+        description: "把黏丝抛到地面，摊成带有空隙的网。踩上线的敌人会被缠住、暂时降低速度，已有黏身效果时不会继续叠加；可以穿过网孔、跳过线，或从空中越过。深锚式更黏、更久但网更小，广铺式铺得更快、更广。",
         uses: ["提前把一片地面变成减速区", "缠住冲锋或逃跑的敌人", "压低高速目标的机动"],
         kind: "point",
         range: 8,

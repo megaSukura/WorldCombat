@@ -70,13 +70,13 @@ namespace PokemonSkills {
                 .plus(F.level().minus(20).times(0.3).clamp(0, 12))
                 .times(F.when(F.pref("brood"), F.const(1.3), F.const(0.85)))
                 .clamp(40, 160).round(0),
-            "缠身时长", "被虫群缠住、带着 world_combat:status/infested 移动变慢的时间；特攻越强、等级越高缠得越久。"),
+            "缠身时长", "虫群缠身并压低特攻与移动速度的时间；特攻越强、等级越高，缠得越久。"),
         /** 特攻下降：固定 1 级，与原生 100% 一致。 */
         dropStages: formula(
             F.base(1),
             "特攻下降", {
                 unit: "级",
-                description: "被虫群扫到的目标特攻下降的能力等级；对宝可梦落到原生特攻等级，对其他战斗者落到攻击阶梯。"
+                description: "虫群缠身期间降低的特攻等级。"
             }),
         /** 虫点数量：24 + 特攻偏移[−8,20]；夹 16..60。 */
         motes: formula(

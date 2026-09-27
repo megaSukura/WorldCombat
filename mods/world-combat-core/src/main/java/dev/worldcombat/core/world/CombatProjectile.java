@@ -135,6 +135,7 @@ public final class CombatProjectile extends ThrowableProjectile {
     @Override protected double getDefaultGravity() { return entityData.get(GRAVITY); }
     @Override protected boolean canHitEntity(Entity entity) {
         if (!super.canHitEntity(entity) || pierced.contains(entity.getUUID())) return false;
+        if (getOwner()!=null && entity.getRootVehicle()==getOwner().getRootVehicle()) return false;
         return combat == null || !(entity instanceof LivingEntity target) || !(getOwner() instanceof LivingEntity owner)
             || combat.mayHit(owner, target, null)
             || hitAllies && combat.friendly(combat.bind(owner), combat.bind(target));

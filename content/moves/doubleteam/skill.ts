@@ -66,9 +66,12 @@ namespace PokemonSkills {
             const window = Math.max(40,Math.round(p(doubleteamId,"mirrorWindow",action)*(swarm ? 1.25 : .8)));
             const distance = Math.min(4,p(doubleteamId,"mirrorPool",action)*(swarm ? .85 : 1.15));
             const heading = WorldGeometry.flatUnit(action.targetPosition().minus(action.origin()),action.direction()), path = [body.position()];
+            const previous = MobEffects.read(world, actor, doubleteamEffect);
+            const renewing = NativeEffects.ownsBoostWindow(world, actor, "world_combat:move/doubleteam", previous);
             const carrier = MobEffects.apply(world,actor,doubleteamEffect,window,0);
             if (!carrier) { done(action); return; }
-            if (String(actor.domain()) === "cobblemon") NativeEffects.boost(world,actor,"evasion",1);
+            NativeEffects.boostWindow(world, actor, { evasion: renewing ? 0 : 1 }, window,
+                "world_combat:move/doubleteam", carrier, previous);
             if (!swarm) MobEffects.apply(world,actor,"minecraft:speed",window,1);
             let travelled=0;
             function deploy(current: CombatAction): void {

@@ -103,8 +103,13 @@ namespace PokemonSkills {
         const caster = effect.source();
         if (!world.valid(caster)) { effect.end(); return; }
         state.round += 1;
-        const def = NativeEffects.boost(world, victim, "def", -state.squeeze);
-        const spd = NativeEffects.boost(world, victim, "spd", -state.squeeze);
+        const seal = MobEffects.read(world, victim, octoBound);
+        if (seal === null || !MobEffects.matches(world, victim, state.carrier)) { effect.end(); return; }
+        const defBefore = NativeEffects.effectiveStage(world, victim, "def"), spdBefore = NativeEffects.effectiveStage(world, victim, "spd");
+        NativeEffects.boostWindow(world, victim, { def: -state.squeeze, spd: -state.squeeze }, Math.max(1, seal.duration()),
+            "world_combat:move/octolock", seal, seal);
+        const def = NativeEffects.effectiveStage(world, victim, "def") - defBefore;
+        const spd = NativeEffects.effectiveStage(world, victim, "spd") - spdBefore;
         const drops = Math.abs(def) + Math.abs(spd);
         effect.state(JSON.stringify(state));
         const held = world.observe(victim);

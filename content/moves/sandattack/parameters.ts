@@ -6,7 +6,7 @@
  *   站在扇面里的敌人一起被糊；砂砾取自脚下真实的地面（沙、红沙、砂砾、泥土、灵魂沙……），颜色跟着
  *   那块方块走，所以这招在不同的地方长得不一样。扇面很短，走出扇面、绕到侧面或躲到掩体后就能让开。
  *   被糊到的人先挂共享身份 world_combat:status/sanded 的真实 MobEffect（攻击变弱），宝可梦那一层再
- *   调用 NativeEffects.boost 下降原生命中等级；粗砂（粗粝）与细沙（细腻）在覆盖与深度之间取舍。
+ *   调用 NativeEffects.boostWindow 下降原生命中等级；粗砂（粗粝）与细沙（细腻）在覆盖与深度之间取舍。
  *
  * 数值来源（每个参数读不同的个体数据）：
  *   blindStage  攻击每 75 点升一级，基础 1 级，夹 1..2；力气越大，扬起的沙越能糊住整张脸。
@@ -26,7 +26,7 @@ namespace PokemonSkills {
     actionParameters.define(sandattackId, {
         blindStage: formula(F.stat("attack").minus(60).max(0).div(75).plus(1).clamp(1, 2).round(0), "糊眼级数", {
             unit: " 级",
-            description: "目标损失的命中等级；等级变化保留到脱战恢复或被清除。"
+            description: "泥沙糊眼期间降低的命中等级；泥沙消退或被清除后恢复。"
         }),
         coneAngle: formula(F.body("width").minus(0.9).times(26).plus(48).clamp(40, 82).round(0), "扇面角度", {
             unit: " 度",

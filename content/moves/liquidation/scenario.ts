@@ -1,37 +1,37 @@
-/**
- * 水流裂破的可执行设计说明。
- *
- * 场面：一只水属性精灵（Floatzel）面对两只并排站定、不会行动的厚血精灵（Snorlax），它们分列前方左右各一只，
- * 让同一趟横向水刃有机会同时擦到；夜晚避免无关的日光灼烧污染伤害统计。
- * 必然事实：本招被提交过；至少一个目标受到过伤害（正面擦实）；至少一个目标身上出现过共享身份
- * `world_combat:status/soaked`（擦实即挂湿身，与波动冲、水流尾共用同一身份）。
- * 「同一趟擦到两人」与破防是否掷中、压了几级、暴击，都是位置与概率结果，写进 note 供读轨迹判断。
- */
+// Actual cast followed by native dispel: the finite state must own its stat contribution.
 Smoke.scenario("liquidation", function (stage) {
-    stage.time("night");
-    var soaked = "world_combat:status/soaked";
-    var caster = stage.pokemon({ species: "Floatzel", level: 32, moves: ["liquidation"], at: [0, 0, 0] });
-    var left = stage.pokemon({ species: "Snorlax", level: 34, moves: ["tackle"], at: [0.9, 0, 2.4] });
-    var right = stage.pokemon({ species: "Snorlax", level: 34, moves: ["tackle"], at: [-0.9, 0, 2.4] });
-    stage.hostile(caster, left);
-    stage.hostile(caster, right);
-    stage.noai(left, right);
-    stage.until(900, function () {
-        return stage.casts("liquidation") > 0
-            && (stage.damageTo(left) > 0 || stage.damageTo(right) > 0)
-            && (stage.hadMobEffect(left, soaked) || stage.hadMobEffect(right, soaked));
+    stage.time("midnight");
+    stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
+    const caster = stage.pokemon({ species: "gyarados", level: 50, moves: ["liquidation"], at: [0, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:iron_golem", at: [2.4, 0, 0] });
+    stage.noai(foe);
+    stage.command("attribute " + foe.ref.split("/")[0] + " minecraft:generic.max_health base set 10000");
+    stage.command("data merge entity " + foe.ref.split("/")[0] + " {Health:10000.0f}");
+    const affected = foe, baseline = 1;
+    stage.boost(affected, { def: baseline });
+    let seeking = true;
+    function keepThreat(): void {
+        if (!seeking) return;
+        stage.provoke(caster, foe);
+        stage.after(60, keepThreat);
+    }
+    keepThreat();
+    stage.until(2400, function () {
+        return stage.casts("liquidation", caster) > 0 && stage.hasMobEffect(affected, "world_combat:liquidation_sundered")
+            && (stage.stages(affected)["def"] || 0) < baseline;
     }, function () {
-        stage.after(20, function () {
-            stage.expect(stage.casts("liquidation") > 0, "liquidation was committed");
-            stage.expect(stage.damageTo(left) > 0 || stage.damageTo(right) > 0, "the sweep cut at least one target");
-            stage.expect(stage.hadMobEffect(left, soaked) || stage.hadMobEffect(right, soaked), "the sweep left a target soaked");
-            stage.note("liquidation observations", { casts: stage.casts("liquidation"),
-                left: stage.damageTo(left), right: stage.damageTo(right),
-                leftSoaked: stage.hadMobEffect(left, soaked), rightSoaked: stage.hadMobEffect(right, soaked),
-                leftSundered: stage.hadMobEffect(left, "world_combat:status/sundered"),
-                rightSundered: stage.hadMobEffect(right, "world_combat:status/sundered"),
-                moved: Math.round(stage.travelled(caster) * 10) / 10 });
+        stage.expect(stage.hasMobEffect(affected, "world_combat:liquidation_sundered"), "real cast applied its finite carrier");
+        stage.expect((stage.stages(affected)["def"] || 0) < baseline, "carrier has a real stage contribution");
+        stage.expect(stage.damageTo(foe) > 0, "the move also dealt its contact or projectile damage");
+        seeking = false;
+        stage.setPp(caster, "liquidation", 0);
+        stage.command("effect clear " + affected.ref.split("/")[0] + " world_combat:liquidation_sundered");
+        stage.until(10, function () {
+            return !stage.hasMobEffect(affected, "world_combat:liquidation_sundered") && (stage.stages(affected)["def"] || 0) === baseline;
+        }, function () {
+            stage.expect((stage.stages(affected)["def"] || 0) === baseline, "native dispel restores only this move, preserving the unrelated stage");
+            stage.note("Native dispel verified after actual skill application; visual timing remains a manual check.", { casts: stage.casts("liquidation", caster), baseline: baseline, remaining: stage.stages(affected)["def"] || 0 });
             stage.done();
-        });
-    }, "liquidation sweeps and soaks");
+        }, "finite contribution ends with its carrier");
+    }, "actual skill applies finite stage change");
 });

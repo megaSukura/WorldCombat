@@ -34,6 +34,14 @@ Smoke.scenario("nobleroar", function (stage) {
             cowedB: stage.hadMobEffect(foeB, "world_combat:status/cowed"),
             moved: Math.round((stage.travelled(foeA) + stage.travelled(foeB)) * 10) / 10
         });
-        stage.done();
+        stage.setPp(caster, "nobleroar", 0);
+        const affected = stage.hasMobEffect(foeA, "world_combat:status/cowed") ? foeA : foeB;
+        stage.boost(affected, { atk: 1, spa: 1 });
+        stage.command("effect clear @e[type=minecraft:zombie,distance=..40] world_combat:cowed");
+        stage.after(5, function () {
+            stage.expect((stage.stages(affected).atk || 0) === 1 && (stage.stages(affected).spa || 0) === 1,
+                "cleansing noble roar restores both losses while preserving independent gains");
+            stage.done();
+        });
     }, "nobleroar cowed the zombies");
 });

@@ -24,6 +24,13 @@ Smoke.scenario("toxicthread", function (stage) {
             travelled: Math.round(stage.travelled(target) * 10) / 10,
             casterHp: caster.health(), targetHp: target.health()
         });
-        stage.done();
+        stage.setPp(caster, "toxicthread", 0);
+        stage.boost(target, { spe: 1 });
+        stage.command("effect clear @e[type=minecraft:villager,distance=..40] world_combat:toxic_thread_laced");
+        stage.after(5, function () {
+            stage.expect((stage.stages(target).spe || 0) === 1, "removing the thread restores only its Speed loss");
+            stage.expect(stage.hasMobEffect(target, "world_combat:status/poison"), "removing the thread leaves independent poison in place");
+            stage.done();
+        });
     }, "toxic thread lands on the villager");
 });

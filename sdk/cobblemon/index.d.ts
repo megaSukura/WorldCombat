@@ -112,6 +112,8 @@ declare const CobblemonCombat: {
     /** WorldCombat.composition declares compatibility for these native-domain actions too. Shared NativeLoadout.fork starts an independent paid child from an explicit native slot; NativeRepertoire.Skill.composition supplies its control claims. */
     registerAction(id: string, version: string, maxTicks: number, targetKind: "enemy" | "friend" | "aim" | "point" | "motion" | "self", range: number, callback: (action: CombatAction) => void): void;
     tactics(callback: (view: CombatTactics) => void): void;
+    /** One epoch-scoped native NPC challenge policy. Native dialogue/start/result callbacks retain their identity; this policy drives world deployment and behavior. */
+    npcChallenges(callback: (view: CombatNpcChallenge) => void): void;
     skill(world: CombatWorld, slot: number): CombatWorldSkill;
     slot(slot: number, action: string): void;
     loadout(callback: (slot: CombatLoadout) => void): void;
@@ -184,6 +186,8 @@ interface CombatContentRequest {
 /** Synchronous observation with staged, once-only writes. Retained mutation handles expire on return. */
 interface CombatGrowthEvent {
     kind(): string;
+    /** A real defeat of the current native NPC challenge's member by the challenging player's Pokemon. */
+    trainerDefeat(): boolean;
     actor(): CombatPokemon;
     target(): CombatPokemon | null;
     move(): CombatPokemonMove | null;
@@ -236,6 +240,29 @@ interface CombatWorldSkill {
     submit(target: CombatActor | null, point: CombatPoint, direction: CombatPoint): number;
 }
 /** Synchronous scope; all mutation access expires when the callback returns. */
+/** Callback-scoped native trainer encounter; retain plain state or actor refs between callbacks. */
+interface CombatNpcChallenge {
+    id(): string; operation(): "start" | "tick" | "end";
+    definition(): string; skill(): number;
+    trainer(): CombatActor; player(): CombatActor; playerAlive(): boolean;
+    world(): CombatWorld | null; slots(): number;
+    /** Native actor team order, including randomized native order. JSON CombatNpcMember[]. */
+    roster(): string;
+    /** Null while the member is inactive, sending out, unavailable or gone. */
+    memberWorld(index: number): CombatWorld | null;
+    /** Native send-out, respecting space, loaded chunks and cancellation. JSON {ok,reason,ref}. */
+    send(index: number, feet: CombatPoint): string;
+    recall(index: number): boolean;
+    state(): string; state(json: string): void;
+    /** Host verifies real defeat; no-victor cancellation never emits a victory/reward event. */
+    finish(outcome: "player-win" | "npc-win" | "cancelled", reason: string): void;
+    outcome(): string; reason(): string;
+    message(key: string, argumentsJson: string): void;
+}
+interface CombatNpcMember {
+    index: number; id: string; name: string; health: number; maxHealth: number;
+    fainted: boolean; active: boolean; state: string; ref: string;
+}
 interface CombatTactics {
     castInput(slot: number, target: CombatActor | null, point: CombatPoint, direction: CombatPoint, input: string): boolean;
     /** Identity-preserving submission, with the same validation as castAt/castPoint/castInput; 0 on refusal. */

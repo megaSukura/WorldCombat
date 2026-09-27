@@ -4,7 +4,7 @@
   "worldcombat.skill.shadowball.use.1": "用暗影附着磨掉对手的特防",
   "worldcombat.skill.shadowball.use.2": "隔着一段距离先手压血",
   "worldcombat.skill.shadowball.description.0": "影球命中造成约 %1$s 点特殊伤害。",
-  "worldcombat.skill.shadowball.description.1": "命中后，有 %1$s 概率把目标特防压低 %2$s 级；这是能力等级下降，不会随影球散去而恢复。",
+  "worldcombat.skill.shadowball.description.1": "命中后有 %1$s 概率让暗影缠住目标，特防降低 %2$s 级，持续 %3$s；暗影消散或被清除后恢复。同一缠影不会叠加。",
   "worldcombat.skill.shadowball.description.2": "影球朝瞄准方向以 %1$s 格每刻直线飞行，射程 %2$s 格，判定半径 %3$s 格；对着空点也能射出。",
   "worldcombat.skill.shadowball.description.3": "当前凝影形态为 %1$s。",
   "worldcombat.skill.shadowball.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
@@ -24,5 +24,6 @@
   "worldcombat.skill.shadowball.preference.ai.maxChase.help": "超过这个距离就不主动出手，先走近；越大越愿意在更远处先手掷球。",
   "worldcombat.skill.shadowball.preference.ai.sunderFirst": "先打没被碾过的",
   "worldcombat.skill.shadowball.preference.ai.sunderFirst.help": "开启后，特防还没被压低过的目标优先（碾防对干净目标更值）；关闭则所有目标同价，只按普通远程攻击排序。",
-  "world_combat.move.shadowball.text.sunder": "特防 -%1$s"
+  "world_combat.move.shadowball.text.sunder": "特防 -%1$s",
+  "effect.world_combat.shadowball_cling": "缠影"
 }

@@ -8,9 +8,9 @@
  *   沉息（windup 播「入静」，提交前只观察与预告，可被打断，打断不花代价）。
  *   唤醒（提交后）：NativeEffects.boost 抬起物攻（1 或 2 级，安静时更高），挂上共享身份
  *     world_combat:status/meditative 的「入静」标记；灵环从脚边升到头顶，灵光从体内顶出。
- * 结束：入静标记走完只是气息平复，唤醒的物攻等级不褪（与棱角化相反）。
+ * 结束：入静载体到期或被清除时，收回本招的物攻贡献。
  *
- * 与同族分开：棱角化是快、外长棱角、带接触反击的窗口，到点收回；瑜伽姿势是慢、静、内在的唤醒，不被打扰时更深、且留住。
+ * 与同族分开：棱角化是快、外长棱角、带接触反击的窗口，到点收回；瑜伽姿势是慢、静、内在的唤醒，不被打扰时提升更深。
  */
 namespace PokemonSkills {
     const meditateScene = "world_combat:move_meditate";
@@ -70,8 +70,19 @@ namespace PokemonSkills {
             const spread = Math.max(0.6, p("meditate", "spread", action));
             const scale = spread / meditateReferenceRadius;
             // 以实际落下的等级回报：物攻已到顶时不再虚报收益。
-            const gain = Math.max(0, NativeEffects.boost(world, actor, "atk", gift));
+            const previous = MobEffects.read(world, actor, meditateEffect);
+        const renew = NativeEffects.ownsBoostWindow(world, actor, "world_combat:move/meditate", previous);
+            const before = NativeEffects.effectiveStage(world, actor, "atk");
             const mark = MobEffects.apply(world, actor, meditateEffect, stillness, gift);
+            if (mark && !renew && previous && String(mark.key()) === String(previous.key())) { done(action); return; }
+            const window = mark ? NativeEffects.boostWindow(world, actor, renew ? {} : { atk: gift }, stillness,
+                "world_combat:move/meditate", mark, previous) : 0;
+            const gain = Math.max(0, NativeEffects.effectiveStage(world, actor, "atk") - before);
+            if (!window || (!previous && gain === 0)) {
+                if (window) NativeEffects.windowClose(world, window);
+                if (mark) world.removeMobEffect(actor, meditateEffect, mark.key());
+                done(action); return;
+            }
             WorldFeedback.emit(world, meditateScene, 1, body.position(),
                 { moment: "awaken", actor: String(actor.ref()), gift: gain, motes: motes, spread: spread, scale: scale,
                     intensity: Math.max(0.7, Math.min(2, 0.8 + gain * 0.5 + motes / 60)) }, 32);
@@ -96,7 +107,7 @@ namespace PokemonSkills {
             { moment: "stillness", actor: String(actor.ref()) }, meditateAuraTicks);
     });
 
-    // 入静窗口走完：只是气息平复。物攻等级由本招唤醒，按设计不随窗口收回。
+    // 入静窗口结束时，绑定的临时物攻贡献一并收回。
     WorldCombat.on("world_combat:move_meditate/settle", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== meditateEffect) return;

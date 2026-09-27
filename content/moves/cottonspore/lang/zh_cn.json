@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.cottonspore.summary": "当场鼓开一团棉絮，黏住附近敌人并大幅降低它们的速度；这份减速不会自行恢复。只作用于贴近、看得见且还能被减速的敌人，因此要自己走进人群。",
+  "worldcombat.skill.cottonspore.summary": "鼓开一团棉絮，黏住附近看得见的敌人，大幅降低它们的速度。棉絮脱落或被清除后，速度恢复。",
   "worldcombat.skill.cottonspore.use.0": "一次拖住围上来的一群近战",
   "worldcombat.skill.cottonspore.use.1": "在被围住时开出一条退路",
   "worldcombat.skill.cottonspore.use.2": "打断对方的贴身追击",
-  "worldcombat.skill.cottonspore.description.0": "被棉絮黏住的目标损失 %1$s 级速度，这份减速会一直留着、不随棉絮消失而恢复；棉絮在目标身上存留约 %2$s，只是黏着期间的提示。",
+  "worldcombat.skill.cottonspore.description.0": "棉絮使目标速度降低 %1$s 级，持续 %2$s；清除棉絮可提前恢复。已经被本招黏住的目标不会重复叠加。",
   "worldcombat.skill.cottonspore.description.1": "以自身为圆心、半径 %1$s 炸开，最多黏住 %2$s 人。",
   "worldcombat.skill.cottonspore.description.2": "鼓起孢子要 %1$s，冷却 %2$s。",
   "worldcombat.skill.cottonspore.description.3": "只对看得见、还能被减速的敌人生效：墙挡住、已经到速度下限或草属性（对粉末免疫）都不会被黏住。",

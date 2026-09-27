@@ -5,8 +5,8 @@
  *   施法者越是娇小、越受珍视，这场戏越像真的。眼泪糊上脸的一瞬只是防御松了，敌人不会因此被定在原地。
  *
  * 出手：短起手（windup 在眼角憋出泪光）后提交；不放飞行物，眼泪沿视线直接送到对方脸上，命中就是收回表演。
- * 命中：目标挂共享身份 world_combat:status/flustered（本单元效果 world_combat:fake_tears_fluster，只借身份），
- *       再 NativeEffects.boost 大幅下降特防；宝可梦损失原生特防等级，其他生物落到护甲属性。身份只用于防重复。
+ * 命中：目标挂共享身份 world_combat:status/flustered（本单元效果 world_combat:fake_tears_fluster），
+ *       以 boostWindow 绑定特防下降；状态到期或被清除时收回自己的贡献。
  * 反制：眼泪要被看见，躲进掩体就落空（blocked）；拉开到 reach 之外够不到；它不是声音，隔着墙不管用。
  */
 namespace PokemonSkills {
@@ -69,13 +69,21 @@ namespace PokemonSkills {
                 done(action);
                 return;
             }
-            MobEffects.apply(world, target, faketearsEffect, fluster, 0);
-            NativeEffects.boost(world, target, "spd", -drop);
+            if (MobEffects.read(world, target, faketearsEffect) !== null) { done(action); return; }
+            const carrier = MobEffects.apply(world, target, faketearsEffect, fluster, 0);
+            const before = NativeEffects.effectiveStage(world, target, "spd");
+            const window = carrier ? NativeEffects.boostWindow(world, target, { spd: -drop }, fluster, "world_combat:move/faketears", carrier) : 0;
+            const lost = Math.max(0, before - NativeEffects.effectiveStage(world, target, "spd"));
+            if (!window || lost <= 0) {
+                if (window) NativeEffects.windowClose(world, window);
+                if (carrier) world.removeMobEffect(target, faketearsEffect, carrier.key());
+                done(action); return;
+            }
             WorldFeedback.emit(world, faketearsScene, 1, origin,
                 { moment: "feign", path: ["source", "target"], target: String(target.ref()), tears: tears, drop: drop }, 22);
             WorldFeedback.emit(world, faketearsScene, 1, point,
                 { moment: "fluster", target: String(target.ref()), drop: drop, hearts: 4 + drop * 4 }, 24);
-            WorldFeedback.text(world, faketearsAbove(point), "world_combat.move.faketears.text.fluster", [drop], 36);
+            WorldFeedback.text(world, faketearsAbove(point), "world_combat.move.faketears.text.fluster", [lost], 36);
             done(action);
         }
     });

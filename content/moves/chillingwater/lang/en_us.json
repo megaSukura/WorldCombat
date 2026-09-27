@@ -3,7 +3,7 @@
   "worldcombat.skill.chillingwater.use.0": "Cut a foe's physical output",
   "worldcombat.skill.chillingwater.use.1": "Soak the target so later water and ice moves can exploit the wet state",
   "worldcombat.skill.chillingwater.description.0": "Deals about %1$s special damage on hit.",
-  "worldcombat.skill.chillingwater.description.1": "On hit the target's Attack really falls %1$s stage(s) (never reported when immune or already at the floor) and it is soaked for about %2$s: while soaked it moves 10%% slower, and other water and ice moves can read the wet state. An already-soaked target is chilled harder, taking more damage and dropping one more Attack stage.",
+  "worldcombat.skill.chillingwater.description.1": "Lowers Attack by %1$s stages and soaks the target for %2$s, reducing movement speed by 10%%. An already wet target takes a stronger splash and an extra Attack drop when first chilled. Repeated Chilling Water refreshes the chill without stacking the reduction; Attack recovers when it expires or is cleansed.",
   "worldcombat.skill.chillingwater.description.2": "Range %1$s blocks, glob speed %2$s blocks/tick, trace radius %3$s blocks.",
   "worldcombat.skill.chillingwater.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.chillingwater.growth.0": "From level %1$s the douse rises to %2$s power.",

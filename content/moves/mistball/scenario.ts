@@ -1,26 +1,37 @@
-/**
- * 薄雾球 / mistball —— 可执行设计说明。
- *
- * 一句话：把一团羽绒与雾的轻球抛出去，命中炸开一团雾，有一半机会把目标糊住、压特攻减速。
- *
- * 场面：一只只会薄雾球的沙奈朵（45 级）对一只凯西（25 级）。只给这一招，AI 就只会用它。断言只取必然事实：
- * 招式被提交过、目标受过伤害。缠身（约五成起）与弧线落点都是概率/位置结果，写进 note 供读轨迹判断。
- */
+// Actual cast followed by native dispel: the finite state must own its stat contribution.
 Smoke.scenario("mistball", function (stage) {
+    stage.time("midnight");
     stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "gardevoir", level: 45, moves: ["mistball"], at: [-6, 0, 0] });
-    var foe = stage.pokemon({ species: "abra", level: 25, moves: ["tackle"], at: [0, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(900, function () {
-        return stage.casts("mistball", caster) > 0 && stage.damageTo(foe) > 0;
+    const caster = stage.pokemon({ species: "gardevoir", level: 50, moves: ["mistball"], at: [0, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:iron_golem", at: [2.4, 0, 0] });
+    stage.noai(foe);
+    stage.command("attribute " + foe.ref.split("/")[0] + " minecraft:generic.max_health base set 10000");
+    stage.command("data merge entity " + foe.ref.split("/")[0] + " {Health:10000.0f}");
+    const affected = foe, baseline = 1;
+    stage.boost(affected, { spa: baseline });
+    let seeking = true;
+    function keepThreat(): void {
+        if (!seeking) return;
+        stage.provoke(caster, foe);
+        stage.after(60, keepThreat);
+    }
+    keepThreat();
+    stage.until(2400, function () {
+        return stage.casts("mistball", caster) > 0 && stage.hasMobEffect(affected, "world_combat:downcast")
+            && (stage.stages(affected)["spa"] || 0) < baseline;
     }, function () {
-        stage.expect(stage.casts("mistball", caster) > 0, "薄雾球被放出来了");
-        stage.expect(stage.damageTo(foe) > 0, "羽绒雾球打中了目标");
-        stage.note("缠身（约五成起，随特攻与等级上升）是概率结果，只作记录；球沿本招真实初速与重力解出的低/高弧飞出，射程按弧线实际路程预算，飞尽时在 projectilePosition 的真实末点散开。特攻等级下降（持久）与减速（有限 downcast 载体，驱散即恢复）各自独立结算；只有减速真的挂上才留下与载体同寿的贴身羽绒雾。",
-            { casts: stage.casts("mistball", caster), damage: Math.round(stage.damageTo(foe) * 10) / 10,
-                downcast: stage.hadMobEffect(foe, "world_combat:status/downcast"), foeAlive: foe.alive() });
-        stage.done();
-    }, "薄雾球命中目标");
+        stage.expect(stage.hasMobEffect(affected, "world_combat:downcast"), "real cast applied its finite carrier");
+        stage.expect((stage.stages(affected)["spa"] || 0) < baseline, "carrier has a real stage contribution");
+        stage.expect(stage.damageTo(foe) > 0, "the move also dealt its contact or projectile damage");
+        seeking = false;
+        stage.setPp(caster, "mistball", 0);
+        stage.command("effect clear " + affected.ref.split("/")[0] + " world_combat:downcast");
+        stage.until(10, function () {
+            return !stage.hasMobEffect(affected, "world_combat:downcast") && (stage.stages(affected)["spa"] || 0) === baseline;
+        }, function () {
+            stage.expect((stage.stages(affected)["spa"] || 0) === baseline, "native dispel restores only this move, preserving the unrelated stage");
+            stage.note("Native dispel verified after actual skill application; visual timing remains a manual check.", { casts: stage.casts("mistball", caster), baseline: baseline, remaining: stage.stages(affected)["spa"] || 0 });
+            stage.done();
+        }, "finite contribution ends with its carrier");
+    }, "actual skill applies finite stage change");
 });

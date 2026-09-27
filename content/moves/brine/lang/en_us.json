@@ -31,5 +31,5 @@
   "effect.world_combat.brine_soaked": "Salt-soaked",
   "world_combat.move.brine.text.wounded": "Salt in the wound",
   "world_combat.move.brine.text.miss": "The brine misses",
-  "worldcombat.skill.brine.description.wet": "Soaked is only a shared mark other moves can read; brine no longer slows the target."
+  "worldcombat.skill.brine.description.wet": "Soaks the target, allowing combinations with effects that use wetness. Brine itself does not slow them."
 }

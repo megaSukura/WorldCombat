@@ -98,11 +98,16 @@ namespace PokemonSkills {
                         // 只有主伤真的结算成功，才谈糊眼；伤害被拒或免疫时不凭空降命中。
                         if (impact(current, hit, "mudbomb", power, { damage: damageSpec("mudbomb", "boom") })
                             && currentWorld.random() < chance) {
-                            const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
+                            const carrier = MobEffects.read(currentWorld, target, "world_combat:mudbomb_blinded") === null
+                                ? MobEffects.apply(currentWorld, target, "world_combat:mudbomb_blinded", 70, 0) : null;
+                            const before = NativeEffects.effectiveStage(currentWorld, target, "accuracy");
+                            const owned = carrier === null ? 0 : NativeEffects.boostWindow(currentWorld, target, { accuracy: -blind }, 70, "world_combat:move/mudbomb", carrier, null);
+                            if (carrier !== null && owned === 0) currentWorld.removeMobEffect(target, "world_combat:mudbomb_blinded", carrier.key());
+                            const dropped = NativeEffects.effectiveStage(currentWorld, target, "accuracy") - before;
                             const at = currentWorld.observe(target);
                             if (dropped !== 0 && at !== null) {
-                                WorldFeedback.keep(currentWorld, "mudbomb:face:" + String(target.ref()), mudbombScene, 1, at.position(),
-                                    { moment: "face", target: String(target.ref()), stage: blind, shards: shards, intensity: Math.max(0.4, Math.min(1.6, power / 70)) }, 70);
+                                WorldFeedback.onEffect(currentWorld, owned, "mudbomb:face:" + String(target.ref()), mudbombScene, 1, at.position(),
+                                    { moment: "face", target: String(target.ref()), stage: blind, shards: shards, intensity: Math.max(0.4, Math.min(1.6, power / 70)) });
                                 WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
                                     "world_combat.move.mudbomb.text.blind", [Math.abs(dropped)], 30);
                             }

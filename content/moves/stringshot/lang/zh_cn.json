@@ -3,7 +3,7 @@
   "worldcombat.skill.stringshot.use.0": "拦住冲锋或逃跑的敌人",
   "worldcombat.skill.stringshot.use.1": "封住一条通道或门口",
   "worldcombat.skill.stringshot.use.2": "削弱高速目标",
-  "worldcombat.skill.stringshot.description.0": "真正被丝缠住的目标损失 %1$s 级速度，并带上「被丝缠住」标记 %2$s；速度已到底线或特性挡下时不会出现符号。被缠住期间伙伴不会对它重复吐丝，速度下降作为能力等级保留到它离开战斗或能力等级被重置。缠足命中时还会把它钉在原地 %3$s，期间无法移动。",
+  "worldcombat.skill.stringshot.description.0": "丝线缠住目标，使速度下降 %1$s 级，持续 %2$s；丝线消退或被清除时恢复，期间不会重复叠加。缠足形态还会使目标在 %3$s 内无法移动。",
   "worldcombat.skill.stringshot.description.1": "结网形态把同一根丝打成稍大一点的小网：黏在首碰方块的表面外侧，最多铺开半径 %1$s 那么多格，存在 %2$s；放不下时只留装饰丝，不会在远端目标点凭空铺网。",
   "worldcombat.skill.stringshot.description.2": "丝是会飞行的弹体，速度 %1$s、判定半径 %2$s，会被掩体挡下、也能被走位躲开；吐丝距离 %3$s 格、射程 %4$s 格，起手 %5$s。撞到方块时丝绷在表面、留下小片蛛网；只在空气里耗尽则什么都不留。",
   "worldcombat.skill.stringshot.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

@@ -9,7 +9,7 @@
  * 苹果在重力里越落越快，并像被目标的质心吸引一样自行修正落点（`pull`）。输入是 `aim`：点落点或点实体都行。
  * **离地的目标最重**：苹果追上它、用原生受击冲量把它压回地面（`slam`，尊重抗击退），威力按原作 ×1.5；
  * 落地的目标只是挨一记重苹果。落地后苹果留在原地，谁都能捡。
- * 「降低防御」是 `NativeEffects.boost(...,"def",-N)` 加上共享身份 `world_combat:status/guardbroken`
+ * 「降低防御」是 `NativeEffects.boostWindow(...,"def",-N)` 加上共享身份 `world_combat:status/guardbroken`
  * （与撕裂爪/铁尾/暗影之骨/碎岩同一身份），因此别的破防招能接着消费这道缺口。
  *
  * 数据分散：

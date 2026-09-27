@@ -14,11 +14,22 @@ Smoke.scenario("stringshot", function (stage) {
         stage.expect(stage.casts("stringshot") > 0, "string shot was committed");
         stage.expect(stage.hadMobEffect(target, "world_combat:status/silked"), "the target carried the shared silked identity");
         stage.expect(stage.attribute(target, "minecraft:generic.movement_speed") < baseSpeed - 0.001, "the target's movement speed fell with the Speed drop");
-        stage.note("string shot bound the zombie with a permanent Speed-stage drop and a separate bind marker; the surface web is drawn only from the cells terrainResult actually placed (count, not lease id), the air end point reads the real projectilePosition, and the accuracy roll is not part of this run", {
+        stage.note("string shot bound the zombie with a Speed-stage window owned by its silk carrier; the surface web is drawn only from the cells terrainResult actually placed (count, not lease id), the air end point reads the real projectilePosition, and the accuracy roll is not part of this run", {
             casts: stage.casts("stringshot"), baseSpeed: baseSpeed,
             speed: stage.attribute(target, "minecraft:generic.movement_speed"),
             damageToCaster: Math.round(stage.damageTo(caster) * 10) / 10
         });
-        stage.done();
+        const timedTarget = target;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:string_bound"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).spe || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "stringshot", 0);
+        stage.team("timed-b-stringshot", [caster, timedTarget]);
+        stage.boost(timedTarget, { spe: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:string_bound");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:string_bound"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).spe || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "string shot binds the target");
 });

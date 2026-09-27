@@ -4,7 +4,7 @@
   "worldcombat.skill.meditate.use.1": "被追打时快速叫醒一层，抢回出手的底气",
   "worldcombat.skill.meditate.use.2": "在安全换位里补一口静心，把物攻垫住",
   "worldcombat.skill.meditate.description.0": "静心把沉睡的力叫醒：物攻 +%1$s 级；最近没有被打扰（距上次受伤够久）时能多叫一级。",
-  "worldcombat.skill.meditate.description.1": "唤醒后身上会留下「入静」标记并持续 %1$s；标记只是刚把力叫醒过的记号，本身不改变任何属性，唤醒的物攻等级也不会随它褪去。",
+  "worldcombat.skill.meditate.description.1": "进入「入静」状态 %1$s，期间保有本次物攻提升；状态消退或被清除时恢复。再次静心只延长持续时间，不叠加提升。",
   "worldcombat.skill.meditate.description.2": "静心 %1$s 秒、收息 %2$s 秒、冷却 %3$s 秒；静心可以被打断，打断不消耗任何东西。",
   "worldcombat.skill.meditate.deep.on": "深长呼吸：入静窗口 ×1.4，且距上次受伤满 3 秒就多唤醒一级；代价是起手 +2 刻、冷却 +10。",
   "worldcombat.skill.meditate.deep.off": "普通呼吸：起手与冷却更短，但要距上次受伤满 7 秒才多叫得动一级。",

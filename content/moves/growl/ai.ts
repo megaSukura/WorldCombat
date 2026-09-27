@@ -1,13 +1,4 @@
-/**
- * 叫声 的伙伴 AI 用途：这招自己的一套出手计划——把自己送进能听见的范围，再一声叫软一圈。
- *
- * 什么局面有意义：有可见威胁、在 ai.maxChase 以内，而且以自己为圆心、叫声半径内至少站着
- *   ai.minFoes 个还能被叫软的非友方（默认 1，有一个就愿意叫）。声音不看视线，被掩体挡住的敌人也算听得见；
- *   这是原地荡开的一声，不需要走到位，驻守时也能叫。
- * 对谁出手：当前威胁；只看它还能不能真的掉攻击（攻击等级没到 -6），不用泛化的 charmed 身份挡下别处来的分神。
- * 够不到怎么办：reach 就是叫声半径，由共享任务把身体带进人群；这招靠近本身就是它的准备。
- * 放完之后：圈里还能掉攻击的敌人一起变轻，伙伴交回共享顺序，再决定追击还是趁对方错拍拉开。
- */
+/** Prefer nearby opponents who are not already distracted by this cry. */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("growl", { ai: { maxChase: 10, minFoes: 1 } }, [
         PokemonSkills.number("ai.maxChase", "考虑距离", 3, 18, 1),
@@ -24,7 +15,7 @@ namespace CompanionBehavior {
 
     /** 这个非友方还能不能真的被叫声压低攻击：攻击等级没到下限，才值得把这一声算在它头上。 */
     function growlBenefits(context: WorldBehavior.Context, other: Entity): boolean {
-        return stage(context, other, "atk") > -6;
+        return stage(context, other, "atk") > -6 && !marker(context, other, PokemonSkills.growlEffect);
     }
 
     /** 以自身为心的叫声半径内、听得见且仍能掉攻击的非友方数量；声音不看视线。 */

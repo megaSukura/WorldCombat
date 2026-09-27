@@ -30,12 +30,12 @@ namespace PokemonSkills {
     actionParameters.define(stringshotId, {
         speedDrop: formula(F.base(2).plus(F.when(F.body("weight").gte(300), F.const(1), F.const(0))).clamp(2, 3), "速度下降", {
             unit: " 级",
-            description: "被丝缠住者永久损失的速度等级（能力等级，直到离开战斗或被重置，不随标记到期回退）；体重 300 以上的个体吐出更粗的丝，从 2 级升到 3 级。"
+            description: "被丝缠住期间降低的速度等级；体重 300 以上的个体吐出更粗的丝，从 2 级升到 3 级。"
         }),
         bindTicks: seconds(F.base(120).plus(F.body("weight").div(10).times(2)).clamp(120, 260), "缠足标记时长",
-            "被丝缠住的标记持续多久（只表示丝还在身上；不决定降速，那个是永久的）；施法者体重越大缠得越久。"),
+            "丝线缠绕并降低速度的持续时间；施法者体重越大缠得越久。"),
         rootTicks: seconds(F.base(12).plus(F.level().minus(20).max(0).times(0.2)).clamp(12, 30), "定身时长",
-            "缠足命中的那一下额外把目标钉在原地多久；与永久降速、标记时长各自独立。"),
+            "缠足命中的那一下额外把目标钉在原地多久；此后仍受丝线减速，但可以移动。"),
         strandSpeed: formula(F.base(1.0).plus(F.stat("speed").minus(60).max(0).times(0.004)).clamp(0.9, 1.6), "吐丝速度", {
             unit: " 格/刻",
             description: "丝飞出去的速度；施法者速度越快，越难被走位躲开。"

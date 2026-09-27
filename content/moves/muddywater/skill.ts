@@ -214,9 +214,14 @@ namespace PokemonSkills {
                     let dropped = 0;
                     if (scope.valid(enemy) && scope.random() < chance) {
                         // 只按实际降下的命中等级落状态与提示；被原生拒绝时不发成功提示。
-                        dropped = NativeEffects.boost(scope, enemy, "accuracy", -stages);
+                        const previous = MobEffects.read(scope, enemy, muddywaterEffect);
+                        const before = NativeEffects.effectiveStage(scope, enemy, "accuracy");
+                        const carrier = previous || MobEffects.apply(scope, enemy, muddywaterEffect, murk, 0);
+                        const windowId = !previous && carrier ? NativeEffects.boostWindow(scope, enemy, { accuracy: -stages }, murk,
+                            "world_combat:move/muddywater", carrier, null) : 0;
+                        if (!previous && carrier && !windowId) scope.removeMobEffect(enemy, muddywaterEffect, carrier.key());
+                        dropped = NativeEffects.effectiveStage(scope, enemy, "accuracy") - before;
                         if (dropped !== 0) {
-                            MobEffects.apply(scope, enemy, muddywaterEffect, murk, 0);
                             if (scope.effects(enemy, muddywaterLingerMark).length === 0)
                                 scope.effect(muddywaterLingerMark, enemy,
                                     JSON.stringify({ density: Math.max(4, Math.min(10, Math.round(drops / 6))) }),

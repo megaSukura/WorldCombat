@@ -6,8 +6,8 @@
  * 掉速级数与泼溅糊到几个人、泥洼是否留下，写进 note 供读轨迹判断。
  */
 Smoke.scenario("mudshot", function (stage) {
-    const caster = stage.pokemon({ species: "Wooper", level: 32, moves: ["mudshot"], at: [-5, 0, 0] });
-    const foe = stage.pokemon({ species: "Machop", level: 22, moves: ["tackle"], at: [5, 0, 0] });
+    const caster = stage.pokemon({ species: "Wooper", level: 32, moves: ["mudshot"], at: [-2, 0, 0] });
+    const foe = stage.pokemon({ species: "Machop", level: 22, moves: ["tackle"], at: [2, 0, 0] });
     stage.hostile(caster, foe);
     stage.until(800, function () {
         return stage.casts("mudshot", caster) >= 1 && stage.damageTo(foe) > 0 && stage.hadMobEffect(foe, "world_combat:status/mired");
@@ -19,6 +19,17 @@ Smoke.scenario("mudshot", function (stage) {
             casts: stage.casts("mudshot", caster), onFoe: Math.round(stage.damageTo(foe) * 10) / 10,
             blocks: stage.changedBlocks().length
         });
-        stage.done();
+        const timedTarget = foe;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:mudshot_mire"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).spe || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "mudshot", 0);
+        stage.team("timed-b-mudshot", [caster, timedTarget]);
+        stage.boost(timedTarget, { spe: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:mudshot_mire");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:mudshot_mire"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).spe || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "mudshot cast and hit");
 });

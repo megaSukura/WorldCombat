@@ -6,8 +6,7 @@
  *   飞（travel，提交后）：暗影团沿瞄准方向沿直线高速飞出，带剥落的阴气尾迹；瞄准点为空也照样射出。
  *       飞行场景由 `WorldFeedback.actionScenes` 在 execute 内建立，随投射物真实结束释放，不额外留 feedback 实例。
  *   击（burst / fizzle）：命中活物时结算一次特殊伤害，爆散的强度读取这次实际造成的伤害回执（0 伤害不冒爆）；
- *       按概率用共享的 `NativeEffects.boost(..., "spd", -1)` 削掉目标特防，只有真的降级成功（applied !== 0）
- *       才在目标身上贴住一层影子，持续 `clingTicks` 刻（`cling`，这是降阶回执的视觉，不是降阶持续时长）。打空、被吸收或撞到方块只留一下散影。
+ *       按概率用共享的 `NativeEffects.boostWindow(..., "spd", -1)` 削掉目标特防，只有真的降级成功（applied !== 0）
  *
  * 与同族分开：磨防四式里只有它是真实投射物、只打单体、命中后影子会附着在目标身上。
  * 配置 `dense`（凝影）由 resolve 改时序、由公式改威力／速度／射程。
@@ -89,12 +88,17 @@ namespace PokemonSkills {
                             return;
                         }
                         if (scope.valid(victim) && scope.random() < chance) {
-                            const applied = NativeEffects.boost(scope, victim, "spd", -stages);
+                            const carrier = MobEffects.read(scope, victim, "world_combat:shadowball_cling") === null
+                                ? MobEffects.apply(scope, victim, "world_combat:shadowball_cling", cling, 0) : null;
+                            const before = NativeEffects.effectiveStage(scope, victim, "spd");
+                            const owned = carrier === null ? 0 : NativeEffects.boostWindow(scope, victim, { spd: -stages }, cling, "world_combat:move/shadowball", carrier, null);
+                            if (carrier !== null && owned === 0) scope.removeMobEffect(victim, "world_combat:shadowball_cling", carrier.key());
+                            const applied = NativeEffects.effectiveStage(scope, victim, "spd") - before;
                             if (applied !== 0) {
                                 const body = scope.observe(victim);
                                 if (body !== null) {
-                                    WorldFeedback.keep(scope, "shadowball:cling:" + String(victim.ref()), shadowballScene, 1, body.position(),
-                                        { moment: "cling", target: String(victim.ref()), stages: stages, shards: shards, scale: scale }, cling);
+                                    WorldFeedback.onEffect(scope, owned, "shadowball:cling:" + String(victim.ref()), shadowballScene, 1, body.position(),
+                                        { moment: "cling", target: String(victim.ref()), stages: stages, shards: shards, scale: scale });
                                     WorldFeedback.text(scope, body.position().plus(WorldCombat.point(0, 1.2, 0)), shadowballSunderText, [stages], 30);
                                 }
                             }

@@ -141,12 +141,18 @@ namespace PokemonSkills {
                     if (world.valid(victim) && away.length() >= 0.05) world.hitDisplace(victim, away.unit().scale(push));
                     if (!world.valid(victim) || world.random() >= chance) return;
                     // 护甲真的被砸陷（未被免疫）才留凹陷与标记。
-                    if (NativeEffects.boost(world, victim, "def", -stages) === 0) return;
-                    if (MobEffects.apply(world, victim, irontailMark, markTicks, 0) === null) return;
+                    if (MobEffects.read(world, victim, irontailMark) !== null) return;
+                    const before = NativeEffects.effectiveStage(world, victim, "def");
+                    const carrier = MobEffects.apply(world, victim, irontailMark, markTicks, 0);
+                    if (!carrier) return;
+                    const windowId = NativeEffects.boostWindow(world, victim, { def: -stages }, markTicks,
+                        "world_combat:move/irontail", carrier, null);
+                    if (!windowId) { world.removeMobEffect(victim, irontailMark, carrier.key()); return; }
+                    const dropped = Math.max(0, before - NativeEffects.effectiveStage(world, victim, "def"));
                     const body = world.observe(victim);
                     if (body === null) return;
                     WorldFeedback.emit(world, irontailScene, 1, body.position(),
-                        { moment: "dent", target: String(victim.ref()), stages: stages, scale: 1 }, 26);
+                        { moment: "dent", target: String(victim.ref()), stages: dropped, scale: 1 }, 26);
                     WorldFeedback.text(world, body.position().plus(WorldCombat.point(0, 1.2, 0)), irontailDentText, [stages], 30);
                     world.sound("cobblemon:impact.steel", body.position(), 14, "{}");
                 });

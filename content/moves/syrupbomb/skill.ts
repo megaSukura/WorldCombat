@@ -58,7 +58,12 @@ namespace PokemonSkills {
         const world = effect.world(), victim = effect.target(), data = JSON.parse(effect.state());
         if (!world.valid(victim) || !MobEffects.present(world, data.lease)) { effect.end(); return; }
         // 显示真实降级：已到 -6 时这一阵实际掉 0，不假装又降了一级，也不重复播报。
-        const drop = NativeEffects.boost(world, victim, "spe", -data.drop);
+        const carrier = MobEffects.read(world, victim, syrupbombEffect);
+        if (!carrier) { effect.end(); return; }
+        const before = NativeEffects.effectiveStage(world, victim, "spe");
+        NativeEffects.boostWindow(world, victim, { spe: -data.drop }, Math.max(1, carrier.duration()),
+            "world_combat:move/syrupbomb", carrier, carrier);
+        const drop = NativeEffects.effectiveStage(world, victim, "spe") - before;
         data.left = data.left - 1;
         effect.state(JSON.stringify(data));
         const body = world.observe(victim);
@@ -71,7 +76,7 @@ namespace PokemonSkills {
         else effect.end();
     });
     WorldCombat.effectHandler(syrupbombBind, "operation:world_combat:dispel", function (effect) { effect.end(); });
-    // 满身糖被外力清掉（牛奶、/effect clear、别的招式）时，掉速随之停止。
+    // 满身糖被清掉时后续掉速停止，已有降速窗口随载体恢复。
     WorldCombat.on("world_combat:move_syrupbomb/release", "world_combat:mob_effect_removed", "", function (event) {
         const data = JSON.parse(String(event.data()));
         if (String(data.id) !== syrupbombEffect) return;

@@ -23,6 +23,13 @@ Smoke.scenario("sandattack", function (stage) {
             sideSanded: stage.hadMobEffect(side, "world_combat:status/sanded"),
             changedBlocks: stage.changedBlocks().length
         });
-        stage.done();
+        stage.setPp(caster, "sandattack", 0);
+        stage.boost(near, { accuracy: 1 });
+        stage.command("effect clear @e[type=minecraft:zombie,distance=..40] world_combat:sand_blinded");
+        stage.after(5, function () {
+            stage.expect((stage.stages(near).accuracy || 0) === 1, "cleansing sand removes its accuracy loss and preserves another gain");
+            stage.expect(stage.attribute(near, "minecraft:generic.attack_damage") >= baseAttack - 0.001, "cleansing sand also restores melee attack damage");
+            stage.done();
+        });
     }, "sand attack lands in the cone");
 });

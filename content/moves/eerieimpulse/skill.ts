@@ -7,7 +7,7 @@
  *
  * 出手：短起手（windup 在身上攒起电弧）后提交；一圈电波从身上放开。
  * 命中：世界几何用 WorldGeometry.ring 选出圈内所有非友方；每个目标挂共享身份 world_combat:status/jammed
- *       （本单元效果 world_combat:eerie_impulse_jammed，只借身份），再 NativeEffects.boost 下降特攻：
+ *       （本单元效果 world_combat:eerie_impulse_jammed，只借身份），再 NativeEffects.boostWindow 下降特攻：
  *       宝可梦损失原生特攻等级，其他生物落到攻击属性。
  * 反制：站到电波半径之外就沐浴不到；它不造成伤害，也不会把人推开——冲进去的人只要还在圈里就会被扰乱。
  */
@@ -67,13 +67,17 @@ namespace PokemonSkills {
             WorldGeometry.selectEnemies(world, WorldGeometry.ring(centre, 0, radius, { below: 3, above: 3 }),
                 function (target, facts) {
                     // 只有真正掉下去的特攻等级才算这一圈的一次成功：免疫降级或已经封底的目标不吃标记、不报成功。
-                    const delta = NativeEffects.boost(world, target, "spa", -drop);
-                    if (delta === 0) return;
-                    MobEffects.apply(world, target, eerieimpulseEffect, jam, 0);
-                    deepest = Math.max(deepest, Math.abs(delta));
+                    const prior = MobEffects.read(world, target, eerieimpulseEffect);
+                const carrier = prior === null ? MobEffects.apply(world, target, eerieimpulseEffect, jam, 0) : null;
+                const before = NativeEffects.effectiveStage(world, target, "spa");
+                const owned = carrier === null ? 0 : NativeEffects.boostWindow(world, target, { spa: -drop }, jam, "world_combat:move/eerieimpulse", carrier, null);
+                if (carrier !== null && owned === 0) world.removeMobEffect(target, eerieimpulseEffect, carrier.key());
+                const applied = before - NativeEffects.effectiveStage(world, target, "spa");
+                    if (applied <= 0) return;
+                    deepest = Math.max(deepest, applied);
                     hits++;
                     WorldFeedback.emit(world, eerieimpulseScene, 1, facts.position(),
-                        { moment: "jam", target: String(target.ref()), drop: Math.abs(delta), arcs: Math.round(6 + arcs * 0.4) }, 24);
+                        { moment: "jam", target: String(target.ref()), drop: applied, arcs: Math.round(6 + arcs * 0.4) }, 24);
                 });
             WorldFeedback.emit(world, eerieimpulseScene, 1, centre,
                 { moment: "pulse", radius: radius, arcs: arcs, drop: drop, hits: hits, overload: overload ? 1 : 0,

@@ -125,9 +125,14 @@ namespace PokemonSkills {
                         CombatStatus.apply(scope, enemy, "soaked", LiquidationSoaked, soakTicks);
                     if (scope.random() < chance) {
                         // 按实际降幅结算：到顶或免疫时没有真正压低，就不留破甲标记、不发裂开回执。
-                        const drop = -NativeEffects.boost(scope, enemy, "def", -stages);
+                        const previous = MobEffects.read(scope, enemy, LiquidationSundered);
+                        const before = NativeEffects.effectiveStage(scope, enemy, "def");
+                        const carrier = previous || MobEffects.apply(scope, enemy, LiquidationSundered, soakTicks, 0);
+                        const windowId = !previous && carrier ? NativeEffects.boostWindow(scope, enemy, { def: -stages }, soakTicks,
+                            "world_combat:move/liquidation", carrier, null) : 0;
+                        if (!previous && carrier && !windowId) scope.removeMobEffect(enemy, LiquidationSundered, carrier.key());
+                        const drop = Math.max(0, before - NativeEffects.effectiveStage(scope, enemy, "def"));
                         if (drop > 0) {
-                            CombatStatus.apply(scope, enemy, "sundered", LiquidationSundered, soakTicks, 0, { unique: true });
                             WorldFeedback.emit(scope, liquidationScene, 1, facts.position(),
                                 { moment: "crack", target: ref, stages: drop, spokes: drop * 10, scale: scale }, 26);
                             WorldFeedback.text(scope, facts.position().plus(WorldCombat.point(0, 1.4, 0)), liquidationCrackText, [drop], 26);

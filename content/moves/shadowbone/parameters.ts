@@ -15,7 +15,7 @@
  *   collisionRadius 判定半径：碰撞箱高度定骨棒命中面。
  *   rattleChance    慑防几率：物攻定阴气慑人的把握。
  *   rattleStages    慑防等级：本招固定 1 级。
- *   rattleTicks     慑防标记时长：等级定被慑住的时间。
+ *   rattleTicks     慑防时长：等级定被慑住的时间。
  *   gravity         骨棒下坠（固定值）。
  *
  * 伤害段 bone：骨棒命中那一下，不接触；属性相性与暴击由共享结算处理。
@@ -63,10 +63,10 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "一次慑防让目标防御下降的能力等级。"
             }),
-        /** 慑防标记时长：基础 100 刻，等级每比 40 高 1 加 1.5 刻，夹在 80..240。 */
+        /** 慑防时长：基础 100 刻，等级每比 40 高 1 加 1.5 刻，夹在 80..240。 */
         rattleTicks: seconds(
             F.base(100).plus(F.level().minus(40).times(1.5)).clamp(80, 240).round(0),
-            "慑防标记时长", "目标身上慑防标记停留的时长；等级越高被慑住越久。"),
+            "慑防时长", "防御降低的持续时间；等级越高震慑越久，到期或驱散后恢复。"),
         gravity: hidden(0.015)
     });
 

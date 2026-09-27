@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.aurorabeam.summary": "射出一条会跑的虹色光束：命中最前面的敌人造成特殊伤害、按原生实际量让它的攻击下降 1 级（已经到底或免疫时不降），并在落点地面结出一小片霜。首次撞到已有的雪或冰表面时会按入射角镜面折射一次、继续走完剩余射程，石墙不会折射。广谱更远更宽更易降攻，聚谱更快更强。",
+  "worldcombat.skill.aurorabeam.summary": "射出虹色光束，伤害第一个命中的敌人，并有几率降低其攻击，在最终落点结出一小片霜。光束第一次撞到雪或冰表面时会反射一次，继续飞行；石墙会挡住它。广谱更远更宽、更容易降攻，聚谱更快更强。",
   "worldcombat.skill.aurorabeam.use.0": "中远距离的直线点名",
   "worldcombat.skill.aurorabeam.use.1": "压制物理攻击手",
   "worldcombat.skill.aurorabeam.use.2": "瞄冰墙斜角，折射后打到掩体后的敌人",

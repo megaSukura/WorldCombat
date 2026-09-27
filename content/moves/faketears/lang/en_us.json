@@ -3,7 +3,7 @@
   "worldcombat.skill.faketears.use.0": "Strip the Sp. Def of a special attacker up close",
   "worldcombat.skill.faketears.use.1": "Open a gap for a teammate's special attack",
   "worldcombat.skill.faketears.use.2": "Feign tears at a range where the target cannot break line of sight",
-  "worldcombat.skill.faketears.description.0": "On a hit the target loses %1$s stages of Sp. Def, and that drop does not recover when the fluster ends - it lasts until combat breaks or its stages are reset. The target is also left with a fluster marker for about %2$s; the marker itself changes neither stats nor actions and only stops repeated feints. It deals no damage, so it will not wake a sleeping target.",
+  "worldcombat.skill.faketears.description.0": "Lowers the target’s Sp. Def by %1$s stages for %2$s. The reduction ends when the distraction expires or is cleansed and does not stack while active. Deals no damage and does not wake sleeping targets.",
   "worldcombat.skill.faketears.description.1": "The feint only carries within %1$s blocks and needs a clear line of sight; the target need not be facing you, and a hit does not pin it in place.",
   "worldcombat.skill.faketears.description.2": "Telegraph %1$s, cooldown %2$s.",
   "worldcombat.skill.faketears.timing": "Range %1$s blocks, telegraph %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

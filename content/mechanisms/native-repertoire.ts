@@ -58,7 +58,8 @@ namespace NativeRepertoire {
         ready?: (action: CombatAction, config: any) => string;
         /** Telegraph the preparation and return its duration in ticks; `prepare` is the value `resolve` produced for this cast, return it to keep it. */
         windup?: (action: CombatAction, config: any, prepare: number) => number;
-        /** Requires exclusive control of the user's movement (self displacement, anchoring or a movement lock); unavailable while carrying a rider or riding. */
+        /** The action steers or anchors its own body. A driven mount temporarily owns its movement;
+         * a body riding another entity cannot independently move that vehicle. */
         freeMovement?: boolean | ((config: any) => boolean);
         /** The user must physically stand on the ground, checked both before preparation and before payment. */
         requiresGround?: boolean;
@@ -229,6 +230,8 @@ namespace NativeRepertoire {
             NativeLoadout.define(skill.id, options.namespace + ":" + skill.id, String(skill.version || 1), skill.maximumTicks || 600, skill.kind,
                 { max: maximum, current: function (action) { var runtime = resolved(action); return runtime.range === undefined ? skill.range : Math.min(maximum, runtime.range); } }, function (action, move) {
                 var settings = config(action.sense(), action.actor(), skill.id);
+                var independent = typeof skill.freeMovement === "function" ? skill.freeMovement(settings) : skill.freeMovement;
+                if (independent) action.movementLease();
                 if (skill.run) {
                     skill.run(action, move, settings);
                     return;
@@ -267,7 +270,7 @@ namespace NativeRepertoire {
         }
         function movementReason(skill: Skill, pokemon: CombatPokemon, settings: any): string {
             var independent = typeof skill.freeMovement === "function" ? skill.freeMovement(settings) : skill.freeMovement;
-            if (independent && (pokemon.vehicle() || pokemon.passenger())) return "mounted-control";
+            if (independent && pokemon.passenger()) return "mounted-control";
             if (skill.requiresGround && String(pokemon.activeState()) === "sent-out" && !pokemon.grounded()) return "not-grounded";
             return "";
         }

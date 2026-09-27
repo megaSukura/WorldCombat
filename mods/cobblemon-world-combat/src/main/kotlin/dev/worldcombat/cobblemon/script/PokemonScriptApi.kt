@@ -28,6 +28,8 @@ class PokemonScriptApi {
 
     fun tactics(callback: java.util.function.Consumer<dev.worldcombat.cobblemon.control.TacticsContext>) =
         dev.worldcombat.cobblemon.control.CompanionContent.brain(epoch, callback)
+    fun npcChallenges(callback: java.util.function.Consumer<dev.worldcombat.cobblemon.NativeNpcChallengeContext>) =
+        dev.worldcombat.cobblemon.NativeNpcChallenges.register(epoch, callback)
     fun skill(world: dev.worldcombat.core.runtime.WorldAccess, slot: Int): dev.worldcombat.cobblemon.control.WorldSkill {
         require(slot in 0..3); world.check()
         return dev.worldcombat.cobblemon.control.WorldSkill(world, slot)

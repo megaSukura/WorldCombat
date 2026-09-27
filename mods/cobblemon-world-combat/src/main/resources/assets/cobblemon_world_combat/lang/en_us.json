@@ -1,4 +1,9 @@
 {
+  "worldcombat.npc_challenge.unsupported_format": "This challenge format is not yet supported in world combat.",
+  "worldcombat.npc_challenge.unsupported_rules": "This challenge uses additional rules that are not yet supported in world combat.",
+  "worldcombat.npc_challenge.unsupported_clones": "This challenge requires temporary teams or level adjustment, which are not yet supported in world combat.",
+  "worldcombat.npc_challenge.busy": "You or this trainer are already taking part in another challenge.",
+  "worldcombat.npc_challenge.start_failed": "The challenge could not start. Both participants must be nearby with a battle-ready party.",
   "key.categories.worldcombat": "WorldCombat control",
   "key.worldcombat.skill1": "Skill slot 1",
   "key.worldcombat.skill2": "Skill slot 2",

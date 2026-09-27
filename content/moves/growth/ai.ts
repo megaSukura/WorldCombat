@@ -35,7 +35,7 @@ namespace CompanionBehavior {
         protocols: ["world_combat:fortify"],
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
-            if (context.facts.mounted) return false;
+            if (context.facts.mounted || status(context, source(context), "grown")) return false;
             if (["atk", "spa"].every(function (stat) { return CompanionBehavior.stage(context, CompanionBehavior.source(context), stat) >= 6; })) return false;
             if (ai<boolean>(capability, "shadeGrowth", false) && !growthSunlit(context)) return false;
             const threat = growthThreat(context);

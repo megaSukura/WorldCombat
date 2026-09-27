@@ -2,9 +2,9 @@
 
 把 Cobblemon 的战斗带进 Minecraft 世界。玩家照常移动、攻击、使用物品和建造，伙伴自主行动，也接受目标、招式与站位指令。
 
-**当前版本：0.1.0。** [下载与版本记录](https://github.com/megaSukura/WorldCombat/releases/tag/v0.1.0)。目标环境是 Minecraft 1.21.1 / NeoForge 21.1.250 / Java 21。包含 756 个招式实现和 24 个特性单元，支持世界中的即时交战、伙伴指挥与可独立迭代的脚本内容。
+**当前版本：0.1.1。** [下载与版本记录](https://github.com/megaSukura/WorldCombat/releases/tag/v0.1.1)。目标环境是 Minecraft 1.21.1 / NeoForge 21.1.250 / Java 21。包含 756 个招式实现和 24 个特性单元，支持世界中的即时交战、伙伴指挥、原生 NPC 挑战与可独立迭代的脚本内容。
 
-WorldCombat replaces Cobblemon's turn-based encounters with real-time interaction in the Minecraft world. This is an early alpha for Minecraft 1.21.1 and NeoForge, with script-driven abilities and extensible companion behavior.
+WorldCombat brings Cobblemon encounters into real-time combat in the Minecraft world. Version 0.1.1 is a regular release for Minecraft 1.21.1 and NeoForge, with script-driven abilities, mounted combat, native NPC challenges and extensible companion behavior.
 
 ## 安装与游玩
 

@@ -6,7 +6,7 @@
  *
  * 出手：短起手（windup 在口边蓄起紫色的毒丝）后提交，交给 LivingActions.projectile 负责飞行。
  * 命中：挂共享的 world_combat:toxic_thread_laced（身份 world_combat:status/laced），
- *       NativeEffects.boost 降低速度，CombatStatus.inflict 上共享的中毒；随后按配置沿丝线行动：
+ *       NativeEffects.boostWindow 降低速度，CombatStatus.inflict 上共享的中毒；随后按配置沿丝线行动：
  *       「收丝」把目标朝施法者拽近 reel 格，「钉住」改为就地定住 anchorTicks 刻。
  * 落空：丝软软垂到地上，只留一小撮毒渍（表现），不改变世界。
  * 反制：毒丝有飞行时间、会被掩体挡下；对毒免疫的宝可梦只吃速度下降、不吃中毒。
@@ -79,11 +79,15 @@ namespace PokemonSkills {
                 const at = scope.observe(entity);
                 if (at === null) return;
                 // 丝先缠上（laced 身份只表示丝还残留），毒与慢各自按真实回执落地。
-                MobEffects.apply(scope, entity, toxicthreadEffect, venom, 0);
+                const previous = MobEffects.read(scope, entity, toxicthreadEffect);
+                const carrier = previous === null ? MobEffects.apply(scope, entity, toxicthreadEffect, venom, 0) : null;
                 const hadVenom = CombatStatus.has(scope, entity, "poison") || CombatStatus.has(scope, entity, "toxic");
                 const outcome = CombatStatus.impose(scope, entity, "poison", venom);
                 const poisoned = outcome.applied;
-                const dropped = -NativeEffects.boost(scope, entity, "spe", -drop);
+                const before = NativeEffects.effectiveStage(scope, entity, "spe");
+                const owned = carrier === null ? 0 : NativeEffects.boostWindow(scope, entity, { spe: -drop }, venom, "world_combat:move/toxicthread", carrier, null);
+                if (carrier !== null && owned === 0) scope.removeMobEffect(entity, toxicthreadEffect, carrier.key());
+                const dropped = Math.max(0, before - NativeEffects.effectiveStage(scope, entity, "spe"));
                 // 再按实际位移决定收丝或钉住；hitDisplace 让原生抗击退真实生效，拉不动就收成松丝。
                 const selfAt = scope.observe(current.actor());
                 let moved = 0, pinned = false;

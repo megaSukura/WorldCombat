@@ -5,12 +5,12 @@
  *
  * 翻译：把「抓一把泥甩到对手脸上」翻成即时战斗里一件有形状的小事——泥团沿低弧线抛出，糊在脸上，
  * 眼睛被遮住，之后出手会偏。这一招必定生效，代价是本身很轻。
- * 命中下降是共享能力等级（`NativeEffects.boost(world, target, "accuracy", -n)`），和影子分身的闪避一样走全战斗者共有的载体。
+ * 命中下降是共享能力等级（`NativeEffects.boostWindow(world, target, "accuracy", -n)`），和影子分身的闪避一样走全战斗者共有的载体。
  *
  * 数值来源（每项读不同的个体数据）：
  *   splat     特攻与等级决定泥团轻重；厚泥再乘 1.18。
  *   blind     特攻每满 100 加 1 级，基础 1 级；厚泥再多 1 级（夹 1..3）。
- *   mudTicks  体重与等级决定脸上泥迹画面停留多久，是反馈时长；命中下降本身不会随泥迹干掉恢复。
+ *   mudTicks  体重与等级决定脸上泥迹画面停留多久，同时是减益时长；命中下降随泥迹结束恢复。
  *   splash    体重与等级决定溅出的泥点数量，同时驱动表现的密度。
  *   arcSpeed  速度决定出手快慢，厚泥更沉更慢。
  *   radius    体型高度决定泥团判定大小。
@@ -88,7 +88,7 @@ namespace PokemonSkills {
     describe("mudslap", [
         { key: "description.0", values: ["splat","blind"] },
         { key: "description.1", values: ["arcSpeed", "reach", "radius", "steer"] },
-        { key: "description.2", values: [] },
+        { key: "description.2", values: ["mudTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] }
     ]);
 }

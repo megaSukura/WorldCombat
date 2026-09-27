@@ -19,7 +19,7 @@ namespace NativeGrowthDefaults {
             return;
         }
         var target = event.target();
-        if (target === null || !target.wild() || String(event.actor().owner()) === "") return;
+        if (target === null || !(target.wild() || event.trainerDefeat()) || String(event.actor().owner()) === "") return;
         context.records.push({ id: "defeat", amount: 1 });
         for (var i = 0; i < event.recipientCount(); i++) {
             var allocation = context.recipients[i], recipient = allocation.native, pokemon = recipient.pokemon();

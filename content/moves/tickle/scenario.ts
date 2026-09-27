@@ -21,6 +21,12 @@ Smoke.scenario("tickle", function (stage) {
             baseArmor: baseArmor, armor: stage.attribute(target, "minecraft:generic.armor"),
             casterHp: caster.health(), targetHp: target.health()
         });
-        stage.done();
+        stage.setPp(caster, "tickle", 0);
+        stage.command("effect clear " + target.ref.split("/")[0] + " world_combat:ticklish_fit");
+        stage.after(5, function () {
+            stage.expect(Math.abs(stage.attribute(target, "minecraft:generic.attack_damage") - baseAttack) < 0.001, "clearing the fit restores attack");
+            stage.expect(Math.abs(stage.attribute(target, "minecraft:generic.armor") - baseArmor) < 0.001, "clearing the fit restores armor");
+            stage.done();
+        });
     }, "tickle lands on the target");
 });

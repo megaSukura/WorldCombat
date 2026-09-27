@@ -6,13 +6,10 @@ namespace PokemonSkills {
             const at=CompanionBehavior.point(target.point),delta=at.minus(self.position());
             const route=aerialaceRoute(world,source,foe,at,delta,p("aerialace","pursuit",world));
             if(!route.ready)return false;
-            const incoming=self.grounded()?WorldGeometry.flatUnit(route.goal.minus(route.waypoint),delta):WorldGeometry.basis(route.goal.minus(route.waypoint),delta).forward;
-            const returnDirection=incoming.scale(-1).minus(route.side.scale(.5)).unit();
-            const width=p("aerialace","laneWidth",world),reserve=Math.min(.9,p("aerialace","pursuit",world)*.24);
-            const a=route.goal.plus(route.side.scale(self.width()*.4+width*.3));
-            const b=route.goal.plus(returnDirection.scale(reserve)).minus(route.side.scale(self.width()*.5+width*.7)).minus(incoming.scale(width*.5));
-            const facts=world.observe(foe);
-            return !!facts&&WorldGeometry.bodySegment(a,b,Math.max(.12,width*.28)).intersects(facts.boundsMin(),facts.boundsMax());
+            const width=p("aerialace","laneWidth",world),reserve=Math.min(2.4,p("aerialace","pursuit",world)*.25);
+            const contact=world.closestPoint(foe,route.goal);
+            return contact.minus(route.goal).length()<=self.width()*.5+p("aerialace","bladeReach",world)+reserve
+                &&WorldGeometry.blockHit(world,route.goal,contact)===null;
         });
     }
     CompanionBehavior.registerUse("aerialace",{

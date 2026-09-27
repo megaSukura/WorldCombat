@@ -45,9 +45,14 @@ namespace PokemonSkills {
             const blades = Math.max(6, Math.round(p("growth", "blades", action)));
             const window = Math.max(80, Math.round(p("growth", "grownTicks", action)));
             const scale = spread / growthReferenceRadius;
-            const actualAtk = NativeEffects.boost(world, actor, "atk", atk);
-            const actualSpa = NativeEffects.boost(world, actor, "spa", spa);
-            growBody(world, actor, p("growth", "bodyGain", action), window);
+            const previous = MobEffects.read(world, actor, "world_combat:grown");
+            const renew = NativeEffects.ownsBoostWindow(world, actor, "world_combat:move/growth", previous);
+            const beforeAtk = NativeEffects.effectiveStage(world, actor, "atk"), beforeSpa = NativeEffects.effectiveStage(world, actor, "spa");
+            const carrier = growBody(world, actor, p("growth", "bodyGain", action), window);
+            if (carrier && (renew || !previous || String(carrier.key()) !== String(previous.key()))) NativeEffects.boostWindow(world, actor, renew ? {} : { atk: atk, spa: spa }, carrier.duration(),
+                "world_combat:move/growth", carrier, previous);
+            const actualAtk = NativeEffects.effectiveStage(world, actor, "atk") - beforeAtk;
+            const actualSpa = NativeEffects.effectiveStage(world, actor, "spa") - beforeSpa;
             const body = world.observe(actor);
             if (body === null) { done(action); return; }
             const sun = sunlight(world, body.position()) >= growthSunlight;

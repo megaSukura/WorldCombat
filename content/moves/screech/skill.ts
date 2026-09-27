@@ -7,7 +7,7 @@
  * 出手：短起手（windup 在喉间聚起声浪）后提交；声音不飞、不铺地，提交后前沿从嘴里逐刻向前推进。
  * 命中：每刻只取「前一刻前沿到这一刻前沿」的薄片（WorldGeometry.bodyPolygon + selectBodies，真实实体箱相交），
  *       只对首次被薄片扫过的敌人生效一次（同目标不叠降）；波过之后才走进来的人不会被补扫。每个被扫到的敌人
- *       挂共享身份 world_combat:status/deafened（本单元效果 world_combat:screech_ringing，只借身份），
+ *       挂共享身份 world_combat:status/deafened（本单元效果 world_combat:screech_ringing），
  *       再 NativeEffects.boost 下降物防：宝可梦损失原生防御等级，其他生物落到护甲属性。
  * 反制：走廊很窄，侧移一步就出线；声音不需要通视，躲墙后没有用，但前沿到达之前离开走廊就不会被扫到。
  */
@@ -109,10 +109,16 @@ namespace PokemonSkills {
                     if (ref === actorRef || scope.friendly(target) || hitRefs[ref]) return;
                     hitRefs[ref] = true;
                     const centre = facts.position();
-                    // 降阶按实际 delta 计数：免疫或已到底时 boost 返回 0，不发假提示。
-                    const lost = -NativeEffects.boost(scope, target, "def", -drop);
-                    // 耳鸣身份独立于能力等级：无论是否降阶都挂上，供别的单元按身份读取。
-                    MobEffects.apply(scope, target, screechEffect, ringing, 0);
+                    if (MobEffects.read(scope, target, screechEffect) !== null) return;
+            const carrier = MobEffects.apply(scope, target, screechEffect, ringing, 0);
+            const before = NativeEffects.effectiveStage(scope, target, "def");
+            const window = carrier ? NativeEffects.boostWindow(scope, target, { def: -drop }, ringing, "world_combat:move/screech", carrier) : 0;
+            const lost = Math.max(0, before - NativeEffects.effectiveStage(scope, target, "def"));
+            if (!window || lost <= 0) {
+                if (window) NativeEffects.windowClose(scope, window);
+                if (carrier) scope.removeMobEffect(target, screechEffect, carrier.key());
+                return;
+            }
                     if (lost > 0) {
                         hits++;
                         WorldFeedback.emit(scope, screechScene, 1, centre,

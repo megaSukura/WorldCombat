@@ -195,7 +195,10 @@ public final class CompanionInput {
         var actor = actor();
         if (actor == null || mc.player == null || state == null) return null;
         var skill = state.skills().get(slot);
-        String kind = ComplexInput.kind(slot).equals("entity") ? "aim" : skill.kind();
+        String step = ComplexInput.kind(slot);
+        // A menu previews its first sample before ComplexInput creates the selection session.
+        if (step.isEmpty() && !skill.preview().input().steps().isEmpty()) step = skill.preview().input().steps().getFirst();
+        String kind = step.equals("entity") ? "aim" : skill.kind();
         Vec3 origin = actor.getBoundingBox().getCenter();
         Vec3 eye = mc.player.getEyePosition(), look = mc.player.getLookAngle();
         Vec3 rayEnd = eye.add(look.scale(48));
@@ -293,6 +296,11 @@ public final class CompanionInput {
     }
     static long submit(String operation, int value, Aim aim, String version, String input) {
         if (state == null || Minecraft.getInstance().getConnection() == null) return 0;
+        // An entity input sample keeps its reference in the payload; the action's outer target
+        // still follows its point/motion contract, including aim updates while a cast is queued.
+        if (Set.of("cast", "input-update", "input-stop", "input-release").contains(operation) && value >= 0 && value < state.skills().size()
+            && Set.of("point", "motion").contains(state.skills().get(value).kind()))
+            aim = new Aim(ControlCommand.NONE, aim.point(), aim.direction(), aim.origin(), aim.end(), aim.reason());
         ++sequence;
         if (!operation.equals("input-update")) awaiting = sequence;
         var packet = new ControlCommand(state.session(), sequence, state.epoch(), state.tick(), state.actor(), state.generation(),

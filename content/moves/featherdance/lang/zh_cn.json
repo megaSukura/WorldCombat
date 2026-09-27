@@ -3,7 +3,7 @@
   "worldcombat.skill.featherdance.use.0": "削弱一个靠物攻输出的对手",
   "worldcombat.skill.featherdance.use.1": "用一小片绒雾封住必经的门口",
   "worldcombat.skill.featherdance.use.2": "在队友被追时替它压住近战威胁",
-  "worldcombat.skill.featherdance.description.0": "被羽绒覆身的目标立刻损失 %1$s 级攻击（按能力等级永久变化，不会自行恢复）；羽绒覆身标记持续 %2$s，覆羽期间伙伴不会对它重复撒羽。",
+  "worldcombat.skill.featherdance.description.0": "羽绒覆身使目标攻击降低 %1$s 级，持续 %2$s；羽绒脱落或被清除后恢复。已经覆羽的目标不会再次叠加降攻。",
   "worldcombat.skill.featherdance.description.1": "羽绒云在落点摊开半径 %1$s 格的绒雾，持续 %2$s；走进这片绒雾的非友方同样损失攻击、被覆上羽绒（每人在同一片绒雾里只中一次）。可以直接点敌人，也可以点空地提前铺羽，绒雾落在云团实际碰到或耗尽的地方。",
   "worldcombat.skill.featherdance.description.2": "羽绒以 %1$s 格/刻飞出，判定半径 %2$s 格，撒羽距离 %3$s 格（射程 %4$s 格）；起手 %5$s。",
   "worldcombat.skill.featherdance.dense.on": "厚羽：同一团羽绒压得更实，覆盖更小、一次削得更深。",

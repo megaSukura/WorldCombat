@@ -93,9 +93,13 @@ namespace PokemonSkills {
                 // 目光要被看见：通视才算扫到。
                 if (facts.friendly() || !world.clear(origin, facts.position())) return;
                 // 防御真实下降才算扫破；已满负级或被能力拒绝时不占回执、不留身份，也不播成功。
-                const applied = Math.max(0, -NativeEffects.boost(world, actor, "def", -drop));
-                if (applied === 0) return;
-                MobEffects.apply(world, actor, leerEffect, scowl, 0);
+                const prior = MobEffects.read(world, actor, leerEffect);
+                const carrier = prior === null ? MobEffects.apply(world, actor, leerEffect, scowl, 0) : null;
+                const before = NativeEffects.effectiveStage(world, actor, "def");
+                const owned = carrier === null ? 0 : NativeEffects.boostWindow(world, actor, { def: -drop }, scowl, "world_combat:move/leer", carrier, null);
+                if (carrier !== null && owned === 0) world.removeMobEffect(actor, leerEffect, carrier.key());
+                const applied = before - NativeEffects.effectiveStage(world, actor, "def");
+                if (applied <= 0) return;
                 hits++;
                 softened += applied;
                 WorldFeedback.emit(world, leerScene, 1, facts.position(),

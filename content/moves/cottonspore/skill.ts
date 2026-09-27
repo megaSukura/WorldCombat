@@ -75,11 +75,14 @@ namespace PokemonSkills {
                 if (cottonsporePowderImmune(world, actor)) return;
                 if (!world.clear(origin, facts.position())) return;
                 // 只有真的掉了一级速度才黏住：封底、免疫或拒绝时不留下假的棉絮标记，也不报成功。
-                const applied = -NativeEffects.boost(world, actor, "spe", -drop);
-                if (applied <= 0) return;
-                const mark = MobEffects.apply(world, actor, cottonsporeEffect, cling, 0);
+                const prior = MobEffects.read(world, actor, cottonsporeEffect);
+                const carrier = prior === null ? MobEffects.apply(world, actor, cottonsporeEffect, cling, 0) : null;
+                const before = NativeEffects.effectiveStage(world, actor, "spe");
+                const owned = carrier === null ? 0 : NativeEffects.boostWindow(world, actor, { spe: -drop }, cling, "world_combat:move/cottonspore", carrier, null);
+                if (carrier !== null && owned === 0) world.removeMobEffect(actor, cottonsporeEffect, carrier.key());
+                const applied = before - NativeEffects.effectiveStage(world, actor, "spe");
+                if (applied <= 0 || carrier === null) return;
                 caught++;
-                if (mark === null) return;
                 WorldFeedback.emit(world, cottonsporeScene, 1, facts.position(),
                     { moment: "clung", target: String(actor.ref()), drop: applied, tufts: 6 + applied * 6 }, 26);
                 WorldFeedback.text(world, cottonsporeAbove(facts.position()), "world_combat.move.cottonspore.text.clung", [applied], 34);

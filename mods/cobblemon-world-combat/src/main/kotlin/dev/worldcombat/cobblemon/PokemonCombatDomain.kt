@@ -10,6 +10,11 @@ import dev.worldcombat.core.runtime.ActionContext
 class PokemonCombatDomain : CombatDomain {
     override fun id() = "cobblemon"
     override fun supports(entity: LivingEntity) = entity is PokemonEntity
+    override fun riderMotion(entity: LivingEntity) = entity is PokemonEntity && entity.ridingController != null
+    override fun riderMotionChanged(entity: LivingEntity, active: Boolean) {
+        // Retire pre-handoff drive momentum while preserving stamina and the current riding style.
+        (entity as PokemonEntity).ridingController?.context?.state?.rideVelocity?.set(net.minecraft.world.phys.Vec3.ZERO, true)
+    }
     override fun identity(entity: LivingEntity) = (entity as PokemonEntity).pokemon.uuid
     override fun movementControl(entity: LivingEntity, controlled: Boolean) {
         val pokemon = entity as PokemonEntity

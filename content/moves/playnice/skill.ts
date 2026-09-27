@@ -37,11 +37,12 @@ namespace PokemonSkills {
     }
 
     /**
-     * 劝一个人：先降攻击（能力下降始终保留），再尝试用原生目标租约平息敌意。
+     * 劝一个人：先申请原生目标租约平息敌意，成功后在和睦期间降低攻击。
      * 真实降攻与是否接受平息分别反馈；只有租约真实接受才挂握手与共享身份。返回实际降级与是否平息。
      */
     function playniceCalmActor(world: CombatWorld, actor: CombatActor, drop: number, calm: number, sparkles: number): { calmed: boolean; dropped: number } {
-        const dropped = Math.max(0, -NativeEffects.boost(world, actor, "atk", -drop));
+        const before = NativeEffects.effectiveStage(world, actor, "atk");
+        let dropped = 0;
         const carrier = MobEffects.apply(world, actor, playniceEffect, calm, 0);
         const at = world.observe(actor);
         if (carrier === null || !carrier.tagged(playniceSpot) || at === null) return { calmed: false, dropped: dropped };
@@ -56,11 +57,13 @@ namespace PokemonSkills {
         let lease: any = null;
         try { lease = JSON.parse(world.targetLeaseState(actor)); } catch (error) { lease = null; }
         if (!lease || lease.active !== true || lease.mode !== "calm") {
-            // 拒绝平息（Boss、玩家、无当前目标等）：start 已撤回载体，只留真实降攻的小纹。
+            // 拒绝平息（Boss、玩家、无当前目标等）：start 已撤回载体，不施加降攻。
             WorldFeedback.emit(world, playniceScene, 1, at.position(),
                 { moment: "downdrop", target: String(actor.ref()), drop: dropped, sparkles: sparkles }, 26);
             return { calmed: false, dropped: dropped };
         }
+        NativeEffects.boostWindow(world, actor, { atk: -drop }, calm, "world_combat:move/playnice", carrier, null);
+        dropped = Math.max(0, before - NativeEffects.effectiveStage(world, actor, "atk"));
         WorldFeedback.emit(world, playniceScene, 1, at.position(),
             { moment: "befriend", target: String(actor.ref()), drop: dropped, sparkles: sparkles }, 30);
         WorldFeedback.text(world, playniceAbove(at.position()), dropped > 0 ? playniceBefriendText : playniceHeldText, [dropped], 40);
@@ -79,7 +82,7 @@ namespace PokemonSkills {
         const world = effect.world(), actor = effect.target(), state = JSON.parse(effect.state());
         if (!world.valid(actor) || !MobEffects.matches(world, actor, state.carrier)) { effect.end(); return; }
         if (!world.targetLease(actor, null, effect.remaining())) {
-            // 原生入口拒绝：不宣布停手，撤掉载体，只留降攻。
+            // 原生入口拒绝：撤掉载体，不施加降攻。
             MobEffects.consume(world, actor, state.carrier.id);
             effect.end(); return;
         }

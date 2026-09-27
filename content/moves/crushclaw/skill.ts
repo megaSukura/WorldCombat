@@ -29,7 +29,7 @@ namespace PokemonSkills {
         freeMovement: true,
         id: "crushclaw",
         name: "Crush Claw",
-        description: "踏前一步，单爪前伸够到第一个接触后向外一拉，把对手的护甲撕开：撕中时最有可能让目标防御下降一级，目标已经带着破防身份时还会多降一级。刀路只打真正碰到的第一个非友方，前排的身体和墙会先截住它；比碎岩重、比铁尾快。",
+        description: "踏前伸爪，抓住前方第一个对手后向外撕扯，有机会撕开护甲；已有破防效果时，缺口会被撕得更深。前排身体和墙壁能挡下爪击。",
         uses: ["踏前单爪够到再外拉撕甲", "对已经被砸开的目标掀得更深", "在中近距离一记换取防御下降"],
         kind: "aim",
         range: 3.0,
@@ -108,12 +108,18 @@ namespace PokemonSkills {
                 if (world.random() < chance) {
                     const amount = stages + (CombatStatus.has(world, victim, "guardbroken") ? deepen : 0);
                     // 护甲真的被撕开（未被免疫）才留撕口与标记。
-                    if (NativeEffects.boost(world, victim, "def", -amount) !== 0
-                        && MobEffects.apply(world, victim, crushclawMark, tearTicks, 0) !== null) {
+                    const previous = MobEffects.read(world, victim, crushclawMark);
+                    const before = NativeEffects.effectiveStage(world, victim, "def");
+                    const carrier = MobEffects.apply(world, victim, crushclawMark, tearTicks, 0);
+                    const windowId = carrier ? NativeEffects.boostWindow(world, victim, { def: -amount }, tearTicks,
+                        "world_combat:move/crushclaw", carrier, previous) : 0;
+                    if (carrier && !windowId) world.removeMobEffect(victim, crushclawMark, carrier.key());
+                    const dropped = Math.max(0, before - NativeEffects.effectiveStage(world, victim, "def"));
+                    if (dropped > 0) {
                         torn = 1;
                         WorldFeedback.emit(world, crushclawScene, 1, at,
-                            { moment: "tear", target: String(victim.ref()), stages: amount, scale: 1 }, 26);
-                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), crushclawTearText, [amount], 30);
+                            { moment: "tear", target: String(victim.ref()), stages: dropped, scale: 1 }, 26);
+                        WorldFeedback.text(world, at.plus(WorldCombat.point(0, 1.2, 0)), crushclawTearText, [dropped], 30);
                     }
                 }
             } else {

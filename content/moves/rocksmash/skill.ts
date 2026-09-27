@@ -130,8 +130,16 @@ namespace PokemonSkills {
                 const chosen = mostHit();
                 if (landed && chosen !== null && scope.valid(chosen) && scope.random() < chance) {
                     // 只有防御真的被砸低（未被免疫挡下）才留裂纹与标记，画面与实际结果一致。
-                    const dropped = NativeEffects.boost(scope, chosen, "def", -stages);
-                    if (dropped !== 0 && MobEffects.apply(scope, chosen, rocksmashMark, markTicks, 0) !== null) {
+                    const existing = MobEffects.read(scope, chosen, rocksmashMark);
+                    const carrier = existing ? null : MobEffects.apply(scope, chosen, rocksmashMark, markTicks, 0);
+                    const before = NativeEffects.effectiveStage(scope, chosen, "def");
+                    const window = carrier ? NativeEffects.boostWindow(scope, chosen, { def: -stages }, markTicks, "world_combat:move/rocksmash", carrier) : 0;
+                    const dropped = NativeEffects.effectiveStage(scope, chosen, "def") - before;
+                    if (carrier && (!window || dropped === 0)) {
+                        if (window) NativeEffects.windowClose(scope, window);
+                        scope.removeMobEffect(chosen, rocksmashMark, carrier.key());
+                    }
+                    if (dropped !== 0) {
                         const body = scope.observe(chosen);
                         if (body !== null) {
                             WorldFeedback.emit(scope, rocksmashScene, 1, body.position(),

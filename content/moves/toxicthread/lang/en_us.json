@@ -3,7 +3,7 @@
   "worldcombat.skill.toxicthread.use.0": "Get the drop on a fast target",
   "worldcombat.skill.toxicthread.use.1": "Reel a charging melee threat out of position",
   "worldcombat.skill.toxicthread.use.2": "Add a lasting poison to a stubborn foe",
-  "worldcombat.skill.toxicthread.description.0": "A target struck by the thread drops %1$s Speed stage(s) and is poisoned for %2$s; the Speed drop lasts until combat ends, and the poison deals damage over time. Poison-immune targets are not poisoned but still lose Speed and are still caught by the thread.",
+  "worldcombat.skill.toxicthread.description.0": "Toxic thread lowers Speed by %1$s stages and poisons the target for %2$s. Speed returns when the thread falls away or is cleansed. Poison immunity does not prevent the thread from slowing a target.",
   "worldcombat.skill.toxicthread.description.1": "With Reel a hit drags the target up to %1$s blocks toward you along the thread; with Pin it instead roots the target in place for %2$s.",
   "worldcombat.skill.toxicthread.description.2": "The thread flies at %1$s blocks/tick with a %2$s-block hit radius over up to %3$s blocks; windup %4$s.",
   "worldcombat.skill.toxicthread.reel.on": "Reel: on a hit, drag the target toward you along the thread to break its position or pull it into melee. A body that resists the pull (a high-resistance boss, for instance) only takes the poison and the slow; the thread goes slack instead of dragging it.",
@@ -31,5 +31,5 @@
   "world_combat.move.toxicthread.text.refresh": "Already poisoned; the thread just pulled tighter",
   "effect.world_combat.toxic_thread_laced": "Laced",
   "worldcombat.skill.toxicthread.description.blocked": "The thread is a projectile: terrain in its path blocks it, and a miss only leaves a small splash of venom with no effect.",
-  "worldcombat.skill.toxicthread.description.laced": "A caught target carries a Laced mark for as long as the poison lasts; the mark itself adds no damage or slow, and the companion will not spit at an already-laced target again."
+  "worldcombat.skill.toxicthread.description.laced": "The thread lasts as long as the poison’s initial duration. Removing the thread restores the Speed lost to this move. Repeated hits do not stack the slow; poison expires or is cleansed separately."
 }

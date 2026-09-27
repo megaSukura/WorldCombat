@@ -8,6 +8,7 @@ import com.cobblemon.mod.common.api.pokemon.stats.Stat
 import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
 import dev.worldcombat.cobblemon.CobblemonWorldCombat
+import dev.worldcombat.cobblemon.NativeNpcChallenges
 import dev.worldcombat.core.world.CombatServices
 import net.minecraft.server.level.ServerLevel
 
@@ -18,13 +19,15 @@ class GrowthEvent internal constructor(private val kind: String, actor: PokemonE
     private val pokemon = actor.pokemon
     private val defeated = target?.pokemon
     private val owner = pokemon.getOwnerUUID()
+    private val playerOwner = pokemon.getOwnerPlayer()?.takeIf { server.playerList.getPlayer(it.uuid) === it }
+    private val recipientParty = if (kind == "defeat") playerOwner?.let { Cobblemon.storage.getParty(it) } else null
+    private val trainerDefeatValue = kind == "defeat" && target != null && NativeNpcChallenges.trainerOpponent(actor, target)
     private val actorView = PokemonView.capture(pokemon)
     private val targetView = defeated?.let(PokemonView::capture)
     private val moveView = moveValue?.let(PokemonMoveView::capture)
     private var open = true
     private val progress = linkedMapOf<String, Int>()
-    private val recipients = (if (kind == "defeat" && owner != null)
-        Cobblemon.storage.getParty(owner, server.registryAccess()).toList() else emptyList())
+    private val recipients = recipientParty?.filter { currentRecipient(it) }.orEmpty()
         .map { GrowthRecipient(this, it, it === pokemon) }
     fun kind() = kind
     fun actor() = actorView
@@ -32,6 +35,7 @@ class GrowthEvent internal constructor(private val kind: String, actor: PokemonE
     fun move() = moveView
     fun amount() = amountValue
     fun cause() = causeValue
+    fun trainerDefeat() = trainerDefeatValue
     fun recipientCount() = recipients.size
     fun recipient(index: Int) = recipients[index]
     fun config(key: String): Double = when (key) {
@@ -53,7 +57,7 @@ class GrowthEvent internal constructor(private val kind: String, actor: PokemonE
     internal fun apply() {
         checkOpen()
         check(pokemon.getOwnerUUID() == owner) { "Growth ownership changed" }
-        recipients.forEach { check(it.individual.getOwnerUUID() == owner) { "Recipient ownership changed" } }
+        recipients.forEach { check(currentRecipient(it.individual)) { "Recipient ownership changed" } }
         open = false
         progress.forEach { (id, amount) -> NativeProgress.add(pokemon, id, amount, moveValue?.template, defeated) }
         recipients.forEach { recipient ->
@@ -69,6 +73,13 @@ class GrowthEvent internal constructor(private val kind: String, actor: PokemonE
                 CobblemonWorldCombat.LOGGER.info("WorldCombat growth pokemon={} experience={}", individual.uuid, result.experienceAdded)
             }
         }
+    }
+    private fun currentRecipient(individual: Pokemon): Boolean {
+        val player = playerOwner ?: return false
+        val party = recipientParty ?: return false
+        val coordinates = individual.storeCoordinates.get() ?: return false
+        return server.playerList.getPlayer(player.uuid) === player && Cobblemon.storage.getParty(player) === party &&
+            coordinates.store === party && coordinates.get() === individual && individual.getOwnerPlayer() === player
     }
     internal fun close() { open = false }
     internal fun quantity(value: Double): Int {

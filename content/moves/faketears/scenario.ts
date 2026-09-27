@@ -22,6 +22,16 @@ Smoke.scenario("faketears", function (stage) {
             targetMoved: Math.round(stage.travelled(target) * 10) / 10,
             damageToTarget: stage.damageTo(target)
         });
-        stage.done();
+        const timedTarget = target;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:fake_tears_fluster"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).spd || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "faketears", 0);
+        stage.team("timed-b-faketears", [caster, timedTarget]);
+        stage.boost(timedTarget, { spd: 1 });
+        stage.until(400, function () { return !stage.hasMobEffect(timedTarget, "world_combat:fake_tears_fluster"); }, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:fake_tears_fluster"), "natural expiry removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).spd || 0) === 1, "natural expiry restores this move's contribution while preserving a separate +1");
+            stage.done();
+        }, "fake tears expires with its ability window");
     }, "faketears flusters the target");
 });

@@ -49,7 +49,7 @@ namespace CobblemonCompanionUi {
         const Component: any = J.loadClass("net.minecraft.network.chat.Component");
         let state: any = {}, details: any = null, lastIdentity = "", ticks = 0;
         let hud: any = null, title: any, phaseLabel: any, hint: any, cards: any[] = [], hudBox: any = null;
-        let viewport = "", modal = "", pending: any = null, loadoutIdentity = "", language = "";
+        let viewport = "", modal = "", pending: any = null, loadoutIdentity = "", availabilityIdentity = "", language = "";
         let attributeRows: AttributeView.Row[] | null = null, attributeNature: any = null;
         const attributes = new AttributeView.View(() => close());
         let notice = "", noticeUntil = 0, settingMove = 0;
@@ -76,7 +76,10 @@ namespace CobblemonCompanionUi {
             submit: (item, aim) => submit(item, aim), continuous: item => !!item.continuous,
             changed: item => { pending = item; if (!item) clearTarget(); }, reject: reason => announce(reason)
         });
-        function selectionAim(item: any): any { return JSON.parse(item.target === "block" ? Bridge.blockAim() : Bridge.look()); }
+        function selectionAim(item: any): any {
+            return JSON.parse(item.target === "block" ? Bridge.blockAim()
+                : item.command === "cast" ? Bridge.skillAim(item.slot) : Bridge.look());
+        }
         function announce(value: any): void { notice = plain(value); noticeUntil = ticks + 100; if (modal === "settings") editor.notice(value); if (modal === "attributes") attributes.notice(value); }
         function saveField(skill: any, field: any, value: any): void {
             if (revisions.begin(() => Bridge.request(config.channel, state.pokemon, JSON.stringify({ op: "configure", move: skill.id,
@@ -297,6 +300,10 @@ namespace CobblemonCompanionUi {
             if (identity !== lastIdentity) { lastIdentity = identity; attributeRows = null; attributeNature = null; details = null; inspectPending = null; inspectQueued = false; invalidated = true; notificationRevision = -1; hud = null; revisions.finish(); close(); picking.cancel(); }
             const loadout = JSON.stringify([identity, state.nativeMoves || (state.skills || []).map((skill: any) => skill.id)]);
             const loadoutChanged = loadoutIdentity !== loadout; loadoutIdentity = loadout;
+            // Live server bindings report ground/riding/resource eligibility without changing the loadout.
+            // Reuse the existing invalidation/coalescing path so an open menu follows that transition.
+            const availability = JSON.stringify([identity, (state.skills || []).map((skill: any) => [skill.id, skill.available, skill.reason])]);
+            if (availabilityIdentity !== availability) { availabilityIdentity = availability; invalidated = true; }
             if (pending && state.screen && !state.uiActive) { picking.cancel(); announce(tr("target_cancelled")); }
             // Summary dispatch supplies its selected move immediately after this identity update.
             if ((invalidated && (modal || pending || !details && !state.inspection)) || loadoutChanged && !state.inspection) inspect();

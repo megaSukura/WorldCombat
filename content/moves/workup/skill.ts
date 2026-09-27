@@ -6,7 +6,7 @@
  *
  * 一幕半：
  *   起（windup 播「聚气」，提交前只观察与预告，可被打断，打断不花代价）。
- *   抬（提交后）：NativeEffects.boost 同时抬起物攻与特攻（宝可梦走原生等级，其他战斗者落到攻击属性），
+ *   抬（提交后）：boostWindow 在斗志存续期间抬起物攻与特攻，
  *     挂上共享身份 world_combat:status/roused 的「斗志」标记（可见窗口），并播放一次火光爆发；
  *     若这一次触发了受伤加成，换成更大的背水爆发与「背水一战」浮字。
  *
@@ -65,9 +65,14 @@ namespace PokemonSkills {
             const surge = workupSurge(world, actor);
             const window = Math.max(80, Math.round(p("workup", "rousedTicks", action)));
             // 以实际落下的等级为准：某一项已到顶时不再虚报收益，文本与回执都按真实变化。
-            const atkGain = Math.max(0, NativeEffects.boost(world, actor, "atk", atk));
-            const spaGain = Math.max(0, NativeEffects.boost(world, actor, "spa", spa));
+            const previous = MobEffects.read(world, actor, workupRoused);
+            const beforeAtk = NativeEffects.effectiveStage(world, actor, "atk"), beforeSpa = NativeEffects.effectiveStage(world, actor, "spa");
             const mark = MobEffects.apply(world, actor, workupRoused, window, 0);
+            const windowId = mark ? NativeEffects.boostWindow(world, actor, { atk: atk, spa: spa }, window,
+                "world_combat:move/workup", mark, previous) : 0;
+            if (mark && !windowId) world.removeMobEffect(actor, workupRoused, mark.key());
+            const atkGain = Math.max(0, NativeEffects.effectiveStage(world, actor, "atk") - beforeAtk);
+            const spaGain = Math.max(0, NativeEffects.effectiveStage(world, actor, "spa") - beforeSpa);
             // 只要有一项真的多涨了一级，就是背水式触发。
             const comeback = atkGain + spaGain > 2;
             const body = world.observe(actor);

@@ -28,7 +28,7 @@ namespace CompanionBehavior {
     function screechDroppable(context: WorldBehavior.Context, ref: string): boolean {
         try {
             const scope = world(context), actor = scope.actor(ref);
-            return actor !== null && scope.valid(actor) && NativeEffects.effectiveStage(scope, actor, "def") > -6;
+            return actor !== null && scope.valid(actor) && MobEffects.read(scope, actor, "world_combat:screech_ringing") === null && NativeEffects.effectiveStage(scope, actor, "def") > -6;
         } catch (error) { return true; }
     }
 

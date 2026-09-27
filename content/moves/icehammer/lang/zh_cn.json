@@ -5,7 +5,7 @@
   "worldcombat.skill.icehammer.use.1": "在真实接触点的自然地表结冰逼对手走位",
   "worldcombat.skill.icehammer.use.2": "对已经冰缓的目标补一记更重的碎冰",
   "worldcombat.skill.icehammer.description.0": "沿瞄准方向打出一记真实短冰拳路，先碰到的目标才吃这一记，造成 %1$s 点物理伤害；出手距离 %2$s 格。若该目标正处于冰缓，这一记伤害提高约 15%。",
-  "worldcombat.skill.icehammer.description.1": "命中把目标沿远离自己的方向砸退 %1$s 格（受方块阻挡时更短），自身速度按实际事实下降（约 %2$s 级，已到最低速则更少或不再下降），移动随之变慢。",
+  "worldcombat.skill.icehammer.description.1": "命中将目标沿远离自己的方向击退最多 %1$s 格，遇到方块会提前停下；自身速度下降 %2$s 级，移动也随之变慢。",
   "worldcombat.skill.icehammer.description.2": "命中给目标挂上 %1$s 冰缓，其间移动速度降低 15%；拳面真实接触点下方可达的自然地表会结出一片会打滑的整块冰，半径 %2$s 格、持续 %3$s，到期后原方块复原。机器与容器等非自然地材不会被换冰；没有可达地面就只碎冰。",
   "worldcombat.skill.icehammer.glaciate.on": "积冰式：冰缓时长 ×1.4、冰面半径 %1$s 格、冰面保留 %2$s 秒；代价是伤害 ×0.92、起手与收招更慢。",
   "worldcombat.skill.icehammer.glaciate.off": "碎冰式：一击更重、出手更快，但冰缓短、冰面小。",

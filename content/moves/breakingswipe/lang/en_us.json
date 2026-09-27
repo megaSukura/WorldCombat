@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.breakingswipe.summary": "Stands still and sweeps its tough tail from one side to the other at the body's real height in a wide arc: every enemy the tail passes takes contact damage, is shoved away and has its Attack lowered by one stage, with the actual stages reported. Wide mode covers more, focused mode hits harder.",
+  "worldcombat.skill.breakingswipe.summary": "Sweeps its tail in a wide arc without moving, dealing contact damage, lowering Attack and pushing enemies away. Broad Sweep covers more ground; Focused Sweep hits harder.",
   "worldcombat.skill.breakingswipe.use.0": "Lower a whole crowd pressing in at once",
   "worldcombat.skill.breakingswipe.use.1": "Shove everyone adjacent away and open space",
   "worldcombat.skill.breakingswipe.use.2": "Cut several physical attackers at once while they crowd together",

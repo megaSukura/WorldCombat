@@ -4,7 +4,7 @@
   "worldcombat.skill.mistball.use.1": "对上法系目标时高概率压特攻",
   "worldcombat.skill.mistball.use.2": "抛一道弧线绕过前排够到后排",
   "worldcombat.skill.mistball.description.0": "羽绒雾球沿准心抛向一个目标或空点，命中造成约 %1$s 点超能力特殊伤害。",
-  "worldcombat.skill.mistball.description.1": "命中并实际造成伤害后有 %1$s 概率让目标特攻下降 %2$s 级，并真正挂上羽绒减速 %3$s：缠身期间地面与飞行移动速度降低 35%%，驱散即解；特攻等级按普通能力等级保留（要等脱战才消退，不随缠身结束恢复）。只有减速真的挂上才留下贴身羽绒雾。",
+  "worldcombat.skill.mistball.description.1": "命中后有 %1$s 概率使目标特攻降低 %2$s 级，并用羽绒雾拖慢地面与飞行移动速度 35%%，持续 %3$s。缠身效果不叠加，雾散或被驱散时两项削弱一起结束。",
   "worldcombat.skill.mistball.description.2": "球沿弧线能落到约 %1$s 格远；命中点散开雾团，初速 %2$s 格/刻、下坠 %3$s 格/刻²，走出来是一道弧线。雾团只决定画面大小，不扩大实体命中。",
   "worldcombat.skill.mistball.option.on": "当前浓雾式：雾团更大、缠身概率更高更久，代价是球更慢、威力更低。",
   "worldcombat.skill.mistball.option.off": "当前轻羽式：威力更高、球更快更平，代价是雾团更小、缠身概率更低。",

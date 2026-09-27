@@ -74,7 +74,7 @@ namespace PokemonSkills {
         return JSON.stringify(value);
     }, EffectProtocols.unchanged);
 
-    // 租约申请本身返回是否被宿主接受；接受才宣告起浮（乘骑/无重力属性不宣告），拒绝只等下一次。
+    // 租约申请返回宿主是否接受本次托举；接受才宣告起浮，拒绝则等待下一次申请。
     function magnetriseLift(effect: CombatEffect): boolean {
         const world = effect.world(), self = effect.target(), state = JSON.parse(effect.state());
         return world.groundLift(self, Math.max(0.15, Number(state.lift) || 0.4),

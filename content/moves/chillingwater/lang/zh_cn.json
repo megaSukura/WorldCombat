@@ -3,7 +3,7 @@
   "worldcombat.skill.chillingwater.use.0": "压低对手的物理输出",
   "worldcombat.skill.chillingwater.use.1": "把目标浇湿，让后续水冰招能利用这层湿身",
   "worldcombat.skill.chillingwater.description.0": "命中造成约 %1$s 点特殊伤害。",
-  "worldcombat.skill.chillingwater.description.1": "命中后目标攻击实际下降 %1$s 级（免疫或已到底时不谎报），并带上湿透约 %2$s：湿透期间移动速度降低 10%%，其他水冰招也能读取这层湿身；已经湿透的目标会被激得更冷，这一泼伤害更高、掉攻多一级。",
+  "worldcombat.skill.chillingwater.description.1": "使目标攻击下降 %1$s 级并浇湿 %2$s；湿透期间移动速度降低 10%%。已有湿身会增强这一泼的伤害，首次受冷时额外降低一级攻击。重复泼冷水只延长湿冷，不继续叠加降攻；湿冷消退或被清除时恢复。",
   "worldcombat.skill.chillingwater.description.2": "射程 %1$s 格，水团初速 %2$s 格/刻，判定半径 %3$s 格。",
   "worldcombat.skill.chillingwater.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.chillingwater.growth.0": "%1$s 级起泼溅威力升至 %2$s。",

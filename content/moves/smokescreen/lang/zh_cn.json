@@ -3,7 +3,7 @@
   "worldcombat.skill.smokescreen.use.0": "把对手罩进一片打不准的云里",
   "worldcombat.skill.smokescreen.use.1": "铺在身前，让追来的人先吃一嘴烟",
   "worldcombat.skill.smokescreen.use.2": "封住门口与走廊",
-  "worldcombat.skill.smokescreen.description.0": "站在云里的敌人攻击变弱（攻击伤害降低 20%%），并被呛得下降 %1$s 级命中；这两项都跟着呛眼本身走，离开云后还会随余味残留约 %2$s，然后一起结束，不再留永久降阶。",
+  "worldcombat.skill.smokescreen.description.0": "云里的敌人攻击伤害降低 20%%，命中降低 %1$s 级。离开烟云后，两项削弱仍持续约 %2$s；呛眼被解除时也会一并结束。",
   "worldcombat.skill.smokescreen.description.1": "烟团飞到落点或被墙挡住才绽开成半径约 %1$s 格、存在 %2$s 的云；云只熏敌人、留在原地，站在里面的会被反复熏到，后来踏入的也一样。烟没到之前，目标不会被呛。",
   "worldcombat.skill.smokescreen.description.2": "烟团从 %1$s 格内送出、以 %2$s 的速度扑向落点，到得早晚由这个速度决定，攒烟要 %3$s，冷却 %4$s。云不会移动，铺空了就白费一次冷却；施放者离云超过 48 格或倒下，云也会散去。",
   "worldcombat.skill.smokescreen.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

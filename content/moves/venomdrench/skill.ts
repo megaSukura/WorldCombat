@@ -93,12 +93,20 @@ namespace PokemonSkills {
                     { moment: "pour", path: [String(self.ref()), ref], target: ref, drops: Math.max(6, Math.round(drops / 3)),
                         spread: spread, scale: scale }, 22);
                 if (CombatStatus.has(world, actor, "poison")) {
-                    const atk = Math.max(0, -NativeEffects.boost(world, actor, "atk", -drop));
-                    const spa = Math.max(0, -NativeEffects.boost(world, actor, "spa", -drop));
-                    const spe = Math.max(0, -NativeEffects.boost(world, actor, "spe", -drop));
+                    if (MobEffects.read(world, actor, venomdrenchDrench) !== null) return;
+                    const carrier = MobEffects.apply(world, actor, venomdrenchDrench, linger, drop);
+                    const before = [NativeEffects.effectiveStage(world, actor, "atk"), NativeEffects.effectiveStage(world, actor, "spa"), NativeEffects.effectiveStage(world, actor, "spe")];
+                    const window = carrier ? NativeEffects.boostWindow(world, actor, { atk: -drop, spa: -drop, spe: -drop },
+                        linger, "world_combat:move/venomdrench", carrier) : 0;
+                    const atk = Math.max(0, before[0] - NativeEffects.effectiveStage(world, actor, "atk"));
+                    const spa = Math.max(0, before[1] - NativeEffects.effectiveStage(world, actor, "spa"));
+                    const spe = Math.max(0, before[2] - NativeEffects.effectiveStage(world, actor, "spe"));
                     const applied = atk + spa + spe;
-                    // 印记只说明「这个人刚被毒液黏过」；三围等级已写进公共阶梯，印记到期不会回退它们。
-                    MobEffects.apply(world, actor, venomdrenchDrench, linger, drop);
+                    if (!window || applied === 0) {
+                        if (window) NativeEffects.windowClose(world, window);
+                        if (carrier) world.removeMobEffect(actor, venomdrenchDrench, carrier.key());
+                        return;
+                    }
                     drenched++;
                     if (applied > 0) {
                         WorldFeedback.emit(world, venomdrenchScene, 1, at,

@@ -5,7 +5,7 @@
   "worldcombat.skill.lowkick.use.2": "对高攻重型对手做一记便宜的快踢",
   "worldcombat.skill.lowkick.description.0": "扫中造成约 %1$s 的接触伤害，判定半径 %2$s 格；对手越重威力越大。",
   "worldcombat.skill.lowkick.description.1": "沿瞄准方向突进最多 %1$s 格、每刻 %2$s 格，碰到第一个活体即扫。",
-  "worldcombat.skill.lowkick.description.2": "被扫倒的目标约 %2$s 秒无法移动（但仍能出手），并带着约 %3$s 秒的失衡（移动速度降低 50%%）；速度下降 %1$s 级（宝可梦扣速度能力等级，其他战斗者扣移动速度），这份等级下降不会随失衡结束自动收回。腾空的目标只有半伤且不被绊倒。",
+  "worldcombat.skill.lowkick.description.2": "被绊倒的目标在 %2$s 秒内无法移动，但仍能出手；随后仍受失衡影响，共持续 %3$s 秒：移动速度降低 50%%，速度下降 %1$s 级。失衡消退或被清除时恢复；重复绊倒只刷新时长。腾空目标受到半伤且不会被绊倒。",
   "worldcombat.skill.lowkick.reap.on": "开启扫堂式：突进更远，命中主目标后顺这一脚侧前方 %1$s 格的腿弧，把从接触点看得见、约 150 度内的另一名敌人也带倒；不在背后、不隔墙。单发威力略低、收招与冷却更久。",
   "worldcombat.skill.lowkick.reap.off": "关闭扫堂式（点踢式）：一记更重更快的单体扫踢。",
   "worldcombat.skill.lowkick.timing": "可向 %1$s 格内伸腿，准备 %2$s 秒后消耗 %4$s PP 发动；结束后收招 %3$s 秒，提交起冷却 %5$s 秒。",

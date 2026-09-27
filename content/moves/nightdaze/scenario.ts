@@ -21,8 +21,10 @@ Smoke.scenario("nightdaze", function (stage) {
     stage.hostile(caster, right);
     stage.hostile(caster, walled);
     stage.command("execute as @e[type=minecraft:iron_golem,distance=..12] run data merge entity @s {NoAI:1b}");
+    stage.command("execute as @e[distance=..15] run attribute @s minecraft:generic.max_health base set 1000");
+    stage.command("execute as @e[distance=..15] run data merge entity @s {Health:1000.0f}");
     stage.until(900, function () {
-        return stage.casts("nightdaze", caster) > 0 && stage.damageTo(left) > 0 && stage.damageTo(right) > 0;
+        return stage.casts("nightdaze", caster) > 0 && stage.damageTo(left) > 0 && stage.damageTo(right) > 0 && (stage.hasMobEffect(left, "world_combat:nightdaze_shroud") || stage.hasMobEffect(right, "world_combat:nightdaze_shroud"));
     }, function () {
         stage.after(2, function () {
             stage.expect(stage.casts("nightdaze", caster) > 0, "nightdaze was committed");
@@ -37,7 +39,18 @@ Smoke.scenario("nightdaze", function (stage) {
                 shroudedLeft: stage.hadMobEffect(left, "world_combat:status/shrouded"),
                 shroudedRight: stage.hadMobEffect(right, "world_combat:status/shrouded")
             });
+            const timedTarget = stage.hasMobEffect(left, "world_combat:nightdaze_shroud") ? left : right;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:nightdaze_shroud"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).accuracy || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "nightdaze", 0);
+        stage.team("timed-b-nightdaze", [caster, timedTarget]);
+        stage.boost(timedTarget, { accuracy: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:nightdaze_shroud");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:nightdaze_shroud"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).accuracy || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
             stage.done();
+        });
         });
     }, "nightdaze erupts and engulfs both sides within 45 s");
 });

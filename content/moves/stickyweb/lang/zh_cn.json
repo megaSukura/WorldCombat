@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.stickyweb.summary": "把一团黏丝抛到选定的地面，摊成几张交叉黏线加一圈外环：只有脚部真实踩到丝线的贴地敌人才会被黏住，速度等级对每名目标只降一次，并在一段时间里被网缠住、脚步发沉；离开丝线后拖劲按剩余时间自然脱开。网孔可以小步穿行或跳过，飞在半空的从上方过去。深锚式多降一级、黏得更久但网更小，广铺式网更大更快但只降一级。",
+  "worldcombat.skill.stickyweb.summary": "把黏丝抛到地面，摊成带有空隙的网。踩上线的敌人会被缠住、暂时降低速度，已有黏身效果时不会继续叠加；可以穿过网孔、跳过线，或从空中越过。深锚式更黏、更久但网更小，广铺式铺得更快、更广。",
   "worldcombat.skill.stickyweb.use.0": "提前把一片地面变成减速区",
   "worldcombat.skill.stickyweb.use.1": "缠住冲锋或逃跑的敌人",
   "worldcombat.skill.stickyweb.use.2": "压低高速目标的机动",
-  "worldcombat.skill.stickyweb.description.0": "脚部踩到某条黏线的贴地目标速度下降 %1$s，并被网黏住 %2$s；对宝可梦落到原生速度等级，原版生物与其他模组生物落到移动速度属性。每名目标对每张网只降一次速度，重复蹭线不会继续扣。",
+  "worldcombat.skill.stickyweb.description.0": "脚部踩到黏线时速度降低 %1$s 级，持续 %2$s；这段时间内反复蹭线不会叠加。黏身结束或被驱散时恢复；若仍踩在线上，会再次被缠住。",
   "worldcombat.skill.stickyweb.description.1": "黏网半径约 %1$s 格、存在 %2$s，由 %3$s 条交叉黏线加一圈外环组成；判定带半宽约 %4$s 格，只有脚部落在带内才算踩中，网孔是安全的，可以小步穿过或跳过。线按真实地表裁断，不穿楼板和实墙，飞在半空的生物从上方过去；同一片地上再织会替换掉自己之前的旧网。",
   "worldcombat.skill.stickyweb.description.2": "被网黏住期间脚步被压低：这个状态本身让移动速度降低 30%。",
   "worldcombat.skill.stickyweb.option.on": "开启深锚式：多降一级速度、黏身与黏网都更久，但网收窄到约 0.8 倍、起手 +2 刻、冷却更长，用来把一条窄路黏死。",

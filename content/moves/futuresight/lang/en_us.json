@@ -26,5 +26,5 @@
   "world_combat.move.futuresight.text.send": "Future Sight: lands in %1$s s",
   "world_combat.move.futuresight.text.hit": "The vision strikes %1$s",
   "world_combat.move.futuresight.text.fizzle": "The vision fizzles",
-  "worldcombat.skill.futuresight.description.3": "The target is marked as Foreseen; the mark only records the lock - it neither slows nor damages. The mote is pure presentation, not an attackable body, so hitting it cannot cancel the appointment. The mote keeps following the target, so running does not dodge it; when the delay ends it strikes the target's current position, or fizzles if the target is gone. The appointment belongs to the caster: recalling or leaving ends it. Clearing the mark (milk or another move) does not cancel the mote."
+  "worldcombat.skill.futuresight.description.3": "Psychic energy follows the target until the countdown ends. They can heal or raise their defences while waiting; attacking the mote, drinking milk or cleansing statuses does not stop the strike. The energy dissipates if the user is recalled or leaves, or the target leaves observation range."
 }

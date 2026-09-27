@@ -43,7 +43,7 @@ namespace PokemonSkills {
             F.base(80).plus(F.level().minus(30).times(1.2).clamp(0, 60))
                 .plus(F.when(F.pref("shred", text("worldcombat.skill.liquidation.preference.shred")), F.const(20), F.const(0)))
                 .clamp(60, 240).round(0),
-            "浸湿时长", "目标被水打湿、带着共享身份 world_combat:status/soaked 的时长；等级越高水挂得越久，破甲式留得更久。"),
+            "浸湿时长", "湿身与破防各自持续多久；等级越高维持越久，破甲式更久。破防结束或被驱散时恢复防御。"),
         /** 前踏距离：基础 0.9 格，速度每比 55 多 1 加 0.01（上限 +0.5），体重每比 60 多 1 加 0.001（上限 +0.2）；破甲 ×1.05 / 重压 ×0.95；夹在 0.5..1.6。 */
         step: formula(
             F.base(0.9).plus(F.stat("speed").minus(55).times(0.01).clamp(-0.15, 0.5))

@@ -33,7 +33,7 @@ namespace CompanionBehavior {
         protocols: ["world_combat:fortify"],
         reach: function (_context, capability) { return capability.data.range; },
         available: function (context, capability, _purpose, _target) {
-            if (context.facts.mounted) return false;
+            if (context.facts.mounted || status(context, source(context), "meditative")) return false;
             const self = source(context);
             if (CompanionBehavior.stage(context, self, "atk") >= 6) return false;
             if (meditatePureSpecial(context, self)) return false;

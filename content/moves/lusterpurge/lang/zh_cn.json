@@ -5,7 +5,7 @@
   "worldcombat.skill.lusterpurge.use.2": "让甩到侧后方的敌人躲开这道光",
   "worldcombat.skill.lusterpurge.description.0": "光扇扫到的每个敌人各受到约 %1$s 点特殊伤害，同一个目标只结算一次；挡在光路上的前排身体会遮住后面的敌人，墙同样会截住光。",
   "worldcombat.skill.lusterpurge.description.1": "光束朝瞄准方向打出 %1$s 格（被墙挡住时在真实接触面变短），随后由窄芯张开成 %2$s 度的光扇，张开用 %3$s；施法者不移动也不追踪。",
-  "worldcombat.skill.lusterpurge.description.2": "命中后有 %1$s 概率把目标特防压低 %2$s 级；特防降低期间它受到的特殊伤害更高，这一下降持续到目标脱战或被能力重置——命中时身上闪的那记很短亮点只是触发提示，降防不随亮点消失。",
+  "worldcombat.skill.lusterpurge.description.2": "命中后有 %1$s 概率使目标特防降低 %2$s 级，持续 %3$s；光芒消退或被清除后恢复。同一效果不会叠加。",
   "worldcombat.skill.lusterpurge.description.3": "当前聚光形态为 %1$s。",
   "worldcombat.skill.lusterpurge.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",
   "worldcombat.skill.lusterpurge.growth.0": "%1$s 级起强光威力升至 %2$s、光束射程 %3$s 格。",
@@ -24,5 +24,6 @@
   "worldcombat.skill.lusterpurge.preference.ai.maxChase.help": "超过这个距离就不主动靠近，先收进光束射程；越大越愿意先朝目标接近再放。",
   "worldcombat.skill.lusterpurge.preference.ai.cluster": "正面聚团优先",
   "worldcombat.skill.lusterpurge.preference.ai.cluster.help": "开启后，目标方向前方、按实际张角展开的光扇里还挤着别的敌人时优先放光扇，一次扫到一排；只数正面，所以被背后围住时不会误以为能解围。关闭则只按普通攻击排序。",
-  "world_combat.move.lusterpurge.text.sunder": "特防 -%1$s"
+  "world_combat.move.lusterpurge.text.sunder": "特防 -%1$s",
+  "effect.world_combat.lusterpurge_exposed": "防护消散"
 }

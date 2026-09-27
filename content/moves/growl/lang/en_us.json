@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.growl.summary": "Let out an endearing cry that distracts every foe who can hear it, lowering their Attack. Sound needs no line of sight, so cover does not stop it; the trade is a shallow drop and a short reach.",
-  "worldcombat.skill.growl.use.0": "Call a ring of close enemies soft when surrounded",
-  "worldcombat.skill.growl.use.1": "Drop several attackers' output at once while they cluster",
+  "worldcombat.skill.growl.summary": "Distract nearby enemies with a cry that temporarily lowers Attack. The sound reaches through cover; distracted targets cannot be weakened again by Growl.",
+  "worldcombat.skill.growl.use.0": "Weaken surrounding enemies",
+  "worldcombat.skill.growl.use.1": "Lower several enemies’ Attack at once",
   "worldcombat.skill.growl.use.2": "Weaken a threat through cover when it hugs you",
-  "worldcombat.skill.growl.description.0": "Enemies who hear it and really lose Attack do so by %1$s stage(s) and carry the 'softened' mark for %2$s. The mark is only feedback that they were just distracted: it fades on its own and changes no numbers; the Attack drop is a stat stage that does not recover when the mark expires, lasting until the target leaves combat and its stages reset.",
-  "worldcombat.skill.growl.description.1": "Cry radius %1$s; every non-friendly inside hears it. Sound ignores line of sight.",
+  "worldcombat.skill.growl.description.0": "Lowers Attack by %1$s stage(s) for %2$s. Attack recovers when the distraction ends or is cleansed. Another Growl during this time neither deepens the drop nor extends its duration.",
+  "worldcombat.skill.growl.description.1": "Affects enemies within %1$s blocks, including those behind cover.",
   "worldcombat.skill.growl.description.2": "Windup %1$s with a %2$s cooldown. Centred on you, so anyone outside the ring is untouched.",
   "worldcombat.skill.growl.howl.off": "Short cry: quick, small radius, short duration.",
   "worldcombat.skill.growl.howl.on": "Long howl: larger radius and longer duration, but slower windup and cooldown.",
@@ -20,8 +20,8 @@
   "worldcombat.skill.growl.preference.ai.maxChase": "Consider range",
   "worldcombat.skill.growl.preference.ai.maxChase.help": "The companion only steps in to cry while a threat is within this many blocks; smaller keeps it at point-blank, larger approaches on its own.",
   "worldcombat.skill.growl.preference.ai.minFoes": "Minimum listeners",
-  "worldcombat.skill.growl.preference.ai.minFoes.help": "The companion only cries when at least this many non-friendly listeners can still be softened inside the radius, so the windup is not wasted; 1 means cry whenever there is one.",
-  "world_combat.move.growl.text.call": "Softened %1$s (Attack -%2$s)",
-  "world_combat.move.growl.text.empty": "No one heard",
-  "effect.world_combat.growl_hush": "Softened"
+  "worldcombat.skill.growl.preference.ai.minFoes.help": "Use Growl only when this many enemies in range are not already distracted by it.",
+  "world_combat.move.growl.text.call": "%1$s distracted · Attack %2$s",
+  "world_combat.move.growl.text.empty": "No enemies affected",
+  "effect.world_combat.growl_hush": "Distracted"
 }

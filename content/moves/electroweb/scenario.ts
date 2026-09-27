@@ -18,7 +18,8 @@ Smoke.scenario("electroweb", function (stage) {
     var foe = stage.pokemon({ species: "rattata", level: 16, moves: ["tackle"], at: [1.0, 0, 0] });
     var heavy = stage.mob({ type: "minecraft:iron_golem", at: [1.8, 0, 0.9] });
     var baseSpeed = stage.attribute(heavy, "minecraft:generic.movement_speed");
-    stage.hostile(caster, foe);
+    stage.provoke(caster, foe);
+    stage.noai(foe);
     stage.hostile(caster, heavy);
     stage.until(900, function () {
         return stage.casts("electroweb", caster) >= 1 && stage.damageTo(foe) > 0
@@ -37,7 +38,18 @@ Smoke.scenario("electroweb", function (stage) {
                 netted: stage.hasMobEffect(heavy, "world_combat:status/netted"),
                 foeAlive: foe.alive()
             });
+            const timedTarget = heavy;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:electrowebbed"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).spe || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "electroweb", 0);
+        stage.team("timed-b-electroweb", [caster, timedTarget]);
+        stage.boost(timedTarget, { spe: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:electrowebbed");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:electrowebbed"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).spe || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
             stage.done();
+        });
         });
     }, "electroweb catches a foe within 30 s");
 });

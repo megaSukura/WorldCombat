@@ -142,6 +142,21 @@ namespace NativeEffects {
         if (delta !== 0) CombatStages.publish(plan, before, effectiveStage(world, actor, stat));
         return delta;
     }
+    /** Read before reapplying a carrier: whether this caller owns a named stage contribution on this exact application.
+     * Use an empty change set to renew an owned contribution; another caster starts its own replacement contribution. */
+    export function ownsBoostWindow(world: CombatWorld, actor: CombatActor, source: string, carrier: CombatMobEffect | null): boolean {
+        if (!carrier || !world.valid(actor)) return false;
+        const anchor = MobEffects.anchor(carrier);
+        if (!MobEffects.matches(world, actor, anchor)) return false;
+        const definition = String(actor.domain()) === "cobblemon" ? "cobblemon_world_combat:modifier" : CombatStages.windowDefinition;
+        return world.effects(actor, definition).some(function (view) {
+            if (String(view.source().key()) !== String(world.source().key())) return false;
+            const value = JSON.parse(String(view.data()));
+            return !value.pending && value.source === source && value.carrier && value.carrier.id === anchor.id
+                && value.carrier.key === anchor.key && Object.keys(value.stages || {}).some(stat => value.stages[stat] !== 0);
+        });
+    }
+
     /**
      * A temporary stage window owned by the caller: raise the named stats now and remove exactly this window's
      * contribution when it expires or is closed. A Pokemon stores it in the existing NativeModifiers layer (visible

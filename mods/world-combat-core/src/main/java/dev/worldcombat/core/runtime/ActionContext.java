@@ -199,6 +199,12 @@ public final class ActionContext {
         return result;
     }
 
+    /** Declare scoped body control during preparation; this grants no pre-commit position or world mutation. */
+    public void movementLease() {
+        valid();
+        if (runtime.controlAllowed(id,actor,"movement")) runtime.host.movementLease(id,actor);
+    }
+
     /** Move the native body along one straight segment and issue only the contact actually reached. */
     public Impact moveSweep(Point delta, double radius) {
         return moveSweep(delta, radius, "[]");
@@ -216,6 +222,7 @@ public final class ActionContext {
             if (!value.isJsonPrimitive() || !value.getAsJsonPrimitive().isString()) throw new IllegalArgumentException("Contact exclusions require actor refs");
             ignored.add(value.getAsString());
         }
+        runtime.host.movementLease(id,actor);
         var result = runtime.host.moveSweep(actor, controller, delta, Math.min(1, radius), ignored);
         if (result.hitEntity()) traces.add(result);
         return result;

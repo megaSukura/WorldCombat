@@ -44,6 +44,8 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "安抚形态下攻击下降的能力等级；等级越高卸得越狠，清唱时为 0。"
             }),
+        staggerTicks: seconds(F.base(60).plus(F.stat("specialAttack").minus(60).times(0.4)).clamp(40, 120).round(0),
+            "错拍时长", "歌声扰乱步调、降低速度的时间。"),
         /** 魅惑时长：安抚时为 60 刻 + 特攻每比 60 多 1 加 0.4（夹在 40..120），否则为 0。 */
         charmTicks: seconds(
             F.when(F.pref("soothe"),
@@ -61,7 +63,7 @@ namespace PokemonSkills {
 
     describe("disarmingvoice", [
         { key: "description.0", values: ["note","radius"] },
-        { key: "description.1", values: ["stagger"] },
+        { key: "description.1", values: ["stagger","staggerTicks"] },
         { key: "description.2", values: ["soften","charmTicks"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.note"] },

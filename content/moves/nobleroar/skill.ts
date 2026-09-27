@@ -7,7 +7,7 @@
  * 两幕：
  *   起（windup 播「吸气」，提交前只观察与预告，可被打断，打断不花代价）。
  *   吼（提交后）：以施法者为顶点、朝瞄准方向张开 `arc` 度、推出 `reach` 格；
- *     `WorldGeometry.sector` 选出锥内所有非友方，逐个 NativeEffects.boost 掉物攻与特攻（怒吼 1 级／低吼 2 级），
+ *     `WorldGeometry.sector` 选出锥内所有非友方，逐个 NativeEffects.boostWindow 掉物攻与特攻（怒吼 1 级／低吼 2 级），
  *     并挂上共享身份 world_combat:status/cowed 的「气短」标记；表现用的锥形顶点与判定读同一份形状。
  *
  * 选取是 `kind: "aim"`：可以锁定锥内的一个敌人，也可以只朝一条通道/一个方向吼。方向、点、空放都成立，
@@ -93,10 +93,14 @@ namespace PokemonSkills {
                 const point = facts.position();
                 if (!world.clear(origin, point)) return;
                 // 真正压低双攻才算吼到；被免疫或已触底的候选不算成功，也不沉降标记。
-                const attack = NativeEffects.boost(world, target, "atk", -cow);
-                const special = NativeEffects.boost(world, target, "spa", -cow);
-                if (attack === 0 && special === 0) return;
-                MobEffects.apply(world, target, nobleroarCowed, falter, 0);
+                if (MobEffects.read(world, target, nobleroarCowed) !== null) return;
+                const carrier = MobEffects.apply(world, target, nobleroarCowed, falter, 0);
+                if (carrier === null) return;
+                const atkBefore = NativeEffects.effectiveStage(world, target, "atk"), spaBefore = NativeEffects.effectiveStage(world, target, "spa");
+                const owned = NativeEffects.boostWindow(world, target, { atk: -cow, spa: -cow }, falter, "world_combat:move/nobleroar", carrier, null);
+                if (owned === 0) { world.removeMobEffect(target, nobleroarCowed, carrier.key()); return; }
+                const attack = NativeEffects.effectiveStage(world, target, "atk") - atkBefore;
+                const special = NativeEffects.effectiveStage(world, target, "spa") - spaBefore;
                 hits++;
                 WorldFeedback.emit(world, nobleroarScene, 1, point,
                     { moment: "cowed", target: String(target.ref()), cow: cow, attack: attack, special: special, intensity: Math.min(2, cow) }, 26);

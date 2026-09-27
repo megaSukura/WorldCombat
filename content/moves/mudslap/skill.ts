@@ -13,7 +13,7 @@
  *       打在方块上只留一块按真实表面朝向铺开的泥印，不会形成危险泥区。
  *
  * 与同族分开：泥巴炸弹是直线高速的硬弹、命中炸开；掷泥是低弧线的软泥团，命中只是糊在脸上，伤害轻得多。
- * 命中下降走共享能力等级（NativeEffects.boost 的 accuracy），与影子分身的闪避一样走全战斗者共有的载体；
+ * 命中下降走共享能力等级（NativeEffects.boostWindow 的 accuracy），与影子分身的闪避一样走全战斗者共有的载体；
  * 脸上泥迹用同一份机制值（级数、威力、泥点数量）画出来。
  */
 namespace PokemonSkills {
@@ -101,11 +101,16 @@ namespace PokemonSkills {
                         const landed = impact(current, hit, "mudslap", power, { damage: damageSpec("mudslap", "splat") });
                         const at = currentWorld.observe(target);
                         if (landed && at !== null) {
-                            const dropped = NativeEffects.boost(currentWorld, target, "accuracy", -blind);
+                            const carrier = MobEffects.read(currentWorld, target, "world_combat:mudslap_blinded") === null
+                                ? MobEffects.apply(currentWorld, target, "world_combat:mudslap_blinded", mudTicks, 0) : null;
+                            const before = NativeEffects.effectiveStage(currentWorld, target, "accuracy");
+                            const owned = carrier === null ? 0 : NativeEffects.boostWindow(currentWorld, target, { accuracy: -blind }, mudTicks, "world_combat:move/mudslap", carrier, null);
+                            if (carrier !== null && owned === 0) currentWorld.removeMobEffect(target, "world_combat:mudslap_blinded", carrier.key());
+                            const dropped = NativeEffects.effectiveStage(currentWorld, target, "accuracy") - before;
                             // 回执按实际生效的等级变化报，不按配置值冒充。
                             const applied = Math.abs(dropped);
-                            WorldFeedback.keep(currentWorld, "mudslap:face:" + String(target.ref()), mudslapScene, 1, at.position(),
-                                { moment: "face", target: String(target.ref()), stage: applied, splash: splash, intensity: intensity, tick: mudTicks }, mudTicks);
+                            if (owned > 0) WorldFeedback.onEffect(currentWorld, owned, "mudslap:face:" + String(target.ref()), mudslapScene, 1, at.position(),
+                                { moment: "face", target: String(target.ref()), stage: applied, splash: splash, intensity: intensity, tick: mudTicks });
                             if (dropped !== 0)
                                 WorldFeedback.text(currentWorld, at.position().plus(WorldCombat.point(0, 1.1, 0)),
                                     "world_combat.move.mudslap.text.blind", [applied], 30);

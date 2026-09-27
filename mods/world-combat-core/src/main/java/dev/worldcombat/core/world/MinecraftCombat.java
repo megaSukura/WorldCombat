@@ -57,6 +57,9 @@ public final class MinecraftCombat implements CombatHost {
     private final WorldAttributes attributes = new WorldAttributes(this);
     private final NativeEquipmentSuppression equipmentSuppression = new NativeEquipmentSuppression(this);
     private final NativeGroundLift groundLift = new NativeGroundLift(this);
+    private final NativeMountedMotion mountedMotion = new NativeMountedMotion(this);
+    public NativeMountedMotion mountedMotion() { return mountedMotion; }
+    @Override public void movementLease(long owner, ActorHandle actor) { mountedMotion.acquire(owner,actor); }
     private final NativeTargetRequests targetRequests = new NativeTargetRequests(this);
     public NativeTargetRequests targetRequests() { return targetRequests; }
     public WorldAttributes attributes() { return attributes; }
@@ -279,6 +282,7 @@ public final class MinecraftCombat implements CombatHost {
         effects.tick();
         equipmentSuppression.tick();
         groundLift.tick();
+        mountedMotion.tick();
         targetRequests.tick();
         helpers.tick();
         NativeWorldWrites.tickSpawned(this);
@@ -294,7 +298,7 @@ public final class MinecraftCombat implements CombatHost {
         presentations.tick();
     }
 
-    public void stop() { deaths.clear(); flushDepartures(); endedEffects.clear(); changedActors.clear(); nativeDamageOrigins.clear(); NativeWorldWrites.stopSpawned(this); runtime.stop(); equipmentSuppression.stop(); groundLift.stop(); targetRequests.stop(); effectStorage.setDirty(); effects.stop(); helpers.stop(); presentations.clear(); controlled.clear(); controlOwners.clear(); bindings.clear(); departures.clear(); }
+    public void stop() { deaths.clear(); flushDepartures(); endedEffects.clear(); changedActors.clear(); nativeDamageOrigins.clear(); NativeWorldWrites.stopSpawned(this); runtime.stop(); equipmentSuppression.stop(); groundLift.stop(); mountedMotion.stop(); targetRequests.stop(); effectStorage.setDirty(); effects.stop(); helpers.stop(); presentations.clear(); controlled.clear(); controlOwners.clear(); bindings.clear(); departures.clear(); }
     public void controlled(ActorHandle actor, boolean value) {
         controlled(0, actor, value);
     }
@@ -311,7 +315,8 @@ public final class MinecraftCombat implements CombatHost {
         }
     }
     public boolean controls(LivingEntity entity) {
-        if (entity.isPassenger() || entity.isVehicle()) return false;
+        if (entity.isPassenger()) return false;
+        if (entity.isVehicle()) return NativeMountedMotion.active(entity);
         var binding = bindings.get(entity.getUUID());
         return binding != null && (controlled.contains(binding.handle()) || runtime.claimed(binding.handle(), "movement") || runtime.claimed(binding.handle(), "aim"));
     }
@@ -343,6 +348,7 @@ public final class MinecraftCombat implements CombatHost {
         attributes.release(instance);
         equipmentSuppression.release(instance);
         groundLift.release(instance);
+        mountedMotion.release(instance);
         targetRequests.release(instance);
         for (var actor : List.copyOf(controlOwners.keySet())) controlled(instance, actor, false);
     }
@@ -381,11 +387,11 @@ public final class MinecraftCombat implements CombatHost {
     @Override public ActorHandle helperSource(ActorHandle actor) { return helpers.source(actor); }
     @Override public String helperData(ActorHandle actor) { return helpers.data(actor); }
     @Override public void stopMovement(ActorHandle actor) {
-        if (resolve(actor) instanceof Mob mob && !mob.isPassenger() && !mob.isVehicle()) { mob.getNavigation().stop(); mob.setTarget(null); }
+        if (resolve(actor) instanceof Mob mob && !mob.isPassenger() && (!mob.isVehicle() || NativeMountedMotion.active(mob))) { mob.getNavigation().stop(); mob.setTarget(null); }
     }
     @Override public void face(ActorHandle actor, Point target, double yawSpeed, double pitchSpeed) {
         checkThread();
-        if (!(resolve(actor) instanceof Mob mob) || mob.isPassenger() || mob.isVehicle()) return;
+        if (!(resolve(actor) instanceof Mob mob) || mob.isPassenger() || mob.isVehicle() && !NativeMountedMotion.active(mob)) return;
         double dx = target.x() - mob.getX(), dy = target.y() - mob.getEyeY(), dz = target.z() - mob.getZ();
         if (dx * dx + dy * dy + dz * dz < 1.0e-8) return;
         float yaw = (float) (Math.atan2(dz, dx) * 180 / Math.PI) - 90;
@@ -419,7 +425,7 @@ public final class MinecraftCombat implements CombatHost {
     @Override public String navigate(ActorHandle actor, Point goal, double within, double speed) {
         checkThread();
         if (!(resolve(actor) instanceof Mob mob)) return "cannot-move";
-        if (mob.isPassenger() || mob.isVehicle()) return "mounted-control";
+        if (mob.isPassenger() || mob.isVehicle() && !NativeMountedMotion.active(mob)) return "mounted-control";
         String nativeRefusal = CombatServices.domain(mob).navigationReason(mob, goal);
         if (!nativeRefusal.isEmpty()) { stopMovement(actor); return nativeRefusal; }
         var request = new com.google.gson.JsonObject(); request.addProperty("speed", speed);
@@ -746,6 +752,7 @@ public final class MinecraftCombat implements CombatHost {
     @Override public boolean dismissBody(ActorHandle caller, ActorHandle actor) { return bodies.dismiss(caller, actor); }
     @Override public boolean motion(ActorHandle target, Point velocity, boolean add) {
         var entity = resolve(target); if (entity == null) return false;
+        if (entity.isPassenger() || entity.isVehicle() && !NativeMountedMotion.active(entity)) return false;
         var vec = new Vec3(velocity.x(), velocity.y(), velocity.z());
         entity.setDeltaMovement(add ? entity.getDeltaMovement().add(vec) : vec);
         entity.hurtMarked = true; entity.hasImpulse = true;
@@ -799,7 +806,7 @@ public final class MinecraftCombat implements CombatHost {
     }
     @Override public double displace(ActorHandle source, ActorHandle target, Point delta, UUID controller) {
         var entity = resolve(target); if (entity == null) return 0;
-        if (entity.isPassenger() || entity.isVehicle()) {
+        if (entity.isPassenger() || entity.isVehicle() && !NativeMountedMotion.active(entity)) {
             if (source.equals(target)) throw new ActionRejectedException("mounted-control");
             return 0;
         }
@@ -808,7 +815,7 @@ public final class MinecraftCombat implements CombatHost {
         stopMovement(target); entity.move(MoverType.SELF, allowed); entity.hurtMarked = true; return entity.position().distanceTo(before);
     }
     private boolean destination(LivingEntity entity, Point point, LivingEntity ignored) {
-        if (entity == null || entity.isPassenger() || entity.isVehicle()) return false;
+        if (entity == null || entity.isPassenger() || entity.isVehicle() && !NativeMountedMotion.active(entity)) return false;
         var level = (ServerLevel) entity.level(); var feet = vec(point); var pos = net.minecraft.core.BlockPos.containing(feet);
         var box = entity.getBoundingBox().move(feet.subtract(entity.position()));
         return level.hasChunkAt(pos) && level.getWorldBorder().isWithinBounds(box) && !level.isOutsideBuildHeight(pos)

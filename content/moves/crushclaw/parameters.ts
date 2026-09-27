@@ -15,7 +15,7 @@
  *   tearChance  撕甲几率：等级定撕开护甲的把握（全族最高）。
  *   tearStages  撕甲等级：本招固定 1 级。
  *   deepen      加深等级：目标已带破防身份时额外多降的级数——先砸缺口再撕，值得一次配合。
- *   tearTicks   撕开标记时长：等级定外翻的护甲留多久。
+ *   tearTicks   撕甲时长：等级定外翻的护甲留多久。
  *
  * 伤害段 slash：单爪够到再外拉的那一下，slice 与 contact 交给共享结算。
  */
@@ -60,10 +60,10 @@ namespace PokemonSkills {
                 unit: "级",
                 description: "目标身上已带任何来源的破防身份时，这一撕额外多降的级数——先把缺口砸开再撕，收益更高。"
             }),
-        /** 撕开标记时长：基础 90 刻，等级每比 30 高 1 加 1.5 刻，夹在 70..220。 */
+        /** 撕甲时长：基础 90 刻，等级每比 30 高 1 加 1.5 刻，夹在 70..220。 */
         tearTicks: seconds(
             F.base(90).plus(F.level().minus(30).times(1.5)).clamp(70, 220).round(0),
-            "撕开标记时长", "目标身上撕开标记停留的时长；等级越高外翻的护甲留得越久。")
+            "撕甲时长", "目标防御降低的持续时间；等级越高缺口留得越久，到期或驱散后恢复。")
     });
 
     defineDamage("crushclaw", "slash", {}, { contact: true, slice: true });

@@ -37,6 +37,16 @@ class Process:
 
 
 class MonitorChecks(unittest.TestCase):
+    def test_additional_scene_failure_cannot_hide_behind_primary_pass(self):
+        verdicts = {"alpha": "PASS alpha 0/2", "alpha-second": "FAIL alpha-second 1/3"}
+        self.assertEqual(smoke.scenario_failures(verdicts, {}, {}, True), {"alpha-second": "FAIL alpha-second 1/3"})
+
+    def test_additional_scene_must_finish_and_have_no_errors(self):
+        self.assertIn("branch", smoke.scenario_failures({"alpha": "PASS alpha 0/2"}, {}, {"branch": []}, True))
+        self.assertIn("branch", smoke.scenario_failures({"branch": "PASS branch 0/2"}, {"branch": ["script failure"]}, {}, True))
+        self.assertIn("<run>", smoke.scenario_failures({"alpha": "PASS alpha 0/2"}, {}, {}, False))
+        self.assertFalse(smoke.scenario_failures({"alpha": "PASS alpha 0/2", "branch": "PASS branch 0/3"}, {}, {}, True))
+
     def test_failed_boot_preserves_error_and_returns_without_waiting_for_scenarios(self):
         output = ("[main/ERROR] [KubeJS Server/]: fixture.js#4: invalid configuration\n"
                   "[main/INFO] [KubeJS Server/]: Loaded 0/1 KubeJS server scripts in 0.3 s with 1 errors and 0 warnings\n"

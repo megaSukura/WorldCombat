@@ -118,8 +118,15 @@ namespace PokemonSkills {
                     if (fresh) {
                         // 第一次被这一段喝中：挂被斥身份、掉特攻；只有身份或等级真的落下才报，原生拒绝时不发成功提示。
                         const carrier = MobEffects.apply(scope, enemy, snarlScolded, hush, 0);
-                        const dropped = NativeEffects.boost(scope, enemy, "spa", -drop);
-                        if (carrier === null && dropped === 0) return;
+                        const before = NativeEffects.effectiveStage(scope, enemy, "spa");
+                        const window = carrier ? NativeEffects.boostWindow(scope, enemy, { spa: -drop }, hush,
+                            "world_combat:move/snarl", carrier) : 0;
+                        const dropped = NativeEffects.effectiveStage(scope, enemy, "spa") - before;
+                        if (!window || dropped === 0) {
+                            if (window) NativeEffects.windowClose(scope, window);
+                            if (carrier) scope.removeMobEffect(enemy, snarlScolded, carrier.key());
+                            return;
+                        }
                         scolded[ref] = true;
                         WorldFeedback.emit(scope, snarlScene, 1, facts.position(),
                             { moment: "hush", target: ref, notes: notes, drop: Math.abs(dropped), pulse: index + 1,

@@ -156,9 +156,10 @@ namespace PokemonSkills {
             WorldGeometry.selectBodies(world, region, function (actor, facts) {
                 if (caught >= 4 || facts.friendly() || String(actor.ref()) === String(self.ref())) return;
                 // 只有状态真正落地才降命中、才播糊脸；被免疫或未应用时不当作已命中。
-                if (MobEffects.apply(world, actor, sandattackEffect, duration, 0) === null) return;
-                NativeEffects.boost(world, actor, "accuracy", -stage);
-                const carrier = MobEffects.read(world, actor, sandattackEffect);
+                if (MobEffects.read(world, actor, sandattackEffect) !== null) return;
+                const carrier = MobEffects.apply(world, actor, sandattackEffect, duration, 0);
+                if (carrier === null) return;
+                NativeEffects.boostWindow(world, actor, { accuracy: -stage }, duration, "world_combat:move/sandattack", carrier, null);
                 if (carrier !== null)
                     world.effect(sandattackLinger, actor,
                         JSON.stringify({ key: String(carrier.key()), tint: tint, scale: scale }), Math.max(1, carrier.duration()));

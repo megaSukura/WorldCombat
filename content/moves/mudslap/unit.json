@@ -15,5 +15,11 @@
   ],
   "clientSources": [
     "presentation.ts"
-  ]
+  ],
+  "startupSources": [
+    "startup.ts"
+  ],
+  "mobEffectIcons": {
+    "world_combat:mudslap_blinded": "minecraft:mob_effect/blindness"
+  }
 }

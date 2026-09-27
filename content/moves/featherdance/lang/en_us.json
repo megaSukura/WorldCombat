@@ -3,7 +3,7 @@
   "worldcombat.skill.featherdance.use.0": "Blunt a physical attacker's output",
   "worldcombat.skill.featherdance.use.1": "Seal a doorway with a patch of down",
   "worldcombat.skill.featherdance.use.2": "Press a melee threat off an ally",
-  "worldcombat.skill.featherdance.description.0": "A downy target immediately loses %1$s Attack stage(s) (a lasting stat-stage change that does not recover on its own); the downy coat lasts %2$s, and while it clings a companion will not cast Feather Dance on that target again.",
+  "worldcombat.skill.featherdance.description.0": "Coating a target in down lowers Attack by %1$s stages for %2$s. Attack returns when the down falls away or is cleansed. Feather Dance does not stack on a coated target.",
   "worldcombat.skill.featherdance.description.1": "The cloud spreads into a %1$s-block patch of down that lasts %2$s; a non-friendly body entering it also loses Attack and is coated (each body can be caught only once per patch). Target a foe, or aim at bare ground to place the patch in advance; it lands where the cloud actually collides or runs out.",
   "worldcombat.skill.featherdance.description.2": "The down flies at %1$s blocks/tick with a %2$s-block hit radius over %3$s blocks (range %4$s); windup %5$s.",
   "worldcombat.skill.featherdance.dense.on": "Dense: the same bundle packs tighter, a smaller patch but a deeper cut.",

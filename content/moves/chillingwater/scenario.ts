@@ -22,6 +22,17 @@ Smoke.scenario("chillingwater", function (stage) {
         stage.note("命中/暴击、掉攻是 1 级还是 2 级都是随机或状态结果，只作记录。",
             { casts: stage.casts("chillingwater", caster), damage: Math.round(stage.damageTo(target) * 10) / 10,
                 attack: [attack, stage.attribute(target, "minecraft:generic.attack_damage")] });
-        stage.done();
+        const timedTarget = target;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:chillingwater_soaked"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).atk || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "chillingwater", 0);
+        stage.team("timed-b-chillingwater", [caster, timedTarget]);
+        stage.boost(timedTarget, { atk: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:chillingwater_soaked");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:chillingwater_soaked"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).atk || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "冰水浇透目标");
 });

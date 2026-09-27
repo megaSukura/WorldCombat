@@ -1,15 +1,4 @@
-/**
- * 爆音波 / boomburst —— 可执行设计说明。
- *
- * 一句话：憋住一口气再把声压整圈炸出去，身周所有敌人（空中地上一起）被轰中并被击飞，
- * 越靠近中心越重、吹得越远；爆响在每个人（包括施法者自己）耳里留下耳鸣。
- *
- * 场面：普通系的爆音怪带这一招，站在一只小敌与一只原版铁傀儡旁边——小敌会冲上来（看得见被吹开），
- * 铁傀儡血厚、原生抗性拉满且被冻结不会自己走动，用来核对「抗推的Boss仍吃主要声伤、却不被强抛」。
- *
- * 断言只取必然事实：这招被放过、至少一个敌人挨到伤害、被打而不死的铁傀儡带上共享身份 deafened、
- * 施法者自己也带上 deafened、抗推的铁傀儡没有被击飞。具体被吹开多远、暴击与距离衰减写进 note。
- */
+// Native impact and knockback resistance, with no visual-only status added to either body.
 Smoke.scenario("boomburst", function (stage) {
     stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
     stage.time("day");
@@ -26,8 +15,8 @@ Smoke.scenario("boomburst", function (stage) {
         stage.after(15, function () {
             stage.expect(stage.casts("boomburst", caster) >= 1, "exploud committed boomburst");
             stage.expect(stage.damageTo(thick) > 0, "the shock wave hit the iron golem");
-            stage.expect(stage.hadMobEffect(thick, "world_combat:status/deafened"), "the golem was left with ringing ears");
-            stage.expect(stage.hadMobEffect(caster, "world_combat:status/deafened"), "the caster deafened itself too");
+            stage.expect(!stage.hasMobEffect(thick, "world_combat:deafened"), "the blast does not add a display-only status to the target");
+            stage.expect(!stage.hasMobEffect(caster, "world_combat:deafened"), "the caster receives no display-only debuff");
             stage.expect(stage.travelled(thick) < 0.5, "native knockback resistance refused the fling");
             stage.note("how far each target was flung, the distance falloff and the crit roll are random/positional", {
                 casts: stage.casts("boomburst", caster),

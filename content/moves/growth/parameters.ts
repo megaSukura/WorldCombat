@@ -38,7 +38,7 @@ namespace PokemonSkills {
                 unit: " 片",
                 description: "一次破土而出的草叶数量；体重越大冒出的越多，粒子按它发射。"
             }),
-        /** 长大窗口：标记的时长。 */
+        /** 长大窗口：体型与双攻提升的时长。 */
         grownTicks: seconds(
             F.base(220).plus(F.level().times(4))
 

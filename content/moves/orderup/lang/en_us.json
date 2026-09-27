@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.orderup.summary": "A companion gives the order and the user serves a short, flat-thrown dragon-shaped dish: the first body it touches takes one non-contact hit. With a small companion at your side it also raises one of your stats in that companion's likeness (sharing it with nearby allies in share mode). It never strips a barrier, and an empty cast still gains from a real companion.",
+  "worldcombat.skill.orderup.summary": "Serve a short, level dragon-shaped strike that damages the first foe it hits. With a small companion nearby, also raise one stat according to its form. Sharing serves nearby allies too; the support works even if the strike misses.",
   "worldcombat.skill.orderup.use.0": "A short, flat-thrown dragon dish",
   "worldcombat.skill.orderup.use.1": "Raise a stat while a small companion is at your side",
   "worldcombat.skill.orderup.use.2": "Open a fight with both a strike and a buff",

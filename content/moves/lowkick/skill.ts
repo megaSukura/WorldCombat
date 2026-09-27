@@ -30,9 +30,12 @@ namespace PokemonSkills {
 
     /** 扫倒一个目标：挂共享身份 tripped 的 MobEffect、掉速度等级、短时间无法迈步。返回控制是否真的成立。 */
     function lowkickTrip(world: CombatWorld, target: CombatActor, stages: number, rootTicks: number, tripTicks: number): { slow: boolean; root: boolean } {
+        const previous = MobEffects.read(world, target, lowkickStaggerEffect);
+        const renew = NativeEffects.ownsBoostWindow(world, target, "world_combat:move/lowkick", previous);
         const stagger = MobEffects.apply(world, target, lowkickStaggerEffect, Math.max(20, Math.round(tripTicks)), 0);
         const slow = stagger !== null;
-        if (slow) NativeEffects.boost(world, target, "spe", -Math.max(1, stages));
+        if (stagger && (renew || !previous || String(stagger.key()) !== String(previous.key()))) NativeEffects.boostWindow(world, target, renew ? {} : { spe: -Math.max(1, stages) },
+            stagger.duration(), "world_combat:move/lowkick", stagger, previous);
         const root = WorldEffects.apply(world, target, "rooted", {}, Math.max(5, Math.round(rootTicks))) > 0;
         return { slow: slow, root: root };
     }

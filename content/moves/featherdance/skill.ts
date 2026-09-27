@@ -6,7 +6,7 @@
  *
  * 出手：短起手（windup 在身周聚起白色绒羽）后提交，交给 LivingActions.projectile 负责飞行。
  * 命中：羽绒云在落点炸开（settle）——命中的活体立刻挂共享的 world_combat:downy_coat
- *       （身份 world_combat:status/downy）并 NativeEffects.boost 大幅下降攻击；落点用 WorldEffects.field
+ *       （身份 world_combat:status/downy）并 NativeEffects.boostWindow 大幅下降攻击；落点用 WorldEffects.field
  *       租借一片绒雾，之后踏进来的非友方都会被覆羽（每人只生效一次）。
  * 反制：羽绒有飞行时间、会被掩体挡下；绒雾只在落点一小片、绕开即可；厚羽覆盖更小。
  */
@@ -23,8 +23,13 @@ namespace PokemonSkills {
 
     /** 把羽绒覆到一个目标身上：挂身份、扣攻击、播命中表现与浮字；只有真正扣到等级才报出数值。 */
     function featherdanceSmother(world: CombatWorld, target: CombatActor, drop: number, downTicks: number, tufts: number): boolean {
+        if (MobEffects.read(world, target, featherdanceEffect) !== null) return false;
         const applied = MobEffects.apply(world, target, featherdanceEffect, downTicks, 0);
-        const dropped = NativeEffects.boost(world, target, "atk", -drop);
+        if (applied === null) return false;
+        const before = NativeEffects.effectiveStage(world, target, "atk");
+        const owned = NativeEffects.boostWindow(world, target, { atk: -drop }, downTicks, "world_combat:move/featherdance", applied, null);
+        if (owned === 0) { world.removeMobEffect(target, featherdanceEffect, applied.key()); return false; }
+        const dropped = NativeEffects.effectiveStage(world, target, "atk") - before;
         const body = world.observe(target);
         if (body === null) return false;
         WorldFeedback.emit(world, featherdanceScene, 1, body.position(),

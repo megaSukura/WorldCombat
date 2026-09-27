@@ -3,7 +3,7 @@
   "worldcombat.skill.scaleshot.use.0": "A burst of shards that whittles a target at mid-long range",
   "worldcombat.skill.scaleshot.use.1": "Wind up a burst of small hits to raise Speed for the next play",
   "worldcombat.skill.scaleshot.use.2": "Spray form to share the shards among a group ahead",
-  "worldcombat.skill.scaleshot.description.0": "Each shard deals %1$s physical damage and the volley fires %2$s shards (2-5 natively, the count set by Attack, Speed and level, not a random roll).",
+  "worldcombat.skill.scaleshot.description.0": "Each scale deals %1$s physical damage. Fire %2$s scales this time; Attack, Speed, and level determine the count.",
   "worldcombat.skill.scaleshot.description.1": "A shard leaves every %1$s at %2$s blocks/tick along the aimed 3D direction (it can be fired upward and keeps its vertical part), reaching %3$s blocks with up to ±%4$s spread.",
   "worldcombat.skill.scaleshot.description.2": "Each shard has a %1$s block hit radius; only once the whole volley has ended — hit, miss, or fired into empty air — the user gains Speed +%2$s and loses Defense %3$s stage(s), settled once per volley; interrupted before that, the volley is not complete and nothing is settled.",
   "worldcombat.skill.scaleshot.spray.on": "Spray form: shards take turns among up to %1$s foes in a cone of about 70° ahead that are really visible and in line of sight; with no foe ahead they scatter along the fan. Per-shard power x0.82, one more Defense stage lost, range x0.9, a wider spread (x2.4), wind-up +2 ticks, interval +1 tick, recovery +1 tick and cooldown +4 ticks.",

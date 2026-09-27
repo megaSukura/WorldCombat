@@ -430,14 +430,30 @@ public final class WorldAccess {
         runtime.host.controlled(owner, source, value);
     }
     private boolean move(ActorHandle target) { return !target.equals(source) || runtime.controlAllowed(owner, source, "movement"); }
+    /** Explicit preparation/physics ownership for a writable action or persistent effect scope. */
+    public void movementLease() {
+        requireMutation(source);
+        if (owner==0) throw new IllegalArgumentException("A lifecycle owner is required for movement");
+        if (move(source)) runtime.host.movementLease(owner,source);
+    }
     public double displace(ActorHandle target, Point delta) {
         requireMutation(target);
         if (!move(target)) return 0;
         if (!Double.isFinite(delta.length()) || delta.length() > 4) throw new IllegalArgumentException("Displacement exceeds step budget");
+        if (target.equals(source)) runtime.host.movementLease(owner,target);
         return runtime.host.displace(source, target, delta, controller);
     }
-    public boolean teleport(ActorHandle target, Point point) { requireMutation(target); nearby(point); return move(target) && runtime.host.teleport(source, target, point, controller); }
-    public boolean swap(ActorHandle first, ActorHandle second) { requireMutation(first); requireMutation(second); return move(first) && move(second) && runtime.host.swap(source, first, second, controller); }
+    public boolean teleport(ActorHandle target, Point point) {
+        requireMutation(target); nearby(point); if (!move(target)) return false;
+        if (target.equals(source)) runtime.host.movementLease(owner,target);
+        return runtime.host.teleport(source,target,point,controller);
+    }
+    public boolean swap(ActorHandle first, ActorHandle second) {
+        requireMutation(first); requireMutation(second); if (!move(first) || !move(second)) return false;
+        if (first.equals(source)) runtime.host.movementLease(owner,first);
+        if (second.equals(source)) runtime.host.movementLease(owner,second);
+        return runtime.host.swap(source,first,second,controller);
+    }
     public double health(ActorHandle target, double delta, String cause) {
         return health(target, delta, cause, 0);
     }
@@ -542,6 +558,7 @@ public final class WorldAccess {
         requireMutation(target);
         if (!move(target)) return false;
         if (!Double.isFinite(velocity.length()) || velocity.length() > 4) throw new IllegalArgumentException("Velocity exceeds the step budget");
+        if (target.equals(source)) runtime.host.movementLease(owner,target);
         return runtime.host.motion(target, velocity, add);
     }
     private boolean receivedMovementTarget(ActorHandle target) {

@@ -12,12 +12,14 @@ Smoke.scenario("triplearrows", function (stage) {
     stage.time("day");
     stage.weather("clear");
     var caster = stage.pokemon({ species: "decidueye", level: 50, moves: ["triplearrows"], at: [-2, 0, 0] });
-    var foe = stage.pokemon({ species: "snorlax", level: 50, moves: ["splash"], at: [3, 0, 0] });
+    var foe = stage.pokemon({ species: "snorlax", level: 50, moves: ["splash"], at: [-0.5, 0, 0] });
     stage.hostile(caster, foe);
     var landedAt = 0;
+    stage.command("execute as @e[distance=..15] run attribute @s minecraft:generic.max_health base set 1000");
+    stage.command("execute as @e[distance=..15] run data merge entity @s {Health:1000.0f}");
     stage.until(1200, function () {
         if (landedAt === 0 && stage.casts("triplearrows", caster) >= 1 && stage.damageTo(foe) > 0) landedAt = stage.tick();
-        return landedAt > 0 && stage.tick() >= landedAt + 12;
+        return landedAt > 0 && stage.hasMobEffect(foe, "world_combat:triplearrows_guard");
     }, function () {
         stage.expect(stage.casts("triplearrows", caster) >= 1, "caster committed triple arrows");
         stage.expect(stage.damageTo(foe) > 0, "triple arrows dealt damage to the foe");
@@ -28,6 +30,17 @@ Smoke.scenario("triplearrows", function (stage) {
             flinched: stage.hadMobEffect(foe, "world_combat:status/flinch"),
             foeAlive: foe.alive()
         });
-        stage.done();
+        const timedTarget = foe;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:triplearrows_guard"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).def || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "triplearrows", 0);
+        stage.team("timed-b-triplearrows", [caster, timedTarget]);
+        stage.boost(timedTarget, { def: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:triplearrows_guard");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:triplearrows_guard"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).def || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "triple arrows land within 60 s");
 });

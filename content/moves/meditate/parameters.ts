@@ -43,7 +43,7 @@ namespace PokemonSkills {
             F.base(260).plus(F.level().times(4)).plus(F.stat("specialDefence").times(0.4))
                 .times(F.when(F.pref("deepBreath", text("worldcombat.skill.meditate.preference.deepBreath")), F.const(1.4), F.const(1)))
                 .clamp(200, 640).round(0),
-            "入静窗口", "唤醒之后「入静」标记在身上的时长；等级与特防越高越久，深长呼吸再 ×1.4。物攻等级不随它褪去。"),
+            "入静窗口", "物攻提升持续的时间；等级与特防越高越久，深长呼吸再 ×1.4。"),
         /** 灵光点数：特攻越高，唤醒时浮起的灵光越多。 */
         motes: formula(
             F.base(14).plus(F.stat("specialAttack").times(0.08)).clamp(12, 44).round(0),

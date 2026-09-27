@@ -108,11 +108,18 @@ namespace PokemonSkills {
                         path: [[from.x(), from.y(), from.z()], [point.x(), point.y(), point.z()]], intensity: intensity }, 22);
                 // 开架绑定真实降防结果：免疫降防或已到底时 boost 返回 0，不算踢开，也就不给必暴。
                 if (landed && victim !== null && world.valid(victim) && world.random() < guardChance) {
-                    const drop = NativeEffects.boost(world, victim, "def", -guardStages);
+                    const existing = MobEffects.read(world, victim, triplearrowsGuard);
+                    const carrier = existing ? null : MobEffects.apply(world, victim, triplearrowsGuard, guardTicks, 0);
+                    const before = NativeEffects.effectiveStage(world, victim, "def");
+                    const window = carrier ? NativeEffects.boostWindow(world, victim, { def: -guardStages }, guardTicks, "world_combat:move/triplearrows", carrier) : 0;
+                    const drop = NativeEffects.effectiveStage(world, victim, "def") - before;
+                    if (carrier && (!window || drop === 0)) {
+                        if (window) NativeEffects.windowClose(world, window);
+                        world.removeMobEffect(victim, triplearrowsGuard, carrier.key());
+                    }
                     if (drop !== 0) {
                         opened = true;
                         openedRef = String(victim.ref());
-                        MobEffects.apply(world, victim, triplearrowsGuard, guardTicks, 0);
                         WorldFeedback.emit(world, triplearrowsScene, 1, point,
                             { moment: "guard", target: openedRef, stages: Math.abs(drop) }, 22);
                         WorldFeedback.text(world, point.plus(WorldCombat.point(0, 1.1, 0)), triplearrowsGuardText, [Math.abs(drop)], 26);

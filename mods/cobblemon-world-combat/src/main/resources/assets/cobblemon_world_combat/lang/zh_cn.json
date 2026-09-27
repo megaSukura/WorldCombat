@@ -1,4 +1,9 @@
 {
+  "worldcombat.npc_challenge.unsupported_format": "这场挑战的赛制暂不支持即时战斗。",
+  "worldcombat.npc_challenge.unsupported_rules": "这场挑战包含尚未适配即时战斗的附加规则。",
+  "worldcombat.npc_challenge.unsupported_clones": "这场挑战要求临时队伍或等级调整，暂不能用于即时战斗。",
+  "worldcombat.npc_challenge.busy": "你或这位训练家正在进行另一场挑战。",
+  "worldcombat.npc_challenge.start_failed": "暂时无法开始挑战，请确认双方都在附近且队伍可以出战。",
   "key.categories.worldcombat": "WorldCombat 指挥",
   "key.worldcombat.skill1": "技能槽 1",
   "key.worldcombat.skill2": "技能槽 2",

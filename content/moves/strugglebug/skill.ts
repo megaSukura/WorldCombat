@@ -178,8 +178,11 @@ namespace PokemonSkills {
                     caught[ref] = true;
                     if (!hurt(current, enemy, strugglebugId, power, { damage: damageSpec(strugglebugId, "swarm") })) return;
                     hits++;
-                    const dropped = NativeEffects.boost(scope, enemy, "spa", -stages);
-                    const carrier = MobEffects.apply(scope, enemy, strugglebugEffect, cling, 0);
+                    const previous = MobEffects.read(scope, enemy, strugglebugEffect);
+                    const carrier = previous === null ? MobEffects.apply(scope, enemy, strugglebugEffect, cling, 0) : null;
+                    const before = NativeEffects.effectiveStage(scope, enemy, "spa");
+                    if (carrier !== null) NativeEffects.boostWindow(scope, enemy, { spa: -stages }, cling, "world_combat:move/strugglebug", carrier, null);
+                    const dropped = NativeEffects.effectiveStage(scope, enemy, "spa") - before;
                     WorldFeedback.emit(scope, strugglebugScene, 1, facts.position(),
                         { moment: "hit", target: ref, motes: Math.max(8, Math.round(motes * 0.6)), stagger: cling,
                             scale: scale, intensity: intensity }, 24);

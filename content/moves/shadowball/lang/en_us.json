@@ -4,7 +4,7 @@
   "worldcombat.skill.shadowball.use.1": "Cling to a target and wear down its Sp. Def",
   "worldcombat.skill.shadowball.use.2": "Open from a distance before closing",
   "worldcombat.skill.shadowball.description.0": "The ball deals about %1$s special damage on a hit.",
-  "worldcombat.skill.shadowball.description.1": "On a hit there is a %1$s chance to lower the target's Sp. Def by %2$s stage as a stat stage that does not recover when the ball is gone.",
+  "worldcombat.skill.shadowball.description.1": "Hits have a %1$s chance to wrap the target in shadow, lowering Sp. Def by %2$s stages for %3$s. It returns when the shadow fades or is cleansed. Clinging shadows do not stack.",
   "worldcombat.skill.shadowball.description.2": "The ball flies straight along the aim at %1$s blocks per tick, up to %2$s blocks, with a %3$s block trace radius; it can also be fired at an empty point.",
   "worldcombat.skill.shadowball.description.3": "Dense form is currently %1$s.",
   "worldcombat.skill.shadowball.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
@@ -24,5 +24,6 @@
   "worldcombat.skill.shadowball.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it open fire from further away.",
   "worldcombat.skill.shadowball.preference.ai.sunderFirst": "Prefer un-sundered targets",
   "worldcombat.skill.shadowball.preference.ai.sunderFirst.help": "On: it ranks targets whose Sp. Def has not been lowered yet higher, since sunder is worth more on a clean target. Off: every target ranks the same, like an ordinary ranged attack.",
-  "world_combat.move.shadowball.text.sunder": "Sp. Def -%1$s"
+  "world_combat.move.shadowball.text.sunder": "Sp. Def -%1$s",
+  "effect.world_combat.shadowball_cling": "Clinging Shadow"
 }

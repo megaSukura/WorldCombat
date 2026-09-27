@@ -64,11 +64,6 @@ namespace PokemonSkills {
                 unit: "格",
                 description: "被声压轰中的人沿离中心的方向被吹开的距离，中心附近的人吹得更远；特攻越强吹得越狠，爆压式最狠。"
             }),
-        /** 耳鸣停留：140 + 特攻偏移[−30,80] + 等级(≥25)偏移[0,15]；夹 100..300。 */
-        deafenTicks: seconds(
-            F.base(140).plus(F.stat("specialAttack").minus(60).times(1.0).clamp(-30, 80))
-                .plus(F.level().minus(25).times(0.5).clamp(0, 15)).clamp(100, 300).round(0),
-            "耳鸣停留", "爆响在被轰到的人耳中留下的耳鸣停留多久；特攻越高、等级越高响得越久。施法者自己也一起耳鸣。"),
         /** 余响环数：8 + 特攻偏移[−1,5] + 等级(≥25)偏移[0,3]；夹 6..20。同时驱动画面密度。 */
         rings: formula(
             F.base(8).plus(F.stat("specialAttack").minus(60).times(0.08).clamp(-1, 5))
@@ -89,7 +84,6 @@ namespace PokemonSkills {
     describe("boomburst", [
         { key: "description.0", values: ["blast","falloff","maxTargets"] },
         { key: "description.1", values: ["blastRadius","shock"] },
-        { key: "description.2", values: ["deafenTicks"] },
         { key: "concussive.on", values: [], when: function (context) { return read(context.detail.values, ["concussive"]) === true; } },
         { key: "concussive.off", values: [], when: function (context) { return read(context.detail.values, ["concussive"]) !== true; } },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },

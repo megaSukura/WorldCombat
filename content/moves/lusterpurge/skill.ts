@@ -4,7 +4,7 @@
  * 三幕：
  *   起（windup，提交前）：强光在身前收成一线，细亮芯沿瞄准方向预告（`action.present` 预告）。
  *   放（beam → hit/mark）：提交后光束先以窄芯存在，再由芯向两侧张开成有限光扇；张开途中每个落入光扇、
- *       且被 trace 确认视线直达的敌人最多各结算一次原主伤，各掷一次碾防（共享 `NativeEffects.boost(..., "spd", -1)`）。
+ *       且被 trace 确认视线直达的敌人最多各结算一次原主伤，各掷一次碾防（共享 `NativeEffects.boostWindow(..., "spd", -1)`）。
  *   收（fade）：光扇打完收起，触发碾防的目标身上只留一记很短的亮点。
  *
  * 与同族分开：磨防四式里唯一朝前打出的定向光束；施法者不移动、不追踪（`stationary`、`turn: 0`），
@@ -149,12 +149,17 @@ namespace PokemonSkills {
                         WorldFeedback.emit(scope, lusterpurgeScene, 1, point,
                             { moment: "hit", target: ref, rays: rays, scale: scale, intensity: Math.max(0.5, Math.min(2.2, power / 90)) }, 20);
                         if (scope.valid(enemy) && scope.random() < chance) {
-                            const applied = NativeEffects.boost(scope, enemy, "spd", -stages);
+                            const carrier = MobEffects.read(scope, enemy, "world_combat:lusterpurge_exposed") === null
+                                ? MobEffects.apply(scope, enemy, "world_combat:lusterpurge_exposed", markTicks, 0) : null;
+                            const before = NativeEffects.effectiveStage(scope, enemy, "spd");
+                            const owned = carrier === null ? 0 : NativeEffects.boostWindow(scope, enemy, { spd: -stages }, markTicks, "world_combat:move/lusterpurge", carrier, null);
+                            if (carrier !== null && owned === 0) scope.removeMobEffect(enemy, "world_combat:lusterpurge_exposed", carrier.key());
+                            const applied = NativeEffects.effectiveStage(scope, enemy, "spd") - before;
                             if (applied !== 0) {
                                 const at = scope.observe(enemy);
                                 if (at !== null) {
-                                    WorldFeedback.keep(scope, "lusterpurge:mark:" + ref, lusterpurgeScene, 1, at.position(),
-                                        { moment: "mark", target: ref, rays: rays, scale: scale, ticks: markTicks }, markTicks);
+                                    WorldFeedback.onEffect(scope, owned, "lusterpurge:mark:" + ref, lusterpurgeScene, 1, at.position(),
+                                        { moment: "mark", target: ref, rays: rays, scale: scale, ticks: markTicks });
                                     WorldFeedback.text(scope, at.position().plus(WorldCombat.point(0, 1.2, 0)), lusterpurgeSunderText, [stages], 30);
                                 }
                             }

@@ -2,7 +2,7 @@
   "worldcombat.skill.esperwing.summary": "气场上翼，左右两翼先后拍开：左翼先扫左半扇、短间隔后右翼扫右半扇，每个被扫到的敌人各吃一记特殊伤害且更容易击中要害；第二翼落定后才提高自己的速度，并在身上留下气翼余韵。可以空振，空振照常提速。",
   "worldcombat.skill.esperwing.description.0": "左右两翼先后扫过前方两个半扇，对被扫到的每个敌人各造成约 %1$s 点特殊伤害，同一目标最多中一记，且更容易击中要害。",
   "worldcombat.skill.esperwing.description.1": "翼展 %1$s 格、向两侧各张 %2$s 度；可以空振，空振照常推进并提速。",
-  "worldcombat.skill.esperwing.description.2": "第二翼落定后把自己的速度能力等级提高 %1$s 级（持续到正常重置）；同一瞬在身上留下持续 %2$s 的气翼余韵。余韵只是刚振过翅的标识，余韵未散时伙伴不会重复振翅，它的结束不会归还那几级速度。",
+  "worldcombat.skill.esperwing.description.2": "第二翼落定后，速度提高 %1$s 级，持续 %2$s。气翼余韵结束或被驱散时恢复；余韵尚存时再次振翅不叠加提速。",
   "worldcombat.skill.esperwing.stance.flap": "当前为振翅式：单发更重，但翼弧收窄、余韵更短。",
   "worldcombat.skill.esperwing.stance.glide": "当前为滑翔式：翼弧更宽、余韵更久，但单发更轻。",
   "worldcombat.skill.esperwing.timing": "射程 %1$s 格；起手 %2$s 秒，收招 %3$s 秒，消耗 %4$s PP，冷却 %5$s 秒。",

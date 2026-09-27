@@ -1,7 +1,7 @@
 {
   "worldcombat.skill.geomancy.summary": "Plant into the earth and draw on its ley energy: a ground rune lights up underfoot and the user stands rooted, gathering power; on the next beat the rune erupts and the energy surges back, raising Sp. Atk, Sp. Def and Speed together. If the user is put to sleep or frozen while gathering, or the channel window is cleared early, the energy collapses and nothing is gained.",
   "worldcombat.skill.geomancy.use.0": "Gather at a safe distance before a fight",
-  "worldcombat.skill.geomancy.use.1": "Trade a standing channel for three permanent boosts",
+  "worldcombat.skill.geomancy.use.1": "Charge up to raise Special Attack, Special Defence and Speed",
   "worldcombat.skill.geomancy.use.2": "Leave a ground rune underfoot to mark the battlefield",
   "worldcombat.skill.geomancy.description.0": "The second beat raises Sp. Atk, Sp. Def and Speed by %1$s each.",
   "worldcombat.skill.geomancy.description.1": "The first beat channels for %1$s; it can only be used while standing on the ground, and the user stands rooted and cannot act during this time.",

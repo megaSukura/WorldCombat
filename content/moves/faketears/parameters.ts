@@ -39,7 +39,7 @@ namespace PokemonSkills {
             }),
         fluster: seconds(
             F.base(90).plus(F.level().times(1.6)).clamp(80, 280).round(0),
-            "失神时长", "特防下降后留下的身份标记持续多久；它本身不改变属性或行动，只让同伴知道这个人已经吃过这一招。"),
+            "失神时长", "特防下降持续的时间；等级越高，失神越久。"),
         tears: formula(
             F.base(12).plus(F.const(1).minus(F.body("width")).times(10))
                 .plus(F.individual("friendship").times(0.12)).clamp(10, 40).round(0),

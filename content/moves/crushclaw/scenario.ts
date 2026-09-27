@@ -1,30 +1,37 @@
-/**
- * 撕裂爪 / crushclaw —— 可执行设计说明。
- *
- * 一句话：踏前一步，单爪前伸够到第一个接触后向外一拉，撕中可能把护甲撕开、防御下降；对已带破防身份的目标撕得更深。
- *
- * 场面：一只只会撕裂爪的猫鼬斩（45 级）对一只只会跃起的铁掌力士（60 级，只挨打不还手）。
- * 断言只取必然事实：这招被提交过、目标受到过伤害。撕甲是概率结果，是否撕开写进 note。
- */
+// Actual cast followed by native dispel: the finite state must own its stat contribution.
 Smoke.scenario("crushclaw", function (stage) {
-    stage.fill([-8, -1, -6], [8, -1, 6], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "zangoose", level: 45, moves: ["crushclaw"], at: [-2, 0, 0] });
-    var foe = stage.pokemon({ species: "hariyama", level: 60, moves: ["splash"], at: [3, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1400, function () {
-        return stage.casts("crushclaw", caster) >= 2 && stage.damageTo(foe) > 0;
+    stage.time("midnight");
+    stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
+    const caster = stage.pokemon({ species: "zangoose", level: 50, moves: ["crushclaw"], at: [0, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:iron_golem", at: [2.4, 0, 0] });
+    stage.noai(foe);
+    stage.command("attribute " + foe.ref.split("/")[0] + " minecraft:generic.max_health base set 10000");
+    stage.command("data merge entity " + foe.ref.split("/")[0] + " {Health:10000.0f}");
+    const affected = foe, baseline = 1;
+    stage.boost(affected, { def: baseline });
+    let seeking = true;
+    function keepThreat(): void {
+        if (!seeking) return;
+        stage.provoke(caster, foe);
+        stage.after(60, keepThreat);
+    }
+    keepThreat();
+    stage.until(2400, function () {
+        return stage.casts("crushclaw", caster) > 0 && stage.hasMobEffect(affected, "world_combat:crushclaw_rent")
+            && (stage.stages(affected)["def"] || 0) < baseline;
     }, function () {
-        stage.expect(stage.casts("crushclaw", caster) >= 1, "caster committed crush claw");
-        stage.expect(stage.damageTo(foe) > 0, "crush claw dealt damage to the foe");
-        stage.note("the tear is a 50% roll; the mark tag records whether it landed at all", {
-            casts: stage.casts("crushclaw", caster),
-            damage: Math.round(stage.damageTo(foe) * 10) / 10,
-            rent: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),
-            moved: Math.round(stage.travelled(caster) * 10) / 10,
-            foeAlive: foe.alive()
-        });
-        stage.done();
-    }, "crush claw lands within 70 s");
+        stage.expect(stage.hasMobEffect(affected, "world_combat:crushclaw_rent"), "real cast applied its finite carrier");
+        stage.expect((stage.stages(affected)["def"] || 0) < baseline, "carrier has a real stage contribution");
+        stage.expect(stage.damageTo(foe) > 0, "the move also dealt its contact or projectile damage");
+        seeking = false;
+        stage.setPp(caster, "crushclaw", 0);
+        stage.command("effect clear " + affected.ref.split("/")[0] + " world_combat:crushclaw_rent");
+        stage.until(10, function () {
+            return !stage.hasMobEffect(affected, "world_combat:crushclaw_rent") && (stage.stages(affected)["def"] || 0) === baseline;
+        }, function () {
+            stage.expect((stage.stages(affected)["def"] || 0) === baseline, "native dispel restores only this move, preserving the unrelated stage");
+            stage.note("Native dispel verified after actual skill application; visual timing remains a manual check.", { casts: stage.casts("crushclaw", caster), baseline: baseline, remaining: stage.stages(affected)["def"] || 0 });
+            stage.done();
+        }, "finite contribution ends with its carrier");
+    }, "actual skill applies finite stage change");
 });

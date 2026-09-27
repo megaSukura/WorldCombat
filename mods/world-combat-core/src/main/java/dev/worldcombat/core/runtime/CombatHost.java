@@ -3,6 +3,7 @@ package dev.worldcombat.core.runtime;
 import java.util.UUID;
 
 public interface CombatHost {
+    default void movementLease(long owner, ActorHandle actor) {}
     /** Opaque current native hurt identity; empty outside its synchronous call stack. */
     default String damageReceipt() { return ""; }
     default String attackStarts(ActorHandle observer, ActorHandle actor, long after) { return "{\"cursor\":0,\"records\":[]}"; }

@@ -2,7 +2,7 @@
  * 屏障猛攻 / psyshieldbash 的护盾身份载体。
  *
  * 本单元自己的变体：带共享身份 `world_combat:status/psyshield` 与 `identity_only`，只借身份。
- * 机械效果是提交那一刻的 `NativeEffects.boost(..., "def", +N)`；这一层效果是“护盾还在身上”的可读标记，
+ * 防御提升由 skill.ts 的 boostWindow 持有，随这份护盾状态结束。
  * 消费方用 `CombatStatus.has(world, actor, "psyshield")` 能读到，别的单元以后也可以消费。
  * 它不镜像成 Cobblemon 原生异常——这是本招自己发明的状态。
  */

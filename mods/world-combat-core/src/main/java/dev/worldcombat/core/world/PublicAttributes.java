@@ -24,6 +24,12 @@ public final class PublicAttributes {
     /** Synced physical mode; client movement prediction uses the same supported-ground acceleration as the server. */
     public static final DeferredHolder<Attribute, Attribute> GROUND_SUPPORT = REGISTRY.register("ground_support",
         () -> new RangedAttribute("worldcombat.attributes.ground_support", 0, 0, 1).setSyncable(true));
+    public static final DeferredHolder<Attribute, Attribute> GROUND_LIFT_HEIGHT = REGISTRY.register("ground_lift_height",
+        () -> new RangedAttribute("worldcombat.attributes.ground_lift_height", 0, 0, 64).setSyncable(true));
+    public static final DeferredHolder<Attribute, Attribute> GROUND_LIFT_SPEED = REGISTRY.register("ground_lift_speed",
+        () -> new RangedAttribute("worldcombat.attributes.ground_lift_speed", 0, 0, 4).setSyncable(true));
+    public static final DeferredHolder<Attribute, Attribute> GROUND_LIFT_PROBE = REGISTRY.register("ground_lift_probe",
+        () -> new RangedAttribute("worldcombat.attributes.ground_lift_probe", 0, 0, 64).setSyncable(true));
     private static final Map<AttributeInstance, WeakReference<LivingEntity>> OWNERS = Collections.synchronizedMap(new WeakHashMap<>());
     private static DeferredHolder<Attribute, Attribute> number(String id, double minimum) {
         return REGISTRY.register(id, () -> new RangedAttribute("worldcombat.attributes." + id, 0, minimum, Double.MAX_VALUE).setSyncable(true));

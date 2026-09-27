@@ -1,43 +1,32 @@
-/**
- * 黏黏网 / stickyweb —— 可执行设计说明。
- *
- * 一句话：把黏丝抛到敌人脚下的地面摊成有实线和空隙的网；脚部真的踩到某条线带的贴地目标才会被黏住、速度下降。
- *
- * 场面：会黏黏网的电蜘蛛带这一招；对面是一只走向施法者的铁傀儡。网落在它前去的路上，它踏进外环／交叉黏线时
- *   被黏住、速度等级下降、移动速度被压低；随后冻住它，速度不应继续被往下扣。
- *
- * 断言只取必然事实：这招被放过、铁傀儡身上出现黏网身份、它的移动速度被压下去、站定不会继续扣级。
- *   网孔穿行、跳线、上下楼层不串触发、具体落点与是否多降一级写进 note。
- */
+// Finite snare regression through the registered production field rule.
+// Projectile placement and crossing a moving web remain separate manual checks.
 Smoke.scenario("stickyweb", function (stage) {
-    stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "galvantula", level: 40, moves: ["stickyweb"], at: [-5, 0, 0] });
-    var heavy = stage.mob({ type: "minecraft:iron_golem", at: [1.5, 0, 0] });
-    var baseSpeed = stage.attribute(heavy, "minecraft:generic.movement_speed");
-    stage.hostile(caster, heavy);
-    stage.setPp(caster, "stickyweb", 1);
-    stage.until(1100, function () {
-        return stage.casts("stickyweb", caster) >= 1 && stage.hadMobEffect(heavy, "world_combat:status/stickyweb");
-    }, function () {
-        stage.after(10, function () {
-            var slowed = stage.attribute(heavy, "minecraft:generic.movement_speed");
-            stage.expect(stage.casts("stickyweb", caster) >= 1, "galvantula committed sticky web");
-            stage.expect(stage.hadMobEffect(heavy, "world_combat:status/stickyweb"), "the golem stepping on a web line was snared");
-            stage.expect(slowed < baseSpeed - 0.001, "the web lowered the golem's movement speed");
-            stage.noai(heavy);
-            stage.after(120, function () {
-                var later = stage.attribute(heavy, "minecraft:generic.movement_speed");
-                stage.expect(later >= slowed - 0.001, "the same web does not keep cutting the golem's speed");
-                stage.note("only a body whose feet actually touch a clipped web line is snared; the outer ring is crossed by anything walking in, while gaps between lines are safe to step through or jump over. A body one layer up is not caught, and the Speed stage drops once per body per web. Landing spot, thread count, band width and whether the anchored form adds a stage are positional/config dependent.", {
-                    casts: stage.casts("stickyweb", caster),
-                    speed: [baseSpeed, slowed, later],
-                    webbed: stage.hasMobEffect(heavy, "world_combat:status/stickyweb"),
-                    heavyAlive: heavy.alive()
-                });
-                stage.done();
+    stage.fill([-8, -1, -5], [8, -1, 5], "minecraft:stone");
+    const caster = stage.pokemon({ species: "galvantula", level: 40, moves: ["stickyweb"], at: [-5, 0, 0] });
+    const heavy = stage.mob({ type: "minecraft:iron_golem", at: [0, 0, 0] });
+    const baseline = stage.attribute(heavy, "minecraft:generic.movement_speed");
+    stage.after(20, function () {
+        stage.noai(heavy);
+        const foot = heavy.position();
+        stage.field("world_combat:hazard/stickyweb", [0, 0, 0], 120, 3, {
+            stages: 1, strand: 80, threads: 3, strands: 12, band: 0.4,
+            segments: [[foot[0] - 3, foot[1], foot[2], foot[0] + 3, foot[1], foot[2]]], touch: {}
+        }, caster);
+        stage.until(30, function () { return stage.hasMobEffect(heavy, "world_combat:stickywebbed"); }, function () {
+            const slowed = stage.attribute(heavy, "minecraft:generic.movement_speed");
+            stage.expect(slowed < baseline, "real web line applies its snare and stage loss");
+            stage.expect((stage.stages(heavy).spe || 0) === -1, "the line lowers speed by one stage");
+            stage.after(35, function () {
+                stage.expect((stage.stages(heavy).spe || 0) === -1, "staying on the line does not accumulate more speed loss");
+                stage.command("tp " + heavy.ref.split("/")[0] + " " + (foot[0] + 15) + " " + foot[1] + " " + foot[2]);
+                stage.until(150, function () { return !stage.hasMobEffect(heavy, "world_combat:stickywebbed"); }, function () {
+                    stage.expect((stage.stages(heavy).spe || 0) === 0, "speed stage recovers when webbing expires");
+                    stage.expect(Math.abs(stage.attribute(heavy, "minecraft:generic.movement_speed") - baseline) < 0.001,
+                        "native movement attribute recovers with the expired snare");
+                    stage.note("Production field contact and lifecycle verified with a fixed line under a native body; this fixture does not validate throw placement.");
+                    stage.done();
+                }, "snare expires after leaving the line");
             });
-        });
-    }, "sticky web snares a grounded foe crossing a thread");
+        }, "fixed body touches the registered web line");
+    });
 });

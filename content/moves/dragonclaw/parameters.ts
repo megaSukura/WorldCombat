@@ -77,7 +77,7 @@ namespace PokemonSkills {
             F.when(F.pref("cross", text("worldcombat.skill.dragonclaw.preference.cross")), F.const(2), F.const(1)).clamp(1, 2).round(0),
             "撕甲级别", {
                 unit: "级",
-                description: "爪尖撕开目标护甲、使其防御下降的能力等级；对宝可梦与对原版生物走同一条路径。等级随脱战自然消退。"
+                description: "双爪同时撕中时降低的防御等级；脱离战斗后恢复。"
             }),
         /** 爪痕量：16 + 物攻偏移[−3,12] ×0.16；夹 12..40。 */
         marks: formula(

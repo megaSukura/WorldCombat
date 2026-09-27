@@ -53,6 +53,16 @@ namespace PokemonSkills {
         world.effect(electrowebThreads, actor, JSON.stringify({ ref: String(actor.ref()), stages: stages, hold: hold }), hold);
     }
 
+    function electrowebSlow(world: CombatWorld, actor: CombatActor, stages: number, hold: number): void {
+        const previous = MobEffects.read(world, actor, electrowebEffect);
+        const renew = NativeEffects.ownsBoostWindow(world, actor, "world_combat:move/electroweb", previous);
+        const carrier = MobEffects.apply(world, actor, electrowebEffect, hold, 0);
+        if (!carrier || (!renew && previous && String(carrier.key()) === String(previous.key()))) return;
+        const window = NativeEffects.boostWindow(world, actor, renew ? {} : { spe: -stages }, carrier.duration(),
+            "world_combat:move/electroweb", carrier, previous);
+        if (!window) world.removeMobEffect(actor, electrowebEffect, carrier.key());
+    }
+
     /** 电网场地：踏进来触电并缠足，留在网里持续被余电咬；离开后缠身自然消退。 */
     WorldEffects.fieldRule("world_combat:electroweb_net", {
         // 每次场扫描确认网面仍有真实支撑；失去支撑就整张退场（余丝按被缠者自己的时限收）。
@@ -68,11 +78,10 @@ namespace PokemonSkills {
             if (!hurt(world, actor, "electroweb", Math.max(0, field.data.strike || 0), { damage: damageSpec("electroweb", "strike") })) return;
             if (!world.valid(actor)) return;
             const stages = Math.max(1, Math.round(field.data.stages || 1));
-            NativeEffects.boost(world, actor, "spe", -stages);
             const pin = Math.max(6, Math.round(field.data.pin || 12));
             WorldEffects.apply(world, actor, "rooted", {}, pin);
             const hold = Math.max(20, Math.round(field.data.hold || 26));
-            MobEffects.apply(world, actor, electrowebEffect, hold, 0);
+            electrowebSlow(world, actor, stages, hold);
             // 离网后的短余丝挂在独立托管效果上，和地网分开，随它一起收。
             electrowebThreadsKeep(world, actor, stages, hold);
             const next = field.data.next || (field.data.next = {});
@@ -88,7 +97,7 @@ namespace PokemonSkills {
             const body = world.observe(actor);
             if (body === null || !electrowebOnNet(field, body)) return;
             const hold = Math.max(20, Math.round(field.data.hold || 26));
-            MobEffects.apply(world, actor, electrowebEffect, hold, 0);
+            electrowebSlow(world, actor, Math.max(1, Math.round(field.data.stages || 1)), hold);
             // 还站在网里就跟着被刷新的缠身一起延长余丝，离开后它才按自己的时限消退。
             electrowebThreadsKeep(world, actor, Math.max(1, Math.round(field.data.stages || 1)), hold);
             const next = field.data.next || (field.data.next = {}), ref = String(actor.ref());

@@ -2,7 +2,7 @@
   "worldcombat.skill.esperwing.summary": "Gather aura into a pair of wings that beat one after another: the left wing sweeps the left half-fan first, then the right wing sweeps the right half-fan, dealing special damage to every foe caught with a higher critical chance. Only after the second wing lands does the user's Speed rise and a lingering aura remain. An empty beat still boosts.",
   "worldcombat.skill.esperwing.description.0": "The two wings sweep the two front half-fans in turn, dealing about %1$s special damage to each foe caught (each target is hit at most once) and landing critical hits more often.",
   "worldcombat.skill.esperwing.description.1": "The wings span %1$s blocks and spread %2$s degrees to each side; an empty beat still advances and boosts.",
-  "worldcombat.skill.esperwing.description.2": "Once the second wing lands it raises the user's Speed stage by %1$s (lasting until the normal reset) and at that instant leaves a %2$s aura on the user. The aura only marks a wing-beat just made; while it lingers a companion will not beat its wings again, and its end never returns those Speed stages.",
+  "worldcombat.skill.esperwing.description.2": "After the second wingbeat, gain %1$s Speed stages for %2$s. The bonus ends with the wing aura or its dispel; another wingbeat during the aura does not stack Speed.",
   "worldcombat.skill.esperwing.stance.flap": "Beat form: a heavier single hit, at a narrower arc and a shorter aura.",
   "worldcombat.skill.esperwing.stance.glide": "Glide form: a wider arc and a longer aura, at a lighter single hit.",
   "worldcombat.skill.esperwing.timing": "Range %1$s blocks; %2$s s wind-up, %3$s s recovery, %4$s PP, %5$s s cooldown.",

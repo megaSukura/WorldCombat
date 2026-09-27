@@ -3,7 +3,7 @@
   "worldcombat.skill.smokescreen.use.0": "Shroud a foe in a cloud it cannot aim through",
   "worldcombat.skill.smokescreen.use.1": "Lay it ahead of you so pursuers run into the smoke",
   "worldcombat.skill.smokescreen.use.2": "Seal a doorway or corridor",
-  "worldcombat.skill.smokescreen.description.0": "Foes standing in the cloud strike weaker (attack damage reduced by 20%%) and lose %1$s accuracy stage(s); both follow the choking itself and linger about %2$s after they leave, then end together, leaving no permanent drop.",
+  "worldcombat.skill.smokescreen.description.0": "Enemies in the cloud deal 20%% less attack damage and lose %1$s accuracy stage(s). Both effects linger for about %2$s after leaving; cleansing the irritation also ends them.",
   "worldcombat.skill.smokescreen.description.1": "The puff blooms into a cloud about a %1$s block radius that lasts %2$s only when it reaches the spot or is stopped by a wall; it only chokes foes, stays where it lands, and keeps catching enemies standing inside or entering later. Until the puff arrives, nothing is choked.",
   "worldcombat.skill.smokescreen.description.2": "The puff is sent within %1$s blocks and travels at %2$s, which decides how long it takes to arrive; gathering it takes %3$s with a %4$s cooldown. The cloud never moves, so a misplaced cloud wastes the cooldown, and it dissipates if the caster strays more than 48 blocks away or falls.",
   "worldcombat.skill.smokescreen.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",

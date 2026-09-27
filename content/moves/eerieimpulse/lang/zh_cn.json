@@ -1,9 +1,9 @@
 {
-  "worldcombat.skill.eerieimpulse.summary": "从身体放射出看不见的怪异电波，以自己为圆心铺开一圈；圈里的敌人特攻等级立即下降，而且不会自行恢复。它不对准谁、也不需要看见谁，只要近身；过载能把圈铺得更开、电弧更密，但起手与冷却都更长。",
+  "worldcombat.skill.eerieimpulse.summary": "从身体放射出一圈怪异电波，暂时压低附近敌人的特攻；无需瞄准，掩体也挡不住干扰。过载会扩大范围，但起手与冷却更长。",
   "worldcombat.skill.eerieimpulse.use.0": "被近身时一次扰乱身周所有的法系输出",
   "worldcombat.skill.eerieimpulse.use.1": "在混战里不用瞄准就削掉一圈人的特攻",
   "worldcombat.skill.eerieimpulse.use.2": "配合队友抢先手，让贴上来的人打不出特攻",
-  "worldcombat.skill.eerieimpulse.description.0": "以自己为中心一圈内的每个敌人特攻下降 %1$s 级，打出的特殊伤害随之降低；这是能力等级变化，不会自行恢复，直到能力等级被重置。",
+  "worldcombat.skill.eerieimpulse.description.0": "使范围内敌人的特攻降低 %1$s 级，持续 %2$s。电波干扰结束或被清除后恢复；同一干扰不会叠加。",
   "worldcombat.skill.eerieimpulse.description.1": "电波以自己为中心铺开，半径 %1$s 格（空中、地面一起算），只影响圈内的敌人；不需要瞄准，也不需要有视线。",
   "worldcombat.skill.eerieimpulse.description.2": "放电起手 %1$s，冷却 %2$s。",
   "worldcombat.skill.eerieimpulse.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

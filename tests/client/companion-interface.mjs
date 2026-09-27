@@ -8,7 +8,8 @@ let input,update,reply,screen=null,managed=null,parent=null,hud=null,indicator='
 const host={width:()=>480,height:()=>300,mouseX:()=>cursor[0],mouseY:()=>cursor[1],active:()=>!!managed&&screen===managed,themed:root=>{root.theme='minecraft';return root;},
  open:root=>{if(!host.active())parent=screen;screen=managed=root;root.onClose=host.close;},close:()=>{if(host.active())screen=parent;managed=parent=null;},reset:()=>{screen=managed=parent=null;hud=null;},hud:(_id,root)=>{hud=root;},meshTexture:(_json,color)=>{assert.equal(color,color|0);return {};}};
 const aim={target:'target',point:{x:2,y:0,z:3}},party=new Map();let blockPick={target:'00000000-0000-0000-0000-000000000000',point:{x:2.5,y:0.5,z:3.5},reason:''};
-const bridge={listen:(a,b,c)=>{input=a;update=b;reply=c;},request:(...args)=>{requests.push(args);return requests.length;},look:()=>JSON.stringify(aim),blockAim:()=>JSON.stringify(blockPick),aim:mode=>JSON.stringify({...aim,mode}),cast:(...args)=>casts.push(args),command:(...args)=>commands.push(args),indicator:value=>{indicator=value;},
+const skillAimCalls=[];let skillPick={target:'00000000-0000-0000-0000-000000000000',point:{x:4,y:6,z:2},direction:{x:.4,y:.7,z:.2},reason:''};
+const bridge={listen:(a,b,c)=>{input=a;update=b;reply=c;},request:(...args)=>{requests.push(args);return requests.length;},look:()=>JSON.stringify(aim),blockAim:()=>JSON.stringify(blockPick),skillAim:slot=>{skillAimCalls.push(slot);return JSON.stringify(skillPick);},aim:mode=>JSON.stringify({...aim,mode}),cast:(...args)=>casts.push(args),command:(...args)=>commands.push(args),indicator:value=>{indicator=value;},
  dispatch:(key,pokemon,move)=>{dispatches.push({key,pokemon,move});update(JSON.stringify({...activeSnapshot,...party.get(pokemon),pokemon,inspection:true,entityId:-1,skills:undefined}));return input(JSON.stringify({key,move,pressed:true}));}};
 const summaryBridge={listen:(accepts,draw,click)=>Object.assign(summary,{accepts,draw,click})};
 const classes={...mock.classes,NativeUiHost:host,CompanionContentClient:bridge,SummaryContentBridge:summaryBridge,Minecraft:{getInstance:()=>({font:{...mock.classes.Minecraft.getInstance().font,split:value=>({size:()=>1,get:()=>value})}})}};
@@ -40,6 +41,37 @@ assert(widgets(hud).some(widget=>String(widget.text).startsWith('Updated partner
 send('command');click('Company ›');assert.equal(commands.length,0);click('Wait');assert.equal(commands.length,1,'A leaf click executes immediately');send('command',false);assert.equal(commands.at(-1)[0],'hold');assert.equal(screen,null);
 cursor=[240,70];send('command');input(JSON.stringify({key:'command',pressed:false,heldMillis:60}));assert.equal(commands.length,1);assert(screen,'A quick tap keeps the wheel open even above a sector');send('cancel');cursor=[240,70];
 send('command');click('Skills ›');click('Vine ›');click('On player');send('command',false);assert.equal(JSON.parse(casts.at(-1)[1]).mode,'player');
+assert.equal(skillAimCalls.length,0,'Explicit owner targeting remains separate from the camera ray');
+// Menu move picks use the same slot-aware result for their world preview and submission.
+// In particular an airborne empty-ray point already respects that move's reach and keeps camera pitch.
+respond({skills:[],menu:[{id:'move-aim',label:'Aim move',command:'cast',target:'aim',slot:0}]});
+send('command');click('Aim move');update(JSON.stringify(snapshot));
+assert.deepEqual(JSON.parse(indicator).position,[4,6,2]);assert.equal(skillAimCalls.at(-1),0);
+send('confirm');assert.deepEqual(JSON.parse(casts.at(-1)[1]),skillPick);
+// A multi-step move can ask for an entity as its first sample even when its outer action is a point.
+skillPick={...skillPick,target:'sample-entity',point:{x:3,y:8,z:2}};
+send('command');click('Aim move');update(JSON.stringify(snapshot));send('confirm');
+assert.equal(JSON.parse(casts.at(-1)[1]).target,'sample-entity','The bridge receives the entity sample intact for ComplexInput');
+// Actual availability can change without a move identity change: landing clears the cached airborne gate.
+const groundMenu={id:'ground-cast',label:'Ground move',command:'cast',target:'aim',slot:0};
+update(JSON.stringify({...snapshot,skills:[{...snapshot.skills[0],available:false,reason:'not-grounded'}]}));
+respond({skills:[],menu:[{...groundMenu,disabled:{key:'worldcombat.reason.not-grounded'}}]});
+send('command');respond({skills:[],menu:[{...groundMenu,disabled:{key:'worldcombat.reason.not-grounded'}}]});const availabilityRequests=requests.length;
+update(JSON.stringify({...snapshot,skills:[{...snapshot.skills[0],available:true,reason:''}]}));
+assert.equal(requests.length,availabilityRequests+1,'Landing invalidates the open G menu from the pushed binding');
+respond({skills:[],menu:[groundMenu]});
+for(let i=0;i<20;i++)update(JSON.stringify({...snapshot,skills:[{...snapshot.skills[0],available:true,reason:''}]}));
+assert.equal(requests.length,availabilityRequests+1,'Stable eligibility does not request metadata again');
+const menuBeforeTakeoff=screen;
+update(JSON.stringify({...snapshot,skills:[{...snapshot.skills[0],available:false,reason:'not-grounded'}]}));
+assert.equal(requests.length,availabilityRequests+2,'Takeoff refreshes the same menu rather than keeping a stale usable entry');
+respond({skills:[],menu:[{...groundMenu,disabled:{key:'worldcombat.reason.not-grounded'}}]});
+assert.equal(screen,menuBeforeTakeoff,'Eligibility updates retain the current menu tree');
+send('cancel');const requestsWhileClosed=requests.length;
+update(JSON.stringify({...snapshot,skills:[{...snapshot.skills[0],available:true,reason:''}]}));
+assert.equal(requests.length,requestsWhileClosed,'A closed menu defers eligibility inspection until opened');
+send('command');assert.equal(requests.length,requestsWhileClosed+1);respond({skills:[],menu:[groundMenu]});
+click('Ground move');send('confirm');snapshot={...snapshot,skills:[{...snapshot.skills[0],available:true,reason:''}]};activeSnapshot=snapshot;update(JSON.stringify(snapshot));
 // Point selection remains semantic and uses the configured confirmation keys.
 const singleWork={skills:[],menu:[menu[2]]};respond(singleWork);send('command');send('command',false);update(JSON.stringify(snapshot));assert(indicator);send('back');assert.equal(indicator,'');send('cancel');
 send('command');send('command',false);update(JSON.stringify(snapshot));send('confirm');assert.equal(commands.at(-1)[0],'work');assert.equal(indicator,'');
@@ -98,4 +130,4 @@ assert.equal(screen,attributeScreen);assert(attributeValue.hovered);assert.equal
 assert(attributeValue.tooltip.includes('cooldown'));mock.setLocale('zh_cn');update(JSON.stringify(snapshot));assert(widgets(screen).some(widget=>widget.text==='技能急速'));
 send('cancel');
 Object.values(cleanups).forEach(cleanup=>cleanup());assert.equal(input,null);assert.equal(screen,null);assert.equal(summary.draw,null);
-console.log('PASS companion UI: click/held hierarchy, live withdrawn commands, remapped hints, player/point targeting; unsupported loadout management; authored M/H prose; stable CAS/hover/scroll; selected details; no polls; dirty coalescing; locale reload without RPC');
+console.log('PASS companion UI: click/held hierarchy, live withdrawn commands, remapped hints, player/point targeting, slot-aware airborne menu preview/submission and complex first samples; unsupported loadout management; authored M/H prose; stable CAS/hover/scroll; selected details; no polls; dirty coalescing; locale reload without RPC');

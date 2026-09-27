@@ -37,6 +37,7 @@ def main():
     parser.add_argument("--manual-commands", action="store_true", help="Check player command navigation, waiting and cancellation")
     parser.add_argument("--companion-orders", action="store_true", help="Check distant focus and return orders with the production companion AI")
     parser.add_argument("--pasture-lifecycle", action="store_true", help="Check real pasture chunk unload/reload, PC ownership and companion AI")
+    parser.add_argument("--npc-challenges", action="store_true", help="Check native NPC double challenges, script AI, callbacks and cleanup in an isolated server")
     parser.add_argument("--author-kernel", action="store_true", help="Check native binding, temporary stage carriers and shared author mechanisms")
     parser.add_argument("--native-runtime", action="store_true", help="Check native projectile and ecosystem integration in an isolated world")
     parser.add_argument("--composition", action="store_true", help="Check neutral action/effect/projectile composition against private shared content")
@@ -75,6 +76,13 @@ def main():
     parser.add_argument("--p5-player-death", action="store_true", help="Check native player death, respawn and chunk unloading with the formal profile")
     parser.add_argument("--world-copy", type=Path, help="For player-death checks, copy this saved world into a fresh isolated test directory")
     args = parser.parse_args()
+    if args.npc_challenges:
+        if args.environment != "full" or args.restart:
+            parser.error("NPC challenge checks require a fresh full headless server")
+        other_scenarios = (value for name, value in vars(args).items()
+            if name not in {"environment", "scenario", "npc_challenges", "content"})
+        if any(other_scenarios): parser.error("Choose NPC challenges as the only scenario for this server")
+        args.scenario = True
     if args.native_machines or args.manual_commands or args.companion_orders or args.pasture_lifecycle or args.author_kernel or args.functional_work or args.effect_leases:
         args.scenario = True
         if args.restart: parser.error("Machine/command checks use a fresh world")
@@ -174,12 +182,14 @@ def main():
     if args.effect_leases: phase = "effect-leases"
     if args.skills_retired: phase = "skill-retirement"
     if args.composition: phase = "composition"
+    if args.npc_challenges: phase = "npc-challenges"
     marker = "P3CHECK" if args.p3_native or args.p3_moves or args.p3_growth or args.p3_operations else "P2CHECK" if args.p2_input or args.p2_world or args.p2_capture or args.p2_movement else "P1CHECK"
     if args.p4_effects or args.p4_world or args.p4_native or args.p4_combinations or args.p4_script or args.p4_workshop: marker = "P4CHECK"
     if p5: marker = "P5CHECK"
     if args.composition or args.manual_commands or args.companion_orders or args.functional_work: marker = "P5CHECK"
     if args.author_kernel: marker = "REVIEWCHECK"
     if args.pasture_lifecycle: marker = "PASTURECHECK"
+    if args.npc_challenges: marker = "NPCCHECK"
     report_name = args.environment + ("-restart" if args.restart else "")
     if args.world_copy: report_name += "-copied"
     if args.remove_effect_content: report_name += "-removed"
@@ -222,6 +232,7 @@ def main():
     if args.manual_commands: port = "25592"
     if args.companion_orders: port = "25595"
     if args.pasture_lifecycle: port = "25597"
+    if args.npc_challenges: port = "25598"
     if args.author_kernel: port = "25596"
     if args.functional_work: port = "25593"
     if args.effect_leases: port = "25594"
@@ -258,6 +269,7 @@ def main():
     if args.functional_work: content_source = ROOT / "build/content/profiles/play"
     if args.companion_orders: content_source = ROOT / "build/content/profiles/play"
     if args.pasture_lifecycle: content_source = ROOT / "build/content/profiles/play"
+    if args.npc_challenges: content_source = ROOT / "build/content/profiles/play"
     if args.author_kernel: content_source = ROOT / "build/content/profiles/base"
     if args.effect_leases: content_source = ROOT / "build/content/profiles/core"
     if args.content: content_source = args.content.resolve(strict=True)
@@ -372,11 +384,13 @@ def main():
     if args.p5_content or args.p5_riding:
         fixture = "native-content.js" if args.p5_content else "native-riding.js"
         scenario = (ROOT / "mods/cobblemon-world-combat/src/test/resources/worldcombat" / fixture).read_text(encoding="utf-8")
+    if args.npc_challenges:
+        scenario = (ROOT / "mods/cobblemon-world-combat/src/test/resources/worldcombat/native-npc-challenges.js").read_text(encoding="utf-8")
     if args.composition:
         scenario = ""
     if args.p4_effects and args.environment == "full":
         scenario += 'ServerEvents.tick(function (event) { Java.loadClass("dev.worldcombat.cobblemon.checks.NativeScopeChecks").export(event.server); });\n'
-    if args.scenario and not p5 and not args.composition:
+    if args.scenario and not p5 and not args.composition and not args.npc_challenges:
         scenario += 'WorldCombat.register("checks:throw", "fixture", 30, function (a) { a.on("signal", function () {}); a.after(1, function () { throw new Error("P1_EXPECTED_SCRIPT_FAILURE"); }); });\n'
         scenario += 'WorldCombat.register("checks:hold", "fixture", 200, function (a) { a.on("signal", function () {}); a.after(100, function (next) { next.finish(); }); });\n'
     (scripts / "p1_checks.js").write_text(scenario, encoding="utf-8")
@@ -440,7 +454,7 @@ def main():
                     unexpected_script_error = True
                 if "This crash report has been saved to:" in line:
                     break
-                if (args.p4_world or args.p4_native or args.p4_combinations or args.p4_script or p5 or args.composition or args.native_machines or args.manual_commands or args.companion_orders or args.pasture_lifecycle or args.author_kernel or args.functional_work or args.effect_leases) and any(token in line for token in (" script-error", " disabled:", "host-hook-disabled", "effect-disabled", "tactics disabled", "Error loading KubeJS script", "Error in 'ServerEvents.", "Error in 'PlayerEvents.")):
+                if (args.p4_world or args.p4_native or args.p4_combinations or args.p4_script or p5 or args.composition or args.native_machines or args.manual_commands or args.companion_orders or args.pasture_lifecycle or args.npc_challenges or args.author_kernel or args.functional_work or args.effect_leases) and any(token in line for token in (" script-error", " disabled:", "host-hook-disabled", "effect-disabled", "tactics disabled", "Error loading KubeJS script", "Error in 'ServerEvents.", "Error in 'PlayerEvents.")):
                     unexpected_script_error = True
                 should_stop = passed if args.scenario else "WorldCombat core server started." in line
                 if should_stop and not stop_sent:

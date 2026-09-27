@@ -96,9 +96,7 @@ public final class ComplexInput {
         var sample = sample(current, firstAim); if (sample == null) return true;
         current.samples.add(sample);
         if (current.samples.size() == CompanionInput.state().skills().get(current.slot).preview().input().steps().size()) {
-            var aim = current.aim;
-            if (CompanionInput.state().skills().get(current.slot).kind().equals("point")) aim = new CompanionInput.Aim(dev.worldcombat.cobblemon.network.ControlCommand.NONE, aim.point(), aim.direction(), aim.origin(), aim.end(), aim.reason());
-            CompanionInput.submit("cast", current.slot, aim, current.version, payload(current)); selection = null;
+            CompanionInput.submit("cast", current.slot, current.aim, current.version, payload(current)); selection = null;
         }
         return true;
     }

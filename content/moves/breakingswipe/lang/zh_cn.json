@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.breakingswipe.summary": "身子不动，甩起坚韧的尾巴从一侧扫向另一侧、沿身体实际高度扫过一道宽弧：尾巴扫到的敌人各挨一记接触伤害、被掀开，并让它们的攻击下降一级；只有真被压低的才按实际级数反馈。广域式罩得更宽，聚扫式打得更重。",
+  "worldcombat.skill.breakingswipe.summary": "原地甩尾，沿身前宽弧扫击敌人，造成接触伤害、降低攻击并将其掀开。广域式扫得更宽，聚扫式打得更重。",
   "worldcombat.skill.breakingswipe.use.0": "一次压低围在身边的一群敌人",
   "worldcombat.skill.breakingswipe.use.1": "把贴身的敌人一起掀开、拉开距离",
   "worldcombat.skill.breakingswipe.use.2": "趁敌人扎堆时一记压低多个物理输出",

@@ -4,7 +4,7 @@
   "worldcombat.skill.mistball.use.1": "Sap Sp. Atk with a good chance against a special attacker",
   "worldcombat.skill.mistball.use.2": "Arc over the front line to reach the back",
   "worldcombat.skill.mistball.description.0": "The down-and-mist ball arcs along your aim at one target or an empty point, dealing about %1$s Psychic special damage on impact.",
-  "worldcombat.skill.mistball.description.1": "When the ball hits and deals damage, there is a %1$s chance to lower the target's Sp. Atk by %2$s stage(s) and to actually apply the down-slowing for %3$s: ground and flying movement speed is 35%% lower while it clings and it clears the moment it is dispelled, while the Sp. Atk stages stay like normal stat stages (clearing when combat lapses, not when the cling ends). Only a slow that truly lands leaves the persistent down mist on the target.",
+  "worldcombat.skill.mistball.description.1": "On hit, has a %1$s chance to lower Sp. Atk by %2$s stages and slow ground and flying movement by 35%% for %3$s. The clinging mist does not stack; both penalties end when it fades or is dispelled.",
   "worldcombat.skill.mistball.description.2": "The arc can reach about %1$s blocks; the hit bursts into a cloud, at %2$s blocks/tick and %3$s blocks/tick^2 of fall. The cloud is only visual and never enlarges the entity hit.",
   "worldcombat.skill.mistball.option.on": "Suffocating form: a wider cloud with a better and longer cling, at the cost of a slower ball and lower power.",
   "worldcombat.skill.mistball.option.off": "Light-feather form: more power and a faster, flatter ball, at the cost of a smaller cloud and a lower cling chance.",

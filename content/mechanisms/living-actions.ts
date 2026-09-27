@@ -116,6 +116,7 @@ namespace LivingActions {
         }
         argument(key: string) { return this.native.argument(key); }
         control() { return this.native.control(); }
+        movementLease() { return this.native.movementLease(); }
         data(key: string): string | null;
         data(key: string, json: string): void;
         data(key: string, json?: string): any { return json === undefined ? this.native.data(key) : this.native.data(key, json); }

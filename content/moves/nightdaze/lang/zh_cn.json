@@ -6,7 +6,7 @@
   "worldcombat.skill.nightdaze.description.0": "暗波吞到的敌人受到约 %1$s 点特殊伤害，并有 %2$s 概率被黑暗罩住、掉 %3$s 级命中。",
   "worldcombat.skill.nightdaze.description.1": "暗波以自身为心，半径 %1$s 格、向上罩 %2$s 格（空中的敌人也一起吞），分 %3$s 步一圈圈从脚下推出去。",
   "worldcombat.skill.nightdaze.description.2": "被震开的敌人沿背离中心的方向被推开最多 %1$s 格；整道暗波最多命中 %2$s 个敌人，同一个敌人只结算一次。",
-  "worldcombat.skill.nightdaze.description.3": "被罩住期间目标物理攻击降低 18%%，黑暗持续 %1$s；它掉落的命中等级按普通能力等级保留，要等目标脱战才会收回，不随黑暗散去恢复。",
+  "worldcombat.skill.nightdaze.description.3": "黑暗笼罩持续 %1$s，其间物理攻击降低 18%%，并保有这次命中下降；黑暗散去或被清除时一起恢复。重复命中只延长黑暗，不继续叠加降准。",
   "worldcombat.skill.nightdaze.eclipse.on": "蚀夜式：半径 ×1.35、覆盖 +2 人、笼罩概率 +8%、笼罩时长 ×1.4、推进多 2 步（铺得更慢）；代价是威力 ×0.78、起手 +4 刻、冷却 +8 刻、向外推得更轻。",
   "worldcombat.skill.nightdaze.eclipse.off": "爆发式：威力 ×1.12、半径 ×0.85、向外推得更远、推进少 1 步（铺得更快）；代价是笼罩概率 −6%。",
   "worldcombat.skill.nightdaze.timing": "射程 %1$s 格；起手 %2$s 秒、收招 %3$s 秒，耗 %4$s PP，冷却 %5$s 秒。",

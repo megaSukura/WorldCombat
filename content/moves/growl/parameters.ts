@@ -1,22 +1,4 @@
-/**
- * 叫声 / Growl 的参数与数值来源。
- *
- * 原生：Normal／Status／威力 —／命中 100／PP 40／目标 allAdjacentFoes（相邻全体）／boosts={atk:-1}（降低攻击）／
- *       flags 含 sound、bypasssub（声音类，绕过替身、也绕过掩体）。
- * 世界化：不是隔空扣等级，而是**一声可爱的叫喊从身上荡开**——凡听得见这声叫的都分了神，出手变轻。
- *   它是声音，所以不需要通视：躲在墙后、背对着它也会被叫到，这正是它和「瞪眼」「摇尾巴」最大的区别；
- *   代价是降得浅、半径有限，自己必须站得够近。命中后挂共享身份 world_combat:status/charmed 的真实
- *   MobEffect，再 NativeEffects.boost 下降攻击：宝可梦损失原生攻击等级，其他生物落到攻击属性。
- * 「短叫」快而近；「拖长音」铺得更开、留得更久，但起手与冷却都更长。
- *
- * 数值来源（每个参数读不同的个体数据）：
- *   drop        基础 1 级，等级 ≥ 45 升到 2 级；夹 1..2。经验越足，叫声越能把人叫软。
- *   soundRadius 3.5 + 宽度 × 1.2，拖长音 ×1.5，夹 2.5..7；体型越宽，声音摊得越开。
- *   hushTicks   90 + 亲密度 × 0.8，拖长音 ×1.4，夹 60..260；越亲近越能把这份分神留住。
- *   notes       16 + (特攻 − 50) × 0.3，夹 12..40；心神越盛的施法者一次吐出的音符越多（也是画面里的数量）。
- *   tempo       6 − (速度 − 60) × 0.03，拖长音 +4，夹 4..14；速度越快越早开口。
- *   recharge    100 + (等级 − 30) × 0.6，拖长音 +40，夹 80..180；等级越高越熟练。PP 40。
- */
+/** Per-move range, duration and timing; the same duration owns both icon and Attack loss. */
 namespace PokemonSkills {
     export const growlId = "growl";
     export const growlEffect = "world_combat:growl_hush";
@@ -36,7 +18,7 @@ namespace PokemonSkills {
                 .clamp(2.5, 7).round(2),
             "叫声半径", {
                 unit: " 格",
-                description: "叫声能传到多远；体型越宽摊得越开，拖长音明显更远。画面里的声环铺到哪，就是会被叫到哪。"
+                description: "叫声能传到多远；体型越宽摊得越开，拖长音明显更远。"
             }),
         hushTicks: seconds(
             F.base(90).plus(F.individual("friendship").times(0.8))
@@ -58,7 +40,7 @@ namespace PokemonSkills {
             F.base(100).plus(F.level().minus(30).max(0).times(0.6))
                 .plus(F.when(F.pref("howl", text("worldcombat.skill.growl.preference.howl")), F.const(40), F.const(0)))
                 .clamp(80, 180).round(0),
-            "冷却", "两次叫声之间的等待；等级越高越熟练，拖长音更费力。PP 40。")
+            "冷却", "两次叫声之间的等待；拖长音需要更久才能再次使用。")
     });
 
     describe(growlId, [

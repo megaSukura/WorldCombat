@@ -36,9 +36,8 @@ class TacticsContext(
     fun owner(): ActorHandle? {
         check()
         val entity = combat.resolve(actorValue) as? com.cobblemon.mod.common.entity.pokemon.PokemonEntity ?: return null
-        val id = entity.pokemon.getOwnerUUID() ?: return null
-        val player = entity.server?.playerList?.getPlayer(id) ?: return null
-        return if (player.isAlive && player.level() === entity.level()) combat.bind(player) else null
+        val owner = entity.pokemon.getOwnerEntity() ?: return null
+        return if (owner.isAlive && !owner.isRemoved && owner.level() === entity.level()) combat.bind(owner) else null
     }
     fun operation() = operationValue
     fun notice(): String { check(); return noticeValue }

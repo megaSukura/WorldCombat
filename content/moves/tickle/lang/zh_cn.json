@@ -3,7 +3,7 @@
   "worldcombat.skill.tickle.use.0": "瓦解贴身的物理输出",
   "worldcombat.skill.tickle.use.1": "在缠斗里同时削掉对方的攻击与防御",
   "worldcombat.skill.tickle.use.2": "配合队友抢先手压制近战",
-  "worldcombat.skill.tickle.description.0": "命中后目标立刻损失 %1$s 级攻击与 %2$s 级防御，这两项直接记在它的能力等级上；同时带上持续 %3$s 的「痒意」标记，期间伙伴不会对它重复使用挠痒。挠痒本身不造成伤害。",
+  "worldcombat.skill.tickle.description.0": "挠中后攻击降低 %1$s 级、防御降低 %2$s 级，持续 %3$s。痒意结束或被驱散时恢复，痒意未消时再挠不会叠加。本招不造成伤害。",
   "worldcombat.skill.tickle.description.1": "伸手够到的距离约 %1$s 格，离得太远就会挠空，什么也不会发生。",
   "worldcombat.skill.tickle.description.2": "伸手要 %1$s，冷却 %2$s。",
   "worldcombat.skill.tickle.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

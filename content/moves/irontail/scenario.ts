@@ -1,29 +1,37 @@
-/**
- * 铁尾 / irontail —— 可执行设计说明。
- *
- * 一句话：抬尾预告一条线，再沿那条线把钢尾重砸到落点，圈内目标挨重击、被顶开，可能被砸凹防御。
- *
- * 场面：一只只会铁尾的波士可多拉（45 级）对一只只会跃起的铁掌力士（60 级，只挨打不还手）。
- * 断言只取必然事实：这招被提交过、目标受到过伤害。砸凹是概率结果，等两次施放让掷骰在轨迹里出现，是否砸凹写进 note。
- */
+// Actual cast followed by natural expiration: the finite state must own its stat contribution.
 Smoke.scenario("irontail", function (stage) {
-    stage.fill([-9, -1, -7], [9, -1, 7], "minecraft:stone");
-    stage.time("day");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "aggron", level: 45, moves: ["irontail"], at: [-2, 0, 0] });
-    var foe = stage.pokemon({ species: "hariyama", level: 60, moves: ["splash"], at: [4, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1400, function () {
-        return stage.casts("irontail", caster) >= 2 && stage.damageTo(foe) > 0;
+    stage.time("midnight");
+    stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
+    const caster = stage.pokemon({ species: "aggron", level: 50, moves: ["irontail"], at: [0, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:iron_golem", at: [2.4, 0, 0] });
+    stage.noai(foe);
+    stage.command("attribute " + foe.ref.split("/")[0] + " minecraft:generic.max_health base set 10000");
+    stage.command("data merge entity " + foe.ref.split("/")[0] + " {Health:10000.0f}");
+    const affected = foe, baseline = 0;
+
+    let seeking = true;
+    function keepThreat(): void {
+        if (!seeking) return;
+        stage.provoke(caster, foe);
+        stage.after(60, keepThreat);
+    }
+    keepThreat();
+    stage.until(2400, function () {
+        return stage.casts("irontail", caster) > 0 && stage.hasMobEffect(affected, "world_combat:irontail_dented")
+            && (stage.stages(affected)["def"] || 0) < baseline;
     }, function () {
-        stage.expect(stage.casts("irontail", caster) >= 1, "caster committed iron tail");
-        stage.expect(stage.damageTo(foe) > 0, "iron tail dealt damage to the foe");
-        stage.note("the landing point is locked at windup and the tail drops from a high tip onto it; a caster shoved out of reach cancels the slam instead of moving the ring. The dent is a 30% roll; the mark tag records whether it landed at all", {
-            casts: stage.casts("irontail", caster),
-            damage: Math.round(stage.damageTo(foe) * 10) / 10,
-            dented: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),
-            foeAlive: foe.alive()
-        });
-        stage.done();
-    }, "iron tail lands within 70 s");
+        stage.expect(stage.hasMobEffect(affected, "world_combat:irontail_dented"), "real cast applied its finite carrier");
+        stage.expect((stage.stages(affected)["def"] || 0) < baseline, "carrier has a real stage contribution");
+        stage.expect(stage.damageTo(foe) > 0, "the move also dealt its contact or projectile damage");
+        seeking = false;
+        stage.setPp(caster, "irontail", 0);
+
+        stage.until(800, function () {
+            return !stage.hasMobEffect(affected, "world_combat:irontail_dented") && (stage.stages(affected)["def"] || 0) === baseline;
+        }, function () {
+            stage.expect((stage.stages(affected)["def"] || 0) === baseline, "expiry restores its stage contribution");
+            stage.note("Natural expiry verified after actual skill application; visual timing remains a manual check.", { casts: stage.casts("irontail", caster), baseline: baseline, remaining: stage.stages(affected)["def"] || 0 });
+            stage.done();
+        }, "finite contribution ends with its carrier");
+    }, "actual skill applies finite stage change");
 });

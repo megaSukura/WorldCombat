@@ -7,7 +7,7 @@
  *   由玩家按地形选点，AI 只按威胁本身排序。
  * 对谁出手：当前威胁；已被缠住或速度已到底线的跳过，避免对控制免疫的硬目标连续空放。
  * 够不到怎么办：reach 就是吐丝距离，超出先走近；丝有飞行时间，掩体挡住时交回共享接近逻辑。
- * 放完之后：目标永久掉一段速度（缠足还带一段独立定身）；没缠住时丝黏在它真实撞上的表面，伙伴交回共享顺序。
+ * 放完之后：目标缠绕期间降低速度（缠足还带一段独立定身）；没缠住时丝黏在它真实撞上的表面，伙伴交回共享顺序。
  */
 namespace CompanionBehavior {
     PokemonSkills.addPreferences("stringshot", { ai: { maxChase: 8, runnersOnly: false, leaveStation: false } }, [

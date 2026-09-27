@@ -19,7 +19,7 @@ final class NativeBodySweep {
     static Impact move(MinecraftCombat combat, ActorHandle actor, UUID controllerId, Point delta, double radius, java.util.Set<String> ignoredContacts) {
         var source = combat.resolve(actor);
         if (source == null) throw new ActionInactiveException("Actor left");
-        if (source.isPassenger() || source.isVehicle()) throw new ActionRejectedException("mounted-control");
+        if (source.isPassenger() || source.isVehicle() && !NativeMountedMotion.active(source)) throw new ActionRejectedException("mounted-control");
         var level = (ServerLevel) source.level();
         var body = source.getBoundingBox(); var start = body.getCenter();
         var motion = new Vec3(delta.x(), delta.y(), delta.z()); double length = motion.length();
@@ -39,7 +39,8 @@ final class NativeBodySweep {
         var targets = new AABB(start, start.add(motion)).inflate(extentX + EPSILON, extentY + EPSILON, extentZ + EPSILON);
         var controller = controllerId == null ? null : combat.server().getPlayerList().getPlayer(controllerId);
         LivingEntity victim = null; double contact = Double.POSITIVE_INFINITY;
-        for (var entity : level.getEntities(source, targets, candidate -> candidate instanceof LivingEntity living && combat.mayHit(source, living, controller))) {
+        for (var entity : level.getEntities(source, targets, candidate -> candidate instanceof LivingEntity living
+            && candidate.getRootVehicle()!=source.getRootVehicle() && combat.mayHit(source, living, controller))) {
             if (ignoredContacts.contains(combat.bind((LivingEntity) entity).ref())) continue;
             var box = entity.getBoundingBox();
             var expanded = box.inflate(extentX, extentY, extentZ);

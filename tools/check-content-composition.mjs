@@ -164,6 +164,15 @@ const recipient={pokemon:()=>rewardPokemon,participated:()=>true,readyLevelEvolu
 const growth={kind:()=> 'defeat',actor:()=>rewardPokemon,target:()=>defeated,recipientCount:()=>1,recipient:()=>recipient,config:()=>1,record:(id,value)=>records.push([id,value])};
 const baseline=context.NativeGrowthDefaults.experience(growth,recipient,defeated,1);
 callbacks.growth(growth);assert.deepEqual(experience,[baseline+7]);assert.deepEqual(ev,[['atk',1],['spe',2]]);assert.deepEqual(records,[['defeat',1]]);
+for (const authorized of [false,true]) {
+  const event={...growth,target:()=>({...defeated,wild:()=>false}),trainerDefeat:()=>authorized};
+  const plan={event,recipients:[{native:recipient,experience:0,ev:{}}],records:[],data:{}};
+  context.NativeGrowthDefaults.handle(plan);
+  assert.equal(plan.recipients[0].experience,authorized?baseline:0);
+  assert.deepEqual(JSON.parse(JSON.stringify(plan.recipients[0].ev)),authorized?{atk:1}:{});
+  assert.equal(plan.records.length,authorized?1:0);
+}
+console.log('PASS native growth: verified NPC challenge opponents earn native rewards; unrelated owned Pokemon do not');
 const captureState=new Map(),multipliers=[];
 callbacks.capture({kind:()=> 'capture',tick:()=>100,ball:()=> 'cobblemon:quick_ball',number:key=>captureState.get(key)??NaN,setNumber:(key,value)=>captureState.set(key,value),multiplier:value=>multipliers.push(value)});
 assert.deepEqual(multipliers,[6]);

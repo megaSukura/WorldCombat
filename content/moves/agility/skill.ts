@@ -5,7 +5,7 @@
  *
  * 一幕半：
  *   松（windup 播「聚风」，提交前只观察与预告，打断不花代价）。
- *   弹（提交后）：NativeEffects.boost(spe, requested) 立刻写入公共能力阶梯，按前后有效等级差取**真实涨级**回执
+ *   弹（提交后）：NativeEffects.boostWindow(spe, requested) 立刻写入公共能力阶梯，按前后有效等级差取**真实涨级**回执
  *     （封顶时为 0，不虚报）；挂上共享身份 world_combat:status/agility 的「轻身」窗口，播放一次向外的风爆与地环。
  *     窗口内的残影拖尾由这次 carrier 拥有的托管 mark 承载：净化／到期随 carrier 一起收，重施替换旧窗口与旧 mark。
  * 反制：起手极短但仍在提交前，抢一次打断能白赚；重施受冷却与轻身窗口限制，不会空烧 PP。
@@ -86,12 +86,14 @@ namespace PokemonSkills {
             const window = Math.max(60, Math.round(p("agility", "rushTicks", action)));
             const scale = surge / agilityReferenceRadius;
             const before = NativeEffects.effectiveStage(world, actor, "spe");
-            // 重施先替换旧窗口与旧 mark，不叠第二份；真实涨级取前后有效等级差（封顶时可能为 0，不虚报）。
+            if (MobEffects.read(world, actor, agilityRush) !== null) { done(action); return; }
             world.effects(actor, agilityWake).forEach(function (view) {
                 world.operation(view.id(), "world_combat:dispel", "{}");
             });
             const carrier = MobEffects.set(world, actor, agilityRush, window, 0);
-            NativeEffects.boost(world, actor, "spe", requested);
+            if (carrier === null) { done(action); return; }
+            const owned = NativeEffects.boostWindow(world, actor, { spe: requested }, window, "world_combat:move/agility", carrier, null);
+            if (owned === 0) { world.removeMobEffect(actor, agilityRush, carrier.key()); done(action); return; }
             const actual = Math.max(0, NativeEffects.effectiveStage(world, actor, "spe") - before);
             const feet = body.position().plus(WorldCombat.point(0, -body.height() / 2, 0));
             if (carrier) {

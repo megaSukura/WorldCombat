@@ -4,7 +4,7 @@
   "worldcombat.skill.doubleteam.use.1": "Speed away from a pursuit while the images soak the hits",
   "worldcombat.skill.doubleteam.use.2": "Buy a few seconds to reposition or withdraw",
   "worldcombat.skill.doubleteam.description.0": "The sidestep budget is about %1$s blocks; native obstacles shorten actual travel. A few decoys appear only at visited positions spaced far enough apart for their bodies to fit; a short path leaves fewer.",
-  "worldcombat.skill.doubleteam.description.1": "Decoys last %1$s and vanish when this identity is cleared. The caster gains 12%% movement speed (a brief surge) and keeps a lasting one-stage Pokemon evasion gain. Each decoy can be struck directly and broken.",
+  "worldcombat.skill.doubleteam.description.1": "Decoys last %1$s and can be destroyed by a direct hit. While the mirror effect lasts, movement speed rises by 12%% and evasion by 1 stage. Removing it ends both bonuses. Recasting does not stack evasion.",
   "worldcombat.skill.doubleteam.description.2": "Prepare for %1$s, recover for %2$s, and cool down for %3$s. Swarm leaves more lasting decoys with a shorter step; swift moves farther and faster with fewer decoys and extra speed.",
   "worldcombat.skill.doubleteam.value.copies": "Images",
   "worldcombat.skill.doubleteam.value.mirrorPool": "Sidestep distance",

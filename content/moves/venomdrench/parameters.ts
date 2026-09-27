@@ -55,7 +55,7 @@ namespace PokemonSkills {
             }),
         /** 印记时长：等级决定。 */
         linger: seconds(F.base(100).plus(F.level().times(2)).clamp(80, 220).round(0),
-            "印记时长", "中毒者身上「被淋透」的印记留多久；等级越高留得越久。印记只表明这个人刚被毒液黏过，三围等级是永久写下的，印记到期不会把它们还回来。"),
+            "印记时长", "三项能力下降持续的时间；等级越高，毒液附着越久。"),
         /** 起式：速度决定抬手多快，深泼更慢。 */
         tempo: seconds(
             F.base(7).minus(F.stat("speed").minus(60).times(0.03))
@@ -80,7 +80,7 @@ namespace PokemonSkills {
     ]);
 
     describe("venomdrench", [
-        { key: "description.0", values: ["drop","spread"] },
+        { key: "description.0", values: ["drop","spread","linger"] },
         { key: "description.1", values: [] },
         { key: "deep.on", values: ["drop"], when: function (context) { return read(context.detail.values, ["deep"]) === true; } },
         { key: "deep.off", values: [], when: function (context) { return read(context.detail.values, ["deep"]) !== true; } },

@@ -1,5 +1,5 @@
-// 自我激励挂上的「斗志窗口」：只承载共享身份 world_combat:status/roused 的可见标记，告诉玩家这一口气还在。
-// 攻击与特攻的等级由 NativeEffects.boost 写入公共能力阶梯；标记只负责可读性，别的作者可以按身份消费它。
+// 自我激励挂上的「斗志窗口」：通过共享身份 world_combat:status/roused 承载有限双攻提升。
+// 攻击与特攻通过 boostWindow 随载体存在；到期、驱散或被消费时恢复。
 // 启动脚本不引用服务端共享库，标签用字符串字面量。
 StartupEvents.registry("mob_effect", event => event.create("world_combat:roused")
     .beneficial()

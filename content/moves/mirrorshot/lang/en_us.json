@@ -5,7 +5,7 @@
   "worldcombat.skill.mirrorshot.use.2": "Use the scatter form to reflect the light onto the rank behind the target",
   "worldcombat.skill.mirrorshot.description.0": "The lance strikes the main target for about %1$s Steel special damage and has a %2$s chance to lower its accuracy by %3$s stage(s).",
   "worldcombat.skill.mirrorshot.description.1": "The lance reaches %1$s blocks, travels at %2$s blocks/tick and has a %3$s block beam radius.",
-  "worldcombat.skill.mirrorshot.description.2": "The glare clings for %1$s: the target carries the glared/aim_impaired identity and lowered accuracy stages, tied to this glare and removed with it when it ends or is cleared, leaving no permanent accuracy loss.",
+  "worldcombat.skill.mirrorshot.description.2": "Glare lowers the target’s accuracy for %1$s. Accuracy recovers when the glare ends or is cleansed.",
   "worldcombat.skill.mirrorshot.description.3": "In scatter form the light reflects along the shot and spreads %2$s degrees behind the target, reaching 4.5 blocks; every other foe caught takes about %1$s refract damage and has half the glare chance to be glared (for about 70% of the duration).",
   "worldcombat.skill.mirrorshot.scatter.on": "Scatter: the light reflects off the target onto the foes behind, and glare lasts x1.2 with a 2-tick shorter wind-up; costs power x0.85, range -1.5 blocks, glare chance -6% and cooldown +4 ticks.",
   "worldcombat.skill.mirrorshot.scatter.off": "Focused: power x1.12, range +1.5 blocks and glare chance +8%, but the wind-up is 1 tick longer and there is no refract splash.",

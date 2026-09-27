@@ -23,15 +23,15 @@ public final class WorldCombatConfig {
         var builder = new ModConfigSpec.Builder();
         builder.push("mobility");
         MOBILITY_BASE = builder.comment(
-                "Speed-stat to native navigation mapping: base multiplier applied before the cultivated speed factor.")
+                "Speed-stat to native navigation and riding mapping: base multiplier applied before the cultivated speed factor; each species keeps its native movement controller.")
             .defineInRange("baseMultiplier", 1.35D, 0.0D, 10.0D);
         MOBILITY_GROWTH = builder.comment(
                 "Exponent on the cultivated speed factor. 0 ignores the speed stat, 1 keeps the current behaviour, values above 1 amplify investment.")
             .defineInRange("growthInfluence", 1.0D, 0.0D, 4.0D);
-        MOBILITY_MINIMUM = builder.comment("Lower clamp for the final navigation factor.")
+        MOBILITY_MINIMUM = builder.comment("Lower clamp for the cultivated navigation and riding factor, before temporary stage/status modifiers.")
             .defineInRange("minimumMultiplier", 0.9D, 0.0D, 10.0D);
         MOBILITY_MAXIMUM = builder.comment(
-                "Upper clamp for the final navigation factor. 0 disables the cap; a positive value below minimumMultiplier is raised to that minimum.")
+                "Upper clamp for the cultivated navigation and riding factor, before temporary stage/status modifiers. 0 disables the cap; a positive value below minimumMultiplier is raised to that minimum.")
             .defineInRange("maximumMultiplier", 1.8D, 0.0D, 10.0D);
         builder.pop();
         builder.push("moves");

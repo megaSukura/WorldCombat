@@ -2,12 +2,12 @@
  * 吐丝 / String Shot — 执行组织。
  *
  * 核心念头：从口边射出一缕会飞的丝，缠住对手的腿脚。它有飞行时间，所以掩体与走位能躲开；
- *   命中活体就缠住（永久掉一段速度，另有一段短定身），没缠住就黏在它真实撞上的那个表面，留一小片蛛网。
+ *   命中活体就缠住（缠绕期间降低速度，另有一段短定身），没缠住就黏在它真实撞上的那个表面，留一小片蛛网。
  *
  * 出手：`kind: "aim"`——可朝任意方向、地点或实体射出。LivingActions.projectile 负责飞行与原生碰撞，
  *   撞到第一个身体或方块就停在那里；完整动作用同一份位置与阶段数据判定与呈现。
  * 命中：活体挂共享的 world_combat:string_bound（身份 world_combat:status/silked）标记，并 NativeEffects.boost
- *       永久下降速度等级（这是能力等级，直到离开战斗或被重置，不随标记到期回退）；缠足模式下另叠一段
+ *       临时下降速度等级，丝线消退或被清除时恢复；缠足模式下另叠一段
  *       独立的 rooted 定身，真正掉速才出现符号。
  * 落点：`Impact.blockPosition()/blockFace()` 给出原生方块格与表面，在首碰那一格的外侧铺少量蛛网
  *       （terrain 租借，受原生保护与占用限制，到期归还原方块）；只按 `terrainResult` 真正 placed 的格数
@@ -29,17 +29,23 @@ namespace PokemonSkills {
         }
     }
 
-    /** 缠住一个目标：真正掉速才挂身份、定身并给符号。速度等级是永久降级，标记与定身各自有期限。 */
+    /** 缠住一个目标：真正掉速才挂身份、定身并给符号。速度下降随缠丝载体存续；短暂定身有独立期限。 */
     function stringshotBind(world: CombatWorld, self: CombatActor, target: CombatActor, drop: number, bindTicks: number, rootTicks: number): number {
         const body = world.observe(target);
         if (body === null) return 0;
-        const changed = NativeEffects.boost(world, target, "spe", -drop);
-        if (changed === 0) {
+        if (MobEffects.read(world, target, stringshotEffect) !== null) return 0;
+        const carrier = MobEffects.apply(world, target, stringshotEffect, bindTicks, 0);
+        const before = NativeEffects.effectiveStage(world, target, "spe");
+        const window = carrier ? NativeEffects.boostWindow(world, target, { spe: -drop }, bindTicks,
+            "world_combat:move/stringshot", carrier) : 0;
+        const changed = NativeEffects.effectiveStage(world, target, "spe") - before;
+        if (!window || changed === 0) {
+            if (window) NativeEffects.windowClose(world, window);
+            if (carrier) world.removeMobEffect(target, stringshotEffect, carrier.key());
             WorldFeedback.emit(world, stringshotScene, 1, body.position(), { moment: "ward", target: String(target.ref()) }, 18);
             return 0;
         }
         const applied = Math.abs(changed);
-        MobEffects.apply(world, target, stringshotEffect, bindTicks, 0);
         const rooted = rootTicks > 0;
         if (rooted) WorldEffects.apply(world, target, "rooted", {}, Math.round(rootTicks));
         WorldFeedback.emit(world, stringshotScene, 1, body.position(),
@@ -91,7 +97,7 @@ namespace PokemonSkills {
     define({
         id: stringshotId,
         name: "吐丝",
-        description: "从口中朝任意方向射出一缕会飞的丝：缠住第一个碰到的对手，永久降低它一段速度（另有一段短定身）；没缠住就黏在它真实撞上的表面，按真正放下的方块留一小片蛛网。结网形态把同一根丝打成稍大一点的小网，但不再定身。",
+        description: "从口中朝任意方向射出一缕会飞的丝：缠住第一个碰到的对手，在丝线缠绕期间降低速度，并短暂定住脚步；没缠住就黏在它真实撞上的表面，按真正放下的方块留一小片蛛网。结网形态把同一根丝打成稍大一点的小网，但不再定身。",
         uses: ["拦住冲锋或逃跑的敌人", "封住一条通道或门口", "削弱高速目标"],
         kind: "aim",
         range: 5,

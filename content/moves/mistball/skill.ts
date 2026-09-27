@@ -206,11 +206,14 @@ namespace PokemonSkills {
                         { moment: "cloud", target: String(target.ref()), cloud: cloud, motes: motes }, 40);
                     sound(current, "cobblemon:impact.psychic");
                     if (scope.valid(target) && scope.random() < chance) {
-                        // 特攻等级下降（普通能力等级，持久）与有限减速（downcast 载体，到期/驱散即恢复）各自独立结算。
-                        const dropped = NativeEffects.boost(scope, target, "spa", -stages);
-                        const carrier = MobEffects.apply(scope, target, mistballEffect, downTicks, 0);
+                        const previous = MobEffects.read(scope, target, mistballEffect);
+                        const before = NativeEffects.effectiveStage(scope, target, "spa");
+                        const carrier = previous || MobEffects.apply(scope, target, mistballEffect, downTicks, 0);
+                        if (!previous && carrier) NativeEffects.boostWindow(scope, target, { spa: -stages }, downTicks,
+                            "world_combat:move/mistball", carrier, null);
+                        const dropped = NativeEffects.effectiveStage(scope, target, "spa") - before;
                         if (carrier !== null) {
-                            // 后挂雾与减速载体同一份有限责任公司：载体在，雾在；载体被清即散。
+                            // 后挂雾、减速与特攻下降随同一载体存续。
                             scope.effect(mistballCling, target,
                                 JSON.stringify({ motes: motes, cloud: cloud, stages: stages }), downTicks);
                         }

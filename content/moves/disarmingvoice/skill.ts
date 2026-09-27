@@ -74,15 +74,26 @@ namespace PokemonSkills {
                 // 只有真正受伤的对手才吃附加效果；硬控免疫的 Boss 照样受声伤。
                 const landed = hurt(action, target, "disarmingvoice", power, { damage: damageSpec("disarmingvoice", "note"), sound: true });
                 if (!landed) return;
-                NativeEffects.boost(world, target, "spe", -stagger);
+                const staggerTicks = Math.max(1, Math.round(p("disarmingvoice", "staggerTicks", action)));
+                const echo = MobEffects.read(world, target, "world_combat:disarming_echo") === null
+                    ? MobEffects.apply(world, target, "world_combat:disarming_echo", staggerTicks, 0) : null;
+                if (echo !== null) {
+                    const window = NativeEffects.boostWindow(world, target, { spe: -stagger }, staggerTicks, "world_combat:move/disarmingvoice-tempo", echo, null);
+                    if (window === 0) world.removeMobEffect(target, "world_combat:disarming_echo", echo.key());
+                }
                 var charmed = false;
-                if (soothe && charmTicks > 0 && MobEffects.apply(world, target, disarmingvoiceCharm, charmTicks, 0) !== null) {
-                    if (soften > 0) NativeEffects.boost(world, target, "atk", -soften);
+                const charm = soothe && charmTicks > 0 && MobEffects.read(world, target, disarmingvoiceCharm) === null
+                    ? MobEffects.apply(world, target, disarmingvoiceCharm, charmTicks, 0) : null;
+                if (charm !== null) {
+                    const owned = soften > 0 ? NativeEffects.boostWindow(world, target, { atk: -soften }, charmTicks, "world_combat:move/disarmingvoice-charm", charm, null) : 0;
+                    if (owned === 0) world.removeMobEffect(target, disarmingvoiceCharm, charm.key());
+                    else {
                     // 心形表现由真实魅惑载体自己的托管效果拥有：载体被驱散或到期，头顶的心同步收走。
                     if (world.effects(target, disarmingvoiceLingerMark).length === 0)
                         world.effect(disarmingvoiceLingerMark, target, JSON.stringify({ notes: notes, intensity: intensity }),
                             Math.max(1, Math.min(2400, charmTicks)));
                     charmed = true;
+                    }
                 }
                 hits++;
                 WorldFeedback.emit(world, disarmingvoiceScene, 1, facts.position(),

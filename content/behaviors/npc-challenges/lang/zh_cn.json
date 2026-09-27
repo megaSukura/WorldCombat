@@ -1,0 +1,9 @@
+{
+  "worldcombat.npc_challenge.started": "挑战开始！对方可同时派出 %s 只宝可梦。你可以指挥伙伴，也可以亲自参战。",
+  "worldcombat.npc_challenge.sent_out": "对方派出了 %s！",
+  "worldcombat.npc_challenge.player-win": "挑战成功！",
+  "worldcombat.npc_challenge.npc-win": "你在这次挑战中落败了。",
+  "worldcombat.npc_challenge.cancelled": "本次挑战已中止。",
+  "worldcombat.npc_challenge.leaving": "你即将离开挑战区域，返回即可继续。",
+  "worldcombat.npc_challenge.deployment_blocked": "对方暂时找不到可派出宝可梦的位置，请让出附近的空地。"
+}

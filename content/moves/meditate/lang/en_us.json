@@ -4,7 +4,7 @@
   "worldcombat.skill.meditate.use.1": "Under pressure, quickly wake one stage to get your swing back",
   "worldcombat.skill.meditate.use.2": "Top up in a safe reprieve and keep Attack padded",
   "worldcombat.skill.meditate.description.0": "Meditate to awaken deep power: Attack +%1$s stage(s); recently undisturbed (long enough since the last hit) it wakes one more stage.",
-  "worldcombat.skill.meditate.description.1": "Awakening leaves a meditative mark for %1$s; it is only a sign that the power has just been roused and changes no stats - the Attack stages it granted do not fade with it.",
+  "worldcombat.skill.meditate.description.1": "Enters a meditative state for %1$s, retaining this Attack increase while it lasts. The increase ends on expiry or cleansing. Meditating again extends its duration without stacking.",
   "worldcombat.skill.meditate.description.2": "Settle %1$s s, recover %2$s s, cooldown %3$s s; the settle can be interrupted without paying anything.",
   "worldcombat.skill.meditate.deep.on": "Deep breath: calm window x1.4, and the extra stage unlocks 3 seconds after the last hit; costs a 2-tick longer settle and 10 longer cooldown.",
   "worldcombat.skill.meditate.deep.off": "Normal breath: faster settle and shorter cooldown, but the extra stage needs 7 seconds since the last hit.",

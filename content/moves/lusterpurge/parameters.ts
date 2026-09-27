@@ -15,7 +15,7 @@
  *   openTicks    张开时间：速度决定芯张成扇的快慢。
  *   sunderChance 碾防概率：特攻决定，基础 50% 取自原生。
  *   sunderStage  碾防级数：固定 1 级，与原生一致。
- *   markTicks    亮点时长：等级与特攻决定碾防后亮点停留多久。
+ *   markTicks    防护削弱时长：等级与特攻决定碾防后亮点停留多久。
  *   rays         光束数：特攻与等级决定散出的光束数量，也驱动表现。
  *   tempo        起手：速度决定聚光出手的快慢。
  *
@@ -23,7 +23,7 @@
  * 适合正面把一个目标照透；关闭＝光扇更宽、威力与概率按基础值，适合扫前方一片。两向各有适用局面。
  *
  * 伤害段 `core`：光扇扫到每人身上各自结算一次，走共享换算（原生类别 Special）。
- * 特防下降走共享能力等级阶梯 NativeEffects.boost(..., "spd", -1)。
+ * 特防下降走共享能力等级阶梯 NativeEffects.boostWindow(..., "spd", -1)。
  */
 namespace PokemonSkills {
     actionParameters.define("lusterpurge", {
@@ -77,7 +77,7 @@ namespace PokemonSkills {
                 .plus(F.level().minus(35).times(0.3).clamp(0, 12))
                 .plus(F.stat("specialAttack").minus(70).times(0.1).clamp(-2, 6))
                 .clamp(14, 42).round(0),
-            "亮点时长", "碾防生效后，目标被洗去防护时身上停留的亮点多久；等级与特攻越高留得稍久，但这只是画面提示，特防下降会一直保留。"),
+            "防护削弱时长", "强光削弱目标特防的时间；等级与特攻越高，削弱持续稍久。"),
         rays: formula(
             F.base(8)
                 .plus(F.stat("specialAttack").minus(70).times(0.06))
@@ -104,7 +104,7 @@ namespace PokemonSkills {
     describe("lusterpurge", [
         { key: "description.0", values: ["core"] },
         { key: "description.1", values: ["beamLength", "fanAngle", "openTicks"] },
-        { key: "description.2", values: ["sunderChance", "sunderStage"] },
+        { key: "description.2", values: ["sunderChance", "sunderStage", "markTicks"] },
         { key: "description.3", values: ["pref.focus"] },
         { key: "timing", values: ["range", "prepare", "recover", "pp", "cooldown"] },
         { key: "growth.0", values: ["tier.0.level", "tier.0.core", "tier.0.beamLength"] }

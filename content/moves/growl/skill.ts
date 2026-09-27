@@ -1,16 +1,4 @@
-/**
- * 叫声 / Growl — 执行组织。
- *
- * 核心念头：仰头叫一声，让一圈听得见的对手分神——它不挑面孔、不要求看见你，躲在掩体后会照样被叫到，
- *   所以能把身边贴近的敌人一起叫软；代价是降得浅、也够不到远处。
- *
- * 两幕：
- *   起（windup 播「鼓气」，提交前只观察与预告，可被打断，打断不花代价）。
- *   叫（提交后）：以自身为圆心张开 soundRadius 的一圈，凡圈内非友方都会听见——不看视线。真的被压低攻击的
- *     才挂共享的 world_combat:growl_hush（身份 world_combat:status/charmed，仅作「刚被叫软」的反馈身份）；
- *     攻击不到底或被能力拒绝时不占回执，也不留标记。标记会自行消退，真正的代价是永久的攻击等级下降。
- * 反制：拉开到 hearing 半径之外；它不造成伤害，也挡不住对方绕到圈外再进来。
- */
+/** A short distraction: the native status owns its Attack contribution and duration. */
 namespace PokemonSkills {
     function growlAbove(point: CombatPoint): CombatPoint { return point.plus(WorldCombat.point(0, 1, 0)); }
 
@@ -18,7 +6,7 @@ namespace PokemonSkills {
         id: growlId,
         cooldownParameter: "recharge",
         name: "叫声",
-        description: "发出一声可爱的叫喊，让身边听得见的一圈对手分神，降低它们的攻击。声音不需要通视，躲在掩体后也会被叫到；代价是降得浅、也够不到远处。",
+        description: "叫喊使周围敌人暂时分神，降低攻击。声音能传过掩体；同一目标在分神期间不会被重复削弱。",
         uses: ["被近身围住时叫软一圈敌人", "在敌人扎堆时一次压低几人的出手", "隔着掩体削弱贴身的威胁"],
         kind: "self",
         range: 0,
@@ -66,37 +54,35 @@ namespace PokemonSkills {
             const notes = Math.max(12, Math.round(p(growlId, "notes", action)));
             sound(action, "minecraft:entity.wolf.growl");
             let hits = 0, softened = 0;
-            // 声音不看视线：掩体挡不住这一声叫。只有真的压低攻击才算被叫软；抗性的目标不占回执、也不留标记。
+            // 声音不看视线：掩体挡不住这一声叫。只有真的压低攻击才建立这次分神。
             WorldGeometry.select(world, WorldGeometry.ring(origin, 0, radius, { below: 2, above: 3 }), function (actor, facts) {
-                if (facts.friendly()) return;
-                const applied = NativeEffects.boost(world, actor, "atk", -drop);
-                if (applied === 0) return;
-                MobEffects.apply(world, actor, growlEffect, hush, 0);
+                if (facts.friendly() || MobEffects.read(world, actor, growlEffect)) return;
+                const before = NativeEffects.effectiveStage(world, actor, "atk");
+                const carrier = MobEffects.apply(world, actor, growlEffect, hush, 0);
+                if (!carrier) return;
+                const window = NativeEffects.boostWindow(world, actor, { atk: -drop }, carrier.duration(),
+                    "world_combat:move/growl", carrier, null);
+                const applied = NativeEffects.effectiveStage(world, actor, "atk") - before;
+                if (!window || applied === 0) {
+                    if (window) NativeEffects.windowClose(world, window);
+                    world.removeMobEffect(actor, carrier.id(), carrier.key()); return;
+                }
+                WorldFeedback.onEffect(world, window, "growl:" + String(actor.ref()), growlScene, 1,
+                    facts.position(), { moment: "linger", target: String(actor.ref()) });
                 hits++;
-                softened += Math.abs(applied);
+                softened += applied;
                 WorldFeedback.emit(world, growlScene, 1, facts.position(),
-                    { moment: "hush", target: String(actor.ref()), drop: Math.abs(applied), notes: notes }, 26);
+                    { moment: "hush", target: String(actor.ref()), drop: applied, notes: notes }, 26);
             });
-            const perDrop = hits > 0 ? Math.round(softened / hits) : drop;
+            const perDrop = hits > 0 ? Math.round(softened / hits) : -drop;
             WorldFeedback.emit(world, growlScene, 1, origin,
                 { moment: "call", radius: radius, hits: hits, notes: notes, scale: radius / 3.5 }, 34);
             if (hits === 0)
                 WorldFeedback.emit(world, growlScene, 1, origin, { moment: "fizzle", scale: radius / 3.5 }, 16);
             WorldFeedback.text(world, growlAbove(origin), hits > 0 ? "world_combat.move.growl.text.call" : "world_combat.move.growl.text.empty",
-                hits > 0 ? [hits, perDrop] : [], 32);
+                hits > 0 ? [hits, perDrop > 0 ? "+" + perDrop : perDrop] : [], 32);
             done(action);
         }
     });
 
-    // 分神存续期间，被叫到的人头顶持续飘起错拍的音符。
-    WorldCombat.on("world_combat:move_growl/linger", "world_combat:mob_effect_tick", "", function (event) {
-        const data = JSON.parse(String(event.data()));
-        if (String(data.id) !== growlEffect) return;
-        const world = event.world(), actor = event.actor();
-        if (!world.valid(actor) || world.tick() % 6 !== 0) return;
-        const body = world.observe(actor);
-        if (body === null) return;
-        WorldFeedback.keep(world, "growl:" + String(actor.ref()), growlScene, 1, body.position(),
-            { moment: "linger", target: String(actor.ref()) }, 20);
-    });
 }

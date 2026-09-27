@@ -171,6 +171,18 @@ def build(units, fixtures, output):
     return subprocess.run(command, cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
 
 
+def scenario_failures(verdicts, errors, traces, all_done):
+    """A unit may register several scenes; every started scene participates in the run result."""
+    failures = {}
+    for name in (set(verdicts) | set(traces) | set(errors)) - {None}:
+        verdict = verdicts.get(name)
+        if verdict is None or not verdict.startswith("PASS") or errors.get(name):
+            failures[name] = verdict or "no verdict"
+    if errors.get(None): failures["<server>"] = "server errors"
+    if not all_done: failures["<run>"] = "server stopped before all scenes completed"
+    return failures
+
+
 def main():
     argv = sys.argv[1:]
     boolean_options = {"--keep"}
@@ -320,7 +332,16 @@ def main():
         errors.setdefault(None, []).append("smoke-unit: boot failure persisted after retry" if len(attempts) > 1 else "smoke-unit: boot failure")
 
     boot_errors = errors.get(None, [])
-    all_passed = True
+    failures = scenario_failures(verdicts, errors, traces, all_done)
+    all_passed = not failures
+    extra_names = (set(verdicts) | set(traces)) - {unit["name"] for unit in units} - {None}
+    if extra_names:
+        (output / "additional-scenarios.json").write_text(json.dumps({name: {
+            "verdict": verdicts.get(name), "errors": errors.get(name, []),
+            "trace": [json.loads(line) for line in traces.get(name, [])]
+        } for name in sorted(extra_names)}, ensure_ascii=False, indent=2), encoding="utf-8")
+        for name in sorted(extra_names):
+            print(("FAIL" if name in failures else "PASS") + ": additional scenario " + name + " " + str(verdicts.get(name, "no verdict")))
     for unit in units:
         unit_output = ROOT / "build/smoke" / unit["name"]
         if unit_output != output:
@@ -344,8 +365,8 @@ def main():
             print("  server errors: %d (first 5)" % len(unit_errors))
             for e in unit_errors[:5]: print("    " + e[:300])
         print("  trace: " + str(unit_output / "trace.jsonl") + "   log: " + str(unit_output / "server.log"))
-    if len(units) > 1 and not all_done and all_passed:
-        print("FAIL: the server stopped before the last scenario reported"); all_passed = False
+    for name in ("<server>", "<run>"):
+        if name in failures: print("FAIL: " + failures[name])
 
     try: (output / ".running").unlink()
     except OSError: pass

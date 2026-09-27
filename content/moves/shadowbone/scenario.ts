@@ -1,30 +1,37 @@
-/**
- * 暗影之骨 / shadowbone —— 可执行设计说明。
- *
- * 一句话：在远处掷出一根带灵魂的骨棒，命中时结算不接触伤害，并有机会把目标慑得防御下降。
- *
- * 场面：一只只会暗影之骨的嘎啦嘎啦（45 级）对一只只会跃起的铁掌力士（60 级，只挨打不还手），起手隔 6 格，
- * 便于读出它会远程出手。断言只取必然事实：这招被提交过、目标受到过伤害。慑防是概率结果，写进 note。
- */
+// Actual cast followed by natural expiration: the finite state must own its stat contribution.
 Smoke.scenario("shadowbone", function (stage) {
-    stage.fill([-10, -1, -7], [10, -1, 7], "minecraft:stone");
-    stage.time("night");
-    stage.weather("clear");
-    var caster = stage.pokemon({ species: "marowak", level: 45, moves: ["shadowbone"], at: [-2, 0, 0] });
-    var foe = stage.pokemon({ species: "hariyama", level: 60, moves: ["splash"], at: [4, 0, 0] });
-    stage.hostile(caster, foe);
-    stage.until(1600, function () {
-        return stage.casts("shadowbone", caster) >= 2 && stage.damageTo(foe) > 0;
+    stage.time("midnight");
+    stage.fill([-12, -1, -8], [12, -1, 8], "minecraft:stone");
+    const caster = stage.pokemon({ species: "marowak", level: 50, moves: ["shadowbone"], at: [0, 0, 0] });
+    const foe = stage.mob({ type: "minecraft:iron_golem", at: [2.4, 0, 0] });
+    stage.noai(foe);
+    stage.command("attribute " + foe.ref.split("/")[0] + " minecraft:generic.max_health base set 10000");
+    stage.command("data merge entity " + foe.ref.split("/")[0] + " {Health:10000.0f}");
+    const affected = foe, baseline = 0;
+
+    let seeking = true;
+    function keepThreat(): void {
+        if (!seeking) return;
+        stage.provoke(caster, foe);
+        stage.after(60, keepThreat);
+    }
+    keepThreat();
+    stage.until(2400, function () {
+        return stage.casts("shadowbone", caster) > 0 && stage.hasMobEffect(affected, "world_combat:shadowbone_spooked")
+            && (stage.stages(affected)["def"] || 0) < baseline;
     }, function () {
-        stage.expect(stage.casts("shadowbone", caster) >= 1, "caster committed shadow bone");
-        stage.expect(stage.damageTo(foe) > 0, "shadow bone dealt damage to the foe");
-        stage.note("the rattle is a 20% roll; the mark only lands when the target could still lose Defence, and AI reads the real stage not the mark", {
-            casts: stage.casts("shadowbone", caster),
-            damage: Math.round(stage.damageTo(foe) * 10) / 10,
-            spooked: stage.hadMobEffect(foe, "world_combat:status/guardbroken"),
-            foeDef: (stage.stages(foe) || {}).def,
-            foeAlive: foe.alive()
-        });
-        stage.done();
-    }, "shadow bone lands within 80 s");
+        stage.expect(stage.hasMobEffect(affected, "world_combat:shadowbone_spooked"), "real cast applied its finite carrier");
+        stage.expect((stage.stages(affected)["def"] || 0) < baseline, "carrier has a real stage contribution");
+        stage.expect(stage.damageTo(foe) > 0, "the move also dealt its contact or projectile damage");
+        seeking = false;
+        stage.setPp(caster, "shadowbone", 0);
+
+        stage.until(800, function () {
+            return !stage.hasMobEffect(affected, "world_combat:shadowbone_spooked") && (stage.stages(affected)["def"] || 0) === baseline;
+        }, function () {
+            stage.expect((stage.stages(affected)["def"] || 0) === baseline, "expiry restores its stage contribution");
+            stage.note("Natural expiry verified after actual skill application; visual timing remains a manual check.", { casts: stage.casts("shadowbone", caster), baseline: baseline, remaining: stage.stages(affected)["def"] || 0 });
+            stage.done();
+        }, "finite contribution ends with its carrier");
+    }, "actual skill applies finite stage change");
 });

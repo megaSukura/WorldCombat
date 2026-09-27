@@ -24,7 +24,7 @@ namespace CompanionBehavior {
 
     /** 还削得动：中毒者的攻击／特攻／速度里至少一项没到 −6 封底。 */
     function venomdrenchWorthwhile(context: WorldBehavior.Context, other: Entity): boolean {
-        return stage(context, other, "atk") > -6 || stage(context, other, "spa") > -6 || stage(context, other, "spe") > -6;
+        return !status(context, other, "drenched") && (stage(context, other, "atk") > -6 || stage(context, other, "spa") > -6 || stage(context, other, "spe") > -6);
     }
 
     /** 以自身为心、泼洒半径内已经中毒且还削得动的非友方数量。 */

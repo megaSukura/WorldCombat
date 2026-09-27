@@ -1,5 +1,5 @@
 {
-  "worldcombat.skill.orderup.summary": "小伙伴给出指令，使用者端出一记短程平抛的龙形菜势：首个碰到的身体结算一次非接触伤害。身边带着小个子伙伴时，还会按它的样子给自身（分餐式再给身旁队友）补上一项能力；不拆防护幕，空放也能靠真实伙伴上菜。",
+  "worldcombat.skill.orderup.summary": "端出一道平抛的龙形攻势，撞到第一个对手时造成伤害。小个子伙伴在身边时，还会按它的样子提升自身一项能力；分餐式也照顾附近的队友，空放也能获得这份支援。",
   "worldcombat.skill.orderup.use.0": "一记短程抛出的龙形菜势",
   "worldcombat.skill.orderup.use.1": "带着小个子伙伴时顺手强化自身",
   "worldcombat.skill.orderup.use.2": "用同一份上菜同时打开攻击与增益",

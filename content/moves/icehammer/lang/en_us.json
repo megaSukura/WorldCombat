@@ -5,7 +5,7 @@
   "worldcombat.skill.icehammer.use.1": "Freeze the natural ground at the real contact point to force movement",
   "worldcombat.skill.icehammer.use.2": "Answer an already-chilled target with a heavier shatter",
   "worldcombat.skill.icehammer.description.0": "A real short ice-fist path along the aim strikes only the first target it meets for %1$s physical damage at %2$s blocks reach; against an already chilled target the blow deals about 15% more.",
-  "worldcombat.skill.icehammer.description.1": "A hit knocks the target %1$s blocks away from the user (less if blocked) and lowers the user's Speed by the real amount (about %2$s stage(s); less or none at the minimum), slowing its movement.",
+  "worldcombat.skill.icehammer.description.1": "Knocks the target back up to %1$s blocks, stopping early at obstacles. The user loses %2$s Speed stages and moves more slowly.",
   "worldcombat.skill.icehammer.description.2": "A hit leaves the target chilled for %1$s, lowering its movement speed by 15%; the natural ground reachable below the real contact point freezes into a slippery block of ice, radius %2$s blocks, lasting %3$s, with the original blocks returning when it expires. Machines and containers are never turned to ice; with no reachable ground only a shatter remains.",
   "worldcombat.skill.icehammer.glaciate.on": "Glaciate form: chill duration x1.4, frost radius %1$s blocks and frost lasting %2$s s; costs x0.92 damage and a slower wind-up and recovery.",
   "worldcombat.skill.icehammer.glaciate.off": "Shatter form: a heavier, faster hit, but a shorter chill and a smaller frozen patch.",

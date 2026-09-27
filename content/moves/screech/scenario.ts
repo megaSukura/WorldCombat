@@ -31,6 +31,17 @@ Smoke.scenario("screech", function (stage) {
             deafenedB: stage.hadMobEffect(foeB, "world_combat:status/deafened"),
             moved: Math.round((stage.travelled(foeA) + stage.travelled(foeB)) * 10) / 10
         });
-        stage.done();
+        const timedTarget = stage.hasMobEffect(foeA, "world_combat:screech_ringing") ? foeA : foeB;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:screech_ringing"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).def || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "screech", 0);
+        stage.team("timed-b-screech", [caster, timedTarget]);
+        stage.boost(timedTarget, { def: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:screech_ringing");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:screech_ringing"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).def || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "screech pierced the line");
 });

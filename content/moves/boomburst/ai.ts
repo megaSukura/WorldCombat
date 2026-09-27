@@ -18,7 +18,6 @@ namespace PokemonSkills {
             const other = nearby[i];
             if (other.friendly || other.health <= 0 || !other.visible) continue;
             if (CompanionBehavior.distance(self.point, other.point) > radius) continue;
-            if (CompanionBehavior.status(context, other, "deafened")) continue;
             count++;
         }
         return count;

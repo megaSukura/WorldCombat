@@ -33,7 +33,8 @@ Smoke.scenario("tarshot", function (stage) {
     TarshotScenario.caster = caster.ref; TarshotScenario.fireAlly = fireAlly.ref; TarshotScenario.ordinaryAlly = ordinary.ref;
     var foe = stage.mob({ type: "minecraft:iron_golem", at: [0, 0, 0] });
     var baseSpeed = stage.attribute(foe, "minecraft:generic.movement_speed");
-    stage.hostile(caster, foe);
+    stage.provoke(caster, foe);
+    stage.noai(foe);
     stage.command("data merge entity @e[type=minecraft:iron_golem,distance=..12,limit=1] {NoAI:1b}");
     function tar(): number {
         return stage.changedBlocks().filter(function (cell) { return cell.after === "minecraft:black_carpet"; }).length;
@@ -58,6 +59,17 @@ Smoke.scenario("tarshot", function (stage) {
             casterHp: caster.health(),
             foeAlive: foe.alive()
         });
-        stage.done();
+        const timedTarget = foe;
+        stage.expect(stage.hasMobEffect(timedTarget, "world_combat:tar_coated"), "the actual timed carrier is still active");
+        stage.expect((stage.stages(timedTarget).spe || 0) < 0, "the carrier owns an active ability change");
+        stage.setPp(caster, "tarshot", 0);
+        stage.team("timed-b-tarshot", [caster, timedTarget]);
+        stage.boost(timedTarget, { spe: 1 });
+        stage.command("effect clear " + timedTarget.ref.split("/")[0] + " world_combat:tar_coated");
+        stage.after(5, function () {
+            stage.expect(!stage.hasMobEffect(timedTarget, "world_combat:tar_coated"), "cleansing removes the timed carrier");
+            stage.expect((stage.stages(timedTarget).spe || 0) === 1, "cleansing restores this move's contribution while preserving a separate +1");
+            stage.done();
+        });
     }, "tar shot coats the target");
 });

@@ -6,3 +6,7 @@ StartupEvents.registry("mob_effect", event => event.create("world_combat:disarmi
     .tag("world_combat:status/charmed")
     .tag("world_combat:status/identity_only")
     .effectTick((entity: any, amplifier: number) => { }));
+
+StartupEvents.registry("mob_effect", event => event.create("world_combat:disarming_echo")
+    .harmful().color(0xDFA2D1).tag("world_combat:status/identity_only")
+    .effectTick((entity: any, amplifier: number) => { }));

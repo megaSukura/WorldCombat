@@ -155,9 +155,12 @@ namespace PokemonSkills {
         const body = world.observe(actor);
         // 湿透的身体挂不住沥青：不涂附，也就不再反复降速度等级。
         if (body === null || body.wet()) return;
-        const fresh = MobEffects.read(world, actor, tarshotCoated) === null;
-        if (MobEffects.apply(world, actor, tarshotCoated, ticks, 0) === null) return;
-        if (fresh && drop > 0) NativeEffects.boost(world, actor, "spe", -drop);
+        const previous = MobEffects.read(world, actor, tarshotCoated), fresh = previous === null;
+        const renew = NativeEffects.ownsBoostWindow(world, actor, "world_combat:move/tarshot", previous);
+        const carrier = MobEffects.apply(world, actor, tarshotCoated, ticks, 0);
+        if (carrier === null) return;
+        if (renew || !previous || String(carrier.key()) !== String(previous.key())) NativeEffects.boostWindow(world, actor, renew ? {} : { spe: -drop }, carrier.duration(),
+            "world_combat:move/tarshot", carrier, previous);
         const scale = Math.max(0.6, Math.min(2.4, body.width() / 0.9));
         WorldFeedback.emit(world, tarshotScene, 1, body.position(),
             { moment: "coat", target: String(actor.ref()), drops: drops, fresh: fresh ? 1 : 0, scale: scale }, 30);

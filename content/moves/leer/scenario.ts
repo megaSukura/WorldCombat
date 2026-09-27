@@ -19,6 +19,12 @@ Smoke.scenario("leer", function (stage) {
             armor: stage.attribute(target, "minecraft:generic.armor"),
             casterHp: caster.health(), targetHp: target.health()
         });
-        stage.done();
+        stage.setPp(caster, "leer", 0);
+        stage.boost(target, { def: 1 });
+        stage.command("effect clear @e[type=minecraft:zombie,distance=..40] world_combat:leer_spook");
+        stage.after(5, function () {
+            stage.expect((stage.stages(target).def || 0) === 1, "cleansing leer restores only its Defense loss");
+            stage.done();
+        });
     }, "leer lands on the target");
 });

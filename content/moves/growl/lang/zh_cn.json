@@ -1,10 +1,10 @@
 {
-  "worldcombat.skill.growl.summary": "发出一声可爱的叫喊，让身边听得见的一圈对手分神，降低它们的攻击。声音不需要通视，躲在掩体后也会被叫到；代价是降得浅、也够不到远处。",
-  "worldcombat.skill.growl.use.0": "被近身围住时叫软一圈敌人",
-  "worldcombat.skill.growl.use.1": "在敌人扎堆时一次压低几人的出手",
+  "worldcombat.skill.growl.summary": "叫喊使周围敌人暂时分神，降低攻击。声音能传过掩体；同一目标在分神期间不会被重复削弱。",
+  "worldcombat.skill.growl.use.0": "削弱围住自己的敌人",
+  "worldcombat.skill.growl.use.1": "同时压低多名敌人的攻击",
   "worldcombat.skill.growl.use.2": "隔着掩体削弱贴身的威胁",
-  "worldcombat.skill.growl.description.0": "听见叫声、且攻击真的被压低的敌人下降 %1$s 级，并带上「被叫软」标记 %2$s。标记只是「刚被这一声分神」的反馈身份，会自行消退，不控制任何数值；攻击下降则是能力等级，不会随标记到期恢复，而会保留到对手离开战斗、能力等级被重置为止。",
-  "worldcombat.skill.growl.description.1": "叫声半径 %1$s，圈内所有非友方都会听见。声音不看视线。",
+  "worldcombat.skill.growl.description.0": "使敌人的攻击降低 %1$s 级，持续 %2$s。分神结束或被解除时，攻击恢复；分神期间再次受到叫声不会加深削弱或延长时间。",
+  "worldcombat.skill.growl.description.1": "影响周围 %1$s 格内的敌人，声音能穿过掩体。",
   "worldcombat.skill.growl.description.2": "起手 %1$s，冷却 %2$s。以自身为圆心，够不到圈外的人。",
   "worldcombat.skill.growl.howl.off": "短叫：起手快、半径小、持续短。",
   "worldcombat.skill.growl.howl.on": "拖长音：半径更大、持续更久，但起手与冷却都更长。",
@@ -20,8 +20,8 @@
   "worldcombat.skill.growl.preference.ai.maxChase": "考虑距离",
   "worldcombat.skill.growl.preference.ai.maxChase.help": "伙伴只在威胁离自己这么远以内时才考虑走近叫一声；调小只在贴身时叫，调大愿意主动靠近。",
   "worldcombat.skill.growl.preference.ai.minFoes": "最少人数",
-  "worldcombat.skill.growl.preference.ai.minFoes.help": "叫声半径内至少站着这么多还能被叫软的非友方时才叫，免得白起手；调 1 表示有一个就叫。",
-  "world_combat.move.growl.text.call": "叫软 %1$s 人（攻击 -%2$s）",
-  "world_combat.move.growl.text.empty": "没人听见",
-  "effect.world_combat.growl_hush": "被叫软"
+  "worldcombat.skill.growl.preference.ai.minFoes.help": "范围内至少有这么多尚未分神的敌人时，伙伴才会使用叫声。",
+  "world_combat.move.growl.text.call": "%1$s 个敌人分神 · 攻击 %2$s",
+  "world_combat.move.growl.text.empty": "没有影响到敌人",
+  "effect.world_combat.growl_hush": "分神"
 }

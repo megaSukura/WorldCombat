@@ -115,13 +115,17 @@ namespace PokemonSkills {
                     scope.sound("minecraft:entity.illusioner.cast_spell", point, 14, "{}");
                     if (victim !== null && scope.valid(victim) && !scope.friendly(victim)) {
                         // 只记录实际落下的等级：被特性/免疫拒绝时不假报羞辱；两端各自报自己的 delta。
-                        const atkDrop = -NativeEffects.boost(scope, victim, "atk", -drop);
-                        const spaDrop = scope.valid(victim) ? -NativeEffects.boost(scope, victim, "spa", -drop) : 0;
+                        const previous = MobEffects.read(scope, victim, partingshotEffect);
+                        const carrier = previous === null ? MobEffects.apply(scope, victim, partingshotEffect, mark, 0) : null;
+                        const atkBefore = NativeEffects.effectiveStage(scope, victim, "atk"), spaBefore = NativeEffects.effectiveStage(scope, victim, "spa");
+                        const owned = carrier === null ? 0 : NativeEffects.boostWindow(scope, victim, { atk: -drop, spa: -drop }, mark, "world_combat:move/partingshot", carrier, null);
+                        if (carrier !== null && owned === 0) scope.removeMobEffect(victim, partingshotEffect, carrier.key());
+                        const atkDrop = atkBefore - NativeEffects.effectiveStage(scope, victim, "atk");
+                        const spaDrop = spaBefore - NativeEffects.effectiveStage(scope, victim, "spa");
                         const applied = atkDrop + spaDrop;
                         const struck = scope.observe(victim);
                         const at = struck !== null ? struck.position() : point;
                         if (applied > 0) {
-                            MobEffects.apply(scope, victim, partingshotEffect, mark, 0);
                             WorldFeedback.emit(scope, partingshotScene, 1, at,
                                 { moment: "drain", target: String(victim.ref()), motes: motes, drop: drop, atk: atkDrop, spa: spaDrop, scale: scale,
                                     intensity: Math.max(0.7, Math.min(2, 0.7 + applied * 0.5)) }, 26);

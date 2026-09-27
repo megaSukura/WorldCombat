@@ -20,7 +20,8 @@ Smoke.scenario("disarmingvoice", function (stage) {
     stage.until(1000, function () {
         return stage.casts("disarmingvoice", caster) >= 1 && (stage.damageTo(first) + stage.damageTo(second)) > 0;
     }, function () {
-        stage.after(60, function () {
+        stage.setPp(caster, "disarmingvoice", 0);
+        stage.after(2, function () {
             stage.expect(stage.casts("disarmingvoice", caster) >= 1, "caster committed disarming voice");
             stage.expect((stage.damageTo(first) + stage.damageTo(second)) > 0, "disarming voice dealt damage to a foe");
             // 错拍是这招的主体过程：真的受伤的人速度等级真的掉下去。
@@ -35,7 +36,12 @@ Smoke.scenario("disarmingvoice", function (stage) {
                 firstCharmed: stage.hadMobEffect(first, "world_combat:status/charmed"),
                 secondCharmed: stage.hadMobEffect(second, "world_combat:status/charmed")
             });
-            stage.done();
+            const affected = stage.stages(first).spe < 0 ? first : second;
+            stage.boost(affected, { spe: 1 });
+            stage.after(125, function () {
+                stage.expect((stage.stages(affected).spe || 0) === 1, "lost tempo expires and preserves an independent Speed gain");
+                stage.done();
+            });
         });
     }, "disarming voice lands within 50 s");
 });
@@ -46,13 +52,16 @@ Smoke.scenario("disarmingvoice-soothe", function (stage) {
     stage.weather("clear");
     var caster = stage.pokemon({ species: "jigglypuff", level: 38, moves: ["disarmingvoice"], at: [-2, 0, 0] });
     var foe = stage.pokemon({ species: "rattata", level: 30, moves: ["tackle"], at: [2, 0, 0] });
-    stage.hostile(caster, foe);
     stage.noai(foe);
-    stage.after(5, function () { stage.prefer(caster, "disarmingvoice", { soothe: true }); });
+    stage.after(5, function () {
+        stage.prefer(caster, "disarmingvoice", { soothe: true });
+        stage.hostile(caster, foe);
+    });
     stage.until(1000, function () {
         return stage.casts("disarmingvoice", caster) >= 1 && stage.damageTo(foe) > 0;
     }, function () {
-        stage.after(60, function () {
+        stage.setPp(caster, "disarmingvoice", 0);
+        stage.after(2, function () {
             stage.expect(stage.casts("disarmingvoice", caster) >= 1, "caster committed the soothing cry");
             stage.expect(stage.damageTo(foe) > 0, "the soothing cry dealt damage to the foe");
             stage.expect(stage.hadMobEffect(foe, "world_combat:status/charmed"), "the damaged foe was charmed");
@@ -64,7 +73,14 @@ Smoke.scenario("disarmingvoice-soothe", function (stage) {
                 stages: stage.stages(foe),
                 charmed: stage.hadMobEffect(foe, "world_combat:status/charmed")
             });
-            stage.done();
+            stage.boost(foe, { spe: 1, atk: 1 });
+            stage.command("effect clear @e[type=cobblemon:pokemon,distance=..40] world_combat:disarming_charm");
+            stage.command("effect clear @e[type=cobblemon:pokemon,distance=..40] world_combat:disarming_echo");
+            stage.after(5, function () {
+                stage.expect((stage.stages(foe).spe || 0) === 1 && (stage.stages(foe).atk || 0) === 1,
+                    "cleansing soothing voice removes its two losses and preserves independent gains");
+                stage.done();
+            });
         });
     }, "the soothing cry lands and charms within 50 s");
 });

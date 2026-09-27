@@ -103,7 +103,7 @@ namespace PokemonSkills {
             F.base(100).plus(F.level().minus(25).times(1.2).clamp(0, 50))
                 .times(F.when(F.pref("silted"), F.const(1.6), F.const(0.8)))
                 .clamp(60, 260).round(0),
-            "糊眼时长", "被泥水糊住、带着共享身份 murky 的时间；等级越高、淤积式留得越久。"),
+            "糊眼时长", "命中下降的持续时间；等级越高、淤积式留得越久，到期或驱散后恢复。"),
         /** 覆盖人数：2 + 体型宽度偏移[−1,4]；夹 1..6 取整。 */
         maxTargets: formula(
             F.base(2).plus(F.body("width").minus(0.9).times(2.5).clamp(-1, 4)).clamp(1, 6).round(0),

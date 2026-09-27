@@ -3,7 +3,7 @@
   "worldcombat.skill.screech.use.0": "把排成一线冲上来的敌人依次剥掉防御",
   "worldcombat.skill.screech.use.1": "隔着矮墙压住正对方向的物理输出",
   "worldcombat.skill.screech.use.2": "在窄道、门口把来犯的敌人整排削弱",
-  "worldcombat.skill.screech.description.0": "被前沿薄片真正扫到的每个敌人物防实际下降 %1$s 级（已到下限或免疫时不再下降、也不报虚假降幅），并挂上约 %2$s 的耳鸣身份；同一个人只扫一次。耳鸣只表示耳朵嗡响，不改变属性或行动；物防下降是普通能力等级，不随耳鸣结束而恢复。",
+  "worldcombat.skill.screech.description.0": "声浪扫到的敌人陷入耳鸣，物防下降 %1$s 级，持续 %2$s。耳鸣消退或被清除时恢复，期间不会重复叠加。",
   "worldcombat.skill.screech.description.1": "声浪沿正前方铺出 %1$s 格、两侧各宽 %2$s 格，前沿用约 %3$s 扫完全程；掩体挡不住，站得太近的人先被扫到，远处的人随后才被扫到。",
   "worldcombat.skill.screech.description.2": "开嗓 %1$s，冷却 %2$s。",
   "worldcombat.skill.screech.timing": "射程 %1$s 格，起手 %2$s，收招 %3$s，消耗 %4$s PP，冷却 %5$s。",

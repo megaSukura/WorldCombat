@@ -26,5 +26,5 @@
   "world_combat.move.futuresight.text.send": "预知未来：%1$s 秒后落下",
   "world_combat.move.futuresight.text.hit": "预知成真 %1$s",
   "world_combat.move.futuresight.text.fizzle": "预知落空",
-  "worldcombat.skill.futuresight.description.3": "目标会被标上「已被预知」；它只是锁定标记，不减速也不造成伤害。念团是纯表现、不是可攻击的实体，攻击它不能解除预约。落点一直跟着目标，靠走位躲不开；延迟到点后若目标仍在场，就照其当前位置兑现伤害，目标已离场则整团落空。预约归属施法者：施法者收回或离场时预约一起结束。清掉标记（牛奶或别的招式）不会取消已经放出的念力。"
+  "worldcombat.skill.futuresight.description.3": "念力会追随目标，在倒计时结束后落下。等待期间可以治疗或提高防御；攻击头顶念团、喝牛奶或清除状态都不能挡下这一击。施术者被收回、离场，或目标离开可观察范围时，念力消散。"
 }

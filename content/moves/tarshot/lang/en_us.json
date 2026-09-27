@@ -3,7 +3,7 @@
   "worldcombat.skill.tarshot.use.0": "Coat a target ahead of an ally's Fire move",
   "worldcombat.skill.tarshot.use.1": "Slow a fast target and push it back",
   "worldcombat.skill.tarshot.use.2": "Turn a patch of ground into a tar pit that sticks to anyone",
-  "worldcombat.skill.tarshot.description.0": "A first coating drops %1$s Speed stage(s) (counted as stat stages, not restored when the tar washes off); while coated the target's movement speed is lowered by 35%%, and the tar stays for about %2$s - getting wet or rain washes it off.",
+  "worldcombat.skill.tarshot.description.0": "Tar coats the target for about %2$s, lowering Speed by %1$s stages and movement speed by a further 35%%. Another coating only extends the duration. Speed recovers when the tar wears off, is cleansed, or is washed away by water or rain.",
   "worldcombat.skill.tarshot.description.1": "While coated, its weakness to Fire is doubled: any Fire-type move deals about x%1$s damage, and a Fire-type hit or an already burning body ignites the target for about 1.5 s.",
   "worldcombat.skill.tarshot.description.2": "The tar flies along the cast direction at about %1$s blocks per tick, with a %2$s block hit radius and up to %3$s blocks of range; aimed at an enemy it flies at them, aimed at the ground it flies to the landing point and disperses on exhaustion; a wide splash covers about %4$s blocks.",
   "worldcombat.skill.tarshot.description.3": "The impact or landing point leaves tar of about %1$s blocks for about %2$s; it is a decorative layer only above air and replaces no load-bearing block; non-allies who step in are coated the same way (Speed drop, slower movement and the doubled Fire weakness).",

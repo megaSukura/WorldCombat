@@ -98,7 +98,7 @@ namespace PokemonSkills {
             action.present("world_combat:move_splash:crouch", splashScene, 1, origin,
                 JSON.stringify({ moment: "crouch", leap: leap ? 1 : 0, height: height, range: range }));
             action.after(prepare, function (current: CombatAction) {
-                // 起跳要求实地或合适水面；悬空或骑乘等不满足时直接拒绝，不伪造一次起跳。
+                // 起跳要求实地或合适水面；没有实际支撑时直接拒绝，不伪造一次起跳。
                 const standing = current.sense().observe(actor);
                 if (standing === null) { current.finish(); return; }
                 if (!standing.grounded() && !standing.wet()) { current.reject("no-footing"); return; }

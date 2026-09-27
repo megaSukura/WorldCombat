@@ -5,7 +5,7 @@
   "worldcombat.skill.lusterpurge.use.2": "Let enemies who flank or fall behind you avoid the light",
   "worldcombat.skill.lusterpurge.description.0": "Every enemy the fan sweeps takes about %1$s special damage, and each target is settled only once; a front body on the light path shadows the enemies behind it, and a wall stops the light the same way.",
   "worldcombat.skill.lusterpurge.description.1": "The beam reaches %1$s blocks along the aim (shortened at a wall's actual face), then opens from a thin core into a %2$s degree fan over %3$s; the user neither moves nor tracks.",
-  "worldcombat.skill.lusterpurge.description.2": "On a hit there is a %1$s chance to lower the target's Sp. Def by %2$s; while lowered it takes more special damage, until the target disengages or its stat stages are reset. The brief flash on a hit is only the trigger receipt; the drop does not fade with it.",
+  "worldcombat.skill.lusterpurge.description.2": "Hits have a %1$s chance to lower Sp. Def by %2$s stages for %3$s. It returns when the glow fades or is cleansed. This effect does not stack.",
   "worldcombat.skill.lusterpurge.description.3": "Focused form is currently %1$s.",
   "worldcombat.skill.lusterpurge.timing": "Range %1$s blocks, wind-up %2$s, recovery %3$s, %4$s PP, cooldown %5$s.",
   "worldcombat.skill.lusterpurge.growth.0": "From level %1$s the light rises to %2$s power and %3$s blocks of beam range.",
@@ -24,5 +24,6 @@
   "worldcombat.skill.lusterpurge.preference.ai.maxChase.help": "Beyond this distance the companion closes in first. Larger values let it approach from further away before releasing.",
   "worldcombat.skill.lusterpurge.preference.ai.cluster": "Prefer a front cluster",
   "worldcombat.skill.lusterpurge.preference.ai.cluster.help": "On: when other enemies stand inside the real fan in front of the target it prioritizes the light, sweeping a rank at once. Because it only counts the front, being surrounded from behind is not mistaken for a way out. Off: it sorts like an ordinary attack.",
-  "world_combat.move.lusterpurge.text.sunder": "Sp. Def -%1$s"
+  "world_combat.move.lusterpurge.text.sunder": "Sp. Def -%1$s",
+  "effect.world_combat.lusterpurge_exposed": "Exposed Aura"
 }
